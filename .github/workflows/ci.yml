@@ -1,28 +1,43 @@
 name: Python Pain001
 
-on: [push]
+on: [pull_request]
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ["2.7", "3.5", "3.7", "3.8", "3.9", "3.10"]
-
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        python-version: ["3.9", "3.10", "3.11.0"]
+    defaults:
+      run:
+        shell: bash
     steps:
-     # Checkout the repo.
-     - name: Checkout Python Pain001 repository
-       uses: actions/checkout@v3
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          architecture: x64
 
-     # Set up Python environment.
-     - name: Set up Python ${{ matrix.python-version }}
-       uses: actions/setup-python@v4
-       with:
-         python-version: ${{ matrix.python-version }}
+      # Set up Python environment.
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-     # Build Python Pain001 using the build.sh script.
-     - name: Run build script
-       shell: bash
-       run: ./.github/scripts/build.sh
-       env:
-         PYTHON_VERSION: ${{ matrix.python-version }}
+      # Build Python Pain001 using the build.sh script.
+      - name: Run build script
+        shell: bash
+        run: ./.github/scripts/build.sh
+        env:
+          PYTHON_VERSION: ${{ matrix.python-version }}
+
+    # Deploy to PyPI.
+    # - name: Deploy
+    #   uses: pypa/gh-action-pypi-publish@v1.3.1
+    #   with:
+    #     user: __token__
+    #     password: ${{ secrets.PYPI_API_TOKEN }}
+    #     distributions: "sdist bdist_wheel"
+    #     skip-existing: true
