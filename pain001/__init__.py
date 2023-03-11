@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastian Rousseau.
+# Copyright (C) 2023 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,4 +19,4 @@ from __future__ import division
 from __future__ import print_function
 
 __all__ = ['Pain001']
-__version__ = '0.0.1'
+__version__ = '0.0.2'
