@@ -1,4 +1,4 @@
-# Pain001 ![GitHub Pipenv locked Python version](https://img.shields.io/github/pipenv/locked/python-version/sebastienrousseau/pain001?style=for-the-badge)
+# Python Pain001 [![PyPI](https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge)](https://github.com/sebastienrousseau/pain001)
 
 ## Overview 📖
 
