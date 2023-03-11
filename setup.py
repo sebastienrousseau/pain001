@@ -39,7 +39,7 @@ TEST_DEPENDENCIES = [
 
 ]
 
-VERSION = '0.0.2'
+VERSION = '0.0.3'
 URL = 'https://github.com/sebastienrousseau/Pain001'
 
 setup(

@@ -73,6 +73,7 @@ jobs:
 
       # Generate the changelog based on git log and template file
       - name: Generate Changelog
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           # Append version information to CHANGELOG.md
           echo "## Release v${{ env.VERSION }} - $(date +'%Y-%m-%d')" >> ${{ github.workspace }}/CHANGELOG.md
@@ -92,15 +93,6 @@ jobs:
             echo "* [$link](${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ env.VERSION }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
           done
 
-      # Run the release workflow
-      - name: ❯ Run the release workflow 🚀
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: peter-evans/repository-dispatch@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          event-type: release
-          client-payload: '{"version": "${{ env.VERSION }}", "pkg_name": "${{ env.PKG_NAME }}"}'
   # Check code quality using flake8
   # lint:
   #   runs-on: ubuntu-latest
