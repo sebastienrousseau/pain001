@@ -74,25 +74,58 @@ def main(xml_file_path, csv_file_path):
              'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd')
 
     # Create CstmrCdtTrfInitn element
-    cstmr_cdt_trf_initn_element = ET.SubElement(root, 'CstmrCdtTrfInitn')
+    cstmr_cdt_trf_initn_element = ET.Element('CstmrCdtTrfInitn')
     root.append(cstmr_cdt_trf_initn_element)
 
     # Create new "GrpHdr" elements in the XML tree using data from the CSV file
     for row in data:
         GrpHdr_element = ET.Element('GrpHdr')
         for tag, column_name in mapping.items():
-            if tag == 'InitgPty':
-                if column_name in row:
-                    InitgPty_element = ET.Element('InitgPty')
-                    Nm_element = ET.Element('Nm')
-                    Nm_element.text = row[column_name]
-                    InitgPty_element.append(Nm_element)
-                    GrpHdr_element.append(InitgPty_element)
+            if '/' in tag:
+                tag, sub_tag = tag.split('/')
+                if tag == 'InitgPty':
+                    if column_name in row:
+                        InitgPty_element = ET.Element('InitgPty')
+                        child_element = ET.Element(sub_tag)
+                        child_element.text = row[column_name]
+                        InitgPty_element.append(child_element)
+                        GrpHdr_element.append(InitgPty_element)
             else:
                 child_element = ET.Element(tag)
                 child_element.text = row[column_name]
-                GrpHdr_element.append(child_element)
+                if tag == 'Nm' and 'InitgPty' not in mapping:
+                    # Wrap the Initiator Name with the InitgPty tag
+                    InitgPty_element = ET.Element('InitgPty')
+                    InitgPty_element.append(child_element)
+                    GrpHdr_element.append(InitgPty_element)
+                else:
+                    GrpHdr_element.append(child_element)
         cstmr_cdt_trf_initn_element.append(GrpHdr_element)
+
+        # Create new "PmtInf" elements in the XML tree using data from the CSV file
+        PmtInf_element = ET.Element('PmtInf')
+        for tag, column_name in mapping.items():
+            if '/' in tag:
+                tag, sub_tag = tag.split('/')
+                if tag == 'PmtTpInf':
+                    if column_name in row:
+                        PmtTpInf_element = ET.Element('PmtTpInf')
+                        child_element = ET.Element(sub_tag)
+                        child_element.text = row[column_name]
+                        PmtTpInf_element.append(child_element)
+                        PmtInf_element.append(PmtTpInf_element)
+            else:
+                child_element = ET.Element(tag)
+                child_element.text = row[column_name]
+                if tag == 'Nm' and 'PmtTpInf' not in mapping:
+                    # Wrap the Payment Type with the PmtTpInf tag
+                    PmtTpInf_element = ET.Element('PmtTpInf')
+                    PmtTpInf_element.append(child_element)
+                    PmtInf_element.append(PmtTpInf_element)
+                else:
+                    PmtInf_element.append(child_element)
+        cstmr_cdt_trf_initn_element.append(PmtInf_element)
+
 
     # Write the updated XML tree to a file
     updated_xml_file_path = os.path.splitext(
