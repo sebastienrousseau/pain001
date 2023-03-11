@@ -1,14 +1,18 @@
 name: Python Pain001
 
 on:
+  pull_request:
+    branches:
+      - main
+      - 'feat/*'
   push:
     branches:
       - main
-      - feat/*
+      - 'feat/*'
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
@@ -30,6 +34,7 @@ jobs:
 
       # Deploy to PyPI.
       - name: Deploy
+        # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: pypa/gh-action-pypi-publish@v1.3.1
         with:
           user: __token__
