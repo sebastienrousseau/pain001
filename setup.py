@@ -36,9 +36,7 @@ DEPENDENCIES = [
 ]
 
 TEST_DEPENDENCIES = [
-    'hypothesis',
-    'mock',
-    'python-Levenshtein',
+
 ]
 
 VERSION = '0.0.1'
@@ -77,9 +75,8 @@ setup(
 
     keywords='command line interface cli python pain001 interactive bash tool',
 
-    packages=find_packages('src'),
+    packages=['pain001'],
 
-    package_dir={'': 'src'},
 
     install_requires=DEPENDENCIES,
     tests_require=TEST_DEPENDENCIES,
