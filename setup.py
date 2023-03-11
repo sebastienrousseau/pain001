@@ -76,8 +76,9 @@ setup(
 
     keywords='command line interface cli python pain001 interactive bash tool',
 
-    packages=['pain001', 'Payment', 'Initiation', 'SEPA',
-              'Banking', 'Transfer', 'ISO20022', 'Credit', 'Bank'],
+    packages=find_packages('src'),
+
+    package_dir={'': 'src'},
 
     install_requires=DEPENDENCIES,
     tests_require=TEST_DEPENDENCIES,
