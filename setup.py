@@ -14,7 +14,8 @@
 
 """The setup.py file for Python Pain001."""
 
-from setuptools import setup
+from setuptools import setup, find_packages
+
 
 LONG_DESCRIPTION = """
 The Pain001 library is a Python package that generates a Customer-to-
