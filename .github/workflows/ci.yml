@@ -11,33 +11,88 @@ on:
       - 'feat/*'
 
 jobs:
+  # This job builds the distribution packages, and publishes them to PyPI
   build:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest]
         python-version: ["3.9", "3.10", "3.11"]
+    env:
+      TWINE_USERNAME: __token__
+      TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
     steps:
+      # Check out the repository code
       - uses: actions/checkout@v2
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: ❯ Set up Python 🐍
+        id: python
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
+
+      # Install dependencies
+      - name: ❯ Install dependencies 📦
         run: |
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
-      - name: Build distribution packages
+
+      # Build distribution packages
+      - name: ❯ Build distribution packages 🧰
         run: |
           python setup.py sdist bdist_wheel
-      - name: Publish distribution packages to PyPI
+
+      # Publish distribution packages to PyPI
+      - name: ❯ Publish distribution packages to PyPI 🚀
+        id: publish
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: pypa/gh-action-pypi-publish@v1.3.1
         with:
-          user: __token__
-          password: ${{ secrets.PYPI_API_TOKEN }}
+          user: ${{ env.TWINE_USERNAME }}
+          password: ${{ env.TWINE_PASSWORD }}
           packages_dir: dist
           verify_metadata: true
           skip_existing: true
 
+      # Generate the changelog based on git log and template file
+      - name: Generate Changelog
+        run: |
+          # Append version information to CHANGELOG.md
+          echo "## Release v${{ env.VERSION }} - $(date +'%Y-%m-%d')" >> ${{ github.workspace }}/CHANGELOG.md
+          # Copy content of template file to CHANGELOG.md
+          cat TEMPLATE.md >> ${{ github.workspace }}/CHANGELOG.md
+          # Append git log to CHANGELOG.md
+          echo "$(git log --pretty=format:'%s' --reverse $(git describe --tags --abbrev=0)..HEAD)" >> ${{ github.workspace }}/CHANGELOG.md
+          # Append empty line to CHANGELOG.md
+          echo "" >> ${{ github.workspace }}/CHANGELOG.md
+      # Append the artifact links to the changelog
+      - name: Append Artifact Links
+        run: |
+          echo "" >> ${{ github.workspace }}/CHANGELOG.md
+          echo "## Artifacts 🎁" >> ${{ github.workspace }}/CHANGELOG.md
+          for filename in dist/*; do
+            link="$(basename $filename)"
+            echo "* [$link](${{ github.server_url }}/${{ github.repository }}/releases/download/v${{ env.VERSION }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
+          done
+            # Create the release on GitHub Releases
+      - name: Create Release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: Python Pain001 v${{ env.VERSION }}
+          body_path: ${{ github.workspace }}/CHANGELOG.md
+          draft: false
+          prerelease: false
 
-
+      # Upload artifacts to the release
+      - name: Upload Release Artifacts
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: dist/*
+          asset_name: ${{ env.PKG_NAME }}-${{ env.VERSION }}.tar.gz
+          asset_content_type: application/gzip
