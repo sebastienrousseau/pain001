@@ -1,0 +1,11 @@
+site_name: Python Pain001
+theme: readthedocs
+markdown_extensions: [fenced_code]
+nav:
+    - Overview: index.md
+    - Installation: installation.md
+    - Benefits: benefits.md
+    - The Python Pain001 Guide: guide.md
+    - Using a CLI: using-cli.md
+    - Troubleshooting: troubleshooting.md
+    - Reference: api.md

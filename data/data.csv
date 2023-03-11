@@ -1,0 +1,2 @@
+id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,control_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,charge_bearer,payment_id,payment_amount,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information
+0001,2022-03-12T00:00:00.000Z,1,initiator1,payment1,TRF,true,1000.00,SEPA,2022-03-12,Debtor1,DE00000000000000001,BANK1,SLEV,OriginatorID1234,500.00,SPUEDE2UXXX,Creditor1,DE00000000000000002,Remittance1
