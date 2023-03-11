@@ -4,7 +4,7 @@
   xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
   <CstmrCdtTrfInitn>
     <GrpHdr>
-      <MsgId>Message-ID-{{id}}</MsgId>
+      <MsgId>1</MsgId>
       <CreDtTm>2010-11-11T09:30:47.000Z</CreDtTm>
       <NbOfTxs>2</NbOfTxs>
       <InitgPty>
