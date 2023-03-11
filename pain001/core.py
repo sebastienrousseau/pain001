@@ -51,6 +51,8 @@ def main(xml_file_path, csv_file_path):
         'CreDtTm': 'date',
         'NbOfTxs': 'nb_of_txs',
         'Nm': 'initiator_name',
+        'PmtInfId': 'payment_information_id',
+        'PmtMtd': 'payment_method',
     }
 
     # Load CSV data into a list of dictionaries
@@ -79,6 +81,8 @@ def main(xml_file_path, csv_file_path):
 
     # Create new "GrpHdr" elements in the XML tree using data from the CSV file
     for row in data:
+
+        # Create new "GrpHdr" elements in the XML tree using data from the CSV file
         GrpHdr_element = ET.Element('GrpHdr')
         for tag, column_name in mapping.items():
             if '/' in tag:
@@ -102,30 +106,153 @@ def main(xml_file_path, csv_file_path):
                     GrpHdr_element.append(child_element)
         cstmr_cdt_trf_initn_element.append(GrpHdr_element)
 
-        # Create new "PmtInf" elements in the XML tree using data from the CSV file
+        # Create new "PmtInf" element in the XML tree
         PmtInf_element = ET.Element('PmtInf')
-        for tag, column_name in mapping.items():
-            if '/' in tag:
-                tag, sub_tag = tag.split('/')
-                if tag == 'PmtTpInf':
-                    if column_name in row:
-                        PmtTpInf_element = ET.Element('PmtTpInf')
-                        child_element = ET.Element(sub_tag)
-                        child_element.text = row[column_name]
-                        PmtTpInf_element.append(child_element)
-                        PmtInf_element.append(PmtTpInf_element)
-            else:
-                child_element = ET.Element(tag)
-                child_element.text = row[column_name]
-                if tag == 'Nm' and 'PmtTpInf' not in mapping:
-                    # Wrap the Payment Type with the PmtTpInf tag
-                    PmtTpInf_element = ET.Element('PmtTpInf')
-                    PmtTpInf_element.append(child_element)
-                    PmtInf_element.append(PmtTpInf_element)
-                else:
-                    PmtInf_element.append(child_element)
-        cstmr_cdt_trf_initn_element.append(PmtInf_element)
 
+       # Create new "PmtInfId" element in the XML tree using data from the CSV file
+        child_element = ET.Element('PmtInfId')
+        # replace 'id' with the appropriate column name
+        child_element.text = row['id']
+        PmtInf_element.append(child_element)
+
+        # Create new "PmtMtd" element in the XML tree using data from the CSV file
+        child_element = ET.Element('PmtMtd')
+        # replace with the appropriate value
+        child_element.text = row['payment_information_id']
+        PmtInf_element.append(child_element)
+
+        # Create new "BtchBookg" element in the XML tree using data from the CSV file
+        child_element = ET.Element('BtchBookg')
+        # replace with the appropriate value
+        child_element.text = row['batch_booking']
+        PmtInf_element.append(child_element)
+
+        # Create new "NbOfTxs" element in the XML tree using data from the CSV file
+        child_element = ET.Element('NbOfTxs')
+        # replace with the appropriate value
+        child_element.text = row['nb_of_txs']
+        PmtInf_element.append(child_element)
+
+        # Create new "CtrlSum" element in the XML tree using data from the CSV file
+        child_element = ET.Element('CtrlSum')
+        # replace with the appropriate value
+        child_element.text = row['control_sum']
+        PmtInf_element.append(child_element)
+
+        # Create new "PmtTpInf" element in the XML tree using data from the CSV file
+        PmtTpInf_element = ET.Element('PmtTpInf')
+        child_element = ET.Element('SvcLvl')
+        child_element2 = ET.Element('Cd')
+        # replace with the appropriate value
+        child_element2.text = row['service_level_code']
+        child_element.append(child_element2)
+        PmtTpInf_element.append(child_element)
+        PmtInf_element.append(PmtTpInf_element)
+
+        # Create new "ReqdExctnDt" element in the XML tree using data from the CSV file
+        child_element = ET.Element('ReqdExctnDt')
+        # replace with the appropriate value
+        child_element.text = row['requested_execution_date']
+        PmtInf_element.append(child_element)
+
+        # Create new "Dbtr" element in the XML tree using data from the CSV file
+        Dbtr_element = ET.Element('Dbtr')
+        child_element = ET.Element('Nm')
+        # replace with the appropriate value
+        child_element.text = row['debtor_name']
+        Dbtr_element.append(child_element)
+        PmtInf_element.append(Dbtr_element)
+
+        # Create new "DbtrAcct" element in the XML tree using data from the CSV file
+        DbtrAcct_element = ET.Element('DbtrAcct')
+        child_element = ET.Element('Id')
+        child_element2 = ET.Element('IBAN')
+        # replace with the appropriate value
+        child_element2.text = row['debtor_account_IBAN']
+        child_element.append(child_element2)
+        DbtrAcct_element.append(child_element)
+        PmtInf_element.append(DbtrAcct_element)
+
+        # Create new "DbtrAgt" element in the XML tree using data from the CSV file
+        DbtrAgt_element = ET.Element('DbtrAgt')
+        child_element = ET.Element('FinInstnId')
+        child_element2 = ET.Element('BIC')
+        # replace with the appropriate value
+        child_element2.text = row['debtor_agent_BIC']
+        child_element.append(child_element2)
+        DbtrAgt_element.append(child_element)
+        PmtInf_element.append(DbtrAgt_element)
+
+        # Create new "ChrgBr" element in the XML tree using data from the CSV file
+        child_element = ET.Element('ChrgBr')
+        # replace with the appropriate value
+        child_element.text = row['charge_bearer']
+        PmtInf_element.append(child_element)
+
+        # Create new "CdtTrfTxInf" element in the XML tree using data from the CSV file
+        CdtTrfTxInf_element = ET.Element('CdtTrfTxInf')
+
+        # Create new "PmtId" element in the XML tree using data from the CSV file
+        PmtId_element = ET.Element('PmtId')
+        child_element = ET.Element('EndToEndId')
+        child_element.text = row['payment_id']
+        PmtId_element.append(child_element)
+        CdtTrfTxInf_element.append(PmtId_element)
+
+        # Create new "Amt" element in the XML tree using data from the CSV file
+        Amt_element = ET.Element('Amt')
+        child_element = ET.Element('InstdAmt')
+        child_element.text = row['payment_amount']
+        child_element.set('Ccy', row['currency'])
+        Amt_element.append(child_element)
+        CdtTrfTxInf_element.append(Amt_element)
+
+        # Create new "CdtrAgt" element in the XML tree using data from the CSV file
+        CdtrAgt_element = ET.Element('CdtrAgt')
+        child_element = ET.Element('FinInstnId')
+        child_element2 = ET.Element('BIC')
+        child_element2.text = row['creditor_agent_BIC']
+        child_element.append(child_element2)
+        CdtrAgt_element.append(child_element)
+        CdtTrfTxInf_element.append(CdtrAgt_element)
+
+        # Create new "Cdtr" element in the XML tree using data from the CSV file
+        Cdtr_element = ET.Element('Cdtr')
+        child_element = ET.Element('Nm')
+        child_element.text = row['creditor_name']
+        Cdtr_element.append(child_element)
+        CdtTrfTxInf_element.append(Cdtr_element)
+
+        # Create new "CdtrAcct" element in the XML tree using data from the CSV file
+        CdtrAcct_element = ET.Element('CdtrAcct')
+        child_element = ET.Element('Id')
+        child_element2 = ET.Element('IBAN')
+        child_element2.text = row['creditor_account_IBAN']
+        child_element.append(child_element2)
+        CdtrAcct_element.append(child_element)
+        CdtTrfTxInf_element.append(CdtrAcct_element)
+
+        # Create new "RmtInf" element in the XML tree using data from the CSV file
+        RmtInf_element = ET.Element('RmtInf')
+        child_element = ET.Element('Ustrd')
+        child_element.text = row['remittance_information']
+        RmtInf_element.append(child_element)
+        CdtTrfTxInf_element.append(RmtInf_element)
+
+        # Append the new CdtTrfTxInf element to the PmtInf element
+        PmtInf_element.append(CdtTrfTxInf_element)
+
+        # Append the new CdtrAgt element to the PmtInf element
+        CdtrAgt_element = ET.Element('CdtrAgt')
+        child_element = ET.Element('FinInstnId')
+        child_element2 = ET.Element('BIC')
+        child_element2.text = row['creditor_agent_BIC']
+        child_element.append(child_element2)
+        CdtrAgt_element.append(child_element)
+        PmtInf_element.append(CdtrAgt_element)
+
+        # Append the new PmtInf element to the CstmrCdtTrfInitn element
+        cstmr_cdt_trf_initn_element.append(PmtInf_element)
 
     # Write the updated XML tree to a file
     updated_xml_file_path = os.path.splitext(
