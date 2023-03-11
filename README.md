@@ -1,4 +1,4 @@
-# Pain001 [![Pain001](https://img.shields.io/pain001/pyversions/pain001.svg?style=plastic)](https://github.com/sebastienrousseau/pain001)
+# Pain001 [![Pain001](https://img.shields.io/pain001/pyversions/pain001.svg?style=for-the-badge)](https://github.com/sebastienrousseau/pain001)
 
 ## Overview 📖
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastian Rousseau.
+# Copyright (C) 2023 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -31,10 +31,7 @@ SHORT_DESCRIPTION = """
 Pain001 is a Python library for generating Customer-to-Bank Credit Transfer payloads in the ISO 20022 Standard's Pain.001.001.03 format from CSV files.""".strip()
 
 DEPENDENCIES = [
-    'csv',
-    'xml',
-    'os',
-    'sys',
+    'python-dateutil>=2.8.2',
 ]
 
 TEST_DEPENDENCIES = [
@@ -53,7 +50,7 @@ setup(
     long_description=LONG_DESCRIPTION,
     url=URL,
 
-    author='Sebastian Rousseau',
+    author='Sebastien Rousseau',
     author_email='sebastian.rousseau@gmail.com',
     license='Apache Software License',
 
@@ -66,10 +63,7 @@ setup(
         'License :: OSI Approved :: Apache Software License',
 
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

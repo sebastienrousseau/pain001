@@ -1,0 +1,28 @@
+name: Python Pain001
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["2.7", "3.5", "3.7", "3.8", "3.9", "3.10"]
+
+    steps:
+     # Checkout the repo.
+     - name: Checkout Python Pain001 repository
+       uses: actions/checkout@v3
+
+     # Set up Python environment.
+     - name: Set up Python ${{ matrix.python-version }}
+       uses: actions/setup-python@v4
+       with:
+         python-version: ${{ matrix.python-version }}
+
+     # Build Python Pain001 using the build.sh script.
+     - name: Run build script
+       shell: bash
+       run: ./.github/scripts/build.sh
+       env:
+         PYTHON_VERSION: ${{ matrix.python-version }}
