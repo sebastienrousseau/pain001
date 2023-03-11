@@ -12,30 +12,32 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest]
         python-version: ["3.9", "3.10", "3.11"]
-    defaults:
-      run:
-        shell: bash
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-          architecture: x64
-
-      # Test Python Pain001.
-      # - name: Test
-      #   run: pytest
-
-      # Deploy to PyPI.
-      - name: Deploy
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel
+          python -m pip install -r requirements.txt
+      - name: Build distribution packages
+        run: |
+          python setup.py sdist bdist_wheel
+      - name: Publish distribution packages to PyPI
         # if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: pypa/gh-action-pypi-publish@v1.3.1
         with:
           user: __token__
           password: ${{ secrets.PYPI_API_TOKEN }}
+          packages_dir: dist
+          verify_metadata: true
+          skip_existing: true
+
+
