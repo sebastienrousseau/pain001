@@ -29,10 +29,10 @@ jobs:
       #   run: pytest
 
       # Deploy to PyPI.
-      # - name: Deploy
-      #   uses: pypa/gh-action-pypi-publish@v1.3.1
-      #   with:
-      #     user: __token__
-      #     password: ${{ secrets.PYPI_API_TOKEN }}
-      #     distributions: "sdist bdist_wheel"
-      #     skip-existing: true
+      - name: Deploy
+        uses: pypa/gh-action-pypi-publish@v1.3.1
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          distributions: "sdist bdist_wheel"
+          skip-existing: true
