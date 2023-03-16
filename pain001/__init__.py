@@ -19,4 +19,4 @@ from __future__ import division
 from __future__ import print_function
 
 __all__ = ['Pain001']
-__version__ = '0.0.3'
+__version__ = '0.0.4'

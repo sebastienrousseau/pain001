@@ -1,4 +1,14 @@
-# Python Pain001 [![PyPI](https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge)](https://github.com/sebastienrousseau/pain001)
+<!-- markdownlint-disable MD033 MD041 -->
+
+<img src="https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/icon/ico-pain001.svg" alt="pain001 logo" width="261" align="right" />
+
+<!-- markdownlint-enable MD033 MD041 -->
+
+# Python Pain001
+
+![pain001 banner][banner]
+
+[![PyPI][pypi-badge]][3] [![License][license-badge]][1]
 
 ## Overview 📖
 
@@ -15,7 +25,8 @@ data in just a few simple steps.
 - Pain001 uses an XML template file and maps CSV column names to XML
   element tags to generate the XML file.
 - The CSV file must contain the payment data in the required format, and
-  the XML template file must exist. Otherwise, the function will raise a FileNotFoundError.
+  the XML template file must exist. Otherwise, the function will raise a
+  FileNotFoundError.
 - Pain001 includes several features, including batch booking, generation
   of an end-to-end payment ID, and support for multiple currencies.
 
@@ -85,5 +96,9 @@ of [Pain001][5] for their help and support.
 [0]: https://pain001.co
 [1]: https://opensource.org/license/apache-2-0/
 [2]: http://opensource.org/licenses/MIT
+[3]: https://github.com/sebastienrousseau/pain001
 [4]: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
+[banner]: https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg
+[license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
+[pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
