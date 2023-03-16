@@ -11,10 +11,8 @@ on:
       - 'feat/*'
 
 jobs:
-
   # This job reads the version number from setup.cfg and sets it as an environment variable
   version:
-    needs: test
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-version.outputs.version }}
@@ -27,7 +25,6 @@ jobs:
         id: set-version
         run: |
           echo "::set-output name=version::$(python -c 'import configparser; cfg = configparser.ConfigParser(); cfg.read("setup.cfg"); print(cfg.get("metadata", "version"))')"
-
   # This job builds the distribution packages, and publishes them to PyPI
   build:
     needs: version
