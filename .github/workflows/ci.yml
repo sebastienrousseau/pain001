@@ -11,8 +11,38 @@ on:
       - 'feat/*'
 
 jobs:
+  # This job lints the Python code using Flake8
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: ❯ Set up Python 🐍
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: ❯ Install Flake8
+        run: pip install flake8
+      - name: ❯ Lint Python code using Flake8
+        run: flake8 .
+
+  # This job tests the Python code using pytest
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: ❯ Set up Python 🐍
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+      - name: ❯ Install pytest
+        run: pip install pytest
+      - name: ❯ Run pytest
+        run: pytest
+
   # This job reads the version number from setup.cfg and sets it as an environment variable
   version:
+    needs: test
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.set-version.outputs.version }}
@@ -86,6 +116,7 @@ jobs:
 
       # Append the artifact links to the changelog
       - name: Append Artifact Links
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: |
           echo "" >> ${{ github.workspace }}/CHANGELOG.md
           echo "## Artifacts 🎁" >> ${{ github.workspace }}/CHANGELOG.md
@@ -108,14 +139,14 @@ jobs:
           draft: true
           prerelease: false
 
-      # Upload the distribution packages as release assets
-      - name: Upload Release Asset
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*
-          asset_name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.python-version }}-${{ matrix.os }}.whl
-          asset_content_type: application/zip
+      # # Upload the distribution packages as release assets
+      # - name: Upload Release Asset
+      #   if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      #   uses: actions/upload-release-asset@v1
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      #   with:
+      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
+      #     asset_path: ./dist/*
+      #     asset_name: ${{ env.PKG_NAME }}-${{ env.VERSION }}-${{ matrix.python-version }}-${{ matrix.os }}.whl
+      #     asset_content_type: application/zip
