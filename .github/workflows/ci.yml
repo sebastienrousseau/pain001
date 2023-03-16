@@ -11,34 +11,6 @@ on:
       - 'feat/*'
 
 jobs:
-  # This job lints the Python code using Flake8
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: ❯ Set up Python 🐍
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: '3.9'
-  #     - name: ❯ Install Flake8
-  #       run: pip install flake8
-  #     - name: ❯ Lint Python code using Flake8
-  #       run: flake8 .
-
-  # # This job tests the Python code using pytest
-  # test:
-  #   needs: lint
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - name: ❯ Set up Python 🐍
-  #       uses: actions/setup-python@v2
-  #       with:
-  #         python-version: '3.9'
-  #     - name: ❯ Install pytest
-  #       run: pip install pytest
-  #     - name: ❯ Run pytest
-  #       run: pytest
 
   # This job reads the version number from setup.cfg and sets it as an environment variable
   version:
