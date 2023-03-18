@@ -2,7 +2,6 @@ from pain001.core import validate_via_xsd
 import unittest
 import os
 import xml.etree.ElementTree as ET
-import xmlschema
 
 
 class TestValidateViaXsd(unittest.TestCase):
