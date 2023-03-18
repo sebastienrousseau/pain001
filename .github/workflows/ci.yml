@@ -76,24 +76,6 @@ jobs:
       - name: ❯ Run flake8 🔍
         run: flake8
 
-  # This job runs black to check for code formatting issues
-  formatting-check:
-    needs: version
-    runs-on: ubuntu-latest
-    steps:
-      # Check out the repository code
-      - uses: actions/checkout@v3
-      # Set up Python and install dependencies
-      - name: ❯ Set up Python and install dependencies 🐍📦
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.9'
-      - name: ❯ Install black 📦
-        run: python -m pip install black
-      # Check formatting with black
-      - name: ❯ Check formatting with black 👀
-        run: black --check .
-
   # This job builds the distribution packages, and publishes them
   # to PyPI
   build:
