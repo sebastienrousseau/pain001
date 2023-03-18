@@ -6,7 +6,7 @@
 
 # Python Pain001
 
-![pain001 banner][banner]
+![pain001 banner](https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg)
 
 ## Overview 📖
 
@@ -27,7 +27,3 @@ data in just a few simple steps.
   FileNotFoundError.
 - Pain001 includes several features, including batch booking, generation
   of an end-to-end payment ID, and support for multiple currencies.
-
-## Changelog 📚
-
-[banner]: https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg

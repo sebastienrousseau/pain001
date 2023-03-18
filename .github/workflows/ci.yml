@@ -83,24 +83,6 @@ jobs:
           python -m pip install --upgrade pip setuptools wheel
           python -m pip install -r requirements.txt
 
-      # Build distribution packages
-      - name: ❯ Build distribution packages 🧰
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          python setup.py sdist bdist_wheel
-
-      # Publish distribution packages to PyPI
-      - name: ❯ Publish distribution packages to PyPI 🚀
-        id: publish
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: pypa/gh-action-pypi-publish@v1.3.1
-        with:
-          user: ${{ env.TWINE_USERNAME }}
-          password: ${{ env.TWINE_PASSWORD }}
-          packages_dir: dist
-          verify_metadata: true
-          skip_existing: true
-
       # Update the version number based on the setup.cfg file
       - name: Update version number from setup.cfg file 📝
         id: update-version
@@ -121,6 +103,24 @@ jobs:
           echo "$(git log --pretty=format:'%s' --reverse $(git describe --tags --abbrev=0)..HEAD)" >> ${{ github.workspace }}/CHANGELOG.md
           # Append empty line to CHANGELOG.md
           echo "" >> ${{ github.workspace }}/CHANGELOG.md
+
+      # Build distribution packages
+      - name: ❯ Build distribution packages 🧰
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          python setup.py sdist bdist_wheel
+
+      # Publish distribution packages to PyPI
+      - name: ❯ Publish distribution packages to PyPI 🚀
+        id: publish
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: pypa/gh-action-pypi-publish@v1.3.1
+        with:
+          user: ${{ env.TWINE_USERNAME }}
+          password: ${{ env.TWINE_PASSWORD }}
+          packages_dir: dist
+          verify_metadata: true
+          skip_existing: true
 
       # Append artifact links to the changelog
       - name: Append Artifact Links 🔗

@@ -40,7 +40,7 @@ TEST_DEPENDENCIES = [
     'xmlschema>=1.8.0',
 ]
 
-VERSION = '0.0.7'
+VERSION = '0.0.8'
 URL = 'https://github.com/sebastienrousseau/Pain001'
 
 setup(
