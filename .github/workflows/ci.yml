@@ -139,7 +139,7 @@ jobs:
           tag_name: v${{ env.VERSION }}
           release_name: Release v${{ env.VERSION }}
           body_path: ${{ github.workspace }}/CHANGELOG.md
-          draft: true
+          draft: false
           prerelease: false
 
       - name: Upload Release Assets 📦
