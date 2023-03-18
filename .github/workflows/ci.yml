@@ -46,8 +46,8 @@ jobs:
           python -m pip install -r requirements.txt
           python -m pip install pytest pytest-cov
 
-      # Run pytest with code coverage measurement
-      - name: ❯ Run pytest with code coverage 🧪
+      # Run pytest
+      - name: ❯ Run pytest 🧪
         run: pytest --cov=pain001 --cov-report=xml
 
       # Upload code coverage report to Codecov
@@ -109,6 +109,32 @@ jobs:
           echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
         shell: /bin/bash -e {0}
 
+      # Generate the changelog based on git log and template file
+      - name: Generate Changelog 📚
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          # Append version information to CHANGELOG.md
+          echo "## Release v${{ env.VERSION }} - $(date +'%Y-%m-%d')" >> ${{ github.workspace }}/CHANGELOG.md
+          # Copy content of template file to CHANGELOG.md
+          cat TEMPLATE.md >> ${{ github.workspace }}/CHANGELOG.md
+          # Append git log to CHANGELOG.md
+          echo "$(git log --pretty=format:'%s' --reverse $(git describe --tags --abbrev=0)..HEAD)" >> ${{ github.workspace }}/CHANGELOG.md
+          # Append empty line to CHANGELOG.md
+          echo "" >> ${{ github.workspace }}/CHANGELOG.md
+
+      # Append artifact links to the changelog
+      - name: Append Artifact Links 🔗
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: |
+          echo "" >> ${{ github.workspace }}/CHANGELOG.md
+          echo "## Artifacts 🎁" >> ${{ github.workspace }}/CHANGELOG.md
+          for filename in dist/*; do
+            link="$(basename $filename)"
+            echo "* [$link](${{ env.RELEASES_URL }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
+          done
+        env:
+          RELEASES_URL: https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}
+
       # Create a release
       - name: Create Release 🚀
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -120,10 +146,9 @@ jobs:
           tag_name: v${{ env.VERSION }}
           release_name: Release v${{ env.VERSION }}
           body_path: ${{ github.workspace }}/CHANGELOG.md
-          draft: false
+          draft: true
           prerelease: false
 
-      # Upload release assets
       - name: Upload Release Assets 📦
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         env:
@@ -138,15 +163,3 @@ jobs:
               "${upload_url}?name=$(basename $file)"
           done
 
-      # Generate the changelog based on git log and template file
-      - name: Generate Changelog 📚
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          # Append version information to CHANGELOG.md
-          echo "## Release v${{ env.VERSION }} - $(date +'%Y-%m-%d')" >> ${{ github.workspace }}/CHANGELOG.md
-          # Copy content of template file to CHANGELOG.md
-          cat TEMPLATE.md >> ${{ github.workspace }}/CHANGELOG.md
-          # Append git log to CHANGELOG.md
-          echo "$(git log --pretty=format:'%s' --reverse $(git describe --tags --abbrev=0)..HEAD)" >> ${{ github.workspace }}/CHANGELOG.md
-          # Append empty line to CHANGELOG.md
-          echo "" >> ${{ github.workspace }}/CHANGELOG.md
