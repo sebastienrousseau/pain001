@@ -126,7 +126,7 @@ jobs:
             echo "* [$link](${{ env.RELEASES_URL }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
           done
         env:
-          RELEASES_URL: https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}
+          RELEASES_URL: https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/dist
 
       # Create a release
       - name: Create Release 🚀
