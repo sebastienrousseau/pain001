@@ -33,10 +33,11 @@ pain001 is a Python library for generating Customer-to-Bank Credit Transfer payl
 
 DEPENDENCIES = [
     'python-dateutil>=2.8.2',
+    'xmlschema>=1.8.0',
 ]
 
 TEST_DEPENDENCIES = [
-
+    'xmlschema>=1.8.0',
 ]
 
 VERSION = '0.0.7'
