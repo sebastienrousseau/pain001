@@ -4,11 +4,6 @@ on:
   pull_request:
     branches:
       - main
-      - 'feat/*'
-  push:
-    branches:
-      - main
-      - 'feat/*'
 
 jobs:
 
@@ -44,11 +39,18 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
-          python -m pip install pytest
+          python -m pip install pytest pytest-cov
 
-      # Run pytest
-      - name: ❯ Run pytest 🧪
-        run: pytest
+      # Run pytest with code coverage measurement
+      - name: ❯ Run pytest with code coverage 🧪
+        run: pytest --cov=pain001 --cov-report=xml
+
+      # Upload code coverage report to Codecov
+      - name: ❯ Upload code coverage report to Codecov 📊
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   # This job builds the distribution packages, and publishes them to PyPI
   build:
@@ -102,6 +104,35 @@ jobs:
           echo "VERSION=$NEW_VERSION" >> $GITHUB_ENV
         shell: /bin/bash -e {0}
 
+      # Create a release
+      - name: Create Release 🚀
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.VERSION }}
+          release_name: Release v${{ env.VERSION }}
+          body_path: ${{ github.workspace }}/CHANGELOG.md
+          draft: false
+          prerelease: false
+
+      # Upload release assets
+      - name: Upload Release Assets 📦
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          upload_url=${{ steps.create_release.outputs.upload_url }}
+          for file in dist/*; do
+            curl \
+              -H "Authorization: token ${GITHUB_TOKEN}" \
+              -H "Content-Type: $(file --mime-type -b $file)" \
+              --data-binary @$file \
+              "${upload_url}?name=$(basename $file)"
+          done
+
       # Generate the changelog based on git log and template file
       - name: Generate Changelog 📚
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -125,35 +156,4 @@ jobs:
             link="$(basename $filename)"
             echo "* [$link](${{ env.RELEASES_URL }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
           done
-        env:
-          RELEASES_URL: https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/dist
-
-      # Create a release
-      - name: Create Release 🚀
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: v${{ env.VERSION }}
-          release_name: Release v${{ env.VERSION }}
-          body_path: ${{ github.workspace }}/CHANGELOG.md
-          draft: false
-          prerelease: false
-
-      - name: Upload Release Assets 📦
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          upload_url=${{ steps.create_release.outputs.upload_url }}
-          for file in dist/*; do
-            curl \
-              -H "Authorization: token ${GITHUB_TOKEN}" \
-              -H "Content-Type: $(file --mime-type -b $file)" \
-              --data-binary @$file \
-              "${upload_url}?name=$(basename $file)"
-          done
-
 
