@@ -175,4 +175,3 @@ jobs:
             link="$(basename $filename)"
             echo "* [$link](${{ env.RELEASES_URL }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
           done
-
