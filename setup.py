@@ -12,24 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The setup.py file for Python Pain001."""
+"""The setup.py file for Python pain001."""
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 
 LONG_DESCRIPTION = """
-The Pain001 library is a Python package that generates a Customer-to-
+The pain001 library is a Python package that generates a Customer-to-
 Bank Credit Transfer payload in the pain.001.001.03 format from a CSV
 file.
 
 The package is named after the standard file format for SEPA and non-
 SEPA Credit Transfer, which is the Pain (payment initiation) format
-001.001.03. The Pain001 library provides a convenient way for developers
+001.001.03. The pain001 library provides a convenient way for developers
 to create payment files in this format.
 """.strip()
 
 SHORT_DESCRIPTION = """
-Pain001 is a Python library for generating Customer-to-Bank Credit Transfer payloads in the ISO 20022 Standard's Pain.001.001.03 format from CSV files.""".strip()
+pain001 is a Python library for generating Customer-to-Bank Credit Transfer payloads in the ISO 20022 Standard's Pain.001.001.03 format from CSV files.""".strip()
 
 DEPENDENCIES = [
     'python-dateutil>=2.8.2',
@@ -39,7 +39,7 @@ TEST_DEPENDENCIES = [
 
 ]
 
-VERSION = '0.0.6'
+VERSION = '0.0.7'
 URL = 'https://github.com/sebastienrousseau/Pain001'
 
 setup(
