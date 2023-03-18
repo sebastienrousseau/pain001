@@ -163,3 +163,13 @@ jobs:
               "${upload_url}?name=$(basename $file)"
           done
 
+      - name: Publish to GitHub Packages 🧭
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: docker://docker.pkg.github.com/actions/python/blank-container:latest
+        with:
+          args: |
+            pip install twine
+            twine upload --verbose --repository-url https://upload.github.com/ \
+              --username __token__ --password ${{ secrets.GITHUB_TOKEN }} \
+              dist/*
+
