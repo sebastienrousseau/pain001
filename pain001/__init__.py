@@ -12,11 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The Python Pain001 module."""
-
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
-__all__ = ['Pain001']
-__version__ = '0.0.6'
+"""The Python pain001 module."""
+__all__ = ['pain001']
+__version__ = '0.0.7'

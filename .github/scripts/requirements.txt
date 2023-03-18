@@ -1,4 +1,3 @@
-csv
 pip
 pylint
 pytest
@@ -6,5 +5,4 @@ pytest-cov
 pytest-pylint
 pytest-runner
 setuptools
-xml.dom.minidom
-xml.etree.ElementTree
+xmlschema

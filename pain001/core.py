@@ -19,6 +19,7 @@ import os
 import sys
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as minidom
+import xmlschema
 
 
 def validate_csv_data(data):
@@ -105,7 +106,18 @@ def create_xml_element(parent, tag, text=None, attributes=None):
     return element
 
 
-def main(xml_file_path, csv_file_path):
+def validate_via_xsd(xml_file_path, xsd_file_path):
+    # Load XML and XSD files
+    xml_tree = ET.parse(xml_file_path)
+    xsd = xmlschema.XMLSchema(xsd_file_path)
+
+    # Validate XML file against XSD schema
+    is_valid = xsd.is_valid(xml_tree)
+
+    return is_valid
+
+
+def main(xml_file_path, xsd_file_path, csv_file_path):
     """This function, when called, generates a Customer-to-Bank Credit
     Transfer payload in a pain.001.001.03 format from a CSV file.
 
@@ -139,6 +151,9 @@ def main(xml_file_path, csv_file_path):
 
     # Load CSV data into a list of dictionaries
     data = []
+    if not os.path.exists(csv_file_path):
+        raise FileNotFoundError(f"CSV file '{csv_file_path}' does not exist.")
+
     with open(csv_file_path, 'r') as csv_file:
         reader = csv.DictReader(csv_file)
         for row in reader:
@@ -150,7 +165,7 @@ def main(xml_file_path, csv_file_path):
         sys.exit(1)
 
     # Print out CSV data for debugging
-    print(f"CSV data: {data}")
+    # print(f"CSV data: {data}")
 
     # Register the namespace prefixes
     ET.register_namespace('', 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03')
@@ -308,9 +323,17 @@ def main(xml_file_path, csv_file_path):
         dom = minidom.parseString(xml_string)
         f.write(dom.toprettyxml())
 
+    # Validate the updated XML file against the XSD schema
+    is_valid = validate_via_xsd(updated_xml_file_path, xsd_file_path)
+    if not is_valid:
+        print("❌ Error: Invalid XML data.")
+        sys.exit(1)
+    else:
+        print(f"❯ XML located at {updated_xml_file_path} is valid.")
+
 
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print('Usage: python Pain001.py <xml_file_path> <csv_file_path>')
+    if len(sys.argv) < 4:
+        print('Usage: python3 -m pain001 <xml_file_path> <xsd_file_path> <csv_file_path>')
         sys.exit(1)
-    main(sys.argv[1], sys.argv[2])
+    main(sys.argv[1], sys.argv[2], sys.argv[3])

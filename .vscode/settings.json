@@ -2,11 +2,15 @@
     "cSpell.words": [
         "bdist",
         "configparser",
+        "dateutil",
+        "DEUTDEDBFRA",
         "github",
         "GITHUB",
         "pypa",
         "PYPI",
+        "pytest",
         "sdist",
-        "setuptools"
+        "setuptools",
+        "xmlschema"
     ]
 }
