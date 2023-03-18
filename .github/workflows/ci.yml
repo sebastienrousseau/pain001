@@ -12,7 +12,8 @@ on:
 
 jobs:
 
-  # This job reads the version number from setup.cfg and sets it as an environment variable
+  # This job reads the version number from setup.cfg and sets it as an
+  # environment variable
   version:
     runs-on: ubuntu-latest
     outputs:
@@ -93,7 +94,8 @@ jobs:
       - name: ❯ Check formatting with black 👀
         run: black --check .
 
-  # This job builds the distribution packages, and publishes them to PyPI
+  # This job builds the distribution packages, and publishes them
+  # to PyPI
   build:
     needs: [version, pytest]
     runs-on: ubuntu-latest
