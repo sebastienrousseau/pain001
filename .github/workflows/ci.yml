@@ -150,11 +150,9 @@ jobs:
           echo "$(git log --pretty=format:'%s' --reverse $(git describe --tags --abbrev=0)..HEAD)" >> ${{ github.workspace }}/CHANGELOG.md
           # Append empty line to CHANGELOG.md
           echo "" >> ${{ github.workspace }}/CHANGELOG.md
-
           # Generate code coverage report
           coverage run --source=pain001 -m pytest
           coverage xml -o coverage.xml
-
           # Append code coverage report to changelog
           echo "## Code Coverage Report 📊" >> ${{ github.workspace }}/CHANGELOG.md
           echo "<details><summary>Click to expand</summary>" >> ${{ github.workspace }}/CHANGELOG.md
@@ -165,13 +163,3 @@ jobs:
           echo "" >> ${{ github.workspace }}/CHANGELOG.md
           echo "</details>" >> ${{ github.workspace }}/CHANGELOG.md
 
-      # Append artifact links to the changelog
-      - name: Append Artifact Links 🔗
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: |
-          echo "" >> ${{ github.workspace }}/CHANGELOG.md
-          echo "## Artifacts 🎁" >> ${{ github.workspace }}/CHANGELOG.md
-          for filename in dist/*; do
-            link="$(basename $filename)"
-            echo "* [$link](${{ env.RELEASES_URL }}/$link)" >> ${{ github.workspace }}/CHANGELOG.md
-          done
