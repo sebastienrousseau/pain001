@@ -167,47 +167,33 @@ def main(xml_file_path, csv_file_path):
     for elem in root.iter():
         elem.tag = elem.tag.split('}', 1)[-1]
 
-    xml_string = ET.tostring(root, encoding='UTF-8', xml_declaration=True)
-    # print(xml_string.decode())
-
     # Create CstmrCdtTrfInitn element
     cstmr_cdt_trf_initn_element = ET.Element('CstmrCdtTrfInitn')
     root.append(cstmr_cdt_trf_initn_element)
 
+    # Create GrpHdr element and append it to CstmrCdtTrfInitn
+    GrpHdr_element = ET.Element('GrpHdr')
+    cstmr_cdt_trf_initn_element.append(GrpHdr_element)
+
+    # Add the MsgId, CreDtTm, and NbOfTxs elements to the GrpHdr element
+    for xml_tag, csv_column in mapping.items():
+        if xml_tag in ['MsgId', 'CreDtTm', 'NbOfTxs']:
+            create_xml_element(GrpHdr_element, xml_tag, data[0][csv_column])
+
+    # Create new "InitgPty" element in the XML tree using data from the CSV file
+    InitgPty_element = ET.Element('InitgPty')
+    create_xml_element(InitgPty_element, 'Nm', data[0]['initiator_name'])
+    GrpHdr_element.append(InitgPty_element)
+
     for row in data:
-        # Create new "GrpHdr" element in the XML tree
-        GrpHdr_element = ET.Element('GrpHdr')
-
-        # Create new "MsgId" element in the XML tree
-        create_xml_element(GrpHdr_element, 'MsgId',
-                           row['payment_information_id'])
-
-        # Create new "CreDtTm" element in the XML tree
-        create_xml_element(GrpHdr_element, 'CreDtTm', row['date'])
-
-        # Append the new GrpHdr element to the CstmrCdtTrfInitn element
-        cstmr_cdt_trf_initn_element.append(GrpHdr_element)
-
-        # Create new "NbOfTxs" element in the XML tree using data from the CSV file
-        create_xml_element(GrpHdr_element, 'NbOfTxs', row['nb_of_txs'])
-
-        # Create new "InitgPty" element in the XML tree
-        # Create new "InitgPty" element in the XML tree using data from the CSV file
-        InitgPty_element = ET.Element('InitgPty')
-        child_element = ET.Element('Nm')
-        child_element.text = row['initiator_name']
-        InitgPty_element.append(child_element)
-        GrpHdr_element.append(InitgPty_element)
-
-        # Create new "PmtInf" element in the XML tree
+        # Create new "PmtInf" element in the XML tree using data from the CSV file
         PmtInf_element = ET.Element('PmtInf')
+        cstmr_cdt_trf_initn_element.append(PmtInf_element)
 
-        # Create new "PmtInfId" element in the XML tree
-        create_xml_element(PmtInf_element, 'PmtInfId',
-                           row['payment_information_id'])
-
-        # Create new "PmtMtd" element in the XML tree using data from the CSV file
-        create_xml_element(PmtInf_element, 'PmtMtd', row['payment_method'])
+        # Add the PmtInfId and PmtMtd elements to the PmtInf element
+        for xml_tag, csv_column in mapping.items():
+            if xml_tag in ['PmtInfId', 'PmtMtd']:
+                create_xml_element(PmtInf_element, xml_tag, row[csv_column])
 
         # Create new "BtchBookg" element in the XML tree using data from the CSV file
         create_xml_element(PmtInf_element, 'BtchBookg',
