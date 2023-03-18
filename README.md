@@ -4,39 +4,53 @@
 
 <!-- markdownlint-enable MD033 MD041 -->
 
-# Python Pain001
+# Python pain001
 
 ![pain001 banner][banner]
 
-[![PyPI][pypi-badge]][3] [![License][license-badge]][1]
+[![PyPI][pypi-badge]][3] [![License][license-badge]][1] [![Codecov][codecov-badge]][6]
 
 ## Overview 📖
 
-Pain001 is a powerful library that allows you to generate a Customer-to
--Bank Credit Transfer payload in the pain.001.001.03 format from a CSV
-file. With Pain001, you can easily create professional-looking payment
-data in just a few simple steps.
+The pain001 Python package is a CLI tool that makes it easy to automate
+the creation of ISO 20022 compliant payment files (XML PAIN.001.03)
+directly from a CSV file. With pain001, you can easily create payment
+transactions files in just a few simple steps.
 
 ## Features ✨
 
-- Pain001 is a command-line interface (CLI) that when called, generates
-  a Customer-to-Bank Credit Transfer payload in a pain.001.001.03 format
-  from a CSV file.
-- Pain001 uses an XML template file and maps CSV column names to XML
-  element tags to generate the XML file.
-- The CSV file must contain the payment data in the required format, and
-  the XML template file must exist. Otherwise, the function will raise a
-  FileNotFoundError.
-- Pain001 includes several features, including batch booking, generation
-  of an end-to-end payment ID, and support for multiple currencies.
+- **Simplified file creation:** The library generates payment files in
+  the PAIN.001.001.03 format quickly and efficiently.
+- **Ensuring the Highest Quality and Compliance:** The library
+  guarantees that all created payment files follow ISO 20022 standards.
+- **Enhanced efficiency:** The Pain001 library automates the creation of
+  PAIN.001.001.03 files, freeing developers to focus on other aspects of
+  their projects.
+- **Improved accuracy:** By providing precise data, the library reduces
+  errors in payment file creation.
+- **Seamless integration:** As a Python package, the pain001 library is
+  compatible with various Python-based applications and easily
+  integrates into any existing projects.
+- **Cross-border compatibility:** The library supports both Single Euro
+  Payments Area (SEPA) and non-SEPA credit transfers, making it
+  versatile for use in different countries and regions.
+- **Time-saving:** The automated file creation process reduces the time
+  spent on manual data entry and file generation, increasing overall
+  productivity.
+- **Scalable solution:** The Pain001 library can handle varying volumes
+  of payment files, making it suitable for businesses of different sizes
+  and transaction volumes.
+- **Customisable:** The library allows developers to customise the
+  output, making it adaptable to specific business requirements and
+  preferences.
 
 ## Getting Started 🚀
 
-It takes just a few seconds to get up and running with `Pain001`.
+It takes just a few seconds to get up and running with `pain001`.
 
 ### Installation
 
-To install Pain001, run `pip install pain001`
+To install pain001, run `pip install pain001`
 
 ### Documentation
 
@@ -44,31 +58,50 @@ To install Pain001, run `pip install pain001`
 
 ## Usage 📖
 
-With `Pain001`, you can quickly and easily generate a Customer-to-Bank
-Credit Transfer payload in the pain.001.001.03 format from a CSV file.
-To get started, simply call the main function with the path of your XML
-template file and the path of your CSV file containing the payment data.
+`pain001` can be used in two ways:
 
-Here's an example of how to use Pain001:
+### Command Line Interface (CLI)
+
+After installation, you can run `pain001` directly from the command
+line. Simply call the main function with the path of your XML template
+file, XSD schema file and the path of your CSV file containing the
+payment data.
+
+```bash
+python3 -m pain001 ./templates/template.xml ./templates/template.xsd ./templates/template.csv
+```
+
+### Embedded in an Application
+
+To embed pain001 in a new or existing application, import the main
+function and use it in your code.
+
+Here's an example:
 
 ```python
 from pain001 import main
 
 if __name__ == '__main__':
   xml_file_path = 'template.xml'
+  xsd_file_path = 'schema.xsd'
   csv_file_path = 'data.csv'
-  main(xml_file_path, csv_file_path)
+  main(xml_file_path, xsd_file_path, csv_file_path)
 ```
 
-Once you have your script set up, you can run it from the command line
-using the following command:
+### Validation
 
-```bash
-python -m pain001 ./templates/template.xml ./templates/template.csv
+To validate the generated XML file against a given xsd schema, use the
+following method:
+
+```python
+from pain001.core import validate_xml_against_xsd
+
+xml_file = 'generated.xml'
+xsd_file = 'schema.xsd'
+
+is_valid = validate_xml_against_xsd(xml_file, xsd_file)
+print(f"XML validation result: {is_valid}")
 ```
-
-For more information on Pain001 features, including batch booking and
-end-to-end payment ID generation, please see the Pain001 usage page.
 
 ## License 📝
 
@@ -80,7 +113,7 @@ Apache License (Version 2.0).
 
 ## Contribution 🤝
 
-We welcome contributions to `Pain001`. Please see the
+We welcome contributions to `pain001`. Please see the
 [contributing instructions][4] for more information.
 
 Unless you explicitly state otherwise, any contribution intentionally
@@ -91,7 +124,7 @@ additional terms or conditions.
 ## Acknowledgements 💙
 
 We would like to extend a big thank you to all the awesome contributors
-of [Pain001][5] for their help and support.
+of [pain001][5] for their help and support.
 
 [0]: https://pain001.co
 [1]: https://opensource.org/license/apache-2-0/
@@ -99,6 +132,8 @@ of [Pain001][5] for their help and support.
 [3]: https://github.com/sebastienrousseau/pain001
 [4]: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
+[6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 [banner]: https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg
+[codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
