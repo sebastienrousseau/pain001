@@ -61,7 +61,10 @@ def validate_csv_data(data):
         for column, data_type in required_columns.items():
             value = row.get(column)
             if value is None or value.strip() == "":
-                print(f"Error: Missing value for column '{column}' " f"in row: {row}")
+                print(
+                    f"Error: Missing value for column '{column}' "
+                    f"in row: {row}"
+                )
                 return False
 
             try:
@@ -94,8 +97,8 @@ def create_xml_element(parent, tag, text=None, attributes=None):
         to.
         tag (str): The tag name of the new element.
         text (str, optional): The text content of the new element.
-        attributes (dict, optional): A dictionary of attribute names and
-        values for the new element.
+        attributes (dict, optional): A dictionary of attribute names
+        and values for the new element.
 
     Returns:
         Element: The created XML element.
@@ -143,7 +146,8 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
         FileNotFoundError: If the CSV file does not exist.
     """
 
-    # Define mapping dictionary between XML element tags and CSV column names
+    # Define mapping dictionary between XML element tags and CSV column
+    # names
     mapping = {
         "MsgId": "id",
         "CreDtTm": "date",
@@ -156,7 +160,9 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
     # Load CSV data into a list of dictionaries
     data = []
     if not os.path.exists(csv_file_path):
-        raise FileNotFoundError(f"CSV file '{csv_file_path}' does not exist.")
+        raise FileNotFoundError(
+            f"CSV file '{csv_file_path}' does not exist."
+        )
 
     with open(csv_file_path, "r") as csv_file:
         reader = csv.DictReader(csv_file)
@@ -172,8 +178,12 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
     # print(f"CSV data: {data}")
 
     # Register the namespace prefixes
-    ET.register_namespace("", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03")
-    ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")
+    ET.register_namespace(
+        "", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
+    )
+    ET.register_namespace(
+        "xsi", "http://www.w3.org/2001/XMLSchema-instance"
+    )
 
     # Create the root element and set its attributes
     root = ET.Element("Document")
@@ -181,7 +191,8 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
     root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
     root.set(
         "xsi:schemaLocation",
-        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 " "pain.001.001.03.xsd",
+        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 "
+        "pain.001.001.03.xsd",
     )
 
     # Remove the namespace prefix from the Document element
@@ -199,12 +210,16 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
     # Add the MsgId, CreDtTm, and NbOfTxs elements to the GrpHdr element
     for xml_tag, csv_column in mapping.items():
         if xml_tag in ["MsgId", "CreDtTm", "NbOfTxs"]:
-            create_xml_element(GrpHdr_element, xml_tag, data[0][csv_column])
+            create_xml_element(
+                GrpHdr_element, xml_tag, data[0][csv_column]
+            )
 
     # Create new "InitgPty" element in the XML tree using data from the
     # CSV file
     InitgPty_element = ET.Element("InitgPty")
-    create_xml_element(InitgPty_element, "Nm", data[0]["initiator_name"])
+    create_xml_element(
+        InitgPty_element, "Nm", data[0]["initiator_name"]
+    )
     GrpHdr_element.append(InitgPty_element)
 
     for row in data:
@@ -216,11 +231,14 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
         # Add the PmtInfId and PmtMtd elements to the PmtInf element
         for xml_tag, csv_column in mapping.items():
             if xml_tag in ["PmtInfId", "PmtMtd"]:
-                create_xml_element(PmtInf_element, xml_tag, row[csv_column])
+                create_xml_element(
+                    PmtInf_element, xml_tag, row[csv_column]
+                )
 
         # Create new "BtchBookg" element in the XML tree using data
         # from the CSV file
-        create_xml_element(PmtInf_element, "BtchBookg", row["batch_booking"].lower())
+        create_xml_element(PmtInf_element, "BtchBookg",
+                           row["batch_booking"].lower())
 
         # Create new "NbOfTxs" element in the XML tree using data from
         # the CSV file
@@ -228,7 +246,9 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
 
         # Create new "CtrlSum" element in the XML tree using data from
         # the CSV file
-        create_xml_element(PmtInf_element, "CtrlSum", row["control_sum"])
+        create_xml_element(
+            PmtInf_element, "CtrlSum", row["control_sum"]
+        )
 
         # Create new "PmtTpInf" element in the XML tree using data from
         # the CSV file
@@ -337,10 +357,13 @@ def main(xml_file_path, xsd_file_path, csv_file_path):
         cstmr_cdt_trf_initn_element.append(PmtInf_element)
 
     # Write the updated XML tree to a file
-    updated_xml_file_path = os.path.splitext(xml_file_path)[0] + "_updated.xml"
-    with open(updated_xml_file_path, "w") as f:
+    updated_xml_file_path = os.path.splitext(
+        xml_file_path)[0] + "_updated.xml"
+    with open(
+            updated_xml_file_path, "w") as f:
         xml_string = ET.tostring(root, encoding="utf-8")
-        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_string.decode(
+        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        + xml_string.decode(
             "utf-8"
         )
         dom = minidom.parseString(xml_string)

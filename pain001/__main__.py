@@ -45,8 +45,8 @@ Usage:
 python3 -m pain001 <xml_file_path> <xsd_file_path> <csv_file_path>
 
 The first argument is the path of the XML template file. The second
-argument is the path of the XSD template file. The third argument is the
-path of the CSV file containing the payment data."""
+argument is the path of the XSD template file. The third argument is
+the path of the CSV file containing the payment data."""
 
 
 def main():
@@ -55,10 +55,18 @@ def main():
     python3 -m pain001 <xml_file_path> <xsd_file_path> <csv_file_path>.
     """
 
-    parser = argparse.ArgumentParser(description="Generate Pain.001 file from CSV data")
-    parser.add_argument("xml_file_path", help="Path to XML template file")
-    parser.add_argument("xsd_file_path", help="Path to XSD template file")
-    parser.add_argument("csv_file_path", help="Path to CSV data file")
+    parser = argparse.ArgumentParser(
+        description="Generate Pain.001 file from CSV data"
+    )
+    parser.add_argument(
+        "xml_file_path", help="Path to XML template file"
+    )
+    parser.add_argument(
+        "xsd_file_path", help="Path to XSD template file"
+    )
+    parser.add_argument(
+        "csv_file_path", help="Path to CSV data file"
+    )
     args = parser.parse_args()
 
     if not os.path.isfile(args.xml_file_path):
@@ -73,7 +81,9 @@ def main():
         print("The CSV file does not exist.")
         sys.exit(1)
 
-    core.main(args.xml_file_path, args.xsd_file_path, args.csv_file_path)
+    core.main(
+        args.xml_file_path, args.xsd_file_path, args.csv_file_path
+    )
 
 
 if __name__ == "__main__":

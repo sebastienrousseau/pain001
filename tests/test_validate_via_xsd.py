@@ -19,21 +19,29 @@ class TestValidateViaXsd(unittest.TestCase):
 
         # Create invalid XML test file
         with open(self.invalid_xml_file, 'w') as f:
-            f.write('''<root>
-                            <invalidElement>Invalid data</invalidElement>
-                        </root>''')
+            f.write('''
+            <root>
+                <invalidElement>Invalid data</invalidElement>
+            </root>
+            ''')
 
         # Create test XSD schema file
         with open(self.xsd_file, 'w') as f:
-            f.write('''<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
-                            <xs:element name="root">
-                                <xs:complexType>
-                                    <xs:sequence>
-                                        <xs:element name="element" type="xs:string" />
-                                    </xs:sequence>
-                                </xs:complexType>
+            f.write('''
+            <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+                <xs:element name="root">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="element">
+                                <xs:simpleType>
+                                    <xs:restriction base="xs:string"/>
+                                </xs:simpleType>
                             </xs:element>
-                        </xs:schema>''')
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:schema>
+            ''')
 
     def tearDown(self):
         os.remove(self.valid_xml_file)
@@ -44,4 +52,6 @@ class TestValidateViaXsd(unittest.TestCase):
         assert validate_via_xsd(self.valid_xml_file, self.xsd_file)
 
     def test_invalid_xml(self):
-        assert not validate_via_xsd(self.invalid_xml_file, self.xsd_file)
+        assert not validate_via_xsd(
+            self.invalid_xml_file, self.xsd_file
+        )
