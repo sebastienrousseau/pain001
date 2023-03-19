@@ -48,7 +48,7 @@ TEST_DEPENDENCIES = [
 ]
 
 VERSION = '0.0.10'
-URL = 'https://github.com/sebastienrousseau/Pain001'
+URL = 'https://github.com/sebastienrousseau/pain001'
 
 setup(
     name='pain001',
@@ -63,9 +63,10 @@ setup(
 
     classifiers=[
         'Development Status :: 4 - Beta',
-
+        'Intended Audience :: Developers',
         'Intended Audience :: Financial and Insurance Industry',
         'Topic :: Software Development :: Libraries :: Python Modules',
+        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
