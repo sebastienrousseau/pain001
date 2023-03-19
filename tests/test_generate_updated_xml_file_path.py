@@ -1,4 +1,4 @@
-from pain001.generate_updated_xml_file_path import (
+from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
 

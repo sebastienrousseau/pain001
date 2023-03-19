@@ -1,5 +1,5 @@
 import csv
-from pain001.load_csv_data import load_csv_data
+from pain001.csv.load_csv_data import load_csv_data
 
 # Test if the CSV data is loaded correctly
 

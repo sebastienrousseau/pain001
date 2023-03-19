@@ -1,9 +1,8 @@
-from unittest.mock import patch
 import io
-import sys
 import pytest
-
+import sys
 from pain001.__main__ import main
+from unittest.mock import patch
 
 
 class TestMain:

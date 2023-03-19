@@ -1,20 +1,35 @@
+# Copyright (C) 2023 Sebastien Rousseau.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import sys
 
 # Import the XML libraries
 import xml.etree.ElementTree as ET
 
-from pain001.create_root_element import create_root_element
-from pain001.create_xml_element import create_xml_element
-from pain001.generate_updated_xml_file_path import (
-    generate_updated_xml_file_path,
-)
-from pain001.write_xml_to_file import write_xml_to_file
-from pain001.validate_via_xsd import validate_via_xsd
+# Import the functions from the other modules
+from .create_root_element import create_root_element
+from .create_xml_element import create_xml_element
+from .generate_updated_xml_file_path import generate_updated_xml_file_path
+from .validate_via_xsd import validate_via_xsd
+from .write_xml_to_file import write_xml_to_file
 
 
 # XML generator function that creates the XML file from the CSV data
 # and the mapping dictionary between XML tags and CSV columns names and
 # writes it to a file in the same directory as the CSV file
+
 
 def xml_generator(data, mapping, xml_file_path, xsd_file_path):
     # Create the root element and set its attributes
@@ -56,9 +71,7 @@ def xml_generator(data, mapping, xml_file_path, xsd_file_path):
         # Add the PmtInfId and PmtMtd elements to the PmtInf element
         for xml_tag, csv_column in mapping.items():
             if xml_tag in ["PmtInfId", "PmtMtd"]:
-                create_xml_element(
-                    PmtInf_element, xml_tag, row[csv_column]
-                )
+                create_xml_element(PmtInf_element, xml_tag, row[csv_column])
 
         # Create new "BtchBookg" element in the XML tree using data
         # from the CSV file
@@ -71,9 +84,7 @@ def xml_generator(data, mapping, xml_file_path, xsd_file_path):
 
         # Create new "CtrlSum" element in the XML tree using data from
         # the CSV file
-        create_xml_element(
-            PmtInf_element, "CtrlSum", row["control_sum"]
-        )
+        create_xml_element(PmtInf_element, "CtrlSum", row["control_sum"])
 
         # Create new "PmtTpInf" element in the XML tree using data from
         # the CSV file

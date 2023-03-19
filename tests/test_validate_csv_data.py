@@ -1,5 +1,5 @@
 import unittest
-from pain001.validate_csv_data import validate_csv_data
+from pain001.csv.validate_csv_data import validate_csv_data
 
 # Test if the CSV data is validated correctly
 

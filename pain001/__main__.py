@@ -59,15 +59,9 @@ def main(xml_file_path=None, xsd_file_path=None, csv_file_path=None):
         parser = argparse.ArgumentParser(
             description="Generate Pain.001 file from CSV data"
         )
-        parser.add_argument(
-            "xml_file_path", help="Path to XML template file"
-        )
-        parser.add_argument(
-            "xsd_file_path", help="Path to XSD template file"
-        )
-        parser.add_argument(
-            "csv_file_path", help="Path to CSV data file"
-        )
+        parser.add_argument("xml_file_path", help="Path to XML template file")
+        parser.add_argument("xsd_file_path", help="Path to XSD template file")
+        parser.add_argument("csv_file_path", help="Path to CSV data file")
         args = parser.parse_args()
 
         xml_file_path = args.xml_file_path

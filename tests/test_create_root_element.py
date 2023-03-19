@@ -1,4 +1,4 @@
-from pain001.create_root_element import create_root_element
+from pain001.xml.create_root_element import create_root_element
 import xml.etree.ElementTree as ET
 
 # Test if the root element is created correctly
