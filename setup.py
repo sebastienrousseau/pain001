@@ -26,8 +26,10 @@ file.
 
 The package is named after the standard file format for SEPA and non-
 SEPA Credit Transfer, which is the Pain (payment initiation) format
-001.001.03. The pain001 library provides a convenient way for developers
-to create payment files in this format.
+001.001.03.
+
+The pain001 library provides a convenient way for developers to create
+payment files in this format.
 """.strip()
 
 SHORT_DESCRIPTION = """
@@ -45,8 +47,8 @@ TEST_DEPENDENCIES = [
     'xmlschema>=1.8.0',
 ]
 
-VERSION = '0.0.9'
-URL = 'https://github.com/sebastienrousseau/Pain001'
+VERSION = '0.0.10'
+URL = 'https://github.com/sebastienrousseau/pain001'
 
 setup(
     name='pain001',
@@ -61,25 +63,22 @@ setup(
 
     classifiers=[
         'Development Status :: 4 - Beta',
-
         'Intended Audience :: Developers',
+        'Intended Audience :: Financial and Insurance Industry',
         'Topic :: Software Development :: Libraries :: Python Modules',
-
         'License :: OSI Approved :: Apache Software License',
-
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-
-
         'Operating System :: OS Independent',
         'Operating System :: POSIX',
         'Operating System :: MacOS',
         'Operating System :: Unix',
     ],
 
-    keywords='command line interface cli csv python pain001 sepa',
+    keywords='iso 20022 pain.001 credit transfer financial banking \
+        payments csv sepa',
 
     packages=['pain001'],
 

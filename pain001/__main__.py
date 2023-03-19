@@ -22,7 +22,7 @@ This allows using Pain001 with third-party libraries without modifying
 their code.
 """
 
-from . import core
+from .core import process_files
 
 import os
 import sys
@@ -49,41 +49,44 @@ argument is the path of the XSD template file. The third argument is
 the path of the CSV file containing the payment data."""
 
 
-def main():
+def main(xml_file_path=None, xsd_file_path=None, csv_file_path=None):
     """
     Entrypoint for pain001 when invoked as a module with
     python3 -m pain001 <xml_file_path> <xsd_file_path> <csv_file_path>.
     """
 
-    parser = argparse.ArgumentParser(
-        description="Generate Pain.001 file from CSV data"
-    )
-    parser.add_argument(
-        "xml_file_path", help="Path to XML template file"
-    )
-    parser.add_argument(
-        "xsd_file_path", help="Path to XSD template file"
-    )
-    parser.add_argument(
-        "csv_file_path", help="Path to CSV data file"
-    )
-    args = parser.parse_args()
+    if xml_file_path is None or xsd_file_path is None or csv_file_path is None:
+        parser = argparse.ArgumentParser(
+            description="Generate Pain.001 file from CSV data"
+        )
+        parser.add_argument(
+            "xml_file_path", help="Path to XML template file"
+        )
+        parser.add_argument(
+            "xsd_file_path", help="Path to XSD template file"
+        )
+        parser.add_argument(
+            "csv_file_path", help="Path to CSV data file"
+        )
+        args = parser.parse_args()
 
-    if not os.path.isfile(args.xml_file_path):
+        xml_file_path = args.xml_file_path
+        xsd_file_path = args.xsd_file_path
+        csv_file_path = args.csv_file_path
+
+    if not os.path.isfile(xml_file_path):
         print("The XML template file does not exist.")
         sys.exit(1)
 
-    if not os.path.isfile(args.xsd_file_path):
+    if not os.path.isfile(xsd_file_path):
         print("The XSD template file does not exist.")
         sys.exit(1)
 
-    if not os.path.isfile(args.csv_file_path):
-        print("The CSV file does not exist.")
+    if not os.path.isfile(csv_file_path):
+        print(f"The CSV file '{csv_file_path}' does not exist.")
         sys.exit(1)
 
-    core.main(
-        args.xml_file_path, args.xsd_file_path, args.csv_file_path
-    )
+    process_files(xml_file_path, xsd_file_path, csv_file_path)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,0 @@
-site_name: Python Pain001
-theme: readthedocs
-markdown_extensions: [fenced_code]
-nav:
-    - Overview: index.md
