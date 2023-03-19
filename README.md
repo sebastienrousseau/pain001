@@ -176,23 +176,23 @@ of [pain001][5] for their help and support.
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 
-[10]: docs/Bank-to-Customer-Cash-Management/Messages/BankToCustomerAccountReportV10/camt.052.001.10.md
-[11]: docs/Bank-to-Customer-Cash-Management/Messages/BankToCustomerStatementV10/camt.053.001.10.md
-[12]: docs/Bank-to-Customer-Cash-Management/Messages/BankToCustomerDebitCreditNotificationV10/camt.054.001.10.md
-[13]: docs/Bank-to-Customer-Cash-Management/Messages/AccountReportingRequestV06/camt.060.001.06.md
-[14]: docs/pacs.002.001.12.md
-[15]: docs/pacs.003.001.09.md
-[16]: docs/pacs.004.001.11.md
-[17]: docs/pacs.007.001.11.md
-[18]: docs/pacs.008.001.10.md
-[19]: docs/pacs.009.001.10.md
-[20]: docs/pacs.010.001.05.md
-[21]: docs/pacs.028.001.05.md
-[22]: docs/pain.001.001.11.md
-[23]: docs/pain.002.001.12.md
-[24]: docs/pain.007.001.11.md
-[25]: docs/pain.008.001.10.md
-[26]: docs/pain.001.001.03.md
+[10]: docs/bank-to-customer-cash-management/messages/banktocustomeraccountreportv10/camt.052.001.10.md
+[11]: docs/bank-to-customer-cash-management/messages/banktocustomerstatementv10/camt.053.001.10.md
+[12]: docs/bank-to-customer-cash-management/messages/banktocustomerdebitcreditnotificationv10/camt.054.001.10.md
+[13]: docs/bank-to-customer-cash-management/messages/accountreportingrequestv06/camt.060.001.06.md
+[14]: docs/payments-clearing-and-settlement/messages/fitofipaymentstatusreportv12/pacs.002.001.12.md
+[15]: docs/payments-clearing-and-settlement/messages/fitoficustomerdirectdebitv09/pacs.003.001.09.md
+[16]: docs/payments-clearing-and-settlement/messages/paymentreturnv11/pacs.004.001.11.md
+[17]: docs/payments-clearing-and-settlement/messages/fitofipaymentreversalv11/pacs.007.001.11.md
+[18]: docs/payments-clearing-and-settlement/messages/fitoficustomercredittransferv10/pacs.008.001.10.md
+[19]: docs/payments-clearing-and-settlement/messages/financialinstitutioncredittransferv10/pacs.009.001.10.md
+[20]: docs/payments-clearing-and-settlement/messages/financialinstitutiondirectdebitv05/pacs.010.001.05.md
+[21]: docs/payments-clearing-and-settlement/messages/fitofipaymentstatusrequestv05/pacs.028.001.05.md
+[22]: docs/payments-initiation/messages/customercredittransferinitiationv11/pain.001.001.11.md
+[23]: docs/payments-initiation/messages/customerpaymentstatusreportv12/pain.002.001.12.md
+[24]: docs/payments-initiation/messages/customerpaymentreversalv11/pain.007.001.11.md
+[25]: docs/payments-initiation/messages/customerdirectdebitinitiationv10/pain.008.001.10.md
+[26]: docs/payments-initiation/messages/customercredittransferinitiationv03/pain.001.001.03.md
 
 [banner]: https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
