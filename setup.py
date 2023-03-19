@@ -66,7 +66,6 @@ setup(
 
         'Intended Audience :: Financial and Insurance Industry',
         'Topic :: Software Development :: Libraries :: Python Modules',
-        'License :: OSI Approved :: Apache Software License',
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
