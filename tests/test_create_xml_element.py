@@ -1,6 +1,8 @@
 import unittest
 import xml.etree.ElementTree as ET
-from pain001.core import create_xml_element
+from pain001.create_xml_element import create_xml_element
+
+# Test if the XML element is created correctly
 
 
 class TestCreateXmlElement(unittest.TestCase):

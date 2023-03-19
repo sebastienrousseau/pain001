@@ -1,6 +1,8 @@
-from pain001.core import validate_via_xsd
 import unittest
 import os
+from pain001.validate_via_xsd import validate_via_xsd
+
+# Test if the XML file is validated correctly against the XSD schema
 
 
 class TestValidateViaXsd(unittest.TestCase):

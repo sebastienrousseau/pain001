@@ -1,5 +1,7 @@
-from pain001.core import validate_csv_data
 import unittest
+from pain001.validate_csv_data import validate_csv_data
+
+# Test if the CSV data is validated correctly
 
 
 class TestValidateCsvData(unittest.TestCase):
