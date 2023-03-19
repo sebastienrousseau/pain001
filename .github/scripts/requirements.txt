@@ -1,8 +1,0 @@
-pip
-pylint
-pytest
-pytest-cov
-pytest-pylint
-pytest-runner
-setuptools
-xmlschema

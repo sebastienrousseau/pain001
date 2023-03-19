@@ -24,7 +24,7 @@ from pain001.register_namespaces import register_namespaces
 from pain001.xml_generator import xml_generator
 
 
-def main(xml_file_path, xsd_file_path, csv_file_path):
+def process_files(xml_file_path, xsd_file_path, csv_file_path):
     """This function, when called, generates a Customer-to-Bank Credit
     Transfer payload in a pain.001.001.03 format from a CSV file.
 
@@ -82,4 +82,4 @@ if __name__ == "__main__":
             "<xsd_file_path> <csv_file_path>"
         )
         sys.exit(1)
-    main(sys.argv[1], sys.argv[2], sys.argv[3])
+    process_files(sys.argv[1], sys.argv[2], sys.argv[3])

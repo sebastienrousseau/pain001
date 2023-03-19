@@ -3,6 +3,7 @@
         "bdist",
         "configparser",
         "cstmr",
+        "Customisable",
         "dateutil",
         "DEUTDEDBFRA",
         "github",

@@ -4,7 +4,7 @@
 
 <!-- markdownlint-enable MD033 MD041 -->
 
-# Python Pain001
+# Python pain001
 
 ![pain001 banner](https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg)
 
@@ -21,7 +21,7 @@ transactions files in just a few simple steps.
   the PAIN.001.001.03 format quickly and efficiently.
 - **Ensuring the Highest Quality and Compliance:** The library
   guarantees that all created payment files follow ISO 20022 standards.
-- **Enhanced efficiency:** The Pain001 library automates the creation of
+- **Enhanced efficiency:** The pain001 library automates the creation of
   PAIN.001.001.03 files, freeing developers to focus on other aspects of
   their projects.
 - **Improved accuracy:** By providing precise data, the library reduces
@@ -35,7 +35,7 @@ transactions files in just a few simple steps.
 - **Time-saving:** The automated file creation process reduces the time
   spent on manual data entry and file generation, increasing overall
   productivity.
-- **Scalable solution:** The Pain001 library can handle varying volumes
+- **Scalable solution:** The pain001 library can handle varying volumes
   of payment files, making it suitable for businesses of different sizes
   and transaction volumes.
 - **Customisable:** The library allows developers to customise the
