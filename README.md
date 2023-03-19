@@ -44,6 +44,48 @@ transactions files in just a few simple steps.
   output, making it adaptable to specific business requirements and
   preferences.
 
+## Supported messages 📬
+
+This section gives access to the documentation related to the ISO 20022
+message definitions supported by `pain001`.
+
+### Bank-to-Customer Cash Management
+
+Set of messages used to request and provide account information for
+reconciliation and cash positioning between an account servicer and its
+customer.
+
+- [ ] **camt.052.001.10**: [BankToCustomerAccountReportV10][10]
+- [ ] **camt.053.001.10**: [BankToCustomerStatementV10][11]
+- [ ] **camt.054.001.10**: [BankToCustomerDebitCreditNotificationV10][12]
+- [ ] **camt.060.001.06**: [BankToCustomerAccountReportV06][13]
+
+### Payments Clearing and Settlement
+
+Set of messages used between financial institutions for the clearing and
+settlement of payment transactions.
+
+- [ ] **pacs.002.001.12**: [FIToFIPaymentStatusReportV12][14]
+- [ ] **pacs.003.001.09**: [FIToFICustomerCreditTransferV09][15]
+- [ ] **pacs.004.001.11**: [FIToFICustomerDirectDebitV11][16]
+- [ ] **pacs.007.001.11**: [FIToFIPaymentReversalV11][17]
+- [ ] **pacs.008.001.10**: [CustomerPaymentStatusReportV10][18]
+- [ ] **pacs.009.001.10**: [CustomerDirectDebitInitiationV10][19]
+- [ ] **pacs.010.001.05**: [CustomerPaymentReversalV05][20]
+- [ ] **pacs.028.001.05**: [FIToFIPaymentCancellationRequestV05][21]
+
+### Payments Initiation
+
+Set of messages exchanged between a debtor (or buyer) and its bank or
+between a creditor (or seller) and its bank to initiate, collect, manage
+and monitor payments.
+
+- [ ] **pain.001.001.11**: [CustomerCreditTransferInitiationV11][22]
+- [ ] **pain.002.001.12**: [CustomerDirectDebitInitiationV12][23]
+- [ ] **pain.007.001.11**: [CustomerPaymentReversalV11][24]
+- [ ] **pain.008.001.10**: [CustomerPaymentStatusReportV10][25]
+- [x] **pain.001.001.03**: [CustomerCreditTransferInitiationV3][26]
+
 ## Getting Started 🚀
 
 It takes just a few seconds to get up and running with `pain001`.
@@ -133,6 +175,25 @@ of [pain001][5] for their help and support.
 [4]: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
+
+[10]: docs/Bank-to-Customer-Cash-Management/Messages/BankToCustomerAccountReportV10/camt.052.001.10.md
+[11]: docs/Bank-to-Customer-Cash-Management/Messages/BankToCustomerStatementV10/camt.053.001.10.md
+[12]: docs/Bank-to-Customer-Cash-Management/Messages/BankToCustomerDebitCreditNotificationV10/camt.054.001.10.md
+[13]: docs/Bank-to-Customer-Cash-Management/Messages/AccountReportingRequestV06/camt.060.001.06.md
+[14]: docs/pacs.002.001.12.md
+[15]: docs/pacs.003.001.09.md
+[16]: docs/pacs.004.001.11.md
+[17]: docs/pacs.007.001.11.md
+[18]: docs/pacs.008.001.10.md
+[19]: docs/pacs.009.001.10.md
+[20]: docs/pacs.010.001.05.md
+[21]: docs/pacs.028.001.05.md
+[22]: docs/pain.001.001.11.md
+[23]: docs/pain.002.001.12.md
+[24]: docs/pain.007.001.11.md
+[25]: docs/pain.008.001.10.md
+[26]: docs/pain.001.001.03.md
+
 [banner]: https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
