@@ -1,6 +1,6 @@
 import unittest
 import os
-from pain001.validate_via_xsd import validate_via_xsd
+from pain001.xml.validate_via_xsd import validate_via_xsd
 
 # Test if the XML file is validated correctly against the XSD schema
 

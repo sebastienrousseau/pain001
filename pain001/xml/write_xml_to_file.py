@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+
 # Copyright (C) 2023 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,6 +15,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The Python pain001 module."""
-__all__ = ["pain001"]
-__version__ = "0.0.11"
+from xml.dom import minidom
+
+# Write XML to file with pretty formatting (indentation)
+
+
+def write_xml_to_file(xml_file_path, root):
+    with open(xml_file_path, "w") as f:
+        xml_string = ET.tostring(root, encoding="utf-8")
+        xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
+        xml_string = xml_declaration + xml_string.decode("utf-8")
+
+        dom = minidom.parseString(xml_string)
+        f.write(dom.toprettyxml())

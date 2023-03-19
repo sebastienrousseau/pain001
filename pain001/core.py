@@ -18,10 +18,10 @@
 import sys
 
 # Import the pain001 library functions
-from pain001.validate_csv_data import validate_csv_data
-from pain001.load_csv_data import load_csv_data
-from pain001.register_namespaces import register_namespaces
-from pain001.xml_generator import xml_generator
+from .csv.validate_csv_data import validate_csv_data
+from .csv.load_csv_data import load_csv_data
+from .xml.register_namespaces import register_namespaces
+from .xml.xml_generator import xml_generator
 
 
 def process_files(xml_file_path, xsd_file_path, csv_file_path):

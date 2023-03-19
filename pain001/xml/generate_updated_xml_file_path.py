@@ -13,6 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The Python pain001 module."""
-__all__ = ["pain001"]
-__version__ = "0.0.11"
+import os
+
+# Generate the path to the updated XML file based on the path to the
+# original XML file
+
+
+def generate_updated_xml_file_path(xml_file_path):
+    return os.path.splitext(xml_file_path)[0] + "_updated.xml"
