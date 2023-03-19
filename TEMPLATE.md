@@ -10,20 +10,34 @@
 
 ## Overview 📖
 
-Pain001 is a powerful library that allows you to generate a Customer-to
--Bank Credit Transfer payload in the pain.001.001.03 format from a CSV
-file. With Pain001, you can easily create professional-looking payment
-data in just a few simple steps.
+The pain001 Python package is a CLI tool that makes it easy to automate
+the creation of ISO 20022 compliant payment files (XML PAIN.001.03)
+directly from a CSV file. With pain001, you can easily create payment
+transactions files in just a few simple steps.
 
 ## Features ✨
 
-- Pain001 is a command-line interface (CLI) that when called, generates
-  a Customer-to-Bank Credit Transfer payload in a pain.001.001.03 format
-  from a CSV file.
-- Pain001 uses an XML template file and maps CSV column names to XML
-  element tags to generate the XML file.
-- The CSV file must contain the payment data in the required format, and
-  the XML template file must exist. Otherwise, the function will raise a
-  FileNotFoundError.
-- Pain001 includes several features, including batch booking, generation
-  of an end-to-end payment ID, and support for multiple currencies.
+- **Simplified file creation:** The library generates payment files in
+  the PAIN.001.001.03 format quickly and efficiently.
+- **Ensuring the Highest Quality and Compliance:** The library
+  guarantees that all created payment files follow ISO 20022 standards.
+- **Enhanced efficiency:** The Pain001 library automates the creation of
+  PAIN.001.001.03 files, freeing developers to focus on other aspects of
+  their projects.
+- **Improved accuracy:** By providing precise data, the library reduces
+  errors in payment file creation.
+- **Seamless integration:** As a Python package, the pain001 library is
+  compatible with various Python-based applications and easily
+  integrates into any existing projects.
+- **Cross-border compatibility:** The library supports both Single Euro
+  Payments Area (SEPA) and non-SEPA credit transfers, making it
+  versatile for use in different countries and regions.
+- **Time-saving:** The automated file creation process reduces the time
+  spent on manual data entry and file generation, increasing overall
+  productivity.
+- **Scalable solution:** The Pain001 library can handle varying volumes
+  of payment files, making it suitable for businesses of different sizes
+  and transaction volumes.
+- **Customisable:** The library allows developers to customise the
+  output, making it adaptable to specific business requirements and
+  preferences.

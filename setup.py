@@ -8,7 +8,9 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+#
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
@@ -29,7 +31,10 @@ to create payment files in this format.
 """.strip()
 
 SHORT_DESCRIPTION = """
-pain001 is a Python library for generating Customer-to-Bank Credit Transfer payloads in the ISO 20022 Standard's Pain.001.001.03 format from CSV files.""".strip()
+pain001 is a Python library that makes it easy to automate the creation
+of ISO 20022 compliant payment files (XML PAIN.001.03) directly from a
+CSV file.
+""".strip()
 
 DEPENDENCIES = [
     'python-dateutil>=2.8.2',
@@ -40,7 +45,7 @@ TEST_DEPENDENCIES = [
     'xmlschema>=1.8.0',
 ]
 
-VERSION = '0.0.8'
+VERSION = '0.0.9'
 URL = 'https://github.com/sebastienrousseau/Pain001'
 
 setup(
@@ -74,7 +79,7 @@ setup(
         'Operating System :: Unix',
     ],
 
-    keywords='command line interface cli python pain001 interactive bash tool',
+    keywords='command line interface cli csv python pain001 sepa',
 
     packages=['pain001'],
 
