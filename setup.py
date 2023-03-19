@@ -64,21 +64,13 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
 
-        'Intended Audience :: Developers',
         'Intended Audience :: Financial and Insurance Industry',
-        'Intended Audience :: Information Technology',
-        'Topic :: Office/Business :: Financial',
         'Topic :: Software Development :: Libraries :: Python Modules',
-
         'License :: OSI Approved :: Apache Software License',
-        'License :: OSI Approved :: MIT License'
-
         'Programming Language :: Python',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
-
-
         'Operating System :: OS Independent',
         'Operating System :: POSIX',
         'Operating System :: MacOS',
