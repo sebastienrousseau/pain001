@@ -77,7 +77,8 @@ setup(
         'Operating System :: Unix',
     ],
 
-    keywords='iso 20022 pain.001 credit transfer financial banking payments csv sepa',
+    keywords='iso 20022 pain.001 credit transfer financial banking \
+        payments csv sepa',
 
     packages=['pain001'],
 
