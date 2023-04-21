@@ -1,12 +1,12 @@
 <!-- markdownlint-disable MD033 MD041 -->
 
-<img src="https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/icon/ico-pain001.svg" alt="pain001 logo" width="261" align="right" />
+<img src="https://kura.pro/pain001/images/logos/pain001.svg" alt="pain001 logo" width="261" align="right" />
 
 <!-- markdownlint-enable MD033 MD041 -->
 
 # Python pain001
 
-![pain001 banner](https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg)
+![pain001 banner](https://kura.pro/pain001/images/titles/title-pain001.svg)
 
 ## Overview 📖
 

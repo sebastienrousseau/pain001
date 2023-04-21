@@ -1,6 +1,6 @@
 <!-- markdownlint-disable MD033 MD041 -->
 
-<img src="https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/icon/ico-pain001.svg" alt="pain001 logo" width="261" align="right" />
+<img src="https://kura.pro/pain001/images/logos/pain001.svg" alt="pain001 logo" width="261" align="right" />
 
 <!-- markdownlint-enable MD033 MD041 -->
 
@@ -194,7 +194,7 @@ of [pain001][5] for their help and support.
 [25]: docs/payments-initiation/messages/customerdirectdebitinitiationv10/pain.008.001.10.md
 [26]: docs/payments-initiation/messages/customercredittransferinitiationv03/pain.001.001.03.md
 
-[banner]: https://raw.githubusercontent.com/sebastienrousseau/vault/main/assets/pain001/title/title-pain001.svg
+[banner]: https://kura.pro/pain001/images/titles/title-pain001.svg
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
