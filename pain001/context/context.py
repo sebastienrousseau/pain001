@@ -81,16 +81,18 @@ class Context:
 
         if log_level.strip().upper() == "DEBUG":
             self.log_level = logging.DEBUG
-        elif log_level.strip().upper() == "ERROR":
-            self.log_level = logging.ERROR
-        elif log_level.strip().upper() == "FATAL":
-            self.log_level = logging.FATAL
         elif log_level.strip().upper() == "INFO":
             self.log_level = logging.INFO
-        elif log_level.strip().upper() == "UNKNOWN":
-            self.log_level = logging.UNKNOWN
         elif log_level.strip().upper() == "WARNING":
             self.log_level = logging.WARNING
+        elif log_level.strip().upper() == "ERROR":
+            self.log_level = logging.ERROR
+        elif log_level.strip().upper() == "CRITICAL":
+            self.log_level = logging.CRITICAL
+        elif log_level.strip().upper() == "FATAL":
+            self.log_level = logging.FATAL
+        elif log_level.strip().upper() == "UNKNOWN":
+            self.log_level = logging.UNKNOWN
         else:
             raise Exception("Invalid log level")
 
