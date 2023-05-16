@@ -41,8 +41,8 @@ class Context:
             A Context instance.
         """
         if Context.instance is None:
-            Context.instance = Context()
-            return Context.instance
+            Context()
+        return Context.instance
 
     def __init__(self):
         """Initializes the class and creates a logger.
