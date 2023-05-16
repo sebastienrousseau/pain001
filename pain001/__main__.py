@@ -58,8 +58,8 @@ def main(xml_file_path=None, xsd_file_path=None, csv_file_path=None):
     """
 
     """Initialize the context and log a message."""
-    context.set_instance(context())
-    logger = context.get_instance().get_logger()
+    context.Context.set_instance(context())
+    logger = context.Context.get_instance().get_logger()
 
     if xml_file_path is None or xsd_file_path is None or csv_file_path is None:
         parser = argparse.ArgumentParser(

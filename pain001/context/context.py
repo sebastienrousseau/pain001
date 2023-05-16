@@ -29,7 +29,7 @@ class Context:
     """
 
     instance = None
-    name = None
+    name = ''
     log_level = logging.INFO
     logger = None
 
