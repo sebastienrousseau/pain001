@@ -23,7 +23,9 @@ their code.
 """
 
 from .core import process_files
+from .context import Context
 
+import logging
 import os
 import sys
 import argparse
@@ -55,6 +57,10 @@ def main(xml_file_path=None, xsd_file_path=None, csv_file_path=None):
     python3 -m pain001 <xml_file_path> <xsd_file_path> <csv_file_path>.
     """
 
+    """Initialize the Context and log a message."""
+    Context.set_instance(Context())
+    logger = Context.get_instance().get_logger()
+
     if xml_file_path is None or xsd_file_path is None or csv_file_path is None:
         parser = argparse.ArgumentParser(
             description="Generate Pain.001 file from CSV data"
@@ -69,15 +75,15 @@ def main(xml_file_path=None, xsd_file_path=None, csv_file_path=None):
         csv_file_path = args.csv_file_path
 
     if not os.path.isfile(xml_file_path):
-        print("The XML template file does not exist.")
+        logger.info("The XML template file does not exist.")
         sys.exit(1)
 
     if not os.path.isfile(xsd_file_path):
-        print("The XSD template file does not exist.")
+        logger.info("The XSD template file does not exist.")
         sys.exit(1)
 
     if not os.path.isfile(csv_file_path):
-        print(f"The CSV file '{csv_file_path}' does not exist.")
+        logger.info(f"The CSV file '{csv_file_path}' does not exist.")
         sys.exit(1)
 
     process_files(xml_file_path, xsd_file_path, csv_file_path)
