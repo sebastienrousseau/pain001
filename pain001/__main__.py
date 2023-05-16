@@ -23,7 +23,7 @@ their code.
 """
 
 from .core import process_files
-from .context import Context
+from context import Context
 
 import logging
 import os
