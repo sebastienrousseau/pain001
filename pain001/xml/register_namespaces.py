@@ -20,6 +20,18 @@ import xml.etree.ElementTree as ET
 # are created (XML tags and CSV columns mapping)
 
 
-def register_namespaces():
-    ET.register_namespace("", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03")
+def register_namespaces(payment_initiation_message_type):
+    """This function registers the namespaces for the payment initiation message type.
+    Args:
+        payment_initiation_message_type (str): The payment initiation message type.
+
+    Returns:
+        None.
+    """
+
+    # Create the namespace for the payment initiation message type.
+    namespace = "urn:iso:std:iso:20022:tech:xsd:" + payment_initiation_message_type
+
+    # Register the namespaces.
+    ET.register_namespace("", namespace)
     ET.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")

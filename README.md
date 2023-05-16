@@ -110,7 +110,7 @@ file, XSD schema file and the path of your CSV file containing the
 payment data.
 
 ```bash
-python3 -m pain001 ./templates/template.xml ./templates/template.xsd ./templates/template.csv
+python3 -m pain001 "pain001.001.003" ./templates/template.xml ./templates/template.xsd ./templates/template.csv
 ```
 
 ### Embedded in an Application

@@ -31,9 +31,11 @@ from .write_xml_to_file import write_xml_to_file
 # writes it to a file in the same directory as the CSV file
 
 
-def xml_generator(data, mapping, xml_file_path, xsd_file_path):
+def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path, xsd_file_path):
     # Create the root element and set its attributes
-    root = create_root_element()
+    root = create_root_element(payment_initiation_message_type)
+
+    print(ET.tostring(root))
 
     # Remove the namespace prefix from the Document element
     for elem in root.iter():
