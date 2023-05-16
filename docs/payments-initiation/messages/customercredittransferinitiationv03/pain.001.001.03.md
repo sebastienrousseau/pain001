@@ -19,7 +19,10 @@ related to the complexity, speed, and cost of executing credit transfers.
 
 ## Market Opportunity
 
-The adoption of `pain.001.001.03` presents a significant market opportunity for financial institutions. By implementing this message format, organizations can:
+The adoption of `pain.001.001.03` presents a significant market
+opportunity for financial institutions.
+
+By implementing this message format, organizations can:
 
 - Enhance customer experience by offering faster and more transparent transactions
 - Improve operational efficiency and reduce costs associated with manual processing
