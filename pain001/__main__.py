@@ -23,7 +23,7 @@ their code.
 """
 
 from .core import process_files
-from context import Context
+from context import context
 
 import logging
 import os
@@ -57,9 +57,9 @@ def main(xml_file_path=None, xsd_file_path=None, csv_file_path=None):
     python3 -m pain001 <xml_file_path> <xsd_file_path> <csv_file_path>.
     """
 
-    """Initialize the Context and log a message."""
-    Context.set_instance(Context())
-    logger = Context.get_instance().get_logger()
+    """Initialize the context and log a message."""
+    context.set_instance(context())
+    logger = context.get_instance().get_logger()
 
     if xml_file_path is None or xsd_file_path is None or csv_file_path is None:
         parser = argparse.ArgumentParser(
