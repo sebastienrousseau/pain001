@@ -35,7 +35,7 @@ def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path,
     # Create the root element and set its attributes
     root = create_root_element(payment_initiation_message_type)
 
-    print(ET.tostring(root))
+    # print(ET.tostring(root))
 
     # Remove the namespace prefix from the Document element
     for elem in root.iter():

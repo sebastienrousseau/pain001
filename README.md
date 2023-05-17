@@ -1,6 +1,12 @@
 <!-- markdownlint-disable MD033 MD041 -->
 
-<img src="https://kura.pro/pain001/images/logos/pain001.svg" alt="pain001 logo" width="261" align="right" />
+<img
+  src="https://kura.pro/pain001/images/logos/pain001.svg"
+  alt="pain001 logo"
+  height="261"
+  width="261"
+  align="right"
+/>
 
 <!-- markdownlint-enable MD033 MD041 -->
 
@@ -84,7 +90,8 @@ and monitor payments.
 - [ ] **pain.002.001.12**: [CustomerDirectDebitInitiationV12][23]
 - [ ] **pain.007.001.11**: [CustomerPaymentReversalV11][24]
 - [ ] **pain.008.001.10**: [CustomerPaymentStatusReportV10][25]
-- [x] **pain.001.001.03**: [CustomerCreditTransferInitiationV3][26]
+- [x] **pain.001.001.03**: [CustomerCreditTransferInitiationV03][26]
+- [x] **pain.001.001.09**: [CustomerCreditTransferInitiationV09][27]
 
 ## Getting Started 🚀
 
@@ -110,7 +117,7 @@ file, XSD schema file and the path of your CSV file containing the
 payment data.
 
 ```bash
-python3 -m pain001 "pain001.001.003" ./templates/template.xml ./templates/template.xsd ./templates/template.csv
+python3 -m pain001 "pain.001.001.03" ./templates/template.xml ./templates/template.xsd ./templates/template.csv
 ```
 
 ### Embedded in an Application
@@ -188,11 +195,13 @@ of [pain001][5] for their help and support.
 [19]: docs/payments-clearing-and-settlement/messages/financialinstitutioncredittransferv10/pacs.009.001.10.md
 [20]: docs/payments-clearing-and-settlement/messages/financialinstitutiondirectdebitv05/pacs.010.001.05.md
 [21]: docs/payments-clearing-and-settlement/messages/fitofipaymentstatusrequestv05/pacs.028.001.05.md
-[22]: docs/payments-initiation/messages/customercredittransferinitiationv11/pain.001.001.11.md
+[22]: docs/payments-initiation/messages/CustomerCreditTransferInitiationV11/pain.001.001.11.md
 [23]: docs/payments-initiation/messages/customerpaymentstatusreportv12/pain.002.001.12.md
 [24]: docs/payments-initiation/messages/customerpaymentreversalv11/pain.007.001.11.md
 [25]: docs/payments-initiation/messages/customerdirectdebitinitiationv10/pain.008.001.10.md
-[26]: docs/payments-initiation/messages/customercredittransferinitiationv03/pain.001.001.03.md
+[26]: docs/payments-initiation/messages/CustomerCreditTransferInitiationV03/pain.001.001.
+03.md
+[27]: docs/payments-initiation/messages/CustomerCreditTransferInitiationV09/pain.001.001.09.md
 
 [banner]: https://kura.pro/pain001/images/titles/title-pain001.svg
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
