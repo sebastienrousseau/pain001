@@ -2,7 +2,7 @@
 
 <img
   src="https://kura.pro/pain001/images/logos/pain001.svg"
-  alt="pain001 logo"
+  alt="Pain001 logo"
   height="261"
   width="261"
   align="right"
@@ -10,20 +10,20 @@
 
 <!-- markdownlint-enable MD033 MD041 -->
 
-# Python pain001
+# Python Pain001
 
-![pain001 banner][banner]
+![Pain001 banner][banner]
 
 [![PyPI][pypi-badge]][3] [![License][license-badge]][1]
 [![Codecov][codecov-badge]][6]
 
 ## Overview 📖
 
-The `pain001` Python package is a CLI tool that makes it easy to
+The `Pain001` Python package is a CLI tool that makes it easy to
 automate the creation of ISO20022-compliant payment files directly from
 a CSV file.
 
-With `pain001`, you can easily create payment transactions files in just
+With `Pain001`, you can easily create payment transactions files in just
 a few simple steps.
 
 The library supports both **Single Euro Payments Area (SEPA)** and
@@ -33,7 +33,7 @@ countries and regions.
 ## ISO 20022 Payment Initiation Message Types 📨
 
 The following **ISO 20022 Payment Initiation message types** are
-supported:
+currently supported:
 
 * **pain.001.001.03** - Customer Credit Transfer Initiation
 
@@ -64,18 +64,18 @@ details.
 
 ## Features ✨
 
-* **Simplified file creation:** The library generates payment files in
+* **Simplify file creation:** The library generates payment files in
   the desired format quickly and efficiently.
-* **Ensuring the Highest Quality and Compliance:** The library
+* **Ensure the highest quality and compliance:** The library
   guarantees that all created payment files follow the ISO 20022
   standards.
-* **Enhanced efficiency:** The Pain001 library automates the creation of
+* **Enhance efficiency:** The Pain001 library automates the creation of
   Payment Initiation message files, freeing developers to focus on other
   aspects of their projects and simplifying the payment process for
   users.
-* **Improved accuracy:** By providing precise data, the library reduces
+* **Improve accuracy:** By providing precise data, the library reduces
   errors in payment file creation and processing.
-* **Seamless integration:** As a Python package, the pain001 library is
+* **Seamless integration:** As a Python package, the Pain001 library is
   compatible with various Python-based applications and easily
   integrates into any existing projects or workflows.
 * **Cross-border compatibility:** The library supports both Single Euro
@@ -91,12 +91,12 @@ details.
   output, making it adaptable to specific business requirements and
   preferences.
 
-## Supported messages 📬
+### Supported messages
 
 This section gives access to the documentation related to the ISO 20022
-message definitions supported by `pain001`.
+message definitions supported by `Pain001`.
 
-### Bank-to-Customer Cash Management
+#### Bank-to-Customer Cash Management
 
 Set of messages used to request and provide account information for
 reconciliation and cash positioning between an account servicer and its
@@ -104,28 +104,28 @@ customer.
 
 | Status | Message type | Name |
 |---|---|---|
-| ⏳ | [camt.052.001.10][10] | Bank-to-Customer Account Statement |
-| ⏳ | [camt.060.001.10][13] | Customer Account Notification |
-| ⏳ | [camt.054.001.10][12] | Customer Account Statement Request |
-| ⏳ | [camt.053.001.10][11] | Customer Account Identification |
+| ⏳ | [camt.052.001.10] | Bank-to-Customer Account Statement |
+| ⏳ | [camt.060.001.10] | Customer Account Notification |
+| ⏳ | [camt.054.001.10] | Customer Account Statement Request |
+| ⏳ | [camt.053.001.10] | Customer Account Identification |
 
-### Payments Clearing and Settlement
+#### Payments Clearing and Settlement
 
 Set of messages used between financial institutions for the clearing and
 settlement of payment transactions.
 
 | Status | Message type | Name |
 |---|---|---|
-| ⏳ | [pacs.002.001.12][14] | Credit Transfer Notification |
-| ⏳ | [pacs.003.001.09][15] | Direct Debit Initiation |
-| ⏳ | [pacs.004.001.11][16] | Direct Debit Reversal |
-| ⏳ | [pacs.007.001.11][17] | Customer Direct Debit Confirmation |
-| ⏳ | [pacs.008.001.10][18] | Credit Transfer Initiation |
-| ⏳ | [pacs.009.001.10][19] | Credit Transfer Reversal |
-| ⏳ | [pacs.010.001.05][20] | Account Identification |
-| ⏳ | [pacs.028.001.05][21] | Account Statement Request |
+| ⏳ | [pacs.002.001.12] | Credit Transfer Notification |
+| ⏳ | [pacs.003.001.09] | Direct Debit Initiation |
+| ⏳ | [pacs.004.001.11] | Direct Debit Reversal |
+| ⏳ | [pacs.007.001.11] | Customer Direct Debit Confirmation |
+| ⏳ | [pacs.008.001.10] | Credit Transfer Initiation |
+| ⏳ | [pacs.009.001.10] | Credit Transfer Reversal |
+| ⏳ | [pacs.010.001.05] | Account Identification |
+| ⏳ | [pacs.028.001.05] | Account Statement Request |
 
-### Payments Initiation
+#### Payments Initiation
 
 Set of messages exchanged between a debtor (or buyer) and its bank or
 between a creditor (or seller) and its bank to initiate, collect, manage
@@ -145,11 +145,11 @@ and monitor payments.
 
 ## Getting Started 🚀
 
-It takes just a few seconds to get up and running with `pain001`.
+It takes just a few seconds to get up and running with `Pain001`.
 
 ### Installation
 
-To install pain001, run `pip install pain001`
+To install Pain001, run `pip install pain001`
 
 ### Documentation
 
@@ -157,7 +157,7 @@ To install pain001, run `pip install pain001`
 
 ## Usage 📖
 
-`pain001` can be used in two ways:
+`Pain001` can be used in two ways:
 
 ### Command Line Interface (CLI)
 
@@ -173,6 +173,7 @@ python3 -m \pain001 "pain.001.001.03" \
   ./templates/pain.001.001.03/template.xml \
   ./templates/pain.001.001.03/pain.001.001.03.xsd \
   ./templates/pain.001.001.03/template.csv
+
 ```
 
 #### Example pain.001.001.09
@@ -182,11 +183,12 @@ python3 -m \pain001 "pain.001.001.09" \
   ./templates/pain.001.001.09/template.xml \
   ./templates/pain.001.001.09/pain.001.001.09.xsd \
   ./templates/pain.001.001.09/template.csv
+
 ```
 
 ### Embedded in an Application
 
-To embed pain001 in a new or existing application, import the main
+To embed Pain001 in a new or existing application, import the main
 function and use it in your code.
 
 Here's an example:
@@ -232,7 +234,7 @@ Apache License (Version 2.0).
 
 ## Contribution 🤝
 
-We welcome contributions to `pain001`. Please see the
+We welcome contributions to `Pain001`. Please see the
 [contributing instructions][4] for more information.
 
 Unless you explicitly state otherwise, any contribution intentionally
@@ -243,9 +245,9 @@ additional terms or conditions.
 ## Acknowledgements 💙
 
 We would like to extend a big thank you to all the awesome contributors
-of [pain001][5] for their help and support.
+of [Pain001][5] for their help and support.
 
-[0]: https://pain001.co
+[0]: https://Pain001.co
 [1]: https://opensource.org/license/apache-2-0/
 [2]: http://opensource.org/licenses/MIT
 [3]: https://github.com/sebastienrousseau/pain001
@@ -253,18 +255,18 @@ of [pain001][5] for their help and support.
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 
-[10]: docs/bank-to-customer-cash-management/messages/banktocustomeraccountreportv10/camt.052.001.10.md
-[11]: docs/bank-to-customer-cash-management/messages/banktocustomerstatementv10/camt.053.001.10.md
-[12]: docs/bank-to-customer-cash-management/messages/banktocustomerdebitcreditnotificationv10/camt.054.001.10.md
-[13]: docs/bank-to-customer-cash-management/messages/accountreportingrequestv06/camt.060.001.06.md
-[14]: docs/payments-clearing-and-settlement/messages/fitofipaymentstatusreportv12/pacs.002.001.12.md
-[15]: docs/payments-clearing-and-settlement/messages/fitoficustomerdirectdebitv09/pacs.003.001.09.md
-[16]: docs/payments-clearing-and-settlement/messages/paymentreturnv11/pacs.004.001.11.md
-[17]: docs/payments-clearing-and-settlement/messages/fitofipaymentreversalv11/pacs.007.001.11.md
-[18]: docs/payments-clearing-and-settlement/messages/fitoficustomercredittransferv10/pacs.008.001.10.md
-[19]: docs/payments-clearing-and-settlement/messages/financialinstitutioncredittransferv10/pacs.009.001.10.md
-[20]: docs/payments-clearing-and-settlement/messages/financialinstitutiondirectdebitv05/pacs.010.001.05.md
-[21]: docs/payments-clearing-and-settlement/messages/fitofipaymentstatusrequestv05/pacs.028.001.05.md
+[camt.052.001.10]: docs/bank-to-customer-cash-management/messages/camt.052.001.10/README.md
+[camt.060.001.10]: docs/bank-to-customer-cash-management/messages/camt.053.001.10/README.md
+[camt.054.001.10]: docs/bank-to-customer-cash-management/messages/camt.054.001.10/README.md
+[camt.053.001.10]: docs/bank-to-customer-cash-management/messages/camt.053.001.10/README.md
+[pacs.002.001.12]: docs/payments-clearing-and-settlement/messages/pacs.002.001.12/README.md
+[pacs.003.001.09]: docs/payments-clearing-and-settlement/messages/pacs.003.001.09/README.md
+[pacs.004.001.11]: docs/payments-clearing-and-settlement/messages/pacs.004.001.11/README.md
+[pacs.007.001.11]: docs/payments-clearing-and-settlement/messages/pacs.007.001.11/README.md
+[pacs.008.001.10]: docs/payments-clearing-and-settlement/messages/pacs.008.001.10/README.md
+[pacs.009.001.10]: docs/payments-clearing-and-settlement/messages/pacs.009.001.10/README.md
+[pacs.010.001.05]: docs/payments-clearing-and-settlement/messages/pacs.010.001.05/README.md
+[pacs.028.001.05]: docs/payments-clearing-and-settlement/messages/pacs.028.001.05/README.md
 [pain.001.001.03]: docs/payments-initiation/messages/pain.001.001.03/README.md
 [pain.001.001.04]: docs/payments-initiation/messages/pain.001.001.04/README.md
 [pain.001.001.05]: docs/payments-initiation/messages/pain.001.001.05/README.md
@@ -275,8 +277,8 @@ of [pain001][5] for their help and support.
 [pain.001.001.10]: docs/payments-initiation/messages/pain.001.001.10/README.md
 [pain.001.001.11]: docs/payments-initiation/messages/pain.001.001.11/README.md
 
-[banner]: https://kura.pro/pain001/images/titles/title-pain001.svg
+[banner]: https://kura.pro/pain001/images/titles/title-pain001.svg 'Pain001'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
-[supported-messages]: ./README.MD#supported-messages-📬
+[supported-messages]: #supported-messages 'Supported messages'
