@@ -10,6 +10,10 @@ from pain001.xml.xml_generator import xml_generator
 
 class TestProcessFiles(unittest.TestCase):
     def test_process_files_valid_data(self):
+
+        # Define the XML message type
+        payment_initiation_message_type = "pain.001.001.03"
+
         # Create a CSV file with valid data
         csv_file_path = os.path.join(os.path.dirname(
             __file__), "data/template.csv")
@@ -39,10 +43,16 @@ class TestProcessFiles(unittest.TestCase):
         data = load_csv_data(csv_file_path)
 
         # Register the namespace prefixes
-        register_namespaces()
+        register_namespaces(payment_initiation_message_type)
 
         # Generate the updated XML file path
-        xml_generator(data, mapping, xml_template_file, xsd_file)
+        xml_generator(
+            data,
+            mapping,
+            payment_initiation_message_type,
+            xml_template_file,
+            xsd_file
+        )
 
         # Check that the output XML file was created
         output_xml_file = os.path.join(
@@ -54,18 +64,30 @@ class TestProcessFiles(unittest.TestCase):
         self.assertTrue(is_valid)
 
         # Test process_files function
-        process_files(xml_template_file, xsd_file, csv_file_path)
+        xml_message_type = payment_initiation_message_type
+        process_files(
+            xml_message_type,
+            xml_template_file,
+            xsd_file,
+            csv_file_path
+        )
         assert os.path.exists(os.path.join(
             os.path.dirname(__file__), "data/template_updated.xml"))
 
     def test_process_files_invalid_data(self):
         try:
-            process_files("invalid.xml", "invalid.xsd", "invalid.csv")
+            process_files(
+                "pain.001.001.03",
+                "invalid.xml",
+                "invalid.xsd",
+                "invalid.csv"
+            )
         except FileNotFoundError:
             pass
         else:
             assert False, "process_files() FileNotFoundError"
 
+        # Test that the invalid XML file was not created
         assert os.path.exists(os.path.join(
             os.path.dirname(__file__), "data/invalid.xml")) is False
         assert os.path.exists(os.path.join(

@@ -8,6 +8,7 @@ from unittest.mock import patch
 class TestMain:
 
     def setup_method(self):
+        self.xml_message_type = "pain.001.001.03"
         self.xml_file = "tests/data/template.xml"
         self.xsd_file = "tests/data/template.xsd"
         self.csv_file = "tests/data/template.csv"
@@ -16,12 +17,23 @@ class TestMain:
         with patch.object(
             sys,
             'argv',
-            ['', self.xml_file, self.xsd_file, self.csv_file]
+            [
+                '',
+                self.xml_message_type,
+                self.xml_file,
+                self.xsd_file,
+                self.csv_file
+            ]
         ):
             with patch(
                 'sys.stdout', new_callable=io.StringIO
             ) as captured_output:
-                main(self.xml_file, self.xsd_file, self.csv_file)
+                main(
+                    self.xml_message_type,
+                    self.xml_file,
+                    self.xsd_file,
+                    self.csv_file
+                )
 
             captured_text = captured_output.getvalue()
             assert (
@@ -31,15 +43,38 @@ class TestMain:
                 in captured_text
             )
 
+    def test_main_with_invalid_xml_message_type(self):
+        with patch.object(
+            sys, 'argv', [
+                '', 'invalid', self.xml_file, self.xsd_file, self.csv_file
+            ]
+        ):
+            with patch(
+                'sys.stdout', new_callable=io.StringIO
+            ) as captured_output:
+                with pytest.raises(SystemExit):
+                    main(
+                        'invalid',
+                        self.xml_file,
+                        self.xsd_file,
+                        self.csv_file
+                    )
+
+                assert (
+                    "Invalid XML message type"
+                    in captured_output.getvalue()
+                )
+
     def test_main_with_invalid_xml_file(self):
         with patch.object(sys, 'argv', [
-            '', 'tests/data/invalid.xml', self.xsd_file, self.csv_file
+            '', 'pain.001.001.03', 'tests/data/invalid.xml', self.xsd_file, self.csv_file
         ]):
             with patch(
                 'sys.stdout', new_callable=io.StringIO
             ) as captured_output:
                 with pytest.raises(SystemExit):
                     main(
+                        self.xml_message_type,
                         'tests/data/invalid.xml',
                         self.xsd_file,
                         self.csv_file
@@ -54,7 +89,7 @@ class TestMain:
     def test_main_with_invalid_xsd_file(self):
         with patch.object(
             sys, 'argv', [
-                '',
+                self.xml_message_type,
                 self.xml_file,
                 'tests/data/invalid.xsd',
                 self.csv_file
@@ -66,6 +101,7 @@ class TestMain:
             ) as captured_output:
                 with pytest.raises(SystemExit):
                     main(
+                        self.xml_message_type,
                         self.xml_file,
                         'tests/data/invalid.xsd',
                         self.csv_file
@@ -81,7 +117,7 @@ class TestMain:
             sys,
             'argv',
             [
-                '',
+                self.xml_message_type,
                 self.xml_file,
                 self.xsd_file,
                 'tests/data/invalid.csv'
@@ -93,6 +129,7 @@ class TestMain:
             ) as captured_output:
                 with pytest.raises(SystemExit):
                     main(
+                        self.xml_message_type,
                         self.xml_file,
                         self.xsd_file,
                         'tests/data/invalid.csv'
@@ -108,6 +145,7 @@ class TestMain:
             sys,
             'argv',
             ['',
+             self.xml_message_type,
              self.xml_file,
              self.xsd_file,
              'tests/data/file_not_found.csv'
@@ -118,7 +156,7 @@ class TestMain:
                 new_callable=io.StringIO
             ) as captured_output:
                 with pytest.raises(SystemExit):
-                    main(self.xml_file, self.xsd_file,
+                    main(self.xml_message_type, self.xml_file, self.xsd_file,
                          'tests/data/file_not_found.csv')
 
             assert (

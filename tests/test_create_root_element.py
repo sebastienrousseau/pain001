@@ -5,7 +5,12 @@ import xml.etree.ElementTree as ET
 
 
 def test_create_root_element():
-    root = create_root_element()
+
+    # Define the XML message type
+    payment_initiation_message_type = "pain.001.001.03"
+
+    # Create the root element
+    root = create_root_element(payment_initiation_message_type)
 
     # Check if root element has correct tag
     assert root.tag == 'Document'
@@ -27,13 +32,24 @@ def test_create_root_element():
 
 
 def test_create_root_element_returns_element_object():
-    root = create_root_element()
+
+    # Define the XML message type
+    payment_initiation_message_type = "pain.001.001.03"
+
+    # Create the root element
+    root = create_root_element(payment_initiation_message_type)
+
+    # Check if root element is an instance of Element
     assert isinstance(root, ET.Element)
 
 
 def test_create_root_element_does_not_raise_exception():
     try:
-        create_root_element()
+        # Define the XML message type
+        payment_initiation_message_type = "pain.001.001.03"
+
+        # Create the root element
+        create_root_element(payment_initiation_message_type)
     except Exception:
         error_msg = 'create_root_element unexpected exception'
         assert False, error_msg
@@ -43,14 +59,22 @@ def test_create_root_element_handles_empty_input_gracefully():
     # Test that the function does not raise an exception when
     # called with no input
     try:
-        create_root_element()
+        # Define the XML message type
+        payment_initiation_message_type = "pain.001.001.03"
+
+        # Create the root element
+        create_root_element(payment_initiation_message_type)
     except Exception:
         error_msg = 'create_root_element unexpected exception'
         assert False, error_msg
 
 
 def test_create_root_element_sets_all_expected_attributes_correctly():
-    root = create_root_element()
+    # Define the XML message type
+    payment_initiation_message_type = "pain.001.001.03"
+
+    # Create the root element
+    root = create_root_element(payment_initiation_message_type)
 
     # Check if required attributes are set correctly
     assert root.tag == 'Document'
@@ -70,10 +94,12 @@ def test_create_root_element_sets_all_expected_attributes_correctly():
     )
 
     # Check if optional attributes are set correctly
-    root_with_optional_attrs = create_root_element()
+    root_with_optional_attrs = create_root_element(
+        payment_initiation_message_type
+    )
     assert 'xmlns:xs' not in root_with_optional_attrs.attrib.keys()
 
-    root = create_root_element()
+    root = create_root_element(payment_initiation_message_type)
 
     # Check that optional attributes are not set by default
     assert 'xmlns:xs' not in root.attrib.keys()

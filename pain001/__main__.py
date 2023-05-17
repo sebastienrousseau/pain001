@@ -23,7 +23,8 @@ their code.
 """
 
 from .core import process_files
-from .context import context
+from pain001.context import context
+from pain001.constants.constants import valid_xml_types
 
 import os
 import sys
@@ -81,6 +82,14 @@ def main(xml_message_type=None, xml_file_path=None, xsd_file_path=None, csv_file
         print("The XML message type is not specified.")
         sys.exit(1)
 
+    # Add the following code to handle invalid XML message type
+
+    # Check that the XML message type is valid
+    if xml_message_type not in valid_xml_types:
+        logger.info(f"Invalid XML message type: {xml_message_type}.")
+        print(f"Invalid XML message type: {xml_message_type}.")
+        sys.exit(1)
+
     if not os.path.isfile(xml_file_path):
         logger.info("The XML template file does not exist.")
         print("The XML template file does not exist.")
@@ -97,8 +106,10 @@ def main(xml_message_type=None, xml_file_path=None, xsd_file_path=None, csv_file
         sys.exit(1)
 
     process_files(
-        xml_message_type, xml_file_path,
-        xsd_file_path, csv_file_path
+        xml_message_type,
+        xml_file_path,
+        xsd_file_path,
+        csv_file_path
     )
 
 

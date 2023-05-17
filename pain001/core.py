@@ -23,9 +23,15 @@ from .csv.validate_csv_data import validate_csv_data
 from .csv.load_csv_data import load_csv_data
 from .xml.register_namespaces import register_namespaces
 from .xml.xml_generator import xml_generator
+from pain001.constants.constants import valid_xml_types as payment_initiation_message_types
 
 
-def process_files(xml_message_type, xml_file_path, xsd_file_path, csv_file_path):
+def process_files(
+    xml_message_type,
+    xml_file_path,
+    xsd_file_path,
+    csv_file_path
+):
     """
     This function, when called, generates an ISO 20022 payment message
     from a CSV file containing the payment data.
@@ -33,12 +39,11 @@ def process_files(xml_message_type, xml_file_path, xsd_file_path, csv_file_path)
     The `process_files` function takes the following arguments:
 
     - **xml_message_type**: The type of the ISO 20022 payment message to
-      generate. (Default value is `pain.001.001.03`)
+    generate. (Default value is `pain.001.001.03`)
     - **xml_file_path**: The path of the XML template file.
     - **xsd_file_path**: The path of the XSD schema file.
     - **csv_file_path**: The path of the CSV file containing the payment
-      data.
-
+    data.
 
     Args:
         - **xml_message_type (str)**: The type of XML message to
@@ -75,18 +80,6 @@ def process_files(xml_message_type, xml_file_path, xsd_file_path, csv_file_path)
 
     # Print out the command-line arguments for debugging purposes
     # print(f"Command-line arguments: {sys.argv}")
-
-    # Define the payment initiation message types supported by pain001
-    payment_initiation_message_types = [
-        "pain.001.001.03",  # Customer Credit Transfer Initiation
-        "pain.001.001.04",  # Customer Direct Debit Initiation
-        "pain.001.001.05",  # Request for Payment Status
-        "pain.001.001.06",  # Notification of Payment Status
-        "pain.001.001.07",  # Request for Reversal
-        "pain.001.001.08",  # Notification of Reversal
-        "pain.001.001.09",  # Request for Amendment
-        "pain.001.001.10"   # Notification of Amendment
-    ]
 
     # Looping through the payment initiation message types array and
     # check if the XML message type is supported.  If it is supported,
