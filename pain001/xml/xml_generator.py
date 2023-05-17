@@ -21,8 +21,6 @@ from .generate_updated_xml_file_path import generate_updated_xml_file_path
 from .generate_xml import create_xml_v3, create_xml_v9
 from .validate_via_xsd import validate_via_xsd
 from .write_xml_to_file import write_xml_to_file
-from pain001.constants.constants import valid_xml_types
-
 
 # XML generator function that creates the XML file from the CSV data
 # and the mapping dictionary between XML tags and CSV columns names and
