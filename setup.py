@@ -58,9 +58,7 @@ amounts, payment references, and other transaction-related information
 required for processing the credit transfers.
 """.strip()
 
-SHORT_DESCRIPTION = """pain001 is a Python library that makes it easy to
-automate the creation of ISO20022-compliant payment files directly from
-a CSV file.""".strip()
+SHORT_DESCRIPTION = """pain001 is a Python library that makes it easy to automate the creation of ISO20022-compliant payment files directly from a CSV file.""".strip()
 
 DEPENDENCIES = [
     'xmlschema>=1.8.0'
@@ -70,7 +68,7 @@ TEST_DEPENDENCIES = [
     'xmlschema>=1.8.0',
 ]
 
-VERSION = '0.0.14'
+VERSION = '0.0.15'
 URL = 'https://github.com/sebastienrousseau/pain001'
 
 setup(
