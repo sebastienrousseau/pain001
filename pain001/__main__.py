@@ -23,7 +23,7 @@ This allows using Pain001 with third-party libraries without modifying
 their code.
 """
 
-from .core import process_files
+from pain001.core import process_files
 from pain001.context import context
 from pain001.constants.constants import valid_xml_types
 
