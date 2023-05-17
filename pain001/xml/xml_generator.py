@@ -55,7 +55,10 @@ def xml_generator(
         # Handle the case when the payment_initiation_message_type is
         # not valid
         print(
-            f"❌ Error: Invalid XML message type: {payment_initiation_message_type}")
+            "❌",
+            "Error: Invalid XML message type:",
+            payment_initiation_message_type,
+        )
         sys.exit(1)
 
     # Generate updated XML file path
