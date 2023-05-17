@@ -90,8 +90,15 @@ and monitor payments.
 - [ ] **pain.002.001.12**: [CustomerDirectDebitInitiationV12][23]
 - [ ] **pain.007.001.11**: [CustomerPaymentReversalV11][24]
 - [ ] **pain.008.001.10**: [CustomerPaymentStatusReportV10][25]
-- [x] **pain.001.001.03**: [CustomerCreditTransferInitiationV03][26]
-- [x] **pain.001.001.09**: [CustomerCreditTransferInitiationV09][27]
+- [x] **pain.001.001.03**: [pain.001.001.03][pain.001.001.03]
+- [ ] **pain.001.001.04**: [pain.001.001.04][pain.001.001.04]
+- [ ] **pain.001.001.05**: [pain.001.001.05][pain.001.001.05]
+- [ ] **pain.001.001.06**: [pain.001.001.06][pain.001.001.06]
+- [ ] **pain.001.001.07**: [pain.001.001.07][pain.001.001.07]
+- [ ] **pain.001.001.08**: [pain.001.001.08][pain.001.001.08]
+- [ ] **pain.001.001.09**: [pain.001.001.09][pain.001.001.09]
+- [ ] **pain.001.001.10**: [pain.001.001.10][pain.001.001.10]
+- [ ] **pain.001.001.11**: [pain.001.001.11][pain.001.001.11]
 
 ## Getting Started 🚀
 
@@ -199,9 +206,15 @@ of [pain001][5] for their help and support.
 [23]: docs/payments-initiation/messages/customerpaymentstatusreportv12/pain.002.001.12.md
 [24]: docs/payments-initiation/messages/customerpaymentreversalv11/pain.007.001.11.md
 [25]: docs/payments-initiation/messages/customerdirectdebitinitiationv10/pain.008.001.10.md
-[26]: docs/payments-initiation/messages/CustomerCreditTransferInitiationV03/pain.001.001.
-03.md
-[27]: docs/payments-initiation/messages/CustomerCreditTransferInitiationV09/pain.001.001.09.md
+[pain.001.001.03]: docs/payments-initiation/messages/pain.001.001.03/README.md
+[pain.001.001.04]: docs/payments-initiation/messages/pain.001.001.04/README.md
+[pain.001.001.05]: docs/payments-initiation/messages/pain.001.001.05/README.md
+[pain.001.001.06]: docs/payments-initiation/messages/pain.001.001.06/README.md
+[pain.001.001.07]: docs/payments-initiation/messages/pain.001.001.07/README.md
+[pain.001.001.08]: docs/payments-initiation/messages/pain.001.001.08/README.md
+[pain.001.001.09]: docs/payments-initiation/messages/pain.001.001.09/README.md
+[pain.001.001.10]: docs/payments-initiation/messages/pain.001.001.10/README.md
+[pain.001.001.11]: docs/payments-initiation/messages/pain.001.001.11/README.md
 
 [banner]: https://kura.pro/pain001/images/titles/title-pain001.svg
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
