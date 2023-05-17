@@ -51,23 +51,45 @@ argument is the path of the XSD template file. The third argument is
 the path of the CSV file containing the payment data."""
 
 
-def main(xml_message_type=None, xml_file_path=None, xsd_file_path=None, csv_file_path=None):
+def main(
+    xml_message_type=None,
+    xml_file_path=None,
+    xsd_file_path=None,
+    csv_file_path=None
+):
     """
     Entrypoint for pain001 when invoked as a module with
-    python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>.
+    python3 -m pain001 <xml_message_type> <xml_file_path>
+    <xsd_file_path> <csv_file_path>.
     """
 
     """Initialize the context and log a message."""
     logger = context.Context.get_instance().get_logger()
 
-    if xml_file_path is None or xsd_file_path is None or csv_file_path is None:
+    if (
+        xml_file_path is None or
+        xsd_file_path is None or
+        csv_file_path is None
+    ):
         parser = argparse.ArgumentParser(
             description="Generate Pain.001 file from CSV data"
         )
-        parser.add_argument("xml_message_type", help="Type of XML message")
-        parser.add_argument("xml_file_path", help="Path to XML template file")
-        parser.add_argument("xsd_file_path", help="Path to XSD template file")
-        parser.add_argument("csv_file_path", help="Path to CSV data file")
+        parser.add_argument(
+            "xml_message_type",
+            help="Type of XML message"
+        )
+        parser.add_argument(
+            "xml_file_path",
+            help="Path to XML template file"
+        )
+        parser.add_argument(
+            "xsd_file_path",
+            help="Path to XSD template file"
+        )
+        parser.add_argument(
+            "csv_file_path",
+            help="Path to CSV data file"
+        )
         args = parser.parse_args()
 
         logger.info("Parsing command line arguments.")
