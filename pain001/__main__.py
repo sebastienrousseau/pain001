@@ -16,7 +16,8 @@
 # pylint: disable=invalid-name
 """
 Enables use of Python Pain001 as a "main" function (i.e.
-"python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>").
+"python3 -m pain001
+<xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>").
 
 This allows using Pain001 with third-party libraries without modifying
 their code.
@@ -33,7 +34,8 @@ import argparse
 cli_string = """
 
 usage:
-python3 -m pain001 <xml_message_type><xml_file_path> <xsd_file_path> <csv_file_path>
+python3 -m pain001 <xml_message_type><xml_file_path> <xsd_file_path>
+<csv_file_path>
 
 Python Pain001 is a Python package that generates a Customer-to-Bank
 Credit Transfer payload in the pain.001.001.03 format from a CSV file.
@@ -44,7 +46,8 @@ developers to create payment files in this format and to validate
 the generated files against the XSD schema.
 
 Usage:
-python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>
+python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path>
+<csv_file_path>
 
 The first argument is the path of the XML template file. The second
 argument is the path of the XSD template file. The third argument is
