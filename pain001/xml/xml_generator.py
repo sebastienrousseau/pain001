@@ -15,9 +15,6 @@
 
 import sys
 
-# Import the XML libraries
-import xml.etree.ElementTree as ET
-
 # Import the functions from the other modules
 from .create_root_element import create_root_element
 from .generate_updated_xml_file_path import generate_updated_xml_file_path
@@ -73,12 +70,12 @@ def xml_generator(
     write_xml_to_file(updated_xml_file_path, root)
 
     # Validate the updated XML file against the XSD schema
-    # is_valid = validate_via_xsd(
-    #     updated_xml_file_path,
-    #     xsd_file_path
-    # )
-    # if not is_valid:
-    #     print("❌ Error: Invalid XML data.")
-    #     sys.exit(1)
-    # else:
-    #     print(f"❯ XML located at {updated_xml_file_path} is valid.")
+    is_valid = validate_via_xsd(
+        updated_xml_file_path,
+        xsd_file_path
+    )
+    if not is_valid:
+        print("❌ Error: Invalid XML data.")
+        sys.exit(1)
+    else:
+        print(f"❯ XML located at {updated_xml_file_path} is valid.")
