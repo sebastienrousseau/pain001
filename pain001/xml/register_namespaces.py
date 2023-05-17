@@ -21,9 +21,12 @@ import xml.etree.ElementTree as ET
 
 
 def register_namespaces(payment_initiation_message_type):
-    """This function registers the namespaces for the payment initiation message type.
+    """This function registers the namespaces for the payment initiation
+    message type.
+
     Args:
-        payment_initiation_message_type (str): The payment initiation message type.
+        payment_initiation_message_type (str):
+        The payment initiation message type.
 
     Returns:
         None.
