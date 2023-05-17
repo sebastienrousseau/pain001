@@ -31,7 +31,14 @@ from .write_xml_to_file import write_xml_to_file
 # writes it to a file in the same directory as the CSV file
 
 
-def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path, xsd_file_path):
+def xml_generator(
+    data,
+    mapping,
+    payment_initiation_message_type,
+    xml_file_path,
+    xsd_file_path
+):
+
     # Create the root element and set its attributes
     root = create_root_element(payment_initiation_message_type)
 
@@ -73,7 +80,11 @@ def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path,
         # Add the PmtInfId and PmtMtd elements to the PmtInf element
         for xml_tag, csv_column in mapping.items():
             if xml_tag in ["PmtInfId", "PmtMtd"]:
-                create_xml_element(PmtInf_element, xml_tag, row[csv_column])
+                create_xml_element(
+                    PmtInf_element,
+                    xml_tag,
+                    row[csv_column]
+                )
 
         # Create new "BtchBookg" element in the XML tree using data
         # from the CSV file
@@ -86,7 +97,11 @@ def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path,
 
         # Create new "CtrlSum" element in the XML tree using data from
         # the CSV file
-        create_xml_element(PmtInf_element, "CtrlSum", row["control_sum"])
+        create_xml_element(
+            PmtInf_element,
+            "CtrlSum",
+            row["control_sum"]
+        )
 
         # Create new "PmtTpInf" element in the XML tree using data from
         # the CSV file
@@ -101,7 +116,9 @@ def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path,
         # Create new "ReqdExctnDt" element in the XML tree using data
         # from the CSV file
         create_xml_element(
-            PmtInf_element, "ReqdExctnDt", row["requested_execution_date"]
+            PmtInf_element,
+            "ReqdExctnDt",
+            row["requested_execution_date"]
         )
 
         # Create new "Dbtr" element in the XML tree using data from
@@ -195,7 +212,9 @@ def xml_generator(data, mapping, payment_initiation_message_type, xml_file_path,
         cstmr_cdt_trf_initn_element.append(PmtInf_element)
 
     # Generate updated XML file path
-    updated_xml_file_path = generate_updated_xml_file_path(xml_file_path)
+    updated_xml_file_path = generate_updated_xml_file_path(
+        xml_file_path
+    )
 
     # Write the updated XML tree to a file
     write_xml_to_file(updated_xml_file_path, root)
