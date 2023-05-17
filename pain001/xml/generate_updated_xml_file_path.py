@@ -19,7 +19,10 @@ import os
 # original XML file
 
 
-def generate_updated_xml_file_path(xml_file_path, payment_initiation_message_type):
+def generate_updated_xml_file_path(
+    xml_file_path,
+    payment_initiation_message_type
+):
     print(os.path.splitext(xml_file_path)[0])
     base_directory = os.path.dirname(xml_file_path)
     base_name = os.path.basename(xml_file_path)
