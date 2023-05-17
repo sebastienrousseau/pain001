@@ -338,6 +338,5 @@ def create_xml_v9(root, data, mapping):
         # Create the main elements
         SplmtryData_element = ET.Element("SplmtryData")
         Envlp_element = ET.SubElement(SplmtryData_element, "Envlp")
-        WC_element = ET.SubElement(Envlp_element, "WC")
-
+        child_element = ET.SubElement(Envlp_element, "WC")
         CdtTrfTxInf_element.append(SplmtryData_element)
