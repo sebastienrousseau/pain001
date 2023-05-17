@@ -23,7 +23,7 @@ from .csv.validate_csv_data import validate_csv_data
 from .csv.load_csv_data import load_csv_data
 from .xml.register_namespaces import register_namespaces
 from .xml.xml_generator import xml_generator
-from pain001.constants.constants import valid_xml_types as payment_initiation_message_types
+from pain001.constants.constants import valid_xml_types
 
 
 def process_files(
@@ -85,7 +85,7 @@ def process_files(
     # check if the XML message type is supported.  If it is supported,
     # print out the XML message type and break out of the loop.  If it
     # is not supported, print out an error message and exit the program.
-    for payment_initiation_message_type in payment_initiation_message_types:
+    for payment_initiation_message_type in valid_xml_types:
         if xml_message_type == payment_initiation_message_type:
             logger.info(
                 f"XML message type: {payment_initiation_message_type}"
