@@ -38,8 +38,8 @@ class TestMain:
             captured_text = captured_output.getvalue()
             assert (
                 "❯ XML located at "
-                "tests/data/template_updated.xml "
-                "is valid."
+                "tests/data/pain.001.001.03.xml"
+                " is valid."
                 in captured_text
             )
 
