@@ -20,28 +20,6 @@ import xml.etree.ElementTree as ET
 from .create_xml_element import create_xml_element
 
 
-def create_xml_element(parent, tag, text):
-    """
-    Create an XML element with the given tag and text content,
-    and append it as a child to the specified parent element.
-
-    Arguments:
-    parent -- The parent element to which the new element will be
-    appended.
-    tag -- The tag name of the new XML element.
-    text -- The text content of the new XML element.
-    """
-
-    # Create a new XML element with the specified tag
-    element = ET.Element(tag)
-
-    # Assign the provided text as the content of the element
-    element.text = text
-
-    # Append the newly created element as a child to the parent element
-    parent.append(element)
-
-
 def create_common_elements(parent, row, mapping):
     for xml_tag, csv_column in mapping.items():
         if xml_tag in ["PmtInfId", "PmtMtd"]:
