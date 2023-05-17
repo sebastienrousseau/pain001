@@ -5,6 +5,8 @@ description = "pain001 is a Python library that makes it easy to automate the cr
 authors = ["Sebastien Rousseau <sebastienrousseau@users.noreply.github.com>"]
 license = "Apache Software License"
 readme = "README.md"
+repository = "https://github.com/sebastienrousseau/pain001"
+homepage = "https://pain001.com"
 
 [tool.poetry.dependencies]
 python = "^3.9"
