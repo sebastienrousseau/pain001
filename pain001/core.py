@@ -18,33 +18,73 @@
 import sys
 
 # Import the pain001 library functions
+from .context import context
 from .csv.validate_csv_data import validate_csv_data
 from .csv.load_csv_data import load_csv_data
 from .xml.register_namespaces import register_namespaces
 from .xml.xml_generator import xml_generator
+from pain001.constants.constants import valid_xml_types
 
 
-def process_files(xml_file_path, xsd_file_path, csv_file_path):
-    """This function, when called, generates a Customer-to-Bank Credit
-    Transfer payload in a pain.001.001.03 format from a CSV file.
+def process_files(
+    xml_message_type,
+    xml_file_path,
+    xsd_file_path,
+    csv_file_path
+):
+    """
+    This function, when called, generates an ISO 20022 payment message
+    from a CSV file containing the payment data.
 
-    Executes a command-line interface for the Pain001 library. The first
-    argument is the path of the XML template file. The second argument
-    is the path of the CSV file containing the payment data.
+    The `process_files` function takes the following arguments:
+
+    - **xml_message_type**: The type of the ISO 20022 payment message to
+    generate. (Default value is `pain.001.001.03`)
+    - **xml_file_path**: The path of the XML template file.
+    - **xsd_file_path**: The path of the XSD schema file.
+    - **csv_file_path**: The path of the CSV file containing the payment
+    data.
 
     Args:
-        xml_file_path (str): The path of the XML template file.
-        csv_file_path (str): The path of the CSV file containing the
-        payment data.
+        - **xml_message_type (str)**: The type of XML message to
+        generate. The following ISO 20022 Payment Initiation message
+        types are supported:
+            - `pain.001.001.03` - Customer Credit Transfer Initiation,
+            - `pain.001.001.09` - Notification of Reversal,
+        - **xml_file_path (str)**: The path of the XML template file.
+        - **xsd_file_path (str)**: The path of the XSD schema file.
+        - **csv_file_path (str)**: The path of the CSV file containing
+        the payment data.
 
     Returns:
-        The generated XML file in the pain.001.001.03 format with the
-        payment data.
+        The function returns a new XML file with the payment data in the
+        ISO 20022 payment message format that was specified in the
+        `xml_message_type` argument.
 
     Raises:
+        ValueError: If the XML message type is not supported.
         FileNotFoundError: If the XML template file does not exist.
+        FileNotFoundError: If the XSD schema file does not exist.
         FileNotFoundError: If the CSV file does not exist.
     """
+
+    # Initialize the context and log a message.
+    logger = context.Context.get_instance().get_logger()
+
+    # Print out the command-line arguments for debugging purposes
+    # print(f"Command-line arguments: {sys.argv}")
+
+    # Looping through the payment initiation message types array and
+    # check if the XML message type is supported.  If it is supported,
+    # print out the XML message type and break out of the loop.  If it
+    # is not supported, print out an error message and exit the program.
+    if xml_message_type in valid_xml_types:
+        logger.info(f"XML message type: {xml_message_type}")
+    else:
+        logger.error(
+            f"Error: Invalid XML message type: `{xml_message_type}`."
+        )
+        sys.exit(1)
 
     # Define mapping dictionary between XML element tags and CSV column
     # names
@@ -62,24 +102,30 @@ def process_files(xml_file_path, xsd_file_path, csv_file_path):
 
     # Validate the CSV data
     if not validate_csv_data(data):
-        print("Error: Invalid CSV data.")
+        logger.error("❌ Error: Invalid CSV data.")
         sys.exit(1)
 
     # Print out CSV data for debugging
     # print(f"CSV data: {data}")
 
-    # Register the namespace prefixes
-    register_namespaces()
+    # Register the namespace prefixes and URIs for the XML message type
+    register_namespaces(xml_message_type)
 
     # Generate the updated XML file path
-    xml_generator(data, mapping, xml_file_path, xsd_file_path)
+    xml_generator(
+        data,
+        mapping,
+        xml_message_type,
+        xml_file_path,
+        xsd_file_path
+    )
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print(
-            "Usage: python3 -m pain001 <xml_file_path> "
-            "<xsd_file_path> <csv_file_path>"
+            "Usage: python3 -m pain001 <xml_message_type> "
+            "<xml_file_path> <xsd_file_path> <csv_file_path> "
         )
         sys.exit(1)
     process_files(sys.argv[1], sys.argv[2], sys.argv[3])

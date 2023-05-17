@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09 pain.001.001.09.xsd">
+    <CstmrCdtTrfInitn>
+        <GrpHdr>
+            <MsgId>1</MsgId>
+            <CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
+            <NbOfTxs>2</NbOfTxs>
+            <InitgPty>
+                <Nm>John Doe</Nm>
+            </InitgPty>
+        </GrpHdr>
+        <PmtInf>
+            <PmtInfId>Payment-Info-12345</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <ReqdExctnDt>
+                <Dt>2023-03-12</Dt>
+            </ReqdExctnDt>
+            <Dbtr>
+                <Nm>Acme Corp</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE75512108001245126162</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+                </FinInstnId>
+            </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>PaymentID6789</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">150.00</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Global Tech</Nm>
+                </Cdtr>
+                <RmtInf>
+                    <Ustrd>Invoice-98765</Ustrd>
+                </RmtInf>
+                <SplmtryData>
+                    <Envlp>
+                        <WC />
+                    </Envlp>
+                </SplmtryData>
+            </CdtTrfTxInf>
+        </PmtInf>
+    </CstmrCdtTrfInitn>
+</Document>

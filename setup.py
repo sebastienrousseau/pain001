@@ -20,34 +20,57 @@ from setuptools import setup
 
 
 LONG_DESCRIPTION = """
-The pain001 library is a Python package that generates a Customer-to-
-Bank Credit Transfer payload in the pain.001.001.03 format from a CSV
-file.
+The `pain001` Python package is a CLI tool that makes it easy to
+automate the creation of ISO20022-compliant payment files directly from
+a CSV file.
 
-The package is named after the standard file format for SEPA and non-
-SEPA Credit Transfer, which is the Pain (payment initiation) format
-001.001.03.
+With `pain001`, you can easily create payment transactions files in just
+a few simple steps.
 
-The pain001 library provides a convenient way for developers to create
-payment files in this format.
+The library supports both **Single Euro Payments Area (SEPA)** and
+**non-SEPA credit transfers**, making it versatile for use in different
+countries and regions.
+
+The following **ISO 20022 Payment Initiation message types** are
+currently supported:
+
+- **pain.001.001.03** - Customer Credit Transfer Initiation
+
+This message is used to transmit credit transfer instructions from the
+originator (the party initiating the payment) to the originator's bank.
+The message supports both bulk and single payment instructions, allowing
+for the transmission of multiple payments in a batch or individual
+payments separately. The pain.001.001.03 message format is part of the
+ISO 20022 standard and is commonly used for SEPA Credit Transfers within
+the Single Euro Payments Area. It includes relevant information such as
+the originator's and beneficiary's details, payment amounts, payment
+references, and other transaction-related information required for
+processing the credit transfers.
+
+- **pain.001.001.09** - Customer Credit Transfer Initiation
+
+This message format is part of the ISO 20022 standard and is commonly
+used for SEPA Credit Transfers within the Single Euro Payments Area. It
+enables the transmission of credit transfer instructions from the
+originator to the originator's bank. The message includes essential
+information such as the originator's and beneficiary's details, payment
+amounts, payment references, and other transaction-related information
+required for processing the credit transfers.
 """.strip()
 
-SHORT_DESCRIPTION = """
-pain001 is a Python library that makes it easy to automate the creation
-of ISO 20022 compliant payment files (XML PAIN.001.03) directly from a
-CSV file.
-""".strip()
+SHORT_DESCRIPTION = """pain001 is a Python library that makes it easy to
+automate the creation of ISO20022-compliant payment files directly from
+a CSV file.""".strip()
 
 DEPENDENCIES = [
-    'python-dateutil>=2.8.2',
-    'xmlschema>=1.8.0',
+    'xmlschema>=1.8.0'
 ]
 
 TEST_DEPENDENCIES = [
     'xmlschema>=1.8.0',
 ]
 
-VERSION = '0.0.13'
+VERSION = '0.0.14'
 URL = 'https://github.com/sebastienrousseau/pain001'
 
 setup(

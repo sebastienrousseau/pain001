@@ -1,43 +1,32 @@
 <!-- markdownlint-disable MD033 MD041 -->
 
-<img src="https://kura.pro/pain001/images/logos/pain001.svg" alt="pain001 logo" width="261" align="right" />
+<img
+  src="https://kura.pro/pain001/images/logos/pain001.svg"
+  alt="pain001 logo"
+  height="261"
+  width="261"
+  align="right"
+/>
 
 <!-- markdownlint-enable MD033 MD041 -->
 
-# Python pain001
+# Pain001 (v0.0.14)
 
-![pain001 banner](https://kura.pro/pain001/images/titles/title-pain001.svg)
+![Pain001 banner][banner]
+
+[![PyPI][pypi]][2] [![License][license]][1] [![Codecov][codecov]][3]
 
 ## Overview 📖
 
-The pain001 Python package is a CLI tool that makes it easy to automate
-the creation of ISO 20022 compliant payment files (XML PAIN.001.03)
-directly from a CSV file. With pain001, you can easily create payment
-transactions files in just a few simple steps.
+The `Pain001` Python package is a CLI tool that makes it easy to
+automate the creation of ISO20022-compliant payment files directly from
+a CSV file.
 
-## Features ✨
+[1]: https://opensource.org/license/apache-2-0/
+[2]: https://github.com/sebastienrousseau/pain001
+[3]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 
-- **Simplified file creation:** The library generates payment files in
-  the PAIN.001.001.03 format quickly and efficiently.
-- **Ensuring the Highest Quality and Compliance:** The library
-  guarantees that all created payment files follow ISO 20022 standards.
-- **Enhanced efficiency:** The pain001 library automates the creation of
-  PAIN.001.001.03 files, freeing developers to focus on other aspects of
-  their projects.
-- **Improved accuracy:** By providing precise data, the library reduces
-  errors in payment file creation.
-- **Seamless integration:** As a Python package, the pain001 library is
-  compatible with various Python-based applications and easily
-  integrates into any existing projects.
-- **Cross-border compatibility:** The library supports both Single Euro
-  Payments Area (SEPA) and non-SEPA credit transfers, making it
-  versatile for use in different countries and regions.
-- **Time-saving:** The automated file creation process reduces the time
-  spent on manual data entry and file generation, increasing overall
-  productivity.
-- **Scalable solution:** The pain001 library can handle varying volumes
-  of payment files, making it suitable for businesses of different sizes
-  and transaction volumes.
-- **Customisable:** The library allows developers to customise the
-  output, making it adaptable to specific business requirements and
-  preferences.
+[banner]: https://kura.pro/pain001/images/titles/title-pain001.svg 'Pain001 banner'
+[codecov]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
+[license]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
+[pypi]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
