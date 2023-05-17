@@ -45,8 +45,14 @@ class TestMain:
 
     def test_main_with_invalid_xml_message_type(self):
         with patch.object(
-            sys, 'argv', [
-                '', 'invalid', self.xml_file, self.xsd_file, self.csv_file
+            sys,
+            'argv',
+            [
+                '',
+                'invalid',
+                self.xml_file,
+                self.xsd_file,
+                self.csv_file
             ]
         ):
             with patch(
@@ -66,9 +72,16 @@ class TestMain:
                 )
 
     def test_main_with_invalid_xml_file(self):
-        with patch.object(sys, 'argv', [
-            '', 'pain.001.001.03', 'tests/data/invalid.xml', self.xsd_file, self.csv_file
-        ]):
+        with patch.object(
+                sys,
+                'argv',
+                [
+                    '',
+                    'pain.001.001.03',
+                    'tests/data/invalid.xml',
+                    self.xsd_file,
+                    self.csv_file
+                ]):
             with patch(
                 'sys.stdout', new_callable=io.StringIO
             ) as captured_output:
@@ -144,20 +157,25 @@ class TestMain:
         with patch.object(
             sys,
             'argv',
-            ['',
-             self.xml_message_type,
-             self.xml_file,
-             self.xsd_file,
-             'tests/data/file_not_found.csv'
-             ]
+            [
+                '',
+                self.xml_message_type,
+                self.xml_file,
+                self.xsd_file,
+                'tests/data/file_not_found.csv'
+            ]
         ):
             with patch(
                 'sys.stdout',
                 new_callable=io.StringIO
             ) as captured_output:
                 with pytest.raises(SystemExit):
-                    main(self.xml_message_type, self.xml_file, self.xsd_file,
-                         'tests/data/file_not_found.csv')
+                    main(
+                        self.xml_message_type,
+                        self.xml_file,
+                        self.xsd_file,
+                        'tests/data/file_not_found.csv'
+                    )
 
             assert (
                 "CSV file "
