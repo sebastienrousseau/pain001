@@ -87,11 +87,14 @@ def process_files(
     # is not supported, print out an error message and exit the program.
     for payment_initiation_message_type in payment_initiation_message_types:
         if xml_message_type == payment_initiation_message_type:
-            logger.info(f"XML message type: {payment_initiation_message_type}")
+            logger.info(
+                f"XML message type: {payment_initiation_message_type}"
+            )
             break
         else:
             logger.error(
-                f"Error: Invalid XML message type: `{xml_message_type}`.")
+                f"Error: Invalid XML message type: `{xml_message_type}`."
+            )
             sys.exit(1)
 
     # Define mapping dictionary between XML element tags and CSV column
@@ -121,7 +124,11 @@ def process_files(
 
     # Generate the updated XML file path
     xml_generator(
-        data, mapping, payment_initiation_message_type, xml_file_path, xsd_file_path
+        data,
+        mapping,
+        payment_initiation_message_type,
+        xml_file_path,
+        xsd_file_path
     )
 
 
