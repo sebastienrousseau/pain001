@@ -1,0 +1,463 @@
+<?xml version="1.0" ?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09 pain.001.001.09.xsd">
+	<CstmrCdtTrfInitn>
+		<GrpHdr>
+			<MsgId>1</MsgId>
+			<CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
+			<NbOfTxs>2</NbOfTxs>
+			<InitgPty>
+				<Nm>John Doe</Nm>
+			</InitgPty>
+		</GrpHdr>
+		<PmtInf>
+			<PmtInfId>Payment-Info-12345</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-12</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Acme Corp</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE75512108001245126162</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID6789</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">150.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Global Tech</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-98765</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-12345</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-12</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Acme Corp</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE75512108001245126162</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID6789</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">150.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Global Tech</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-98765</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-67890</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-14</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Brown Industries</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE44500105175407324931</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID4321</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">300.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Green Energy</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-12345</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-67890</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-14</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Brown Industries</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE44500105175407324931</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID4321</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">300.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Green Energy</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-12345</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-24680</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-13</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Alpha Electronics</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE47500105175711000100</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID1357</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">250.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Beta Chemicals</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-24680</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-24680</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-13</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Alpha Electronics</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE47500105175711000100</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID1357</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">250.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Beta Chemicals</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-24680</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-86420</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-15</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Delta Manufacturing</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE25500105176602214896</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID2468</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">175.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Gamma Logistics</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-86420</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-86420</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-15</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Delta Manufacturing</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE25500105176602214896</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID2468</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">175.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Gamma Logistics</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-86420</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-59162</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-16</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Smart Solutions</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE86500105174603245678</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID4815</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">225.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Eco Innovations</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-59162</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+		<PmtInf>
+			<PmtInfId>Payment-Info-59162</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-16</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Smart Solutions</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE86500105174603245678</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">BANKDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>SLEV</ChrgBr>
+			<CdtTrfTxInf>
+				<PmtId>
+					<EndToEndId>PaymentID4815</EndToEndId>
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="EUR">225.00</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					<FinInstnId>
+						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">SPUEDE2UXXX</BICFI>
+					</FinInstnId>
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>Eco Innovations</Nm>
+				</Cdtr>
+				<RmtInf>
+					<Ustrd>Invoice-59162</Ustrd>
+				</RmtInf>
+				<SplmtryData>
+					<Envlp>
+						<WC/>
+					</Envlp>
+				</SplmtryData>
+			</CdtTrfTxInf>
+		</PmtInf>
+	</CstmrCdtTrfInitn>
+</Document>

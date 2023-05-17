@@ -19,5 +19,13 @@ import os
 # original XML file
 
 
-def generate_updated_xml_file_path(xml_file_path):
-    return os.path.splitext(xml_file_path)[0] + "_updated.xml"
+def generate_updated_xml_file_path(xml_file_path, payment_initiation_message_type):
+    print(os.path.splitext(xml_file_path)[0])
+    base_directory = os.path.dirname(xml_file_path)
+    base_name = os.path.basename(xml_file_path)
+    file_name, _ = os.path.splitext(base_name)
+
+    new_file_name = payment_initiation_message_type + ".xml"
+    new_file_path = os.path.join(base_directory, new_file_name)
+
+    return new_file_path

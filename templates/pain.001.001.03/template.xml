@@ -34,12 +34,9 @@
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
-                <FinInstnId>
-                    <BIC>{{debtor_agent_BIC}}</BIC>
                 </FinInstnId>
             </DbtrAgt>
-            <ChrgBr>
-            {{charge_bearer}}</ChrgBr> {% for tx in transactions %} <CdtTrfTxInf>
+            {% for tx in transactions %} <CdtTrfTxInf>
                 <PmtId>
                     <EndToEndId>{{tx.payment_id}}</EndToEndId>
                 </PmtId>

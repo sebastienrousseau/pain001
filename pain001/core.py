@@ -50,14 +50,7 @@ def process_files(
         generate. The following ISO 20022 Payment Initiation message
         types are supported:
             - `pain.001.001.03` - Customer Credit Transfer Initiation,
-            - `pain.001.001.04` - Customer Direct Debit Initiation,
-            - `pain.001.001.05` - Request for Payment Status,
-            - `pain.001.001.06` - Notification of Payment Status,
-            - `pain.001.001.07` - Request for Reversal,
-            - `pain.001.001.08` - Notification of Reversal,
             - `pain.001.001.09` - Notification of Reversal,
-            - `pain.001.001.10` - Request for Amendment
-            - `pain.001.001.11` - Notification of Amendment
         - **xml_file_path (str)**: The path of the XML template file.
         - **xsd_file_path (str)**: The path of the XSD schema file.
         - **csv_file_path (str)**: The path of the CSV file containing
@@ -85,17 +78,13 @@ def process_files(
     # check if the XML message type is supported.  If it is supported,
     # print out the XML message type and break out of the loop.  If it
     # is not supported, print out an error message and exit the program.
-    for payment_initiation_message_type in valid_xml_types:
-        if xml_message_type == payment_initiation_message_type:
-            logger.info(
-                f"XML message type: {payment_initiation_message_type}"
-            )
-            break
-        else:
-            logger.error(
-                f"Error: Invalid XML message type: `{xml_message_type}`."
-            )
-            sys.exit(1)
+    if xml_message_type in valid_xml_types:
+        logger.info(f"XML message type: {xml_message_type}")
+    else:
+        logger.error(
+            f"Error: Invalid XML message type: `{xml_message_type}`."
+        )
+        sys.exit(1)
 
     # Define mapping dictionary between XML element tags and CSV column
     # names
@@ -113,20 +102,20 @@ def process_files(
 
     # Validate the CSV data
     if not validate_csv_data(data):
-        logger.error("Error: Invalid CSV data.")
+        logger.error("❌ Error: Invalid CSV data.")
         sys.exit(1)
 
     # Print out CSV data for debugging
     # print(f"CSV data: {data}")
 
     # Register the namespace prefixes and URIs for the XML message type
-    register_namespaces(payment_initiation_message_type)
+    register_namespaces(xml_message_type)
 
     # Generate the updated XML file path
     xml_generator(
         data,
         mapping,
-        payment_initiation_message_type,
+        xml_message_type,
         xml_file_path,
         xsd_file_path
     )

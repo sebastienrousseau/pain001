@@ -39,8 +39,8 @@ CSV file.
 """.strip()
 
 DEPENDENCIES = [
-    'python-dateutil>=2.8.2',
-    'xmlschema>=1.8.0',
+    # 'python-dateutil>=2.8.2',
+    'xmlschema>=1.8.0'
 ]
 
 TEST_DEPENDENCIES = [
