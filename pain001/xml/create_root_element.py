@@ -22,7 +22,10 @@ import xml.etree.ElementTree as ET
 def create_root_element(payment_initiation_message_type):
 
     # Create the namespace for the payment initiation message type.
-    namespace = "urn:iso:std:iso:20022:tech:xsd:" + payment_initiation_message_type
+    namespace = (
+        "urn:iso:std:iso:20022:tech:xsd:"
+        + payment_initiation_message_type
+    )
 
     # Create the root element.
     root = ET.Element("Document")
@@ -30,7 +33,11 @@ def create_root_element(payment_initiation_message_type):
     root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
 
     # Set the schema location.
-    schema_location = namespace + " " + payment_initiation_message_type + ".xsd"
+    schema_location = (
+        namespace + " "
+        + payment_initiation_message_type
+        + ".xsd"
+    )
     root.set("xsi:schemaLocation", schema_location)
 
     for elem in root.iter():
