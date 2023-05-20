@@ -33,16 +33,22 @@ import argparse
 
 
 cli_string = """
-Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data.
+Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files
+Using CSV Data.
 
 It offers a streamlined solution for reducing complexity and costs associated
 with payment processing. By providing a simple and efficient method to create
 ISO 20022-compliant payment files, it eliminates the manual effort of file
 creation and validation. This not only saves valuable time and resources but
-also minimizes the risk of errors, ensuring accurate and seamless payment processing.
+also minimizes the risk of errors, ensuring accurate and seamless payment
+processing.
 
 Usage:
-    python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>
+    python3 -m pain001 \
+        <xml_message_type> \
+        <xml_file_path> \
+        <xsd_file_path> \
+        <csv_file_path>
 
 Arguments:
     xml_message_type: The type of XML message. Valid values are:
@@ -53,7 +59,10 @@ Arguments:
     csv_file_path: The path to the CSV data file.
 
 Example:
-    python3 -m pain001 "pain.001.001.09" ./templates/pain.001.001.09/template.xml ./templates/pain.001.001.09/pain.001.001.09.xsd ./templates/pain.001.001.09/template.csv
+    python3 -m pain001 "pain.001.001.09"  \
+        ./templates/pain.001.001.09/template.xml  \
+        ./templates/pain.001.001.09/pain.001.001.09.xsd  \
+        ./templates/pain.001.001.09/template.csv
 
     This command will generate a pain.001.001.09 XML file using the template
     files in the ./templates/pain.001.001.09/ directory and the CSV data in
