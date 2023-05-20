@@ -19,15 +19,18 @@
 from setuptools import setup
 
 LONG_DESCRIPTION = """
-Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files
-Using CSV Data.
+**Pain001** is a Python Library for Automating ISO 20022-Compliant Payment
+Files Using CSV Data.
 
-It offers a streamlined solution for reducing complexity and costs
-associated with payment processing. By providing a simple and efficient
-method to create ISO 20022-compliant payment files, it eliminates the
-manual effort of file creation and validation. This not only saves valuable
-time and resources but also minimizes the risk of errors, ensuring accurate and
-seamless payment processing.
+It offers a streamlined solution for reducing complexity and costs associated
+with payment processing. By providing a simple and efficient method to create
+ISO 20022-compliant payment files, it eliminates the manual effort of file
+creation and validation. This not only saves valuable time and resources but
+also minimizes the risk of errors, ensuring accurate and seamless payment
+processing.
+
+If you are seeking to simplify and automate your payment processing, consider
+leveraging the capabilities of **Pain001**.
 """.strip()
 
 SHORT_DESCRIPTION = """
@@ -38,7 +41,7 @@ DEPENDENCIES = ["xmlschema>=2.3.0"]
 
 TEST_DEPENDENCIES = ["xmlschema>=2.3.0", "pytest>=7.3.1"]
 
-VERSION = "0.0.16"
+VERSION = "0.0.17"
 
 URL = "https://github.com/sebastienrousseau/pain001"
 
@@ -66,8 +69,11 @@ setup(
         "Operating System :: MacOS",
         "Operating System :: Unix",
     ],
-    keywords="iso 20022 pain.001 credit transfer financial banking \
-        payments csv sepa",
+    keywords="""
+    Pain001, finance python library, ISO 20022, payment files, payment
+    processing, automate payments, ISO 20022-compliant, SWIFT, SEPA, payment
+    initiation messages,
+    """,
     packages=["pain001"],
     install_requires=DEPENDENCIES,
     tests_require=TEST_DEPENDENCIES,
