@@ -33,33 +33,51 @@ import argparse
 
 
 cli_string = """
+Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data.
 
-usage:
-python3 -m pain001 <xml_message_type><xml_file_path> <xsd_file_path>
-<csv_file_path>
-
-Python Pain001 is a Python package that generates a Customer-to-Bank
-Credit Transfer payload in the pain.001.001.03 format from a CSV file.
-The package is named after the standard file format for SEPA and
-non-SEPA Credit Transfer, which is the Pain (payment initiation)
-format 001.001.03. The Pain001 library provides a convenient way for
-developers to create payment files in this format and to validate
-the generated files against the XSD schema.
+It offers a streamlined solution for reducing complexity and costs associated
+with payment processing. By providing a simple and efficient method to create
+ISO 20022-compliant payment files, it eliminates the manual effort of file
+creation and validation. This not only saves valuable time and resources but
+also minimizes the risk of errors, ensuring accurate and seamless payment processing.
 
 Usage:
-python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path>
-<csv_file_path>
+    python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>
 
-The first argument is the path of the XML template file. The second
-argument is the path of the XSD template file. The third argument is
-the path of the CSV file containing the payment data."""
+Arguments:
+    xml_message_type: The type of XML message. Valid values are:
+        - pain.001.001.03
+        - pain.001.001.09
+    xml_file_path: The path to the XML template file.
+    xsd_file_path: The path to the XSD template file.
+    csv_file_path: The path to the CSV data file.
+
+Example:
+    python3 -m pain001 "pain.001.001.09" ./templates/pain.001.001.09/template.xml ./templates/pain.001.001.09/pain.001.001.09.xsd ./templates/pain.001.001.09/template.csv
+
+    This command will generate a pain.001.001.09 XML file using the template
+    files in the ./templates/pain.001.001.09/ directory and the CSV data in
+    ./templates/pain.001.001.09/template.csv.
+
+    The generated XML file will be saved in the <xml_message_type> directory.
+    For example, if the <xml_message_type> is pain.001.001.09, the generated
+    XML file will be saved in the directory pain.001.001.09 and the file name
+    will be pain.001.001.09.xml.
+
+    Note: The generated XML file will be validated against the XSD template
+    file before being saved. If the validation fails, the program will exit
+    with an error message.
+
+    For more information, please visit
+    https://github.com/sebastienrousseau/pain001
+"""
 
 
 def main(
     xml_message_type=None,
     xml_file_path=None,
     xsd_file_path=None,
-    csv_file_path=None
+    csv_file_path=None,
 ):
     """
     Entrypoint for pain001 when invoked as a module with
@@ -71,28 +89,24 @@ def main(
     logger = context.Context.get_instance().get_logger()
 
     if (
-        xml_file_path is None or
-        xsd_file_path is None or
-        csv_file_path is None
+        xml_file_path is None
+        or xsd_file_path is None
+        or csv_file_path is None
     ):
         parser = argparse.ArgumentParser(
             description="Generate Pain.001 file from CSV data"
         )
         parser.add_argument(
-            "xml_message_type",
-            help="Type of XML message"
+            "xml_message_type", help="Type of XML message"
         )
         parser.add_argument(
-            "xml_file_path",
-            help="Path to XML template file"
+            "xml_file_path", help="Path to XML template file"
         )
         parser.add_argument(
-            "xsd_file_path",
-            help="Path to XSD template file"
+            "xsd_file_path", help="Path to XSD template file"
         )
         parser.add_argument(
-            "csv_file_path",
-            help="Path to CSV data file"
+            "csv_file_path", help="Path to CSV data file"
         )
         args = parser.parse_args()
 
@@ -132,10 +146,7 @@ def main(
         sys.exit(1)
 
     process_files(
-        xml_message_type,
-        xml_file_path,
-        xsd_file_path,
-        csv_file_path
+        xml_message_type, xml_file_path, xsd_file_path, csv_file_path
     )
 
 
