@@ -25,12 +25,14 @@ Using CSV Data.
 It offers a streamlined solution for reducing complexity and costs
 associated with payment processing. By providing a simple and efficient
 method to create ISO 20022-compliant payment files, it eliminates the
-manual effort of file creation and validation. This not only saves valuable time
-and resources but also minimizes the risk of errors, ensuring accurate and
+manual effort of file creation and validation. This not only saves valuable
+time and resources but also minimizes the risk of errors, ensuring accurate and
 seamless payment processing.
 """.strip()
 
-SHORT_DESCRIPTION = """Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data.""".strip()
+SHORT_DESCRIPTION = """
+Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files
+Using CSV Data.""".strip()
 
 DEPENDENCIES = ["xmlschema>=2.3.0"]
 
