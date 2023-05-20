@@ -10,7 +10,7 @@
 
 <!-- markdownlint-enable MD033 MD041 -->
 
-# Pain001 (v0.0.15)
+# Pain001 (v0.0.16)
 
 ![Pain001 banner][banner]
 
