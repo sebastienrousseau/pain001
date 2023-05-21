@@ -1,6 +1,6 @@
 import unittest
 
-# import sys
+import sys
 
 from pain001.xml.xml_generator import xml_generator
 
