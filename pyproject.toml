@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "pain001"
 version = "0.0.18"
-description = "pain001 is a Python library that makes it easy to automate the creation of ISO20022-compliant payment files directly from a CSV file."
-authors = ["Sebastien Rousseau <sebastienrousseau@users.noreply.github.com>"]
+description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
+authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache Software License"
 readme = "README.md"
 repository = "https://github.com/sebastienrousseau/pain001"
@@ -10,7 +10,7 @@ homepage = "https://pain001.com"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-xmlschema = "^1.8.0"
+xmlschema = "^2.3.0"
 
 [build-system]
 requires = ["poetry-core"]

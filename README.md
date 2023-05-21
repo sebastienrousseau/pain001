@@ -2,7 +2,7 @@
 
 <img
   src="https://kura.pro/pain001/images/logos/pain001.svg"
-  alt="Pain001 logo"
+  alt="Pain001 Logo"
   height="261"
   width="261"
   align="right"
@@ -10,91 +10,194 @@
 
 <!-- markdownlint-enable MD033 MD041 -->
 
-# Python Pain001
+# Pain001 - A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data
 
 ![Pain001 banner][banner]
 
 [![PyPI][pypi-badge]][3] [![License][license-badge]][1]
 [![Codecov][codecov-badge]][6]
 
-## Overview 📖
+**Pain001** is a Python Library for Automating ISO 20022-Compliant Payment
+Files Using CSV Data.
 
-The `Pain001` Python package is a CLI tool that makes it easy to
-automate the creation of ISO20022-compliant payment files directly from
-a CSV file.
+**Pain001** offers a streamlined solution for reducing complexity and costs
+associated with payment processing. By providing a simple and efficient method
+to create ISO 20022-compliant payment files, it eliminates the manual effort of
+file creation and validation. This not only saves valuable time and resources
+but also minimizes the risk of errors, ensuring accurate and seamless payment
+processing.
 
-With `Pain001`, you can easily create payment transactions files in just
-a few simple steps.
+If you are seeking to simplify and automate your payment processing, consider
+leveraging the capabilities of **Pain001**.
 
-The library supports both **Single Euro Payments Area (SEPA)** and
-**non-SEPA credit transfers**, making it versatile for use in different
-countries and regions.
+## Features ✨
 
-## ISO 20022 Payment Initiation Message Types 📨
+- **Easy to use:** The library is easy to use and requires minimal coding
+  knowledge, making it suitable for both developers and non-developers.
+- **Open-source**: The library is open-source and free to use, making it
+  accessible to everyone.
+- **Secure**: The library is secure and does not store any sensitive data,
+  ensuring that all information remains confidential.
+- **Customizable**: The library allows developers to customize the output,
+  making it adaptable to specific business requirements and preferences.
+- **Scalable solution**: The **Pain001** library can handle varying volumes of
+  payment files, making it suitable for businesses of different sizes and
+  transaction volumes.
+- **Time-saving**: The automated file creation process reduces the time spent
+  on manual data entry and file generation, increasing overall productivity.
+- **Seamless integration**: As a Python package, the **Pain001** library is
+  compatible with various Python-based applications and easily integrates into
+  any existing projects or workflows.
+- **Cross-border compatibility**: The library supports both Single Euro
+  Payments Area (SEPA) and non-SEPA credit transfers, making it versatile for
+  use in different countries and regions.
+- **Improve accuracy** by providing precise data, the library reduces errors in
+  payment file creation and processing.
+- **Enhance efficiency** by automating the creation of Payment Initiation
+  message files
+- **Accelerate payment file creation** by automating the process and reducing
+  the time required to create payment files.
+- **Guarantee the highest quality and compliance** by validating all payment
+  files to meet the ISO 20022 standards.
+- **Provide flexibility and choice to migrate to any supported ISO 20022
+  messaging standard definitions** by simplifying the message creation process
+  and providing a standardized format for payment files.
+
+## Installation
+
+It takes just a few seconds to get up and running with **Pain001**. Open your
+terminal and run the following command:
+
+```sh
+pip install pain001
+```
+
+## Usage
+
+After installation, you can run **Pain001** directly from the command line.
+Simply call the main function with the path of your XML template file, XSD
+schema file and the path of your CSV file containing the payment data.
+
+Once you have installed **Pain001**, you can generate and validate XML files
+using the following command:
+
+```sh
+python3 -m pain001 \
+    <xml_message_type> \
+    <xml_file_path> \
+    <xsd_file_path> \
+    <csv_file_path>
+```
+
+## Arguments
+
+When running **Pain001**, you will need to specify four arguments:
+
+- `xml_message_type`: This is the type of XML message you want to generate.
+  Currently, the valid options are:
+  - pain.001.001.03
+  - pain.001.001.09
+- `xml_file_path`: This is the path to the XML template file you are using.
+- `xsd_file_path`: This is the path to the XSD template file you are using.
+- `csv_file_path`: This is the path to the CSV data file you want to convert
+  to XML.
+
+## Examples
+
+Here are a few example on how to use **Pain001** to generate a
+pain.001.001.03 XML file from a CSV data file:
+
+### Via the Command Line
+
+```sh
+python3 -m pain001 \
+    pain.001.001.03 \
+    /path/to/your/pain.001.001.03.xml \
+    /path/to/your/pain.001.001.03.xsd \
+    /path/to/your/pain.001.001.03.csv
+```
+
+**Note:** The XML file that **Pain001** generates will be automatically
+validated against the XSD template file before the new XML file is saved. If
+the validation fails, **Pain001** will stop running and display an error
+message in your terminal.
+
+### Embedded in an Application
+
+To embed **Pain001** in a new or existing application, import the main function
+and use it in your code.
+
+Here's an example:
+
+```python
+from pain001 import main
+
+if __name__ == '__main__':
+  xml_message_type = 'pain.001.001.03'
+  xml_file_path = 'template.xml'
+  xsd_file_path = 'schema.xsd'
+  csv_file_path = 'data.csv'
+  main(xml_message_type, xml_file_path, xsd_file_path, csv_file_path)
+```
+
+### Validation
+
+To validate the generated XML file against a given xsd schema, use the
+following method:
+
+```python
+from pain001.core import validate_xml_against_xsd
+
+xml_message_type = 'pain.001.001.03'
+xml_file = 'generated.xml'
+xsd_file = 'schema.xsd'
+
+is_valid = validate_xml_against_xsd(
+  xml_message_type,
+  xml_file,
+  xsd_file
+)
+print(f"XML validation result: {is_valid}")
+```
+
+## Documentation 📖
+
+> ℹ️ **Info:** Do check out our [website][0] for more information.
+
+### Payment Messages
 
 The following **ISO 20022 Payment Initiation message types** are
 currently supported:
 
-* **pain.001.001.03** - Customer Credit Transfer Initiation
+- **pain.001.001.03** - Customer Credit Transfer Initiation
 
 This message is used to transmit credit transfer instructions from the
-originator (the party initiating the payment) to the originator's bank.
-The message supports both bulk and single payment instructions, allowing
-for the transmission of multiple payments in a batch or individual
-payments separately. The pain.001.001.03 message format is part of the
-ISO 20022 standard and is commonly used for SEPA Credit Transfers within
-the Single Euro Payments Area. It includes relevant information such as
-the originator's and beneficiary's details, payment amounts, payment
-references, and other transaction-related information required for
-processing the credit transfers.
+originator (the party initiating the payment) to the originator's bank. The
+message supports both bulk and single payment instructions, allowing for the
+transmission of multiple payments in a batch or individual payments separately.
+The pain.001.001.03 message format is part of the ISO 20022 standard and is
+commonly used for SEPA Credit Transfers within the Single Euro Payments Area.
+It includes relevant information such as the originator's and beneficiary's
+details, payment amounts, payment references, and other transaction-related
+information required for processing the credit transfers.
 
-* **pain.001.001.09** - Customer Credit Transfer Initiation
+- **pain.001.001.09** - Customer Credit Transfer Initiation
 
-This message format is part of the ISO 20022 standard and is commonly
-used for SEPA Credit Transfers within the Single Euro Payments Area. It
-enables the transmission of credit transfer instructions from the
-originator to the originator's bank. The message includes essential
-information such as the originator's and beneficiary's details, payment
-amounts, payment references, and other transaction-related information
-required for processing the credit transfers.
+This message format is part of the ISO 20022 standard and is commonly used for
+SEPA Credit Transfers within the Single Euro Payments Area. It enables the
+transmission of credit transfer instructions from the originator to the
+originator's bank. The message includes essential information such as the
+originator's and beneficiary's details, payment amounts, payment references,
+and other transaction-related information required for processing the credit
+transfers.
 
-More message types will be added in the future. Please refer to the
-[supported messages section][supported-messages] section for more
-details.
-
-## Features ✨
-
-* **Simplify file creation:** The library generates payment files in
-  the desired format quickly and efficiently.
-* **Ensure the highest quality and compliance:** The library
-  guarantees that all created payment files follow the ISO 20022
-  standards.
-* **Enhance efficiency:** The Pain001 library automates the creation of
-  Payment Initiation message files, freeing developers to focus on other
-  aspects of their projects and simplifying the payment process for
-  users.
-* **Improve accuracy:** By providing precise data, the library reduces
-  errors in payment file creation and processing.
-* **Seamless integration:** As a Python package, the Pain001 library is
-  compatible with various Python-based applications and easily
-  integrates into any existing projects or workflows.
-* **Cross-border compatibility:** The library supports both Single Euro
-  Payments Area (SEPA) and non-SEPA credit transfers, making it
-  versatile for use in different countries and regions.
-* **Time-saving:** The automated file creation process reduces the time
-  spent on manual data entry and file generation, increasing overall
-  productivity.
-* **Scalable solution:** The Pain001 library can handle varying volumes
-  of payment files, making it suitable for businesses of different sizes
-  and transaction volumes.
-* **Customisable:** The library allows developers to customise the
-  output, making it adaptable to specific business requirements and
-  preferences.
+More message types will be added in the future. Please refer to the section
+below for more details.
 
 ### Supported messages
 
 This section gives access to the documentation related to the ISO 20022
-message definitions supported by `Pain001`.
+message definitions supported by **Pain001**.
 
 #### Bank-to-Customer Cash Management
 
@@ -143,98 +246,17 @@ and monitor payments.
 | ⏳ | [pain.001.001.10][pain.001.001.10] | Customer Account Closure Request |
 | ⏳ | [pain.001.001.11][pain.001.001.11] | Customer Account Change Request |
 
-## Getting Started 🚀
-
-It takes just a few seconds to get up and running with `Pain001`.
-
-### Installation
-
-To install Pain001, run `pip install pain001`
-
-### Documentation
-
-> ℹ️ **Info:** Do check out our [website][0] for more information.
-
-## Usage 📖
-
-`Pain001` can be used in two ways:
-
-### Command Line Interface (CLI)
-
-After installation, you can run `pain001` directly from the command
-line. Simply call the main function with the path of your XML template
-file, XSD schema file and the path of your CSV file containing the
-payment data.
-
-#### Example pain.001.001.03
-
-```bash
-python3 -m \pain001 "pain.001.001.03" \
-  ./templates/pain.001.001.03/template.xml \
-  ./templates/pain.001.001.03/pain.001.001.03.xsd \
-  ./templates/pain.001.001.03/template.csv
-
-```
-
-#### Example pain.001.001.09
-
-```bash
-python3 -m \pain001 "pain.001.001.09" \
-  ./templates/pain.001.001.09/template.xml \
-  ./templates/pain.001.001.09/pain.001.001.09.xsd \
-  ./templates/pain.001.001.09/template.csv
-
-```
-
-### Embedded in an Application
-
-To embed Pain001 in a new or existing application, import the main
-function and use it in your code.
-
-Here's an example:
-
-```python
-from pain001 import main
-
-if __name__ == '__main__':
-  xml_message_type = 'pain.001.001.03'
-  xml_file_path = 'template.xml'
-  xsd_file_path = 'schema.xsd'
-  csv_file_path = 'data.csv'
-  main(xml_file_path, xsd_file_path, csv_file_path)
-```
-
-### Validation
-
-To validate the generated XML file against a given xsd schema, use the
-following method:
-
-```python
-from pain001.core import validate_xml_against_xsd
-
-xml_message_type = 'pain.001.001.03'
-xml_file = 'generated.xml'
-xsd_file = 'schema.xsd'
-
-is_valid = validate_xml_against_xsd(
-  xml_message_type,
-  xml_file,
-  xsd_file
-)
-print(f"XML validation result: {is_valid}")
-```
-
 ## License 📝
 
 The project is licensed under the terms of both the MIT license and the
 Apache License (Version 2.0).
 
-* [Apache License, Version 2.0][1]
-* [MIT license][2]
+- [Apache License, Version 2.0][1]
+- [MIT license][2]
 
 ## Contribution 🤝
 
-We welcome contributions to `Pain001`. Please see the
+We welcome contributions to **Pain001**. Please see the
 [contributing instructions][4] for more information.
 
 Unless you explicitly state otherwise, any contribution intentionally
@@ -281,4 +303,3 @@ of [Pain001][5] for their help and support.
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
-[supported-messages]: #supported-messages 'Supported messages'
