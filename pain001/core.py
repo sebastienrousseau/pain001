@@ -27,10 +27,7 @@ from pain001.constants.constants import valid_xml_types
 
 
 def process_files(
-    xml_message_type,
-    xml_file_path,
-    xsd_file_path,
-    csv_file_path
+    xml_message_type, xml_file_path, xsd_file_path, csv_file_path
 ):
     """
     This function, when called, generates an ISO 20022 payment message
@@ -113,11 +110,7 @@ def process_files(
 
     # Generate the updated XML file path
     xml_generator(
-        data,
-        mapping,
-        xml_message_type,
-        xml_file_path,
-        xsd_file_path
+        data, mapping, xml_message_type, xml_file_path, xsd_file_path
     )
 
 

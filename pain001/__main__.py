@@ -33,52 +33,67 @@ import argparse
 
 
 cli_string = """
-Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files
-Using CSV Data.
+**Pain001** is a Python Library for Automating ISO 20022-Compliant Payment
+Files Using CSV Data.
 
-It offers a streamlined solution for reducing complexity and costs associated
-with payment processing. By providing a simple and efficient method to create
-ISO 20022-compliant payment files, it eliminates the manual effort of file
-creation and validation. This not only saves valuable time and resources but
-also minimizes the risk of errors, ensuring accurate and seamless payment
+**Pain001** offers a streamlined solution for reducing complexity and costs
+associated with payment processing. By providing a simple and efficient method
+to create ISO 20022-compliant payment files, it eliminates the manual effort of
+file creation and validation. This not only saves valuable time and resources
+but also minimizes the risk of errors, ensuring accurate and seamless payment
 processing.
 
-Usage:
-    python3 -m pain001 \
-        <xml_message_type> \
-        <xml_file_path> \
-        <xsd_file_path> \
-        <csv_file_path>
+If you are seeking to simplify and automate your payment processing, consider
+leveraging the capabilities of **Pain001**.
 
-Arguments:
-    xml_message_type: The type of XML message. Valid values are:
-        - pain.001.001.03
-        - pain.001.001.09
-    xml_file_path: The path to the XML template file.
-    xsd_file_path: The path to the XSD template file.
-    csv_file_path: The path to the CSV data file.
+## Installation
 
-Example:
-    python3 -m pain001 "pain.001.001.09"  \
-        ./templates/pain.001.001.09/template.xml  \
-        ./templates/pain.001.001.09/pain.001.001.09.xsd  \
-        ./templates/pain.001.001.09/template.csv
+To install **Pain001**, run this command in your terminal:
 
-    This command will generate a pain.001.001.09 XML file using the template
-    files in the ./templates/pain.001.001.09/ directory and the CSV data in
-    ./templates/pain.001.001.09/template.csv.
+```sh
+pip install pain001
+```
 
-    The generated XML file will be saved in the <xml_message_type> directory.
-    For example, if the <xml_message_type> is pain.001.001.09, the generated
-    XML file will be saved in the directory pain.001.001.09 and the file name
-    will be pain.001.001.09.xml.
+## Usage
 
-    Note: The generated XML file will be validated against the XSD template
-    file before being saved. If the validation fails, the program will exit
-    with an error message.
+To use **Pain001**, run this command in your terminal:
 
-    For more information, please visit
-    https://github.com/sebastienrousseau/pain001
+```sh
+python3 -m pain001 \
+    <xml_message_type> \
+    <xml_file_path> \
+    <xsd_file_path> \
+    <csv_file_path>
+```
+
+## Arguments:
+
+- `xml_message_type`: The type of XML message. The current valid values are:
+    - pain.001.001.03 and
+    - pain.001.001.09
+- `xml_file_path`: The path to the XML template file.
+- `xsd_file_path`: The path to the XSD template file.
+- `csv_file_path`: The path to the CSV data file.
+
+## Example:
+
+To generate a pain.001.001.03 XML file from the CSV data file you can run the
+following command in your terminal:
+
+```sh
+python3 -m pain001 \
+    pain.001.001.03 \
+    /path/to/your/pain.001.001.03.xml \
+    /path/to/your/pain.001.001.03.xsd \
+    /path/to/your/pain.001.001.03.csv
+```
+
+Note: The generated XML file will be validated against the XSD template
+file before being saved. If the validation fails, the program will exit
+with an error message.
+
+For more information, please visit the project's GitHub page at:
+<https://github.com/sebastienrousseau/pain001>.
 """
 
 
