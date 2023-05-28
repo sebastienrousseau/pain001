@@ -184,6 +184,16 @@ def create_xml_v3(root, data, mapping):
         child_element.text = row["creditor_name"]
         Cdtr_element.append(child_element)
         CdtTrfTxInf_element.append(Cdtr_element)
+        
+        # Create new "CdtrAcct" element in the XML tree using data
+        # from the CSV file
+        CdtrAcct_element = ET.Element("CdtrAcct")
+        child_element = ET.Element("Id")
+        child_element2 = ET.Element("IBAN")
+        child_element2.text = row["creditor_agent_BIC"]
+        child_element.append(child_element2)
+        CdtrAcct_element.append(child_element)
+        CdtTrfTxInf_element.append(CdtrAcct_element)
 
         # Create new "RmtInf" element in the XML tree using data
         # from the CSV file
@@ -318,6 +328,16 @@ def create_xml_v9(root, data, mapping):
         child_element.text = row["creditor_name"]
         Cdtr_element.append(child_element)
         CdtTrfTxInf_element.append(Cdtr_element)
+
+        # Create new "CdtrAcct" element in the XML tree using data
+        # from the CSV file
+        CdtrAcct_element = ET.Element("CdtrAcct")
+        child_element = ET.Element("Id")
+        child_element2 = ET.Element("IBAN")
+        child_element2.text = row["creditor_agent_BIC"]
+        child_element.append(child_element2)
+        CdtrAcct_element.append(child_element)
+        CdtTrfTxInf_element.append(CdtrAcct_element)
 
         # Create new "RmtInf" element in the XML tree using data
         # from the CSV file
