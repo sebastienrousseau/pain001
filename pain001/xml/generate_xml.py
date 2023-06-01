@@ -184,7 +184,7 @@ def create_xml_v3(root, data, mapping):
         child_element.text = row["creditor_name"]
         Cdtr_element.append(child_element)
         CdtTrfTxInf_element.append(Cdtr_element)
-        
+
         # Create new "CdtrAcct" element in the XML tree using data
         # from the CSV file
         CdtrAcct_element = ET.Element("CdtrAcct")
