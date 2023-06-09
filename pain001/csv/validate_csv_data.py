@@ -78,8 +78,10 @@ def validate_csv_data(data):
         for column, data_type in required_columns.items():
             value = row.get(column)
             if value is None or value.strip() == "":
-                print(f"Error: Missing value for column '{column}' "
-                      f"in row: {row}")
+                print(
+                    f"Error: Missing value for column '{column}' "
+                    f"in row: {row}"
+                )
                 return False
 
             try:

@@ -1,22 +1,19 @@
 {
-  "background_color": "#000",
+  "background_color": "#ffffff",
   "description": "pain.001.001.09, is an XML-based message format under the ISO 20022 standard designed to streamline cross-border and domestic payment processes.",
-  "dir": "/",
-  "display": "fullscreen",
+  "display": "standalone",
   "icons": [
     {
       "purpose": "any maskable",
       "sizes": "512x512",
-      "src": "https://kura.pro/pain001/images/icons/512x512.png",
+      "src": "https://kura.pro/pain001/images/favicon.ico",
       "type": "image/png"
     }
   ],
-  "identity": "/",
-  "lang": "en-GB",
   "name": "Customer Credit Transfer Initiation V9 (pain.001.001.09)",
-  "orientation": "any",
+  "orientation": "portrait-primary",
   "scope": "/",
-  "short_name": "/",
-  "start_url": "/",
-  "theme_color": "#fff"
+  "short_name": "pain.001.001.09",
+  "start_url": ".",
+  "theme_color": "#004957"
 }

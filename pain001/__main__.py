@@ -31,6 +31,8 @@ import os
 import sys
 import argparse
 
+from pain001.xml.validate_via_xsd import validate_via_xsd
+
 
 cli_string = """
 **Pain001** is a Python Library for Automating ISO 20022-Compliant Payment
@@ -101,12 +103,13 @@ def main(
     xml_message_type=None,
     xml_file_path=None,
     xsd_file_path=None,
-    csv_file_path=None,
+    data_file_path=None,
+    output_file_path=None,
 ):
     """
     Entrypoint for pain001 when invoked as a module with
     python3 -m pain001 <xml_message_type> <xml_file_path>
-    <xsd_file_path> <csv_file_path>.
+    <xsd_file_path> <data_file_path> <output_file_path>.
     """
 
     """Initialize the context and log a message."""
@@ -115,10 +118,11 @@ def main(
     if (
         xml_file_path is None
         or xsd_file_path is None
-        or csv_file_path is None
+        or data_file_path is None
+        or output_file_path is None
     ):
         parser = argparse.ArgumentParser(
-            description="Generate Pain.001 file from CSV data"
+            description="Generate Pain.001 file from data"
         )
         parser.add_argument(
             "xml_message_type", help="Type of XML message"
@@ -130,7 +134,10 @@ def main(
             "xsd_file_path", help="Path to XSD template file"
         )
         parser.add_argument(
-            "csv_file_path", help="Path to CSV data file"
+            "data_file_path", help="Path to data file (CSV or SQLite)"
+        )
+        parser.add_argument(
+            "output_file_path", help="Path to output XML file"
         )
         args = parser.parse_args()
 
@@ -138,15 +145,14 @@ def main(
         xml_message_type = args.xml_message_type
         xml_file_path = args.xml_file_path
         xsd_file_path = args.xsd_file_path
-        csv_file_path = args.csv_file_path
+        data_file_path = args.data_file_path
+        output_file_path = args.output_file_path
 
     """Check that the files or values passed as arguments exist."""
     if not xml_message_type:
         logger.info("The XML message type is not specified.")
         print("The XML message type is not specified.")
         sys.exit(1)
-
-    # Add the following code to handle invalid XML message type
 
     # Check that the XML message type is valid
     if xml_message_type not in valid_xml_types:
@@ -155,22 +161,37 @@ def main(
         sys.exit(1)
 
     if not os.path.isfile(xml_file_path):
-        logger.info("The XML template file does not exist.")
-        print("The XML template file does not exist.")
+        logger.info(
+            "The XML template file '{xml_file_path}' does not exist."
+        )
+        print("The XML template file '{xml_file_path}' does not exist.")
         sys.exit(1)
 
     if not os.path.isfile(xsd_file_path):
-        logger.info("The XSD template file does not exist.")
-        print("The XSD template file does not exist.")
+        logger.info(
+            "The XSD template file '{xsd_file_path}' does not exist."
+        )
+        print("The XSD template file '{xsd_file_path}' does not exist.")
         sys.exit(1)
 
-    if not os.path.isfile(csv_file_path):
-        logger.info(f"The CSV file '{csv_file_path}' does not exist.")
-        print(f"The CSV file '{csv_file_path}' does not exist.")
+    if not os.path.isfile(data_file_path):
+        logger.info(f"The data file '{data_file_path}' does not exist.")
+        print(f"The data file '{data_file_path}' does not exist.")
+        sys.exit(1)
+
+    # Validate the XML file and raise a SystemExit exception if invalid
+    if not validate_via_xsd(xml_file_path, xsd_file_path):
+        logger.info(
+            f"Error: XML located at {xml_file_path} is invalid."
+        )
         sys.exit(1)
 
     process_files(
-        xml_message_type, xml_file_path, xsd_file_path, csv_file_path
+        xml_message_type,
+        xml_file_path,
+        xsd_file_path,
+        data_file_path,
+        output_file_path,
     )
 
 

@@ -108,3 +108,7 @@ ENV/
 # VSCode
 .vscode/
 .vscode/settings.json
+
+# Database
+*.db-shm
+*.db-wal
