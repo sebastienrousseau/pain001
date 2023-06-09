@@ -1,68 +1,291 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
     <CstmrCdtTrfInitn>
         <GrpHdr>
-            <MsgId>{{id}}</MsgId>
-            <CreDtTm>{{date}}</CreDtTm>
-            <NbOfTxs>{{nb_of_txs}}</NbOfTxs>
+            <MsgId>1</MsgId>
+            <CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
+            <NbOfTxs>2</NbOfTxs>
             <InitgPty>
-                <Nm>{{initiator_name}}</Nm>
+                <Nm>John Doe</Nm>
             </InitgPty>
         </GrpHdr>
         <PmtInf>
-            <PmtInfId>{{payment_id}}</PmtInfId>
-            <PmtMtd>{{payment_method}}</PmtMtd>
-            <BtchBookg>
-            {{batch_booking}}</BtchBookg>
-            <NbOfTxs>{{nb_of_txs}}</NbOfTxs>
-            <CtrlSum>{{control_sum}}</CtrlSum>
+            <PmtInfId>Payment-Info-12345</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>2</NbOfTxs>
+            <CtrlSum>2</CtrlSum>
             <PmtTpInf>
                 <SvcLvl>
-                    <Cd>{{service_level_code}}</Cd>
+                    <Cd>SEPA</Cd>
                 </SvcLvl>
             </PmtTpInf>
-            <ReqdExctnDt>
-            {{requested_execution_date}}</ReqdExctnDt>
+            <ReqdExctnDt>2023-03-12</ReqdExctnDt>
             <Dbtr>
-                <Nm>{{debtor_name}}</Nm>
+                <Nm>Acme Corp</Nm>
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <IBAN>{{debtor_account_IBAN}}</IBAN>
+                    <IBAN>DE75512108001245126162</IBAN>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BIC>{{debtor_agent_BIC}}</BIC>
+                    <BIC>BANKDEFFXXX</BIC>
                 </FinInstnId>
             </DbtrAgt>
-            <ChrgBr>
-            {{charge_bearer}}</ChrgBr> {% for tx in transactions %} <CdtTrfTxInf>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
                 <PmtId>
-                    <EndToEndId>{{tx.payment_id}}</EndToEndId>
+                    <EndToEndId>PaymentID6789</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
+                    <InstdAmt Ccy="EUR">150.00</InstdAmt>
                 </Amt>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BIC>{{tx.creditor_agent_BIC}}</BIC>
+                        <BIC>SPUEDE2UXXX</BIC>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
-                    <Nm>{{tx.creditor_name}}</Nm>
+                    <Nm>Global Tech</Nm>
                 </Cdtr>
-                <CdtrAcct>
-                    <Id>
-                        <IBAN>{{tx.creditor_account_IBAN}}</IBAN>
-                    </Id>
-                </CdtrAcct>
                 <RmtInf>
-                    <Ustrd>{{tx.unstructured_remittance_info}}</Ustrd>
+                    <Ustrd>Invoice-98765</Ustrd>
                 </RmtInf>
             </CdtTrfTxInf>
-            {% endfor %} </PmtInf>
+        </PmtInf>
+        <PmtInf>
+            <PmtInfId>Payment-Info-12345</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>2</NbOfTxs>
+            <CtrlSum>2</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdExctnDt>2023-03-12</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Acme Corp</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE75512108001245126162</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKDEFFXXX</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>PaymentID6789</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">150.00</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Global Tech</Nm>
+                </Cdtr>
+                <RmtInf>
+                    <Ustrd>Invoice-98765</Ustrd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+        <PmtInf>
+            <PmtInfId>Payment-Info-67890</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>3</NbOfTxs>
+            <CtrlSum>3</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdExctnDt>2023-03-14</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Brown Industries</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE44500105175407324931</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKDEFFXXX</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>PaymentID4321</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">300.00</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Green Energy</Nm>
+                </Cdtr>
+                <RmtInf>
+                    <Ustrd>Invoice-12345</Ustrd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+        <PmtInf>
+            <PmtInfId>Payment-Info-67890</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>3</NbOfTxs>
+            <CtrlSum>3</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdExctnDt>2023-03-14</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Brown Industries</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE44500105175407324931</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKDEFFXXX</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>PaymentID4321</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">300.00</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Green Energy</Nm>
+                </Cdtr>
+                <RmtInf>
+                    <Ustrd>Invoice-12345</Ustrd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+        <PmtInf>
+            <PmtInfId>Payment-Info-24680</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>1</NbOfTxs>
+            <CtrlSum>1</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdExctnDt>2023-03-13</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Alpha Electronics</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE47500105175711000100</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKDEFFXXX</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>PaymentID1357</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">250.00</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Beta Chemicals</Nm>
+                </Cdtr>
+                <RmtInf>
+                    <Ustrd>Invoice-24680</Ustrd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+        <PmtInf>
+            <PmtInfId>Payment-Info-24680</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>1</NbOfTxs>
+            <CtrlSum>1</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdExctnDt>2023-03-13</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Alpha Electronics</Nm>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <IBAN>DE47500105175711000100</IBAN>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKDEFFXXX</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <EndToEndId>PaymentID1357</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">250.00</InstdAmt>
+                </Amt>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Beta Chemicals</Nm>
+                </Cdtr>
+                <RmtInf>
+                    <Ustrd>Invoice-24680</Ustrd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
     </CstmrCdtTrfInitn>
 </Document>

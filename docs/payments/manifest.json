@@ -1,6 +1,6 @@
 {
   "background_color": "#ffffff",
-  "description": "Pain001 is a powerful Python library that enables you to create ISO 20022-compliant payment files directly from CSV or SQLite Data Files.",
+  "description": "Streamline your payments with Pain001, a Python library that automates the creation of ISO 20022 payment messages.",
   "display": "standalone",
   "icons": [
     {
@@ -10,10 +10,10 @@
       "type": "image/png"
     }
   ],
-  "name": "Pain001: Automate ISO 20022-Compliant Payment File Creation",
+  "name": "Automate Payments Generation with Pain001",
   "orientation": "portrait-primary",
   "scope": "/",
-  "short_name": "Pain001",
+  "short_name": "payments",
   "start_url": ".",
   "theme_color": "#0092a5"
 }

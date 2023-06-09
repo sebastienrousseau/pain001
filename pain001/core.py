@@ -16,75 +16,86 @@
 
 # Import the standard libraries
 import sys
+import os
 
 # Import the pain001 library functions
-from .context import context
-from .csv.validate_csv_data import validate_csv_data
-from .csv.load_csv_data import load_csv_data
-from .xml.register_namespaces import register_namespaces
-from .xml.xml_generator import xml_generator
 from pain001.constants.constants import valid_xml_types
+from pain001.context import context
+from pain001.csv.load_csv_data import load_csv_data
+from pain001.csv.validate_csv_data import validate_csv_data
+from pain001.db.load_db_data import load_db_data
+from pain001.db.validate_db_data import validate_db_data
+from pain001.xml.register_namespaces import register_namespaces
+from pain001.xml.xml_generator import xml_generator
 
 
 def process_files(
-    xml_message_type, xml_file_path, xsd_file_path, csv_file_path
+    xml_message_type,
+    xml_file_path,
+    xsd_file_path,
+    data_file_path,
+    output_file_path,
 ):
     """
-    This function, when called, generates an ISO 20022 payment message
-    from a CSV file containing the payment data.
-
-    The `process_files` function takes the following arguments:
-
-    - **xml_message_type**: The type of the ISO 20022 payment message to
-    generate. (Default value is `pain.001.001.03`)
-    - **xml_file_path**: The path of the XML template file.
-    - **xsd_file_path**: The path of the XSD schema file.
-    - **csv_file_path**: The path of the CSV file containing the payment
-    data.
+    This function generates an ISO 20022 payment message from a CSV or SQLite
+    file containing the payment data.
 
     Args:
-        - **xml_message_type (str)**: The type of XML message to
-        generate. The following ISO 20022 Payment Initiation message
-        types are supported:
-            - `pain.001.001.03` - Customer Credit Transfer Initiation,
-            - `pain.001.001.09` - Notification of Reversal,
-        - **xml_file_path (str)**: The path of the XML template file.
-        - **xsd_file_path (str)**: The path of the XSD schema file.
-        - **csv_file_path (str)**: The path of the CSV file containing
-        the payment data.
+        xml_message_type (str): The type of XML message to generate. Valid
+        options are 'pain.001.001.03' and 'pain.001.001.09'.
+        xml_file_path (str): The path of the XML template file.
+        xsd_file_path (str): The path of the XSD schema file.
+        data_file_path (str): The path of the CSV or SQLite file containing the
+        payment data.
+        output_file_path (str): The path of the output XML file.
 
     Returns:
-        The function returns a new XML file with the payment data in the
-        ISO 20022 payment message format that was specified in the
-        `xml_message_type` argument.
+        None
 
     Raises:
         ValueError: If the XML message type is not supported.
         FileNotFoundError: If the XML template file does not exist.
         FileNotFoundError: If the XSD schema file does not exist.
-        FileNotFoundError: If the CSV file does not exist.
+        FileNotFoundError: If the data file does not exist.
     """
 
     # Initialize the context and log a message.
     logger = context.Context.get_instance().get_logger()
 
-    # Print out the command-line arguments for debugging purposes
-    # print(f"Command-line arguments: {sys.argv}")
-
-    # Looping through the payment initiation message types array and
-    # check if the XML message type is supported.  If it is supported,
-    # print out the XML message type and break out of the loop.  If it
-    # is not supported, print out an error message and exit the program.
-    if xml_message_type in valid_xml_types:
-        logger.info(f"XML message type: {xml_message_type}")
-    else:
-        logger.error(
-            f"Error: Invalid XML message type: `{xml_message_type}`."
+    # Loop through the payment initiation message types and check if the XML
+    # message type is supported.
+    if xml_message_type not in valid_xml_types:
+        error_message = (
+            f"Error: Invalid XML message type: '{xml_message_type}'."
         )
-        sys.exit(1)
+        logger.error(error_message)
+        raise ValueError(error_message)
 
-    # Define mapping dictionary between XML element tags and CSV column
-    # names
+    # Check if the XML template file exists
+    if not os.path.exists(xml_file_path):
+        error_message = (
+            f"Error: XML template '{xml_file_path}' does not exist."
+        )
+        logger.error(error_message)
+        raise FileNotFoundError(error_message)
+
+    # Check if the XSD schema file exists
+    if not os.path.exists(xsd_file_path):
+        error_message = (
+            f"Error: XSD schema file '{xsd_file_path}' does not exist."
+        )
+        logger.error(error_message)
+        raise FileNotFoundError(error_message)
+
+    # Check if the data file exists
+    if not os.path.exists(data_file_path):
+        error_message = (
+            f"Error: Data file '{data_file_path}' does not exist."
+        )
+        logger.error(error_message)
+        raise FileNotFoundError(error_message)
+
+    # Define mapping dictionary between XML element tags and CSV column names
     mapping = {
         "MsgId": "id",
         "CreDtTm": "date",
@@ -94,16 +105,26 @@ def process_files(
         "PmtMtd": "payment_method",
     }
 
-    # Load CSV data into a list of dictionaries
-    data = load_csv_data(csv_file_path)
+    # Determine the type of data file (CSV or SQLite)
+    is_csv = data_file_path.endswith(".csv")
+    is_sqlite = data_file_path.endswith(".db")
 
-    # Validate the CSV data
-    if not validate_csv_data(data):
-        logger.error("❌ Error: Invalid CSV data.")
-        sys.exit(1)
+    # Load data into a list of dictionaries based on the file type
+    if is_csv:
+        data = load_csv_data(data_file_path)
+        validate_csv_data
+    elif is_sqlite:
+        data = load_db_data(data_file_path, table_name="pain001")
+    else:
+        error_message = "Error: Unsupported data file type."
+        logger.error(error_message)
+        raise ValueError(error_message)
 
-    # Print out CSV data for debugging
-    # print(f"CSV data: {data}")
+    # Validate the data
+    if not validate_db_data(data):
+        error_message = "Error: Invalid data."
+        logger.error(error_message)
+        raise ValueError(error_message)
 
     # Register the namespace prefixes and URIs for the XML message type
     register_namespaces(xml_message_type)
@@ -113,12 +134,31 @@ def process_files(
         data, mapping, xml_message_type, xml_file_path, xsd_file_path
     )
 
+    # Log a message
+    logger.info(
+        f"Generating XML file '{output_file_path}'"
+        f"from data file '{data_file_path}'."
+    )
+    logger.info(
+        f"Successfully generated XML file '{output_file_path}'."
+    )
+
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 6:
         print(
-            "Usage: python3 -m pain001 <xml_message_type> "
-            "<xml_file_path> <xsd_file_path> <csv_file_path> "
+            "Usage: python3 -m pain001 "
+            + " ".join(
+                [
+                    "<xml_message_type>",
+                    "<xml_file_path>",
+                    "<xsd_file_path>",
+                    "<data_file_path>",
+                    "<output_file_path>",
+                ]
+            )
         )
         sys.exit(1)
-    process_files(sys.argv[1], sys.argv[2], sys.argv[3])
+    process_files(
+        sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5]
+    )

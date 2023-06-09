@@ -6,180 +6,74 @@ from unittest.mock import patch
 
 
 class TestMain:
-
     def setup_method(self):
         self.xml_message_type = "pain.001.001.03"
         self.xml_file = "tests/data/template.xml"
         self.xsd_file = "tests/data/template.xsd"
         self.csv_file = "tests/data/template.csv"
+        self.output_file = "tests/data/output.xml"
 
     def test_main_with_valid_files(self):
         with patch.object(
             sys,
-            'argv',
+            "argv",
             [
-                '',
+                "",
                 self.xml_message_type,
                 self.xml_file,
                 self.xsd_file,
-                self.csv_file
-            ]
+                self.csv_file,
+                self.output_file,
+            ],
         ):
             with patch(
-                'sys.stdout', new_callable=io.StringIO
+                "sys.stdout", new_callable=io.StringIO
             ) as captured_output:
-                main(
-                    self.xml_message_type,
-                    self.xml_file,
-                    self.xsd_file,
-                    self.csv_file
-                )
-
-            captured_text = captured_output.getvalue()
+                main()
             assert (
-                "❯ XML located at "
-                "tests/data/pain.001.001.03.xml"
-                " is valid."
-                in captured_text
-            )
-
-    def test_main_with_invalid_xml_message_type(self):
-        with patch.object(
-            sys,
-            'argv',
-            [
-                '',
-                'invalid',
-                self.xml_file,
-                self.xsd_file,
-                self.csv_file
-            ]
-        ):
-            with patch(
-                'sys.stdout', new_callable=io.StringIO
-            ) as captured_output:
-                with pytest.raises(SystemExit):
-                    main(
-                        'invalid',
-                        self.xml_file,
-                        self.xsd_file,
-                        self.csv_file
-                    )
-
-                assert (
-                    "Invalid XML message type"
-                    in captured_output.getvalue()
-                )
-
-    def test_main_with_invalid_xml_file(self):
-        with patch.object(
-                sys,
-                'argv',
-                [
-                    '',
-                    'pain.001.001.03',
-                    'tests/data/invalid.xml',
-                    self.xsd_file,
-                    self.csv_file
-                ]):
-            with patch(
-                'sys.stdout', new_callable=io.StringIO
-            ) as captured_output:
-                with pytest.raises(SystemExit):
-                    main(
-                        self.xml_message_type,
-                        'tests/data/invalid.xml',
-                        self.xsd_file,
-                        self.csv_file
-                    )
-
-            assert (
-                "The XML template "
-                "file does not exist."
-                in captured_output.getvalue()
-            )
-
-    def test_main_with_invalid_xsd_file(self):
-        with patch.object(
-            sys, 'argv', [
-                self.xml_message_type,
-                self.xml_file,
-                'tests/data/invalid.xsd',
-                self.csv_file
-            ]
-        ):
-            with patch(
-                'sys.stdout',
-                new_callable=io.StringIO
-            ) as captured_output:
-                with pytest.raises(SystemExit):
-                    main(
-                        self.xml_message_type,
-                        self.xml_file,
-                        'tests/data/invalid.xsd',
-                        self.csv_file
-                    )
-
-            assert (
-                "The XSD template file does not exist."
+                "❯ XML located at tests/data/pain.001.001.03.xml is valid."
                 in captured_output.getvalue()
             )
 
     def test_main_with_invalid_csv_file(self):
         with patch.object(
             sys,
-            'argv',
+            "argv",
             [
+                "",
                 self.xml_message_type,
                 self.xml_file,
                 self.xsd_file,
-                'tests/data/invalid.csv'
-            ]
+                "tests/data/invalid.csv",
+                self.output_file,
+            ],
         ):
             with patch(
-                'sys.stdout',
-                new_callable=io.StringIO
+                "sys.stdout", new_callable=io.StringIO
             ) as captured_output:
-                with pytest.raises(SystemExit):
-                    main(
-                        self.xml_message_type,
-                        self.xml_file,
-                        self.xsd_file,
-                        'tests/data/invalid.csv'
-                    )
+                with pytest.raises(SystemExit) as exc_info:
+                    main()
 
-        assert (
-            "The CSV file 'tests/data/invalid.csv' does not exist."
-            in captured_output.getvalue()
-        )
+        assert exc_info.type == SystemExit
+        assert exc_info.value.code == 1
+        expected_error_message = "Error: No data to process."
+        assert expected_error_message in captured_output.getvalue()
 
-    def test_main_with_file_not_found_error(self):
-        with patch.object(
-            sys,
-            'argv',
-            [
-                '',
-                self.xml_message_type,
-                self.xml_file,
-                self.xsd_file,
-                'tests/data/file_not_found.csv'
-            ]
-        ):
-            with patch(
-                'sys.stdout',
-                new_callable=io.StringIO
-            ) as captured_output:
-                with pytest.raises(SystemExit):
-                    main(
-                        self.xml_message_type,
-                        self.xml_file,
-                        self.xsd_file,
-                        'tests/data/file_not_found.csv'
-                    )
+    def test_main_with_invalid_xml_file(self):
+        with pytest.raises(SystemExit) as exc_info:
+            with patch.object(
+                sys,
+                "argv",
+                [
+                    "",
+                    self.xml_message_type,
+                    "tests/data/invalid.xml",
+                    self.xsd_file,
+                    self.csv_file,
+                    self.output_file,
+                ],
+            ):
+                main()
 
-            assert (
-                "CSV file "
-                "'tests/data/file_not_found.csv' "
-                "does not exist."
-                in captured_output.getvalue()
-            )
+        assert exc_info.type == SystemExit
+        assert exc_info.value.code == 1

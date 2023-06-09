@@ -1,96 +1,173 @@
-import unittest
 import os
+import pytest
+import sys
+
+from contextlib import contextmanager
+from io import StringIO
+
 from pain001.core import process_files
 
-from pain001.csv.load_csv_data import load_csv_data
-from pain001.xml.register_namespaces import register_namespaces
-from pain001.xml.validate_via_xsd import validate_via_xsd
-from pain001.xml.xml_generator import xml_generator
+
+@contextmanager
+def catch_stdout():
+    try:
+        old_out, sys.stdout = sys.stdout, StringIO()
+        yield sys.stdout
+    finally:
+        sys.stdout = old_out
 
 
-class TestProcessFiles(unittest.TestCase):
-    def test_process_files_valid_data(self):
+class TestProcessFiles:
+    @pytest.fixture(autouse=True)
+    def setup_teardown(self):
+        self.output_file_path = "tests/data/pain.001.001.03.xml"
+        yield
+        if os.path.exists(self.output_file_path):
+            os.remove(self.output_file_path)
 
-        # Define the XML message type
-        payment_initiation_message_type = "pain.001.001.03"
+    def test_invalid_csv_data(self):
+        """
+        Test case for processing files with invalid CSV data.
+        """
+        with catch_stdout():
+            with pytest.raises(SystemExit) as exc_info:
+                process_files(
+                    "pain.001.001.03",
+                    "tests/data/template.xml",
+                    "tests/data/template.xsd",
+                    "tests/data/invalid.csv",
+                    self.output_file_path,
+                )
 
-        # Create a CSV file with valid data
-        csv_file_path = os.path.join(os.path.dirname(
-            __file__), "data/template.csv")
+        assert exc_info.value.code == 1
 
-        # Read the XML template file
-        xml_template_file = os.path.join(
-            os.path.dirname(__file__), "data/template.xml")
+    def test_invalid_xml_message_type(self):
+        """
+        Test case for processing files with an invalid XML message type.
+        """
+        with pytest.raises(ValueError) as exc_info:
+            process_files(
+                "invalid",
+                "tests/data/template.xml",
+                "tests/data/template.xsd",
+                "tests/data/template.csv",
+                self.output_file_path,
+            )
 
-        # Create an XSD file
-        xsd_file = os.path.join(os.path.dirname(
-            __file__), "data/template.xsd")
-        with open(xsd_file) as f:
-            xsd_file = f.read()
-
-        # Define mapping dictionary between XML element tags and
-        # CSV column names
-        mapping = {
-            "MsgId": "id",
-            "CreDtTm": "date",
-            "NbOfTxs": "nb_of_txs",
-            "Nm": "initiator_name",
-            "PmtInfId": "payment_information_id",
-            "PmtMtd": "payment_method",
-        }
-
-        # Load CSV data into a list of dictionaries
-        data = load_csv_data(csv_file_path)
-
-        # Register the namespace prefixes
-        register_namespaces(payment_initiation_message_type)
-
-        # Generate the updated XML file path
-        xml_generator(
-            data,
-            mapping,
-            payment_initiation_message_type,
-            xml_template_file,
-            xsd_file
+        error_message = str(exc_info.value)
+        expected_error_message = (
+            "Error: Invalid XML message type: 'invalid'."
         )
+        assert error_message == expected_error_message
 
-        # Check that the output XML file was created
-        output_xml_file = os.path.join(
-            os.path.dirname(__file__), "data/template_updated.xml")
-        self.assertTrue(os.path.exists(output_xml_file))
-
-        # Validate the updated XML file against the XSD schema
-        is_valid = validate_via_xsd(output_xml_file, xsd_file)
-        self.assertTrue(is_valid)
-
-        # Test process_files function
-        xml_message_type = payment_initiation_message_type
-        process_files(
-            xml_message_type,
-            xml_template_file,
-            xsd_file,
-            csv_file_path
-        )
-        assert os.path.exists(os.path.join(
-            os.path.dirname(__file__), "data/template_updated.xml"))
-
-    def test_process_files_invalid_data(self):
-        try:
+    def test_nonexistent_data_file_path(self):
+        """
+        Test case for processing files with a non-existent data file path.
+        """
+        with pytest.raises(FileNotFoundError) as exc_info:
             process_files(
                 "pain.001.001.03",
-                "invalid.xml",
-                "invalid.xsd",
-                "invalid.csv"
+                "tests/data/template.xml",
+                "tests/data/template.xsd",
+                "tests/data/nonexistent.csv",
+                self.output_file_path,
             )
-        except FileNotFoundError:
-            pass
-        else:
-            assert False, "process_files() FileNotFoundError"
+        assert (
+            str(exc_info.value)
+            == "Error: Data file 'tests/data/nonexistent.csv' does not exist."
+        )
 
-        # Test that the invalid XML file was not created
-        assert os.path.exists(os.path.join(
-            os.path.dirname(__file__), "data/invalid.xml")) is False
-        assert os.path.exists(os.path.join(
-            os.path.dirname(__file__), "data/invalid.xsd")) is False
-        assert os.path.exists(os.path.join(
-            os.path.dirname(__file__), "data/invalid.csv")) is False
+    def test_nonexistent_xml_file_path(self):
+        """
+        Test case for processing files with a non-existent XML file path.
+        """
+        with pytest.raises(FileNotFoundError):
+            process_files(
+                "pain.001.001.03",
+                "tests/data/nonexistent.xml",
+                "tests/data/template.xsd",
+                "tests/data/template.csv",
+                self.output_file_path,
+            )
+        # assert exc_info.value.code == 1
+
+    def test_nonexistent_xsd_file_path(self):
+        """
+        Test case for processing files with a non-existent XSD file path.
+        """
+        with pytest.raises(FileNotFoundError):
+            process_files(
+                "pain.001.001.03",
+                "tests/data/template.xml",
+                "tests/data/nonexistent.xsd",
+                "tests/data/template.csv",
+                self.output_file_path,
+            )
+        # assert exc_info.value.code == 1
+
+    def test_successful_execution(self):
+        """
+        Test case for successful execution of file processing.
+        """
+        process_files(
+            "pain.001.001.03",
+            "tests/data/template.xml",
+            "tests/data/template.xsd",
+            "tests/data/template.csv",
+            self.output_file_path,
+        )
+
+        output_file_exists = os.path.exists(self.output_file_path)
+        if not output_file_exists:
+            raise AssertionError("Output file does not exist.")
+
+    def test_unsupported_data_file_type(self):
+        """
+        Test case for processing files with an unsupported data file type.
+        """
+        with pytest.raises(ValueError) as exc_info:
+            process_files(
+                "pain.001.001.03",
+                "tests/data/template.xml",
+                "tests/data/template.xsd",
+                "tests/data/invalid.rtf",
+                self.output_file_path,
+            )
+        assert (
+            str(exc_info.value) == "Error: Unsupported data file type."
+        )
+
+    def test_uses_sqlite_database(self):
+        """
+        Test case for processing files using an SQLite database.
+        """
+        xml_message_type = "pain.001.001.03"
+        xml_file_path = "tests/data/template.xml"
+        xsd_file_path = "tests/data/template.xsd"
+        data_file_path = "tests/data/template.db"
+
+        process_files(
+            xml_message_type,
+            xml_file_path,
+            xsd_file_path,
+            data_file_path,
+            self.output_file_path,
+        )
+        output_file_exists = os.path.exists(self.output_file_path)
+        if not output_file_exists:
+            raise AssertionError("Output file does not exist.")
+
+    def test_valid_xml_message_type(self):
+        """
+        Test case for processing files with a valid XML message type.
+        """
+        process_files(
+            "pain.001.001.03",
+            "tests/data/template.xml",
+            "tests/data/template.xsd",
+            "tests/data/template.csv",
+            self.output_file_path,
+        )
+        output_file_exists = os.path.exists(self.output_file_path)
+        if not output_file_exists:
+            raise AssertionError("Output file does not exist.")

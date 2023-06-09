@@ -1,0 +1,2 @@
+User-agent: *
+Sitemap: https://pain001.com/pain.001.001.03/index.html/sitemap.xml
