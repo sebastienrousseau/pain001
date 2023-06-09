@@ -18,9 +18,6 @@
 import sys
 import os
 
-# Import the SQLite library
-import sqlite3
-
 # Import the pain001 library functions
 from pain001.constants.constants import valid_xml_types
 from pain001.context import context
@@ -40,13 +37,16 @@ def process_files(
     output_file_path,
 ):
     """
-    This function generates an ISO 20022 payment message from a CSV or SQLite file containing the payment data.
+    This function generates an ISO 20022 payment message from a CSV or SQLite
+    file containing the payment data.
 
     Args:
-        xml_message_type (str): The type of XML message to generate. Valid options are 'pain.001.001.03' and 'pain.001.001.09'.
+        xml_message_type (str): The type of XML message to generate. Valid
+        options are 'pain.001.001.03' and 'pain.001.001.09'.
         xml_file_path (str): The path of the XML template file.
         xsd_file_path (str): The path of the XSD schema file.
-        data_file_path (str): The path of the CSV or SQLite file containing the payment data.
+        data_file_path (str): The path of the CSV or SQLite file containing the
+        payment data.
         output_file_path (str): The path of the output XML file.
 
     Returns:
@@ -62,7 +62,8 @@ def process_files(
     # Initialize the context and log a message.
     logger = context.Context.get_instance().get_logger()
 
-    # Loop through the payment initiation message types and check if the XML message type is supported.
+    # Loop through the payment initiation message types and check if the XML
+    # message type is supported.
     if xml_message_type not in valid_xml_types:
         error_message = (
             f"Error: Invalid XML message type: '{xml_message_type}'."
@@ -72,7 +73,9 @@ def process_files(
 
     # Check if the XML template file exists
     if not os.path.exists(xml_file_path):
-        error_message = f"Error: XML template file '{xml_file_path}' does not exist."
+        error_message = (
+            f"Error: XML template '{xml_file_path}' does not exist."
+        )
         logger.error(error_message)
         raise FileNotFoundError(error_message)
 
@@ -109,7 +112,7 @@ def process_files(
     # Load data into a list of dictionaries based on the file type
     if is_csv:
         data = load_csv_data(data_file_path)
-        validate_func = validate_csv_data
+        validate_csv_data
     elif is_sqlite:
         data = load_db_data(data_file_path, table_name="pain001")
     else:
@@ -133,7 +136,8 @@ def process_files(
 
     # Log a message
     logger.info(
-        f"Generating XML file '{output_file_path}' from data file '{data_file_path}'."
+        f"Generating XML file '{output_file_path}'"
+        f"from data file '{data_file_path}'."
     )
     logger.info(
         f"Successfully generated XML file '{output_file_path}'."
@@ -143,7 +147,16 @@ def process_files(
 if __name__ == "__main__":
     if len(sys.argv) < 6:
         print(
-            "Usage: python3 -m pain001 <xml_message_type> <xml_file_path> <xsd_file_path> <data_file_path> <output_file_path>"
+            "Usage: python3 -m pain001 "
+            + " ".join(
+                [
+                    "<xml_message_type>",
+                    "<xml_file_path>",
+                    "<xsd_file_path>",
+                    "<data_file_path>",
+                    "<output_file_path>",
+                ]
+            )
         )
         sys.exit(1)
     process_files(

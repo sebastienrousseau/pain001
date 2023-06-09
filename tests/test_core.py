@@ -81,7 +81,7 @@ class TestProcessFiles:
         """
         Test case for processing files with a non-existent XML file path.
         """
-        with pytest.raises(FileNotFoundError) as exc_info:
+        with pytest.raises(FileNotFoundError):
             process_files(
                 "pain.001.001.03",
                 "tests/data/nonexistent.xml",
@@ -95,7 +95,7 @@ class TestProcessFiles:
         """
         Test case for processing files with a non-existent XSD file path.
         """
-        with pytest.raises(FileNotFoundError) as exc_info:
+        with pytest.raises(FileNotFoundError):
             process_files(
                 "pain.001.001.03",
                 "tests/data/template.xml",
