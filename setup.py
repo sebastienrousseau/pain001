@@ -172,16 +172,21 @@ SHORT_DESCRIPTION = """
 Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files
 Using CSV Data.""".strip()
 
-DEPENDENCIES = ["xmlschema>=2.3.0"]
+DEPENDENCIES = ["click==8.1.3", "defusedxml==0.7.1", "xmlschema==2.3.0"]
 
-TEST_DEPENDENCIES = ["xmlschema>=2.3.0", "pytest>=7.3.1"]
+TEST_DEPENDENCIES = [
+    "click==8.1.3",
+    "defusedxml==0.7.1",
+    "xmlschema==2.3.0",
+    "pytest>=7.3.1",
+]
 
+NAME = ("pain001",)
+URL = "https://github.com/sebastienrousseau/pain001"
 VERSION = "0.0.20"
 
-URL = "https://github.com/sebastienrousseau/pain001"
-
 setup(
-    name="pain001",
+    name=NAME,
     version=VERSION,
     description=SHORT_DESCRIPTION,
     long_description=LONG_DESCRIPTION,
