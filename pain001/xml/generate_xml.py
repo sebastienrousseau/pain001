@@ -27,7 +27,7 @@ def create_common_elements(parent, row, mapping):
 
 
 def create_xml_v3(root, data, mapping):
-    print("XML v3")
+    # print("XML v3")
 
     # Create CstmrCdtTrfInitn element
     cstmr_cdt_trf_initn_element = ET.Element("CstmrCdtTrfInitn")
@@ -41,9 +41,7 @@ def create_xml_v3(root, data, mapping):
     for xml_tag, csv_column in mapping.items():
         if xml_tag in ["MsgId", "CreDtTm", "NbOfTxs"]:
             create_xml_element(
-                GrpHdr_element,
-                xml_tag,
-                data[0][csv_column]
+                GrpHdr_element, xml_tag, data[0][csv_column]
             )
 
     # Create new "InitgPty" element in the XML tree using data from the
@@ -74,9 +72,7 @@ def create_xml_v3(root, data, mapping):
         # Create new "BtchBookg" element in the XML tree using data
         # from the CSV file
         create_xml_element(
-            PmtInf_element,
-            "BtchBookg",
-            row["batch_booking"].lower()
+            PmtInf_element, "BtchBookg", row["batch_booking"].lower()
         )
 
         # Create new "NbOfTxs" element in the XML tree using data from
@@ -86,9 +82,7 @@ def create_xml_v3(root, data, mapping):
         # Create new "CtrlSum" element in the XML tree using data from
         # the CSV file
         create_xml_element(
-            PmtInf_element,
-            "CtrlSum",
-            f"{row['control_sum']}"
+            PmtInf_element, "CtrlSum", f"{row['control_sum']}"
         )
 
         # Create new "PmtTpInf" element in the XML tree using data from
@@ -106,7 +100,7 @@ def create_xml_v3(root, data, mapping):
         create_xml_element(
             PmtInf_element,
             "ReqdExctnDt",
-            row["requested_execution_date"]
+            row["requested_execution_date"],
         )
 
         # Create new "Dbtr" element in the XML tree using data from
@@ -214,7 +208,9 @@ def create_xml_v9(root, data, mapping):
     # Add the MsgId, CreDtTm, and NbOfTxs elements to the GrpHdr element
     for xml_tag, csv_column in mapping.items():
         if xml_tag in ["MsgId", "CreDtTm", "NbOfTxs"]:
-            create_xml_element(GrpHdr_element, xml_tag, data[0][csv_column])
+            create_xml_element(
+                GrpHdr_element, xml_tag, data[0][csv_column]
+            )
 
     # Create new "InitgPty" element in the XML tree using data from the
     # CSV file
@@ -265,7 +261,8 @@ def create_xml_v9(root, data, mapping):
         # replace with the appropriate value
         child_element2.text = row["debtor_agent_BIC"]
         child_element2.set(
-            "xmlns", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09")
+            "xmlns", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
+        )
         child_element.append(child_element2)
         DbtrAgt_element.append(child_element)
         PmtInf_element.append(DbtrAgt_element)
@@ -306,7 +303,8 @@ def create_xml_v9(root, data, mapping):
         # replace with the appropriate value
         child_element2.text = row["creditor_agent_BIC"]
         child_element2.set(
-            "xmlns", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09")
+            "xmlns", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
+        )
         child_element.append(child_element2)
         CdtrAgt_element.append(child_element)
         CdtTrfTxInf_element.append(CdtrAgt_element)

@@ -1,67 +1,55 @@
-<!-- markdownlint-disable MD033 MD041 -->
-
-<img
-  src="https://kura.pro/pain001/images/logos/pain001.svg"
-  alt="Pain001 Logo"
-  height="261"
-  width="261"
-  align="right"
-/>
-
-<!-- markdownlint-enable MD033 MD041 -->
-
-# Pain001 - A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data
+# Pain001: Automate ISO 20022-Compliant Payment File Creation
 
 ![Pain001 banner][banner]
 
 [![PyPI][pypi-badge]][3] [![License][license-badge]][1]
 [![Codecov][codecov-badge]][6]
 
-**Pain001** is a Python Library for Automating ISO 20022-Compliant Payment
-Files Using CSV Data.
+**Pain001** is a powerful Python library that enables you to create ISO 20022-
+compliant payment files directly from CSV or SQLite Data Files.
 
-**Pain001** offers a streamlined solution for reducing complexity and costs
-associated with payment processing. By providing a simple and efficient method
-to create ISO 20022-compliant payment files, it eliminates the manual effort of
-file creation and validation. This not only saves valuable time and resources
-but also minimizes the risk of errors, ensuring accurate and seamless payment
-processing.
+## Overview
+
+Today, the payment industry is experiencing a rapid evolution and
+transformation as it moves towards adopting **[ISO 20022][1]** as the new norm.
+ISO 20022 is a global standard for sharing financial information across
+organisations. It provides a harmonised protocol used by banks, corporations,
+and financial institutions to automate and standardise payment transactions.
+
+Here are some of the benefits of using ISO 20022:
+
+- **Improved data quality**: ISO 20022 messages are more structured and
+  detailed than traditional payment messages, reducing errors and improving
+  efficiency.
+- **Increased transparency**: ISO 20022 messages provide more information
+  about the payment transaction, which can help to improve the visibility and
+  traceability of payments.
+- **Enhanced compliance**: ISO 20022 messages can help organisations follow
+  AML/CFT and PSD2 regulations.
+
+Overall, ISO 20022 is a significant improvement over traditional payment
+messaging standards. It provides a more efficient, transparent, and compliant
+way to process payments.
+
+## Pain001 in action
+
+The Python library **Pain001** focuses specifically on payment initiation and
+advice messages, commonly known as **pain**. Payments usually start with a
+**pain.001 payment initiation message**. The payer sends it to the payee (or
+the payee's bank) via a secure network. This network could be **SWIFT** or
+**SEPA (Single Euro Payments Area)** network, or other payment networks such
+as **CHAPS**, **BACS**, **Faster Payments**, etc. The message contains the
+payer's and payee's bank account details, payment amount, and other information
+required to process the payment.
+
+**Pain001** can reduce payment processing complexity and costs by generating
+ISO 20022-compliant payment files. These files automatically remove the need to
+create and validate them manually, making the payment process more efficient
+and cost-effective. It will save you time and resources and minimises the risk
+of errors, making sure accurate and seamless payment processing.
 
 If you are seeking to simplify and automate your payment processing, consider
 leveraging the capabilities of **Pain001**.
-
-## Features ✨
-
-- **Easy to use:** The library is easy to use and requires minimal coding
-  knowledge, making it suitable for both developers and non-developers.
-- **Open-source**: The library is open-source and free to use, making it
-  accessible to everyone.
-- **Secure**: The library is secure and does not store any sensitive data,
-  ensuring that all information remains confidential.
-- **Customizable**: The library allows developers to customize the output,
-  making it adaptable to specific business requirements and preferences.
-- **Scalable solution**: The **Pain001** library can handle varying volumes of
-  payment files, making it suitable for businesses of different sizes and
-  transaction volumes.
-- **Time-saving**: The automated file creation process reduces the time spent
-  on manual data entry and file generation, increasing overall productivity.
-- **Seamless integration**: As a Python package, the **Pain001** library is
-  compatible with various Python-based applications and easily integrates into
-  any existing projects or workflows.
-- **Cross-border compatibility**: The library supports both Single Euro
-  Payments Area (SEPA) and non-SEPA credit transfers, making it versatile for
-  use in different countries and regions.
-- **Improve accuracy** by providing precise data, the library reduces errors in
-  payment file creation and processing.
-- **Enhance efficiency** by automating the creation of Payment Initiation
-  message files
-- **Accelerate payment file creation** by automating the process and reducing
-  the time required to create payment files.
-- **Guarantee the highest quality and compliance** by validating all payment
-  files to meet the ISO 20022 standards.
-- **Provide flexibility and choice to migrate to any supported ISO 20022
-  messaging standard definitions** by simplifying the message creation process
-  and providing a standardized format for payment files.
 
 ## Installation
 
@@ -86,7 +74,8 @@ python3 -m pain001 \
     <xml_message_type> \
     <xml_file_path> \
     <xsd_file_path> \
-    <csv_file_path>
+    <data_file_path> \
+    <output_file_path>
 ```
 
 ## Arguments
@@ -101,6 +90,8 @@ When running **Pain001**, you will need to specify four arguments:
 - `xsd_file_path`: This is the path to the XSD template file you are using.
 - `csv_file_path`: This is the path to the CSV data file you want to convert
   to XML.
+- `output_file_path`: This is the path to the output XML file you want to save
+  the generated XML file to.
 
 ## Examples
 
@@ -114,7 +105,8 @@ python3 -m pain001 \
     pain.001.001.03 \
     /path/to/your/pain.001.001.03.xml \
     /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/pain.001.001.03.csv
+    /path/to/your/pain.001.001.03.csv \
+    /path/to/your/output.xml
 ```
 
 **Note:** The XML file that **Pain001** generates will be automatically
@@ -299,7 +291,7 @@ of [Pain001][5] for their help and support.
 [pain.001.001.10]: docs/payments-initiation/messages/pain.001.001.10/README.md
 [pain.001.001.11]: docs/payments-initiation/messages/pain.001.001.11/README.md
 
-[banner]: https://kura.pro/pain001/images/titles/title-pain001.svg 'Pain001'
+[banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'

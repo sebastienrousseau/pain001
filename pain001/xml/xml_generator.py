@@ -69,20 +69,23 @@ def xml_generator(
         # Write the updated XML tree to a file
         write_xml_to_file(updated_xml_file_path, root)
 
+        print(
+            f"A new XML file has been created at {updated_xml_file_path}"
+        )
+
         # Validate the updated XML file against the XSD schema
         is_valid = validate_via_xsd(
             updated_xml_file_path, xsd_file_path
         )
         if not is_valid:
-            print("❌ Error: Invalid XML data.")
+            print("Error: Invalid XML data.")
             sys.exit(1)
         else:
-            print(f"❯ XML located at {updated_xml_file_path} is valid.")
+            print(f"The XML has been validated against {xsd_file_path}")
     else:
         # Handle the case when the payment_initiation_message_type is
         # not valid
         print(
-            "❌",
             "Error: Invalid XML message type:",
             payment_initiation_message_type,
         )

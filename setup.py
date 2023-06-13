@@ -176,7 +176,7 @@ DEPENDENCIES = ["xmlschema>=2.3.0"]
 
 TEST_DEPENDENCIES = ["xmlschema>=2.3.0", "pytest>=7.3.1"]
 
-VERSION = "0.0.19"
+VERSION = "0.0.20"
 
 URL = "https://github.com/sebastienrousseau/pain001"
 

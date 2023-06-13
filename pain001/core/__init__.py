@@ -12,22 +12,3 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import os
-
-# Generate the path to the updated XML file based on the path to the
-# original XML file
-
-
-def generate_updated_xml_file_path(
-    xml_file_path, payment_initiation_message_type
-):
-    # print(os.path.splitext(xml_file_path)[0])
-    base_directory = os.path.dirname(xml_file_path)
-    base_name = os.path.basename(xml_file_path)
-    file_name, _ = os.path.splitext(base_name)
-
-    new_file_name = payment_initiation_message_type + ".xml"
-    new_file_path = os.path.join(base_directory, new_file_name)
-
-    return new_file_path

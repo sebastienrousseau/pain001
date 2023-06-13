@@ -75,26 +75,32 @@ class Context:
         Raises:
             Exception: If the log level is invalid.
         """
+        valid_log_levels = {
+            "DEBUG": logging.DEBUG,
+            "INFO": logging.INFO,
+            "WARNING": logging.WARNING,
+            "ERROR": logging.ERROR,
+            "CRITICAL": logging.CRITICAL,
+        }
+
         if isinstance(
             log_level, int
         ):  # Check if log_level is an integer
-            self.log_level = log_level
+            if log_level in valid_log_levels.values():
+                self.log_level = log_level
+            else:
+                raise Exception("Invalid log level")
         else:
             log_level = (
                 log_level.strip().upper()
             )  # Strip and convert to uppercase
-            if log_level == "DEBUG":
-                self.log_level = logging.DEBUG
-            elif log_level == "INFO":
-                self.log_level = logging.INFO
-            elif log_level == "WARNING":
-                self.log_level = logging.WARNING
-            elif log_level == "ERROR":
-                self.log_level = logging.ERROR
-            elif log_level == "CRITICAL":
-                self.log_level = logging.CRITICAL
+            if log_level in valid_log_levels:
+                self.log_level = valid_log_levels[log_level]
             else:
                 raise Exception("Invalid log level")
+
+        if self.logger:
+            self.logger.setLevel(self.log_level)
 
     def init_logger(self):
         """Initializes the logger.

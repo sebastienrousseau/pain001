@@ -15,19 +15,38 @@ import xmlschema
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xml.etree.ElementTree as ET
-
-# Validate XML file against XSD schema using xmlschema package
-# (https://pypi.org/project/xmlschema/) and ElementTree package
-# (https://docs.python.org/3/library/xml.etree.elementtree.html)
+import defusedxml.ElementTree as ET
+import xmlschema
 
 
 def validate_via_xsd(xml_file_path, xsd_file_path):
-    # Load XML and XSD files
-    xml_tree = ET.parse(xml_file_path)
+    """
+    Validates an XML file against an XSD schema.
+
+    Args:
+        xml_file_path (str): Path to the XML file to validate.
+        xsd_file_path (str): Path to the XSD schema file.
+
+    Returns:
+        bool: True if the XML file is valid, False otherwise.
+    """
+
+    # Load XML file into an ElementTree object.
+    try:
+        xml_tree = ET.parse(xml_file_path)
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+
+    # Load XSD schema into an XMLSchema object.
     xsd = xmlschema.XMLSchema(xsd_file_path)
 
-    # Validate XML file against XSD schema
-    is_valid = xsd.is_valid(xml_tree)
+    # Validate XML file against XSD schema.
+    try:
+        is_valid = xsd.is_valid(xml_tree)
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
 
+    # Return True if XML file is valid, False otherwise.
     return is_valid

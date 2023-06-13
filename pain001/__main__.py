@@ -17,142 +17,142 @@
 """
 Enables use of Python Pain001 as a "main" function (i.e.
 "python3 -m pain001
-<xml_message_type> <xml_file_path> <xsd_file_path> <csv_file_path>").
+<xml_message_type> <xml_template_file_path> <xsd_template_file_path>
+<data_file_path>").
 
 This allows using Pain001 with third-party libraries without modifying
 their code.
 """
 
-from pain001.core import process_files
-from pain001.context import context
-from pain001.constants.constants import valid_xml_types
 
 import os
 import sys
-import argparse
+import click
 
+from pain001.constants.constants import valid_xml_types
+from pain001.context.context import Context
+from pain001.core.core import process_files
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
-cli_string = """
-**Pain001** is a Python Library for Automating ISO 20022-Compliant Payment
-Files Using CSV Data.
+console = Console()
 
-**Pain001** offers a streamlined solution for reducing complexity and costs
-associated with payment processing. By providing a simple and efficient method
-to create ISO 20022-compliant payment files, it eliminates the manual effort of
-file creation and validation. This not only saves valuable time and resources
-but also minimizes the risk of errors, ensuring accurate and seamless payment
-processing.
-
-If you are seeking to simplify and automate your payment processing, consider
-leveraging the capabilities of **Pain001**.
-
-## Installation
-
-To install **Pain001**, run this command in your terminal:
-
-```sh
-pip install pain001
-```
-
-## Usage
-
-To use **Pain001**, run this command in your terminal:
-
-```sh
-python3 -m pain001 \
-    <xml_message_type> \
-    <xml_file_path> \
-    <xsd_file_path> \
-    <csv_file_path>
-```
-
-## Arguments:
-
-- `xml_message_type`: The type of XML message. The current valid values are:
-    - pain.001.001.03 and
-    - pain.001.001.09
-- `xml_file_path`: The path to the XML template file.
-- `xsd_file_path`: The path to the XSD template file.
-- `csv_file_path`: The path to the CSV data file.
-
-## Example:
-
-To generate a pain.001.001.03 XML file from the CSV data file you can run the
-following command in your terminal:
-
-```sh
-python3 -m pain001 \
-    pain.001.001.03 \
-    /path/to/your/pain.001.001.03.xml \
-    /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/pain.001.001.03.csv
-```
-
-Note: The generated XML file will be validated against the XSD template
-file before being saved. If the validation fails, the program will exit
-with an error message.
-
-For more information, please visit the project's GitHub page at:
-<https://github.com/sebastienrousseau/pain001>.
+description = """
+A powerful Python library that enables you to create
+ISO 20022-compliant payment files directly from CSV or SQLite Data files.\n
+https://pain001.com
 """
+title = "Pain001"
+
+table = Table(
+    box=box.ROUNDED,
+    safe_box=True,
+    show_header=False,
+    title=title,
+)
+
+table.add_column(justify="center", no_wrap=False, vertical="middle")
+table.add_row(description)
+table.width = 80
+console.print(table)
 
 
+@click.command(
+    help=(
+        "To use Pain001, you must specify the following options:\n\n"
+    ),
+    context_settings=dict(help_option_names=["-h", "--help"]),
+)
+@click.option(
+    "-t",
+    "--xml_message_type",
+    default=None,
+    help="Type of XML message (required)",
+)
+@click.option(
+    "-m",
+    "--xml_template_file_path",
+    default=None,
+    type=click.Path(),
+    help="Path to XML template file (required)",
+)
+@click.option(
+    "-s",
+    "--xsd_template_file_path",
+    default=None,
+    type=click.Path(),
+    help="Path to XSD template file (required)",
+)
+@click.option(
+    "-d",
+    "--data_file_path",
+    default=None,
+    type=click.Path(),
+    help="Path to data file (CSV or SQLite) (required)",
+)
 def main(
-    xml_message_type=None,
-    xml_file_path=None,
-    xsd_file_path=None,
-    data_file_path=None,
-    output_file_path=None,
+    xml_message_type,
+    xml_template_file_path,
+    xsd_template_file_path,
+    data_file_path,
 ):
+    """Initialize the context and log a message."""
+    logger = Context.get_instance().get_logger()
+
+    # print("Inside main function")
+
+    def check_variable(variable, name):
+        if variable is None:
+            print(f"Error: {name} is required.")
+            sys.exit(1)
+
+    # Check that xml_message_type is provided
+    check_variable(xml_message_type, "xml_message_type")
+
+    # Check that xsd_template_file_path is provided
+    check_variable(xsd_template_file_path, "xsd_template_file_path")
+
+    # Check that data_file_path is provided
+    check_variable(data_file_path, "data_file_path")
+
+    # Check that xml_template_file_path is not invalid
+    if not os.path.isfile(xml_template_file_path):
+        print(
+            f"The XML template file '{xml_template_file_path}' does not exist."
+        )
+        sys.exit(1)
+
+    # Check that xsd_template_file_path is not invalid
+    if not os.path.isfile(xsd_template_file_path):
+        print(
+            f"The XSD template file '{xsd_template_file_path}' does not exist."
+        )
+        sys.exit(1)
+
+    # Check that data_file_path is not invalid
+    if not os.path.isfile(data_file_path):
+        print(f"The data file '{data_file_path}' does not exist.")
+        sys.exit(1)
+
+    # Check that other necessary arguments are provided
+    if (
+        xml_template_file_path is None
+        or xsd_template_file_path is None
+        or data_file_path is None
+    ):
+        print(click.get_current_context().get_help())
+        sys.exit(1)
     """
     Entrypoint for pain001 when invoked as a module with
-    python3 -m pain001 <xml_message_type> <xml_file_path>
-    <xsd_file_path> <data_file_path> <output_file_path>.
+    python3 -m pain001 <xml_message_type> <xml_template_file_path>
+    <xsd_template_file_path> <data_file_path>.
     """
+    logger = Context.get_instance().get_logger()
 
-    """Initialize the context and log a message."""
-    logger = context.Context.get_instance().get_logger()
-
-    if (
-        xml_file_path is None
-        or xsd_file_path is None
-        or data_file_path is None
-        or output_file_path is None
-    ):
-        parser = argparse.ArgumentParser(
-            description="Generate Pain.001 file from data"
-        )
-        parser.add_argument(
-            "xml_message_type", help="Type of XML message"
-        )
-        parser.add_argument(
-            "xml_file_path", help="Path to XML template file"
-        )
-        parser.add_argument(
-            "xsd_file_path", help="Path to XSD template file"
-        )
-        parser.add_argument(
-            "data_file_path", help="Path to data file (CSV or SQLite)"
-        )
-        parser.add_argument(
-            "output_file_path", help="Path to output XML file"
-        )
-        args = parser.parse_args()
-
-        logger.info("Parsing command line arguments.")
-        xml_message_type = args.xml_message_type
-        xml_file_path = args.xml_file_path
-        xsd_file_path = args.xsd_file_path
-        data_file_path = args.data_file_path
-        output_file_path = args.output_file_path
-
-    """Check that the files or values passed as arguments exist."""
-    if not xml_message_type:
-        logger.info("The XML message type is not specified.")
-        print("The XML message type is not specified.")
-        sys.exit(1)
+    logger.info("Parsing command line arguments.")
 
     # Check that the XML message type is valid
     if xml_message_type not in valid_xml_types:
@@ -160,18 +160,22 @@ def main(
         print(f"Invalid XML message type: {xml_message_type}.")
         sys.exit(1)
 
-    if not os.path.isfile(xml_file_path):
+    if not os.path.isfile(xml_template_file_path):
         logger.info(
-            "The XML template file '{xml_file_path}' does not exist."
+            f"The XML template file '{xml_template_file_path}' does not exist."
         )
-        print("The XML template file '{xml_file_path}' does not exist.")
+        print(
+            f"The XML template file '{xml_template_file_path}' does not exist."
+        )
         sys.exit(1)
 
-    if not os.path.isfile(xsd_file_path):
+    if not os.path.isfile(xsd_template_file_path):
         logger.info(
-            "The XSD template file '{xsd_file_path}' does not exist."
+            f"The XSD template file '{xsd_template_file_path}' does not exist."
         )
-        print("The XSD template file '{xsd_file_path}' does not exist.")
+        print(
+            f"The XSD template file '{xsd_template_file_path}' does not exist."
+        )
         sys.exit(1)
 
     if not os.path.isfile(data_file_path):
@@ -180,18 +184,20 @@ def main(
         sys.exit(1)
 
     # Validate the XML file and raise a SystemExit exception if invalid
-    if not validate_via_xsd(xml_file_path, xsd_file_path):
-        logger.info(
-            f"Error: XML located at {xml_file_path} is invalid."
+    is_valid = validate_via_xsd(
+        xml_template_file_path, xsd_template_file_path
+    )
+    if not is_valid:
+        logger.error(
+            f"Error: XML located at {xml_template_file_path} is invalid."
         )
         sys.exit(1)
 
     process_files(
         xml_message_type,
-        xml_file_path,
-        xsd_file_path,
+        xml_template_file_path,
+        xsd_template_file_path,
         data_file_path,
-        output_file_path,
     )
 
 
