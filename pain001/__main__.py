@@ -32,7 +32,8 @@ import click
 from pain001.constants.constants import valid_xml_types
 from pain001.context.context import Context
 from pain001.core.core import process_files
-from pain001.xml.validate_via_xsd import validate_via_xsd
+
+# from pain001.xml.validate_via_xsd import validate_via_xsd
 
 from rich.console import Console
 from rich.table import Table
