@@ -11,6 +11,9 @@ from pain001.xml.generate_xml import (
 
 class TestXMLCreation(unittest.TestCase):
     def setUp(self):
+        """
+        Test setup
+        """
         self.root = ET.Element("Root")
         self.row = {
             "initiator_name": "Initiator",
@@ -40,6 +43,9 @@ class TestXMLCreation(unittest.TestCase):
         }
 
     def test_create_common_elements(self):
+        """
+        Test create_common_elements
+        """
         create_common_elements(self.root, self.row, self.mapping)
         self.assertEqual(len(self.root), 2)
         self.assertEqual(self.root[0].tag, "PmtInfId")
@@ -48,6 +54,9 @@ class TestXMLCreation(unittest.TestCase):
         self.assertEqual(self.root[1].text, "pain.001.001.09")
 
     def test_create_xml_v3(self):
+        """
+        Test create_xml_v3
+        """
         create_xml_v3(self.root, [self.row], self.mapping)
         cstmr_cdt_trf_initn_element = self.root[0]
         self.assertEqual(
@@ -56,6 +65,10 @@ class TestXMLCreation(unittest.TestCase):
         # You can continue to assert more conditions based on your expectations
 
     def test_create_xml_v9(self):
+        """
+        Test create_xml_v9
+        """
+
         create_xml_v9(self.root, [self.row], self.mapping)
         cstmr_cdt_trf_initn_element = self.root[0]
         self.assertEqual(

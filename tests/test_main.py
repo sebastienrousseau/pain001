@@ -1,4 +1,3 @@
-from unittest.mock import patch
 from click.testing import CliRunner
 from pain001.__main__ import main
 

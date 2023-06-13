@@ -16,7 +16,6 @@ import xmlschema
 # limitations under the License.
 
 import defusedxml.ElementTree as ET
-import xmlschema
 
 
 def validate_via_xsd(xml_file_path, xsd_file_path):

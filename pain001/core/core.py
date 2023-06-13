@@ -71,13 +71,19 @@ def process_files(
 
     # Check if the XML template file exists
     if not os.path.exists(xml_template_file_path):
-        error_message = f"Error: XML template '{xml_template_file_path}' does not exist."
+        error_message = (
+            f"Error: XML template '{xml_template_file_path}' "
+            f"does not exist."
+        )
         logger.error(error_message)
         raise FileNotFoundError(error_message)
 
     # Check if the XSD schema file exists
     if not os.path.exists(xsd_template_file_path):
-        error_message = f"Error: XSD schema file '{xsd_template_file_path}' does not exist."
+        error_message = (
+            f"Error: XSD schema file '{xsd_template_file_path}' "
+            f"does not exist."
+        )
         logger.error(error_message)
         raise FileNotFoundError(error_message)
 
