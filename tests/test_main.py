@@ -18,7 +18,7 @@ class TestMain:
                 self.xml_message_type,
                 "--xml_template_file_path",
                 self.xml_file,
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 self.xsd_file,
                 "--data_file_path",
                 self.csv_file,
@@ -36,7 +36,7 @@ class TestMain:
             [
                 "--xml_template_file_path",
                 self.xml_file,
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 self.xsd_file,
                 "--data_file_path",
                 self.csv_file,
@@ -59,8 +59,7 @@ class TestMain:
         )
         assert result.exit_code == 1
         assert (
-            "Error: xsd_template_file_path is required."
-            in result.output
+            "Error: xsd_schema_file_path is required." in result.output
         )
 
     def test_main_with_missing_data_file(self):
@@ -71,7 +70,7 @@ class TestMain:
                 self.xml_message_type,
                 "--xml_template_file_path",
                 self.xml_file,
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 self.xsd_file,
             ],
         )
@@ -86,7 +85,7 @@ class TestMain:
                 "invalid",
                 "--xml_template_file_path",
                 self.xml_file,
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 self.xsd_file,
                 "--data_file_path",
                 self.csv_file,
@@ -103,7 +102,7 @@ class TestMain:
                 self.xml_message_type,
                 "--xml_template_file_path",
                 "invalid",
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 self.xsd_file,
                 "--data_file_path",
                 self.csv_file,
@@ -123,7 +122,7 @@ class TestMain:
                 self.xml_message_type,
                 "--xml_template_file_path",
                 self.xml_file,
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 "invalid",
                 "--data_file_path",
                 self.csv_file,
@@ -143,7 +142,7 @@ class TestMain:
                 self.xml_message_type,
                 "--xml_template_file_path",
                 self.xml_file,
-                "--xsd_template_file_path",
+                "--xsd_schema_file_path",
                 self.xsd_file,
                 "--data_file_path",
                 "invalid",

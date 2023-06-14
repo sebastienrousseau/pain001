@@ -17,7 +17,7 @@
 """
 Enables use of Python Pain001 as a "main" function (i.e.
 "python3 -m pain001
-<xml_message_type> <xml_template_file_path> <xsd_template_file_path>
+<xml_message_type> <xml_template_file_path> <xsd_schema_file_path>
 <data_file_path>").
 
 This allows using Pain001 with third-party libraries without modifying
@@ -82,7 +82,7 @@ console.print(table)
 )
 @click.option(
     "-s",
-    "--xsd_template_file_path",
+    "--xsd_schema_file_path",
     default=None,
     type=click.Path(),
     help="Path to XSD template file (required)",
@@ -97,7 +97,7 @@ console.print(table)
 def main(
     xml_message_type,
     xml_template_file_path,
-    xsd_template_file_path,
+    xsd_schema_file_path,
     data_file_path,
 ):
     """Initialize the context and log a message."""
@@ -113,8 +113,8 @@ def main(
     # Check that xml_message_type is provided
     check_variable(xml_message_type, "xml_message_type")
 
-    # Check that xsd_template_file_path is provided
-    check_variable(xsd_template_file_path, "xsd_template_file_path")
+    # Check that xsd_schema_file_path is provided
+    check_variable(xsd_schema_file_path, "xsd_schema_file_path")
 
     # Check that data_file_path is provided
     check_variable(data_file_path, "data_file_path")
@@ -126,10 +126,10 @@ def main(
         )
         sys.exit(1)
 
-    # Check that xsd_template_file_path is not invalid
-    if not os.path.isfile(xsd_template_file_path):
+    # Check that xsd_schema_file_path is not invalid
+    if not os.path.isfile(xsd_schema_file_path):
         print(
-            f"The XSD template file '{xsd_template_file_path}' does not exist."
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
         )
         sys.exit(1)
 
@@ -141,7 +141,7 @@ def main(
     # Check that other necessary arguments are provided
     if (
         xml_template_file_path is None
-        or xsd_template_file_path is None
+        or xsd_schema_file_path is None
         or data_file_path is None
     ):
         print(click.get_current_context().get_help())
@@ -149,7 +149,7 @@ def main(
     """
     Entrypoint for pain001 when invoked as a module with
     python3 -m pain001 <xml_message_type> <xml_template_file_path>
-    <xsd_template_file_path> <data_file_path>.
+    <xsd_schema_file_path> <data_file_path>.
     """
     logger = Context.get_instance().get_logger()
 
@@ -170,12 +170,12 @@ def main(
         )
         sys.exit(1)
 
-    if not os.path.isfile(xsd_template_file_path):
+    if not os.path.isfile(xsd_schema_file_path):
         logger.info(
-            f"The XSD template file '{xsd_template_file_path}' does not exist."
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
         )
         print(
-            f"The XSD template file '{xsd_template_file_path}' does not exist."
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
         )
         sys.exit(1)
 
@@ -186,7 +186,7 @@ def main(
 
     # Validate the XML file and raise a SystemExit exception if invalid
     # is_valid = validate_via_xsd(
-    #     xml_template_file_path, xsd_template_file_path
+    #     xml_template_file_path, xsd_schema_file_path
     # )
     # if not is_valid:
     #     logger.error(
@@ -197,7 +197,7 @@ def main(
     process_files(
         xml_message_type,
         xml_template_file_path,
-        xsd_template_file_path,
+        xsd_schema_file_path,
         data_file_path,
     )
 

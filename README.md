@@ -5,111 +5,148 @@
 [![PyPI][pypi-badge]][3] [![License][license-badge]][1]
 [![Codecov][codecov-badge]][6]
 
-**Pain001** is a powerful Python library that enables you to create ISO 20022-
-compliant payment files directly from CSV or SQLite Data Files.
-
 ## Overview
 
-Today, the payment industry is experiencing a rapid evolution and
-transformation as it moves towards adopting **[ISO 20022][1]** as the new norm.
-ISO 20022 is a global standard for sharing financial information across
-organisations. It provides a harmonised protocol used by banks, corporations,
-and financial institutions to automate and standardise payment transactions.
+**Pain001** is an open-source Python Library that you can use to create
+**ISO 20022-Compliant Payment Files** directly from your **CSV** or **SQLite**
+Data Files.
 
-Here are some of the benefits of using ISO 20022:
+The Python library focuses specifically on
+**Payment Initiation and Advice Messages**, commonly known as **Pain**. It is
+currently designed to be compatible with the **pain.001.001.03** and
+**pain.001.001.09** message types and will support more message types in the
+future.
 
-- **Improved data quality**: ISO 20022 messages are more structured and
-  detailed than traditional payment messages, reducing errors and improving
-  efficiency.
-- **Increased transparency**: ISO 20022 messages provide more information
-  about the payment transaction, which can help to improve the visibility and
-  traceability of payments.
-- **Enhanced compliance**: ISO 20022 messages can help organisations follow
-  AML/CFT and PSD2 regulations.
+Payments usually start with a **pain.001 payment initiation message**. The
+payer sends it to the payee (or the payee’s bank) via a secure network. This
+network could be **SWIFT** or **SEPA (Single Euro Payments Area) network**, or
+other payment networks such as **CHAPS**, **BACS**, **Faster Payments**, etc.
+The message contains the payer’s and payee’s bank account details, payment
+amount, and other information required to process the payment.
 
-Overall, ISO 20022 is a significant improvement over traditional payment
-messaging standards. It provides a more efficient, transparent, and compliant
-way to process payments.
+The **Pain001** library can reduce payment processing complexity and costs by
+generating ISO 20022-compliant payment files. These files automatically remove
+the need to create and validate them manually, making the payment process more
+efficient and cost-effective. It will save you time and resources and minimises
+the risk of errors, making sure accurate and seamless payment processing.
 
-## Pain001 in action
+Use the **Pain001** library to simplify, accelerate and automate your payment
+processing.
 
-The Python library **Pain001** focuses specifically on payment initiation and
-advice messages, commonly known as **pain**. Payments usually start with a
-**pain.001 payment initiation message**. The payer sends it to the payee (or
-the payee's bank) via a secure network. This network could be **SWIFT** or
-**SEPA (Single Euro Payments Area)** network, or other payment networks such
-as **CHAPS**, **BACS**, **Faster Payments**, etc. The message contains the
-payer's and payee's bank account details, payment amount, and other information
-required to process the payment.
+## Requirements
 
-**Pain001** can reduce payment processing complexity and costs by generating
-ISO 20022-compliant payment files. These files automatically remove the need to
-create and validate them manually, making the payment process more efficient
-and cost-effective. It will save you time and resources and minimises the risk
-of errors, making sure accurate and seamless payment processing.
-
-If you are seeking to simplify and automate your payment processing, consider
-leveraging the capabilities of **Pain001**.
+**Pain001** works with macOS, Linux and Windows and requires Python 3.9.0 and
+above.
 
 ## Installation
 
-It takes just a few seconds to get up and running with **Pain001**. Open your
-terminal and run the following command:
+It takes just a few seconds to get up and running with **Pain001**. You can
+install Pain001 from PyPI with pip or your favorite package manager:
+
+Open your terminal and run the following command:
 
 ```sh
 pip install pain001
 ```
 
-## Usage
+Add the -U switch to update to the current version, if `pain001` is already
+installed.
+
+## Quick Start
 
 After installation, you can run **Pain001** directly from the command line.
-Simply call the main function with the path of your XML template file, XSD
-schema file and the path of your CSV file containing the payment data.
+Simply call the main module pain001 with the paths of your
 
-Once you have installed **Pain001**, you can generate and validate XML files
-using the following command:
+- **XML template file** containing the various parameters you want to pass from
+  your Data file,
+- **XSD schema file** to validate the generated XML file, and
+- **Data file (CSV or SQLite)** containing the payment instructions that you
+  want to submit.
+
+Here’s how you would do that:
 
 ```sh
 python3 -m pain001 \
     <xml_message_type> \
-    <xml_file_path> \
-    <xsd_file_path> \
-    <data_file_path> \
-    <output_file_path>
+    <xml_template_file_path> \
+    <xsd_schema_file_path> \
+    <data_file_path>
 ```
 
-## Arguments
+### Arguments
 
-When running **Pain001**, you will need to specify four arguments:
+When running **Pain001**, as briefly described above, you will need to specify
+four arguments to the **Pain001** module:
 
 - `xml_message_type`: This is the type of XML message you want to generate.
-  Currently, the valid options are:
+
+  The currently supported types are:
   - pain.001.001.03
   - pain.001.001.09
-- `xml_file_path`: This is the path to the XML template file you are using.
-- `xsd_file_path`: This is the path to the XSD template file you are using.
-- `csv_file_path`: This is the path to the CSV data file you want to convert
-  to XML.
-- `output_file_path`: This is the path to the output XML file you want to save
-  the generated XML file to.
+- `xml_template_file_path`: This is the path to the XML template file you are
+  using that contains variables to be replaced with data from the Data file.
+- `xsd_schema_file_path`: This is the path to the XSD schema file you are using
+  to validate the generated XML file.
+- `data_file_path`: This is the path to the CSV or SQLite Data file you want to
+  convert to XML format.
 
 ## Examples
 
-Here are a few example on how to use **Pain001** to generate a
-pain.001.001.03 XML file from a CSV data file:
+The following examples demonstrate how to use **Pain001** to generate a payment
+initiation message from a CSV file and a SQLite Data file.
 
-### Via the Command Line
+### Using a CSV Data File as the source
 
 ```sh
 python3 -m pain001 \
     pain.001.001.03 \
-    /path/to/your/pain.001.001.03.xml \
+    /path/to/your/template.xml \
     /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/pain.001.001.03.csv \
-    /path/to/your/output.xml
+    /path/to/your/template.csv
 ```
 
-**Note:** The XML file that **Pain001** generates will be automatically
+### Using a SQLite Data File as the source
+
+```sh
+python3 -m pain001 \
+    pain.001.001.03 \
+    /path/to/your/template.xml \
+    /path/to/your/pain.001.001.03.xsd \
+    /path/to/your/template.db
+```
+
+### Using the source code
+
+You can use the source code and run the example code in your
+terminal/command-line. To check out the source code, clone the repository from
+GitHub:
+
+```sh
+git clone https://github.com/sebastienrousseau/pain001.git
+```
+
+You can then run this script to generate a payment initiation message from the
+sample CSV Data file:
+
+```sh
+python3 pain001/__main__.py \
+  --xml_message_type "pain.001.001.03" \
+  --xml_template_file_path "templates/pain.001.001.03/template.xml" \
+  --xsd_schema_file_path "templates/pain.001.001.03/pain.001.001.03.xsd" \
+  --data_file_path "templates/pain.001.001.03/template.csv"
+```
+
+or the sample SQLite Data File
+
+```sh
+python3 pain001/__main__.py \
+  --xml_message_type "pain.001.001.03" \
+  --xml_template_file_path "templates/pain.001.001.03/template.xml" \
+  --xsd_schema_file_path "templates/pain.001.001.03/pain.001.001.03.xsd" \
+  --data_file_path "templates/pain.001.001.03/template.db"
+```
+
+> **Note:** The XML file that **Pain001** generates will automatically be
 validated against the XSD template file before the new XML file is saved. If
 the validation fails, **Pain001** will stop running and display an error
 message in your terminal.
@@ -126,10 +163,10 @@ from pain001 import main
 
 if __name__ == '__main__':
   xml_message_type = 'pain.001.001.03'
-  xml_file_path = 'template.xml'
-  xsd_file_path = 'schema.xsd'
-  csv_file_path = 'data.csv'
-  main(xml_message_type, xml_file_path, xsd_file_path, csv_file_path)
+  xml_template_file_path = 'template.xml'
+  xsd_schema_file_path = 'schema.xsd'
+  data_file_path = 'data.csv'
+  main(xml_message_type, xml_template_file_path, xsd_schema_file_path, data_file_path)
 ```
 
 ### Validation
@@ -154,37 +191,7 @@ print(f"XML validation result: {is_valid}")
 
 ## Documentation 📖
 
-> ℹ️ **Info:** Do check out our [website][0] for more information.
-
-### Payment Messages
-
-The following **ISO 20022 Payment Initiation message types** are
-currently supported:
-
-- **pain.001.001.03** - Customer Credit Transfer Initiation
-
-This message is used to transmit credit transfer instructions from the
-originator (the party initiating the payment) to the originator's bank. The
-message supports both bulk and single payment instructions, allowing for the
-transmission of multiple payments in a batch or individual payments separately.
-The pain.001.001.03 message format is part of the ISO 20022 standard and is
-commonly used for SEPA Credit Transfers within the Single Euro Payments Area.
-It includes relevant information such as the originator's and beneficiary's
-details, payment amounts, payment references, and other transaction-related
-information required for processing the credit transfers.
-
-- **pain.001.001.09** - Customer Credit Transfer Initiation
-
-This message format is part of the ISO 20022 standard and is commonly used for
-SEPA Credit Transfers within the Single Euro Payments Area. It enables the
-transmission of credit transfer instructions from the originator to the
-originator's bank. The message includes essential information such as the
-originator's and beneficiary's details, payment amounts, payment references,
-and other transaction-related information required for processing the credit
-transfers.
-
-More message types will be added in the future. Please refer to the section
-below for more details.
+> **Info:** Do check out our [website][0] for comprehensive documentation.
 
 ### Supported messages
 
@@ -199,10 +206,10 @@ customer.
 
 | Status | Message type | Name |
 |---|---|---|
-| ⏳ | [camt.052.001.10] | Bank-to-Customer Account Statement |
-| ⏳ | [camt.060.001.10] | Customer Account Notification |
-| ⏳ | [camt.054.001.10] | Customer Account Statement Request |
-| ⏳ | [camt.053.001.10] | Customer Account Identification |
+| ⏳ | camt.052.001.10 | Bank-to-Customer Account Statement |
+| ⏳ | camt.060.001.10 | Customer Account Notification |
+| ⏳ | camt.054.001.10 | Customer Account Statement Request |
+| ⏳ | camt.053.001.10 | Customer Account Identification |
 
 #### Payments Clearing and Settlement
 
@@ -211,14 +218,14 @@ settlement of payment transactions.
 
 | Status | Message type | Name |
 |---|---|---|
-| ⏳ | [pacs.002.001.12] | Credit Transfer Notification |
-| ⏳ | [pacs.003.001.09] | Direct Debit Initiation |
-| ⏳ | [pacs.004.001.11] | Direct Debit Reversal |
-| ⏳ | [pacs.007.001.11] | Customer Direct Debit Confirmation |
-| ⏳ | [pacs.008.001.10] | Credit Transfer Initiation |
-| ⏳ | [pacs.009.001.10] | Credit Transfer Reversal |
-| ⏳ | [pacs.010.001.05] | Account Identification |
-| ⏳ | [pacs.028.001.05] | Account Statement Request |
+| ⏳ | pacs.002.001.12 | Credit Transfer Notification |
+| ⏳ | pacs.003.001.09 | Direct Debit Initiation |
+| ⏳ | pacs.004.001.11 | Direct Debit Reversal |
+| ⏳ | pacs.007.001.11 | Customer Direct Debit Confirmation |
+| ⏳ | pacs.008.001.10 | Credit Transfer Initiation |
+| ⏳ | pacs.009.001.10 | Credit Transfer Reversal |
+| ⏳ | pacs.010.001.05 | Account Identification |
+| ⏳ | pacs.028.001.05 | Account Statement Request |
 
 #### Payments Initiation
 
@@ -229,14 +236,14 @@ and monitor payments.
 | Status | Message type | Name |
 |---|---|---|
 | ✅ | [pain.001.001.03][pain.001.001.03] | Customer Credit Transfer Initiation |
-| ⏳ | [pain.001.001.04][pain.001.001.04] | Customer Direct Debit Initiation |
-| ⏳ | [pain.001.001.05][pain.001.001.05] | Customer Direct Debit Reversal |
-| ⏳ | [pain.001.001.06][pain.001.001.06] | Customer Credit Transfer Reversal |
-| ⏳ | [pain.001.001.07][pain.001.001.07] | Customer Account Notification |
-| ⏳ | [pain.001.001.08][pain.001.001.08] | Customer Account Statement |
+| ⏳ | pain.001.001.04 | Customer Direct Debit Initiation |
+| ⏳ | pain.001.001.05 | Customer Direct Debit Reversal |
+| ⏳ | pain.001.001.06 | Customer Credit Transfer Reversal |
+| ⏳ | pain.001.001.07 | Customer Account Notification |
+| ⏳ | pain.001.001.08 | Customer Account Statement |
 | ✅ | [pain.001.001.09][pain.001.001.09] | Customer Credit Transfer Initiation |
-| ⏳ | [pain.001.001.10][pain.001.001.10] | Customer Account Closure Request |
-| ⏳ | [pain.001.001.11][pain.001.001.11] | Customer Account Change Request |
+| ⏳ | pain.001.001.10 | Customer Account Closure Request |
+| ⏳ | pain.001.001.11 | Customer Account Change Request |
 
 ## License 📝
 
@@ -269,29 +276,10 @@ of [Pain001][5] for their help and support.
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 
-[camt.052.001.10]: docs/bank-to-customer-cash-management/messages/camt.052.001.10/README.md
-[camt.060.001.10]: docs/bank-to-customer-cash-management/messages/camt.053.001.10/README.md
-[camt.054.001.10]: docs/bank-to-customer-cash-management/messages/camt.054.001.10/README.md
-[camt.053.001.10]: docs/bank-to-customer-cash-management/messages/camt.053.001.10/README.md
-[pacs.002.001.12]: docs/payments-clearing-and-settlement/messages/pacs.002.001.12/README.md
-[pacs.003.001.09]: docs/payments-clearing-and-settlement/messages/pacs.003.001.09/README.md
-[pacs.004.001.11]: docs/payments-clearing-and-settlement/messages/pacs.004.001.11/README.md
-[pacs.007.001.11]: docs/payments-clearing-and-settlement/messages/pacs.007.001.11/README.md
-[pacs.008.001.10]: docs/payments-clearing-and-settlement/messages/pacs.008.001.10/README.md
-[pacs.009.001.10]: docs/payments-clearing-and-settlement/messages/pacs.009.001.10/README.md
-[pacs.010.001.05]: docs/payments-clearing-and-settlement/messages/pacs.010.001.05/README.md
-[pacs.028.001.05]: docs/payments-clearing-and-settlement/messages/pacs.028.001.05/README.md
-[pain.001.001.03]: docs/payments-initiation/messages/pain.001.001.03/README.md
-[pain.001.001.04]: docs/payments-initiation/messages/pain.001.001.04/README.md
-[pain.001.001.05]: docs/payments-initiation/messages/pain.001.001.05/README.md
-[pain.001.001.06]: docs/payments-initiation/messages/pain.001.001.06/README.md
-[pain.001.001.07]: docs/payments-initiation/messages/pain.001.001.07/README.md
-[pain.001.001.08]: docs/payments-initiation/messages/pain.001.001.08/README.md
-[pain.001.001.09]: docs/payments-initiation/messages/pain.001.001.09/README.md
-[pain.001.001.10]: docs/payments-initiation/messages/pain.001.001.10/README.md
-[pain.001.001.11]: docs/payments-initiation/messages/pain.001.001.11/README.md
+[pain.001.001.03]: https://www.pain001.com/pain.001.001.03/index.html
+[pain.001.001.09]: https://www.pain001.com/pain.001.001.09/index.html
 
-[banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001'
+[banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'

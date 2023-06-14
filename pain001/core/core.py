@@ -32,7 +32,7 @@ from pain001.xml.xml_generator import xml_generator
 def process_files(
     xml_message_type,
     xml_template_file_path,
-    xsd_template_file_path,
+    xsd_schema_file_path,
     data_file_path,
 ):
     """
@@ -43,7 +43,7 @@ def process_files(
         xml_message_type (str): The type of XML message to generate. Valid
         options are 'pain.001.001.03' and 'pain.001.001.09'.
         xml_template_file_path (str): The path of the XML template file.
-        xsd_template_file_path (str): The path of the XSD schema file.
+        xsd_schema_file_path (str): The path of the XSD schema file.
         data_file_path (str): The path of the CSV or SQLite file containing the
         payment data.
 
@@ -79,9 +79,9 @@ def process_files(
         raise FileNotFoundError(error_message)
 
     # Check if the XSD schema file exists
-    if not os.path.exists(xsd_template_file_path):
+    if not os.path.exists(xsd_schema_file_path):
         error_message = (
-            f"Error: XSD schema file '{xsd_template_file_path}' "
+            f"Error: XSD schema file '{xsd_schema_file_path}' "
             f"does not exist."
         )
         logger.error(error_message)
@@ -136,7 +136,7 @@ def process_files(
         mapping,
         xml_message_type,
         xml_template_file_path,
-        xsd_template_file_path,
+        xsd_schema_file_path,
     )
 
     # Confirm the XML file has been created
@@ -158,7 +158,7 @@ if __name__ == "__main__":
                 [
                     "<xml_message_type>",
                     "<xml_template_file_path>",
-                    "<xsd_template_file_path>",
+                    "<xsd_schema_file_path>",
                     "<data_file_path>",
                 ]
             )

@@ -176,7 +176,7 @@ DEPENDENCIES = [
     "click==8.1.3",
     "defusedxml==0.7.1",
     "rich==13.4.2",
-    "xmlschema==2.3.0",
+    "xmlschema==2.3.1",
 ]
 
 TEST_DEPENDENCIES = [
@@ -184,7 +184,7 @@ TEST_DEPENDENCIES = [
     "defusedxml==0.7.1",
     "pytest>=7.3.1",
     "rich==13.4.2",
-    "xmlschema==2.3.0",
+    "xmlschema==2.3.1",
 ]
 
 NAME = ("pain001",)
