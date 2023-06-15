@@ -2,14 +2,19 @@
 
 ![Pain001 banner][banner]
 
-[![PyPI][pypi-badge]][3] [![License][license-badge]][1]
-[![Codecov][codecov-badge]][6]
+[![PyPI][pypi-badge]][3] [![PyPI Downloads][pypi-downloads-badge]][7] [![License][license-badge]][1] [![Codecov][codecov-badge]][6]
 
 ## Overview
 
 **Pain001** is an open-source Python Library that you can use to create
 **ISO 20022-Compliant Payment Files** directly from your **CSV** or **SQLite**
 Data Files.
+
+- **Website:** <https://pain001.com>
+- **Documentation:** <https://pain001.com/documentation>
+- **Source code:** <https://github.com/sebastienrousseau/pain001>
+- **Contributing:** <https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md>
+- **Bug reports:** <https://github.com/sebastienrousseau/pain001/issues>
 
 The Python library focuses specifically on
 **Payment Initiation and Advice Messages**, commonly known as **Pain**. In a
@@ -41,6 +46,7 @@ processing.
 - [Pain001: Automate ISO 20022-Compliant Payment File Creation](#pain001-automate-iso-20022-compliant-payment-file-creation)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
+  - [Features](#features)
   - [Requirements](#requirements)
   - [Installation](#installation)
   - [Quick Start](#quick-start)
@@ -59,6 +65,40 @@ processing.
   - [License](#license)
   - [Contribution](#contribution)
   - [Acknowledgements](#acknowledgements)
+
+## Features
+
+- **Easy to use:** Both developers and non-developers can easily use the
+  library, as it requires minimal coding knowledge.
+- **Open-source**: The library is open-source and free to use, making it
+  accessible to everyone.
+- **Secure**: The library is secure and does not store any sensitive data,
+  making sure that all information remains confidential.
+- **Customizable**: The library allows developers to customise the output,
+  making it adaptable to specific business requirements and preferences.
+- **Scalable solution**: The **Pain001** library can handle varying volumes of
+  payment files, making it suitable for businesses of different sizes and
+  transaction volumes.
+- **Time-saving**: The automated file creation process reduces the time spent
+  on manual data entry and file generation, increasing overall productivity.
+- **Seamless integration**: As a Python package, the Pain001 library is
+  compatible with various Python-based applications and easily integrates into
+  any existing projects or workflows.
+- **Cross-border compatibility**: The library supports both Single Euro
+  Payments Area (SEPA) and non-SEPA credit transfers, making it versatile for
+  use in different countries and regions.
+- **Improve accuracy** by providing precise data; the library reduces errors in
+  payment file creation and processing.
+- **Enhance efficiency** by automating the creation of Payment Initiation
+  message files
+- **Accelerate payment file creation** by automating the process and reducing
+  the time required to create payment files.
+- **Guarantee the highest quality and compliance** by validating all payment
+  files to meet the ISO 20022 standards.
+- **Simplify ISO 20022-compliant payment initiation message creation** by
+  providing a standardised payment file format.
+- **Reduce costs** by removing manual data entry and file generation, reducing
+  payment processing time, and reducing errors.
 
 ## Requirements
 
@@ -308,6 +348,7 @@ of [Pain001][5] for their help and support.
 [4]: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
+[7]: https://pypi.org/project/pain001/
 
 [pain.001.001.03]: https://pain001.com/pain.001.001.03/index.html
 [pain.001.001.09]: https://pain001.com/pain.001.001.09/index.html
@@ -316,3 +357,4 @@ of [Pain001][5] for their help and support.
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
 [license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
 [pypi-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'PyPI badge'
+[pypi-downloads-badge]:https://img.shields.io/pypi/dm/pain001.svg?style=for-the-badge 'PyPI Downloads badge'
