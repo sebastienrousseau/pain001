@@ -12,10 +12,13 @@
 Data Files.
 
 The Python library focuses specifically on
-**Payment Initiation and Advice Messages**, commonly known as **Pain**. It is
-currently designed to be compatible with the **pain.001.001.03** and
-**pain.001.001.09** message types and will support more message types in the
-future.
+**Payment Initiation and Advice Messages**, commonly known as **Pain**. In a
+very simplified way, a **pain.001** is a message that initiates the customer
+payment.
+
+As of today the library is designed to be compatible with the
+**pain.001.001.03** and **pain.001.001.09** message types and will support more
+message types in the future.
 
 Payments usually start with a **pain.001 payment initiation message**. The
 payer sends it to the payee (or the payee’s bank) via a secure network. This
@@ -33,6 +36,30 @@ the risk of errors, making sure accurate and seamless payment processing.
 Use the **Pain001** library to simplify, accelerate and automate your payment
 processing.
 
+## Table of Contents
+
+- [Pain001: Automate ISO 20022-Compliant Payment File Creation](#pain001-automate-iso-20022-compliant-payment-file-creation)
+  - [Overview](#overview)
+  - [Table of Contents](#table-of-contents)
+  - [Requirements](#requirements)
+  - [Installation](#installation)
+  - [Quick Start](#quick-start)
+    - [Arguments](#arguments)
+  - [Examples](#examples)
+    - [Using a CSV Data File as the source](#using-a-csv-data-file-as-the-source)
+    - [Using a SQLite Data File as the source](#using-a-sqlite-data-file-as-the-source)
+    - [Using the Source code](#using-the-source-code)
+    - [Embedded in an Application](#embedded-in-an-application)
+    - [Validation](#validation)
+  - [Documentation](#documentation)
+    - [Supported messages](#supported-messages)
+      - [Bank-to-Customer Cash Management](#bank-to-customer-cash-management)
+      - [Payments Clearing and Settlement](#payments-clearing-and-settlement)
+      - [Payments Initiation](#payments-initiation)
+  - [License](#license)
+  - [Contribution](#contribution)
+  - [Acknowledgements](#acknowledgements)
+
 ## Requirements
 
 **Pain001** works with macOS, Linux and Windows and requires Python 3.9.0 and
@@ -41,7 +68,7 @@ above.
 ## Installation
 
 It takes just a few seconds to get up and running with **Pain001**. You can
-install Pain001 from PyPI with pip or your favorite package manager:
+install Pain001 from PyPI with pip or your favourite package manager:
 
 Open your terminal and run the following command:
 
@@ -55,7 +82,7 @@ installed.
 ## Quick Start
 
 After installation, you can run **Pain001** directly from the command line.
-Simply call the main module pain001 with the paths of your
+Simply call the main module pain001 with the paths of your:
 
 - **XML template file** containing the various parameters you want to pass from
   your Data file,
@@ -75,20 +102,20 @@ python3 -m pain001 \
 
 ### Arguments
 
-When running **Pain001**, as briefly described above, you will need to specify
-four arguments to the **Pain001** module:
+When running **Pain001**, you will need to specify four arguments:
 
-- `xml_message_type`: This is the type of XML message you want to generate.
+- An `xml_message_type`: This is the type of XML message you want to generate.
 
   The currently supported types are:
   - pain.001.001.03
   - pain.001.001.09
-- `xml_template_file_path`: This is the path to the XML template file you are
-  using that contains variables to be replaced with data from the Data file.
-- `xsd_schema_file_path`: This is the path to the XSD schema file you are using
-  to validate the generated XML file.
-- `data_file_path`: This is the path to the CSV or SQLite Data file you want to
-  convert to XML format.
+- An `xml_template_file_path`: This is the path to the XML template file you
+  are using that contains variables that will be replaced by the values in your
+  Data file.
+- An `xsd_schema_file_path`: This is the path to the XSD schema file you are
+  using to validate the generated XML file.
+- A `data_file_path`: This is the path to the CSV or SQLite Data file you want
+  to convert to XML format.
 
 ## Examples
 
@@ -115,9 +142,9 @@ python3 -m pain001 \
     /path/to/your/template.db
 ```
 
-### Using the source code
+### Using the Source code
 
-You can use the source code and run the example code in your
+You can clone the source code and run the example code in your
 terminal/command-line. To check out the source code, clone the repository from
 GitHub:
 
@@ -125,25 +152,26 @@ GitHub:
 git clone https://github.com/sebastienrousseau/pain001.git
 ```
 
-You can then run this script to generate a payment initiation message from the
-sample CSV Data file:
+  Then, navigate to the `pain001` directory and run the following command:
+
+  ```sh
+  python3 -m pain001 \
+      pain.001.001.03 \
+      templates/pain.001.001.03/template.xml \
+      templates/pain.001.001.03/pain.001.001.03.xsd \
+      templates/pain.001.001.03/template.csv
+  ```
+
+This will generate a payment initiation message from the sample CSV Data file.
+
+You can do the same with the sample SQLite Data file:
 
 ```sh
-python3 pain001/__main__.py \
-  --xml_message_type "pain.001.001.03" \
-  --xml_template_file_path "templates/pain.001.001.03/template.xml" \
-  --xsd_schema_file_path "templates/pain.001.001.03/pain.001.001.03.xsd" \
-  --data_file_path "templates/pain.001.001.03/template.csv"
-```
-
-or the sample SQLite Data File
-
-```sh
-python3 pain001/__main__.py \
-  --xml_message_type "pain.001.001.03" \
-  --xml_template_file_path "templates/pain.001.001.03/template.xml" \
-  --xsd_schema_file_path "templates/pain.001.001.03/pain.001.001.03.xsd" \
-  --data_file_path "templates/pain.001.001.03/template.db"
+python3 -m pain001 \
+    pain.001.001.03 \
+    templates/pain.001.001.03/template.xml \
+    templates/pain.001.001.03/pain.001.001.03.xsd \
+    templates/pain.001.001.03/template.db
 ```
 
 > **Note:** The XML file that **Pain001** generates will automatically be
@@ -166,7 +194,12 @@ if __name__ == '__main__':
   xml_template_file_path = 'template.xml'
   xsd_schema_file_path = 'schema.xsd'
   data_file_path = 'data.csv'
-  main(xml_message_type, xml_template_file_path, xsd_schema_file_path, data_file_path)
+  main(
+    xml_message_type,
+    xml_template_file_path,
+    xsd_schema_file_path,
+    data_file_path
+  )
 ```
 
 ### Validation
@@ -189,7 +222,7 @@ is_valid = validate_xml_against_xsd(
 print(f"XML validation result: {is_valid}")
 ```
 
-## Documentation 📖
+## Documentation
 
 > **Info:** Do check out our [website][0] for comprehensive documentation.
 
@@ -207,9 +240,9 @@ customer.
 | Status | Message type | Name |
 |---|---|---|
 | ⏳ | camt.052.001.10 | Bank-to-Customer Account Statement |
-| ⏳ | camt.060.001.10 | Customer Account Notification |
-| ⏳ | camt.054.001.10 | Customer Account Statement Request |
 | ⏳ | camt.053.001.10 | Customer Account Identification |
+| ⏳ | camt.054.001.10 | Customer Account Statement Request |
+| ⏳ | camt.060.001.10 | Customer Account Notification |
 
 #### Payments Clearing and Settlement
 
@@ -245,7 +278,7 @@ and monitor payments.
 | ⏳ | pain.001.001.10 | Customer Account Closure Request |
 | ⏳ | pain.001.001.11 | Customer Account Change Request |
 
-## License 📝
+## License
 
 The project is licensed under the terms of both the MIT license and the
 Apache License (Version 2.0).
@@ -253,7 +286,7 @@ Apache License (Version 2.0).
 - [Apache License, Version 2.0][1]
 - [MIT license][2]
 
-## Contribution 🤝
+## Contribution
 
 We welcome contributions to **Pain001**. Please see the
 [contributing instructions][4] for more information.
@@ -263,12 +296,12 @@ submitted for inclusion in the work by you, as defined in the
 Apache-2.0 license, shall be dual licensed as above, without any
 additional terms or conditions.
 
-## Acknowledgements 💙
+## Acknowledgements
 
 We would like to extend a big thank you to all the awesome contributors
 of [Pain001][5] for their help and support.
 
-[0]: https://Pain001.co
+[0]: https://pain001.com
 [1]: https://opensource.org/license/apache-2-0/
 [2]: http://opensource.org/licenses/MIT
 [3]: https://github.com/sebastienrousseau/pain001
@@ -276,8 +309,8 @@ of [Pain001][5] for their help and support.
 [5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 
-[pain.001.001.03]: https://www.pain001.com/pain.001.001.03/index.html
-[pain.001.001.09]: https://www.pain001.com/pain.001.001.09/index.html
+[pain.001.001.03]: https://pain001.com/pain.001.001.03/index.html
+[pain.001.001.09]: https://pain001.com/pain.001.001.09/index.html
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
