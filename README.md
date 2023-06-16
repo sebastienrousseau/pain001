@@ -11,9 +11,7 @@
 Data Files.
 
 - **Website:** <https://pain001.com>
-- **Documentation:** <https://pain001.com/documentation>
 - **Source code:** <https://github.com/sebastienrousseau/pain001>
-- **Contributing:** <https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md>
 - **Bug reports:** <https://github.com/sebastienrousseau/pain001/issues>
 
 The Python library focuses specifically on
