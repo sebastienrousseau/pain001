@@ -1,79 +1,154 @@
-import io
-import pytest
-import sys
+from click.testing import CliRunner
 from pain001.__main__ import main
-from unittest.mock import patch
 
 
 class TestMain:
     def setup_method(self):
+        self.runner = CliRunner()
         self.xml_message_type = "pain.001.001.03"
         self.xml_file = "tests/data/template.xml"
         self.xsd_file = "tests/data/template.xsd"
         self.csv_file = "tests/data/template.csv"
-        self.output_file = "tests/data/output.xml"
 
     def test_main_with_valid_files(self):
-        with patch.object(
-            sys,
-            "argv",
+        result = self.runner.invoke(
+            main,
             [
-                "",
+                "--xml_message_type",
                 self.xml_message_type,
+                "--xml_template_file_path",
                 self.xml_file,
+                "--xsd_schema_file_path",
                 self.xsd_file,
+                "--data_file_path",
                 self.csv_file,
-                self.output_file,
             ],
-        ):
-            with patch(
-                "sys.stdout", new_callable=io.StringIO
-            ) as captured_output:
-                main()
-            assert (
-                "❯ XML located at tests/data/pain.001.001.03.xml is valid."
-                in captured_output.getvalue()
-            )
+        )
+        assert (
+            "The XML has been validated against tests/data/template.xsd\n"
+            in result.output
+        )
+        assert result.exit_code == 0
 
-    def test_main_with_invalid_csv_file(self):
-        with patch.object(
-            sys,
-            "argv",
+    def test_main_with_missing_xml_message_type(self):
+        result = self.runner.invoke(
+            main,
             [
-                "",
-                self.xml_message_type,
+                "--xml_template_file_path",
                 self.xml_file,
+                "--xsd_schema_file_path",
                 self.xsd_file,
-                "tests/data/invalid.csv",
-                self.output_file,
+                "--data_file_path",
+                self.csv_file,
             ],
-        ):
-            with patch(
-                "sys.stdout", new_callable=io.StringIO
-            ) as captured_output:
-                with pytest.raises(SystemExit) as exc_info:
-                    main()
+        )
+        assert result.exit_code == 1
+        assert "Error: xml_message_type is required." in result.output
 
-        assert exc_info.type == SystemExit
-        assert exc_info.value.code == 1
-        expected_error_message = "Error: No data to process."
-        assert expected_error_message in captured_output.getvalue()
+    def test_main_with_missing_xsd_template_file(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                self.xml_message_type,
+                "--xml_template_file_path",
+                self.xml_file,
+                "--data_file_path",
+                self.csv_file,
+            ],
+        )
+        assert result.exit_code == 1
+        assert (
+            "Error: xsd_schema_file_path is required." in result.output
+        )
 
-    def test_main_with_invalid_xml_file(self):
-        with pytest.raises(SystemExit) as exc_info:
-            with patch.object(
-                sys,
-                "argv",
-                [
-                    "",
-                    self.xml_message_type,
-                    "tests/data/invalid.xml",
-                    self.xsd_file,
-                    self.csv_file,
-                    self.output_file,
-                ],
-            ):
-                main()
+    def test_main_with_missing_data_file(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                self.xml_message_type,
+                "--xml_template_file_path",
+                self.xml_file,
+                "--xsd_schema_file_path",
+                self.xsd_file,
+            ],
+        )
+        assert result.exit_code == 1
+        assert "Error: data_file_path is required." in result.output
 
-        assert exc_info.type == SystemExit
-        assert exc_info.value.code == 1
+    def test_main_with_invalid_xml_message_type(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                "invalid",
+                "--xml_template_file_path",
+                self.xml_file,
+                "--xsd_schema_file_path",
+                self.xsd_file,
+                "--data_file_path",
+                self.csv_file,
+            ],
+        )
+        assert result.exit_code == 1
+        assert "Invalid XML message type: invalid." in result.output
+
+    def test_main_with_invalid_xml_template_file(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                self.xml_message_type,
+                "--xml_template_file_path",
+                "invalid",
+                "--xsd_schema_file_path",
+                self.xsd_file,
+                "--data_file_path",
+                self.csv_file,
+            ],
+        )
+        assert result.exit_code == 1
+        assert (
+            "The XML template file 'invalid' does not exist."
+            in result.output
+        )
+
+    def test_main_with_invalid_xsd_template_file(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                self.xml_message_type,
+                "--xml_template_file_path",
+                self.xml_file,
+                "--xsd_schema_file_path",
+                "invalid",
+                "--data_file_path",
+                self.csv_file,
+            ],
+        )
+        assert result.exit_code == 1
+        assert (
+            "The XSD template file 'invalid' does not exist."
+            in result.output
+        )
+
+    def test_main_with_invalid_data_file(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                self.xml_message_type,
+                "--xml_template_file_path",
+                self.xml_file,
+                "--xsd_schema_file_path",
+                self.xsd_file,
+                "--data_file_path",
+                "invalid",
+            ],
+        )
+        assert result.exit_code == 1
+        assert (
+            "The data file 'invalid' does not exist." in result.output
+        )

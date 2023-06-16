@@ -1,11 +1,10 @@
-import os
 import pytest
 import sys
 
 from contextlib import contextmanager
 from io import StringIO
 
-from pain001.core import process_files
+from pain001.core.core import process_files
 
 
 @contextmanager
@@ -18,13 +17,6 @@ def catch_stdout():
 
 
 class TestProcessFiles:
-    @pytest.fixture(autouse=True)
-    def setup_teardown(self):
-        self.output_file_path = "tests/data/pain.001.001.03.xml"
-        yield
-        if os.path.exists(self.output_file_path):
-            os.remove(self.output_file_path)
-
     def test_invalid_csv_data(self):
         """
         Test case for processing files with invalid CSV data.
@@ -36,7 +28,6 @@ class TestProcessFiles:
                     "tests/data/template.xml",
                     "tests/data/template.xsd",
                     "tests/data/invalid.csv",
-                    self.output_file_path,
                 )
 
         assert exc_info.value.code == 1
@@ -51,7 +42,6 @@ class TestProcessFiles:
                 "tests/data/template.xml",
                 "tests/data/template.xsd",
                 "tests/data/template.csv",
-                self.output_file_path,
             )
 
         error_message = str(exc_info.value)
@@ -70,7 +60,6 @@ class TestProcessFiles:
                 "tests/data/template.xml",
                 "tests/data/template.xsd",
                 "tests/data/nonexistent.csv",
-                self.output_file_path,
             )
         assert (
             str(exc_info.value)
@@ -87,7 +76,6 @@ class TestProcessFiles:
                 "tests/data/nonexistent.xml",
                 "tests/data/template.xsd",
                 "tests/data/template.csv",
-                self.output_file_path,
             )
         # assert exc_info.value.code == 1
 
@@ -101,7 +89,6 @@ class TestProcessFiles:
                 "tests/data/template.xml",
                 "tests/data/nonexistent.xsd",
                 "tests/data/template.csv",
-                self.output_file_path,
             )
         # assert exc_info.value.code == 1
 
@@ -114,12 +101,7 @@ class TestProcessFiles:
             "tests/data/template.xml",
             "tests/data/template.xsd",
             "tests/data/template.csv",
-            self.output_file_path,
         )
-
-        output_file_exists = os.path.exists(self.output_file_path)
-        if not output_file_exists:
-            raise AssertionError("Output file does not exist.")
 
     def test_unsupported_data_file_type(self):
         """
@@ -131,7 +113,6 @@ class TestProcessFiles:
                 "tests/data/template.xml",
                 "tests/data/template.xsd",
                 "tests/data/invalid.rtf",
-                self.output_file_path,
             )
         assert (
             str(exc_info.value) == "Error: Unsupported data file type."
@@ -151,11 +132,7 @@ class TestProcessFiles:
             xml_file_path,
             xsd_file_path,
             data_file_path,
-            self.output_file_path,
         )
-        output_file_exists = os.path.exists(self.output_file_path)
-        if not output_file_exists:
-            raise AssertionError("Output file does not exist.")
 
     def test_valid_xml_message_type(self):
         """
@@ -166,8 +143,4 @@ class TestProcessFiles:
             "tests/data/template.xml",
             "tests/data/template.xsd",
             "tests/data/template.csv",
-            self.output_file_path,
         )
-        output_file_exists = os.path.exists(self.output_file_path)
-        if not output_file_exists:
-            raise AssertionError("Output file does not exist.")

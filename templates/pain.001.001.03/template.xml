@@ -34,6 +34,16 @@
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKXXXXX</BIC>
+                    <Nm>Bank Name</Nm>
+                    <PstlAdr>
+                        <Ctry>Country Code</Ctry>
+                        <PstlCd>Postal Code</PstlCd>
+                        <StrtNm>Street Name</StrtNm>
+                        <BldgNb>Building Number</BldgNb>
+                        <TwnNm>Town Name</TwnNm>
+                    </PstlAdr>
                 </FinInstnId>
             </DbtrAgt>
             {% for tx in transactions %} <CdtTrfTxInf>
