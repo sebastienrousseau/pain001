@@ -1,5 +1,7 @@
-<?xml version="1.0" ?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
+<?xml version="1.0"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
 	<CstmrCdtTrfInitn>
 		<GrpHdr>
 			<MsgId>1</MsgId>
@@ -14,7 +16,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>2</NbOfTxs>
-			<CtrlSum>2</CtrlSum>
+			<CtrlSum>15000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -51,7 +53,7 @@
 					<Nm>Global Tech</Nm>
 				</Cdtr>
 				<RmtInf>
-					<Ustrd>Invoice-98765</Ustrd>
+					<Ustrd>Invoice-12345</Ustrd>
 				</RmtInf>
 			</CdtTrfTxInf>
 		</PmtInf>
@@ -60,7 +62,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>2</NbOfTxs>
-			<CtrlSum>2</CtrlSum>
+			<CtrlSum>15000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -97,7 +99,7 @@
 					<Nm>Global Tech</Nm>
 				</Cdtr>
 				<RmtInf>
-					<Ustrd>Invoice-98765</Ustrd>
+					<Ustrd>Invoice-12345</Ustrd>
 				</RmtInf>
 			</CdtTrfTxInf>
 		</PmtInf>
@@ -106,7 +108,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>3</NbOfTxs>
-			<CtrlSum>3</CtrlSum>
+			<CtrlSum>30000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -143,7 +145,7 @@
 					<Nm>Green Energy</Nm>
 				</Cdtr>
 				<RmtInf>
-					<Ustrd>Invoice-12345</Ustrd>
+					<Ustrd>Invoice-67890</Ustrd>
 				</RmtInf>
 			</CdtTrfTxInf>
 		</PmtInf>
@@ -152,7 +154,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>3</NbOfTxs>
-			<CtrlSum>3</CtrlSum>
+			<CtrlSum>30000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -189,7 +191,7 @@
 					<Nm>Green Energy</Nm>
 				</Cdtr>
 				<RmtInf>
-					<Ustrd>Invoice-12345</Ustrd>
+					<Ustrd>Invoice-67890</Ustrd>
 				</RmtInf>
 			</CdtTrfTxInf>
 		</PmtInf>
@@ -198,7 +200,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>1</NbOfTxs>
-			<CtrlSum>1</CtrlSum>
+			<CtrlSum>25000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -244,7 +246,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>1</NbOfTxs>
-			<CtrlSum>1</CtrlSum>
+			<CtrlSum>25000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -286,11 +288,11 @@
 			</CdtTrfTxInf>
 		</PmtInf>
 		<PmtInf>
-			<PmtInfId>Payment-Info-86420</PmtInfId>
+			<PmtInfId>Payment-Info-36912</PmtInfId>
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>2</NbOfTxs>
-			<CtrlSum>2</CtrlSum>
+			<CtrlSum>20000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -298,11 +300,11 @@
 			</PmtTpInf>
 			<ReqdExctnDt>2023-03-15</ReqdExctnDt>
 			<Dbtr>
-				<Nm>Delta Manufacturing</Nm>
+				<Nm>Zeta Services</Nm>
 			</Dbtr>
 			<DbtrAcct>
 				<Id>
-					<IBAN>DE25500105176602214896</IBAN>
+					<IBAN>DE68120933300112345608</IBAN>
 				</Id>
 			</DbtrAcct>
 			<DbtrAgt>
@@ -313,10 +315,10 @@
 			<ChrgBr>SLEV</ChrgBr>
 			<CdtTrfTxInf>
 				<PmtId>
-					<EndToEndId>PaymentID2468</EndToEndId>
+					<EndToEndId>PaymentID8642</EndToEndId>
 				</PmtId>
 				<Amt>
-					<InstdAmt Ccy="EUR">175.00</InstdAmt>
+					<InstdAmt Ccy="EUR">200.00</InstdAmt>
 				</Amt>
 				<CdtrAgt>
 					<FinInstnId>
@@ -324,19 +326,19 @@
 					</FinInstnId>
 				</CdtrAgt>
 				<Cdtr>
-					<Nm>Gamma Logistics</Nm>
+					<Nm>Theta Solutions</Nm>
 				</Cdtr>
 				<RmtInf>
-					<Ustrd>Invoice-86420</Ustrd>
+					<Ustrd>Invoice-36912</Ustrd>
 				</RmtInf>
 			</CdtTrfTxInf>
 		</PmtInf>
 		<PmtInf>
-			<PmtInfId>Payment-Info-86420</PmtInfId>
+			<PmtInfId>Payment-Info-36912</PmtInfId>
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>2</NbOfTxs>
-			<CtrlSum>2</CtrlSum>
+			<CtrlSum>20000</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -344,11 +346,11 @@
 			</PmtTpInf>
 			<ReqdExctnDt>2023-03-15</ReqdExctnDt>
 			<Dbtr>
-				<Nm>Delta Manufacturing</Nm>
+				<Nm>Zeta Services</Nm>
 			</Dbtr>
 			<DbtrAcct>
 				<Id>
-					<IBAN>DE25500105176602214896</IBAN>
+					<IBAN>DE68120933300112345608</IBAN>
 				</Id>
 			</DbtrAcct>
 			<DbtrAgt>
@@ -359,10 +361,10 @@
 			<ChrgBr>SLEV</ChrgBr>
 			<CdtTrfTxInf>
 				<PmtId>
-					<EndToEndId>PaymentID2468</EndToEndId>
+					<EndToEndId>PaymentID8642</EndToEndId>
 				</PmtId>
 				<Amt>
-					<InstdAmt Ccy="EUR">175.00</InstdAmt>
+					<InstdAmt Ccy="EUR">200.00</InstdAmt>
 				</Amt>
 				<CdtrAgt>
 					<FinInstnId>
@@ -370,10 +372,10 @@
 					</FinInstnId>
 				</CdtrAgt>
 				<Cdtr>
-					<Nm>Gamma Logistics</Nm>
+					<Nm>Theta Solutions</Nm>
 				</Cdtr>
 				<RmtInf>
-					<Ustrd>Invoice-86420</Ustrd>
+					<Ustrd>Invoice-36912</Ustrd>
 				</RmtInf>
 			</CdtTrfTxInf>
 		</PmtInf>
@@ -382,7 +384,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>3</NbOfTxs>
-			<CtrlSum>3</CtrlSum>
+			<CtrlSum>22500</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>
@@ -428,7 +430,7 @@
 			<PmtMtd>TRF</PmtMtd>
 			<BtchBookg>true</BtchBookg>
 			<NbOfTxs>3</NbOfTxs>
-			<CtrlSum>3</CtrlSum>
+			<CtrlSum>22500</CtrlSum>
 			<PmtTpInf>
 				<SvcLvl>
 					<Cd>SEPA</Cd>

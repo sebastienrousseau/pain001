@@ -60,15 +60,6 @@ def create_xml_v3(root, data, mapping):
 
         create_common_elements(PmtInf_element, row, mapping)
 
-        # Add the PmtInfId and PmtMtd elements to the PmtInf element
-        # for xml_tag, csv_column in mapping.items():
-        #     if xml_tag in ["PmtInfId", "PmtMtd"]:
-        #         create_xml_element(
-        #             PmtInf_element,
-        #             xml_tag,
-        #             row[csv_column]
-        #         )
-
         # Create new "BtchBookg" element in the XML tree using data
         # from the CSV file
         create_xml_element(

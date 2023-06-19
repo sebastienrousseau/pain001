@@ -9,6 +9,13 @@
             <NbOfTxs>{{nb_of_txs}}</NbOfTxs>
             <InitgPty>
                 <Nm>{{initiator_name}}</Nm>
+                <PstlAdr>
+                    <StrtNm>{{initiator_street_name}}</StrtNm>
+                    <BldgNb>{{initiator_building_number}}</BldgNb>
+                    <PstCd>{{initiator_postal_code}}</PstCd>
+                    <TwnNm>{{initiator_town_name}}</TwnNm>
+                    <Ctry>{{initiator_country_code}}</Ctry>
+                </PstlAdr>
             </InitgPty>
         </GrpHdr>
         <PmtInf>
@@ -16,58 +23,70 @@
             <PmtMtd>{{payment_method}}</PmtMtd>
             <BtchBookg>
             {{batch_booking}}</BtchBookg>
-            <NbOfTxs>{{nb_of_txs}}</NbOfTxs>
-            <CtrlSum>{{control_sum}}</CtrlSum>
-            <PmtTpInf>
-                <SvcLvl>
-                    <Cd>{{service_level_code}}</Cd>
-                </SvcLvl>
-            </PmtTpInf>
-            <ReqdExctnDt>
-            {{requested_execution_date}}</ReqdExctnDt>
+            <ReqdExctnDt>{{requested_execution_date}}</ReqdExctnDt>
             <Dbtr>
                 <Nm>{{debtor_name}}</Nm>
+                <PstlAdr>
+                    <StrtNm>{{debtor_street_name}}</StrtNm>
+                    <BldgNb>{{debtor_building_number}}</BldgNb>
+                    <PstCd>{{debtor_postal_code}}</PstCd>
+                    <TwnNm>{{debtor_town_name}}</TwnNm>
+                    <Ctry>{{debtor_country_code}}</Ctry>
+                </PstlAdr>
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <IBAN>{{debtor_account_IBAN}}</IBAN>
+                    <Othr>
+                        <Id>{{debtor_account_IBAN}}</Id>
+                    </Othr>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BIC>BANKXXXXX</BIC>
-                    <Nm>Bank Name</Nm>
-                    <PstlAdr>
-                        <Ctry>Country Code</Ctry>
-                        <PstlCd>Postal Code</PstlCd>
-                        <StrtNm>Street Name</StrtNm>
-                        <BldgNb>Building Number</BldgNb>
-                        <TwnNm>Town Name</TwnNm>
-                    </PstlAdr>
+                    <BIC>{{debtor_agent_BIC}}</BIC>
                 </FinInstnId>
             </DbtrAgt>
             {% for tx in transactions %} <CdtTrfTxInf>
                 <PmtId>
-                    <EndToEndId>{{tx.payment_id}}</EndToEndId>
+                    <InstrId>TX-{{ loop.index }}</InstrId>
+                    <EndToEndId>{{payment_id}}</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
+                    <InstdAmt Ccy="{{payment_currency}}">{{payment_amount}}</InstdAmt>
                 </Amt>
+                <ChrgBr>{{charge_bearer}}</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BIC>{{tx.creditor_agent_BIC}}</BIC>
+                        <BIC>{{creditor_agent_BIC}}</BIC>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
-                    <Nm>{{tx.creditor_name}}</Nm>
+                    <Nm>{{creditor_name}}</Nm>
+                    <PstlAdr>
+                        <AdrLine>{{creditor_street_name}}</AdrLine>
+                        <AdrLine>{{creditor_building_number}}</AdrLine>
+                        <AdrLine>{{creditor_postal_code}}</AdrLine>
+                        <AdrLine>{{creditor_town_name}}</AdrLine>
+                        <AdrLine>{{creditor_country_code}}</AdrLine>
+                    </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
-                        <IBAN>{{tx.creditor_account_IBAN}}</IBAN>
+                        <Othr>
+                            <Id>{{creditor_account_IBAN}}</Id>
+                        </Othr>
                     </Id>
                 </CdtrAcct>
+                <Purp>
+                    <Cd>{{purpose_code}}</Cd>
+                </Purp>
                 <RmtInf>
-                    <Ustrd>{{tx.unstructured_remittance_info}}</Ustrd>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>{{reference_number}}</Nb>
+                            <RltdDt>{{reference_date}}</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
                 </RmtInf>
             </CdtTrfTxInf>
             {% endfor %} </PmtInf>
