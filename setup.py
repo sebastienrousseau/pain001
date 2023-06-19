@@ -34,7 +34,7 @@ DEPENDENCIES = [
 ]
 
 TEST_DEPENDENCIES = [
-    "pytest>=7.3.1",
+    "pytest>=7.3.2",
 ]
 
 NAME = "pain001"

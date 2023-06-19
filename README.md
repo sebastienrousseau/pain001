@@ -146,6 +146,7 @@ When running **Pain001**, you will need to specify four arguments:
 
   The currently supported types are:
   - pain.001.001.03
+  - pain.001.001.04
   - pain.001.001.09
 - An `xml_template_file_path`: This is the path to the XML template file you
   are using that contains variables that will be replaced by the values in your
