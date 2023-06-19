@@ -155,8 +155,9 @@ class TestMain:
 
     def test_invalid_xml_template_file_path(self):
         """
-        Test that the `print(click.get_current_context().get_help())` line is executed
-        when the `xml_template_file_path` argument is set to an invalid value.
+        Test that the `print(click.get_current_context().get_help())` line is
+        executed when the `xml_template_file_path` argument is set to an
+        invalid value.
         """
 
         result = self.runner.invoke(
@@ -186,7 +187,8 @@ class TestMain:
     def test_non_existent_xml_template_file_path(self):
         """
         Test that the `logger.info()` and `print()` lines are executed
-        when the `xml_template_file_path` argument is set to a non-existent file path.
+        when the `xml_template_file_path` argument is set to a non-existent
+        file path.
         """
 
         result = self.runner.invoke(
