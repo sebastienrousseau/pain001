@@ -307,7 +307,7 @@ and monitor payments.
 | Status | Message type | Name |
 |---|---|---|
 | ✅ | [pain.001.001.03][pain.001.001.03] | Customer Credit Transfer Initiation |
-| ⏳ | pain.001.001.04 | Customer Direct Debit Initiation |
+| ✅ | [pain.001.001.04][pain.001.001.04] | Customer Direct Debit Initiation |
 | ⏳ | pain.001.001.05 | Customer Direct Debit Reversal |
 | ⏳ | pain.001.001.06 | Customer Credit Transfer Reversal |
 | ⏳ | pain.001.001.07 | Customer Account Notification |
@@ -349,6 +349,7 @@ of [Pain001][5] for their help and support.
 [7]: https://pypi.org/project/pain001/
 
 [pain.001.001.03]: https://pain001.com/pain.001.001.03/index.html
+[pain.001.001.04]: https://pain001.com/pain.001.001.04/index.html
 [pain.001.001.09]: https://pain001.com/pain.001.001.09/index.html
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
