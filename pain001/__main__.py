@@ -184,16 +184,6 @@ def main(
         print(f"The data file '{data_file_path}' does not exist.")
         sys.exit(1)
 
-    # Validate the XML file and raise a SystemExit exception if invalid
-    # is_valid = validate_via_xsd(
-    #     xml_template_file_path, xsd_schema_file_path
-    # )
-    # if not is_valid:
-    #     logger.error(
-    #         f"Error: XML located at {xml_template_file_path} is invalid."
-    #     )
-    #     sys.exit(1)
-
     process_files(
         xml_message_type,
         xml_template_file_path,

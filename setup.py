@@ -34,12 +34,12 @@ DEPENDENCIES = [
 ]
 
 TEST_DEPENDENCIES = [
-    "pytest>=7.3.1",
+    "pytest>=7.3.2",
 ]
 
 NAME = "pain001"
 URL = "https://github.com/sebastienrousseau/pain001"
-VERSION = "0.0.20"
+VERSION = "0.0.21"
 
 setup(
     name=NAME,

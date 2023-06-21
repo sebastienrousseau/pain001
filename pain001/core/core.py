@@ -87,6 +87,9 @@ def process_files(
         logger.error(error_message)
         raise FileNotFoundError(error_message)
 
+    # Sanitize the path to the data file.
+    data_file_path = os.path.normpath(data_file_path)
+
     # Check if the data file exists
     if not os.path.exists(data_file_path):
         error_message = (

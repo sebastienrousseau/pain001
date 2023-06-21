@@ -23,7 +23,11 @@ from pain001.xml.create_root_element import create_root_element
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
-from pain001.xml.generate_xml import create_xml_v3, create_xml_v9
+from pain001.xml.generate_xml import (
+    create_xml_v3,
+    create_xml_v4,
+    create_xml_v9,
+)
 
 from pain001.xml.validate_via_xsd import validate_via_xsd
 from pain001.xml.write_xml_to_file import write_xml_to_file
@@ -42,6 +46,7 @@ def xml_generator(
     # Define a mapping between the XML types and the XML generators
     xml_generators = {
         "pain.001.001.03": create_xml_v3,
+        "pain.001.001.04": create_xml_v4,
         "pain.001.001.09": create_xml_v9,
     }
 
@@ -72,6 +77,8 @@ def xml_generator(
         print(
             f"A new XML file has been created at {updated_xml_file_path}"
         )
+
+        print(updated_xml_file_path)
 
         # Validate the updated XML file against the XSD schema
         is_valid = validate_via_xsd(

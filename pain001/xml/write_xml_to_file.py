@@ -15,7 +15,7 @@ import xml.etree.ElementTree as ET
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from xml.dom import minidom
+from defusedxml.minidom import parseString
 
 # Write XML to file with pretty formatting (indentation)
 
@@ -26,5 +26,5 @@ def write_xml_to_file(xml_file_path, root):
         xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
         xml_string = xml_declaration + xml_string.decode("utf-8")
 
-        dom = minidom.parseString(xml_string)
+        dom = parseString(xml_string)
         f.write(dom.toprettyxml())

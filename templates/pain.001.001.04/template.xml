@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.04"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.04 pain.001.001.04.xsd">
     <CstmrCdtTrfInitn>
         <GrpHdr>
             <MsgId>{{id}}</MsgId>
@@ -10,28 +10,27 @@
             <InitgPty>
                 <Nm>{{initiator_name}}</Nm>
                 <PstlAdr>
-                    <StrtNm>{{initiator_street_name}}</StrtNm>
+                    <StrtNm>{{initiator_street}}</StrtNm>
                     <BldgNb>{{initiator_building_number}}</BldgNb>
                     <PstCd>{{initiator_postal_code}}</PstCd>
-                    <TwnNm>{{initiator_town_name}}</TwnNm>
-                    <Ctry>{{initiator_country_code}}</Ctry>
+                    <TwnNm>{{initiator_town}}</TwnNm>
+                    <Ctry>{{initiator_country}}</Ctry>
                 </PstlAdr>
             </InitgPty>
         </GrpHdr>
         <PmtInf>
-            <PmtInfId>{{payment_id}}</PmtInfId>
+            <PmtInfId>{{payment_information_id}}</PmtInfId>
             <PmtMtd>{{payment_method}}</PmtMtd>
-            <BtchBookg>
-            {{batch_booking}}</BtchBookg>
+            <BtchBookg>{{batch_booking}}</BtchBookg>
             <ReqdExctnDt>{{requested_execution_date}}</ReqdExctnDt>
             <Dbtr>
                 <Nm>{{debtor_name}}</Nm>
                 <PstlAdr>
-                    <StrtNm>{{debtor_street_name}}</StrtNm>
+                    <StrtNm>{{debtor_street}}</StrtNm>
                     <BldgNb>{{debtor_building_number}}</BldgNb>
                     <PstCd>{{debtor_postal_code}}</PstCd>
-                    <TwnNm>{{debtor_town_name}}</TwnNm>
-                    <Ctry>{{debtor_country_code}}</Ctry>
+                    <TwnNm>{{debtor_town}}</TwnNm>
+                    <Ctry>{{debtor_country}}</Ctry>
                 </PstlAdr>
             </Dbtr>
             <DbtrAcct>
@@ -43,31 +42,32 @@
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BIC>{{debtor_agent_BIC}}</BIC>
+                    <BICFI>{{debtor_agent_BICFI}}</BICFI>
                 </FinInstnId>
             </DbtrAgt>
-            {% for tx in transactions %} <CdtTrfTxInf>
+            <CdtTrfTxInf>
                 <PmtId>
-                    <InstrId>TX-{{ loop.index }}</InstrId>
-                    <EndToEndId>{{payment_id}}</EndToEndId>
+                    <InstrId>{{payment_instruction_id}}</InstrId>
+                    <EndToEndId>{{payment_end_to_end_id}}</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="{{payment_currency}}">{{payment_amount}}</InstdAmt>
+                    <InstdAmt Ccy="{{payment_currency}}">
+                        {{payment_amount}}
+                    </InstdAmt>
                 </Amt>
                 <ChrgBr>{{charge_bearer}}</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BIC>{{creditor_agent_BIC}}</BIC>
+                        <BICFI>{{creditor_agent_BIC}}</BICFI>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
                     <Nm>{{creditor_name}}</Nm>
                     <PstlAdr>
-                        <AdrLine>{{creditor_street_name}}</AdrLine>
+                        <AdrLine>{{creditor_street}}</AdrLine>
                         <AdrLine>{{creditor_building_number}}</AdrLine>
                         <AdrLine>{{creditor_postal_code}}</AdrLine>
-                        <AdrLine>{{creditor_town_name}}</AdrLine>
-                        <AdrLine>{{creditor_country_code}}</AdrLine>
+                        <AdrLine>{{creditor_town}}</AdrLine>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
@@ -84,11 +84,13 @@
                     <Strd>
                         <RfrdDocInf>
                             <Nb>{{reference_number}}</Nb>
-                            <RltdDt>{{reference_date}}</RltdDt>
+                            <RltdDt>
+                                {{reference_date}}
+                            </RltdDt>
                         </RfrdDocInf>
                     </Strd>
                 </RmtInf>
             </CdtTrfTxInf>
-            {% endfor %} </PmtInf>
+        </PmtInf>
     </CstmrCdtTrfInitn>
 </Document>

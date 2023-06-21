@@ -152,3 +152,61 @@ class TestMain:
         assert (
             "The data file 'invalid' does not exist." in result.output
         )
+
+    def test_invalid_xml_template_file_path(self):
+        """
+        Test that the `print(click.get_current_context().get_help())` line is
+        executed when the `xml_template_file_path` argument is set to an
+        invalid value.
+        """
+
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                "pain.001.001.03",
+                "--xml_template_file_path",
+                "invalid",
+                "--xsd_schema_file_path",
+                self.xsd_file,
+                "--data_file_path",
+                self.csv_file,
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert (
+            "The XML template file 'invalid' does not exist."
+            in result.output
+        )
+        assert (
+            "The XML template file 'invalid' does not exist."
+            in result.output
+        )
+
+    def test_non_existent_xml_template_file_path(self):
+        """
+        Test that the `logger.info()` and `print()` lines are executed
+        when the `xml_template_file_path` argument is set to a non-existent
+        file path.
+        """
+
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                "pain.001.001.03",
+                "--xml_template_file_path",
+                "non_existent_file.xml",
+                "--xsd_schema_file_path",
+                self.xsd_file,
+                "--data_file_path",
+                self.csv_file,
+            ],
+        )
+
+        assert result.exit_code == 1
+        assert (
+            "The XML template file 'non_existent_file.xml' does not exist."
+            in result.output
+        )
