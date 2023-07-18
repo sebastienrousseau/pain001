@@ -20,7 +20,6 @@ import xml.etree.ElementTree as ET
 
 
 def create_root_element(payment_initiation_message_type):
-
     # Create the namespace for the payment initiation message type.
     namespace = (
         "urn:iso:std:iso:20022:tech:xsd:"
@@ -34,9 +33,7 @@ def create_root_element(payment_initiation_message_type):
 
     # Set the schema location.
     schema_location = (
-        namespace + " "
-        + payment_initiation_message_type
-        + ".xsd"
+        namespace + " " + payment_initiation_message_type + ".xsd"
     )
     root.set("xsi:schemaLocation", schema_location)
 

@@ -5,6 +5,11 @@ from pain001.xml.xml_generator import xml_generator
 
 class TestXmlGenerator(unittest.TestCase):
     def test_xml_generator_with_invalid_input(self):
+        """
+        Test if the XML generator exits with a non-zero exit code when
+        invalid input is provided.
+        """
+
         # Arrange
         data = {
             "amount": "100.00",
