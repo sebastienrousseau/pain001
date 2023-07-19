@@ -73,25 +73,23 @@ def create_xml_v3(root, data, mapping):
 
     # Calculate CreDtTm
     time_and_date_str = str(datetime.now())
-    time_and_date_CreDtTm = time_and_date_str[0:10] + "T" + time_and_date_str[11:19]
+    CreDtTm_value = time_and_date_str[0:10] + "T" + time_and_date_str[11:19]
     # Add CreDtTm Element in the XML tree
-    create_xml_element(GrpHdr_element, "CreDtTm", time_and_date_CreDtTm)
+    create_xml_element(GrpHdr_element, "CreDtTm", CreDtTm_value)
 
     # Calculate NbOfTxs
-    NbOfTxs = 0;
+    NbOfTxs = 0
     for row in data:
         NbOfTxs = NbOfTxs + 1
     # Add NbOfTxs to the XML tree
     create_xml_element(GrpHdr_element, "NbOfTxs", str(NbOfTxs))
 
     # Calculate CtrlSum Element from the CSV file
-    totalSum = 0;
+    totalSum = 0
     for row in data:
         totalSum += float(row["payment_amount"])
     # Add CtrlSum Element in the XML tree
-    create_xml_element(
-        GrpHdr_element, "CtrlSum", str(round(totalSum,2))
-    )
+    create_xml_element(GrpHdr_element, "CtrlSum", str(round(totalSum,2)))
 
     # Create new "InitgPty" element in the XML tree using data from the
     # CSV file
@@ -116,13 +114,11 @@ def create_xml_v3(root, data, mapping):
 
         # Create new "NbOfTxs" element in the XML tree using data from
         # the Data file
-        #create_xml_element(PmtInf_element, "NbOfTxs", row["nb_of_txs"])
+        # create_xml_element(PmtInf_element, "NbOfTxs", row["nb_of_txs"])
 
         # Create new "CtrlSum" element in the XML tree using data from
         # the Data file
-        #create_xml_element(
-        #    PmtInf_element, "CtrlSum", f"{row['control_sum']}"
-        #)
+        # create_xml_element(PmtInf_element, "CtrlSum", f"{row['control_sum']}")
 
         # Create new "PmtTpInf" element in the XML tree using data from
         # the Data file
