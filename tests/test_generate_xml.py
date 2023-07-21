@@ -32,6 +32,7 @@ class TestXMLCreation(unittest.TestCase):
             "currency": "EUR",
             "creditor_agent_BIC": "NOLADE21KIE",
             "creditor_name": "Creditor",
+            "creditor_account_IBAN": "DE26500700100096773701",
             "remittance_information": "Invoice 123",
         }
         self.mapping = {
