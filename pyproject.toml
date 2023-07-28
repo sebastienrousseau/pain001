@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.21"
+version = "0.0.22"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache Software License"

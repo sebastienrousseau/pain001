@@ -16,6 +16,9 @@
 # Import the XML libraries
 import xml.etree.ElementTree as ET
 
+# Import the datetime library
+from datetime import datetime
+
 # Import the functions from the other modules
 from .create_xml_element import create_xml_element
 
@@ -63,10 +66,30 @@ def create_xml_v3(root, data, mapping):
 
     # Add the MsgId, CreDtTm, and NbOfTxs elements to the GrpHdr element
     for xml_tag, csv_column in mapping.items():
-        if xml_tag in ["MsgId", "CreDtTm", "NbOfTxs"]:
+        if xml_tag in ["MsgId"]:
             create_xml_element(
                 GrpHdr_element, xml_tag, data[0][csv_column]
             )
+
+    # Calculate CreDtTm
+    time_and_date_str = str(datetime.now())
+    CreDtTm_value = time_and_date_str[0:10] + "T" + time_and_date_str[11:19]
+    # Add CreDtTm Element in the XML tree
+    create_xml_element(GrpHdr_element, "CreDtTm", CreDtTm_value)
+
+    # Calculate NbOfTxs
+    NbOfTxs = 0
+    for row in data:
+        NbOfTxs = NbOfTxs + 1
+    # Add NbOfTxs to the XML tree
+    create_xml_element(GrpHdr_element, "NbOfTxs", str(NbOfTxs))
+
+    # Calculate CtrlSum Element from the CSV file
+    totalSum = 0
+    for row in data:
+        totalSum += float(row["payment_amount"])
+    # Add CtrlSum Element in the XML tree
+    create_xml_element(GrpHdr_element, "CtrlSum", str(round(totalSum, 2)))
 
     # Create new "InitgPty" element in the XML tree using data from the
     # CSV file
@@ -80,7 +103,6 @@ def create_xml_v3(root, data, mapping):
         # Create new "PmtInf" element in the XML tree using data from
         # the CSV file
         PmtInf_element = ET.Element("PmtInf")
-        cstmr_cdt_trf_initn_element.append(PmtInf_element)
 
         create_common_elements(PmtInf_element, row, mapping)
 
@@ -92,13 +114,12 @@ def create_xml_v3(root, data, mapping):
 
         # Create new "NbOfTxs" element in the XML tree using data from
         # the Data file
-        create_xml_element(PmtInf_element, "NbOfTxs", row["nb_of_txs"])
+        # create_xml_element(PmtInf_element, "NbOfTxs", row["nb_of_txs"])
 
         # Create new "CtrlSum" element in the XML tree using data from
         # the Data file
-        create_xml_element(
-            PmtInf_element, "CtrlSum", f"{row['control_sum']}"
-        )
+        # create_xml_element(
+        # PmtInf_element, "CtrlSum", f"{row['control_sum']}")
 
         # Create new "PmtTpInf" element in the XML tree using data from
         # the Data file
@@ -134,7 +155,12 @@ def create_xml_v3(root, data, mapping):
         # replace with the appropriate value
         child_element2.text = row["debtor_account_IBAN"]
         child_element.append(child_element2)
+        # Create CCy Element
+        CCy_element = ET.Element("Ccy")
+        CCy_element.text = row["currency"]
+        # Add Both Elements to Parents
         DbtrAcct_element.append(child_element)
+        DbtrAcct_element.append(CCy_element)
         PmtInf_element.append(DbtrAcct_element)
 
         # Create new "DbtrAgt" element in the XML tree using data
@@ -148,13 +174,6 @@ def create_xml_v3(root, data, mapping):
         DbtrAgt_element.append(child_element)
         PmtInf_element.append(DbtrAgt_element)
 
-        # Create new "ChrgBr" element in the XML tree using data
-        # from the Data file
-        child_element = ET.Element("ChrgBr")
-        # replace with the appropriate value
-        child_element.text = row["charge_bearer"]
-        PmtInf_element.append(child_element)
-
         # Create new "CdtTrfTxInf" element in the XML tree using data
         # from the Data file
         CdtTrfTxInf_element = ET.Element("CdtTrfTxInf")
@@ -162,8 +181,11 @@ def create_xml_v3(root, data, mapping):
         # Create new "PmtId" element in the XML tree using data
         # from the Data file
         PmtId_element = ET.Element("PmtId")
+        InstrId_element = ET.Element("InstrId")
         child_element = ET.Element("EndToEndId")
+        InstrId_element.text = row["payment_id"]
         child_element.text = row["payment_id"]
+        PmtId_element.append(InstrId_element)
         PmtId_element.append(child_element)
         CdtTrfTxInf_element.append(PmtId_element)
 
@@ -175,6 +197,13 @@ def create_xml_v3(root, data, mapping):
         child_element.set("Ccy", row["currency"])
         Amt_element.append(child_element)
         CdtTrfTxInf_element.append(Amt_element)
+
+        # Create new "ChrgBr" element in the XML tree using data
+        # from the Data file
+        ChrgBr_element = ET.Element("ChrgBr")
+        # replace with the appropriate value
+        ChrgBr_element.text = row["charge_bearer"]
+        PmtInf_element.append(ChrgBr_element)
 
         # Create new "CdtrAgt" element in the XML tree using data
         # from the Data file
@@ -193,6 +222,16 @@ def create_xml_v3(root, data, mapping):
         child_element.text = row["creditor_name"]
         Cdtr_element.append(child_element)
         CdtTrfTxInf_element.append(Cdtr_element)
+
+        # Create new "CdtrAcct" element in the XML tree using data
+        # from the CSV file
+        CdtrAcct_element = ET.Element("CdtrAcct")
+        Id_element = ET.Element("Id")
+        IBAN_element = ET.Element("IBAN")
+        IBAN_element.text = row["creditor_account_IBAN"]
+        Id_element.append(IBAN_element)
+        CdtrAcct_element.append(Id_element)
+        CdtTrfTxInf_element.append(CdtrAcct_element)
 
         # Create new "RmtInf" element in the XML tree using data
         # from the Data file
@@ -475,6 +514,16 @@ def create_xml_v9(root, data, mapping):
         child_element.text = row["creditor_name"]
         Cdtr_element.append(child_element)
         CdtTrfTxInf_element.append(Cdtr_element)
+
+        # Create new "CdtrAcct" element in the XML tree using data
+        # from the CSV file
+        CdtrAcct_element = ET.Element("CdtrAcct")
+        child_element = ET.Element("Id")
+        child_element2 = ET.Element("IBAN")
+        child_element2.text = row["creditor_agent_BIC"]
+        child_element.append(child_element2)
+        CdtrAcct_element.append(child_element)
+        CdtTrfTxInf_element.append(CdtrAcct_element)
 
         # Create new "RmtInf" element in the XML tree using data
         # from the Data file
