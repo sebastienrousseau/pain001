@@ -39,7 +39,7 @@ TEST_DEPENDENCIES = [
 
 NAME = "pain001"
 URL = "https://github.com/sebastienrousseau/pain001"
-VERSION = "0.0.22"
+VERSION = "0.0.23"
 
 setup(
     name=NAME,
