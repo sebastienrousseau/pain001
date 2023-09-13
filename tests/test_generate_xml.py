@@ -2,10 +2,10 @@ import unittest
 
 import xml.etree.ElementTree as ET
 
+from pain001.xml.create_xml_v3 import create_xml_v3
+
 from pain001.xml.generate_iso20022_payments import (
     create_common_elements,
-    create_xml_v3,
-    # create_xml_v9,
 )
 
 

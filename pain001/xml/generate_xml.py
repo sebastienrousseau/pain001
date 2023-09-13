@@ -24,11 +24,10 @@ from jinja2 import Environment, FileSystemLoader
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
-from pain001.xml.generate_iso20022_payments import (
-    create_xml_v3,
-    create_xml_v4,
-    create_xml_v9,
-)
+from pain001.xml.create_xml_v3 import create_xml_v3
+from pain001.xml.create_xml_v4 import create_xml_v4
+from pain001.xml.create_xml_v5 import create_xml_v5
+# from pain001.xml.create_xml_v9 import create_xml_v9
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 
@@ -40,7 +39,7 @@ def generate_xml(
     Args:
         data: List of dictionaries containing payment data
         payment_initiation_message_type: String indicating message type
-        like "pain.001.001.04"
+        such as "pain.001.001.03, pain.001.001.04, pain.001.001.05, etc."
         xml_file_path: Path to write generated XML file to
         xsd_file_path: Path to XML schema file for validation
 
@@ -52,7 +51,8 @@ def generate_xml(
     xml_generators = {
         "pain.001.001.03": create_xml_v3,
         "pain.001.001.04": create_xml_v4,
-        "pain.001.001.09": create_xml_v9,
+        "pain.001.001.05": create_xml_v5,
+        # "pain.001.001.09": create_xml_v9,
     }
 
     # Check if the provided payment_initiation_message_type exists in

@@ -2,9 +2,12 @@
 
 ![Pain001 banner][banner]
 
+## A Powerful Python Library that enables you to create ISO 20022-Compliant Payment Files directly from CSV or SQLite data files
+
 [![PyPI][pypi-badge]][3] [![PyPI Downloads][pypi-downloads-badge]][7] [![License][license-badge]][1] [![Codecov][codecov-badge]][6]
 
 ## Overview
+
 
 **Pain001** is an open-source Python Library that you can use to create
 **ISO 20022-Compliant Payment Files** directly from your **CSV** or **SQLite**
@@ -42,6 +45,7 @@ processing.
 ## Table of Contents
 
 - [Pain001: Automate ISO 20022-Compliant Payment File Creation](#pain001-automate-iso-20022-compliant-payment-file-creation)
+  - [A Powerful Python Library that enables you to create ISO 20022-Compliant Payment Files directly from CSV or SQLite data files](#a-powerful-python-library-that-enables-you-to-create-iso-20022-compliant-payment-files-directly-from-csv-or-sqlite-data-files)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
