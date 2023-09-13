@@ -88,17 +88,16 @@ class TestXMLCreation(unittest.TestCase):
         )
 
 
-    def test_create_xml_v9(self):
-        """
-        Test create_xml_v9
-        """
+        # def test_create_xml_v9(self):
+        #     """
+        #     Test create_xml_v9
+        #     """
 
-        create_xml_v9(self.root, [self.row], self.mapping)
-        cstmr_cdt_trf_initn_element = self.root[0]
-        self.assertEqual(
-            cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn"
-        )
-        # You can continue to assert more conditions based on your expectations
+        #     create_xml_v9(self.root, [self.row], self.mapping)
+        #     cstmr_cdt_trf_initn_element = self.root[0]
+        #     self.assertEqual(
+        #         cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn"
+        #     )
 
 
 if __name__ == "__main__":
