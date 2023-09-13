@@ -46,49 +46,49 @@
                     <BIC>{{debtor_agent_BIC}}</BIC>
                 </FinInstnId>
             </DbtrAgt>
-            {% for tx in transactions %} <CdtTrfTxInf>
+            {% for tx in transactions %}<CdtTrfTxInf>
                 <PmtId>
                     <InstrId>TX-{{ loop.index }}</InstrId>
-                    <EndToEndId>{{payment_id}}</EndToEndId>
+                    <EndToEndId>{{tx.payment_id}}</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="{{payment_currency}}">{{payment_amount}}</InstdAmt>
+                    <InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
                 </Amt>
-                <ChrgBr>{{charge_bearer}}</ChrgBr>
+                <ChrgBr>{{tx.charge_bearer}}</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BIC>{{creditor_agent_BIC}}</BIC>
+                        <BIC>{{tx.creditor_agent_BIC}}</BIC>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
-                    <Nm>{{creditor_name}}</Nm>
+                    <Nm>{{tx.creditor_name}}</Nm>
                     <PstlAdr>
-                        <AdrLine>{{creditor_street_name}}</AdrLine>
-                        <AdrLine>{{creditor_building_number}}</AdrLine>
-                        <AdrLine>{{creditor_postal_code}}</AdrLine>
-                        <AdrLine>{{creditor_town_name}}</AdrLine>
-                        <AdrLine>{{creditor_country_code}}</AdrLine>
+                        <AdrLine>{{tx.creditor_street_name}}</AdrLine>
+                        <AdrLine>{{tx.creditor_building_number}}</AdrLine>
+                        <AdrLine>{{tx.creditor_postal_code}}</AdrLine>
+                        <AdrLine>{{tx.creditor_town_name}}</AdrLine>
+                        <AdrLine>{{tx.creditor_country_code}}</AdrLine>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
                         <Othr>
-                            <Id>{{creditor_account_IBAN}}</Id>
+                            <Id>{{tx.creditor_account_IBAN}}</Id>
                         </Othr>
                     </Id>
                 </CdtrAcct>
                 <Purp>
-                    <Cd>{{purpose_code}}</Cd>
+                    <Cd>{{tx.purpose_code}}</Cd>
                 </Purp>
                 <RmtInf>
                     <Strd>
                         <RfrdDocInf>
-                            <Nb>{{reference_number}}</Nb>
-                            <RltdDt>{{reference_date}}</RltdDt>
+                            <Nb>{{tx.reference_number}}</Nb>
+                            <RltdDt>{{tx.reference_date}}</RltdDt>
                         </RfrdDocInf>
                     </Strd>
                 </RmtInf>
             </CdtTrfTxInf>
-            {% endfor %} </PmtInf>
+            {% endfor %}</PmtInf>
     </CstmrCdtTrfInitn>
 </Document>

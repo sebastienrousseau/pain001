@@ -132,10 +132,10 @@ Here’s how you would do that:
 
 ```sh
 python3 -m pain001 \
-    <xml_message_type> \
-    <xml_template_file_path> \
-    <xsd_schema_file_path> \
-    <data_file_path>
+    -t <xml_message_type> \
+    -m <xml_template_file_path> \
+    -s <xsd_schema_file_path> \
+    -d <data_file_path>
 ```
 
 ### Arguments
@@ -165,20 +165,20 @@ initiation message from a CSV file and a SQLite Data file.
 
 ```sh
 python3 -m pain001 \
-    pain.001.001.03 \
-    /path/to/your/template.xml \
-    /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/template.csv
+    -t pain.001.001.03 \
+    -m /path/to/your/template.xml \
+    -s /path/to/your/pain.001.001.03.xsd \
+    -d /path/to/your/template.csv
 ```
 
 ### Using a SQLite Data File as the source
 
 ```sh
 python3 -m pain001 \
-    pain.001.001.03 \
-    /path/to/your/template.xml \
-    /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/template.db
+    -t pain.001.001.03 \
+    -m /path/to/your/template.xml \
+    -s /path/to/your/pain.001.001.03.xsd \
+    -d /path/to/your/template.db
 ```
 
 ### Using the Source code
@@ -194,11 +194,11 @@ git clone https://github.com/sebastienrousseau/pain001.git
   Then, navigate to the `pain001` directory and run the following command:
 
   ```sh
-  python3 -m pain001 \
-      pain.001.001.03 \
-      templates/pain.001.001.03/template.xml \
-      templates/pain.001.001.03/pain.001.001.03.xsd \
-      templates/pain.001.001.03/template.csv
+  python -m pain001 \
+    -t pain.001.001.03 \
+    -m templates/pain.001.001.03/template.xml \
+    -s templates/pain.001.001.03/pain.001.001.03.xsd \
+    -d templates/pain.001.001.03/template.csv
   ```
 
 This will generate a payment initiation message from the sample CSV Data file.
@@ -207,10 +207,10 @@ You can do the same with the sample SQLite Data file:
 
 ```sh
 python3 -m pain001 \
-    pain.001.001.03 \
-    templates/pain.001.001.03/template.xml \
-    templates/pain.001.001.03/pain.001.001.03.xsd \
-    templates/pain.001.001.03/template.db
+    -t pain.001.001.03 \
+    -m templates/pain.001.001.03/template.xml \
+    -s templates/pain.001.001.03/pain.001.001.03.xsd \
+    -d templates/pain.001.001.03/template.db
 ```
 
 > **Note:** The XML file that **Pain001** generates will automatically be

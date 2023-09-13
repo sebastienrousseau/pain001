@@ -19,14 +19,6 @@ class TestXmlGenerator(unittest.TestCase):
             "creditor_bic": "DEFGH456",
             "creditor_iban": "DE893706019800000234567",
         }
-        mapping = {
-            "amount": "Amount",
-            "currency": "Currency",
-            "beneficiary_bic": "BeneficiaryBIC",
-            "beneficiary_iban": "BeneficiaryIBAN",
-            "creditor_bic": "CreditorBIC",
-            "creditor_iban": "CreditorIBAN",
-        }
         payment_initiation_message_type = "invalid_message_type"
         xml_file_path = "test.xml"
         xsd_file_path = "schema.xsd"
@@ -35,7 +27,6 @@ class TestXmlGenerator(unittest.TestCase):
         with self.assertRaises(SystemExit):
             xml_generator(
                 data,
-                mapping,
                 payment_initiation_message_type,
                 xml_file_path,
                 xsd_file_path,

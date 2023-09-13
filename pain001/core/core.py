@@ -28,7 +28,6 @@ from pain001.db.validate_db_data import validate_db_data
 from pain001.xml.register_namespaces import register_namespaces
 from pain001.xml.xml_generator import xml_generator
 
-
 def process_files(
     xml_message_type,
     xml_template_file_path,
@@ -99,14 +98,14 @@ def process_files(
         raise FileNotFoundError(error_message)
 
     # Define mapping dictionary between XML element tags and CSV column names
-    mapping = {
-        "MsgId": "id",
-        "CreDtTm": "date",
-        "NbOfTxs": "nb_of_txs",
-        "Nm": "initiator_name",
-        "PmtInfId": "payment_information_id",
-        "PmtMtd": "payment_method",
-    }
+    # mapping = {
+    #     "MsgId": "id",
+    #     "CreDtTm": "date",
+    #     "NbOfTxs": "nb_of_txs",
+    #     "Nm": "initiator_name",
+    #     "PmtInfId": "payment_information_id",
+    #     "PmtMtd": "payment_method",
+    # }
 
     # Determine the type of data file (CSV or SQLite)
     is_csv = data_file_path.endswith(".csv")
@@ -136,7 +135,6 @@ def process_files(
     # Generate the updated XML file path
     xml_generator(
         data,
-        mapping,
         xml_message_type,
         xml_template_file_path,
         xsd_schema_file_path,
