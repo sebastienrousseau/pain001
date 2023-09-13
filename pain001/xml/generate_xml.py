@@ -39,7 +39,8 @@ def generate_xml(
 
     Args:
         data: List of dictionaries containing payment data
-        payment_initiation_message_type: String indicating message type like "pain.001.001.04"
+        payment_initiation_message_type: String indicating message type
+        like "pain.001.001.04"
         xml_file_path: Path to write generated XML file to
         xsd_file_path: Path to XML schema file for validation
 
@@ -241,9 +242,12 @@ def generate_xml(
         elif payment_initiation_message_type == "pain.001.001.04":
             xml_data = xml_data_pain001_001_04
         else:
-            # If it's not supported, print an error message and exit the program
+            # If it's not supported, print an error message and exit
             print(
-                f"The payment initiation message type {payment_initiation_message_type} is not supported at this time."
+                f"""
+The payment initiation message type {payment_initiation_message_type} is not
+supported at this time.
+"""
             )
             sys.exit(1)
 
