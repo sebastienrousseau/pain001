@@ -15,6 +15,7 @@ def catch_stdout():
     finally:
         sys.stdout = old_out
 
+
 class TestProcessFiles:
     def test_invalid_csv_data(self):
         """

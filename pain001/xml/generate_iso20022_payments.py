@@ -22,6 +22,7 @@ from pain001.xml.create_xml_element import create_xml_element
 # Import the functions from the other modules
 from jinja2 import Environment, FileSystemLoader
 
+
 def create_common_elements(parent, row, mapping):
     """Create common elements "PmtInfId" and "PmtMtd" in the XML tree using
     data from the CSV or SQLite Data Files.
@@ -39,8 +40,6 @@ def create_common_elements(parent, row, mapping):
     for xml_tag, csv_column in mapping.items():
         if xml_tag in ["PmtInfId", "PmtMtd"]:
             create_xml_element(parent, xml_tag, row[csv_column])
-
-
 
 
 def create_xml_v3(root, data):
@@ -62,52 +61,58 @@ def create_xml_v3(root, data):
     root.append(cstmr_cdt_trf_initn_element)
 
     # Create a Jinja2 environment
-    env = Environment(loader=FileSystemLoader('.'))
+    env = Environment(loader=FileSystemLoader("."))
 
     # Load the Jinja2 template
-    template = env.get_template('templates/pain.001.001.03/template.xml')
+    template = env.get_template(
+        "templates/pain.001.001.03/template.xml"
+    )
 
     # Prepare the data for rendering
     xml_data_pain001_001_03 = {
-        'id': data[0]['id'],
-        'date': data[0]['date'],
-        'nb_of_txs': data[0]['nb_of_txs'],
-        'initiator_name': data[0]['initiator_name'],
-        'initiator_street_name': data[0]['initiator_street_name'],
-        'initiator_building_number': data[0]['initiator_building_number'],
-        'initiator_postal_code': data[0]['initiator_postal_code'],
-        'initiator_town_name': data[0]['initiator_town_name'],
-        'initiator_country_code': data[0]['initiator_country_code'],
-        'payment_id': data[0]['payment_id'],
-        'payment_method': data[0]['payment_method'],
-        'batch_booking': data[0]['batch_booking'],
-        'requested_execution_date': data[0]['requested_execution_date'],
-        'debtor_name': data[0]['debtor_name'],
-        'debtor_street_name': data[0]['debtor_street_name'],
-        'debtor_building_number': data[0]['debtor_building_number'],
-        'debtor_postal_code': data[0]['debtor_postal_code'],
-        'debtor_town_name': data[0]['debtor_town_name'],
-        'debtor_country_code': data[0]['debtor_country_code'],
-        'debtor_account_IBAN': data[0]['debtor_account_IBAN'],
-        'debtor_agent_BIC': data[0]['debtor_agent_BIC'],
-        'charge_bearer': data[0]['charge_bearer'],
-        'transactions': [
+        "id": data[0]["id"],
+        "date": data[0]["date"],
+        "nb_of_txs": data[0]["nb_of_txs"],
+        "initiator_name": data[0]["initiator_name"],
+        "initiator_street_name": data[0]["initiator_street_name"],
+        "initiator_building_number": data[0][
+            "initiator_building_number"
+        ],
+        "initiator_postal_code": data[0]["initiator_postal_code"],
+        "initiator_town_name": data[0]["initiator_town_name"],
+        "initiator_country_code": data[0]["initiator_country_code"],
+        "payment_id": data[0]["payment_id"],
+        "payment_method": data[0]["payment_method"],
+        "batch_booking": data[0]["batch_booking"],
+        "requested_execution_date": data[0]["requested_execution_date"],
+        "debtor_name": data[0]["debtor_name"],
+        "debtor_street_name": data[0]["debtor_street_name"],
+        "debtor_building_number": data[0]["debtor_building_number"],
+        "debtor_postal_code": data[0]["debtor_postal_code"],
+        "debtor_town_name": data[0]["debtor_town_name"],
+        "debtor_country_code": data[0]["debtor_country_code"],
+        "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+        "debtor_agent_BIC": data[0]["debtor_agent_BIC"],
+        "charge_bearer": data[0]["charge_bearer"],
+        "transactions": [
             {
-                'payment_id': row['payment_id'],
-                'payment_amount': row.get('payment_amount', ''),
-                'payment_currency': row.get('payment_currency', ''),
-                'charge_bearer': row['charge_bearer'],
-                'creditor_agent_BIC': row['creditor_agent_BIC'],
-                'creditor_name': row['creditor_name'],
-                'creditor_street_name': row['creditor_street_name'],
-                'creditor_building_number': row['creditor_building_number'],
-                'creditor_postal_code': row['creditor_postal_code'],
-                'creditor_town_name': row['creditor_town_name'],
-                'creditor_country_code': row['creditor_country_code'],
-                'creditor_account_IBAN': row['creditor_account_IBAN'],
-                'purpose_code': row['purpose_code'],
-                'reference_number': row['reference_number'],
-                'reference_date': row['reference_date'],
+                "payment_id": row["payment_id"],
+                "payment_amount": row.get("payment_amount", ""),
+                "payment_currency": row.get("payment_currency", ""),
+                "charge_bearer": row["charge_bearer"],
+                "creditor_agent_BIC": row["creditor_agent_BIC"],
+                "creditor_name": row["creditor_name"],
+                "creditor_street_name": row["creditor_street_name"],
+                "creditor_building_number": row[
+                    "creditor_building_number"
+                ],
+                "creditor_postal_code": row["creditor_postal_code"],
+                "creditor_town_name": row["creditor_town_name"],
+                "creditor_country_code": row["creditor_country_code"],
+                "creditor_account_IBAN": row["creditor_account_IBAN"],
+                "purpose_code": row["purpose_code"],
+                "reference_number": row["reference_number"],
+                "reference_date": row["reference_date"],
             }
             for row in data[1:]
         ],
@@ -122,6 +127,7 @@ def create_xml_v3(root, data):
         cstmr_cdt_trf_initn_element.append(child)
 
     return root
+
 
 def create_xml_v4(root, data):
     """Create the XML tree for the pain.001.001.04 schema.
@@ -142,72 +148,70 @@ def create_xml_v4(root, data):
     root.append(cstmr_cdt_trf_initn_element)
 
     # Create a Jinja2 environment
-    env = Environment(loader=FileSystemLoader('.'))
+    env = Environment(loader=FileSystemLoader("."))
 
     # Load the Jinja2 template
-    template = env.get_template('templates/pain.001.001.04/template.xml')
+    template = env.get_template(
+        "templates/pain.001.001.04/template.xml"
+    )
 
     # Prepare the data for rendering
     xml_data_pain001_001_04 = {
-    'id': '{{id}}',
-    'date': '{{date}}',
-    'nb_of_txs': '{{nb_of_txs}}',
-
-    'initiator_name': '{{initiator_name}}',
-    'initiator_street': '{{initiator_street}}', 
-    'initiator_building_number': '{{initiator_building_number}}',
-    'initiator_postal_code': '{{initiator_postal_code}}',
-    'initiator_town': '{{initiator_town}}',
-    'initiator_country': '{{initiator_country}}',
-
-    'payment_information_id': '{{payment_information_id}}',
-    'payment_method': '{{payment_method}}',
-    'batch_booking': '{{batch_booking}}', 
-    'requested_execution_date': '{{requested_execution_date}}',
-
-    'debtor_name': '{{debtor_name}}',
-    'debtor_street': '{{debtor_street}}',
-    'debtor_building_number': '{{debtor_building_number}}',
-    'debtor_postal_code': '{{debtor_postal_code}}',
-    'debtor_town': '{{debtor_town}}',
-    'debtor_country': '{{debtor_country}}',
-    'debtor_account_IBAN': '{{debtor_account_IBAN}}',
-    'debtor_agent_BICFI': '{{debtor_agent_BICFI}}',
-
-    'payment_instruction_id': '{{payment_instruction_id}}',
-    'payment_end_to_end_id': '{{payment_end_to_end_id}}',
-    'payment_currency': '{{payment_currency}}',
-    'payment_amount': '{{payment_amount}}',
-    'charge_bearer': '{{charge_bearer}}',
-    'creditor_agent_BIC': '{{creditor_agent_BIC}}',
-    'creditor_name': '{{creditor_name}}',
-    'creditor_street': '{{creditor_street}}',
-    'creditor_building_number': '{{creditor_building_number}}',
-    'creditor_postal_code': '{{creditor_postal_code}}',
-    'creditor_town': '{{creditor_town}}',
-    'creditor_account_IBAN': '{{creditor_account_IBAN}}',
-    'purpose_code': '{{purpose_code}}',
-    'reference_number': '{{reference_number}}',
-    'reference_date': '{{reference_date}}',
-    'transactions': [
-        {
-        'payment_instruction_id': '{{payment_instruction_id}}',
-        'payment_end_to_end_id': '{{payment_end_to_end_id}}',
-        'payment_currency': '{{payment_currency}}',
-        'payment_amount': '{{payment_amount}}',
-        'charge_bearer': '{{charge_bearer}}',
-        'creditor_agent_BIC': '{{creditor_agent_BIC}}',
-        'creditor_name': '{{creditor_name}}',
-        'creditor_street': '{{creditor_street}}',
-        'creditor_building_number': '{{creditor_building_number}}',
-        'creditor_postal_code': '{{creditor_postal_code}}',
-        'creditor_town': '{{creditor_town}}',
-        'creditor_account_IBAN': '{{creditor_account_IBAN}}',
-        'purpose_code': '{{purpose_code}}',
-        'reference_number': '{{reference_number}}',
-        'reference_date': '{{reference_date}}'
-        }
-    ]
+        "id": "{{id}}",
+        "date": "{{date}}",
+        "nb_of_txs": "{{nb_of_txs}}",
+        "initiator_name": "{{initiator_name}}",
+        "initiator_street": "{{initiator_street}}",
+        "initiator_building_number": "{{initiator_building_number}}",
+        "initiator_postal_code": "{{initiator_postal_code}}",
+        "initiator_town": "{{initiator_town}}",
+        "initiator_country": "{{initiator_country}}",
+        "payment_information_id": "{{payment_information_id}}",
+        "payment_method": "{{payment_method}}",
+        "batch_booking": "{{batch_booking}}",
+        "requested_execution_date": "{{requested_execution_date}}",
+        "debtor_name": "{{debtor_name}}",
+        "debtor_street": "{{debtor_street}}",
+        "debtor_building_number": "{{debtor_building_number}}",
+        "debtor_postal_code": "{{debtor_postal_code}}",
+        "debtor_town": "{{debtor_town}}",
+        "debtor_country": "{{debtor_country}}",
+        "debtor_account_IBAN": "{{debtor_account_IBAN}}",
+        "debtor_agent_BICFI": "{{debtor_agent_BICFI}}",
+        "payment_instruction_id": "{{payment_instruction_id}}",
+        "payment_end_to_end_id": "{{payment_end_to_end_id}}",
+        "payment_currency": "{{payment_currency}}",
+        "payment_amount": "{{payment_amount}}",
+        "charge_bearer": "{{charge_bearer}}",
+        "creditor_agent_BIC": "{{creditor_agent_BIC}}",
+        "creditor_name": "{{creditor_name}}",
+        "creditor_street": "{{creditor_street}}",
+        "creditor_building_number": "{{creditor_building_number}}",
+        "creditor_postal_code": "{{creditor_postal_code}}",
+        "creditor_town": "{{creditor_town}}",
+        "creditor_account_IBAN": "{{creditor_account_IBAN}}",
+        "purpose_code": "{{purpose_code}}",
+        "reference_number": "{{reference_number}}",
+        "reference_date": "{{reference_date}}",
+        "transactions": [
+            {
+                "payment_instruction_id": "{{payment_instruction_id}}",
+                "payment_end_to_end_id": "{{payment_end_to_end_id}}",
+                "payment_currency": "{{payment_currency}}",
+                "payment_amount": "{{payment_amount}}",
+                "charge_bearer": "{{charge_bearer}}",
+                "creditor_agent_BIC": "{{creditor_agent_BIC}}",
+                "creditor_name": "{{creditor_name}}",
+                "creditor_street": "{{creditor_street}}",
+                "creditor_building_number": "{{creditor_building_number}}",
+                "creditor_postal_code": "{{creditor_postal_code}}",
+                "creditor_town": "{{creditor_town}}",
+                "creditor_account_IBAN": "{{creditor_account_IBAN}}",
+                "purpose_code": "{{purpose_code}}",
+                "reference_number": "{{reference_number}}",
+                "reference_date": "{{reference_date}}",
+            }
+        ],
     }
 
     # Render the template

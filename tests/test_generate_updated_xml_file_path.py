@@ -10,7 +10,9 @@ def test_generate_updated_xml_file_path():
     xml_file_path = "tests/data/template.xml"
     payment_initiation_message_type = "pain.001.001.03"
     expected_output = "tests/data/pain.001.001.03.xml"
-    assert generate_updated_xml_file_path(
-        xml_file_path,
-        payment_initiation_message_type
-    ) == expected_output
+    assert (
+        generate_updated_xml_file_path(
+            xml_file_path, payment_initiation_message_type
+        )
+        == expected_output
+    )

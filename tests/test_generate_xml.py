@@ -16,8 +16,8 @@ class TestXMLCreation(unittest.TestCase):
         """
         self.root = ET.Element("Root")
         self.row = {
-            'id': '1',
-            'date': '2023-03-10T15:30:47.000Z',
+            "id": "1",
+            "date": "2023-03-10T15:30:47.000Z",
             "nb_of_txs": "2",
             "initiator_name": "Initiator",
             "initiator_street_name": "Street",
@@ -86,7 +86,6 @@ class TestXMLCreation(unittest.TestCase):
         self.assertEqual(
             cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn"
         )
-
 
         # def test_create_xml_v9(self):
         #     """

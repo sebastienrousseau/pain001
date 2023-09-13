@@ -28,6 +28,7 @@ from pain001.db.validate_db_data import validate_db_data
 from pain001.xml.register_namespaces import register_namespaces
 from pain001.xml.generate_xml import generate_xml
 
+
 def process_files(
     xml_message_type,
     xml_template_file_path,
