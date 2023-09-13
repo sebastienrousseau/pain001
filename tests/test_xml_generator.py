@@ -1,6 +1,6 @@
 import unittest
 
-from pain001.xml.xml_generator import xml_generator
+from pain001.xml.generate_xml import generate_xml
 
 
 class TestXmlGenerator(unittest.TestCase):
@@ -25,7 +25,7 @@ class TestXmlGenerator(unittest.TestCase):
 
         # Act
         with self.assertRaises(SystemExit):
-            xml_generator(
+            generate_xml(
                 data,
                 payment_initiation_message_type,
                 xml_file_path,

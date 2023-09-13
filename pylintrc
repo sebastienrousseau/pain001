@@ -140,7 +140,7 @@ max-module-lines=99999
 
 # String used as indentation unit. This is usually " " (4 spaces) or "\t" (1
 # tab).
-indent-string='  '
+indent-string=' '
 
 
 [SIMILARITIES]
@@ -226,3 +226,5 @@ int-import-graph=
 
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp
+
+

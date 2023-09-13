@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Standard library imports
 import os
 
 # Generate the path to the updated XML file based on the path to the
@@ -22,11 +23,25 @@ import os
 def generate_updated_xml_file_path(
     xml_file_path, payment_initiation_message_type
 ):
-    # print(os.path.splitext(xml_file_path)[0])
-    base_directory = os.path.dirname(xml_file_path)
-    base_name = os.path.basename(xml_file_path)
-    file_name, _ = os.path.splitext(base_name)
+    """Generates the file path for an updated XML file.
 
+    Given the original XML file path and payment message type, this function
+    constructs the file path for an updated version of the XML file with
+    the provided message type in the filename.
+
+    Args:
+        xml_file_path (str): The path to the original XML file.
+        payment_initiation_message_type (str): The payment message type
+            (e.g. 'pain.001.001.04').
+
+    Returns:
+        str: The file path to the updated XML file.
+
+    """
+
+    base_directory = os.path.dirname(xml_file_path)
+
+    # Construct new file path
     new_file_name = payment_initiation_message_type + ".xml"
     new_file_path = os.path.join(base_directory, new_file_name)
 

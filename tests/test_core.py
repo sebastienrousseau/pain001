@@ -1,6 +1,5 @@
 import pytest
 import sys
-
 from contextlib import contextmanager
 from io import StringIO
 
@@ -9,12 +8,12 @@ from pain001.core.core import process_files
 
 @contextmanager
 def catch_stdout():
+    old_out = None  # type: StringIO
     try:
         old_out, sys.stdout = sys.stdout, StringIO()
         yield sys.stdout
     finally:
         sys.stdout = old_out
-
 
 class TestProcessFiles:
     def test_invalid_csv_data(self):

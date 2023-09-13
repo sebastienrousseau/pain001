@@ -26,7 +26,7 @@ from pain001.csv.validate_csv_data import validate_csv_data
 from pain001.db.load_db_data import load_db_data
 from pain001.db.validate_db_data import validate_db_data
 from pain001.xml.register_namespaces import register_namespaces
-from pain001.xml.xml_generator import xml_generator
+from pain001.xml.generate_xml import generate_xml
 
 def process_files(
     xml_message_type,
@@ -133,7 +133,7 @@ def process_files(
     register_namespaces(xml_message_type)
 
     # Generate the updated XML file path
-    xml_generator(
+    generate_xml(
         data,
         xml_message_type,
         xml_template_file_path,
