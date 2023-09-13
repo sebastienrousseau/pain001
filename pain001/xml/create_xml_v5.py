@@ -20,7 +20,9 @@ for the pain.001.001.05 schema.
 
 """
 
-import xml.etree.ElementTree as ET
+# Import the defusedxml package
+import defusedxml.ElementTree as ET
+
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -42,7 +44,7 @@ def create_xml_v5(root, data):
     root.append(cstmr_cdt_trf_initn_element)
 
     # Create a Jinja2 environment
-    env = Environment(loader=FileSystemLoader("."))
+    env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
     template = env.get_template("pain.001.001.05.xml")

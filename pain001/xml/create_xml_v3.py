@@ -20,20 +20,19 @@ for the pain.001.001.03 schema.
 
 """
 
-import xml.etree.ElementTree as ET
+# Import the defusedxml package
+import defusedxml.ElementTree as ET
+
 from jinja2 import Environment, FileSystemLoader
 
 
 def create_xml_v3(root, data):
-    """Create the XML tree for the pain.001.001.03 schema.
-
+    """
+    Create the XML tree for the pain.001.001.03 schema.
     Args:
         root (ElementTree.Element): The root element of the XML tree.
         data (list): A list of dictionaries containing the data to be added
-        to the XML document.
-        mapping (dict): A dictionary mapping the Data column names to the XML
-        element names.
-
+            to the XML document.
     Returns:
         The root element of the XML tree.
     """
@@ -44,7 +43,7 @@ def create_xml_v3(root, data):
     root.append(cstmr_cdt_trf_initn_element)
 
     # Create a Jinja2 environment
-    env = Environment(loader=FileSystemLoader("."))
+    env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
     template = env.get_template(
