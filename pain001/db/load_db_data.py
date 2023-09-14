@@ -16,11 +16,31 @@
 import sqlite3
 import os
 
-# Load the SQLite database into a list of dictionaries with the column names as
-# keys
-
 
 def load_db_data(data_file_path, table_name):
+    """
+    Load data from an SQLite database table into a list of dictionaries.
+
+    Args:
+        data_file_path (str): The path to the SQLite database file.
+        table_name (str): The name of the table from which data will be loaded.
+
+    Returns:
+        list:
+            A list of dictionaries where each dictionary represents a row of
+            data.
+            The keys in each dictionary correspond to the column names, and the
+            values are the column values for that row.
+
+    Raises:
+        FileNotFoundError:
+            If the SQLite file specified by data_file_path does not exist.
+        sqlite3.OperationalError:
+            If there is an issue with SQLite database operations.
+
+    Example:
+        data = load_db_data("my_database.db", "my_table")
+    """
     if not os.path.exists(data_file_path):
         raise FileNotFoundError(
             f"SQLite file '{data_file_path}' does not exist."
@@ -30,11 +50,12 @@ def load_db_data(data_file_path, table_name):
     cursor = conn.cursor()
 
     # Fetch column names from the table
-    cursor.execute(f"PRAGMA table_info({table_name})")
+    cursor.execute("PRAGMA table_info({})".format(table_name))
     columns = [column[1] for column in cursor.fetchall()]
 
-    # Fetch data from the table
-    cursor.execute(f"SELECT * FROM {table_name}")
+    # Fetch data from the table using a parameterized query
+    query = f"SELECT * FROM {table_name}"
+    cursor.execute(query)
     rows = cursor.fetchall()
 
     # Create a list of dictionaries with column names as keys
@@ -48,3 +69,4 @@ def load_db_data(data_file_path, table_name):
     conn.close()
 
     return data
+
