@@ -30,7 +30,7 @@ def create_xml_v4(root, data):
     """Create the XML tree for the pain.001.001.04 schema.
 
     Args:
-        root (ElementTree.Element): The root element of the XML tree.
+        root (ET.Element): The root element of the XML tree.
         data (list): A list of dictionaries containing the data to be added
         to the XML document.
         mapping (dict): A dictionary mapping the Data column names to the XML

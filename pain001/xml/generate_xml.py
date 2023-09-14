@@ -27,7 +27,7 @@ from pain001.xml.generate_updated_xml_file_path import (
 from pain001.xml.create_xml_v3 import create_xml_v3
 from pain001.xml.create_xml_v4 import create_xml_v4
 from pain001.xml.create_xml_v5 import create_xml_v5
-# from pain001.xml.create_xml_v9 import create_xml_v9
+from pain001.xml.create_xml_v9 import create_xml_v9
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 
@@ -52,7 +52,7 @@ def generate_xml(
         "pain.001.001.03": create_xml_v3,
         "pain.001.001.04": create_xml_v4,
         "pain.001.001.05": create_xml_v5,
-        # "pain.001.001.09": create_xml_v9,
+        "pain.001.001.09": create_xml_v9,
     }
 
     # Check if the provided payment_initiation_message_type exists in
@@ -235,12 +235,50 @@ def generate_xml(
                     for row in data[1:]
                 ],
             }
+        elif payment_initiation_message_type == "pain.001.001.09":
+            xml_data_pain001_001_09 = {
+                "id": data[0]["id"],
+                "date": data[0]["date"],
+                "nb_of_txs": data[0]["nb_of_txs"],
+                "initiator_name": data[0]["initiator_name"],
+                "payment_id": data[0]["payment_id"],
+                "payment_method": data[0]["payment_method"],
+                "payment_nb_of_txs": data[0]["nb_of_txs"],
+                "requested_execution_date": data[0][
+                    "requested_execution_date"
+                ],
+                "debtor_name": data[0]["debtor_name"],
+                "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+                "debtor_agent_BICFI": data[0]["debtor_agent_BIC"],
+                "charge_bearer": data[0]["charge_bearer"],
+                "transactions": [
+                    {
+                        "payment_id": row["payment_id"],
+                        "payment_amount": row["payment_amount"],
+                        "payment_currency": row.get(
+                            "payment_currency", ""
+                        ),
+                        "charge_bearer": row["charge_bearer"],
+                        "creditor_agent_BIC": row["creditor_agent_BIC"],
+                        "creditor_name": row["creditor_name"],
+                        "creditor_account_IBAN": row[
+                            "creditor_account_IBAN"
+                        ],
+                        "creditor_remittance_information": row[
+                            "remittance_information"
+                        ],
+                    }
+                    for row in data[1:]
+                ],
+            }
 
         # Check if the payment initiation message type is "pain.001.001.03"
         if payment_initiation_message_type == "pain.001.001.03":
             xml_data = xml_data_pain001_001_03
         elif payment_initiation_message_type == "pain.001.001.04":
             xml_data = xml_data_pain001_001_04
+        elif payment_initiation_message_type == "pain.001.001.09":
+            xml_data = xml_data_pain001_001_09
         else:
             # If it's not supported, print an error message and exit
             print(
