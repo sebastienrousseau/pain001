@@ -69,4 +69,3 @@ def load_db_data(data_file_path, table_name):
     conn.close()
 
     return data
-

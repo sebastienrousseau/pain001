@@ -20,13 +20,14 @@ Module for creating secure XML payment initiation message documents.
 Uses the defusedxml library to prevent XML vulnerabilities.
 """
 
-import defusedxml.ElementTree as et
+import xml.etree.ElementTree as ET
 
 NAMESPACE = "urn:iso:std:iso:20022:tech:xsd:"
 
 XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 
-def create_root_element(message_type: str) -> et.XML:
+
+def create_root_element(message_type: str) -> ET.Element:
     """
     Create the root Element for a payment initiation XML document.
 
@@ -37,21 +38,14 @@ def create_root_element(message_type: str) -> et.XML:
         The root Element node for the XML document.
     """
 
-    parser = et.DefusedXMLParser()
+    # Use ET.Element instead of parser.ProcessingInstruction
+    root = ET.Element("Document")
 
-    processing_instruction = "version=\"1.0\" encoding=\"UTF-8\""
-    root = parser.ProcessingInstruction("xml", processing_instruction)
-
-    root = parser.Entity("Document",
-        xmlns=NAMESPACE + message_type,
-        xmlns_xsi=XSI_NAMESPACE
-    )
+    # Add xmlns and xmlns_xsi attributes directly to the root element
+    root.set("xmlns", NAMESPACE + message_type)
+    root.set("xmlns:xsi", XSI_NAMESPACE)
 
     schema_location = f"{NAMESPACE}{message_type} {message_type}.xsd"
     root.set("xsi:schemaLocation", schema_location)
-
-    # Remove namespaces from child elements
-    for elem in root.iter():
-        elem.tag = elem.tag.split('}', 1)[-1]
 
     return root

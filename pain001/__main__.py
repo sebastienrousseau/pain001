@@ -49,10 +49,7 @@ https://pain001.com
 title = "Pain001"
 
 table = Table(
-    box=box.ROUNDED,
-    safe_box=True,
-    show_header=False,
-    title=title,
+    box=box.ROUNDED, safe_box=True, show_header=False, title=title
 )
 
 table.add_column(justify="center", no_wrap=False, vertical="middle")

@@ -20,8 +20,8 @@ for the pain.001.001.09 schema.
 
 """
 
-# Import the defusedxml package
-import defusedxml.ElementTree as ET
+# Import the ElementTree package
+import xml.etree.ElementTree as ET
 
 from jinja2 import Environment, FileSystemLoader
 

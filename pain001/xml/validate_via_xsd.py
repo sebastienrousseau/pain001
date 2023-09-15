@@ -15,7 +15,7 @@ import xmlschema
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import defusedxml.ElementTree as ET
+import xml.etree.ElementTree as ET
 
 
 def validate_via_xsd(xml_file_path, xsd_file_path):
