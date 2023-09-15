@@ -14,43 +14,57 @@
 # limitations under the License.
 
 """
+This module contains the function `create_xml_v3`, which constructs an XML tree
+for the ISO 20022 pain.001.001.03 schema.
 
-This module contains the create_xml_v3 function which creates the XML tree
-for the pain.001.001.03 schema.
-
+The function takes in a root ElementTree element and a list of dictionaries
+containing the required data. It then uses Jinja2 templating to dynamically
+generate the XML content based on the given data. The function ultimately
+returns the root element of the modified XML tree.
 """
 
-# Import the ElementTree package
 import xml.etree.ElementTree as et
-
 from jinja2 import Environment, FileSystemLoader
 
 
 def create_xml_v3(root, data):
-    """Create the XML tree for the pain.001.001.03 schema.
+    """
+    Constructs an XML tree based on the pain.001.001.03 schema and appends it
+    to the provided root element. This function uses the Jinja2 templating
+    engine to generate the XML content.
 
-    Args:
-        root (ET.Element): The root element of the XML tree.
-        data (list): A list of dictionaries containing the data to be added
-            to the XML document.
+    Parameters
+    ----------
+    root : xml.etree.ElementTree.Element
+        The root element of the XML tree to which the new elements will be
+        appended.
+    data : list of dict
+        A list of dictionaries, where each dictionary contains the data to be
+        added to the XML document. The first dictionary usually contains common
+        attributes that are used throughout the XML, while the subsequent
+        dictionaries contain transaction-specific attributes.
 
-    Returns:
-        The root element of the XML tree.
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The updated root element of the XML tree.
     """
 
-    # Create CstmrCdtTrfInitn element
+    # Create the "CstmrCdtTrfInitn" element and append it to the root
     cstmr_cdt_trf_initn_element = et.Element("CstmrCdtTrfInitn")
     root.append(cstmr_cdt_trf_initn_element)
 
-    # Create a Jinja2 environment
+    # Initialize the Jinja2 environment
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
-    # Load the Jinja2 template
+    # Load the Jinja2 template for the pain.001.001.03 schema
     template = env.get_template(
         "templates/pain.001.001.03/template.xml"
     )
 
-    # Prepare the data for rendering
+    # Prepare the data dictionary for rendering through the Jinja2 template
+    # This dictionary is a reformatted version of the `data` parameter, made to
+    # fit the template's requirements.
     xml_data_pain001_001_03 = {
         "id": data[0]["id"],
         "date": data[0]["date"],
@@ -100,11 +114,14 @@ def create_xml_v3(root, data):
         ],
     }
 
-    # Render the template
+    # Render the XML content using the Jinja2 template and the prepared data
     xml_content = template.render(**xml_data_pain001_001_03)
 
-    # Parse the rendered XML content and append its children to the root
+    # Parse the rendered XML content into an ElementTree object
     rendered_xml_tree = et.fromstring(xml_content)
+
+    # Append the rendered XML content as children to the "CstmrCdtTrfInitn"
+    # element
     for child in rendered_xml_tree:
         cstmr_cdt_trf_initn_element.append(child)
 

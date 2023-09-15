@@ -88,6 +88,7 @@ def load_db_data(data_file_path, table_name):
     table_name = sanitize_table_name(table_name)
 
     # Use string formatting to construct the query
+
     query = f"SELECT * FROM {table_name}"
     cursor.execute(query)
     rows = cursor.fetchall()

@@ -15,26 +15,29 @@
 
 import xml.etree.ElementTree as et
 
-# Create an XML element with the specified tag, text, and attributes,
-# and append it to the given parent element (XML tags and CSV columns
-# mapping)
-
 
 def create_xml_element(parent, tag, text=None, attributes=None):
     """
-    Create an XML element with the specified tag, text, and
-    attributes, and append it to the given parent element.
+    Create and append an XML element with the specified tag, text, and attributes
+    to a given parent element in the XML tree. The new element becomes a child of
+    the parent element.
 
-    Args:
-        parent (Element): The parent element to append the new element
-        to.
-        tag (str): The tag name of the new element.
-        text (str, optional): The text content of the new element.
-        attributes (dict, optional): A dictionary of attribute names
-        and values for the new element.
+    Parameters
+    ----------
+    parent : xml.etree.ElementTree.Element
+        The parent XML element to which the new element will be appended.
+    tag : str
+        The name of the XML tag for the new element.
+    text : str, optional
+        The text content to be inserted into the new XML element. Defaults to None.
+    attributes : dict of {str: str}, optional
+        A dictionary containing the attribute names and their corresponding values
+        to be set in the new XML element. Defaults to None.
 
-    Returns:
-        Element: The created XML element.
+    Returns
+    -------
+    xml.etree.ElementTree.Element
+        The newly created and appended XML element.
     """
     element = et.Element(tag)
     if text is not None:

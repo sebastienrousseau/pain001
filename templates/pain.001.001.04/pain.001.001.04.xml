@@ -9,10 +9,10 @@
             <InitgPty>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
-                    <StrtNm>John's Street</StrtNm>
+                    <StrtNm>John&#39;s Street</StrtNm>
                     <BldgNb>1</BldgNb>
                     <PstCd>12345</PstCd>
-                    <TwnNm>John's Town</TwnNm>
+                    <TwnNm>John&#39;s Town</TwnNm>
                     <Ctry>DE</Ctry>
                 </PstlAdr>
             </InitgPty>

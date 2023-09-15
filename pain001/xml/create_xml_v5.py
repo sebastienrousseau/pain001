@@ -14,10 +14,13 @@
 # limitations under the License.
 
 """
+This module contains the function `create_xml_v5`, which constructs an XML tree
+following the ISO 20022 pain.001.001.05 schema.
 
-This module contains the create_xml_v5 function which creates the XML tree
-for the pain.001.001.05 schema.
-
+The function takes in a root ElementTree element and a list of dictionaries
+containing the required data. It then uses Jinja2 templating to dynamically
+generate the XML content based on the given data. The function ultimately
+returns the root element of the modified XML tree.
 """
 
 # Import the ElementTree package
@@ -89,6 +92,9 @@ def create_xml_v5(root, data):
 
     # Parse the rendered XML content and append its children to the root
     rendered_xml_tree = et.fromstring(xml_content)
+
+    # Append the rendered XML content as children to the "CstmrCdtTrfInitn"
+    # element
     for child in rendered_xml_tree:
         cstmr_cdt_trf_initn_element.append(child)
 
