@@ -23,7 +23,7 @@ the XML element names. The functions return the root element of the XML tree.
 For more information on the ISO 20022 pain.001 schema, refer to the
 official ISO 20022 message definitions website:
 
-- [ISO 20022 Message Definitions](https://www.iso20022.org/iso-20022-message-definitions)
+- <https://www.iso20022.org/iso-20022-message-definitions>
 """
 
 # Import required modules
@@ -45,13 +45,15 @@ def create_common_elements(parent, row, mapping):
         row in the Data file.
     mapping : dict of {str: str}
         A dictionary mapping XML tags to corresponding Data file column names.
-        For example, if "PmtInfId" maps to "PaymentInfoID", the element "PmtInfId"
-        will be created with the data from the "PaymentInfoID" column.
+        For example, if "PmtInfId" maps to "PaymentInfoID", the element
+        "PmtInfId" will be created with the data from the "PaymentInfoID"
+        column.
 
     Returns
     -------
     None
-        This function modifies the XML tree in-place and does not return any value.
+        This function modifies the XML tree in-place and does not return any
+        value.
     """
     for xml_tag, csv_column in mapping.items():
         if xml_tag in ["PmtInfId", "PmtMtd"]:

@@ -18,9 +18,9 @@ import xml.etree.ElementTree as et
 
 def create_xml_element(parent, tag, text=None, attributes=None):
     """
-    Create and append an XML element with the specified tag, text, and attributes
-    to a given parent element in the XML tree. The new element becomes a child of
-    the parent element.
+    Create and append an XML element with the specified tag, text, and
+    attributes to a given parent element in the XML tree. The new element
+    becomes a child of the parent element.
 
     Parameters
     ----------
@@ -29,10 +29,11 @@ def create_xml_element(parent, tag, text=None, attributes=None):
     tag : str
         The name of the XML tag for the new element.
     text : str, optional
-        The text content to be inserted into the new XML element. Defaults to None.
+        The text content to be inserted into the new XML element. Defaults to
+        None.
     attributes : dict of {str: str}, optional
-        A dictionary containing the attribute names and their corresponding values
-        to be set in the new XML element. Defaults to None.
+        A dictionary containing the attribute names and their corresponding
+        values to be set in the new XML element. Defaults to None.
 
     Returns
     -------

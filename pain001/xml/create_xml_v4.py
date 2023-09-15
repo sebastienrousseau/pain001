@@ -35,7 +35,8 @@ def create_xml_v4(root, data):
 
     Args:
         root (ET.Element): The root element of the XML tree.
-        data (list): A list of dictionaries containing data to populate the XML document.
+        data (list): A list of dictionaries containing data to populate the XML
+        document.
 
     Returns:
         ET.Element: The root element of the modified XML tree.
