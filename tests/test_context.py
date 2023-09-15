@@ -32,10 +32,8 @@ class TestContext(unittest.TestCase):
         self.assertEqual(context.name, "my_context")
 
     def test_set_log_level(self):
-        """Test that set_log_level() sets the log level of the logger"""
         context = Context.get_instance()
 
-        """Test all valid log levels"""
         valid_log_levels = {
             "DEBUG": logging.DEBUG,
             "INFO": logging.INFO,
@@ -50,43 +48,31 @@ class TestContext(unittest.TestCase):
             context.set_log_level(level_int)
             self.assertEqual(context.log_level, level_int)
 
-        """
-        Test that set_log_level() raises an exception if the log level is
-        invalid.
-        """
         with self.assertRaises(Exception):
             context.set_log_level("INVALID")
         with self.assertRaises(Exception):
             context.set_log_level(12345)  # some invalid int
 
     def test_init_logger(self):
-        """Test that init_logger() initializes the logger."""
         context = Context.get_instance()
-
-        """Ensure the logger is not initialized"""
         context.logger = None
         context.init_logger()
         self.assertIsNotNone(context.logger)
 
-        """Test that init_logger() raises an exception if called again."""
         with self.assertRaises(Exception):
             context.init_logger()
 
     def test_get_logger(self):
-        """Test that get_logger() returns the logger."""
         context = Context.get_instance()
         logger = context.get_logger()
         self.assertIsNotNone(logger)
         self.assertEqual(logger, context.logger)
-
-        """Test that get_logger() can initialize the logger."""
         context.logger = None
         logger = context.get_logger()
         self.assertIsNotNone(logger)
         self.assertEqual(logger, context.logger)
 
     def test_log_level_propagation(self):
-        """Test that the log level is correctly propagated to the logger."""
         context = Context.get_instance()
         context.set_log_level(logging.DEBUG)
         self.assertEqual(context.logger.level, logging.DEBUG)
