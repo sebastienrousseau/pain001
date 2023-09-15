@@ -26,7 +26,7 @@ NAMESPACE = "urn:iso:std:iso:20022:tech:xsd:"
 
 XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 
-def create_payment_initiation_root(message_type: str) -> et.XML:
+def create_root_element(message_type: str) -> et.XML:
     """
     Create the root Element for a payment initiation XML document.
 
