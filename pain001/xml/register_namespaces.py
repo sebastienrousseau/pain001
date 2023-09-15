@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 # Register the namespace prefixes with the ElementTree module so that
 # they are automatically added to the XML tags when the XML elements
@@ -39,7 +39,7 @@ def register_namespaces(payment_initiation_message_type):
     )
 
     # Register the namespaces.
-    ET.register_namespace("", namespace)
-    ET.register_namespace(
+    et.register_namespace("", namespace)
+    et.register_namespace(
         "xsi", "http://www.w3.org/2001/XMLSchema-instance"
     )

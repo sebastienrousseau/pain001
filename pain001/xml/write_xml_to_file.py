@@ -1,4 +1,4 @@
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 # Copyright (C) 2023 Sebastien Rousseau.
 #
@@ -22,7 +22,7 @@ from defusedxml.minidom import parseString
 
 def write_xml_to_file(xml_file_path, root):
     with open(xml_file_path, "w") as f:
-        xml_string = ET.tostring(root, encoding="utf-8")
+        xml_string = et.tostring(root, encoding="utf-8")
         xml_declaration = '<?xml version="1.0" encoding="UTF-8"?>\n'
         xml_string = xml_declaration + xml_string.decode("utf-8")
 

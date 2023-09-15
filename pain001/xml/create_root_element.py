@@ -20,14 +20,14 @@ Module for creating secure XML payment initiation message documents.
 Uses the defusedxml library to prevent XML vulnerabilities.
 """
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 NAMESPACE = "urn:iso:std:iso:20022:tech:xsd:"
 
 XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 
 
-def create_root_element(message_type: str) -> ET.Element:
+def create_root_element(message_type: str) -> et.Element:
     """
     Create the root Element for a payment initiation XML document.
 
@@ -38,8 +38,8 @@ def create_root_element(message_type: str) -> ET.Element:
         The root Element node for the XML document.
     """
 
-    # Use ET.Element instead of parser.ProcessingInstruction
-    root = ET.Element("Document")
+    # Use et.Element to create the root element
+    root = et.Element("Document")
 
     # Add xmlns and xmlns_xsi attributes directly to the root element
     root.set("xmlns", NAMESPACE + message_type)

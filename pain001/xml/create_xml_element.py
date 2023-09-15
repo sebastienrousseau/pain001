@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 # Create an XML element with the specified tag, text, and attributes,
 # and append it to the given parent element (XML tags and CSV columns
@@ -36,7 +36,7 @@ def create_xml_element(parent, tag, text=None, attributes=None):
     Returns:
         Element: The created XML element.
     """
-    element = ET.Element(tag)
+    element = et.Element(tag)
     if text is not None:
         element.text = text
     if attributes is not None:
