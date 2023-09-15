@@ -16,9 +16,11 @@
 import sqlite3
 import os
 
+
 def sanitize_table_name(table_name):
     """
-    Sanitize a table name by replacing all characters that are not alphanumeric or underscores with underscores.
+    Sanitize a table name by replacing all characters that are not alphanumeric
+    or underscores with underscores.
 
     Args:
         table_name (str): The table name to sanitize.
@@ -28,16 +30,17 @@ def sanitize_table_name(table_name):
     """
     sanitized_name = ""
     for char in table_name:
-        if char.isalnum() or char == '_':
+        if char.isalnum() or char == "_":
             sanitized_name += char
         else:
-            sanitized_name += '_'
+            sanitized_name += "_"
 
     # Ensure the resulting name starts with an alphabetic character
     if not sanitized_name[0].isalpha():
-        sanitized_name = 'table_' + sanitized_name
+        sanitized_name = "table_" + sanitized_name
 
     return sanitized_name
+
 
 def load_db_data(data_file_path, table_name):
     """

@@ -149,8 +149,8 @@ class TestXMLCreation(unittest.TestCase):
 
     def test_create_xml_v9(self):
         """
-            Test create_xml_v9
-            """
+        Test create_xml_v9
+        """
         create_xml_v9(self.root, [self.row_v9])
         cstmr_cdt_trf_initn_element = self.root[0]
         self.assertEqual(

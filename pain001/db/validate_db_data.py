@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 def validate_db_data(data):
     """Validate the SQLite data before processing it.
 
