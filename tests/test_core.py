@@ -3,7 +3,6 @@ import sys
 from contextlib import contextmanager
 from io import StringIO
 from pain001.core.core import process_files
-from jinja2 import Environment, FileSystemLoader
 
 
 @contextmanager
