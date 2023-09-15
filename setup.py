@@ -68,7 +68,7 @@ banking-payments,csv,sqlite
         "pygments==^2.16.1",
         "python==^3.9",
         "rich==^13.5.2",
-        "xmlschema==^2.4.0"
+        "xmlschema==^2.4.0",
     ],
     setup_requires=setup_requirements,
     tests_require=test_requirements,
