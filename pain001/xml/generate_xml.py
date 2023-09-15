@@ -302,28 +302,17 @@ supported at this time.
             xml_file.write(xml_content)
 
         print(
-            f"A new XML file has been created at {updated_xml_file_path}"
+            f"A new XML file has been created at `{updated_xml_file_path}`"
         )
 
         # Validate the updated XML file against the XSD schema
-        is_valid = validate_via_xsd(
-            updated_xml_file_path, xsd_file_path
-        )
+        is_valid = validate_via_xsd(updated_xml_file_path, xsd_file_path)
+
         if not is_valid:
             print("Error: Invalid XML data.")
             sys.exit(1)
         else:
-            print(f"The XML has been validated against {xsd_file_path}")
-
-        # Validate the updated XML file against the XSD schema
-        is_valid = validate_via_xsd(
-            updated_xml_file_path, xsd_file_path
-        )
-        if not is_valid:
-            print("Error: Invalid XML data.")
-            sys.exit(1)
-        else:
-            print(f"The XML has been validated against {xsd_file_path}")
+            print(f"The XML has been validated against `{xsd_file_path}`")
 
     else:
         # Handle the case when the payment_initiation_message_type is
