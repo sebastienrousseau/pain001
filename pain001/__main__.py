@@ -29,8 +29,11 @@ import os
 import sys
 import click
 
+from pain001.constants.constants import valid_xml_types
 from pain001.context.context import Context
 from pain001.core.core import process_files
+
+# from pain001.xml.validate_via_xsd import validate_via_xsd
 
 from rich.console import Console
 from rich.table import Table
@@ -97,10 +100,83 @@ def main(
     """Initialize the context and log a message."""
     logger = Context.get_instance().get_logger()
 
-    # Check that xml_message_type is provided and other necessary arguments exist
-    check_arguments_exist(xml_message_type, xml_template_file_path, xsd_schema_file_path, data_file_path)
+    # print("Inside main function")
 
-    # Process files
+    def check_variable(variable, name):
+        if variable is None:
+            print(f"Error: {name} is required.")
+            sys.exit(1)
+
+    # Check that xml_message_type is provided
+    check_variable(xml_message_type, "xml_message_type")
+
+    # Check that xsd_schema_file_path is provided
+    check_variable(xsd_schema_file_path, "xsd_schema_file_path")
+
+    # Check that data_file_path is provided
+    check_variable(data_file_path, "data_file_path")
+
+    # Check that xml_template_file_path is not invalid
+    if not os.path.isfile(xml_template_file_path):
+        print(
+            f"The XML template file '{xml_template_file_path}' does not exist."
+        )
+        sys.exit(1)
+
+    # Check that xsd_schema_file_path is not invalid
+    if not os.path.isfile(xsd_schema_file_path):
+        print(
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
+        )
+        sys.exit(1)
+
+    # Check that data_file_path is not invalid
+    if not os.path.isfile(data_file_path):
+        print(f"The data file '{data_file_path}' does not exist.")
+        sys.exit(1)
+
+    # Check that other necessary arguments are provided
+    if (
+        xml_template_file_path is None
+        or xsd_schema_file_path is None
+        or data_file_path is None
+    ):
+        print(click.get_current_context().get_help())
+        sys.exit(1)
+
+    logger = Context.get_instance().get_logger()
+
+    logger.info("Parsing command line arguments.")
+
+    # Check that the XML message type is valid
+    if xml_message_type not in valid_xml_types:
+        logger.info(f"Invalid XML message type: {xml_message_type}.")
+        print(f"Invalid XML message type: {xml_message_type}.")
+        sys.exit(1)
+
+    if not os.path.isfile(xml_template_file_path):
+        logger.info(
+            f"The XML template file '{xml_template_file_path}' does not exist."
+        )
+        print(
+            f"The XML template file '{xml_template_file_path}' does not exist."
+        )
+        sys.exit(1)
+
+    if not os.path.isfile(xsd_schema_file_path):
+        logger.info(
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
+        )
+        print(
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
+        )
+        sys.exit(1)
+
+    if not os.path.isfile(data_file_path):
+        logger.info(f"The data file '{data_file_path}' does not exist.")
+        print(f"The data file '{data_file_path}' does not exist.")
+        sys.exit(1)
+
     process_files(
         xml_message_type,
         xml_template_file_path,
@@ -108,25 +184,6 @@ def main(
         data_file_path,
     )
 
-def check_file_exists(file_path, name):
-    if not os.path.isfile(file_path):
-        print(f"The {name} file '{file_path}' does not exist.")
-        sys.exit(1)
-
-def check_arguments_exist(xml_message_type, xml_template_file_path, xsd_schema_file_path, data_file_path):
-    if xml_message_type is None:
-        print("Error: xml_message_type is required.")
-        sys.exit(1)
-    if xsd_schema_file_path is None:
-        print("Error: xsd_schema_file_path is required.")
-        sys.exit(1)
-    if data_file_path is None:
-        print("Error: data_file_path is required.")
-        sys.exit(1)
-    check_file_exists(xml_template_file_path, "XML template")
-    check_file_exists(xsd_schema_file_path, "XSD schema")
-    check_file_exists(data_file_path, "data")
 
 if __name__ == "__main__":
-    # pylint: disable=no-value-for-parameter
     main()
