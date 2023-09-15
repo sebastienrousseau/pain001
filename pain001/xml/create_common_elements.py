@@ -39,7 +39,8 @@ def create_common_elements(parent, row, mapping):
     Parameters
     ----------
     parent : xml.etree.ElementTree.Element
-        The parent element in the XML tree where the new elements will be added.
+        The parent element in the XML tree where the new elements will be
+        added.
     row : list of str
         A list of strings where each string represents a value from a single
         row in the Data file.

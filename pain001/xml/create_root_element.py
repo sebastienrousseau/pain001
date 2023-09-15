@@ -20,9 +20,9 @@ Module for creating XML payment initiation message documents compliant with
 the ISO 20022 standard. The generated XML documents include essential
 namespaces and schema locations.
 
-Note: This module does not include additional security features for XML parsing.
-It is advisable to consider measures to prevent XML vulnerabilities when using
-it.
+Note: This module does not include additional security features for XML
+parsing. It is advisable to consider measures to prevent XML vulnerabilities
+when using it.
 """
 
 import xml.etree.ElementTree as et
@@ -35,17 +35,18 @@ XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 def create_root_element(message_type: str) -> et.Element:
     """
     Creates the root Element for a payment initiation XML document based on the
-    specified message type. The function sets the required namespaces and schema
-    locations.
+    specified message type. The function sets the required namespaces and
+    schema locations.
 
     Args:
         message_type (str):
-        Specifies the message type, for example, "pain.001.001.09". This is used
-        to construct the namespace and schema location attributes.
+        Specifies the message type, for example, "pain.001.001.09". This is
+        used to construct the namespace and schema location attributes.
 
     Returns:
-        et.Element: The root Element node for the XML document, configured with
-                    the necessary namespaces and schema location attributes.
+        et.Element:
+        The root Element node for the XML document, configured with the
+        necessary namespaces and schema location attributes.
 
     Examples:
         >>> create_root_element("pain.001.001.09")
@@ -55,7 +56,8 @@ def create_root_element(message_type: str) -> et.Element:
     # Create the root element using the ElementTree library
     root = et.Element("Document")
 
-    # Add xmlns (XML Namespace) and xmlns:xsi (XML Schema Instance) attributes to the root element
+    # Add xmlns (XML Namespace) and xmlns:xsi (XML Schema Instance) attributes
+    # to the root element
     root.set("xmlns", NAMESPACE + message_type)
     root.set("xmlns:xsi", XSI_NAMESPACE)
 
