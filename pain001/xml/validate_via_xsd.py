@@ -15,7 +15,7 @@ import xmlschema
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 
 def validate_via_xsd(xml_file_path, xsd_file_path):
@@ -32,7 +32,7 @@ def validate_via_xsd(xml_file_path, xsd_file_path):
 
     # Load XML file into an ElementTree object.
     try:
-        xml_tree = ET.parse(xml_file_path)
+        xml_tree = et.parse(xml_file_path)
     except Exception as e:
         print(f"Error: {e}")
         return False
