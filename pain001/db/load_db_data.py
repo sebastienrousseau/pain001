@@ -84,7 +84,10 @@ def load_db_data(data_file_path, table_name):
     cursor.execute(f"PRAGMA table_info({table_name})")
     columns = [column[1] for column in cursor.fetchall()]
 
-    # Fetch data from the table using a parameterized query
+    # Sanitize the table_name before using it in the query
+    table_name = sanitize_table_name(table_name)
+
+    # Use string formatting to construct the query
     query = f"SELECT * FROM {table_name}"
     cursor.execute(query)
     rows = cursor.fetchall()
