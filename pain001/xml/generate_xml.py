@@ -67,7 +67,7 @@ def generate_xml(
             sys.exit(1)
 
         # Create a Jinja2 environment
-        env = Environment(loader=FileSystemLoader("."))
+        env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
         # Load the Jinja2 template
         template = env.get_template(xml_file_path)

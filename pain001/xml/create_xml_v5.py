@@ -21,7 +21,7 @@ for the pain.001.001.05 schema.
 """
 
 # Import the ElementTree package
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as et
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -40,7 +40,7 @@ def create_xml_v5(root, data):
 
     # Create CstmrCdtTrfInitn element
     # pylint: disable=E1101
-    cstmr_cdt_trf_initn_element = ET.Element("CstmrCdtTrfInitn")
+    cstmr_cdt_trf_initn_element = et.Element("CstmrCdtTrfInitn")
     root.append(cstmr_cdt_trf_initn_element)
 
     # Create a Jinja2 environment
@@ -88,7 +88,7 @@ def create_xml_v5(root, data):
     xml_content = template.render(**xml_data)
 
     # Parse the rendered XML content and append its children to the root
-    rendered_xml_tree = ET.fromstring(xml_content)
+    rendered_xml_tree = et.fromstring(xml_content)
     for child in rendered_xml_tree:
         cstmr_cdt_trf_initn_element.append(child)
 
