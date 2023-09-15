@@ -14,5 +14,4 @@
 # limitations under the License.
 
 """The Python pain001 module."""
-__all__ = ["pain001"]
 __version__ = "0.0.23"
