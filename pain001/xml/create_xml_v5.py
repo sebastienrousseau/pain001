@@ -50,45 +50,58 @@ def create_xml_v5(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
-    template = env.get_template("pain.001.001.05.xml")
+    template = env.get_template(
+        "templates/pain.001.001.05/template.xml"
+    )
 
     # Prepare the data for rendering
-    xml_data = {
-        "GrpHdr": {
-            "MsgId": data[0]["MsgId"],
-            "CreDtTm": data[0]["CreDtTm"],
-            "NbOfTxs": data[0]["NbOfTxs"],
-            "CtrlSum": data[0]["CtrlSum"],
-            "InitgPty": data[0]["InitgPty"],
-        },
-        "PmtInf": [
-            {
-                "PmtInfId": payment["PmtInfId"],
-                "PmtMtd": payment["PmtMtd"],
-                "NbOfTxs": payment["NbOfTxs"],
-                "CtrlSum": payment["CtrlSum"],
-                "PmtTpInf": {"SvcLvl": payment["SvcLvl"]},
-                "ReqdExctnDt": payment["ReqdExctnDt"],
-                "Dbtr": payment["Dbtr"],
-                "DbtrAcct": payment["DbtrAcct"],
-                "DbtrAgt": payment["DbtrAgt"],
-                "CdtTrfTxInf": [
-                    {
-                        "PmtId": transaction["PmtId"],
-                        "Amt": transaction["Amt"],
-                        "CdtrAgt": transaction["CdtrAgt"],
-                        "Cdtr": transaction["Cdtr"],
-                        "CdtrAcct": transaction["CdtrAcct"],
-                    }
-                    for transaction in payment["CdtTrfTxInf"]
-                ],
-            }
-            for payment in data[1:]
+    xml_data_pain001_001_05 = {
+        "id": data[0]["id"],
+        "date": data[0]["date"],
+        "nb_of_txs": data[0]["nb_of_txs"],
+        "ctrl_sum": data[0]["ctrl_sum"],
+        "initiator_name": data[0]["initiator_name"],
+        "initiator_street_name": data[0]["initiator_street_name"],
+        "initiator_building_number": data[0][
+            "initiator_building_number"
         ],
+        "initiator_postal_code": data[0]["initiator_postal_code"],
+        "initiator_town": data[0]["initiator_town_name"],
+        "initiator_country": data[0]["initiator_country"],
+        "ultimate_debtor_name": data[0]["ultimate_debtor_name"],
+        "service_level_code": data[0]["service_level_code"],
+        "requested_execution_date": data[0]["requested_execution_date"],
+        "payment_information_id": data[0]["payment_information_id"],
+        "payment_method": data[0]["payment_method"],
+        "batch_booking": data[0]["batch_booking"],
+        "debtor_name": data[0]["debtor_name"],
+        "debtor_street": data[0]["debtor_street"],
+        "debtor_building_number": data[0]["debtor_building_number"],
+        "debtor_postal_code": data[0]["debtor_postal_code"],
+        "debtor_town": data[0]["debtor_town"],
+        "debtor_country": data[0]["debtor_country"],
+        "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+        "debtor_agent_BICFI": data[0]["debtor_agent_BICFI"],
+        "payment_instruction_id": data[0]["payment_instruction_id"],
+        "payment_end_to_end_id": data[0]["payment_end_to_end_id"],
+        "payment_currency": data[0]["payment_currency"],
+        "payment_amount": data[0]["payment_amount"],
+        "charge_bearer": data[0]["charge_bearer"],
+        "creditor_name": data[0]["creditor_name"],
+        "creditor_street": data[0]["creditor_street"],
+        "creditor_building_number": data[0]["creditor_building_number"],
+        "creditor_postal_code": data[0]["creditor_postal_code"],
+        "creditor_town": data[0]["creditor_town"],
+        "creditor_country": data[0]["creditor_country"],
+        "creditor_account_IBAN": data[0]["creditor_account_IBAN"],
+        "creditor_agent_BICFI": data[0]["creditor_agent_BICFI"],
+        "purpose_code": data[0]["purpose_code"],
+        "reference_number": data[0]["reference_number"],
+        "reference_date": data[0]["reference_date"],
     }
 
     # Render the template
-    xml_content = template.render(**xml_data)
+    xml_content = template.render(**xml_data_pain001_001_05)
 
     # Parse the rendered XML content and append its children to the root
     rendered_xml_tree = et.fromstring(xml_content)

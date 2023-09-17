@@ -18,7 +18,7 @@
             </InitgPty>
         </GrpHdr>
         <PmtInf>
-            <PmtInfId>Invoice-12345</PmtInfId>
+            <PmtInfId>1234567890</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
             <BtchBookg>true</BtchBookg>
             <ReqdExctnDt>2023-03-12</ReqdExctnDt>
