@@ -25,7 +25,7 @@ class TestMain:
             ],
         )
         assert (
-            "The XML has been validated against tests/data/template.xsd\n"
+            "The XML has been validated against `tests/data/template.xsd`\n"
             in result.output
         )
         assert result.exit_code == 0

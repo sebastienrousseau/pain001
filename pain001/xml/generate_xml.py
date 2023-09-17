@@ -13,536 +13,389 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Import the XML libraries
-import xml.etree.ElementTree as ET
+# XML generator function that creates the XML file from the CSV data
+# and the mapping dictionary between XML tags and CSV columns names and
+# writes it to a file in the same directory as the CSV file
 
-# Import the datetime library
-from datetime import datetime
+# Import the CSV library
+import sys
 
-# Import the functions from the other modules
-from .create_xml_element import create_xml_element
-
-
-def create_common_elements(parent, row, mapping):
-    """Create common elements "PmtInfId" and "PmtMtd" in the XML tree using
-    data from the CSV or SQLite Data Files.
-
-    Parameters
-    ----------
-    parent : xml.etree.ElementTree.Element
-        Parent element in the XML tree.
-    row : list
-        List of strings, each string is a row of the Data file.
-    mapping : dict
-        Dictionary with the mapping between XML tags and Data columns.
-    """
-
-    for xml_tag, csv_column in mapping.items():
-        if xml_tag in ["PmtInfId", "PmtMtd"]:
-            create_xml_element(parent, xml_tag, row[csv_column])
+from jinja2 import Environment, FileSystemLoader
+from pain001.xml.generate_updated_xml_file_path import (
+    generate_updated_xml_file_path,
+)
+from pain001.xml.create_xml_v3 import create_xml_v3
+from pain001.xml.create_xml_v4 import create_xml_v4
+from pain001.xml.create_xml_v5 import create_xml_v5
+from pain001.xml.create_xml_v9 import create_xml_v9
+from pain001.xml.validate_via_xsd import validate_via_xsd
 
 
-def create_xml_v3(root, data, mapping):
-    """Create the XML tree for the pain.001.001.03 schema.
+def generate_xml(
+    data, payment_initiation_message_type, xml_file_path, xsd_file_path
+):
+    """Generates an ISO 20022 pain.001 XML file from input data.
 
     Args:
-        root (ElementTree.Element): The root element of the XML tree.
-        data (list): A list of dictionaries containing the data to be added
-        to the XML document.
-        mapping (dict): A dictionary mapping the Data column names to the XML
-        element names.
+        data: List of dictionaries containing payment data
+        payment_initiation_message_type: String indicating message type
+        such as "pain.001.001.03, pain.001.001.04, pain.001.001.05, etc."
+        xml_file_path: Path to write generated XML file to
+        xsd_file_path: Path to XML schema file for validation
 
     Returns:
-        The root element of the XML tree.
+        None
     """
 
-    # Create CstmrCdtTrfInitn element
-    cstmr_cdt_trf_initn_element = ET.Element("CstmrCdtTrfInitn")
-    root.append(cstmr_cdt_trf_initn_element)
+    # Define a mapping between the XML types and the XML generators
+    xml_generators = {
+        "pain.001.001.03": create_xml_v3,
+        "pain.001.001.04": create_xml_v4,
+        "pain.001.001.05": create_xml_v5,
+        "pain.001.001.09": create_xml_v9,
+    }
 
-    # Create GrpHdr element and append it to CstmrCdtTrfInitn
-    GrpHdr_element = ET.Element("GrpHdr")
-    cstmr_cdt_trf_initn_element.append(GrpHdr_element)
+    # Check if the provided payment_initiation_message_type exists in
+    # the mapping
+    if payment_initiation_message_type in xml_generators:
+        # Get the corresponding XML generation function for the XML type
+        # xml_generator = xml_generators[payment_initiation_message_type]
 
-    # Add the MsgId, CreDtTm, and NbOfTxs elements to the GrpHdr element
-    for xml_tag, csv_column in mapping.items():
-        if xml_tag in ["MsgId"]:
-            create_xml_element(
-                GrpHdr_element, xml_tag, data[0][csv_column]
+        # Check if data is not empty
+        if not data:
+            print("Error: No data to process.")
+            sys.exit(1)
+
+        # Create a Jinja2 environment
+        env = Environment(loader=FileSystemLoader("."), autoescape=True)
+
+        # Load the Jinja2 template
+        template = env.get_template(xml_file_path)
+
+        # Prepare the data for rendering
+        if payment_initiation_message_type == "pain.001.001.03":
+            xml_data_pain001_001_03 = {
+                "id": data[0]["id"],
+                "date": data[0]["date"],
+                "nb_of_txs": data[0]["nb_of_txs"],
+                "initiator_name": data[0]["initiator_name"],
+                "initiator_street_name": data[0][
+                    "initiator_street_name"
+                ],
+                "initiator_building_number": data[0][
+                    "initiator_building_number"
+                ],
+                "initiator_postal_code": data[0][
+                    "initiator_postal_code"
+                ],
+                "initiator_town_name": data[0]["initiator_town_name"],
+                "initiator_country_code": data[0][
+                    "initiator_country_code"
+                ],
+                "payment_id": data[0]["payment_id"],
+                "payment_method": data[0]["payment_method"],
+                "batch_booking": data[0]["batch_booking"],
+                "requested_execution_date": data[0][
+                    "requested_execution_date"
+                ],
+                "debtor_name": data[0]["debtor_name"],
+                "debtor_street_name": data[0]["debtor_street_name"],
+                "debtor_building_number": data[0][
+                    "debtor_building_number"
+                ],
+                "debtor_postal_code": data[0]["debtor_postal_code"],
+                "debtor_town_name": data[0]["debtor_town_name"],
+                "debtor_country_code": data[0]["debtor_country_code"],
+                "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+                "debtor_agent_BIC": data[0]["debtor_agent_BIC"],
+                "charge_bearer": data[0]["charge_bearer"],
+                "transactions": [
+                    {
+                        "payment_id": row["payment_id"],
+                        "payment_amount": row.get("payment_amount", ""),
+                        "payment_currency": row.get(
+                            "payment_currency", ""
+                        ),
+                        "charge_bearer": row["charge_bearer"],
+                        "creditor_agent_BIC": row["creditor_agent_BIC"],
+                        "creditor_name": row["creditor_name"],
+                        "creditor_street_name": row[
+                            "creditor_street_name"
+                        ],
+                        "creditor_building_number": row[
+                            "creditor_building_number"
+                        ],
+                        "creditor_postal_code": row[
+                            "creditor_postal_code"
+                        ],
+                        "creditor_town_name": row["creditor_town_name"],
+                        "creditor_country_code": row[
+                            "creditor_country_code"
+                        ],
+                        "creditor_account_IBAN": row[
+                            "creditor_account_IBAN"
+                        ],
+                        "purpose_code": row["purpose_code"],
+                        "reference_number": row["reference_number"],
+                        "reference_date": row["reference_date"],
+                    }
+                    for row in data[1:]
+                ],
+            }
+        elif payment_initiation_message_type == "pain.001.001.04":
+            xml_data_pain001_001_04 = {
+                "id": data[0]["id"],
+                "date": data[0]["date"],
+                "nb_of_txs": data[0]["nb_of_txs"],
+                "initiator_name": data[0]["initiator_name"],
+                "initiator_street": data[0]["initiator_street_name"],
+                "initiator_building_number": data[0][
+                    "initiator_building_number"
+                ],
+                "initiator_postal_code": data[0][
+                    "initiator_postal_code"
+                ],
+                "initiator_town": data[0]["initiator_town_name"],
+                "initiator_country": data[0]["initiator_country_code"],
+                "payment_information_id": data[0]["payment_id"],
+                "payment_method": data[0]["payment_method"],
+                "batch_booking": data[0]["batch_booking"],
+                "requested_execution_date": data[0][
+                    "requested_execution_date"
+                ],
+                "debtor_name": data[0]["debtor_name"],
+                "debtor_street": data[0]["debtor_street_name"],
+                "debtor_building_number": data[0][
+                    "debtor_building_number"
+                ],
+                "debtor_postal_code": data[0]["debtor_postal_code"],
+                "debtor_town": data[0]["debtor_town_name"],
+                "debtor_country": data[0]["debtor_country_code"],
+                "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+                "debtor_agent_BICFI": data[0]["debtor_agent_BIC"],
+                "debtor_agent_account_IBAN": data[0][
+                    "debtor_agent_account_IBAN"
+                ],
+                "instruction_for_debtor_agent": data[0][
+                    "instruction_for_debtor_agent"
+                ],
+                "charge_bearer": data[0]["charge_bearer"],
+                "charge_account_IBAN": data[0]["charge_account_IBAN"],
+                "charge_agent_BICFI": data[0]["charge_agent_BICFI"],
+                "payment_instruction_id": data[0][
+                    "payment_instruction_id"
+                ],
+                "payment_end_to_end_id": data[0][
+                    "payment_end_to_end_id"
+                ],
+                "payment_currency": data[0]["payment_currency"],
+                "payment_amount": data[0]["payment_amount"],
+                "creditor_agent_BIC": data[0]["creditor_agent_BIC"],
+                "creditor_name": data[0]["creditor_name"],
+                "creditor_street": data[0]["creditor_street"],
+                "creditor_building_number": data[0][
+                    "creditor_building_number"
+                ],
+                "creditor_postal_code": data[0]["creditor_postal_code"],
+                "creditor_town": data[0]["creditor_town"],
+                "creditor_account_IBAN": data[0][
+                    "creditor_account_IBAN"
+                ],
+                "purpose_code": data[0]["purpose_code"],
+                "reference_number": data[0]["reference_number"],
+                "reference_date": data[0]["reference_date"],
+                "transactions": [
+                    {
+                        "payment_instruction_id": row["payment_id"],
+                        "payment_end_to_end_id": row[
+                            "reference_number"
+                        ],
+                        "payment_currency": row.get(
+                            "payment_currency", "EUR"
+                        ),
+                        "payment_amount": row.get("payment_amount", ""),
+                        "charge_bearer": row["charge_bearer"],
+                        "creditor_agent_BIC": row["creditor_agent_BIC"],
+                        "creditor_name": row["creditor_name"],
+                        "creditor_street": row["creditor_street_name"],
+                        "creditor_building_number": row[
+                            "creditor_building_number"
+                        ],
+                        "creditor_postal_code": row[
+                            "creditor_postal_code"
+                        ],
+                        "creditor_town": row["creditor_town_name"],
+                        "creditor_account_IBAN": row[
+                            "creditor_account_IBAN"
+                        ],
+                        "purpose_code": row["purpose_code"],
+                        "reference_number": row["reference_number"],
+                        "reference_date": row["reference_date"],
+                    }
+                    for row in data[1:]
+                ],
+            }
+        elif payment_initiation_message_type == "pain.001.001.05":
+            xml_data_pain001_001_05 = {
+                "id": data[0]["id"],
+                "date": data[0]["date"],
+                "nb_of_txs": data[0]["nb_of_txs"],
+                "ctrl_sum": data[0]["ctrl_sum"],
+                "initiator_name": data[0]["initiator_name"],
+                "initiator_street_name": data[0][
+                    "initiator_street_name"
+                ],
+                "initiator_building_number": data[0][
+                    "initiator_building_number"
+                ],
+                "initiator_postal_code": data[0][
+                    "initiator_postal_code"
+                ],
+                "initiator_town": data[0]["initiator_town_name"],
+                "initiator_country": data[0]["initiator_country"],
+                "ultimate_debtor_name": data[0]["ultimate_debtor_name"],
+                "service_level_code": data[0]["service_level_code"],
+                "requested_execution_date": data[0][
+                    "requested_execution_date"
+                ],
+                "payment_information_id": data[0][
+                    "payment_information_id"
+                ],
+                "payment_method": data[0]["payment_method"],
+                "batch_booking": data[0]["batch_booking"],
+                "debtor_name": data[0]["debtor_name"],
+                "debtor_street": data[0]["debtor_street"],
+                "debtor_building_number": data[0][
+                    "debtor_building_number"
+                ],
+                "debtor_postal_code": data[0]["debtor_postal_code"],
+                "debtor_town": data[0]["debtor_town"],
+                "debtor_country": data[0]["debtor_country"],
+                "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+                "debtor_agent_BICFI": data[0]["debtor_agent_BICFI"],
+                "payment_instruction_id": data[0][
+                    "payment_instruction_id"
+                ],
+                "payment_end_to_end_id": data[0][
+                    "payment_end_to_end_id"
+                ],
+                "payment_currency": data[0]["payment_currency"],
+                "payment_amount": data[0]["payment_amount"],
+                "charge_bearer": data[0]["charge_bearer"],
+                "creditor_name": data[0]["creditor_name"],
+                "creditor_street": data[0]["creditor_street"],
+                "creditor_building_number": data[0][
+                    "creditor_building_number"
+                ],
+                "creditor_postal_code": data[0]["creditor_postal_code"],
+                "creditor_town": data[0]["creditor_town"],
+                "creditor_country": data[0]["creditor_country"],
+                "creditor_account_IBAN": data[0][
+                    "creditor_account_IBAN"
+                ],
+                "creditor_agent_BICFI": data[0]["creditor_agent_BICFI"],
+                "purpose_code": data[0]["purpose_code"],
+                "reference_number": data[0]["reference_number"],
+                "reference_date": data[0]["reference_date"],
+            }
+
+        elif payment_initiation_message_type == "pain.001.001.09":
+            xml_data_pain001_001_09 = {
+                "id": data[0]["id"],
+                "date": data[0]["date"],
+                "nb_of_txs": data[0]["nb_of_txs"],
+                "initiator_name": data[0]["initiator_name"],
+                "payment_id": data[0]["payment_id"],
+                "payment_method": data[0]["payment_method"],
+                "payment_nb_of_txs": data[0]["nb_of_txs"],
+                "requested_execution_date": data[0][
+                    "requested_execution_date"
+                ],
+                "debtor_name": data[0]["debtor_name"],
+                "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
+                "debtor_agent_BICFI": data[0]["debtor_agent_BIC"],
+                "charge_bearer": data[0]["charge_bearer"],
+                "transactions": [
+                    {
+                        "payment_id": row["payment_id"],
+                        "payment_amount": row["payment_amount"],
+                        "payment_currency": row.get(
+                            "payment_currency", ""
+                        ),
+                        "charge_bearer": row["charge_bearer"],
+                        "creditor_agent_BIC": row["creditor_agent_BIC"],
+                        "creditor_name": row["creditor_name"],
+                        "creditor_account_IBAN": row[
+                            "creditor_account_IBAN"
+                        ],
+                        "creditor_remittance_information": row[
+                            "remittance_information"
+                        ],
+                    }
+                    for row in data[1:]
+                ],
+            }
+
+        # Check if the payment initiation message type is "pain.001.001.03"
+        if payment_initiation_message_type == "pain.001.001.03":
+            # xml_data_pain001_001_03 = {}
+            xml_data = xml_data_pain001_001_03
+        # Check if the payment initiation message type is "pain.001.001.04"
+        elif payment_initiation_message_type == "pain.001.001.04":
+            # xml_data_pain001_001_04 = {}
+            xml_data = xml_data_pain001_001_04
+        # Check if the payment initiation message type is "pain.001.001.05"
+        elif payment_initiation_message_type == "pain.001.001.05":
+            # xml_data_pain001_001_05 = {}
+            xml_data = xml_data_pain001_001_05
+        # Check if the payment initiation message type is "pain.001.001.09"
+        elif payment_initiation_message_type == "pain.001.001.09":
+            # xml_data_pain001_001_09 = {}
+            xml_data = xml_data_pain001_001_09
+        else:
+            # If it's not supported, print an error message and exit
+            print(
+                f"""
+The payment initiation message type {payment_initiation_message_type} is not
+supported at this time.
+"""
+            )
+            sys.exit(1)
+
+        # Render the template
+        xml_content = template.render(**xml_data)
+
+        # Generate updated XML file path
+        updated_xml_file_path = generate_updated_xml_file_path(
+            xml_file_path, payment_initiation_message_type
+        )
+
+        # Write the XML content to the file without extra spacing
+        with open(updated_xml_file_path, "w") as xml_file:
+            xml_file.write(xml_content)
+
+        print(
+            f"A new XML file has been created at `{updated_xml_file_path}`"
+        )
+
+        # Validate the updated XML file against the XSD schema
+        is_valid = validate_via_xsd(
+            updated_xml_file_path, xsd_file_path
+        )
+
+        if not is_valid:
+            print("Error: Invalid XML data.")
+            sys.exit(1)
+        else:
+            print(
+                f"The XML has been validated against `{xsd_file_path}`"
             )
 
-    # Calculate CreDtTm
-    time_and_date_str = str(datetime.now())
-    CreDtTm_value = time_and_date_str[0:10] + "T" + time_and_date_str[11:19]
-    # Add CreDtTm Element in the XML tree
-    create_xml_element(GrpHdr_element, "CreDtTm", CreDtTm_value)
-
-    # Calculate NbOfTxs
-    NbOfTxs = 0
-    for row in data:
-        NbOfTxs = NbOfTxs + 1
-    # Add NbOfTxs to the XML tree
-    create_xml_element(GrpHdr_element, "NbOfTxs", str(NbOfTxs))
-
-    # Calculate CtrlSum Element from the CSV file
-    totalSum = 0
-    for row in data:
-        totalSum += float(row["payment_amount"])
-    # Add CtrlSum Element in the XML tree
-    create_xml_element(GrpHdr_element, "CtrlSum", str(round(totalSum, 2)))
-
-    # Create new "InitgPty" element in the XML tree using data from the
-    # CSV file
-    InitgPty_element = ET.Element("InitgPty")
-    create_xml_element(
-        InitgPty_element, "Nm", data[0]["initiator_name"]
-    )
-    GrpHdr_element.append(InitgPty_element)
-
-    for row in data:
-        # Create new "PmtInf" element in the XML tree using data from
-        # the CSV file
-        PmtInf_element = ET.Element("PmtInf")
-
-        create_common_elements(PmtInf_element, row, mapping)
-
-        # Create new "BtchBookg" element in the XML tree using data
-        # from the Data file
-        create_xml_element(
-            PmtInf_element, "BtchBookg", row["batch_booking"].lower()
+    else:
+        # Handle the case when the payment_initiation_message_type is
+        # not valid
+        print(
+            "Error: Invalid XML message type:",
+            payment_initiation_message_type,
         )
-
-        # Create new "NbOfTxs" element in the XML tree using data from
-        # the Data file
-        # create_xml_element(PmtInf_element, "NbOfTxs", row["nb_of_txs"])
-
-        # Create new "CtrlSum" element in the XML tree using data from
-        # the Data file
-        # create_xml_element(
-        # PmtInf_element, "CtrlSum", f"{row['control_sum']}")
-
-        # Create new "PmtTpInf" element in the XML tree using data from
-        # the Data file
-        PmtTpInf_element = ET.Element("PmtTpInf")
-        child_element = ET.Element("SvcLvl")
-        child_element2 = ET.Element("Cd")
-        child_element2.text = row["service_level_code"]
-        child_element.append(child_element2)
-        PmtTpInf_element.append(child_element)
-        PmtInf_element.append(PmtTpInf_element)
-
-        # Create new "ReqdExctnDt" element in the XML tree using data
-        # from the Data file
-        create_xml_element(
-            PmtInf_element,
-            "ReqdExctnDt",
-            row["requested_execution_date"],
-        )
-
-        # Create new "Dbtr" element in the XML tree using data from
-        # the Data file
-        Dbtr_element = ET.Element("Dbtr")
-        child_element = ET.Element("Nm")
-        child_element.text = row["debtor_name"]
-        Dbtr_element.append(child_element)
-        PmtInf_element.append(Dbtr_element)
-
-        # Create new "DbtrAcct" element in the XML tree using data
-        # from the Data file
-        DbtrAcct_element = ET.Element("DbtrAcct")
-        child_element = ET.Element("Id")
-        child_element2 = ET.Element("IBAN")
-        # replace with the appropriate value
-        child_element2.text = row["debtor_account_IBAN"]
-        child_element.append(child_element2)
-        # Create CCy Element
-        CCy_element = ET.Element("Ccy")
-        CCy_element.text = row["currency"]
-        # Add Both Elements to Parents
-        DbtrAcct_element.append(child_element)
-        DbtrAcct_element.append(CCy_element)
-        PmtInf_element.append(DbtrAcct_element)
-
-        # Create new "DbtrAgt" element in the XML tree using data
-        # from the Data file
-        DbtrAgt_element = ET.Element("DbtrAgt")
-        child_element = ET.Element("FinInstnId")
-        child_element2 = ET.Element("BIC")
-        # replace with the appropriate value
-        child_element2.text = row["debtor_agent_BIC"]
-        child_element.append(child_element2)
-        DbtrAgt_element.append(child_element)
-        PmtInf_element.append(DbtrAgt_element)
-
-        # Create new "CdtTrfTxInf" element in the XML tree using data
-        # from the Data file
-        CdtTrfTxInf_element = ET.Element("CdtTrfTxInf")
-
-        # Create new "PmtId" element in the XML tree using data
-        # from the Data file
-        PmtId_element = ET.Element("PmtId")
-        InstrId_element = ET.Element("InstrId")
-        child_element = ET.Element("EndToEndId")
-        InstrId_element.text = row["payment_id"]
-        child_element.text = row["payment_id"]
-        PmtId_element.append(InstrId_element)
-        PmtId_element.append(child_element)
-        CdtTrfTxInf_element.append(PmtId_element)
-
-        # Create new "Amt" element in the XML tree using data
-        # from the Data file
-        Amt_element = ET.Element("Amt")
-        child_element = ET.Element("InstdAmt")
-        child_element.text = row["payment_amount"]
-        child_element.set("Ccy", row["currency"])
-        Amt_element.append(child_element)
-        CdtTrfTxInf_element.append(Amt_element)
-
-        # Create new "ChrgBr" element in the XML tree using data
-        # from the Data file
-        ChrgBr_element = ET.Element("ChrgBr")
-        # replace with the appropriate value
-        ChrgBr_element.text = row["charge_bearer"]
-        PmtInf_element.append(ChrgBr_element)
-
-        # Create new "CdtrAgt" element in the XML tree using data
-        # from the Data file
-        CdtrAgt_element = ET.Element("CdtrAgt")
-        child_element = ET.Element("FinInstnId")
-        child_element2 = ET.Element("BIC")
-        child_element2.text = row["creditor_agent_BIC"]
-        child_element.append(child_element2)
-        CdtrAgt_element.append(child_element)
-        CdtTrfTxInf_element.append(CdtrAgt_element)
-
-        # Create new "Cdtr" element in the XML tree using data
-        # from the Data file
-        Cdtr_element = ET.Element("Cdtr")
-        child_element = ET.Element("Nm")
-        child_element.text = row["creditor_name"]
-        Cdtr_element.append(child_element)
-        CdtTrfTxInf_element.append(Cdtr_element)
-
-        # Create new "CdtrAcct" element in the XML tree using data
-        # from the CSV file
-        CdtrAcct_element = ET.Element("CdtrAcct")
-        Id_element = ET.Element("Id")
-        IBAN_element = ET.Element("IBAN")
-        IBAN_element.text = row["creditor_account_IBAN"]
-        Id_element.append(IBAN_element)
-        CdtrAcct_element.append(Id_element)
-        CdtTrfTxInf_element.append(CdtrAcct_element)
-
-        # Create new "RmtInf" element in the XML tree using data
-        # from the Data file
-        RmtInf_element = ET.Element("RmtInf")
-        child_element = ET.Element("Ustrd")
-        child_element.text = row["remittance_information"]
-        RmtInf_element.append(child_element)
-        CdtTrfTxInf_element.append(RmtInf_element)
-
-        # Append the new CdtTrfTxInf element to the PmtInf element
-        PmtInf_element.append(CdtTrfTxInf_element)
-
-        # Append the new PmtInf element to the CstmrCdtTrfInitn element
-        cstmr_cdt_trf_initn_element.append(PmtInf_element)
-
-
-def create_xml_v4(root, data, mapping):
-    """Creates an XML document for the pain.001.001.04 format.
-
-    Args:
-        root: The root element of the XML document.
-        data: A list of dictionaries containing the payment data.
-        mapping: A dictionary that maps XML element names to Data column names.
-
-    Returns:
-        The root element of the XML document.
-    """
-
-    # Create new "CstmrCdtTrfInitn" element in the XML tree
-    cstmr_cdt_trf_initn_element = ET.Element("CstmrCdtTrfInitn")
-    root.append(cstmr_cdt_trf_initn_element)
-
-    # Create new "GrpHdr" element in the XML tree
-    GrpHdr_element = ET.Element("GrpHdr")
-    cstmr_cdt_trf_initn_element.append(GrpHdr_element)
-
-    # Loop through the first row of the Data file and create new
-    # "MsgId", "CreDtTm" and "NbOfTxs" elements in the XML tree
-    for xml_tag, csv_column in mapping.items():
-        if xml_tag in ["MsgId", "CreDtTm", "NbOfTxs"]:
-            create_xml_element(
-                GrpHdr_element, xml_tag, data[0][csv_column]
-            )
-    # Create new "InitgPty" element in the XML tree using data
-    InitgPty_element = ET.Element("InitgPty")
-    create_xml_element(
-        InitgPty_element, "Nm", data[0]["initiator_name"]
-    )
-    GrpHdr_element.append(InitgPty_element)
-
-    # Loop through the Data file and create new "PmtInf" elements
-    for row in data:
-        PmtInf_element = ET.Element("PmtInf")
-        cstmr_cdt_trf_initn_element.append(PmtInf_element)
-
-        create_common_elements(PmtInf_element, row, mapping)
-
-        create_xml_element(
-            PmtInf_element, "BtchBookg", row["batch_booking"].lower()
-        )
-
-        create_xml_element(PmtInf_element, "NbOfTxs", row["nb_of_txs"])
-
-        create_xml_element(
-            PmtInf_element, "CtrlSum", f"{row['control_sum']}"
-        )
-
-        PmtTpInf_element = ET.Element("PmtTpInf")
-        SvcLvl_element = ET.Element("SvcLvl")
-        Cd_element = ET.Element("Cd")
-        Cd_element.text = row["service_level_code"]
-        SvcLvl_element.append(Cd_element)
-        PmtTpInf_element.append(SvcLvl_element)
-        PmtInf_element.append(PmtTpInf_element)
-
-        create_xml_element(
-            PmtInf_element,
-            "ReqdExctnDt",
-            row["requested_execution_date"],
-        )
-
-        Dbtr_element = ET.Element("Dbtr")
-        Nm_element = ET.Element("Nm")
-        Nm_element.text = row["debtor_name"]
-        Dbtr_element.append(Nm_element)
-        PmtInf_element.append(Dbtr_element)
-
-        DbtrAcct_element = ET.Element("DbtrAcct")
-        Id_element = ET.Element("Id")
-        IBAN_element = ET.Element("IBAN")
-        IBAN_element.text = row["debtor_account_IBAN"]
-        Id_element.append(IBAN_element)
-        DbtrAcct_element.append(Id_element)
-        PmtInf_element.append(DbtrAcct_element)
-
-        DbtrAgt_element = ET.Element("DbtrAgt")
-        FinInstnId_element = ET.Element("FinInstnId")
-        BIC_element = ET.Element("BICFI")
-        BIC_element.text = row["debtor_agent_BIC"]
-        FinInstnId_element.append(BIC_element)
-        DbtrAgt_element.append(FinInstnId_element)
-        PmtInf_element.append(DbtrAgt_element)
-
-        CdtTrfTxInf_element = ET.Element("CdtTrfTxInf")
-
-        PmtId_element = ET.Element("PmtId")
-        EndToEndId_element = ET.Element("EndToEndId")
-        EndToEndId_element.text = row["payment_id"]
-        PmtId_element.append(EndToEndId_element)
-        CdtTrfTxInf_element.append(PmtId_element)
-
-        Amt_element = ET.Element("Amt")
-        InstdAmt_element = ET.Element("InstdAmt")
-        InstdAmt_element.text = row["payment_amount"]
-        InstdAmt_element.set("Ccy", row["currency"])
-        Amt_element.append(InstdAmt_element)
-        CdtTrfTxInf_element.append(Amt_element)
-
-        CdtrAgt_element = ET.Element("CdtrAgt")
-        FinInstnId_element = ET.Element("FinInstnId")
-        BIC_element = ET.Element("BICFI")
-        BIC_element.text = row["creditor_agent_BIC"]
-        FinInstnId_element.append(BIC_element)
-        CdtrAgt_element.append(FinInstnId_element)
-        CdtTrfTxInf_element.append(CdtrAgt_element)
-
-        Cdtr_element = ET.Element("Cdtr")
-        Nm_element = ET.Element("Nm")
-        Nm_element.text = row["creditor_name"]
-        Cdtr_element.append(Nm_element)
-        CdtTrfTxInf_element.append(Cdtr_element)
-
-        CdtrAcct_element = ET.Element("CdtrAcct")
-        Id_element = ET.Element("Id")
-        IBAN_element = ET.Element("IBAN")
-        IBAN_element.text = row["creditor_account_IBAN"]
-        Id_element.append(IBAN_element)
-        CdtrAcct_element.append(Id_element)
-        CdtTrfTxInf_element.append(CdtrAcct_element)
-
-        RmtInf_element = ET.Element("RmtInf")
-        Ustrd_element = ET.Element("Ustrd")
-        Ustrd_element.text = row["remittance_information"]
-        RmtInf_element.append(Ustrd_element)
-        CdtTrfTxInf_element.append(RmtInf_element)
-
-        PmtInf_element.append(CdtTrfTxInf_element)
-
-
-def create_xml_v9(root, data, mapping):
-    """Creates an XML document for the pain.001.001.09 schema.
-
-    Args:
-        root (ElementTree.Element): The root element of the XML tree.
-        data (list): A list of dictionaries containing the data to be added
-        to the XML document.
-        mapping (dict): A dictionary mapping the Data column names to the XML
-        element names.
-
-    Returns:
-        The root element of the XML tree.
-    """
-
-    # Create CstmrCdtTrfInitn element
-    cstmr_cdt_trf_initn_element = ET.Element("CstmrCdtTrfInitn")
-    root.append(cstmr_cdt_trf_initn_element)
-
-    # Create GrpHdr element and append it to CstmrCdtTrfInitn
-    GrpHdr_element = ET.Element("GrpHdr")
-    cstmr_cdt_trf_initn_element.append(GrpHdr_element)
-
-    # Add the MsgId, CreDtTm, and NbOfTxs elements to the GrpHdr element
-    for xml_tag, csv_column in mapping.items():
-        if xml_tag in ["MsgId", "CreDtTm", "NbOfTxs"]:
-            create_xml_element(
-                GrpHdr_element, xml_tag, data[0][csv_column]
-            )
-
-    # Create new "InitgPty" element in the XML tree using data from the
-    # Data file
-    InitgPty_element = ET.Element("InitgPty")
-    create_xml_element(
-        InitgPty_element, "Nm", data[0]["initiator_name"]
-    )
-    GrpHdr_element.append(InitgPty_element)
-
-    for row in data:
-        # Create new "PmtInf" element in the XML tree using data from
-        # the Data file
-        PmtInf_element = ET.Element("PmtInf")
-        cstmr_cdt_trf_initn_element.append(PmtInf_element)
-
-        create_common_elements(PmtInf_element, row, mapping)
-
-        Dbtr_element = ET.Element("ReqdExctnDt")
-        child_element = ET.Element("Dt")
-        child_element.text = row["requested_execution_date"]
-        Dbtr_element.append(child_element)
-        PmtInf_element.append(Dbtr_element)
-
-        # Create new "Dbtr" element in the XML tree using data from
-        # the Data file
-        Dbtr_element = ET.Element("Dbtr")
-        child_element = ET.Element("Nm")
-        child_element.text = row["debtor_name"]
-        Dbtr_element.append(child_element)
-        PmtInf_element.append(Dbtr_element)
-
-        # Create new "DbtrAcct" element in the XML tree using data
-        # from the Data file
-        DbtrAcct_element = ET.Element("DbtrAcct")
-        child_element = ET.Element("Id")
-        child_element2 = ET.Element("IBAN")
-        # replace with the appropriate value
-        child_element2.text = row["debtor_account_IBAN"]
-        child_element.append(child_element2)
-        DbtrAcct_element.append(child_element)
-        PmtInf_element.append(DbtrAcct_element)
-
-        # Create new "DbtrAgt" element in the XML tree using data
-        # from the Data file
-        DbtrAgt_element = ET.Element("DbtrAgt")
-        child_element = ET.Element("FinInstnId")
-        child_element2 = ET.Element("BICFI")
-        # replace with the appropriate value
-        child_element2.text = row["debtor_agent_BIC"]
-        child_element2.set(
-            "xmlns", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
-        )
-        child_element.append(child_element2)
-        DbtrAgt_element.append(child_element)
-        PmtInf_element.append(DbtrAgt_element)
-
-        # Create new "ChrgBr" element in the XML tree using data
-        # from the Data file
-        child_element = ET.Element("ChrgBr")
-        # replace with the appropriate value
-        child_element.text = row["charge_bearer"]
-        PmtInf_element.append(child_element)
-
-        # Create new "CdtTrfTxInf" element in the XML tree using data
-        # from the Data file
-        CdtTrfTxInf_element = ET.Element("CdtTrfTxInf")
-
-        # Create new "PmtId" element in the XML tree using data
-        # from the Data file
-        PmtId_element = ET.Element("PmtId")
-        child_element = ET.Element("EndToEndId")
-        child_element.text = row["payment_id"]
-        PmtId_element.append(child_element)
-        CdtTrfTxInf_element.append(PmtId_element)
-
-        # Create new "Amt" element in the XML tree using data
-        # from the Data file
-        Amt_element = ET.Element("Amt")
-        child_element = ET.Element("InstdAmt")
-        child_element.text = row["payment_amount"]
-        child_element.set("Ccy", row["currency"])
-        Amt_element.append(child_element)
-        CdtTrfTxInf_element.append(Amt_element)
-
-        # Create new "CdtrAgt" element in the XML tree using data
-        # from the Data file
-        CdtrAgt_element = ET.Element("CdtrAgt")
-        child_element = ET.Element("FinInstnId")
-        child_element2 = ET.Element("BICFI")
-        # replace with the appropriate value
-        child_element2.text = row["creditor_agent_BIC"]
-        child_element2.set(
-            "xmlns", "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
-        )
-        child_element.append(child_element2)
-        CdtrAgt_element.append(child_element)
-        CdtTrfTxInf_element.append(CdtrAgt_element)
-
-        # Create new "Cdtr" element in the XML tree using data
-        # from the Data file
-        Cdtr_element = ET.Element("Cdtr")
-        child_element = ET.Element("Nm")
-        child_element.text = row["creditor_name"]
-        Cdtr_element.append(child_element)
-        CdtTrfTxInf_element.append(Cdtr_element)
-
-        # Create new "CdtrAcct" element in the XML tree using data
-        # from the CSV file
-        CdtrAcct_element = ET.Element("CdtrAcct")
-        child_element = ET.Element("Id")
-        child_element2 = ET.Element("IBAN")
-        child_element2.text = row["creditor_agent_BIC"]
-        child_element.append(child_element2)
-        CdtrAcct_element.append(child_element)
-        CdtTrfTxInf_element.append(CdtrAcct_element)
-
-        # Create new "RmtInf" element in the XML tree using data
-        # from the Data file
-        RmtInf_element = ET.Element("RmtInf")
-        child_element = ET.Element("Ustrd")
-        child_element.text = row["remittance_information"]
-        RmtInf_element.append(child_element)
-        CdtTrfTxInf_element.append(RmtInf_element)
-
-        # Append the new CdtTrfTxInf element to the PmtInf element
-        PmtInf_element.append(CdtTrfTxInf_element)
-
-        # Append the new PmtInf element to the CstmrCdtTrfInitn element
-        cstmr_cdt_trf_initn_element.append(PmtInf_element)
-
-        # Create new "SplmtryData" elements in the XML tree using data
-        # from the Data file"
-        # Create the main elements
-        SplmtryData_element = ET.Element("SplmtryData")
-        Envlp_element = ET.SubElement(SplmtryData_element, "Envlp")
-        child_element = ET.SubElement(Envlp_element, "WC")
-        CdtTrfTxInf_element.append(SplmtryData_element)
+        sys.exit(1)

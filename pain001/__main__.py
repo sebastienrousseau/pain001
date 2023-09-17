@@ -49,10 +49,7 @@ https://pain001.com
 title = "Pain001"
 
 table = Table(
-    box=box.ROUNDED,
-    safe_box=True,
-    show_header=False,
-    title=title,
+    box=box.ROUNDED, safe_box=True, show_header=False, title=title
 )
 
 table.add_column(justify="center", no_wrap=False, vertical="middle")
@@ -146,11 +143,7 @@ def main(
     ):
         print(click.get_current_context().get_help())
         sys.exit(1)
-    """
-    Entrypoint for pain001 when invoked as a module with
-    python3 -m pain001 <xml_message_type> <xml_template_file_path>
-    <xsd_schema_file_path> <data_file_path>.
-    """
+
     logger = Context.get_instance().get_logger()
 
     logger.info("Parsing command line arguments.")
@@ -193,4 +186,5 @@ def main(
 
 
 if __name__ == "__main__":
+    # pylint: disable=no-value-for-parameter
     main()

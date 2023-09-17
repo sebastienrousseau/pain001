@@ -13,31 +13,56 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xml.etree.ElementTree as ET
+# pylint: disable=C0301
 
-# Create the root element and set its attributes (XML tags and CSV
-# columns mapping)
+"""
+Module for creating XML payment initiation message documents compliant with
+the ISO 20022 standard. The generated XML documents include essential
+namespaces and schema locations.
+
+Note: This module does not include additional security features for XML
+parsing. It is advisable to consider measures to prevent XML vulnerabilities
+when using it.
+"""
+
+import xml.etree.ElementTree as et
+
+# Namespace and schema-related constants
+NAMESPACE = "urn:iso:std:iso:20022:tech:xsd:"
+XSI_NAMESPACE = "http://www.w3.org/2001/XMLSchema-instance"
 
 
-def create_root_element(payment_initiation_message_type):
-    # Create the namespace for the payment initiation message type.
-    namespace = (
-        "urn:iso:std:iso:20022:tech:xsd:"
-        + payment_initiation_message_type
-    )
+def create_root_element(message_type: str) -> et.Element:
+    """
+    Creates the root Element for a payment initiation XML document based on the
+    specified message type. The function sets the required namespaces and
+    schema locations.
 
-    # Create the root element.
-    root = ET.Element("Document")
-    root.set("xmlns", namespace)
-    root.set("xmlns:xsi", "http://www.w3.org/2001/XMLSchema-instance")
+    Args:
+        message_type (str):
+        Specifies the message type, for example, "pain.001.001.09". This is
+        used to construct the namespace and schema location attributes.
 
-    # Set the schema location.
-    schema_location = (
-        namespace + " " + payment_initiation_message_type + ".xsd"
-    )
+    Returns:
+        et.Element:
+        The root Element node for the XML document, configured with the
+        necessary namespaces and schema location attributes.
+
+    Examples:
+        >>> create_root_element("pain.001.001.09")
+        <Element 'Document' at 0x7f8c0a309db0>
+    """
+
+    # Create the root element using the ElementTree library
+    root = et.Element("Document")
+
+    # Add xmlns (XML Namespace) and xmlns:xsi (XML Schema Instance) attributes
+    # to the root element
+    root.set("xmlns", NAMESPACE + message_type)
+    root.set("xmlns:xsi", XSI_NAMESPACE)
+
+    # Set the schema location for XML validation
+    schema_location = f"{NAMESPACE}{message_type} {message_type}.xsd"
     root.set("xsi:schemaLocation", schema_location)
-
-    for elem in root.iter():
-        elem.tag = elem.tag.split("}", 1)[-1]
 
     return root

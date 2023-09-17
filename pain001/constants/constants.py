@@ -23,6 +23,6 @@ valid_xml_types = [
     "pain.001.001.07",  # Request for Reversal
     "pain.001.001.08",  # Notification of Reversal
     "pain.001.001.09",  # Request for Amendment
-    "pain.001.001.10"   # Notification of Amendment
-    "pain.001.001.11"   # Request for Cancellation
+    "pain.001.001.10"  # Notification of Amendment
+    "pain.001.001.11",  # Request for Cancellation
 ]

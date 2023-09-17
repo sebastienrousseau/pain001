@@ -2,9 +2,12 @@
 
 ![Pain001 banner][banner]
 
+## A Powerful Python Library that enables you to create ISO 20022-Compliant Payment Files directly from CSV or SQLite data files
+
 [![PyPI][pypi-badge]][3] [![PyPI Downloads][pypi-downloads-badge]][7] [![License][license-badge]][1] [![Codecov][codecov-badge]][6]
 
 ## Overview
+
 
 **Pain001** is an open-source Python Library that you can use to create
 **ISO 20022-Compliant Payment Files** directly from your **CSV** or **SQLite**
@@ -19,9 +22,18 @@ The Python library focuses specifically on
 very simplified way, a **pain.001** is a message that initiates the customer
 payment.
 
-As of today the library is designed to be compatible with the
-**pain.001.001.03** and **pain.001.001.09** message types and will support more
-message types in the future.
+As of today the library is designed to be compatible with the:
+
+- **Payments Initiation V03 (pain.001.001.03)** - ISO20022 message format for
+  initiating payments with version 03,
+- **Payments Initiation V04 (pain.001.001.04)** - ISO20022 message format for
+  initiating payments with version 04,
+- **Payments Initiation V05 (pain.001.001.05)** - ISO20022 message format for
+  initiating payments with version 05 and,
+- **Payments Initiation V09 (pain.001.001.09)** - ISO20022 message format for
+  initiating payments with version 09.
+
+message types and will support more in the future.
 
 Payments usually start with a **pain.001 payment initiation message**. The
 payer sends it to the payee (or the payee’s bank) via a secure network. This
@@ -42,6 +54,7 @@ processing.
 ## Table of Contents
 
 - [Pain001: Automate ISO 20022-Compliant Payment File Creation](#pain001-automate-iso-20022-compliant-payment-file-creation)
+  - [A Powerful Python Library that enables you to create ISO 20022-Compliant Payment Files directly from CSV or SQLite data files](#a-powerful-python-library-that-enables-you-to-create-iso-20022-compliant-payment-files-directly-from-csv-or-sqlite-data-files)
   - [Overview](#overview)
   - [Table of Contents](#table-of-contents)
   - [Features](#features)
@@ -132,10 +145,10 @@ Here’s how you would do that:
 
 ```sh
 python3 -m pain001 \
-    <xml_message_type> \
-    <xml_template_file_path> \
-    <xsd_schema_file_path> \
-    <data_file_path>
+    -t <xml_message_type> \
+    -m <xml_template_file_path> \
+    -s <xsd_schema_file_path> \
+    -d <data_file_path>
 ```
 
 ### Arguments
@@ -147,6 +160,7 @@ When running **Pain001**, you will need to specify four arguments:
   The currently supported types are:
   - pain.001.001.03
   - pain.001.001.04
+  - pain.001.001.05
   - pain.001.001.09
 - An `xml_template_file_path`: This is the path to the XML template file you
   are using that contains variables that will be replaced by the values in your
@@ -165,20 +179,20 @@ initiation message from a CSV file and a SQLite Data file.
 
 ```sh
 python3 -m pain001 \
-    pain.001.001.03 \
-    /path/to/your/template.xml \
-    /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/template.csv
+    -t pain.001.001.03 \
+    -m /path/to/your/template.xml \
+    -s /path/to/your/pain.001.001.03.xsd \
+    -d /path/to/your/template.csv
 ```
 
 ### Using a SQLite Data File as the source
 
 ```sh
 python3 -m pain001 \
-    pain.001.001.03 \
-    /path/to/your/template.xml \
-    /path/to/your/pain.001.001.03.xsd \
-    /path/to/your/template.db
+    -t pain.001.001.03 \
+    -m /path/to/your/template.xml \
+    -s /path/to/your/pain.001.001.03.xsd \
+    -d /path/to/your/template.db
 ```
 
 ### Using the Source code
@@ -194,11 +208,11 @@ git clone https://github.com/sebastienrousseau/pain001.git
   Then, navigate to the `pain001` directory and run the following command:
 
   ```sh
-  python3 -m pain001 \
-      pain.001.001.03 \
-      templates/pain.001.001.03/template.xml \
-      templates/pain.001.001.03/pain.001.001.03.xsd \
-      templates/pain.001.001.03/template.csv
+  python -m pain001 \
+    -t pain.001.001.03 \
+    -m templates/pain.001.001.03/template.xml \
+    -s templates/pain.001.001.03/pain.001.001.03.xsd \
+    -d templates/pain.001.001.03/template.csv
   ```
 
 This will generate a payment initiation message from the sample CSV Data file.
@@ -207,10 +221,10 @@ You can do the same with the sample SQLite Data file:
 
 ```sh
 python3 -m pain001 \
-    pain.001.001.03 \
-    templates/pain.001.001.03/template.xml \
-    templates/pain.001.001.03/pain.001.001.03.xsd \
-    templates/pain.001.001.03/template.db
+    -t pain.001.001.03 \
+    -m templates/pain.001.001.03/template.xml \
+    -s templates/pain.001.001.03/pain.001.001.03.xsd \
+    -d templates/pain.001.001.03/template.db
 ```
 
 > **Note:** The XML file that **Pain001** generates will automatically be
@@ -309,7 +323,7 @@ and monitor payments.
 |---|---|---|
 | ✅ | [pain.001.001.03][pain.001.001.03] | Customer Credit Transfer Initiation |
 | ✅ | [pain.001.001.04][pain.001.001.04] | Customer Direct Debit Initiation |
-| ⏳ | pain.001.001.05 | Customer Direct Debit Reversal |
+| ✅ | [pain.001.001.05][pain.001.001.05] | Customer Direct Debit Reversal |
 | ⏳ | pain.001.001.06 | Customer Credit Transfer Reversal |
 | ⏳ | pain.001.001.07 | Customer Account Notification |
 | ⏳ | pain.001.001.08 | Customer Account Statement |
@@ -351,6 +365,7 @@ of [Pain001][5] for their help and support.
 
 [pain.001.001.03]: https://pain001.com/pain.001.001.03/index.html
 [pain.001.001.04]: https://pain001.com/pain.001.001.04/index.html
+[pain.001.001.05]: https://pain001.com/pain.001.001.05/index.html
 [pain.001.001.09]: https://pain001.com/pain.001.001.09/index.html
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'

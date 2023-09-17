@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09 pain.001.001.09.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09 pain.001.001.09.xsd">
 	<CstmrCdtTrfInitn>
 		<GrpHdr>
 			<MsgId>{{id}}</MsgId>
@@ -27,41 +26,41 @@
 			</DbtrAcct>
 			<DbtrAgt>
 				<FinInstnId>
-					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
-			{{debtor_agent_BICFI}}</BICFI>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">{{debtor_agent_BICFI}}</BICFI>
 				</FinInstnId>
 			</DbtrAgt>
-			<ChrgBr>
-			SLEV</ChrgBr> {% for tx in transactions %} <CdtTrfTxInf>
-				<PmtId>
-					<EndToEndId>{{tx.payment_id}}</EndToEndId>
-				</PmtId>
-				<Amt>
-					<InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
-				</Amt>
-				<CdtrAgt>
-					<FinInstnId>
-						<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
-			{{tx.creditor_agent_BICFI}}</BICFI>
-					</FinInstnId>
-				</CdtrAgt>
-				<Cdtr>
-					<Nm>{{tx.creditor_name}}</Nm>
-				</Cdtr>
-				<CdtrAcct>
-					<Id>
-						<IBAN>{{tx.creditor_account_IBAN}}</IBAN>
-					</Id>
-				</CdtrAcct>
-				<RmtInf>
-					<Ustrd>{{tx.unstructured_remittance_info}}</Ustrd>
-				</RmtInf>
-				<SplmtryData>
-					<Envlp>
-						<WC />
-					</Envlp>
-				</SplmtryData>
-			</CdtTrfTxInf>
+			<ChrgBr>{{charge_bearer}}</ChrgBr>
+			{% for tx in transactions %} <CdtTrfTxInf>
+			<PmtId>
+				<EndToEndId>{{tx.payment_id}}</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">{{tx.creditor_agent_BIC}}</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>{{tx.creditor_name}}</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>{{tx.creditor_account_IBAN}}</IBAN>
+				</Id>
+			</CdtrAcct>
+			{% if tx.remittance_information %}
+			<RmtInf>
+				<Ustrd>{{tx.remittance_information}}</Ustrd>
+			</RmtInf>
+			{% endif %}
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
 			{% endfor %} </PmtInf>
-	</CstmrCdtTrfInitn>
+</CstmrCdtTrfInitn>
 </Document>

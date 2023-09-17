@@ -14,42 +14,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The setup.py file for Python Pain001."""
+from setuptools import setup, find_packages
 
-from setuptools import setup
 
-with open("README.md") as f:
-    LONG_DESCRIPTION = f.read()
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
-SHORT_DESCRIPTION = """
-Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files
-Using CSV Or SQlite Data Files.
-""".strip()
-
-DEPENDENCIES = [
-    "click==8.1.3",
-    "defusedxml==0.7.1",
-    "rich==13.4.2",
-    "xmlschema==2.3.1",
-]
-
-TEST_DEPENDENCIES = [
-    "pytest>=7.3.2",
-]
-
-NAME = "pain001"
-URL = "https://github.com/sebastienrousseau/pain001"
-VERSION = "0.0.22"
+setup_requirements = []
+test_requirements = ["pytest>=7.4.2"]
 
 setup(
-    name=NAME,
-    version=VERSION,
-    description=SHORT_DESCRIPTION,
-    long_description=LONG_DESCRIPTION,
+    name="pain001",
+    version="0.0.23",
+    description="""
+Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files
+Using CSV Or SQLite Data Files.
+""",
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    url=URL,
     author="Sebastien Rousseau",
     author_email="sebastian.rousseau@gmail.com",
+    url="https://github.com/sebastienrousseau/pain001",
     license="Apache Software License",
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -67,9 +52,25 @@ setup(
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
     keywords="""
-    pain001,iso20022,payment-processing,automate-payments,sepa,financial,banking-payments,csv,sqlite
-    """,
-    packages=["pain001"],
-    install_requires=DEPENDENCIES,
-    tests_require=TEST_DEPENDENCIES,
+pain001,iso20022,payment-processing,automate-payments,sepa,financial,
+banking-payments,csv,sqlite
+""",
+    packages=find_packages(),
+    install_requires=[
+        "click==^8.1.7",
+        "colorama==^0.4.6",
+        "defusedxml==^0.7.1",
+        "elementpath==^4.1.5",
+        "jinja2==^3.1.2",
+        "markdown-it-py==^3.0.0",
+        "markupsafe==^2.1.3",
+        "mdurl==^0.1.2",
+        "pygments==^2.16.1",
+        "python==^3.9",
+        "rich==^13.5.2",
+        "xmlschema==^2.4.0",
+    ],
+    setup_requires=setup_requirements,
+    tests_require=test_requirements,
+    test_suite="tests",
 )

@@ -84,6 +84,8 @@ celerybeat-schedule
 
 # virtualenv
 .venv
+bandit-env
+myenv
 venv/
 ENV/
 
