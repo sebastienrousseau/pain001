@@ -7,7 +7,7 @@
             <MsgId>1</MsgId>
             <CreDtTm>2023-01-01T12:00:00Z</CreDtTm>
             <NbOfTxs>3</NbOfTxs>
-            <CtrlSum>2</CtrlSum>
+            <CtrlSum>500.75</CtrlSum>
             <InitgPty>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
@@ -43,7 +43,7 @@
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BICFI>DEUTDEFF</BICFI>
+                    <BICFI>BANKGB2L</BICFI>
                 </FinInstnId>
             </DbtrAgt>
             <CdtTrfTxInf>
