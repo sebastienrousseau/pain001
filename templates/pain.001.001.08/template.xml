@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05"
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.08"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05 pain.001.001.05.xsd">
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.08 pain.001.001.08.xsd">
     <CstmrCdtTrfInitn>
         <GrpHdr>
             <MsgId>{{id}}</MsgId>
@@ -23,7 +23,9 @@
             <PmtInfId>{{payment_information_id}}</PmtInfId>
             <PmtMtd>{{payment_method}}</PmtMtd>
             <BtchBookg>{{batch_booking}}</BtchBookg>
-            <ReqdExctnDt>{{requested_execution_date}}</ReqdExctnDt>
+            <ReqdExctnDt>
+                <Dt>{{requested_execution_date}}</Dt>
+            </ReqdExctnDt>
             <Dbtr>
                 <Nm>{{debtor_name}}</Nm>
                 <PstlAdr>
