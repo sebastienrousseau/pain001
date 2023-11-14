@@ -24,16 +24,13 @@ payment.
 
 As of today the library is designed to be compatible with the:
 
-- **Payments Initiation V03 (pain.001.001.03)** - ISO20022 message format for
-  initiating payments with version 03,
-- **Payments Initiation V04 (pain.001.001.04)** - ISO20022 message format for
-  initiating payments with version 04,
-- **Payments Initiation V05 (pain.001.001.05)** - ISO20022 message format for
-  initiating payments with version 05 and,
-- **Payments Initiation V09 (pain.001.001.09)** - ISO20022 message format for
-  initiating payments with version 09.
-
-message types and will support more in the future.
+- **Payments Initiation V03 (pain.001.001.03)**: This version is used for initiating credit transfers within the SEPA (Single Euro Payments Area).
+- **Payments Initiation V04 (pain.001.001.04)**: Introduced support for non-SEPA payments and additional functionalities.
+- **Payments Initiation V05 (pain.001.001.05)**: Brought further enhancements and clarifications.
+- **Payments Initiation V06 (pain.001.001.06)**: Focused on introducing support for instant payments.
+- **Payments Initiation V07 (pain.001.001.07)**: Added support for Request for Large Payment (RLP) and Request to Modify Payment (RTP) functionalities.
+- **Payments Initiation V08 (pain.001.001.08)**: Included support for the TARGET Instant Settlement Service (TISS) and introduced a new pain.002 message type for debit transfers.
+- **Payments Initiation V09 (pain.001.001.09)**: The latest version, which introduced support for Request for Account Information (RAI) functionality.
 
 Payments usually start with a **pain.001 payment initiation message**. The
 payer sends it to the payee (or the payee’s bank) via a secure network. This
@@ -162,6 +159,8 @@ When running **Pain001**, you will need to specify four arguments:
   - pain.001.001.04
   - pain.001.001.05
   - pain.001.001.06
+  - pain.001.001.07
+  - pain.001.001.08
   - pain.001.001.09
 
 - An `xml_template_file_path`: This is the path to the XML template file you
@@ -328,9 +327,9 @@ and monitor payments.
 | ✅ | [pain.001.001.03][pain.001.001.03] | Customer Credit Transfer Initiation |
 | ✅ | [pain.001.001.04][pain.001.001.04] | Customer Direct Debit Initiation |
 | ✅ | [pain.001.001.05][pain.001.001.05] | Customer Direct Debit Reversal |
-| ⏳ | [pain.001.001.06][pain.001.001.06] | Customer Credit Transfer Reversal |
-| ⏳ | [pain.001.001.07][pain.001.001.07] | Customer Account Notification |
-| ⏳ | [pain.001.001.08][pain.001.001.08] | Customer Account Statement |
+| ✅ | [pain.001.001.06][pain.001.001.06] | Customer Credit Transfer Reversal |
+| ✅ | [pain.001.001.07][pain.001.001.07] | Customer Account Notification |
+| ✅ | [pain.001.001.08][pain.001.001.08] | Customer Account Statement |
 | ✅ | [pain.001.001.09][pain.001.001.09] | Customer Credit Transfer Initiation |
 | ⏳ | pain.001.001.10 | Customer Account Closure Request |
 | ⏳ | pain.001.001.11 | Customer Account Change Request |
