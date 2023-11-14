@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05"
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.07"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05 pain.001.001.05.xsd">
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.07 pain.001.001.07.xsd">
     <CstmrCdtTrfInitn>
         <GrpHdr>
             <MsgId>{{id}}</MsgId>
