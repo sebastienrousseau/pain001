@@ -4,7 +4,7 @@
 
 ## A Powerful Python Library that enables you to create ISO 20022-Compliant Payment Files directly from CSV or SQLite data files
 
-[![PyPI][pypi-badge]][3] [![PyPI Downloads][pypi-downloads-badge]][7] [![License][license-badge]][1] [![Codecov][codecov-badge]][6]
+[![PyPI][pypi-badge]][03] [![PyPI Downloads][pypi-downloads-badge]][07] [![License][license-badge]][01] [![Codecov][codecov-badge]][06]
 
 ## Overview
 
@@ -161,12 +161,16 @@ When running **Pain001**, you will need to specify four arguments:
   - pain.001.001.03
   - pain.001.001.04
   - pain.001.001.05
+  - pain.001.001.06
   - pain.001.001.09
+
 - An `xml_template_file_path`: This is the path to the XML template file you
   are using that contains variables that will be replaced by the values in your
   Data file.
+
 - An `xsd_schema_file_path`: This is the path to the XSD schema file you are
   using to validate the generated XML file.
+
 - A `data_file_path`: This is the path to the CSV or SQLite Data file you want
   to convert to XML format.
 
@@ -277,7 +281,7 @@ print(f"XML validation result: {is_valid}")
 
 ## Documentation
 
-> **Info:** Do check out our [website][0] for comprehensive documentation.
+> **Info:** Do check out our [website][00] for comprehensive documentation.
 
 ### Supported messages
 
@@ -324,9 +328,9 @@ and monitor payments.
 | ✅ | [pain.001.001.03][pain.001.001.03] | Customer Credit Transfer Initiation |
 | ✅ | [pain.001.001.04][pain.001.001.04] | Customer Direct Debit Initiation |
 | ✅ | [pain.001.001.05][pain.001.001.05] | Customer Direct Debit Reversal |
-| ⏳ | pain.001.001.06 | Customer Credit Transfer Reversal |
-| ⏳ | pain.001.001.07 | Customer Account Notification |
-| ⏳ | pain.001.001.08 | Customer Account Statement |
+| ⏳ | [pain.001.001.06][pain.001.001.06] | Customer Credit Transfer Reversal |
+| ⏳ | [pain.001.001.07][pain.001.001.07] | Customer Account Notification |
+| ⏳ | [pain.001.001.08][pain.001.001.08] | Customer Account Statement |
 | ✅ | [pain.001.001.09][pain.001.001.09] | Customer Credit Transfer Initiation |
 | ⏳ | pain.001.001.10 | Customer Account Closure Request |
 | ⏳ | pain.001.001.11 | Customer Account Change Request |
@@ -336,13 +340,13 @@ and monitor payments.
 The project is licensed under the terms of both the MIT license and the
 Apache License (Version 2.0).
 
-- [Apache License, Version 2.0][1]
-- [MIT license][2]
+- [Apache License, Version 2.0][01]
+- [MIT license][02]
 
 ## Contribution
 
 We welcome contributions to **Pain001**. Please see the
-[contributing instructions][4] for more information.
+[contributing instructions][04] for more information.
 
 Unless you explicitly state otherwise, any contribution intentionally
 submitted for inclusion in the work by you, as defined in the
@@ -352,20 +356,23 @@ additional terms or conditions.
 ## Acknowledgements
 
 We would like to extend a big thank you to all the awesome contributors
-of [Pain001][5] for their help and support.
+of [Pain001][05] for their help and support.
 
-[0]: https://pain001.com
-[1]: https://opensource.org/license/apache-2-0/
-[2]: http://opensource.org/licenses/MIT
-[3]: https://github.com/sebastienrousseau/pain001
-[4]: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
-[5]: https://github.com/sebastienrousseau/pain001/graphs/contributors
-[6]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
-[7]: https://pypi.org/project/pain001/
+[00]: https://pain001.com
+[01]: https://opensource.org/license/apache-2-0/
+[02]: http://opensource.org/licenses/MIT
+[03]: https://github.com/sebastienrousseau/pain001
+[04]: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
+[05]: https://github.com/sebastienrousseau/pain001/graphs/contributors
+[06]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
+[07]: https://pypi.org/project/pain001/
 
 [pain.001.001.03]: https://pain001.com/pain.001.001.03/index.html
 [pain.001.001.04]: https://pain001.com/pain.001.001.04/index.html
 [pain.001.001.05]: https://pain001.com/pain.001.001.05/index.html
+[pain.001.001.06]: https://pain001.com/pain.001.001.06/index.html
+[pain.001.001.07]: https://pain001.com/pain.001.001.07/index.html
+[pain.001.001.08]: https://pain001.com/pain.001.001.08/index.html
 [pain.001.001.09]: https://pain001.com/pain.001.001.09/index.html
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
