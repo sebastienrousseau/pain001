@@ -26,7 +26,7 @@
 			</DbtrAcct>
 			<DbtrAgt>
 				<FinInstnId>
-					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">{{debtor_agent_BICFI}}</BICFI>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">{{debtor_agent_BIC}}</BICFI>
 				</FinInstnId>
 			</DbtrAgt>
 			<ChrgBr>{{charge_bearer}}</ChrgBr>

@@ -25,7 +25,7 @@ test_requirements = ["pytest>=7.4.2"]
 
 setup(
     name="pain001",
-    version="0.0.23",
+    version="0.0.24",
     description="""
 Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files
 Using CSV Or SQLite Data Files.

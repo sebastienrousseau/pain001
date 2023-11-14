@@ -23,7 +23,7 @@
 # - payment_information_id (str) - payment information identifier
 # - payment_method (str) - payment method
 # - batch_booking (bool) - batch booking
-# - control_sum (int) - control sum
+# - ctrl_sum (int) - control sum
 # - service_level_code (str) - service level code
 # - requested_execution_date (str) - requested execution date
 # - debtor_name (str) - debtor name
@@ -53,11 +53,11 @@ def validate_csv_data(data):
         "id": int,
         "date": str,
         "nb_of_txs": int,
+        "ctrl_sum": str,
         "initiator_name": str,
         "payment_information_id": str,
         "payment_method": str,
         "batch_booking": bool,
-        "control_sum": int,
         "service_level_code": str,
         "requested_execution_date": str,
         "debtor_name": str,

@@ -70,7 +70,7 @@ def create_xml_v9(root, data):
                 ],
                 "debtor_name": row["debtor_name"],
                 "debtor_account_IBAN": row["debtor_account_IBAN"],
-                "debtor_agent_BICFI": row["debtor_agent_BIC"],
+                "debtor_agent_BIC": row["debtor_agent_BIC"],
                 "charge_bearer": row["charge_bearer"],
                 "transactions": [
                     {

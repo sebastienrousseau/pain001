@@ -41,7 +41,8 @@ def process_files(
 
     Args:
         xml_message_type (str): The type of XML message to generate. Valid
-        options are 'pain.001.001.03' and 'pain.001.001.09'.
+        options are 'pain.001.001.03', 'pain.001.001.04', 'pain.001.001.05',
+        'pain.001.001.06' and 'pain.001.001.09'.
         xml_template_file_path (str): The path of the XML template file.
         xsd_schema_file_path (str): The path of the XSD schema file.
         data_file_path (str): The path of the CSV or SQLite file containing the

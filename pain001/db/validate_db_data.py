@@ -31,7 +31,7 @@ def validate_db_data(data):
         "payment_information_id": str,
         "payment_method": str,
         "batch_booking": bool,
-        "control_sum": int,
+        "ctrl_sum": int,
         "service_level_code": str,
         "requested_execution_date": str,
         "debtor_name": str,
