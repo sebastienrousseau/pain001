@@ -90,7 +90,7 @@ def create_xml_v6(root, data):
         "creditor_country": data[0]["creditor_country"],
         "creditor_account_IBAN": data[0]["creditor_account_IBAN"],
         "creditor_agent_BICFI": data[0]["creditor_agent_BICFI"],
-        "creditor_agent_name": data[0]["creditor_agent_name"], 
+        "creditor_agent_name": data[0]["creditor_agent_name"],
         "purpose_code": data[0]["purpose_code"],
         "reference_number": data[0]["reference_number"],
         "reference_date": data[0]["reference_date"]

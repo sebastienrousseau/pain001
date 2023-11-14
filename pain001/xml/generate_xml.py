@@ -319,7 +319,9 @@ def generate_xml(
                 "payment_information_id": data[0]["payment_information_id"],
                 "payment_method": data[0]["payment_method"],
                 "batch_booking": data[0]["batch_booking"],
-                "requested_execution_date": data[0]["requested_execution_date"],
+                "requested_execution_date": data[0][
+                    "requested_execution_date"
+                ],
                 "debtor_name": data[0]["debtor_name"],
                 "debtor_street": data[0]["debtor_street"],
                 "debtor_building_number": data[0]["debtor_building_number"],
@@ -335,7 +337,9 @@ def generate_xml(
                 "charge_bearer": data[0]["charge_bearer"],
                 "creditor_name": data[0]["creditor_name"],
                 "creditor_street": data[0]["creditor_street"],
-                "creditor_building_number": data[0]["creditor_building_number"],
+                "creditor_building_number": data[0][
+                    "creditor_building_number"
+                ],
                 "creditor_postal_code": data[0]["creditor_postal_code"],
                 "creditor_town": data[0]["creditor_town"],
                 "creditor_country": data[0]["creditor_country"],
@@ -344,26 +348,26 @@ def generate_xml(
                 "purpose_code": data[0]["purpose_code"],
                 "reference_number": data[0]["reference_number"],
                 "reference_date": data[0]["reference_date"],
-            "transactions": [
-                    {
-                        "payment_id": row["payment_id"],
-                        "payment_amount": row["payment_amount"],
-                        "payment_currency": row.get(
-                            "payment_currency", ""
-                        ),
-                        "charge_bearer": row["charge_bearer"],
-                        "creditor_agent_BIC": row["creditor_agent_BIC"],
-                        "creditor_name": row["creditor_name"],
-                        "creditor_account_IBAN": row[
-                            "creditor_account_IBAN"
-                        ],
-                        "creditor_remittance_information": row[
-                            "remittance_information"
-                        ],
-                    }
-                    for row in data[1:]
-                ],
-            }
+                "transactions": [
+                        {
+                            "payment_id": row["payment_id"],
+                            "payment_amount": row["payment_amount"],
+                            "payment_currency": row.get(
+                                "payment_currency", ""
+                            ),
+                            "charge_bearer": row["charge_bearer"],
+                            "creditor_agent_BIC": row["creditor_agent_BIC"],
+                            "creditor_name": row["creditor_name"],
+                            "creditor_account_IBAN": row[
+                                "creditor_account_IBAN"
+                            ],
+                            "creditor_remittance_information": row[
+                                "remittance_information"
+                            ],
+                        }
+                        for row in data[1:]
+                    ],
+                }
 
         elif payment_initiation_message_type == "pain.001.001.09":
             xml_data_pain001_001_09 = {
