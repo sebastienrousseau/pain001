@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05"
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.08"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05 pain.001.001.05.xsd">
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.08 pain.001.001.08.xsd">
     <CstmrCdtTrfInitn>
         <GrpHdr>
             <MsgId>1</MsgId>
             <CreDtTm>2023-01-01T12:00:00Z</CreDtTm>
             <NbOfTxs>3</NbOfTxs>
-            <CtrlSum>2</CtrlSum>
+            <CtrlSum>500.75</CtrlSum>
             <InitgPty>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
@@ -23,7 +23,9 @@
             <PmtInfId>Payment001</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
             <BtchBookg>true</BtchBookg>
-            <ReqdExctnDt>2023-01-04</ReqdExctnDt>
+            <ReqdExctnDt>
+                <Dt>2023-01-04</Dt>
+            </ReqdExctnDt>
             <Dbtr>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
@@ -43,7 +45,7 @@
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BICFI>DEUTDEFF</BICFI>
+                    <BICFI>BANKGB2L</BICFI>
                 </FinInstnId>
             </DbtrAgt>
             <CdtTrfTxInf>
@@ -83,7 +85,7 @@
                     <Strd>
                         <RfrdDocInf>
                             <Nb>123</Nb>
-                            <RltdDt>2023-01-02</RltdDt>
+                            <RltdDt>2023-02-01</RltdDt>
                         </RfrdDocInf>
                     </Strd>
                 </RmtInf>

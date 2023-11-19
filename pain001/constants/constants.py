@@ -16,13 +16,13 @@
 # Defines the valid XML types for the ISO 20022 Payment Initiation
 # message types that are supported by the pain001 library.
 valid_xml_types = [
-    "pain.001.001.03",  # Customer Credit Transfer Initiation
-    "pain.001.001.04",  # Customer Direct Debit Initiation
-    "pain.001.001.05",  # Request for Payment Status
-    "pain.001.001.06",  # Notification of Payment Status
-    "pain.001.001.07",  # Request for Reversal
-    "pain.001.001.08",  # Notification of Reversal
-    "pain.001.001.09",  # Request for Amendment
-    "pain.001.001.10"  # Notification of Amendment
-    "pain.001.001.11",  # Request for Cancellation
+    "pain.001.001.03",  # Customer Credit Transfer Initiation (pain.001.001.03)
+    "pain.001.001.04",  # Customer Direct Debit Initiation (pain.001.001.04)
+    "pain.001.001.05",  # Request for Payment Status (pain.001.001.05)
+    "pain.001.001.06",  # Notification of Payment Status (pain.001.001.06)
+    "pain.001.001.07",  # Request for Reversal (pain.001.001.07)
+    "pain.001.001.08",  # Notification of Reversal (pain.001.001.08)
+    "pain.001.001.09",  # Request for Amendment (pain.001.001.09)
+    "pain.001.001.10"   # Notification of Amendment (pain.001.001.10)
+    "pain.001.001.11",  # Request for Cancellation (pain.001.001.11)
 ]

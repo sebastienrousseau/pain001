@@ -79,7 +79,7 @@ def create_xml_v4(root, data):
         "debtor_town": data[0]["debtor_town"],
         "debtor_country": data[0]["debtor_country"],
         "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
-        "debtor_agent_BICFI": data[0]["debtor_agent_BICFI"],
+        "debtor_agent_BIC": data[0]["debtor_agent_BIC"],
         "payment_instruction_id": data[0]["payment_instruction_id"],
         "payment_end_to_end_id": data[0]["payment_end_to_end_id"],
         "payment_currency": data[0]["payment_currency"],

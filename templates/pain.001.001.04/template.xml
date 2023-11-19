@@ -41,7 +41,7 @@
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BICFI>{{debtor_agent_BICFI}}</BICFI>
+                    <BICFI>{{debtor_agent_BIC}}</BICFI>
                 </FinInstnId>
             </DbtrAgt>
             <CdtTrfTxInf>
