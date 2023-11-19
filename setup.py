@@ -14,11 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from pathlib import Path
 from setuptools import setup, find_packages
 
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.md").read_text()
 
 setup_requirements = []
 test_requirements = ["pytest>=7.4.2"]
@@ -34,7 +35,7 @@ Using CSV Or SQLite Data Files.
     long_description_content_type="text/markdown",
     author="Sebastien Rousseau",
     author_email="sebastian.rousseau@gmail.com",
-    url="https://github.com/sebastienrousseau/pain001",
+    url="https://pain001.com",
     license="Apache Software License",
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -45,9 +46,10 @@ Using CSV Or SQLite Data Files.
         "Operating System :: OS Independent",
         "Operating System :: POSIX",
         "Operating System :: Unix",
+        "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.12",
         "Programming Language :: Python",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
@@ -55,22 +57,22 @@ Using CSV Or SQLite Data Files.
 pain001,iso20022,payment-processing,automate-payments,sepa,financial,
 banking-payments,csv,sqlite
 """,
-    packages=find_packages(),
+    packages=find_packages(exclude=["docs", "tests*"]),
     install_requires=[
-        "click>=8.1.7",
-        "colorama>=0.4.6",
-        "defusedxml>=0.7.1",
-        "elementpath>=4.1.5",
-        "jinja2>=3.1.2",
-        "markdown-it-py>=3.0.0",
-        "markupsafe>=2.1.3",
-        "mdurl>=0.1.2",
-        "pygments>=2.16.1",
-        "python>=3.9",
-        "rich>=13.5.2",
-        "xmlschema>=2.4.0",
+        "click==8.1.7",
+        "colorama==0.4.6",
+        "defusedxml==0.7.1",
+        "elementpath==4.1.5",
+        "jinja2==3.1.2",
+        "markdown-it-py==3.0.0",
+        "markupsafe==2.1.3",
+        "mdurl==0.1.2",
+        "pygments==2.17.1",
+        "rich==13.7.0",
+        "xmlschema==2.5.0",
     ],
-    setup_requires=setup_requirements,
-    tests_require=test_requirements,
+    python_requires=">=3.9,<3.13",
+    setup_requires=["pytest-runner"],
+    tests_require=["pytest"],
     test_suite="tests",
 )

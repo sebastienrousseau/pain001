@@ -84,10 +84,13 @@ celerybeat-schedule
 
 # virtualenv
 .venv
+.pain001/
+.pytest_cache/
 bandit-env
 myenv
 venv/
 ENV/
+pyvenv.cfg
 
 # Spyder project settings
 .spyderproject
@@ -114,3 +117,13 @@ ENV/
 # Database
 *.db-shm
 *.db-wal
+pain001/bin/activate
+pain001/bin/activate.csh
+pain001/bin/activate.fish
+pain001/bin/Activate.ps1
+pain001/bin/pip
+pain001/bin/pip3
+pain001/bin/pip3.11
+pain001/bin/python
+pain001/bin/python3
+pain001/bin/python3.11
