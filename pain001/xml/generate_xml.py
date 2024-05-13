@@ -146,7 +146,7 @@ def generate_xml(
                         "reference_number": row["reference_number"],
                         "reference_date": row["reference_date"],
                     }
-                    for row in data[1:]
+                    for row in data[0:]
                 ],
             }
         elif payment_initiation_message_type == "pain.001.001.04":
@@ -239,7 +239,7 @@ def generate_xml(
                         "reference_number": row["reference_number"],
                         "reference_date": row["reference_date"],
                     }
-                    for row in data[1:]
+                    for row in data[0:]
                 ],
             }
         elif payment_initiation_message_type == "pain.001.001.05":
@@ -369,7 +369,7 @@ def generate_xml(
                                 "remittance_information"
                             ],
                         }
-                        for row in data[1:]
+                        for row in data[0:]
                     ],
                 }
 
@@ -436,7 +436,7 @@ def generate_xml(
                                 "remittance_information"
                             ],
                         }
-                        for row in data[1:]
+                        for row in data[0:]
                     ],
                 }
 
@@ -503,7 +503,7 @@ def generate_xml(
                                 "remittance_information"
                             ],
                         }
-                        for row in data[1:]
+                        for row in data[0:]
                     ],
                 }
 
@@ -540,7 +540,7 @@ def generate_xml(
                             "remittance_information"
                         ],
                     }
-                    for row in data[1:]
+                    for row in data[0:]
                 ],
             }
 
