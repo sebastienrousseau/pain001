@@ -98,7 +98,10 @@ def validate_csv_data(data):
                     elif data_type == float:
                         float(value)
                     elif data_type == bool:
-                        if value.strip().lower() not in ["true", "false"]:
+                        if value.strip().lower() not in [
+                            "true",
+                            "false",
+                        ]:
                             raise ValueError
                     elif data_type == datetime.datetime:
                         datetime.datetime.strptime(value, "%Y-%m-%d")

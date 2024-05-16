@@ -35,7 +35,7 @@ def load_csv_data(file_path):
     """
     data = []
     try:
-        with open(file_path, mode='r', encoding='utf-8') as file:
+        with open(file_path, mode="r", encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 data.append(row)
@@ -43,12 +43,16 @@ def load_csv_data(file_path):
         print(f"Error: File '{file_path}' not found.")
         raise
     except IOError:
-        print(f"Error: An IOError occurred while reading the file '{
-              file_path}'.")
+        print(
+            f"Error: An IOError occurred while reading the file '{
+              file_path}'."
+        )
         raise
     except UnicodeDecodeError:
-        print(f"Error: A UnicodeDecodeError occurred while decoding the file '{
-              file_path}'.")
+        print(
+            f"Error: A UnicodeDecodeError occurred while decoding the file '{
+              file_path}'."
+        )
         raise
 
     return data

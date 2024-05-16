@@ -104,12 +104,16 @@ def main(
 
     # Check that xml_template_file_path is not invalid
     if not os.path.isfile(xml_template_file_path):
-        print(f"The XML template file '{xml_template_file_path}' does not exist.")
+        print(
+            f"The XML template file '{xml_template_file_path}' does not exist."
+        )
         sys.exit(1)
 
     # Check that xsd_schema_file_path is not invalid
     if not os.path.isfile(xsd_schema_file_path):
-        print(f"The XSD template file '{xsd_schema_file_path}' does not exist.")
+        print(
+            f"The XSD template file '{xsd_schema_file_path}' does not exist."
+        )
         sys.exit(1)
 
     # Check that data_file_path is not invalid
@@ -161,4 +165,3 @@ def main(
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
     main()
-
