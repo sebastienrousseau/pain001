@@ -97,51 +97,24 @@ def main(
     xsd_schema_file_path,
     data_file_path,
 ):
-    """Initialize the context and log a message."""
-    logger = Context.get_instance().get_logger()
-
-    # print("Inside main function")
-
-    def check_variable(variable, name):
-        if variable is None:
-            print(f"Error: {name} is required.")
-            sys.exit(1)
-
-    # Check that xml_message_type is provided
-    check_variable(xml_message_type, "xml_message_type")
-
-    # Check that xsd_schema_file_path is provided
-    check_variable(xsd_schema_file_path, "xsd_schema_file_path")
-
-    # Check that data_file_path is provided
-    check_variable(data_file_path, "data_file_path")
+    # Check that the required arguments are provided
+    if not xml_message_type:
+        print("The XML message type is required.")
+        sys.exit(1)
 
     # Check that xml_template_file_path is not invalid
     if not os.path.isfile(xml_template_file_path):
-        print(
-            f"The XML template file '{xml_template_file_path}' does not exist."
-        )
+        print(f"The XML template file '{xml_template_file_path}' does not exist.")
         sys.exit(1)
 
     # Check that xsd_schema_file_path is not invalid
     if not os.path.isfile(xsd_schema_file_path):
-        print(
-            f"The XSD template file '{xsd_schema_file_path}' does not exist."
-        )
+        print(f"The XSD template file '{xsd_schema_file_path}' does not exist.")
         sys.exit(1)
 
     # Check that data_file_path is not invalid
     if not os.path.isfile(data_file_path):
         print(f"The data file '{data_file_path}' does not exist.")
-        sys.exit(1)
-
-    # Check that other necessary arguments are provided
-    if (
-        xml_template_file_path is None
-        or xsd_schema_file_path is None
-        or data_file_path is None
-    ):
-        print(click.get_current_context().get_help())
         sys.exit(1)
 
     logger = Context.get_instance().get_logger()
@@ -188,3 +161,4 @@ def main(
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
     main()
+

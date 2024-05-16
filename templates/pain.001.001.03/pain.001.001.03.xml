@@ -49,6 +49,49 @@
             <CdtTrfTxInf>
                 <PmtId>
                     <InstrId>TX-1</InstrId>
+                    <EndToEndId>PaymentID6789</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">150</InstdAmt>
+                </Amt>
+                <ChrgBr>SLEV</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Global Tech</Nm>
+                    <PstlAdr>
+                        <AdrLine>Global Street</AdrLine>
+                        <AdrLine>3</AdrLine>
+                        <AdrLine>11223</AdrLine>
+                        <AdrLine>Global Town</AdrLine>
+                        <AdrLine>DE</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>DE68210501700024690959</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>OTHR</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>Invoice-98765</Nb>
+                            <RltdDt>2023-03-09</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>TX-2</InstrId>
                     <EndToEndId>PaymentID4321</EndToEndId>
                 </PmtId>
                 <Amt>
@@ -91,7 +134,7 @@
             </CdtTrfTxInf>
             <CdtTrfTxInf>
                 <PmtId>
-                    <InstrId>TX-2</InstrId>
+                    <InstrId>TX-3</InstrId>
                     <EndToEndId>PaymentID1357</EndToEndId>
                 </PmtId>
                 <Amt>
@@ -134,7 +177,7 @@
             </CdtTrfTxInf>
             <CdtTrfTxInf>
                 <PmtId>
-                    <InstrId>TX-3</InstrId>
+                    <InstrId>TX-4</InstrId>
                     <EndToEndId>PaymentID8642</EndToEndId>
                 </PmtId>
                 <Amt>
