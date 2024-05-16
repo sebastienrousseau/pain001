@@ -14,4 +14,4 @@
 # limitations under the License.
 
 """The Python pain001 module."""
-__version__ = "0.0.24"
+__version__ = "0.0.25"

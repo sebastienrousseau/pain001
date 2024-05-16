@@ -6,6 +6,15 @@ from pain001.csv.validate_csv_data import validate_csv_data
 
 class TestValidateCsvData(unittest.TestCase):
     def test_valid_data(self):
+        """
+        Test the validate_csv_data function with valid CSV data.
+
+        Args:
+            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+
+        Returns:
+            None
+        """
         # Test valid data
         data = [
             {
@@ -61,12 +70,22 @@ class TestValidateCsvData(unittest.TestCase):
         assert validate_csv_data(data) is True
 
     def test_missing_required_columns(self):
+        """
+        Test the validate_csv_data function with CSV data missing required columns.
+
+        Args:
+            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+
+        Returns:
+            None
+        """
         # Test missing required columns
         data = [
             {
                 "id": "1",
                 "date": "2022-01-01",
                 "nb_of_txs": "1",
+                # "initiator_name": "John Doe",  # This column is intentionally missing
                 "payment_information_id": "12345",
                 "payment_method": "TRF",
                 "batch_booking": "false",
@@ -113,3 +132,122 @@ class TestValidateCsvData(unittest.TestCase):
         ]
 
         assert not validate_csv_data(data)
+
+    def test_invalid_data_types(self):
+        """
+        Test the validate_csv_data function with CSV data containing invalid data types.
+
+        Args:
+            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+
+        Returns:
+            None
+        """
+        # Test invalid data types
+        data = [
+            {
+                "id": "1",
+                "date": "2022-01-01",
+                "nb_of_txs": "one",  # Invalid data type
+                "initiator_name": "John Doe",
+                "payment_information_id": "12345",
+                "payment_method": "TRF",
+                "batch_booking": "false",
+                "ctrl_sum": "100",
+                "service_level_code": "SEPA",
+                "requested_execution_date": "2022-01-01",
+                "debtor_name": "John Doe",
+                "debtor_account_IBAN": "DE89370400440532013000",
+                "debtor_agent_BIC": "DEUTDEDBFRA",
+                "forwarding_agent_BIC": "FORWARD",
+                "charge_bearer": "SHA",
+                "payment_id": "12345",
+                "payment_amount": "100.00",
+                "currency": "EUR",
+                "creditor_agent_BIC": "DABADEHHXXX",
+                "creditor_name": "Jane Doe",
+                "creditor_account_IBAN": "DE89370400440532013001",
+                "remittance_information": "Invoice 1234",
+            },
+            {
+                "id": "2",
+                "date": "2022-01-02",
+                "nb_of_txs": "1",
+                "initiator_name": "Jane Doe",
+                "payment_information_id": "67890",
+                "payment_method": "TRF",
+                "batch_booking": "false",
+                "ctrl_sum": "two hundred",  # Invalid data type
+                "service_level_code": "SEPA",
+                "requested_execution_date": "2022-01-02",
+                "debtor_name": "Jane Doe",
+                "debtor_account_IBAN": "DE89370400440532013001",
+                "debtor_agent_BIC": "DEUTDEDBFRA",
+                "forwarding_agent_BIC": "FORWARD",
+                "charge_bearer": "SHA",
+                "payment_id": "67890",
+                "payment_amount": "200.00",
+                "currency": "EUR",
+                "creditor_agent_BIC": "DABADEHHXXX",
+                "creditor_name": "John Doe",
+                "creditor_account_IBAN": "DE89370400440532013000",
+                "remittance_information": "Invoice 5678",
+            },
+        ]
+
+        assert not validate_csv_data(data)
+
+    def test_empty_csv(self):
+        """
+        Test the validate_csv_data function with an empty CSV data list.
+
+        Args:
+            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+
+        Returns:
+            None
+        """
+        # Test empty CSV data
+        data = []
+
+        assert not validate_csv_data(data)
+
+    def test_single_row_csv(self):
+        """
+        Test the validate_csv_data function with a single row CSV data list.
+
+        Args:
+            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+
+        Returns:
+            None
+        """
+        # Test single row CSV data
+        data = [
+            {
+                "id": "1",
+                "date": "2022-01-01",
+                "nb_of_txs": "1",
+                "initiator_name": "John Doe",
+                "payment_information_id": "12345",
+                "payment_method": "TRF",
+                "batch_booking": "false",
+                "ctrl_sum": "100",
+                "service_level_code": "SEPA",
+                "requested_execution_date": "2022-01-01",
+                "debtor_name": "John Doe",
+                "debtor_account_IBAN": "DE89370400440532013000",
+                "debtor_agent_BIC": "DEUTDEDBFRA",
+                "forwarding_agent_BIC": "FORWARD",
+                "charge_bearer": "SHA",
+                "payment_id": "12345",
+                "payment_amount": "100.00",
+                "currency": "EUR",
+                "creditor_agent_BIC": "DABADEHHXXX",
+                "creditor_name": "Jane Doe",
+                "creditor_account_IBAN": "DE89370400440532013001",
+                "remittance_information": "Invoice 1234",
+            }
+        ]
+
+        assert validate_csv_data(data) is True

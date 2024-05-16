@@ -14,65 +14,154 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
+import sys
+import click
+import logging
+import configparser
 from pathlib import Path
-from setuptools import setup, find_packages
 
+from pain001.constants.constants import valid_xml_types
+from pain001.context.context import Context
+from pain001.core.core import process_files
+from pain001.xml.validate_via_xsd import validate_via_xsd
 
-this_directory = Path(__file__).parent
-long_description = (this_directory / "README.md").read_text()
+from rich.console import Console
+from rich.table import Table
+from rich import box
 
-setup_requirements = []
-test_requirements = ["pytest>=7.4.2"]
+console = Console()
 
-setup(
-    name="pain001",
-    version="0.0.24",
-    description="""
-Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files
-Using CSV Or SQLite Data Files.
-""",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    author="Sebastien Rousseau",
-    author_email="sebastian.rousseau@gmail.com",
-    url="https://pain001.com",
-    license="Apache Software License",
-    classifiers=[
-        "Development Status :: 4 - Beta",
-        "Intended Audience :: Developers",
-        "Intended Audience :: Financial and Insurance Industry",
-        "License :: OSI Approved :: Apache Software License",
-        "Operating System :: MacOS",
-        "Operating System :: OS Independent",
-        "Operating System :: POSIX",
-        "Operating System :: Unix",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Programming Language :: Python :: 3.12",
-        "Programming Language :: Python",
-        "Topic :: Software Development :: Libraries :: Python Modules",
-    ],
-    keywords="""
-pain001,iso20022,payment-processing,automate-payments,sepa,financial,
-banking-payments,csv,sqlite
-""",
-    packages=find_packages(exclude=["docs", "tests*"]),
-    install_requires=[
-        "click==8.1.7",
-        "colorama==0.4.6",
-        "defusedxml==0.7.1",
-        "elementpath==4.1.5",
-        "jinja2==3.1.3",
-        "markdown-it-py==3.0.0",
-        "markupsafe==2.1.3",
-        "mdurl==0.1.2",
-        "pygments==2.17.1",
-        "rich==13.7.0",
-        "xmlschema==2.5.0",
-    ],
-    python_requires=">=3.9,<3.13",
-    setup_requires=["pytest-runner"],
-    tests_require=["pytest"],
-    test_suite="tests",
+description = """
+A powerful Python library that enables you to create
+ISO 20022-compliant payment files directly from CSV or SQLite Data files.\n
+https://pain001.com
+"""
+title = "Pain001"
+
+table = Table(
+    box=box.ROUNDED, safe_box=True, show_header=False, title=title
 )
+
+table.add_column(justify="center", no_wrap=False, vertical="middle")
+table.add_row(description)
+table.width = 80
+console.print(table)
+
+
+@click.command(
+    help=(
+        "To use Pain001, you must specify the following options:\n\n"
+    ),
+    context_settings=dict(help_option_names=["-h", "--help"]),
+)
+@click.option(
+    "-t",
+    "--xml_message_type",
+    default=None,
+    help="Type of XML message (required)",
+)
+@click.option(
+    "-m",
+    "--xml_template_file_path",
+    default=None,
+    type=click.Path(),
+    help="Path to XML template file (required)",
+)
+@click.option(
+    "-s",
+    "--xsd_schema_file_path",
+    default=None,
+    type=click.Path(),
+    help="Path to XSD template file (required)",
+)
+@click.option(
+    "-d",
+    "--data_file_path",
+    default=None,
+    type=click.Path(),
+    help="Path to data file (CSV or SQLite) (required)",
+)
+@click.option(
+    "-c",
+    "--config_file",
+    default=None,
+    type=click.Path(),
+    help="Path to configuration file (optional)",
+)
+def main(
+    xml_message_type,
+    xml_template_file_path,
+    xsd_schema_file_path,
+    data_file_path,
+    config_file,
+):
+    # Expand user-friendly paths
+    xml_template_file_path = os.path.expanduser(xml_template_file_path)
+    xsd_schema_file_path = os.path.expanduser(xsd_schema_file_path)
+    data_file_path = os.path.expanduser(data_file_path)
+
+    # Load configuration file if provided
+    if config_file:
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        if "Paths" in config:
+            xml_template_file_path = config["Paths"].get(
+                "xml_template_file_path", xml_template_file_path
+            )
+            xsd_schema_file_path = config["Paths"].get(
+                "xsd_schema_file_path", xsd_schema_file_path
+            )
+            data_file_path = config["Paths"].get(
+                "data_file_path", data_file_path
+            )
+
+    # Check that the required arguments are provided
+    if not xml_message_type:
+        print("The XML message type is required.")
+        sys.exit(1)
+
+    # Check file existence
+    for file_path in [
+        xml_template_file_path,
+        xsd_schema_file_path,
+        data_file_path,
+    ]:
+        if not os.path.isfile(file_path):
+            print(f"The file '{file_path}' does not exist.")
+            sys.exit(1)
+
+    logger = Context.get_instance().get_logger()
+
+    logger.info("Parsing command line arguments.")
+
+    # Check that the XML message type is valid
+    if xml_message_type not in valid_xml_types:
+        logger.info(f"Invalid XML message type: {xml_message_type}.")
+        print(
+            f"""
+                Invalid XML message type: {xml_message_type}.
+                Valid types are: {', '.join(valid_xml_types)}.
+            """
+        )
+        sys.exit(1)
+
+    # Validate XML and XSD schemas
+    try:
+        validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
+    except Exception as e:
+        logger.error(f"Schema validation failed: {e}")
+        print(f"Schema validation failed: {e}")
+        sys.exit(1)
+
+    process_files(
+        xml_message_type,
+        xml_template_file_path,
+        xsd_schema_file_path,
+        data_file_path,
+    )
+
+
+if __name__ == "__main__":
+    # pylint: disable=no-value-for-parameter
+    main()

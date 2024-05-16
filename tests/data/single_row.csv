@@ -1,0 +1,2 @@
+id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,ctrl_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,forwarding_agent_BIC,charge_bearer,payment_id,payment_amount,currency,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information
+1,2022-01-01,1,John Doe,12345,TRF,false,100,SEPA,2022-01-01,John Doe,DE89370400440532013000,DEUTDEDBFRA,FORWARD,SHA,12345,100.00,EUR,DABADEHHXXX,Jane Doe,DE89370400440532013001,Invoice 1234

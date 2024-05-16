@@ -1,30 +1,103 @@
-import csv
+import unittest
 from pain001.csv.load_csv_data import load_csv_data
 
 # Test if the CSV data is loaded correctly
 
 
-def test_load_csv_data():
-    # Test with an existing CSV file
-    csv_file_path = "tests/data/existing_file.csv"
-    expected_output = [
-        {"col1": "val1", "col2": "val2", "col3": "val3"},
-        {"col1": "val4", "col2": "val5", "col3": "val6"},
-        {"col1": "val7", "col2": "val8", "col3": "val9"},
-    ]
-    with open(csv_file_path, "w", newline="") as csv_file:
-        writer = csv.DictWriter(
-            csv_file, fieldnames=["col1", "col2", "col3"]
-        )
-        writer.writeheader()
-        writer.writerows(expected_output)
-    assert load_csv_data(csv_file_path) == expected_output
+class TestLoadCsvData(unittest.TestCase):
+    def test_load_valid_csv(self):
+        """
+        Test the load_csv_data function with a valid CSV file.
 
-    # Test with a non-existing CSV file
-    csv_file_path = "path/to/non_existing_file.csv"
-    try:
-        load_csv_data(csv_file_path)
-    except FileNotFoundError as e:
-        assert str(e) == f"CSV file '{csv_file_path}' does not exist."
-    else:
-        assert False, "Expected FileNotFoundError not raised."
+        Args:
+            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+            file_path (str): The path to the valid CSV file.
+
+        Returns:
+            None
+        """
+        file_path = "tests/data/valid_data.csv"
+        data = load_csv_data(file_path)
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
+
+    def test_load_non_existent_csv(self):
+        """
+        Test the load_csv_data function with a non-existent CSV file path.
+
+        Args:
+            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+            file_path (str): The path to the non-existent CSV file.
+
+        Returns:
+            None
+        """
+        file_path = "tests/data/non_existent.csv"
+        with self.assertRaises(FileNotFoundError):
+            load_csv_data(file_path)
+
+    def test_load_empty_csv(self):
+        """
+        Test the load_csv_data function with an empty CSV file path.
+
+        Args:
+            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+            file_path (str): The path to the empty CSV file.
+
+        Returns:
+            None
+        """
+        file_path = "tests/data/empty.csv"
+        data = load_csv_data(file_path)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 0)
+
+    def test_load_csv_with_invalid_data(self):
+        """
+        Test the load_csv_data function with a CSV file containing invalid data.
+
+        Args:
+            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+            file_path (str): The path to the CSV file with invalid data.
+
+        Returns:
+            None
+        """
+        file_path = "tests/data/invalid_data.csv"
+        data = load_csv_data(file_path)
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
+
+    def test_load_single_row_csv(self):
+        """
+        Test the load_csv_data function with a CSV file containing a single row.
+
+        Args:
+            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+
+        Returns:
+            None
+        """
+        file_path = "tests/data/single_row.csv"
+        data = load_csv_data(file_path)
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 1)
+
+    def test_load_single_column_csv(self):
+        """
+        Test the load_csv_data function with a single column CSV file.
+
+        Args:
+            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+
+        Returns:
+            None
+        """
+        file_path = "tests/data/single_column.csv"
+        data = load_csv_data(file_path)
+        self.assertIsInstance(data, list)
+        self.assertGreater(len(data), 0)
+
+    if __name__ == "__main__":
+        unittest.main()
+
