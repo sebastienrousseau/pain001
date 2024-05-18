@@ -1,4 +1,4 @@
-# Byte-compiled / optimized / DLL files
+    # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -127,3 +127,8 @@ pain001/bin/pip3.11
 pain001/bin/python
 pain001/bin/python3
 pain001/bin/python3.11
+tests/data/empty.csv
+tests/data/invalid_data.csv
+tests/data/single_column.csv
+tests/data/single_row.csv
+tests/data/valid_data.csv
