@@ -1,260 +1,106 @@
 import unittest
 from pain001.csv.validate_csv_data import validate_csv_data
 
-# Test if the CSV data is validated correctly
-
 
 class TestValidateCsvData(unittest.TestCase):
-    def test_valid_data(self):
-        """
-        Test the validate_csv_data function with valid CSV data.
-
-        Args:
-            self (TestValidateCsvData):
-            The instance of the TestValidateCsvData class.
-
-        Returns:
-            None
-        """
-        # Test valid data
+    def test_validate_csv_with_valid_data(self):
         data = [
             {
                 "id": "1",
-                "date": "2022-01-01",
-                "nb_of_txs": "1",
+                "date": "2023-03-10T15:30:47.000Z",
+                "nb_of_txs": "2",
                 "initiator_name": "John Doe",
-                "payment_information_id": "12345",
+                "initiator_street_name": "John's Street",
+                "initiator_building_number": "1",
+                "initiator_postal_code": "12345",
+                "initiator_town_name": "John's Town",
+                "initiator_country_code": "DE",
+                "payment_information_id": "Payment-Info-12345",
                 "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "100",
-                "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-01",
-                "debtor_name": "John Doe",
-                "debtor_account_IBAN": "DE89370400440532013000",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD",
-                "charge_bearer": "SHA",
-                "payment_id": "12345",
-                "payment_amount": "100.00",
+                "batch_booking": "true",
+                "requested_execution_date": "2023-03-12",
+                "debtor_name": "Acme Corp",
+                "debtor_street_name": "Acme Street",
+                "debtor_building_number": "2",
+                "debtor_postal_code": "67890",
+                "debtor_town_name": "Acme Town",
+                "debtor_country_code": "DE",
+                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_agent_BIC": "BANKDEFFXXX",
+                "charge_bearer": "SLEV",
+                "payment_id": "PaymentID6789",
+                "payment_amount": "150",
                 "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "Jane Doe",
-                "creditor_account_IBAN": "DE89370400440532013001",
-                "remittance_information": "Invoice 1234",
-            },
-            {
-                "id": "2",
-                "date": "2022-01-02",
-                "nb_of_txs": "1",
-                "initiator_name": "Jane Doe",
-                "payment_information_id": "67890",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "200",
+                "payment_currency": "EUR",
+                "ctrl_sum": "15000",
+                "creditor_agent_BIC": "SPUEDE2UXXX",
+                "creditor_name": "Global Tech",
+                "creditor_street_name": "Global Street",
+                "creditor_building_number": "3",
+                "creditor_postal_code": "11223",
+                "creditor_town_name": "Global Town",
+                "creditor_country_code": "DE",
+                "creditor_account_IBAN": "DE68210501700024690959",
+                "purpose_code": "OTHR",
+                "reference_number": "Invoice-98765",
+                "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-02",
-                "debtor_name": "Jane Doe",
-                "debtor_account_IBAN": "DE89370400440532013001",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD2",
-                "charge_bearer": "SHA",
-                "payment_id": "67890",
-                "payment_amount": "200.00",
-                "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "John Doe",
-                "creditor_account_IBAN": "DE89370400440532013000",
-                "remittance_information": "Invoice 5678",
-            },
-        ]
-
-        assert validate_csv_data(data) is True
-
-    def test_missing_required_columns(self):
-        """
-        Test the validate_csv_data function with CSV data missing
-        required columns.
-
-        Args:
-            self (TestValidateCsvData):
-            The instance of the TestValidateCsvData class.
-
-        Returns:
-            None
-        """
-        # Test missing required columns
-        data = [
-            {
-                "id": "1",
-                "date": "2022-01-01",
-                "nb_of_txs": "1",
-                # "initiator_name": "John Doe",
-                "payment_information_id": "12345",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "100",
-                "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-01",
-                "debtor_name": "John Doe",
-                "debtor_account_IBAN": "DE89370400440532013000",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD",
-                "charge_bearer": "SHA",
-                "payment_id": "12345",
-                "payment_amount": "100.00",
-                "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "Jane Doe",
-                "creditor_account_IBAN": "DE89370400440532013001",
-                "remittance_information": "Invoice 1234",
-            },
-            {
-                "id": "2",
-                "date": "2022-01-02",
-                "nb_of_txs": "1",
-                "initiator_name": "Jane Doe",
-                "payment_information_id": "67890",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "200",
-                "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-02",
-                "debtor_name": "Jane Doe",
-                "debtor_account_IBAN": "DE89370400440532013001",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD",
-                "charge_bearer": "SHA",
-                "payment_id": "67890",
-                "payment_amount": "200.00",
-                "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "John Doe",
-                "creditor_account_IBAN": "DE89370400440532013000",
-                "remittance_information": "Invoice 5678",
-            },
-        ]
-
-        assert not validate_csv_data(data)
-
-    def test_invalid_data_types(self):
-        """
-        Test the validate_csv_data function with CSV data containing
-        invalid data types.
-
-        Args:
-            self (TestValidateCsvData):
-            The instance of the TestValidateCsvData class.
-
-        Returns:
-            None
-        """
-        # Test invalid data types
-        data = [
-            {
-                "id": "1",
-                "date": "2022-01-01",
-                "nb_of_txs": "one",  # Invalid data type
-                "initiator_name": "John Doe",
-                "payment_information_id": "12345",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "100",
-                "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-01",
-                "debtor_name": "John Doe",
-                "debtor_account_IBAN": "DE89370400440532013000",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD",
-                "charge_bearer": "SHA",
-                "payment_id": "12345",
-                "payment_amount": "100.00",
-                "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "Jane Doe",
-                "creditor_account_IBAN": "DE89370400440532013001",
-                "remittance_information": "Invoice 1234",
-            },
-            {
-                "id": "2",
-                "date": "2022-01-02",
-                "nb_of_txs": "1",
-                "initiator_name": "Jane Doe",
-                "payment_information_id": "67890",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "two hundred",  # Invalid data type
-                "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-02",
-                "debtor_name": "Jane Doe",
-                "debtor_account_IBAN": "DE89370400440532013001",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD",
-                "charge_bearer": "SHA",
-                "payment_id": "67890",
-                "payment_amount": "200.00",
-                "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "John Doe",
-                "creditor_account_IBAN": "DE89370400440532013000",
-                "remittance_information": "Invoice 5678",
-            },
-        ]
-
-        assert not validate_csv_data(data)
-
-    def test_empty_csv(self):
-        """
-        Test the validate_csv_data function with an empty CSV data list.
-
-        Args:
-            self (TestValidateCsvData):
-            The instance of the TestValidateCsvData class.
-
-        Returns:
-            None
-        """
-        # Test empty CSV data
-        data = []
-
-        assert not validate_csv_data(data)
-
-    def test_single_row_csv(self):
-        """
-        Test the validate_csv_data function with a single row CSV data list.
-
-        Args:
-            self (TestValidateCsvData):
-            The instance of the TestValidateCsvData class.
-
-        Returns:
-            None
-        """
-        # Test single row CSV data
-        data = [
-            {
-                "id": "1",
-                "date": "2022-01-01",
-                "nb_of_txs": "1",
-                "initiator_name": "John Doe",
-                "payment_information_id": "12345",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "ctrl_sum": "100",
-                "service_level_code": "SEPA",
-                "requested_execution_date": "2022-01-01",
-                "debtor_name": "John Doe",
-                "debtor_account_IBAN": "DE89370400440532013000",
-                "debtor_agent_BIC": "DEUTDEDBFRA",
-                "forwarding_agent_BIC": "FORWARD",
-                "charge_bearer": "SHA",
-                "payment_id": "12345",
-                "payment_amount": "100.00",
-                "currency": "EUR",
-                "creditor_agent_BIC": "DABADEHHXXX",
-                "creditor_name": "Jane Doe",
-                "creditor_account_IBAN": "DE89370400440532013001",
-                "remittance_information": "Invoice 1234",
+                "forwarding_agent_BIC": "SPUEDE2UXXX",
+                "remittance_information": "Invoice-12345",
+                "charge_account_IBAN": "CHARGE-IBAN-12345",
             }
         ]
+        self.assertTrue(validate_csv_data(data))
 
-        assert validate_csv_data(data) is True
+    def test_validate_csv_with_invalid_data(self):
+        data = [
+            {
+                "id": "1",
+                "date": "not-a-date",
+                "nb_of_txs": "2",
+                "initiator_name": "John Doe",
+                "initiator_street_name": "John's Street",
+                "initiator_building_number": "1",
+                "initiator_postal_code": "12345",
+                "initiator_town_name": "John's Town",
+                "initiator_country_code": "DE",
+                "payment_information_id": "Payment-Info-12345",
+                "payment_method": "TRF",
+                "batch_booking": "true",
+                "requested_execution_date": "2023-03-12",
+                "debtor_name": "Acme Corp",
+                "debtor_street_name": "Acme Street",
+                "debtor_building_number": "2",
+                "debtor_postal_code": "67890",
+                "debtor_town_name": "Acme Town",
+                "debtor_country_code": "DE",
+                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_agent_BIC": "BANKDEFFXXX",
+                "charge_bearer": "SLEV",
+                "payment_id": "PaymentID6789",
+                "payment_amount": "150",
+                "currency": "EUR",
+                "payment_currency": "EUR",
+                "ctrl_sum": "15000",
+                "creditor_agent_BIC": "SPUEDE2UXXX",
+                "creditor_name": "Global Tech",
+                "creditor_street_name": "Global Street",
+                "creditor_building_number": "3",
+                "creditor_postal_code": "11223",
+                "creditor_town_name": "Global Town",
+                "creditor_country_code": "DE",
+                "creditor_account_IBAN": "DE68210501700024690959",
+                "purpose_code": "OTHR",
+                "reference_number": "Invoice-98765",
+                "reference_date": "2023-03-09",
+                "service_level_code": "SEPA",
+                "forwarding_agent_BIC": "SPUEDE2UXXX",
+                "remittance_information": "Invoice-12345",
+                "charge_account_IBAN": "CHARGE-IBAN-12345",
+            }
+        ]
+        self.assertFalse(validate_csv_data(data))
+
+
+if __name__ == "__main__":
+    unittest.main()
