@@ -1,47 +1,93 @@
-import os
+import datetime
 
-# Ensure the tests/data directory exists
-os.makedirs("tests/data", exist_ok=True)
 
-# Create valid_data.csv
-with open("tests/data/valid_data.csv", "w") as f:
-    f.write(
-        """id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,ctrl_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,forwarding_agent_BIC,charge_bearer,payment_id,payment_amount,currency,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information
-1,2022-01-01,1,John Doe,12345,TRF,false,100,SEPA,2022-01-01,John Doe,DE89370400440532013000,DEUTDEDBFRA,FORWARD,SHA,12345,100.00,EUR,DABADEHHXXX,Jane Doe,DE89370400440532013001,Invoice 1234
-2,2022-01-02,1,Jane Doe,67890,TRF,false,200,SEPA,2022-01-02,Jane Doe,DE89370400440532013001,DEUTDEDBFRA,FORWARD2,SHA,67890,200.00,EUR,DABADEHHXXX,John Doe,DE89370400440532013000,Invoice 5678
-"""
-    )
+def validate_csv_data(data):
+    """Validate the CSV data before processing it.
 
-# Create empty.csv
-with open("tests/data/empty.csv", "w") as f:
-    f.write(
-        """id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,ctrl_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,forwarding_agent_BIC,charge_bearer,payment_id,payment_amount,currency,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information
-"""
-    )
+    Args:
+        data (list): A list of dictionaries containing the CSV data.
 
-# Create invalid_data.csv
-with open("tests/data/invalid_data.csv", "w") as f:
-    f.write(
-        """id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,ctrl_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,forwarding_agent_BIC,charge_bearer,payment_id,payment_amount,currency,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information
-1,2022-01-01,one,John Doe,12345,TRF,false,100,SEPA,2022-01-01,John Doe,DE89370400440532013000,DEUTDEDBFRA,FORWARD,SHA,12345,100.00,EUR,DABADEHHXXX,Jane Doe,DE89370400440532013001,Invoice 1234
-2,2022-01-02,1,Jane Doe,67890,TRF,false,two hundred,SEPA,2022-01-02,Jane Doe,DE89370400440532013001,DEUTDEDBFRA,FORWARD2,SHA,67890,200.00,EUR,DABADEHHXXX,John Doe,DE89370400440532013000,Invoice 5678
-"""
-    )
+    Returns:
+        bool: True if the data is valid, False otherwise.
+    """
+    required_columns = {
+        "id": int,
+        "date": datetime.datetime,
+        "nb_of_txs": int,
+        "ctrl_sum": float,
+        "initiator_name": str,
+        "payment_information_id": str,
+        "payment_method": str,
+        "batch_booking": bool,
+        "service_level_code": str,
+        "requested_execution_date": datetime.datetime,
+        "debtor_name": str,
+        "debtor_account_IBAN": str,
+        "debtor_agent_BIC": str,
+        "forwarding_agent_BIC": str,
+        "charge_bearer": str,
+        "payment_id": str,
+        "payment_amount": float,
+        "currency": str,
+        "creditor_agent_BIC": str,
+        "creditor_name": str,
+        "creditor_account_IBAN": str,
+        "remittance_information": str,
+    }
 
-# Create single_row.csv
-with open("tests/data/single_row.csv", "w") as f:
-    f.write(
-        """id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,ctrl_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,forwarding_agent_BIC,charge_bearer,payment_id,payment_amount,currency,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information
-1,2022-01-01,1,John Doe,12345,TRF,false,100,SEPA,2022-01-01,John Doe,DE89370400440532013000,DEUTDEDBFRA,FORWARD,SHA,12345,100.00,EUR,DABADEHHXXX,Jane Doe,DE89370400440532013001,Invoice 1234
-"""
-    )
+    if not data:
+        print("Error: The CSV data is empty.")
+        return False
 
-# Create single_column.csv
-with open("tests/data/single_column.csv", "w") as f:
-    f.write(
-        """id
-1
-2
-3
-"""
-    )
+    is_valid = True
+
+    for row in data:
+        missing_columns = []
+        invalid_columns = []
+        for column, data_type in required_columns.items():
+            value = row.get(column)
+            if value is None or value.strip() == "":
+                missing_columns.append(column)
+                is_valid = False
+            else:
+                try:
+                    if data_type == int:
+                        int(value)
+                    elif data_type == float:
+                        float(value)
+                    elif data_type == bool:
+                        if value.strip().lower() not in [
+                            "true",
+                            "false",
+                        ]:
+                            raise ValueError
+                    elif data_type == datetime.datetime:
+                        try:
+                            if value.endswith("Z"):
+                                value = value[:-1] + "+00:00"
+                            datetime.datetime.fromisoformat(value)
+                        except ValueError:
+                            datetime.datetime.strptime(
+                                value, "%Y-%m-%d"
+                            )
+                    else:
+                        str(value)
+                except ValueError:
+                    invalid_columns.append(column)
+                    is_valid = False
+        if missing_columns:
+            print(
+                f"Error: Missing value(s) for column(s) {missing_columns} "
+                f"in row: {row}"
+            )
+        if invalid_columns:
+            expected_types = [
+                required_columns[col].__name__
+                for col in invalid_columns
+            ]
+            print(
+                f"Error: Invalid data type for column(s) {invalid_columns}, "
+                f"expected {expected_types} in row: {row}"
+            )
+
+    return is_valid
