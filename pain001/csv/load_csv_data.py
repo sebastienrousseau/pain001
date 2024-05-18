@@ -14,9 +14,11 @@
 # limitations under the License.
 
 import csv
+import logging
 
-# Load the CSV file into a list of dictionaries with the column names as
-# keys
+logging.basicConfig(
+    level=logging.ERROR, format="%(levelname)s: %(message)s"
+)
 
 
 def load_csv_data(file_path):
@@ -32,6 +34,7 @@ def load_csv_data(file_path):
         FileNotFoundError: If the file does not exist.
         IOError: If there is an issue reading the file.
         UnicodeDecodeError: If there is an issue decoding the file's content.
+        ValueError: If the CSV file is empty.
     """
     data = []
     try:
@@ -40,19 +43,20 @@ def load_csv_data(file_path):
             for row in csv_reader:
                 data.append(row)
     except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found.")
+        logging.error(f"File '{file_path}' not found.")
         raise
     except IOError:
-        print(
-            f"Error: An IOError occurred while reading the file '{
-              file_path}'."
+        logging.error(
+            f"An IOError occurred while reading the file '{file_path}'."
         )
         raise
     except UnicodeDecodeError:
-        print(
-            f"Error: A UnicodeDecodeError occurred while decoding the file '{
-              file_path}'."
+        logging.error(
+            f"A UnicodeDecodeError occurred while decoding the file '{file_path}'."
         )
         raise
+
+    if not data:
+        raise ValueError(f"The CSV file '{file_path}' is empty.")
 
     return data

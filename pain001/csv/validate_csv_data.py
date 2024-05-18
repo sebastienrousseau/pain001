@@ -62,7 +62,7 @@ def validate_csv_data(data):
         "payment_method": str,
         "batch_booking": bool,
         "service_level_code": str,
-        "requested_execution_date": datetime.datetime,  # Updated to handle datetime objects
+        "requested_execution_date": datetime.datetime,
         "debtor_name": str,
         "debtor_account_IBAN": str,
         "debtor_agent_BIC": str,
@@ -118,7 +118,9 @@ def validate_csv_data(data):
         if invalid_columns:
             print(
                 f"Error: Invalid data type for column(s) {invalid_columns}, "
-                f"expected {[required_columns[col].__name__ for col in invalid_columns]} in row: {row}"
+                f"expected {
+                    [required_columns[col].__name__ for col in invalid_columns]
+                } in row: {row}"
             )
 
     return is_valid

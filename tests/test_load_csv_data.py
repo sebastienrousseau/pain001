@@ -11,7 +11,6 @@ class TestLoadCsvData(unittest.TestCase):
 
         Args:
             self (TestLoadCsvData): The instance of the TestLoadCsvData class.
-            file_path (str): The path to the valid CSV file.
 
         Returns:
             None
@@ -27,7 +26,6 @@ class TestLoadCsvData(unittest.TestCase):
 
         Args:
             self (TestLoadCsvData): The instance of the TestLoadCsvData class.
-            file_path (str): The path to the non-existent CSV file.
 
         Returns:
             None
@@ -42,15 +40,13 @@ class TestLoadCsvData(unittest.TestCase):
 
         Args:
             self (TestLoadCsvData): The instance of the TestLoadCsvData class.
-            file_path (str): The path to the empty CSV file.
 
         Returns:
             None
         """
         file_path = "tests/data/empty.csv"
-        data = load_csv_data(file_path)
-        self.assertIsInstance(data, list)
-        self.assertEqual(len(data), 0)
+        with self.assertRaises(ValueError):
+            load_csv_data(file_path)
 
     def test_load_csv_with_invalid_data(self):
         """
@@ -58,7 +54,6 @@ class TestLoadCsvData(unittest.TestCase):
 
         Args:
             self (TestLoadCsvData): The instance of the TestLoadCsvData class.
-            file_path (str): The path to the CSV file with invalid data.
 
         Returns:
             None
