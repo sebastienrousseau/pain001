@@ -33,8 +33,6 @@ from pain001.constants.constants import valid_xml_types
 from pain001.context.context import Context
 from pain001.core.core import process_files
 
-# from pain001.xml.validate_via_xsd import validate_via_xsd
-
 from rich.console import Console
 from rich.table import Table
 from rich import box
@@ -97,69 +95,74 @@ def main(
     xsd_schema_file_path,
     data_file_path,
 ):
-    # Check that the required arguments are provided
-    if not xml_message_type:
-        print("The XML message type is required.")
-        sys.exit(1)
+    try:
+        # Check that the required arguments are provided
+        if not xml_message_type:
+            console.print("The XML message type is required.")
+            sys.exit(1)
 
-    # Check that xml_template_file_path is not invalid
-    if not os.path.isfile(xml_template_file_path):
-        print(
-            f"The XML template file '{xml_template_file_path}' does not exist."
+        if not xml_template_file_path:
+            console.print("The XML template file path is required.")
+            sys.exit(1)
+
+        if not xsd_schema_file_path:
+            console.print("The XSD schema file path is required.")
+            sys.exit(1)
+
+        if not data_file_path:
+            console.print("The data file path is required.")
+            sys.exit(1)
+
+        logger = Context.get_instance().get_logger()
+
+        logger.info("Parsing command line arguments.")
+
+        # Check that the XML message type is valid
+        if xml_message_type not in valid_xml_types:
+            logger.info(
+                f"Invalid XML message type: {xml_message_type}."
+            )
+            console.print(
+                f"Invalid XML message type: {xml_message_type}."
+            )
+            sys.exit(1)
+
+        if not os.path.isfile(xml_template_file_path):
+            logger.info(
+                f"The XML template file '{xml_template_file_path}' does not exist."
+            )
+            console.print(
+                f"The XML template file '{xml_template_file_path}' does not exist."
+            )
+            sys.exit(1)
+
+        if not os.path.isfile(xsd_schema_file_path):
+            logger.info(
+                f"The XSD template file '{xsd_schema_file_path}' does not exist."
+            )
+            console.print(
+                f"The XSD template file '{xsd_schema_file_path}' does not exist."
+            )
+            sys.exit(1)
+
+        if not os.path.isfile(data_file_path):
+            logger.info(
+                f"The data file '{data_file_path}' does not exist."
+            )
+            console.print(
+                f"The data file '{data_file_path}' does not exist."
+            )
+            sys.exit(1)
+
+        process_files(
+            xml_message_type,
+            xml_template_file_path,
+            xsd_schema_file_path,
+            data_file_path,
         )
+    except Exception as e:
+        console.print(f"An error occurred: {e}")
         sys.exit(1)
-
-    # Check that xsd_schema_file_path is not invalid
-    if not os.path.isfile(xsd_schema_file_path):
-        print(
-            f"The XSD template file '{xsd_schema_file_path}' does not exist."
-        )
-        sys.exit(1)
-
-    # Check that data_file_path is not invalid
-    if not os.path.isfile(data_file_path):
-        print(f"The data file '{data_file_path}' does not exist.")
-        sys.exit(1)
-
-    logger = Context.get_instance().get_logger()
-
-    logger.info("Parsing command line arguments.")
-
-    # Check that the XML message type is valid
-    if xml_message_type not in valid_xml_types:
-        logger.info(f"Invalid XML message type: {xml_message_type}.")
-        print(f"Invalid XML message type: {xml_message_type}.")
-        sys.exit(1)
-
-    if not os.path.isfile(xml_template_file_path):
-        logger.info(
-            f"The XML template file '{xml_template_file_path}' does not exist."
-        )
-        print(
-            f"The XML template file '{xml_template_file_path}' does not exist."
-        )
-        sys.exit(1)
-
-    if not os.path.isfile(xsd_schema_file_path):
-        logger.info(
-            f"The XSD template file '{xsd_schema_file_path}' does not exist."
-        )
-        print(
-            f"The XSD template file '{xsd_schema_file_path}' does not exist."
-        )
-        sys.exit(1)
-
-    if not os.path.isfile(data_file_path):
-        logger.info(f"The data file '{data_file_path}' does not exist.")
-        print(f"The data file '{data_file_path}' does not exist.")
-        sys.exit(1)
-
-    process_files(
-        xml_message_type,
-        xml_template_file_path,
-        xsd_schema_file_path,
-        data_file_path,
-    )
 
 
 if __name__ == "__main__":

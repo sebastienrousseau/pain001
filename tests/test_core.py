@@ -20,15 +20,17 @@ class TestProcessFiles:
         """
         Test case for processing files with invalid CSV data.
         """
-        with pytest.raises(SystemExit) as exc_info:
+        with pytest.raises(ValueError) as exc_info:
             process_files(
                 "pain.001.001.03",
                 "tests/data/template.xml",
                 "tests/data/template.xsd",
                 "tests/data/invalid.csv",
             )
-        assert exc_info.type == SystemExit
-        assert exc_info.value.code == 1
+        assert (
+            str(exc_info.value)
+            == "The CSV file 'tests/data/invalid.csv' is empty."
+        )
 
     def test_successful_execution(self):
         """
