@@ -52,7 +52,9 @@ def load_csv_data(file_path):
         raise
     except UnicodeDecodeError:
         logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{file_path}'."
+            "A UnicodeDecodeError occurred while decoding the file '"
+            + file_path
+            + "'."
         )
         raise
 
