@@ -129,19 +129,27 @@ def main(
 
         if not os.path.isfile(xml_template_file_path):
             logger.info(
-                f"The XML template file '{xml_template_file_path}' does not exist."
+                f"""
+            The XML template file '{xml_template_file_path}' does not exist.
+            """
             )
             console.print(
-                f"The XML template file '{xml_template_file_path}' does not exist."
+                f"""
+            The XML template file '{xml_template_file_path}' does not exist.
+            """
             )
             sys.exit(1)
 
         if not os.path.isfile(xsd_schema_file_path):
             logger.info(
-                f"The XSD template file '{xsd_schema_file_path}' does not exist."
+                f"""
+            The XSD template file '{xsd_schema_file_path}' does not exist.
+            """
             )
             console.print(
-                f"The XSD template file '{xsd_schema_file_path}' does not exist."
+                f"""
+            The XSD template file '{xsd_schema_file_path}' does not exist.
+            """
             )
             sys.exit(1)
 
