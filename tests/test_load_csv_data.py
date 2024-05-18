@@ -50,13 +50,15 @@ class TestLoadCsvData(unittest.TestCase):
 
     def test_load_csv_with_invalid_data(self):
         """
-        Test the load_csv_data function with a CSV file containing invalid data.
+        Test the load_csv_data function with a CSV file containing
+        invalid data.
 
-        Args:
-            self (TestLoadCsvData): The instance of the TestLoadCsvData class.
+            Args:
+                self (TestLoadCsvData):
+                The instance of the TestLoadCsvData class.
 
-        Returns:
-            None
+            Returns:
+                None
         """
         file_path = "tests/data/invalid_data.csv"
         data = load_csv_data(file_path)
@@ -65,7 +67,8 @@ class TestLoadCsvData(unittest.TestCase):
 
     def test_load_single_row_csv(self):
         """
-        Test the load_csv_data function with a CSV file containing a single row.
+        Test the load_csv_data function with a CSV file containing
+        a single row.
 
         Args:
             self (TestLoadCsvData): The instance of the TestLoadCsvData class.

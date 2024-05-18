@@ -10,7 +10,8 @@ class TestValidateCsvData(unittest.TestCase):
         Test the validate_csv_data function with valid CSV data.
 
         Args:
-            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+            self (TestValidateCsvData):
+            The instance of the TestValidateCsvData class.
 
         Returns:
             None
@@ -71,10 +72,12 @@ class TestValidateCsvData(unittest.TestCase):
 
     def test_missing_required_columns(self):
         """
-        Test the validate_csv_data function with CSV data missing required columns.
+        Test the validate_csv_data function with CSV data missing
+        required columns.
 
         Args:
-            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+            self (TestValidateCsvData):
+            The instance of the TestValidateCsvData class.
 
         Returns:
             None
@@ -85,7 +88,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "id": "1",
                 "date": "2022-01-01",
                 "nb_of_txs": "1",
-                # "initiator_name": "John Doe",  # This column is intentionally missing
+                # "initiator_name": "John Doe",
                 "payment_information_id": "12345",
                 "payment_method": "TRF",
                 "batch_booking": "false",
@@ -135,10 +138,12 @@ class TestValidateCsvData(unittest.TestCase):
 
     def test_invalid_data_types(self):
         """
-        Test the validate_csv_data function with CSV data containing invalid data types.
+        Test the validate_csv_data function with CSV data containing
+        invalid data types.
 
         Args:
-            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+            self (TestValidateCsvData):
+            The instance of the TestValidateCsvData class.
 
         Returns:
             None
@@ -202,7 +207,8 @@ class TestValidateCsvData(unittest.TestCase):
         Test the validate_csv_data function with an empty CSV data list.
 
         Args:
-            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+            self (TestValidateCsvData):
+            The instance of the TestValidateCsvData class.
 
         Returns:
             None
@@ -217,7 +223,8 @@ class TestValidateCsvData(unittest.TestCase):
         Test the validate_csv_data function with a single row CSV data list.
 
         Args:
-            self (TestValidateCsvData): The instance of the TestValidateCsvData class.
+            self (TestValidateCsvData):
+            The instance of the TestValidateCsvData class.
 
         Returns:
             None
