@@ -54,9 +54,9 @@ def validate_csv_data(data):
     """
     required_columns = {
         "id": int,
-        "date": datetime.datetime,  # Updated to handle datetime objects
+        "date": datetime.datetime,
         "nb_of_txs": int,
-        "ctrl_sum": float,  # Assuming it represents a numerical value
+        "ctrl_sum": float,
         "initiator_name": str,
         "payment_information_id": str,
         "payment_method": str,
@@ -69,7 +69,7 @@ def validate_csv_data(data):
         "forwarding_agent_BIC": str,
         "charge_bearer": str,
         "payment_id": str,
-        "payment_amount": float,  # Assuming it's a numerical value
+        "payment_amount": float,
         "currency": str,
         "creditor_agent_BIC": str,
         "creditor_name": str,
@@ -116,11 +116,13 @@ def validate_csv_data(data):
                 f"in row: {row}"
             )
         if invalid_columns:
+            expected_types = [
+                required_columns[col].__name__
+                for col in invalid_columns
+            ]
             print(
                 f"Error: Invalid data type for column(s) {invalid_columns}, "
-                f"expected {
-                    [required_columns[col].__name__ for col in invalid_columns]
-                } in row: {row}"
+                f"expected {expected_types} in row: {row}"
             )
 
     return is_valid
