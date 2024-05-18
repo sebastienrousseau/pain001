@@ -17,9 +17,7 @@
 import os
 import sys
 import click
-import logging
 import configparser
-from pathlib import Path
 
 from pain001.constants.constants import valid_xml_types
 from pain001.context.context import Context
