@@ -104,7 +104,13 @@ def validate_csv_data(data):
                         ]:
                             raise ValueError
                     elif data_type == datetime.datetime:
-                        datetime.datetime.strptime(value, "%Y-%m-%d")
+                        # Check for both ISO 8601 and YYYY-MM-DD formats
+                        try:
+                            datetime.datetime.fromisoformat(value)
+                        except ValueError:
+                            datetime.datetime.strptime(
+                                value, "%Y-%m-%d"
+                            )
                     else:
                         str(value)
                 except ValueError:
