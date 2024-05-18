@@ -104,8 +104,10 @@ def validate_csv_data(data):
                         ]:
                             raise ValueError
                     elif data_type == datetime.datetime:
-                        # Check for both ISO 8601 and YYYY-MM-DD formats
                         try:
+                            # Handle the "Z" suffix for UTC
+                            if value.endswith("Z"):
+                                value = value[:-1] + "+00:00"
                             datetime.datetime.fromisoformat(value)
                         except ValueError:
                             datetime.datetime.strptime(
