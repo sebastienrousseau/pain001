@@ -131,3 +131,22 @@ class TestMain:
             "The XSD template file 'invalid' does not exist."
             in result.output
         )
+
+    def test_main_with_invalid_data_file(self):
+        result = self.runner.invoke(
+            main,
+            [
+                "--xml_message_type",
+                self.xml_message_type,
+                "--xml_template_file_path",
+                self.xml_file,
+                "--xsd_schema_file_path",
+                self.xsd_file,
+                "--data_file_path",
+                "invalid",
+            ],
+        )
+        assert result.exit_code == 1
+        assert (
+            "The data file 'invalid' does not exist." in result.output
+        )
