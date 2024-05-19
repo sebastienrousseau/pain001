@@ -454,17 +454,17 @@ Set of messages exchanged between a debtor (or buyer) and its bank or between a
 creditor (or seller) and its bank to initiate, collect, manage and monitor
 payments.
 
-| Status | Message type                       | Name                                |
-| ------ | ---------------------------------- | ----------------------------------- |
-| ✅      | [pain.001.001.03][pain.001.001.03] | Customer Credit Transfer Initiation |
-| ✅      | [pain.001.001.04][pain.001.001.04] | Customer Direct Debit Initiation    |
-| ✅      | [pain.001.001.05][pain.001.001.05] | Customer Direct Debit Reversal      |
-| ✅      | [pain.001.001.06][pain.001.001.06] | Customer Credit Transfer Reversal   |
-| ✅      | [pain.001.001.07][pain.001.001.07] | Customer Account Notification       |
-| ✅      | [pain.001.001.08][pain.001.001.08] | Customer Account Statement          |
-| ✅      | [pain.001.001.09][pain.001.001.09] | Customer Credit Transfer Initiation |
-| ⏳      | pain.001.001.10                    | Customer Account Closure Request    |
-| ⏳      | pain.001.001.11                    | Customer Account Change Request     |
+| Status | Message type                       | Name              |
+| ------ | ---------------- | ----------------------------------- |
+| ✅      | pain.001.001.03 | Customer Credit Transfer Initiation |
+| ✅      | pain.001.001.04 | Customer Direct Debit Initiation    |
+| ✅      | pain.001.001.05 | Customer Direct Debit Reversal      |
+| ✅      | pain.001.001.06 | Customer Credit Transfer Reversal   |
+| ✅      | pain.001.001.07 | Customer Account Notification       |
+| ✅      | pain.001.001.08 | Customer Account Statement          |
+| ✅      | pain.001.001.09 | Customer Credit Transfer Initiation |
+| ⏳      | pain.001.001.10 | Customer Account Closure Request    |
+| ⏳      | pain.001.001.11 | Customer Account Change Request     |
 
 ## License
 
@@ -497,13 +497,6 @@ We would like to extend a big thank you to all the awesome contributors of
 [06]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 [07]: https://pypi.org/project/pain001/
 
-[pain.001.001.03]: https://pain001.com/pain.001.001.03/index.html
-[pain.001.001.04]: https://pain001.com/pain.001.001.04/index.html
-[pain.001.001.05]: https://pain001.com/pain.001.001.05/index.html
-[pain.001.001.06]: https://pain001.com/pain.001.001.06/index.html
-[pain.001.001.07]: https://pain001.com/pain.001.001.07/index.html
-[pain.001.001.08]: https://pain001.com/pain.001.001.08/index.html
-[pain.001.001.09]: https://pain001.com/pain.001.001.09/index.html
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'
