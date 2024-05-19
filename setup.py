@@ -71,7 +71,7 @@ setup(
     },
     entry_points={
         "console_scripts": [
-            "pain001=pain001.cli:cli:main",
+            "pain001=pain001.cli:main",
         ],
     },
     python_requires=">=3.9,<3.13",
