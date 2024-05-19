@@ -1,4 +1,4 @@
-    # Byte-compiled / optimized / DLL files
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 *$py.class
@@ -132,3 +132,6 @@ tests/data/invalid_data.csv
 tests/data/single_column.csv
 tests/data/single_row.csv
 tests/data/valid_data.csv
+tests/data/invalid_data.db
+tests/data/valid_data.db
+tests/data/unsupported_data_type.txt
