@@ -58,7 +58,9 @@ def create_xml_v3(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template for the pain.001.001.03 schema
-    template = env.get_template("templates/pain.001.001.03/template.xml")
+    template = env.get_template(
+        "pain001/templates/pain.001.001.03/template.xml"
+    )
 
     # Prepare the data dictionary for rendering through the Jinja2 template
     # This dictionary is a reformatted version of the `data` parameter, made to

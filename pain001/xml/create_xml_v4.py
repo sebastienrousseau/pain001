@@ -51,63 +51,75 @@ def create_xml_v4(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
-    template = env.get_template("templates/pain.001.001.04/template.xml")
+    template = env.get_template(
+        "pain001/templates/pain.001.001.04/template.xml"
+    )
 
-    # Prepare the data for rendering
+    # Prepare the data for rendering, ensuring all required keys are present
     xml_data_pain001_001_04 = {
-        "id": data[0]["id"],
-        "date": data[0]["date"],
-        "nb_of_txs": data[0]["nb_of_txs"],
-        "initiator_name": data[0]["initiator_name"],
-        "initiator_street": data[0]["initiator_street"],
-        "initiator_building_number": data[0]["initiator_building_number"],
-        "initiator_postal_code": data[0]["initiator_postal_code"],
-        "initiator_town": data[0]["initiator_town"],
-        "initiator_country": data[0]["initiator_country"],
-        "payment_information_id": data[0]["payment_information_id"],
-        "payment_method": data[0]["payment_method"],
-        "batch_booking": data[0]["batch_booking"],
-        "requested_execution_date": data[0]["requested_execution_date"],
-        "debtor_name": data[0]["debtor_name"],
-        "debtor_street": data[0]["debtor_street"],
-        "debtor_building_number": data[0]["debtor_building_number"],
-        "debtor_postal_code": data[0]["debtor_postal_code"],
-        "debtor_town": data[0]["debtor_town"],
-        "debtor_country": data[0]["debtor_country"],
-        "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
-        "debtor_agent_BIC": data[0]["debtor_agent_BIC"],
-        "payment_instruction_id": data[0]["payment_instruction_id"],
-        "payment_end_to_end_id": data[0]["payment_end_to_end_id"],
-        "payment_currency": data[0]["payment_currency"],
-        "payment_amount": data[0]["payment_amount"],
-        "charge_bearer": data[0]["charge_bearer"],
-        "creditor_agent_BIC": data[0]["creditor_agent_BIC"],
-        "creditor_name": data[0]["creditor_name"],
-        "creditor_street": data[0]["creditor_street"],
-        "creditor_building_number": data[0]["creditor_building_number"],
-        "creditor_postal_code": data[0]["creditor_postal_code"],
-        "creditor_town": data[0]["creditor_town"],
-        "creditor_account_IBAN": data[0]["creditor_account_IBAN"],
-        "purpose_code": data[0]["purpose_code"],
-        "reference_number": data[0]["reference_number"],
-        "reference_date": data[0]["reference_date"],
+        "id": data[0].get("id", ""),
+        "date": data[0].get("date", ""),
+        "nb_of_txs": data[0].get("nb_of_txs", ""),
+        "initiator_name": data[0].get("initiator_name", ""),
+        "initiator_street": data[0].get("initiator_street", ""),
+        "initiator_building_number": data[0].get(
+            "initiator_building_number", ""
+        ),
+        "initiator_postal_code": data[0].get("initiator_postal_code", ""),
+        "initiator_town": data[0].get("initiator_town", ""),
+        "initiator_country": data[0].get("initiator_country", ""),
+        "payment_information_id": data[0].get("payment_information_id", ""),
+        "payment_method": data[0].get("payment_method", ""),
+        "batch_booking": data[0].get("batch_booking", ""),
+        "requested_execution_date": data[0].get(
+            "requested_execution_date", ""
+        ),
+        "debtor_name": data[0].get("debtor_name", ""),
+        "debtor_street": data[0].get("debtor_street", ""),
+        "debtor_building_number": data[0].get("debtor_building_number", ""),
+        "debtor_postal_code": data[0].get("debtor_postal_code", ""),
+        "debtor_town": data[0].get("debtor_town", ""),
+        "debtor_country": data[0].get("debtor_country", ""),
+        "debtor_account_IBAN": data[0].get("debtor_account_IBAN", ""),
+        "debtor_agent_BIC": data[0].get("debtor_agent_BIC", ""),
+        "payment_instruction_id": data[0].get("payment_instruction_id", ""),
+        "payment_end_to_end_id": data[0].get("payment_end_to_end_id", ""),
+        "payment_currency": data[0].get("payment_currency", ""),
+        "payment_amount": data[0].get("payment_amount", ""),
+        "charge_bearer": data[0].get("charge_bearer", ""),
+        "creditor_agent_BIC": data[0].get("creditor_agent_BIC", ""),
+        "creditor_name": data[0].get("creditor_name", ""),
+        "creditor_street": data[0].get("creditor_street", ""),
+        "creditor_building_number": data[0].get(
+            "creditor_building_number", ""
+        ),
+        "creditor_postal_code": data[0].get("creditor_postal_code", ""),
+        "creditor_town": data[0].get("creditor_town", ""),
+        "creditor_account_IBAN": data[0].get("creditor_account_IBAN", ""),
+        "purpose_code": data[0].get("purpose_code", ""),
+        "reference_number": data[0].get("reference_number", ""),
+        "reference_date": data[0].get("reference_date", ""),
         "transactions": [
             {
-                "payment_instruction_id": row["payment_instruction_id"],
-                "payment_end_to_end_id": row["payment_end_to_end_id"],
-                "payment_currency": row["payment_currency"],
-                "payment_amount": row["payment_amount"],
-                "charge_bearer": row["charge_bearer"],
-                "creditor_agent_BIC": row["creditor_agent_BIC"],
-                "creditor_name": row["creditor_name"],
-                "creditor_street": row["creditor_street"],
-                "creditor_building_number": row["creditor_building_number"],
-                "creditor_postal_code": row["creditor_postal_code"],
-                "creditor_town": row["creditor_town"],
-                "creditor_account_IBAN": row["creditor_account_IBAN"],
-                "purpose_code": row["purpose_code"],
-                "reference_number": row["reference_number"],
-                "reference_date": row["reference_date"],
+                "payment_instruction_id": row.get(
+                    "payment_instruction_id", ""
+                ),
+                "payment_end_to_end_id": row.get("payment_end_to_end_id", ""),
+                "payment_currency": row.get("payment_currency", ""),
+                "payment_amount": row.get("payment_amount", ""),
+                "charge_bearer": row.get("charge_bearer", ""),
+                "creditor_agent_BIC": row.get("creditor_agent_BIC", ""),
+                "creditor_name": row.get("creditor_name", ""),
+                "creditor_street": row.get("creditor_street", ""),
+                "creditor_building_number": row.get(
+                    "creditor_building_number", ""
+                ),
+                "creditor_postal_code": row.get("creditor_postal_code", ""),
+                "creditor_town": row.get("creditor_town", ""),
+                "creditor_account_IBAN": row.get("creditor_account_IBAN", ""),
+                "purpose_code": row.get("purpose_code", ""),
+                "reference_number": row.get("reference_number", ""),
+                "reference_date": row.get("reference_date", ""),
             }
             for row in data[1:]
         ],
@@ -119,8 +131,7 @@ def create_xml_v4(root, data):
     # Parse the rendered XML content into an ElementTree object
     rendered_xml_tree = et.fromstring(xml_content)
 
-    # Append the rendered XML content as children to the "CstmrCdtTrfInitn"
-    # element
+    # Append the rendered XML content as children to the "CstmrCdtTrfInitn" element
     for child in rendered_xml_tree:
         cstmr_cdt_trf_initn_element.append(child)
 

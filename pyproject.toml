@@ -21,10 +21,11 @@ mdurl = "0.1.2"
 pygments = "2.18.0"
 python = "^3.9"
 rich = "13.7.1"
+setuptools = "69.5.1"
 xmlschema = "3.3.1"
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.1.0"
+pytest = "^8.2.0"
 pytest-cov = "^5.0.0"
 
 [tool.poetry.group.docs]

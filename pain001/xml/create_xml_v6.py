@@ -48,7 +48,9 @@ def create_xml_v6(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load pain.001.001.06 template
-    template = env.get_template("templates/pain.001.001.06/template.xml")
+    template = env.get_template(
+        "pain001/templates/pain.001.001.06/template.xml"
+    )
 
     # Prepare data for rendering
     xml_data = {

@@ -50,7 +50,9 @@ def create_xml_v9(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
-    template = env.get_template("templates/pain.001.001.09/template.xml")
+    template = env.get_template(
+        "pain001/templates/pain.001.001.09/template.xml"
+    )
 
     # Prepare the data
     xml_data_pain001_001_09 = {

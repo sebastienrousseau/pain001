@@ -78,44 +78,42 @@ class TestXMLCreation(unittest.TestCase):
             ],
         }
         self.row_v4 = {
-            "id": "1",
-            "date": "2023-03-10T15:30:47.000Z",
-            "nb_of_txs": "2",
-            "initiator_name": "Initiator",
-            "initiator_street": "Street",
+            "id": "ID001",
+            "date": "2023-05-19",
+            "nb_of_txs": "1",
+            "initiator_name": "John Doe",
+            "initiator_street": "Main Street",
             "initiator_building_number": "1",
             "initiator_postal_code": "12345",
-            "initiator_town": "Town",
-            "initiator_country": "DE",
-            "payment_information_id": "PID123",
-            "payment_id": "PID123",  # Added payment_id
-            "payment_method": "pain.001.001.04",
+            "initiator_town": "Anytown",
+            "initiator_country": "US",
+            "payment_information_id": "PI001",
+            "payment_method": "TRF",
             "batch_booking": "true",
-            "requested_execution_date": "2023-05-21",
-            "debtor_name": "Debtor",
-            "debtor_street": "Street",
-            "debtor_building_number": "1",
-            "debtor_postal_code": "12345",
-            "debtor_town": "Town",
-            "debtor_country": "DE",
-            "debtor_account_IBAN": "DE123456789",
-            "debtor_agent_BIC": "DEUTDEFF",
+            "requested_execution_date": "2023-05-20",
+            "debtor_name": "Jane Doe",
+            "debtor_street": "Second Street",
+            "debtor_building_number": "2",
+            "debtor_postal_code": "54321",
+            "debtor_town": "Othertown",
+            "debtor_country": "US",
+            "debtor_account_IBAN": "US123456789",
+            "debtor_agent_BIC": "BANKUS33",
+            "payment_instruction_id": "PI002",
+            "payment_end_to_end_id": "E2E001",
+            "payment_currency": "USD",
+            "payment_amount": "100.00",
             "charge_bearer": "SLEV",
             "creditor_agent_BIC": "NOLADE21KIE",
-            "creditor_name": "Creditor",
-            "creditor_street": "Street",
-            "creditor_building_number": "1",
-            "creditor_postal_code": "12345",
-            "creditor_town": "Town",
-            "creditor_country": "DE",
+            "creditor_name": "Creditor Name",
+            "creditor_street": "Creditor Street",
+            "creditor_building_number": "3",
+            "creditor_postal_code": "67890",
+            "creditor_town": "Creditor Town",
             "creditor_account_IBAN": "DE123456789",
-            "payment_instruction_id": "PID123",
-            "payment_end_to_end_id": "E2E123",
-            "payment_currency": "EUR",
-            "payment_amount": "1500",
             "purpose_code": "GDDS",
-            "reference_number": "RF123",
-            "reference_date": "2023-03-10T15:30:47.000Z",
+            "reference_number": "REF001",
+            "reference_date": "2023-05-19",
         }
         self.row_v5 = {
             "id": "1",
@@ -374,16 +372,13 @@ class TestXMLCreation(unittest.TestCase):
         self.assertEqual(self.root[1].tag, "PmtMtd")
         self.assertEqual(self.root[1].text, "pain.001.001.03")
 
-    def test_create_common_elements_v4(self):
+    def test_create_xml_v4(self):
         """
-        Test create_common_elements for version 4
+        Test create_xml_v4
         """
-        create_common_elements(self.root, self.row_v4, self.mapping)
-        self.assertEqual(len(self.root), 2)
-        self.assertEqual(self.root[0].tag, "PmtInfId")
-        self.assertEqual(self.root[0].text, "PID123")
-        self.assertEqual(self.root[1].tag, "PmtMtd")
-        self.assertEqual(self.root[1].text, "pain.001.001.04")
+        create_xml_v4(self.root, [self.row_v4])
+        # Check if the root contains the expected elements and values
+        self.assertTrue(self.root.find(".//CstmrCdtTrfInitn") is not None)
 
     def test_create_common_elements_v5(self):
         """

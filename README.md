@@ -269,9 +269,9 @@ Pain.001.001.03.
 ```sh
 python -m pain001 \
     -t pain.001.001.03 \
-    -m templates/pain.001.001.03/template.xml \
-    -s templates/pain.001.001.03/pain.001.001.03.xsd \
-    -d templates/pain.001.001.03/template.csv
+    -m pain001/templates/pain.001.001.03/template.xml \
+    -s pain001/templates/pain.001.001.03/pain.001.001.03.xsd \
+    -d pain001/templates/pain.001.001.03/template.csv
 ```
 
 #### Pain.001.001.04
@@ -282,9 +282,9 @@ Pain.001.001.04.
 ```sh
 python -m pain001 \
     -t pain.001.001.04 \
-    -m templates/pain.001.001.04/template.xml \
-    -s templates/pain.001.001.04/pain.001.001.04.xsd \
-    -d templates/pain.001.001.04/template.csv
+    -m pain001/templates/pain.001.001.04/template.xml \
+    -s pain001/templates/pain.001.001.04/pain.001.001.04.xsd \
+    -d pain001/templates/pain.001.001.04/template.csv
 ```
 
 #### Pain.001.001.05
@@ -295,9 +295,9 @@ Pain.001.001.05.
 ```sh
 python -m pain001 \
     -t pain.001.001.05 \
-    -m templates/pain.001.001.05/template.xml \
-    -s templates/pain.001.001.05/pain.001.001.05.xsd \
-    -d templates/pain.001.001.05/template.csv
+    -m pain001/templates/pain.001.001.05/template.xml \
+    -s pain001/templates/pain.001.001.05/pain.001.001.05.xsd \
+    -d pain001/templates/pain.001.001.05/template.csv
 ```
 
 #### Pain.001.001.06
@@ -308,9 +308,9 @@ Pain.001.001.06.
 ```sh
 python -m pain001 \
     -t pain.001.001.06 \
-    -m templates/pain.001.001.06/template.xml \
-    -s templates/pain.001.001.06/pain.001.001.06.xsd \
-    -d templates/pain.001.001.06/template.csv
+    -m pain001/templates/pain.001.001.06/template.xml \
+    -s pain001/templates/pain.001.001.06/pain.001.001.06.xsd \
+    -d pain001/templates/pain.001.001.06/template.csv
 ```
 
 #### Pain.001.001.07
@@ -321,9 +321,9 @@ Pain.001.001.07.
 ```sh
 python -m pain001 \
     -t pain.001.001.07 \
-    -m templates/pain.001.001.07/template.xml \
-    -s templates/pain.001.001.07/pain.001.001.07.xsd \
-    -d templates/pain.001.001.07/template.csv
+    -m pain001/templates/pain.001.001.07/template.xml \
+    -s pain001/templates/pain.001.001.07/pain.001.001.07.xsd \
+    -d pain001/templates/pain.001.001.07/template.csv
 ```
 
 #### Pain.001.001.08
@@ -334,9 +334,9 @@ Pain.001.001.08.
 ```sh
 python -m pain001 \
     -t pain.001.001.08 \
-    -m templates/pain.001.001.08/template.xml \
-    -s templates/pain.001.001.08/pain.001.001.08.xsd \
-    -d templates/pain.001.001.08/template.csv
+    -m pain001/templates/pain.001.001.08/template.xml \
+    -s pain001/templates/pain.001.001.08/pain.001.001.08.xsd \
+    -d pain001/templates/pain.001.001.08/template.csv
 ```
 
 #### Pain.001.001.09
@@ -347,9 +347,9 @@ Pain.001.001.09.
 ```sh
 python -m pain001 \
     -t pain.001.001.09 \
-    -m templates/pain.001.001.09/template.xml \
-    -s templates/pain.001.001.09/pain.001.001.09.xsd \
-    -d templates/pain.001.001.09/template.csv
+    -m pain001/templates/pain.001.001.09/template.xml \
+    -s pain001/templates/pain.001.001.09/pain.001.001.09.xsd \
+    -d pain001/templates/pain.001.001.09/template.csv
 ```
 
 You can do the same with the sample SQLite Data file:
@@ -357,9 +357,9 @@ You can do the same with the sample SQLite Data file:
 ```sh
 python3 -m pain001 \
     -t pain.001.001.03 \
-    -m templates/pain.001.001.03/template.xml \
-    -s templates/pain.001.001.03/pain.001.001.03.xsd \
-    -d templates/pain.001.001.03/template.db
+    -m pain001/templates/pain.001.001.03/template.xml \
+    -s pain001/templates/pain.001.001.03/pain.001.001.03.xsd \
+    -d pain001/templates/pain.001.001.03/template.db
 ```
 
 > **Note:** The XML file that **Pain001** generates will automatically be
@@ -496,7 +496,6 @@ We would like to extend a big thank you to all the awesome contributors of
 [05]: https://github.com/sebastienrousseau/pain001/graphs/contributors
 [06]: https://codecov.io/github/sebastienrousseau/pain001?branch=main
 [07]: https://pypi.org/project/pain001/
-
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge&token=AaUxKfRiou 'Codecov badge'

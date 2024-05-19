@@ -79,24 +79,26 @@ def main(
     try:
         # Check that the required arguments are provided
         if not xml_message_type:
-            console.print("The XML message type is required.")
+            console.print(
+                "The XML message type is required. Use -h for help.\n"
+            )
             sys.exit(1)
 
         if not xml_template_file_path:
-            console.print("The XML template file path is required.")
+            console.print("The XML template file path is required.\n")
             sys.exit(1)
 
         if not xsd_schema_file_path:
-            console.print("The XSD schema file path is required.")
+            console.print("The XSD schema file path is required.\n")
             sys.exit(1)
 
         if not data_file_path:
-            console.print("The data file path is required.")
+            console.print("The data file path is required.\n")
             sys.exit(1)
 
         logger = Context.get_instance().get_logger()
 
-        logger.info("Parsing command line arguments.")
+        logger.info("Parsing command line arguments.\n")
 
         # Check that the XML message type is valid
         if xml_message_type not in valid_xml_types:
