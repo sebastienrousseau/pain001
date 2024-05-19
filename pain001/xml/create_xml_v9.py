@@ -50,9 +50,7 @@ def create_xml_v9(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
-    template = env.get_template(
-        "templates/pain.001.001.09/template.xml"
-    )
+    template = env.get_template("templates/pain.001.001.09/template.xml")
 
     # Prepare the data
     xml_data_pain001_001_09 = {
@@ -65,9 +63,7 @@ def create_xml_v9(root, data):
                 "payment_id": row["payment_id"],
                 "payment_method": row["payment_method"],
                 "payment_nb_of_txs": row["nb_of_txs"],
-                "requested_execution_date": row[
-                    "requested_execution_date"
-                ],
+                "requested_execution_date": row["requested_execution_date"],
                 "debtor_name": row["debtor_name"],
                 "debtor_account_IBAN": row["debtor_account_IBAN"],
                 "debtor_agent_BIC": row["debtor_agent_BIC"],
@@ -79,9 +75,7 @@ def create_xml_v9(root, data):
                         "payment_currency": row["currency"],
                         "cdtr_agent_BICFI": row["creditor_agent_BIC"],
                         "creditor_name": row["creditor_name"],
-                        "cdtr_account_IBAN": row[
-                            "creditor_account_IBAN"
-                        ],
+                        "cdtr_account_IBAN": row["creditor_account_IBAN"],
                         "remittance_information": row[
                             "remittance_information"
                         ],

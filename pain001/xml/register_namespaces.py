@@ -34,12 +34,9 @@ def register_namespaces(payment_initiation_message_type):
 
     # Create the namespace for the payment initiation message type.
     namespace = (
-        "urn:iso:std:iso:20022:tech:xsd:"
-        + payment_initiation_message_type
+        "urn:iso:std:iso:20022:tech:xsd:" + payment_initiation_message_type
     )
 
     # Register the namespaces.
     et.register_namespace("", namespace)
-    et.register_namespace(
-        "xsi", "http://www.w3.org/2001/XMLSchema-instance"
-    )
+    et.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")

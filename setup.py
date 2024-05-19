@@ -37,9 +37,7 @@ https://pain001.com
 """
 title = "Pain001"
 
-table = Table(
-    box=box.ROUNDED, safe_box=True, show_header=False, title=title
-)
+table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
 
 table.add_column(justify="center", no_wrap=False, vertical="middle")
 table.add_row(description)
@@ -48,9 +46,7 @@ console.print(table)
 
 
 @click.command(
-    help=(
-        "To use Pain001, you must specify the following options:\n\n"
-    ),
+    help=("To use Pain001, you must specify the following options:\n\n"),
     context_settings=dict(help_option_names=["-h", "--help"]),
 )
 @click.option(

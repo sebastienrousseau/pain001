@@ -135,3 +135,13 @@ tests/data/valid_data.csv
 tests/data/invalid_data.db
 tests/data/valid_data.db
 tests/data/unsupported_data_type.txt
+tests/data/empty_unique.csv
+tests/data/invalid_data_unique.csv
+tests/data/invalid_data_unique.db
+tests/data/single_column_unique.csv
+tests/data/single_row_unique.csv
+tests/data/template_unique.xml
+tests/data/template_unique.xsd
+tests/data/unsupported_data_type_unique.txt
+tests/data/valid_data_unique.csv
+tests/data/valid_data_unique.db

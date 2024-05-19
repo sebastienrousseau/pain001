@@ -24,8 +24,7 @@ def test_create_root_element():
 
     # Check if xsi:schemaLocation attribute is set correctly
     schema_location = (
-        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 "
-        "pain.001.001.03.xsd"
+        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 " "pain.001.001.03.xsd"
     )
     assert root.attrib["xsi:schemaLocation"] == schema_location
 
@@ -87,8 +86,7 @@ def test_create_root_element_sets_all_expected_attributes_correctly():
 
     # Check if xsi:schemaLocation attribute is set correctly
     assert root.attrib["xsi:schemaLocation"] == (
-        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 "
-        "pain.001.001.03.xsd"
+        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 " "pain.001.001.03.xsd"
     )
 
     # Check if optional attributes are set correctly

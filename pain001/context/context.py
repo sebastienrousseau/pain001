@@ -83,9 +83,7 @@ class Context:
             "CRITICAL": logging.CRITICAL,
         }
 
-        if isinstance(
-            log_level, int
-        ):  # Check if log_level is an integer
+        if isinstance(log_level, int):  # Check if log_level is an integer
             if log_level in valid_log_levels.values():
                 self.log_level = log_level
             else:

@@ -143,9 +143,7 @@ class TestXMLCreation(unittest.TestCase):
         """
         create_xml_v3(self.root, [self.row_v3])
         cstmr_cdt_trf_initn_element = self.root[0]
-        self.assertEqual(
-            cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn"
-        )
+        self.assertEqual(cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn")
 
     def test_create_xml_v9(self):
         """
@@ -153,9 +151,7 @@ class TestXMLCreation(unittest.TestCase):
         """
         create_xml_v9(self.root, [self.row_v9])
         cstmr_cdt_trf_initn_element = self.root[0]
-        self.assertEqual(
-            cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn"
-        )
+        self.assertEqual(cstmr_cdt_trf_initn_element.tag, "CstmrCdtTrfInitn")
 
 
 if __name__ == "__main__":

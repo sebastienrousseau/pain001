@@ -38,12 +38,12 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.black]
-line-length = 72
+line-length = 79
 target-version = ['py39']
 
 [tool.isort]
 profile = "black"
-line_length = 72
+line_length = 79
 multi_line_output = 3
 include_trailing_comma = true
 force_grid_wrap = 0

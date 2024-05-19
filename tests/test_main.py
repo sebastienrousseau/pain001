@@ -108,8 +108,7 @@ class TestMain:
         )
         assert result.exit_code == 1
         assert (
-            "The XML template file 'invalid' does not exist."
-            in result.output
+            "The XML template file 'invalid' does not exist." in result.output
         )
 
     def test_main_with_invalid_xsd_template_file(self):
@@ -128,8 +127,7 @@ class TestMain:
         )
         assert result.exit_code == 1
         assert (
-            "The XSD template file 'invalid' does not exist."
-            in result.output
+            "The XSD template file 'invalid' does not exist." in result.output
         )
 
     def test_main_with_invalid_data_file(self):
@@ -147,6 +145,4 @@ class TestMain:
             ],
         )
         assert result.exit_code == 1
-        assert (
-            "The data file 'invalid' does not exist." in result.output
-        )
+        assert "The data file 'invalid' does not exist." in result.output

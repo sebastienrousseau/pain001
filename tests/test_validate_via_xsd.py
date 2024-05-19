@@ -70,9 +70,5 @@ class TestValidateViaXsd(unittest.TestCase):
         """
         Test case for validating an invalid XML file against an XSD schema.
         """
-        assert not validate_via_xsd(
-            self.invalid_xml_file, self.xsd_file
-        )
-        assert not validate_via_xsd(
-            self.invalid_xml_file, self.xsd_file
-        )
+        assert not validate_via_xsd(self.invalid_xml_file, self.xsd_file)
+        assert not validate_via_xsd(self.invalid_xml_file, self.xsd_file)

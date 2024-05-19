@@ -51,9 +51,7 @@ def create_xml_v4(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template
-    template = env.get_template(
-        "templates/pain.001.001.04/template.xml"
-    )
+    template = env.get_template("templates/pain.001.001.04/template.xml")
 
     # Prepare the data for rendering
     xml_data_pain001_001_04 = {
@@ -62,9 +60,7 @@ def create_xml_v4(root, data):
         "nb_of_txs": data[0]["nb_of_txs"],
         "initiator_name": data[0]["initiator_name"],
         "initiator_street": data[0]["initiator_street"],
-        "initiator_building_number": data[0][
-            "initiator_building_number"
-        ],
+        "initiator_building_number": data[0]["initiator_building_number"],
         "initiator_postal_code": data[0]["initiator_postal_code"],
         "initiator_town": data[0]["initiator_town"],
         "initiator_country": data[0]["initiator_country"],
@@ -105,9 +101,7 @@ def create_xml_v4(root, data):
                 "creditor_agent_BIC": row["creditor_agent_BIC"],
                 "creditor_name": row["creditor_name"],
                 "creditor_street": row["creditor_street"],
-                "creditor_building_number": row[
-                    "creditor_building_number"
-                ],
+                "creditor_building_number": row["creditor_building_number"],
                 "creditor_postal_code": row["creditor_postal_code"],
                 "creditor_town": row["creditor_town"],
                 "creditor_account_IBAN": row["creditor_account_IBAN"],

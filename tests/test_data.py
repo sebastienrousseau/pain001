@@ -330,9 +330,7 @@ class TestLoadCsvData(unittest.TestCase):
                 "CHARGE-IBAN-12345",
             ],
         ]
-        with open(
-            "tests/data/invalid_data.csv", "w", newline=""
-        ) as file:
+        with open("tests/data/invalid_data.csv", "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerows(invalid_data)
 
@@ -341,9 +339,7 @@ class TestLoadCsvData(unittest.TestCase):
 
         # single_column.csv
         single_column = [["id"], ["1"], ["2"], ["3"]]
-        with open(
-            "tests/data/single_column.csv", "w", newline=""
-        ) as file:
+        with open("tests/data/single_column.csv", "w", newline="") as file:
             writer = csv.writer(file)
             writer.writerows(single_column)
 

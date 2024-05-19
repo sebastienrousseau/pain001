@@ -48,9 +48,7 @@ def create_xml_v6(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load pain.001.001.06 template
-    template = env.get_template(
-        "templates/pain.001.001.06/template.xml"
-    )
+    template = env.get_template("templates/pain.001.001.06/template.xml")
 
     # Prepare data for rendering
     xml_data = {
@@ -60,9 +58,7 @@ def create_xml_v6(root, data):
         "ctrl_sum": data[0]["ctrl_sum"],
         "initiator_name": data[0]["initiator_name"],
         "initiator_street_name": data[0]["initiator_street_name"],
-        "initiator_building_number": data[0][
-            "initiator_building_number"
-        ],
+        "initiator_building_number": data[0]["initiator_building_number"],
         "initiator_postal_code": data[0]["initiator_postal_code"],
         "initiator_town": data[0]["initiator_town_name"],
         "initiator_country": data[0]["initiator_country"],

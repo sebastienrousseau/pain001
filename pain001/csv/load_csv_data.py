@@ -16,9 +16,7 @@
 import csv
 import logging
 
-logging.basicConfig(
-    level=logging.ERROR, format="%(levelname)s: %(message)s"
-)
+logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
 def load_csv_data(file_path):

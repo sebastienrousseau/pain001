@@ -46,9 +46,7 @@ https://pain001.com
 """
 title = "Pain001"
 
-table = Table(
-    box=box.ROUNDED, safe_box=True, show_header=False, title=title
-)
+table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
 
 table.add_column(justify="center", no_wrap=False, vertical="middle")
 table.add_row(description)
@@ -57,9 +55,7 @@ console.print(table)
 
 
 @click.command(
-    help=(
-        "To use Pain001, you must specify the following options:\n\n"
-    ),
+    help=("To use Pain001, you must specify the following options:\n\n"),
     context_settings=dict(help_option_names=["-h", "--help"]),
 )
 @click.option(
@@ -119,12 +115,8 @@ def main(
 
         # Check that the XML message type is valid
         if xml_message_type not in valid_xml_types:
-            logger.info(
-                f"Invalid XML message type: {xml_message_type}."
-            )
-            console.print(
-                f"Invalid XML message type: {xml_message_type}."
-            )
+            logger.info(f"Invalid XML message type: {xml_message_type}.")
+            console.print(f"Invalid XML message type: {xml_message_type}.")
             sys.exit(1)
 
         if not os.path.isfile(xml_template_file_path):
@@ -154,12 +146,8 @@ def main(
             sys.exit(1)
 
         if not os.path.isfile(data_file_path):
-            logger.info(
-                f"The data file '{data_file_path}' does not exist."
-            )
-            console.print(
-                f"The data file '{data_file_path}' does not exist."
-            )
+            logger.info(f"The data file '{data_file_path}' does not exist.")
+            console.print(f"The data file '{data_file_path}' does not exist.")
             sys.exit(1)
 
         process_files(

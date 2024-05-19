@@ -58,9 +58,7 @@ def create_xml_v3(root, data):
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
 
     # Load the Jinja2 template for the pain.001.001.03 schema
-    template = env.get_template(
-        "templates/pain.001.001.03/template.xml"
-    )
+    template = env.get_template("templates/pain.001.001.03/template.xml")
 
     # Prepare the data dictionary for rendering through the Jinja2 template
     # This dictionary is a reformatted version of the `data` parameter, made to
@@ -71,9 +69,7 @@ def create_xml_v3(root, data):
         "nb_of_txs": data[0]["nb_of_txs"],
         "initiator_name": data[0]["initiator_name"],
         "initiator_street_name": data[0]["initiator_street_name"],
-        "initiator_building_number": data[0][
-            "initiator_building_number"
-        ],
+        "initiator_building_number": data[0]["initiator_building_number"],
         "initiator_postal_code": data[0]["initiator_postal_code"],
         "initiator_town_name": data[0]["initiator_town_name"],
         "initiator_country_code": data[0]["initiator_country_code"],
@@ -99,9 +95,7 @@ def create_xml_v3(root, data):
                 "creditor_agent_BIC": row["creditor_agent_BIC"],
                 "creditor_name": row["creditor_name"],
                 "creditor_street_name": row["creditor_street_name"],
-                "creditor_building_number": row[
-                    "creditor_building_number"
-                ],
+                "creditor_building_number": row["creditor_building_number"],
                 "creditor_postal_code": row["creditor_postal_code"],
                 "creditor_town_name": row["creditor_town_name"],
                 "creditor_country_code": row["creditor_country_code"],

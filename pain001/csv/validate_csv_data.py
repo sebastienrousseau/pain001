@@ -110,9 +110,7 @@ def validate_csv_data(data):
                                 value = value[:-1] + "+00:00"
                             datetime.datetime.fromisoformat(value)
                         except ValueError:
-                            datetime.datetime.strptime(
-                                value, "%Y-%m-%d"
-                            )
+                            datetime.datetime.strptime(value, "%Y-%m-%d")
                     else:
                         str(value)
                 except ValueError:
@@ -125,8 +123,7 @@ def validate_csv_data(data):
             )
         if invalid_columns:
             expected_types = [
-                required_columns[col].__name__
-                for col in invalid_columns
+                required_columns[col].__name__ for col in invalid_columns
             ]
             print(
                 f"Error: Invalid data type for column(s) {invalid_columns}, "
