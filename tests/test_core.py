@@ -144,9 +144,7 @@ class TestProcessFiles(unittest.TestCase):
                     self.csv_file_path,
                 )
         self.assertIn(
-            """
-Error: XML template 'tests/data/non_existent_template.xml' does not exist.
-""",
+            "Error: XML template 'tests/data/non_existent_template.xml' does not exist.",
             log.output[0],
         )
 
