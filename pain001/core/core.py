@@ -93,9 +93,7 @@ def process_files(
 
     # Check if the data file exists
     if not os.path.exists(data_file_path):
-        error_message = (
-            f"Error: Data file '{data_file_path}' does not exist."
-        )
+        error_message = f"Error: Data file '{data_file_path}' does not exist."
         logger.error(error_message)
         raise FileNotFoundError(error_message)
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2024 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,12 +34,9 @@ def register_namespaces(payment_initiation_message_type):
 
     # Create the namespace for the payment initiation message type.
     namespace = (
-        "urn:iso:std:iso:20022:tech:xsd:"
-        + payment_initiation_message_type
+        "urn:iso:std:iso:20022:tech:xsd:" + payment_initiation_message_type
     )
 
     # Register the namespaces.
     et.register_namespace("", namespace)
-    et.register_namespace(
-        "xsi", "http://www.w3.org/2001/XMLSchema-instance"
-    )
+    et.register_namespace("xsi", "http://www.w3.org/2001/XMLSchema-instance")

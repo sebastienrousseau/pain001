@@ -1,3 +1,19 @@
+# Copyright (C) 2023-2024 Sebastien Rousseau.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
 from pain001.xml.create_root_element import create_root_element
 import xml.etree.ElementTree as ET
 
@@ -24,8 +40,7 @@ def test_create_root_element():
 
     # Check if xsi:schemaLocation attribute is set correctly
     schema_location = (
-        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 "
-        "pain.001.001.03.xsd"
+        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 " "pain.001.001.03.xsd"
     )
     assert root.attrib["xsi:schemaLocation"] == schema_location
 
@@ -87,8 +102,7 @@ def test_create_root_element_sets_all_expected_attributes_correctly():
 
     # Check if xsi:schemaLocation attribute is set correctly
     assert root.attrib["xsi:schemaLocation"] == (
-        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 "
-        "pain.001.001.03.xsd"
+        "urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 " "pain.001.001.03.xsd"
     )
 
     # Check if optional attributes are set correctly

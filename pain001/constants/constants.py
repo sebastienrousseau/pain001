@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2024 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,6 +23,6 @@ valid_xml_types = [
     "pain.001.001.07",  # Request for Reversal (pain.001.001.07)
     "pain.001.001.08",  # Notification of Reversal (pain.001.001.08)
     "pain.001.001.09",  # Request for Amendment (pain.001.001.09)
-    "pain.001.001.10"   # Notification of Amendment (pain.001.001.10)
+    "pain.001.001.10"  # Notification of Amendment (pain.001.001.10)
     "pain.001.001.11",  # Request for Cancellation (pain.001.001.11)
 ]

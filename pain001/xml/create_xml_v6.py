@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2024 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,9 +58,7 @@ def create_xml_v6(root, data):
         "ctrl_sum": data[0]["ctrl_sum"],
         "initiator_name": data[0]["initiator_name"],
         "initiator_street_name": data[0]["initiator_street_name"],
-        "initiator_building_number": data[0][
-            "initiator_building_number"
-        ],
+        "initiator_building_number": data[0]["initiator_building_number"],
         "initiator_postal_code": data[0]["initiator_postal_code"],
         "initiator_town": data[0]["initiator_town_name"],
         "initiator_country": data[0]["initiator_country"],
@@ -93,7 +91,7 @@ def create_xml_v6(root, data):
         "creditor_agent_name": data[0]["creditor_agent_name"],
         "purpose_code": data[0]["purpose_code"],
         "reference_number": data[0]["reference_number"],
-        "reference_date": data[0]["reference_date"]
+        "reference_date": data[0]["reference_date"],
     }
 
     # Render template

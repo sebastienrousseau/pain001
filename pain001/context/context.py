@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2024 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -83,9 +83,7 @@ class Context:
             "CRITICAL": logging.CRITICAL,
         }
 
-        if isinstance(
-            log_level, int
-        ):  # Check if log_level is an integer
+        if isinstance(log_level, int):  # Check if log_level is an integer
             if log_level in valid_log_levels.values():
                 self.log_level = log_level
             else:

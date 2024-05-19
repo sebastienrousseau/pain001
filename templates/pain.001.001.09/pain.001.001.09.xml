@@ -32,6 +32,33 @@
 			<ChrgBr>DEBT</ChrgBr>
 			 <CdtTrfTxInf>
 			<PmtId>
+				<EndToEndId>PaymentID6789</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="EUR">150.00</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>Global Tech</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>DE68210501700024690959</IBAN>
+				</Id>
+			</CdtrAcct>
+			
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
+			 <CdtTrfTxInf>
+			<PmtId>
 				<EndToEndId>PaymentID4321</EndToEndId>
 			</PmtId>
 			<Amt>
