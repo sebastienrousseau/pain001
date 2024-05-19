@@ -1,5 +1,5 @@
 from click.testing import CliRunner
-from pain001.__main__ import main
+from pain001.__main__ import cli
 
 
 class TestMain:
@@ -12,7 +12,7 @@ class TestMain:
 
     def test_main_with_valid_files(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 self.xml_message_type,
@@ -32,7 +32,7 @@ class TestMain:
 
     def test_main_with_missing_xml_message_type(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_template_file_path",
                 self.xml_file,
@@ -47,7 +47,7 @@ class TestMain:
 
     def test_main_with_missing_xsd_template_file(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 self.xml_message_type,
@@ -62,7 +62,7 @@ class TestMain:
 
     def test_main_with_missing_data_file(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 self.xml_message_type,
@@ -77,7 +77,7 @@ class TestMain:
 
     def test_main_with_invalid_xml_message_type(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 "invalid",
@@ -94,7 +94,7 @@ class TestMain:
 
     def test_main_with_invalid_xml_template_file(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 self.xml_message_type,
@@ -113,7 +113,7 @@ class TestMain:
 
     def test_main_with_invalid_xsd_template_file(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 self.xml_message_type,
@@ -132,7 +132,7 @@ class TestMain:
 
     def test_main_with_invalid_data_file(self):
         result = self.runner.invoke(
-            main,
+            cli,
             [
                 "--xml_message_type",
                 self.xml_message_type,
