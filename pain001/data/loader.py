@@ -24,6 +24,16 @@ from pain001.db.load_db_data import load_db_data
 from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.db.validate_db_data import validate_db_data
 from pain001.exceptions import DataSourceError, PaymentValidationError
+from pain001.json.load_json_data import (
+    load_json_data,
+    load_json_data_streaming,
+    load_jsonl_data,
+    load_jsonl_data_streaming,
+)
+from pain001.parquet.load_parquet_data import (
+    load_parquet_data,
+    load_parquet_data_streaming,
+)
 
 
 def load_payment_data(
@@ -38,7 +48,8 @@ def load_payment_data(
 
     Args:
         data_source: The payment data source. Supports:
-            - str: File path to CSV (.csv) or SQLite (.db) file
+            - str: File path to CSV (.csv), SQLite (.db), JSON (.json/.jsonl),
+                   or Parquet (.parquet) file
             - list: List of dictionaries with payment data
             - dict: Single payment transaction as dictionary
 
@@ -53,6 +64,13 @@ def load_payment_data(
         # Existing file-based usage (backward compatible)
         >>> data = load_payment_data('payments.csv')
         >>> data = load_payment_data('payments.db')
+
+        # New JSON formats
+        >>> data = load_payment_data('payments.json')
+        >>> data = load_payment_data('payments.jsonl')  # JSON Lines
+
+        # New Parquet format (requires pyarrow)
+        >>> data = load_payment_data('payments.parquet')
 
         # New direct Python data usage
         >>> data = load_payment_data([
@@ -86,9 +104,10 @@ def load_payment_data(
 
 def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     """
-    Load data from file (CSV or SQLite).
+    Load data from file (CSV, SQLite, JSON, or Parquet).
 
-    This preserves the existing behavior for backward compatibility.
+    This preserves the existing behavior for backward compatibility
+    and adds support for JSON and Parquet formats.
     """
     if file_path.endswith(".csv"):
         data = load_csv_data(file_path)
@@ -106,9 +125,34 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
             )
         return data
 
+    elif file_path.endswith(".json"):
+        data = load_json_data(file_path)
+        if not validate_csv_data(data):  # Reuse CSV validator
+            raise PaymentValidationError(
+                f"JSON data validation failed for {file_path}"
+            )
+        return data
+
+    elif file_path.endswith(".jsonl"):
+        data = load_jsonl_data(file_path)
+        if not validate_csv_data(data):  # Reuse CSV validator
+            raise PaymentValidationError(
+                f"JSONL data validation failed for {file_path}"
+            )
+        return data
+
+    elif file_path.endswith(".parquet"):
+        data = load_parquet_data(file_path)
+        if not validate_csv_data(data):  # Reuse CSV validator
+            raise PaymentValidationError(
+                f"Parquet data validation failed for {file_path}"
+            )
+        return data
+
     else:
         raise DataSourceError(
-            f"Unsupported file type: {file_path}. Expected .csv or .db file."
+            f"Unsupported file type: {file_path}. "
+            f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
 
 
@@ -219,7 +263,7 @@ def _load_from_file_streaming(
     file_path: str, chunk_size: int, validate: bool = True
 ) -> Generator[list[dict[str, Any]], None, None]:
     """
-    Stream data from file (CSV or SQLite) in chunks.
+    Stream data from file (CSV, SQLite, JSON, or Parquet) in chunks.
 
     Memory-efficient for large files.
     """
@@ -239,9 +283,34 @@ def _load_from_file_streaming(
                 )
             yield chunk
 
+    elif file_path.endswith(".json"):
+        for chunk in load_json_data_streaming(file_path, chunk_size):
+            if validate and not validate_csv_data(chunk):
+                raise PaymentValidationError(
+                    f"JSON data validation failed for chunk in {file_path}"
+                )
+            yield chunk
+
+    elif file_path.endswith(".jsonl"):
+        for chunk in load_jsonl_data_streaming(file_path, chunk_size):
+            if validate and not validate_csv_data(chunk):
+                raise PaymentValidationError(
+                    f"JSONL data validation failed for chunk in {file_path}"
+                )
+            yield chunk
+
+    elif file_path.endswith(".parquet"):
+        for chunk in load_parquet_data_streaming(file_path, chunk_size):
+            if validate and not validate_csv_data(chunk):
+                raise PaymentValidationError(
+                    f"Parquet data validation failed for chunk in {file_path}"
+                )
+            yield chunk
+
     else:
         raise DataSourceError(
-            f"Unsupported file type: {file_path}. Expected .csv or .db file."
+            f"Unsupported file type: {file_path}. "
+            f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
 
 
