@@ -25,6 +25,7 @@ cryptography = ">=44.0.1,<47.0.0"
 jsonschema = ">=4.17,<4.18"
 fastapi = ">=0.95"
 uvicorn = {version = ">=0.20", extras = ["standard"]}
+httpx = ">=0.23"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
