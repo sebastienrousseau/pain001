@@ -18,7 +18,7 @@
 import uuid
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, Optional
+from typing import Any, Optional
 
 
 class JobStatus(str, Enum):
@@ -38,7 +38,7 @@ class JobResult:
         self,
         job_id: str,
         status: JobStatus,
-        result: Optional[Dict[str, Any]] = None,
+        result: Optional[dict[str, Any]] = None,
         error: Optional[str] = None,
     ):
         """Initialize job result.
@@ -57,7 +57,7 @@ class JobResult:
         self.updated_at = datetime.utcnow()
         self.progress_percent = 0
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary."""
         return {
             "job_id": self.job_id,
@@ -79,7 +79,7 @@ class JobManager:
         Args:
             max_jobs: Maximum number of jobs to keep in memory.
         """
-        self.jobs: Dict[str, JobResult] = {}
+        self.jobs: dict[str, JobResult] = {}
         self.max_jobs = max_jobs
 
     def create_job(self) -> str:
@@ -111,7 +111,7 @@ class JobManager:
         job_id: str,
         status: JobStatus,
         progress: int = 0,
-        result: Optional[Dict[str, Any]] = None,
+        result: Optional[dict[str, Any]] = None,
         error: Optional[str] = None,
     ) -> None:
         """Update job status.
@@ -163,7 +163,8 @@ class JobManager:
         completed_jobs = [
             (job_id, job)
             for job_id, job in self.jobs.items()
-            if job.status in [
+            if job.status
+            in [
                 JobStatus.SUCCESS,
                 JobStatus.FAILED,
                 JobStatus.CANCELLED,

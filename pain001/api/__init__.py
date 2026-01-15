@@ -43,6 +43,3 @@ __all__ = [
     "ValidationRequest",
     "ValidationResponse",
 ]
-from pain001.api.app import app
-
-__all__ = ["app"]

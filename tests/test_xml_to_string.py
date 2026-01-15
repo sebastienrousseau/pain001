@@ -36,7 +36,9 @@ class TestXmlToString:
 
         assert result.startswith('<?xml version="1.0" encoding="UTF-8"?>')
         assert "<Document" in result
-        assert 'xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"' in result
+        assert (
+            'xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"' in result
+        )
         assert "<CstmrCdtTrfInitn>Test</CstmrCdtTrfInitn>" in result
 
     def test_simple_xml_without_declaration(self):
@@ -159,7 +161,9 @@ class TestXmlToString:
         string_result = xml_to_string(root, include_declaration=True)
 
         # Write to temp file and read back
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".xml", delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(
+            mode="w", suffix=".xml", delete=False
+        ) as tmp:
             tmp_path = tmp.name
 
         # Need to recreate root because indent_xml modifies it
@@ -179,6 +183,7 @@ class TestXmlToString:
         assert "<Child>Test Value</Child>" in file_result
 
         import os
+
         os.unlink(tmp_path)
 
     def test_large_xml_structure(self):

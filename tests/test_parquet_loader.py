@@ -239,7 +239,9 @@ def test_load_parquet_data_streaming_default_chunk_size(parquet_file):
 
 def test_load_parquet_data_streaming_large_dataset(large_parquet_file):
     """Test streaming large Parquet file (10,000 records)."""
-    chunks = list(load_parquet_data_streaming(large_parquet_file, chunk_size=2500))
+    chunks = list(
+        load_parquet_data_streaming(large_parquet_file, chunk_size=2500)
+    )
 
     assert len(chunks) == 4  # 10000 / 2500
     assert all(len(chunk) == 2500 for chunk in chunks)
@@ -263,7 +265,9 @@ def test_load_parquet_data_streaming_partial_last_chunk(tmp_path):
     table = pa.Table.from_pylist(data)
     pq.write_table(table, str(parquet_file))
 
-    chunks = list(load_parquet_data_streaming(str(parquet_file), chunk_size=10))
+    chunks = list(
+        load_parquet_data_streaming(str(parquet_file), chunk_size=10)
+    )
 
     assert len(chunks) == 3  # 10, 10, 5
     assert len(chunks[0]) == 10
@@ -312,7 +316,9 @@ def test_streaming_memory_efficiency(large_parquet_file):
     chunk_count = 0
     record_count = 0
 
-    for chunk in load_parquet_data_streaming(large_parquet_file, chunk_size=1000):
+    for chunk in load_parquet_data_streaming(
+        large_parquet_file, chunk_size=1000
+    ):
         chunk_count += 1
         record_count += len(chunk)
         if chunk_count == 2:
@@ -414,7 +420,9 @@ def test_parquet_support_flag():
     assert isinstance(HAS_PARQUET_SUPPORT, bool)
 
 
-@pytest.mark.skipif(HAS_PARQUET_SUPPORT, reason="Test requires pyarrow NOT installed")
+@pytest.mark.skipif(
+    HAS_PARQUET_SUPPORT, reason="Test requires pyarrow NOT installed"
+)
 def test_load_parquet_data_without_pyarrow():
     """Test DataSourceError when pyarrow not installed."""
     with pytest.raises(DataSourceError) as exc_info:
@@ -425,7 +433,9 @@ def test_load_parquet_data_without_pyarrow():
     assert "pip install pyarrow" in error_msg
 
 
-@pytest.mark.skipif(HAS_PARQUET_SUPPORT, reason="Test requires pyarrow NOT installed")
+@pytest.mark.skipif(
+    HAS_PARQUET_SUPPORT, reason="Test requires pyarrow NOT installed"
+)
 def test_load_parquet_data_streaming_without_pyarrow():
     """Test DataSourceError when pyarrow not installed (streaming)."""
     with pytest.raises(DataSourceError) as exc_info:

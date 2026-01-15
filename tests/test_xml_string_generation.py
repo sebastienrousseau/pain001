@@ -91,7 +91,9 @@ class TestGenerateXmlString:
         assert "John Doe" in xml_content
         assert "Jane Smith" in xml_content
 
-    def test_generate_xml_string_invalid_message_type(self, sample_payment_data_v03):
+    def test_generate_xml_string_invalid_message_type(
+        self, sample_payment_data_v03
+    ):
         """Test generate_xml_string with invalid message type."""
         with pytest.raises(ValueError, match="Invalid XML message type"):
             generate_xml_string(
@@ -143,7 +145,9 @@ class TestGenerateXmlString:
             except (FileNotFoundError, RuntimeError) as e:
                 # Some versions might have different data requirements
                 # This is expected - we're testing the function works, not the data
-                pytest.skip(f"Version {version} requires different data structure: {e}")
+                pytest.skip(
+                    f"Version {version} requires different data structure: {e}"
+                )
 
 
 class TestValidateXmlStringViaXsd:
@@ -204,7 +208,9 @@ class TestValidateXmlStringViaXsd:
     def test_validate_malformed_xml(self, tmp_path):
         """Test validating malformed XML string."""
         xsd_file = tmp_path / "dummy.xsd"
-        xsd_file.write_text('<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>')
+        xsd_file.write_text(
+            '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"/>'
+        )
 
         malformed_xml = "This is not XML"
 
@@ -215,7 +221,9 @@ class TestValidateXmlStringViaXsd:
         """Test validation with nonexistent XSD file."""
         xml_content = '<?xml version="1.0"?><Document/>'
 
-        result = validate_xml_string_via_xsd(xml_content, "/nonexistent/schema.xsd")
+        result = validate_xml_string_via_xsd(
+            xml_content, "/nonexistent/schema.xsd"
+        )
         assert result is False
 
 
@@ -338,16 +346,24 @@ class TestIntegrationXmlString:
 
         # Generate file version
         import os
+
         old_cwd = os.getcwd()
         try:
             os.chdir(tmp_path)
             # Copy template files to tmp directory
             import shutil
+
             template_src = "pain001/templates/pain.001.001.03"
             if os.path.exists(template_src):
-                shutil.copytree(template_src, str(tmp_path / "pain001/templates/pain.001.001.03"), dirs_exist_ok=True)
+                shutil.copytree(
+                    template_src,
+                    str(tmp_path / "pain001/templates/pain.001.001.03"),
+                    dirs_exist_ok=True,
+                )
 
-                os.chdir(old_cwd)  # Go back to original directory for generate_xml
+                os.chdir(
+                    old_cwd
+                )  # Go back to original directory for generate_xml
                 generate_xml(
                     data,
                     "pain.001.001.03",
@@ -356,7 +372,9 @@ class TestIntegrationXmlString:
                 )
 
                 # Find generated file
-                generated_files = list(tmp_path.glob("**/pain.001.001.03_*.xml"))
+                generated_files = list(
+                    tmp_path.glob("**/pain.001.001.03_*.xml")
+                )
                 assert len(generated_files) > 0, "No XML file was generated"
 
                 with open(generated_files[0], encoding="utf-8") as f:

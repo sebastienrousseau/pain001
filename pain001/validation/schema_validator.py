@@ -35,7 +35,7 @@ Example:
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 import jsonschema
 
@@ -115,7 +115,7 @@ class SchemaValidator:
                 e.pos,
             ) from e
 
-    def validate_data(self, data: Dict[str, Any]) -> List[ValidationError]:
+    def validate_data(self, data: dict[str, Any]) -> list[ValidationError]:
         """Validate a data dictionary against the schema.
 
         Args:
@@ -124,15 +124,17 @@ class SchemaValidator:
         Returns:
             List of ValidationError objects. Empty list if valid.
         """
-        errors: List[ValidationError] = []
+        errors: list[ValidationError] = []
 
         try:
             jsonschema.validate(instance=data, schema=self.schema)
         except jsonschema.ValidationError as e:
             # Format the path to JSON pointer notation
-            path = "$." + ".".join(
-                str(p) for p in e.absolute_path
-            ) if e.absolute_path else "$"
+            path = (
+                "$." + ".".join(str(p) for p in e.absolute_path)
+                if e.absolute_path
+                else "$"
+            )
 
             error = ValidationError(
                 message=e.message,
@@ -147,8 +149,8 @@ class SchemaValidator:
         return errors
 
     def validate_row(
-        self, row: Dict[str, Any]
-    ) -> tuple[bool, List[ValidationError]]:
+        self, row: dict[str, Any]
+    ) -> tuple[bool, list[ValidationError]]:
         """Validate a single row of data.
 
         Args:
@@ -160,7 +162,7 @@ class SchemaValidator:
         errors = self.validate_data(row)
         return len(errors) == 0, errors
 
-    def get_required_fields(self) -> List[str]:
+    def get_required_fields(self) -> list[str]:
         """Extract required field names from schema.
 
         Returns:
@@ -168,7 +170,7 @@ class SchemaValidator:
         """
         return self.schema.get("required", [])
 
-    def get_field_schema(self, field_name: str) -> Optional[Dict[str, Any]]:
+    def get_field_schema(self, field_name: str) -> Optional[dict[str, Any]]:
         """Get the schema definition for a specific field.
 
         Args:
@@ -195,8 +197,8 @@ class SchemaValidator:
         return None
 
     def validate_batch(
-        self, rows: List[Dict[str, Any]]
-    ) -> tuple[int, int, List[tuple[int, List[ValidationError]]]]:
+        self, rows: list[dict[str, Any]]
+    ) -> tuple[int, int, list[tuple[int, list[ValidationError]]]]:
         """Validate a batch of rows.
 
         Args:
@@ -208,7 +210,7 @@ class SchemaValidator:
         """
         total_rows = len(rows)
         valid_rows = 0
-        errors: List[tuple[int, List[ValidationError]]] = []
+        errors: list[tuple[int, list[ValidationError]]] = []
 
         for row_idx, row in enumerate(rows):
             row_errors = self.validate_data(row)

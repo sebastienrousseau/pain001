@@ -28,9 +28,11 @@ from pain001.api.models import (
     GenerateXMLResponse,
     HealthResponse,
     JobStatusResponse,
-    ValidationError as ValidationErrorModel,
     ValidationRequest,
     ValidationResponse,
+)
+from pain001.api.models import (
+    ValidationError as ValidationErrorModel,
 )
 from pain001.core.core import generate_xml
 from pain001.data.loader import load_payment_data
@@ -101,7 +103,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
 
         # Format errors
         error_models = []
-        for row_idx, row_errors in errors:
+        for _row_idx, row_errors in errors:
             for error in row_errors:
                 error_models.append(
                     ValidationErrorModel(
@@ -122,12 +124,12 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Validation failed: {str(e)}",
-        )
+        ) from e
 
 
 @app.post(
@@ -166,7 +168,7 @@ async def generate_xml_sync(
 
         if errors:
             error_models = []
-            for row_idx, row_errors in errors:
+            for _row_idx, row_errors in errors:
                 for error in row_errors:
                     error_models.append(
                         ValidationErrorModel(
@@ -190,9 +192,7 @@ async def generate_xml_sync(
             )
 
         # Generate XML
-        output_dir = (
-            Path(request.output_dir) if request.output_dir else None
-        )
+        output_dir = Path(request.output_dir) if request.output_dir else None
         result = generate_xml(
             file_path=str(file_path),
             message_type=request.message_type.value,
@@ -211,12 +211,12 @@ async def generate_xml_sync(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
-        )
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Generation failed: {str(e)}",
-        )
+        ) from e
 
 
 @app.post(
@@ -242,9 +242,7 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict:
         job_id = job_manager.create_job()
 
         # Start background task
-        asyncio.create_task(
-            _process_generation_job(job_id, request)
-        )
+        asyncio.create_task(_process_generation_job(job_id, request))
 
         return {
             "job_id": job_id,
@@ -256,7 +254,7 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to create job: {str(e)}",
-        )
+        ) from e
 
 
 @app.get(
@@ -432,9 +430,7 @@ async def _process_generation_job(
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=70)
 
         # Generate XML
-        output_dir = (
-            Path(request.output_dir) if request.output_dir else None
-        )
+        output_dir = Path(request.output_dir) if request.output_dir else None
         result = generate_xml(
             file_path=str(file_path),
             message_type=request.message_type.value,
