@@ -15,7 +15,6 @@
 
 """Job management for async XML generation."""
 
-import asyncio
 import uuid
 from datetime import datetime
 from enum import Enum

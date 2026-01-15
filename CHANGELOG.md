@@ -5,6 +5,51 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- **FastAPI REST API** - Production-ready RESTful endpoints for payment file generation (Resolves #106):
+  - `POST /api/validate` - Validate payment data against JSON Schema
+  - `POST /api/generate` - Synchronous XML generation with full validation
+  - `POST /api/generate/async` - Asynchronous job submission for long-running generation
+  - `GET /api/status/{job_id}` - Poll job status with real-time progress tracking (0-100%)
+  - `DELETE /api/jobs/{job_id}` - Cancel running async jobs
+  - `GET /api/download/{job_id}` - Download generated XML file from completed job
+  - `GET /api/health` - Health check endpoint with version information
+  - Comprehensive error handling with HTTP status codes (400, 404, 500)
+  - Interactive API documentation via Swagger UI (`/api/docs`) and ReDoc (`/api/redoc`)
+
+- **Job Management System** - UUID-based async job tracking with state machine:
+  - JobManager class with in-memory job store and automatic cleanup
+  - Job lifecycle states: PENDING → PROCESSING → SUCCESS/FAILED/CANCELLED
+  - Real-time progress tracking (0-100%) for long-running operations
+  - Timestamped job creation, modification, and completion
+  - Job cancellation with state validation
+  - Automatic cleanup of old jobs (configurable TTL)
+
+- **Pydantic Request/Response Models** - Type-safe API contracts:
+  - DataSourceType enum (csv, sqlite, json, jsonl, parquet)
+  - MessageType enum (9 ISO versions: pain.001.001.03-11)
+  - JobStatus enum (pending, processing, success, failed, cancelled)
+  - ValidationRequest/Response models with error reporting
+  - GenerateXMLRequest/Response models with file path handling
+  - JobStatusResponse model for job polling
+  - HealthResponse model with version tracking
+
+- **API Integration** - Seamless integration with existing pain001 modules:
+  - Uses `load_payment_data()` for universal file format support (CSV, SQLite, JSON, JSONL, Parquet)
+  - Uses `SchemaValidator` for declarative JSON Schema validation
+  - Uses `generate_xml()` for ISO 20022 compliance and XSD validation
+  - Proper error handling with PaymentValidationError exceptions
+  - Async task processing with background job workers
+
+- **Dependencies**:
+  - FastAPI 0.128.0 - Modern async web framework with automatic OpenAPI generation
+  - Uvicorn 0.40.0 - Production-ready ASGI server
+  - Pydantic v2 - Request/response validation and serialization
+  - All dependencies compatible with Python 3.9+
+
 ## [0.0.46] - 2026-01-14
 
 ### Added

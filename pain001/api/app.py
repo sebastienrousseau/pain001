@@ -17,7 +17,6 @@
 
 import asyncio
 from pathlib import Path
-from typing import List
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import FileResponse
