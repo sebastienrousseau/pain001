@@ -1194,6 +1194,15 @@ class TestGenerateXMLFunction(unittest.TestCase):
             )
         self.assertEqual(cm.exception.code, 1)
 
+    def test_validate_xml_string_via_xsd_parsing_exception(self) -> None:
+        """Test exception handling in validate_xml_string_via_xsd with malformed XML."""
+        from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
+
+        # Test with malformed XML that causes parsing error
+        malformed_xml = "<Document><invalid"
+        result = validate_xml_string_via_xsd(malformed_xml, self.test_xsd_path)
+        self.assertFalse(result)
+
 
 if __name__ == "__main__":
     unittest.main()

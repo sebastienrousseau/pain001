@@ -18,6 +18,7 @@ Tests generate_xml_string() and validate_xml_string_via_xsd() for serverless/API
 """
 
 import pytest
+
 from pain001.xml.generate_xml import generate_xml_string
 from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
 
@@ -345,7 +346,7 @@ class TestIntegrationXmlString:
             template_src = "pain001/templates/pain.001.001.03"
             if os.path.exists(template_src):
                 shutil.copytree(template_src, str(tmp_path / "pain001/templates/pain.001.001.03"), dirs_exist_ok=True)
-                
+
                 os.chdir(old_cwd)  # Go back to original directory for generate_xml
                 generate_xml(
                     data,
@@ -353,12 +354,12 @@ class TestIntegrationXmlString:
                     f"{tmp_path}/pain001/templates/pain.001.001.03/template.xml",
                     f"{tmp_path}/pain001/templates/pain.001.001.03/pain.001.001.03.xsd",
                 )
-                
+
                 # Find generated file
                 generated_files = list(tmp_path.glob("**/pain.001.001.03_*.xml"))
                 assert len(generated_files) > 0, "No XML file was generated"
-                
-                with open(generated_files[0], "r", encoding="utf-8") as f:
+
+                with open(generated_files[0], encoding="utf-8") as f:
                     xml_file_content = f.read()
 
                 # Both should contain same key elements

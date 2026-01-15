@@ -19,8 +19,6 @@ Tests XML-to-string conversion for serverless/API architectures.
 
 import xml.etree.ElementTree as ET
 
-import pytest
-
 from pain001.xml.xml_to_string import xml_to_string
 
 
@@ -150,6 +148,7 @@ class TestXmlToString:
     def test_consistency_with_write_xml_to_file(self):
         """Test that xml_to_string produces same structure as write_xml_to_file."""
         import tempfile
+
         from pain001.xml.write_xml_to_file import write_xml_to_file
 
         root = ET.Element("Document")
@@ -170,7 +169,7 @@ class TestXmlToString:
 
         write_xml_to_file(tmp_path, root2)
 
-        with open(tmp_path, "r", encoding="utf-8") as f:
+        with open(tmp_path, encoding="utf-8") as f:
             file_result = f.read()
 
         # Both should have same structure (minor differences in spacing acceptable)

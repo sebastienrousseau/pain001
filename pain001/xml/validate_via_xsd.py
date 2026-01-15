@@ -1,7 +1,8 @@
+from io import StringIO
+
 import xmlschema
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
-from io import StringIO
 
 # Copyright (C) 2023-2026 Sebastien Rousseau.
 #
