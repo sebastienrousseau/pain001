@@ -1,0 +1,220 @@
+# Copyright (C) 2023-2026 Sebastien Rousseau.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""JSON Schema-based validator for payment data.
+
+This module provides schema-based validation for payment data against
+ISO 20022 specifications. Schemas are externalized to JSON files to support
+multiple message types and custom validation rules.
+
+Example:
+    >>> from pain001.validation.schema_validator import SchemaValidator
+    >>>
+    >>> validator = SchemaValidator("pain.001.001.03")
+    >>> errors = validator.validate_data({
+    ...     "id": "MSG001",
+    ...     "date": "2024-01-15",
+    ...     "nb_of_txs": 1,
+    ...     # ... additional fields
+    ... })
+    >>> if not errors:
+    ...     print("✓ Data is valid")
+"""
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import jsonschema
+
+
+class ValidationError:
+    """Represents a validation error."""
+
+    def __init__(
+        self,
+        message: str,
+        path: str,
+        value: Any,
+        rule: str,
+    ):
+        """Initialize a validation error.
+
+        Args:
+            message: Human-readable error message.
+            path: JSON path to the invalid field (e.g., "$.debtor_account").
+            value: The invalid value.
+            rule: The validation rule that failed (e.g., "pattern", "required").
+        """
+        self.message = message
+        self.path = path
+        self.value = value
+        self.rule = rule
+
+    def __str__(self) -> str:
+        """Return formatted error string."""
+        return f"{self.path}: {self.message}"
+
+    def __repr__(self) -> str:
+        """Return repr of error."""
+        return f"ValidationError(path={self.path!r}, rule={self.rule!r})"
+
+
+class SchemaValidator:
+    """Validates payment data against JSON Schema files.
+
+    Attributes:
+        schema: The loaded JSON schema dictionary.
+        schema_path: Path to the schema file.
+    """
+
+    def __init__(
+        self,
+        message_type: str,
+        schema_dir: Optional[Path] = None,
+    ):
+        """Initialize the schema validator.
+
+        Args:
+            message_type: ISO 20022 message type (e.g., "pain.001.001.03").
+            schema_dir: Directory containing schema files. Defaults to pain001/schemas/.
+
+        Raises:
+            FileNotFoundError: If schema file not found.
+            json.JSONDecodeError: If schema file is invalid JSON.
+        """
+        if schema_dir is None:
+            schema_dir = Path(__file__).parent.parent / "schemas"
+
+        self.schema_path = schema_dir / f"{message_type}.schema.json"
+
+        if not self.schema_path.exists():
+            raise FileNotFoundError(
+                f"Schema file not found: {self.schema_path}"
+            )
+
+        try:
+            with open(self.schema_path) as f:
+                self.schema = json.load(f)
+        except json.JSONDecodeError as e:
+            raise json.JSONDecodeError(
+                f"Invalid JSON in schema file {self.schema_path}: {e.msg}",
+                e.doc,
+                e.pos,
+            ) from e
+
+    def validate_data(self, data: Dict[str, Any]) -> List[ValidationError]:
+        """Validate a data dictionary against the schema.
+
+        Args:
+            data: Dictionary containing payment data to validate.
+
+        Returns:
+            List of ValidationError objects. Empty list if valid.
+        """
+        errors: List[ValidationError] = []
+
+        try:
+            jsonschema.validate(instance=data, schema=self.schema)
+        except jsonschema.ValidationError as e:
+            # Format the path to JSON pointer notation
+            path = "$." + ".".join(
+                str(p) for p in e.absolute_path
+            ) if e.absolute_path else "$"
+
+            error = ValidationError(
+                message=e.message,
+                path=path,
+                value=e.instance,
+                rule=e.validator,
+            )
+            errors.append(error)
+        except jsonschema.SchemaError as e:
+            raise ValueError(f"Invalid schema: {e.message}") from e
+
+        return errors
+
+    def validate_row(
+        self, row: Dict[str, Any]
+    ) -> tuple[bool, List[ValidationError]]:
+        """Validate a single row of data.
+
+        Args:
+            row: Dictionary containing a single row of data.
+
+        Returns:
+            Tuple of (is_valid, errors). is_valid is True if no errors.
+        """
+        errors = self.validate_data(row)
+        return len(errors) == 0, errors
+
+    def get_required_fields(self) -> List[str]:
+        """Extract required field names from schema.
+
+        Returns:
+            List of required field names.
+        """
+        return self.schema.get("required", [])
+
+    def get_field_schema(self, field_name: str) -> Optional[Dict[str, Any]]:
+        """Get the schema definition for a specific field.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            Field schema dictionary, or None if field not in schema.
+        """
+        properties = self.schema.get("properties", {})
+        return properties.get(field_name)
+
+    def get_field_description(self, field_name: str) -> Optional[str]:
+        """Get the description for a specific field.
+
+        Args:
+            field_name: Name of the field.
+
+        Returns:
+            Field description, or None if not available.
+        """
+        field_schema = self.get_field_schema(field_name)
+        if field_schema:
+            return field_schema.get("description")
+        return None
+
+    def validate_batch(
+        self, rows: List[Dict[str, Any]]
+    ) -> tuple[int, int, List[tuple[int, List[ValidationError]]]]:
+        """Validate a batch of rows.
+
+        Args:
+            rows: List of dictionaries containing payment data.
+
+        Returns:
+            Tuple of (total_rows, valid_rows, errors).
+            errors is a list of (row_index, error_list) tuples for invalid rows.
+        """
+        total_rows = len(rows)
+        valid_rows = 0
+        errors: List[tuple[int, List[ValidationError]]] = []
+
+        for row_idx, row in enumerate(rows):
+            row_errors = self.validate_data(row)
+            if row_errors:
+                errors.append((row_idx, row_errors))
+            else:
+                valid_rows += 1
+
+        return total_rows, valid_rows, errors

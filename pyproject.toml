@@ -22,6 +22,7 @@ python = "^3.9.2"
 rich = "13.7.1"
 xmlschema = "3.3.1"
 cryptography = ">=44.0.1,<47.0.0"
+jsonschema = ">=4.17,<4.18"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"
