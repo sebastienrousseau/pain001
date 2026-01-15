@@ -150,6 +150,58 @@ class TestDataLoader:
         with pytest.raises(DataSourceError, match="Unsupported file type"):
             load_payment_data("data.txt")
 
+    def test_load_from_json_file(self, sample_payment_data, tmp_path) -> None:
+        """Test loading from JSON file (new feature)."""
+        import json
+
+        json_file = tmp_path / "payments.json"
+        with open(json_file, "w") as f:
+            json.dump(sample_payment_data, f)
+
+        data = load_payment_data(str(json_file))
+
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["id"] == "1"
+        assert data[0]["payment_amount"] == "1000.00"
+
+    def test_load_from_jsonl_file(self, sample_payment_data, tmp_path) -> None:
+        """Test loading from JSONL file (new feature)."""
+        import json
+
+        jsonl_file = tmp_path / "payments.jsonl"
+        with open(jsonl_file, "w") as f:
+            for record in sample_payment_data:
+                f.write(json.dumps(record) + "\n")
+
+        data = load_payment_data(str(jsonl_file))
+
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["id"] == "1"
+
+    @pytest.mark.skipif(
+        not pytest.importorskip("pyarrow", reason="pyarrow not installed"),
+        reason="pyarrow not installed",
+    )
+    def test_load_from_parquet_file(self, sample_payment_data, tmp_path) -> None:
+        """Test loading from Parquet file (new feature, requires pyarrow)."""
+        try:
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+        except ImportError:
+            pytest.skip("pyarrow not available")
+
+        parquet_file = tmp_path / "payments.parquet"
+        table = pa.Table.from_pylist(sample_payment_data)
+        pq.write_table(table, str(parquet_file))
+
+        data = load_payment_data(str(parquet_file))
+
+        assert isinstance(data, list)
+        assert len(data) == 1
+        assert data[0]["id"] == "1"
+
     # ========== NEW FEATURE TESTS ==========
 
     def test_load_from_list_of_dicts(self, sample_payment_data) -> None:

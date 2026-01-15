@@ -117,13 +117,19 @@ def _load_data(
     data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
     start_time: float,
 ) -> list[dict[str, Any]]:
-    """Load and validate payment data from CSV/DB or Python objects."""
+    """Load and validate payment data from files or Python objects."""
     # Determine data source type
     if isinstance(data_file_path, str):
         if data_file_path.endswith(".csv"):
             data_source_type = "csv"
         elif data_file_path.endswith(".db") or "sqlite" in data_file_path:
             data_source_type = "sqlite"
+        elif data_file_path.endswith(".json"):
+            data_source_type = "json"
+        elif data_file_path.endswith(".jsonl"):
+            data_source_type = "jsonl"
+        elif data_file_path.endswith(".parquet"):
+            data_source_type = "parquet"
         else:
             data_source_type = "file"
     elif isinstance(data_file_path, list):
@@ -222,7 +228,7 @@ def process_files(
         xml_message_type: XML message type (e.g., 'pain.001.001.03').
         xml_template_file_path: Path to the XML template file.
         xsd_schema_file_path: Path to the XSD schema file.
-        data_file_path: CSV/DB path or Python data (list/dict).
+        data_file_path: File path (CSV/DB/JSON/Parquet) or Python data (list/dict).
 
     Raises:
         ValueError: If the XML message type is not supported or data is invalid.
@@ -238,6 +244,12 @@ def process_files(
             data_source_type = "csv"
         elif data_file_path.endswith(".db") or "sqlite" in data_file_path:
             data_source_type = "sqlite"
+        elif data_file_path.endswith(".json"):
+            data_source_type = "json"
+        elif data_file_path.endswith(".jsonl"):
+            data_source_type = "jsonl"
+        elif data_file_path.endswith(".parquet"):
+            data_source_type = "parquet"
         else:
             data_source_type = "file"
     elif isinstance(data_file_path, list):
