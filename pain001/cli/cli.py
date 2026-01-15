@@ -57,42 +57,71 @@ console.print(table)
 
 
 @click.command(
-    help=("To use Pain001, you must specify the following options:\n\n"),
+    help=(
+        "Generate ISO 20022-compliant payment XML files from CSV, SQLite, JSON, or Parquet data.\n\n"
+        "EXAMPLES:\n\n"
+        "  Basic usage (CSV input):\n"
+        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv\n\n"
+        "  Validation only (dry-run):\n"
+        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --dry-run\n\n"
+        "  Custom output directory:\n"
+        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv -o /output\n\n"
+        "  Verbose logging:\n"
+        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --verbose\n\n"
+        "  JSON input:\n"
+        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.json\n\n"
+        "EXIT CODES:\n"
+        "  0 = Success\n"
+        "  1 = Validation or processing error\n"
+        "  2 = Invalid arguments or configuration"
+    ),
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 @click.option(
     "-t",
-    "--xml_message_type",
-    default=None,
-    help="Type of XML message (required)",
+    "--xml-message-type",
+    "xml_message_type",
+    required=True,
+    type=click.Choice(valid_xml_types, case_sensitive=False),
+    help="ISO 20022 message type (e.g., 'pain.001.001.03', 'pain.001.001.11')",
 )
 @click.option(
     "-m",
-    "--xml_template_file_path",
-    default=None,
-    type=click.Path(),
-    help="Path to XML template file (required)",
+    "--template",
+    "xml_template_file_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Path to Jinja2 XML template file",
 )
 @click.option(
     "-s",
-    "--xsd_schema_file_path",
-    default=None,
-    type=click.Path(),
-    help="Path to XSD template file (required)",
+    "--schema",
+    "xsd_schema_file_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Path to XSD schema file for validation",
 )
 @click.option(
     "-d",
-    "--data_file_path",
-    default=None,
-    type=click.Path(),
-    help="Path to data file (CSV or SQLite) (required)",
+    "--data",
+    "data_file_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Path to payment data file (CSV, SQLite, JSON, JSONL, or Parquet)",
 )
 @click.option(
     "-c",
-    "--config_file",
-    default=None,
-    type=click.Path(),
-    help="Path to configuration file (optional)",
+    "--config",
+    "config_file",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    help="Path to configuration INI file (optional)",
+)
+@click.option(
+    "-o",
+    "--output-dir",
+    "output_dir",
+    type=click.Path(file_okay=False, writable=True),
+    help="Output directory for generated XML files (default: current directory)",
 )
 @click.option(
     "--dry-run",
@@ -101,17 +130,26 @@ console.print(table)
     is_flag=True,
     default=False,
     help=(
-        "Validate templates, schema, and data without generating XML output. "
-        "Returns exit code 0 on success."
+        "Validate inputs without generating XML. "
+        "Useful for CI/CD pre-flight checks. Exit code 0 = valid, 1 = invalid."
     ),
 )
-def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    xml_message_type: Optional[str],
-    xml_template_file_path: Optional[str],
-    xsd_schema_file_path: Optional[str],
-    data_file_path: Optional[str],
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Enable detailed logging output (INFO and DEBUG messages)",
+)
+def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+    xml_message_type: str,
+    xml_template_file_path: str,
+    xsd_schema_file_path: str,
+    data_file_path: str,
     config_file: Optional[str],
-    dry_run: bool = False,
+    output_dir: Optional[str],
+    dry_run: bool,
+    verbose: bool,
 ) -> None:
     """CLI entry point for Pain001 ISO 20022 payment file generation.
 
@@ -119,28 +157,24 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         xml_message_type: ISO 20022 message type (e.g., 'pain.001.001.03').
         xml_template_file_path: Path to Jinja2 XML template file.
         xsd_schema_file_path: Path to XSD schema for validation.
-        data_file_path: Path to CSV or SQLite data file.
+        data_file_path: Path to CSV, SQLite, JSON, JSONL, or Parquet data file.
         config_file: Optional configuration file path.
+        output_dir: Optional output directory for generated XML files.
         dry_run: If True, validate inputs without generating XML.
+        verbose: If True, enable detailed logging output.
 
     Exits:
-        0 on success, 1 on validation or processing error.
+        0 on success, 1 on validation/processing error, 2 on invalid arguments.
     """
-    # Check that the required arguments are provided first
-    if not xml_message_type:
-        print("The XML message type is required.")
-        sys.exit(1)
-    if not xml_template_file_path:
-        print("The XML template file path is required.")
-        sys.exit(1)
-    if not xsd_schema_file_path:
-        print("The XSD schema file path is required.")
-        sys.exit(1)
-    if not data_file_path:
-        print("The data file path is required.")
-        sys.exit(1)
+    # Configure logging level based on verbose flag
+    logger = Context.get_instance().get_logger()
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+        console.print("[bold cyan]ℹ Verbose logging enabled[/bold cyan]")
+    else:
+        logger.setLevel(logging.INFO)
 
-    # Expand user-friendly paths (now guaranteed to be non-None)
+    # Expand user-friendly paths
     xml_template_file_path = os.path.expanduser(xml_template_file_path)
     xsd_schema_file_path = os.path.expanduser(xsd_schema_file_path)
     data_file_path = os.path.expanduser(data_file_path)
@@ -160,17 +194,10 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
                 "data_file_path", data_file_path
             )
 
-    # Check file existence
-    for file_path in [
-        xml_template_file_path,
-        xsd_schema_file_path,
-        data_file_path,
-    ]:
-        if not os.path.isfile(file_path):
-            print(f"The file '{file_path}' does not exist.")
-            sys.exit(1)
-
-    logger = Context.get_instance().get_logger()
+    # Create output directory if specified
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
+        console.print(f"[cyan]ℹ Output directory: {output_dir}[/cyan]")
 
     log_event(
         logger,
@@ -182,7 +209,7 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         },
     )
 
-    # Check that the XML message type is valid
+    # Message type validation (Click already validates via Choice, this is redundant but kept for logging)
     if xml_message_type not in valid_xml_types:
         log_validation_event(
             logger,
@@ -191,15 +218,15 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             ValueError(f"Invalid XML message type: {xml_message_type}"),
             message_type=xml_message_type,
         )
-        print(
-            f"""
-                Invalid XML message type: {xml_message_type}.
-                Valid types are: {", ".join(valid_xml_types)}.
-            """
+        console.print(
+            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{xml_message_type}[/yellow]\n"
+            f"[cyan]Valid types:[/cyan] {', '.join(valid_xml_types)}",
+            style="red",
         )
-        sys.exit(1)
+        sys.exit(2)
 
-    # Validate XML and XSD schemas
+    # Validate XML template against XSD schema
+    console.print("[cyan]→ Validating XML template against XSD schema...[/cyan]")
     try:
         validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
         log_validation_event(
@@ -208,6 +235,7 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             True,
             message_type=xml_message_type,
         )
+        console.print("[bold green]✓ Schema validation passed[/bold green]")
     except Exception as e:
         log_validation_event(
             logger,
@@ -216,20 +244,33 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             e,
             message_type=xml_message_type,
         )
-        print(f"Schema validation failed: {e}")
+        console.print(
+            f"[bold red]✗ Schema validation failed:[/bold red] {e}",
+            style="red",
+        )
+        console.print(
+            "\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
+            f"Expected: {xml_message_type}"
+        )
         sys.exit(1)
 
     if dry_run:
         # Validate payment data (same path as generation) but skip XML output
+        console.print("[cyan]→ Validating payment data...[/cyan]")
         try:
-            load_payment_data(data_file_path)
+            data = load_payment_data(data_file_path)
+            record_count = len(data)
             log_validation_event(
                 logger,
                 "payment_data",
                 True,
                 message_type=xml_message_type,
             )
-        except (FileNotFoundError, ValueError) as e:
+            console.print(
+                f"[bold green]✓ Data validation passed[/bold green] "
+                f"({record_count} payment records)"
+            )
+        except (FileNotFoundError, ValueError, Exception) as e:
             log_validation_event(
                 logger,
                 "payment_data",
@@ -237,7 +278,22 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
                 e,
                 message_type=xml_message_type,
             )
-            print(f"Data validation failed: {e}")
+            console.print(
+                f"[bold red]✗ Data validation failed:[/bold red] {e}",
+                style="red",
+            )
+            # Provide helpful error messages based on file extension
+            file_ext = os.path.splitext(data_file_path)[1].lower()
+            if file_ext == ".parquet":
+                console.print(
+                    "\n[yellow]Tip:[/yellow] Parquet files require pyarrow. "
+                    "Install with: [cyan]pip install pyarrow[/cyan]"
+                )
+            elif file_ext in [".json", ".jsonl"]:
+                console.print(
+                    "\n[yellow]Tip:[/yellow] Ensure JSON is valid. "
+                    "Check for syntax errors or invalid structure."
+                )
             sys.exit(1)
 
         log_event(
@@ -247,17 +303,51 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             **{
                 Fields.MESSAGE_TYPE: xml_message_type,
                 "validation_passed": True,
+                "record_count": record_count,
             },
         )
-        print("Validation succeeded. No XML generated (--dry-run).")
+        console.print(
+            "\n[bold green]✓ All validations passed[/bold green] "
+            "[dim](--dry-run: no XML generated)[/dim]"
+        )
         return
 
-    process_files(
-        xml_message_type,
-        xml_template_file_path,
-        xsd_schema_file_path,
-        data_file_path,
-    )
+    # Generate XML files
+    console.print("[cyan]→ Generating XML payment files...[/cyan]")
+    try:
+        # Change to output directory if specified
+        original_cwd = os.getcwd()
+        if output_dir:
+            os.chdir(output_dir)
+
+        process_files(
+            xml_message_type,
+            xml_template_file_path,
+            xsd_schema_file_path,
+            data_file_path,
+        )
+
+        # Restore original directory
+        if output_dir:
+            os.chdir(original_cwd)
+
+        console.print(
+            f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
+            f"[cyan]Message Type:[/cyan] {xml_message_type}\n"
+            f"[cyan]Output Location:[/cyan] {output_dir or os.getcwd()}"
+        )
+    except Exception as e:
+        if output_dir:
+            os.chdir(original_cwd)
+        console.print(
+            f"[bold red]✗ Generation failed:[/bold red] {e}",
+            style="red",
+        )
+        if verbose:
+            import traceback
+            console.print("\n[yellow]Traceback:[/yellow]")
+            console.print(traceback.format_exc())
+        sys.exit(1)
 
 
 if __name__ == "__main__":
