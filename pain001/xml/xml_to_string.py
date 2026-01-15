@@ -56,14 +56,14 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
     indent_xml(root)
 
     # Convert to bytes with proper encoding
-    xml_bytes = et.tostring(
+    xml_bytes: bytes = et.tostring(
         root,
         encoding="utf-8",
         method="xml",
     )
 
     # Decode to string
-    xml_str = xml_bytes.decode("utf-8")
+    xml_str: str = xml_bytes.decode("utf-8")
 
     # Add XML declaration if requested
     if include_declaration and not xml_str.startswith("<?xml"):
