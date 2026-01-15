@@ -184,7 +184,9 @@ class TestDataLoader:
         not pytest.importorskip("pyarrow", reason="pyarrow not installed"),
         reason="pyarrow not installed",
     )
-    def test_load_from_parquet_file(self, sample_payment_data, tmp_path) -> None:
+    def test_load_from_parquet_file(
+        self, sample_payment_data, tmp_path
+    ) -> None:
         """Test loading from Parquet file (new feature, requires pyarrow)."""
         try:
             import pyarrow as pa

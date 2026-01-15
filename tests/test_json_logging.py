@@ -127,13 +127,21 @@ class TestConfigureJSONLogging(unittest.TestCase):
     def setUp(self) -> None:
         """Set up test fixtures."""
         # Clear any environment variables
-        for key in ["PAIN001_LOG_LEVEL", "PAIN001_LOG_FILE", "PAIN001_LOG_JSON"]:
+        for key in [
+            "PAIN001_LOG_LEVEL",
+            "PAIN001_LOG_FILE",
+            "PAIN001_LOG_JSON",
+        ]:
             os.environ.pop(key, None)
 
     def tearDown(self) -> None:
         """Clean up test fixtures."""
         # Clear environment variables
-        for key in ["PAIN001_LOG_LEVEL", "PAIN001_LOG_FILE", "PAIN001_LOG_JSON"]:
+        for key in [
+            "PAIN001_LOG_LEVEL",
+            "PAIN001_LOG_FILE",
+            "PAIN001_LOG_JSON",
+        ]:
             os.environ.pop(key, None)
 
     def test_configure_console_only(self) -> None:
@@ -339,7 +347,9 @@ class TestExecutionMetrics(unittest.TestCase):
         metrics.track_validation("business_rules", "PASSED")
 
         self.assertEqual(metrics.validation_results["schema"], "PASSED")
-        self.assertEqual(metrics.validation_results["business_rules"], "PASSED")
+        self.assertEqual(
+            metrics.validation_results["business_rules"], "PASSED"
+        )
         self.assertEqual(metrics.status, ExecutionStatus.SUCCESS)
 
     def test_execution_metrics_track_validation_failure(self) -> None:

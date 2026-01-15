@@ -63,6 +63,7 @@ class TestIntegrationMatrix(unittest.TestCase):
     def tearDownClass(cls) -> None:
         """Clean up temporary files after all tests."""
         import shutil
+
         if cls.temp_dir.exists():
             shutil.rmtree(cls.temp_dir)
 
@@ -400,7 +401,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         data_file = version_dir / "template.csv"
 
         # Verify all required files exist
-        self.assertTrue(template_file.exists(), f"Template missing for {version}")
+        self.assertTrue(
+            template_file.exists(), f"Template missing for {version}"
+        )
         self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
         self.assertTrue(data_file.exists(), f"CSV data missing for {version}")
 
@@ -415,7 +418,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         # Verify XML generated and valid
         # XML is created in the template directory, not current directory
         xml_file = version_dir / f"{version}.xml"
-        self.assertTrue(xml_file.exists(), f"XML not generated for {version} with CSV")
+        self.assertTrue(
+            xml_file.exists(), f"XML not generated for {version} with CSV"
+        )
         self.assertGreater(
             xml_file.stat().st_size,
             1000,
@@ -441,7 +446,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         data_file = version_dir / "template.db"
 
         # Verify all required files exist
-        self.assertTrue(template_file.exists(), f"Template missing for {version}")
+        self.assertTrue(
+            template_file.exists(), f"Template missing for {version}"
+        )
         self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
         self.assertTrue(data_file.exists(), f"SQLite DB missing for {version}")
 
@@ -456,7 +463,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         # Verify XML generated and valid
         # XML is created in the template directory, not current directory
         xml_file = version_dir / f"{version}.xml"
-        self.assertTrue(xml_file.exists(), f"XML not generated for {version} with SQLite")
+        self.assertTrue(
+            xml_file.exists(), f"XML not generated for {version} with SQLite"
+        )
         self.assertGreater(
             xml_file.stat().st_size,
             1000,
@@ -481,7 +490,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         schema_file = version_dir / f"{version}.xsd"
 
         # Verify required files exist
-        self.assertTrue(template_file.exists(), f"Template missing for {version}")
+        self.assertTrue(
+            template_file.exists(), f"Template missing for {version}"
+        )
         self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
 
         # Generate XML
@@ -495,7 +506,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         # Verify XML generated and valid
         # XML is created in the template directory, not current directory
         xml_file = version_dir / f"{version}.xml"
-        self.assertTrue(xml_file.exists(), f"XML not generated for {version} with JSON")
+        self.assertTrue(
+            xml_file.exists(), f"XML not generated for {version} with JSON"
+        )
         self.assertGreater(
             xml_file.stat().st_size,
             1000,
@@ -527,7 +540,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         csv_file = version_dir / "template.csv"
 
         # Verify required files exist
-        self.assertTrue(template_file.exists(), f"Template missing for {version}")
+        self.assertTrue(
+            template_file.exists(), f"Template missing for {version}"
+        )
         self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
         self.assertTrue(csv_file.exists(), f"CSV missing for {version}")
 
@@ -550,7 +565,10 @@ class TestIntegrationMatrix(unittest.TestCase):
 
         # Verify XML generated and valid
         xml_file = version_dir / f"{version}.xml"
-        self.assertTrue(xml_file.exists(), f"XML not generated for {version} with JSON-from-CSV")
+        self.assertTrue(
+            xml_file.exists(),
+            f"XML not generated for {version} with JSON-from-CSV",
+        )
         self.assertGreater(
             xml_file.stat().st_size,
             1000,
@@ -576,7 +594,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         schema_file = version_dir / f"{version}.xsd"
 
         # Verify required files exist
-        self.assertTrue(template_file.exists(), f"Template missing for {version}")
+        self.assertTrue(
+            template_file.exists(), f"Template missing for {version}"
+        )
         self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
 
         # Generate XML
@@ -590,7 +610,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         # Verify XML generated and valid
         # XML is created in the template directory, not current directory
         xml_file = version_dir / f"{version}.xml"
-        self.assertTrue(xml_file.exists(), f"XML not generated for {version} with Parquet")
+        self.assertTrue(
+            xml_file.exists(), f"XML not generated for {version} with Parquet"
+        )
         self.assertGreater(
             xml_file.stat().st_size,
             1000,
@@ -628,7 +650,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         csv_file = version_dir / "template.csv"
 
         # Verify required files exist
-        self.assertTrue(template_file.exists(), f"Template missing for {version}")
+        self.assertTrue(
+            template_file.exists(), f"Template missing for {version}"
+        )
         self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
         self.assertTrue(csv_file.exists(), f"CSV missing for {version}")
 
@@ -653,7 +677,10 @@ class TestIntegrationMatrix(unittest.TestCase):
 
         # Verify XML generated and valid
         xml_file = version_dir / f"{version}.xml"
-        self.assertTrue(xml_file.exists(), f"XML not generated for {version} with Parquet-from-CSV")
+        self.assertTrue(
+            xml_file.exists(),
+            f"XML not generated for {version} with Parquet-from-CSV",
+        )
         self.assertGreater(
             xml_file.stat().st_size,
             1000,

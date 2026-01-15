@@ -70,9 +70,7 @@ class ValidationRequest(BaseModel):
 class GenerateXMLRequest(BaseModel):
     """Request model for XML generation."""
 
-    data_source: DataSourceType = Field(
-        ..., description="Type of data source"
-    )
+    data_source: DataSourceType = Field(..., description="Type of data source")
     file_path: str = Field(..., description="Path to the data file")
     message_type: MessageType = Field(
         default=MessageType.PAIN_001_03,

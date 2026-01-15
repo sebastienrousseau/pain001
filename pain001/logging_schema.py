@@ -931,7 +931,9 @@ class ExecutionMetrics:
         self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
 
         # Validation tracking
-        self.validation_results: dict[str, str] = {}  # validation_type -> status
+        self.validation_results: dict[str, str] = (
+            {}
+        )  # validation_type -> status
 
         # Record counts
         self.records_processed = 0
@@ -1033,7 +1035,11 @@ class ExecutionMetrics:
 
         log_event(
             self.logger,
-            logging.INFO if self.status == ExecutionStatus.SUCCESS else logging.ERROR,
+            (
+                logging.INFO
+                if self.status == ExecutionStatus.SUCCESS
+                else logging.ERROR
+            ),
             Events.EXECUTION_SUMMARY,
             message="Execution Telemetry",
             telemetry=telemetry_data,

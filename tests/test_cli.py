@@ -105,8 +105,13 @@ class TestCliModule(unittest.TestCase):
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 2  # Click's exit code for missing required option
-        assert "required" in result.output.lower() or "missing" in result.output.lower()
+        assert (
+            result.exit_code == 2
+        )  # Click's exit code for missing required option
+        assert (
+            "required" in result.output.lower()
+            or "missing" in result.output.lower()
+        )
 
     def test_cli_missing_files(self) -> None:
         """Test CLI with non-existent file."""
@@ -124,7 +129,10 @@ class TestCliModule(unittest.TestCase):
             ],
         )
         assert result.exit_code == 2  # Click's exit code for invalid path
-        assert "does not exist" in result.output.lower() or "invalid value" in result.output.lower()
+        assert (
+            "does not exist" in result.output.lower()
+            or "invalid value" in result.output.lower()
+        )
 
     def test_cli_invalid_xml_message_type(self) -> None:
         """Test CLI with invalid XML message type."""
@@ -142,7 +150,10 @@ class TestCliModule(unittest.TestCase):
             ],
         )
         assert result.exit_code == 2  # Click's exit code for invalid choice
-        assert "invalid" in result.output.lower() or "choice" in result.output.lower()
+        assert (
+            "invalid" in result.output.lower()
+            or "choice" in result.output.lower()
+        )
 
     def test_cli_with_config_file(self) -> None:
         """Test CLI with config file."""
@@ -235,7 +246,10 @@ class TestCliModule(unittest.TestCase):
                     )
 
         assert result.exit_code == 0
-        assert "no XML generated" in result.output.lower() or "dry-run" in result.output.lower()
+        assert (
+            "no XML generated" in result.output.lower()
+            or "dry-run" in result.output.lower()
+        )
         mock_load.assert_called_once_with(self.csv_file)
         mock_process.assert_not_called()
 
@@ -344,13 +358,14 @@ class TestCliModule(unittest.TestCase):
                 )
 
         assert result.exit_code == 0
-        assert f"Output Location: {output_dir}" in result.output or "Success" in result.output
+        assert (
+            f"Output Location: {output_dir}" in result.output
+            or "Success" in result.output
+        )
 
     def test_cli_verbose_flag_enables_debug_logging(self) -> None:
         """Test that --verbose flag enables detailed logging."""
-        with patch(
-            "pain001.cli.cli.process_files", autospec=True
-        ):
+        with patch("pain001.cli.cli.process_files", autospec=True):
             with patch(
                 "pain001.cli.cli.validate_via_xsd",
                 autospec=True,
@@ -402,7 +417,10 @@ class TestCliModule(unittest.TestCase):
                 )
 
         assert result.exit_code == 0
-        assert "payment records" in result.output or "validation passed" in result.output.lower()
+        assert (
+            "payment records" in result.output
+            or "validation passed" in result.output.lower()
+        )
 
     def test_cli_improved_error_messages(self) -> None:
         """Test that error messages include helpful tips."""
@@ -427,7 +445,10 @@ class TestCliModule(unittest.TestCase):
 
         assert result.exit_code == 1
         # Check for helpful tip in output
-        assert "Tip" in result.output or "validation failed" in result.output.lower()
+        assert (
+            "Tip" in result.output
+            or "validation failed" in result.output.lower()
+        )
 
     def test_cli_required_fields_via_click(self) -> None:
         """Test that Click enforces required fields."""
@@ -464,9 +485,7 @@ class TestCliModule(unittest.TestCase):
 
     def test_cli_alias_flags(self) -> None:
         """Test that short and long flag names work."""
-        with patch(
-            "pain001.cli.cli.process_files", autospec=True
-        ):
+        with patch("pain001.cli.cli.process_files", autospec=True):
             with patch(
                 "pain001.cli.cli.validate_via_xsd",
                 autospec=True,
@@ -476,10 +495,14 @@ class TestCliModule(unittest.TestCase):
                 result_short = self.runner.invoke(
                     main,
                     [
-                        "-t", "pain.001.001.03",
-                        "-m", self.xml_template,
-                        "-s", self.xsd_schema,
-                        "-d", self.csv_file,
+                        "-t",
+                        "pain.001.001.03",
+                        "-m",
+                        self.xml_template,
+                        "-s",
+                        self.xsd_schema,
+                        "-d",
+                        self.csv_file,
                         "-v",  # Short verbose flag
                     ],
                 )
@@ -488,10 +511,14 @@ class TestCliModule(unittest.TestCase):
                 result_long = self.runner.invoke(
                     main,
                     [
-                        "--xml-message-type", "pain.001.001.03",
-                        "--template", self.xml_template,
-                        "--schema", self.xsd_schema,
-                        "--data", self.csv_file,
+                        "--xml-message-type",
+                        "pain.001.001.03",
+                        "--template",
+                        self.xml_template,
+                        "--schema",
+                        self.xsd_schema,
+                        "--data",
+                        self.csv_file,
                         "--verbose",
                     ],
                 )

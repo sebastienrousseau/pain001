@@ -1,9 +1,7 @@
 """Tests for SchemaValidator module."""
 
-import json
 import unittest
 from pathlib import Path
-from typing import Any, Dict
 
 from pain001.validation.schema_validator import (
     SchemaValidator,
@@ -67,8 +65,10 @@ class TestSchemaValidator(unittest.TestCase):
         errors = validator.validate_data(data)
         self.assertGreater(len(errors), 0)
         self.assertTrue(
-            any("id" in err.message.lower() or "required" in err.rule.lower()
-                for err in errors)
+            any(
+                "id" in err.message.lower() or "required" in err.rule.lower()
+                for err in errors
+            )
         )
 
     def test_validate_data_invalid_iban(self) -> None:
@@ -255,8 +255,7 @@ class TestSchemaValidator(unittest.TestCase):
                 errors = validator.validate_data(self.valid_data)
                 # All versions should accept valid data
                 self.assertEqual(
-                    len(errors), 0,
-                    f"Version {version} rejected valid data"
+                    len(errors), 0, f"Version {version} rejected valid data"
                 )
             except FileNotFoundError:
                 self.fail(f"Schema not found for {message_type}")
@@ -283,7 +282,7 @@ class TestSchemaValidator(unittest.TestCase):
     def test_validate_data_boundary_amount(self) -> None:
         """Validator should accept boundary amounts."""
         validator = SchemaValidator("pain.001.001.03")
-        
+
         # Minimum valid amount
         data_min = self.valid_data.copy()
         data_min["payment_amount"] = 0.01

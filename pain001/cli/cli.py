@@ -226,7 +226,9 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments,to
         sys.exit(2)
 
     # Validate XML template against XSD schema
-    console.print("[cyan]→ Validating XML template against XSD schema...[/cyan]")
+    console.print(
+        "[cyan]→ Validating XML template against XSD schema...[/cyan]"
+    )
     try:
         validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
         log_validation_event(
@@ -345,6 +347,7 @@ def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments,to
         )
         if verbose:
             import traceback
+
             console.print("\n[yellow]Traceback:[/yellow]")
             console.print(traceback.format_exc())
         sys.exit(1)

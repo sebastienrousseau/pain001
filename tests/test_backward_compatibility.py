@@ -69,7 +69,13 @@ class TestCSVLoaderBackwardCompat(unittest.TestCase):
         result = load_csv_data(str(self.valid_csv))
         first_row = result[0]
         # Check for common pain001 fields
-        expected_fields = ["id", "date", "nb_of_txs", "debtor_name", "creditor_name"]
+        expected_fields = [
+            "id",
+            "date",
+            "nb_of_txs",
+            "debtor_name",
+            "creditor_name",
+        ]
         for field in expected_fields:
             self.assertIn(field, first_row)
 
@@ -307,7 +313,7 @@ class TestIBANValidatorBackwardCompat(unittest.TestCase):
         # Use commonly-tested valid IBANs with correct checksums
         valid_ibans = [
             "DE89370400440532013000",  # Valid German IBAN
-            "CH9300762011623852957",   # Valid Swiss IBAN
+            "CH9300762011623852957",  # Valid Swiss IBAN
             "FR1420041010050500013M02606",  # Valid French IBAN
         ]
         for iban in valid_ibans:
@@ -327,13 +333,19 @@ class TestIBANValidatorBackwardCompat(unittest.TestCase):
     def test_validate_iban_case_insensitive(self) -> None:
         """IBAN validator should handle case variations."""
         # Should handle both upper and lowercase
-        is_valid_upper, _ = validate_iban("DE89370400440532013008", strict=False)
-        is_valid_lower, _ = validate_iban("de89370400440532013008", strict=False)
+        is_valid_upper, _ = validate_iban(
+            "DE89370400440532013008", strict=False
+        )
+        is_valid_lower, _ = validate_iban(
+            "de89370400440532013008", strict=False
+        )
         self.assertEqual(is_valid_upper, is_valid_lower)
 
     def test_validate_iban_with_spaces(self) -> None:
         """IBAN validator should handle spaces."""
-        is_valid, _ = validate_iban("DE89 3704 0044 0532 0130 00", strict=False)
+        is_valid, _ = validate_iban(
+            "DE89 3704 0044 0532 0130 00", strict=False
+        )
         # May or may not be valid depending on implementation
         # Just verify it doesn't crash
         self.assertIsInstance(is_valid, bool)
@@ -398,6 +410,7 @@ class TestEdgeCases(unittest.TestCase):
 
         # Should raise DataSourceError, ValueError, or StopIteration
         from pain001.exceptions import DataSourceError
+
         with self.assertRaises(DataSourceError):
             load_csv_data(str(empty_csv))
 
@@ -409,6 +422,7 @@ class TestEdgeCases(unittest.TestCase):
 
         # Should raise DataSourceError since file is empty (no data rows)
         from pain001.exceptions import DataSourceError
+
         with self.assertRaises(DataSourceError):
             load_csv_data(str(csv_file))
 

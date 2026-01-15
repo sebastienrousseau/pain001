@@ -47,7 +47,11 @@ class TestStreamingLoaders(unittest.TestCase):
 
         # Load first few chunks with validation disabled
         chunks = []
-        for i, chunk in enumerate(load_payment_data_streaming(str(csv_file), chunk_size=10, validate=False)):
+        for i, chunk in enumerate(
+            load_payment_data_streaming(
+                str(csv_file), chunk_size=10, validate=False
+            )
+        ):
             chunks.append(chunk)
             if i >= 2:  # Just get first 3 chunks
                 break
@@ -123,7 +127,9 @@ class TestStreamingLoaders(unittest.TestCase):
         conn.close()
 
         # Load in chunks of 12 without validation
-        chunks = list(load_db_data_streaming(str(db_file), "pain001", chunk_size=12))
+        chunks = list(
+            load_db_data_streaming(str(db_file), "pain001", chunk_size=12)
+        )
 
         # Should have 3 chunks: 12, 12, 6
         self.assertEqual(len(chunks), 3)
@@ -166,7 +172,11 @@ class TestStreamingLoaders(unittest.TestCase):
             )
 
         # Load in chunks of 250 without validation
-        chunks = list(load_payment_data_streaming(large_list, chunk_size=250, validate=False))
+        chunks = list(
+            load_payment_data_streaming(
+                large_list, chunk_size=250, validate=False
+            )
+        )
 
         # Should have 4 chunks of 250 each
         self.assertEqual(len(chunks), 4)
@@ -189,11 +199,14 @@ class TestStreamingLoaders(unittest.TestCase):
         total_count = 0
         max_chunk_size = 0
 
-        for chunk in load_payment_data_streaming(str(csv_file), chunk_size=100, validate=False):
+        for chunk in load_payment_data_streaming(
+            str(csv_file), chunk_size=100, validate=False
+        ):
             total_count += len(chunk)
             max_chunk_size = max(max_chunk_size, len(chunk))
 
         self.assertGreater(total_count, 0)
+
     def test_streaming_empty_csv(self):
         """Test streaming with empty CSV file."""
         csv_file = Path(self.test_dir) / "empty.csv"
@@ -275,7 +288,11 @@ class TestStreamingLoaders(unittest.TestCase):
 
         # Get first few chunks (whatever is available)
         chunks = []
-        for i, chunk in enumerate(load_payment_data_streaming(str(csv_file), chunk_size=1, validate=False)):
+        for i, chunk in enumerate(
+            load_payment_data_streaming(
+                str(csv_file), chunk_size=1, validate=False
+            )
+        ):
             chunks.append(chunk)
             if i >= 4:  # Try to get 5 chunks
                 break
@@ -294,15 +311,26 @@ class TestStreamingLoaders(unittest.TestCase):
         if not csv_file.exists():
             self.skipTest("Template CSV not found")
 
-        chunks = list(load_payment_data_streaming(str(csv_file), chunk_size=100000, validate=False))
+        chunks = list(
+            load_payment_data_streaming(
+                str(csv_file), chunk_size=100000, validate=False
+            )
+        )
 
         # Should have 1 chunk with all rows
         self.assertEqual(len(chunks), 1)
         self.assertGreater(len(chunks[0]), 0)
         """Test that streaming preserves original data order."""
-        data_list = [{"id": i, "payment_id": f"TX{i:03d}", "date": "2024-01-15"} for i in range(50)]
+        data_list = [
+            {"id": i, "payment_id": f"TX{i:03d}", "date": "2024-01-15"}
+            for i in range(50)
+        ]
 
-        chunks = list(load_payment_data_streaming(data_list, chunk_size=15, validate=False))
+        chunks = list(
+            load_payment_data_streaming(
+                data_list, chunk_size=15, validate=False
+            )
+        )
 
         # Reconstruct full list from chunks
         reconstructed = []
@@ -326,7 +354,9 @@ class TestStreamingLoaders(unittest.TestCase):
 
         # Load with streaming and reconstruct
         streaming_data = []
-        for chunk in load_payment_data_streaming(str(csv_file), chunk_size=7, validate=False):
+        for chunk in load_payment_data_streaming(
+            str(csv_file), chunk_size=7, validate=False
+        ):
             streaming_data.extend(chunk)
 
         # Compare results

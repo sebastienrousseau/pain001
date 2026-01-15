@@ -60,9 +60,7 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         with open(file_path, encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
-        raise DataSourceError(
-            f"Invalid JSON in file {file_path}: {e}"
-        ) from e
+        raise DataSourceError(f"Invalid JSON in file {file_path}: {e}") from e
 
     # Handle both single object and array formats
     if isinstance(data, dict):
@@ -167,7 +165,9 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
     except Exception as e:
         if isinstance(e, DataSourceError):
             raise
-        raise DataSourceError(f"Error reading JSONL file {file_path}: {e}") from e
+        raise DataSourceError(
+            f"Error reading JSONL file {file_path}: {e}"
+        ) from e
 
     if not data:
         raise DataSourceError(f"JSONL file is empty: {file_path}")
@@ -238,4 +238,6 @@ def load_jsonl_data_streaming(
     except Exception as e:
         if isinstance(e, DataSourceError):
             raise
-        raise DataSourceError(f"Error reading JSONL file {file_path}: {e}") from e
+        raise DataSourceError(
+            f"Error reading JSONL file {file_path}: {e}"
+        ) from e
