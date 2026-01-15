@@ -1138,7 +1138,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
 
         # Use pain.001.001.03 with valid data, but mock XSD validation to fail
         with patch(
-            "pain001.xml.generate_xml.validate_via_xsd",
+            "pain001.xml.generate_xml.validate_xml_string_via_xsd",
             autospec=True,
             return_value=False,
         ):

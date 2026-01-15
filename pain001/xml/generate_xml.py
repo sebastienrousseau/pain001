@@ -28,7 +28,7 @@ from jinja2 import Environment, FileSystemLoader
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
-from pain001.xml.validate_via_xsd import validate_via_xsd
+from pain001.xml.validate_via_xsd import validate_via_xsd, validate_xml_string_via_xsd
 
 
 def _prepare_xml_data_v03(data: list[dict[str, Any]]) -> dict[str, Any]:
@@ -259,27 +259,42 @@ def _prepare_xml_data_v09_to_v11(data: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def generate_xml(
+def generate_xml_string(
     data: list[dict[str, Any]],
     payment_initiation_message_type: str,
-    xml_file_path: str,
-    xsd_file_path: str,
-) -> None:
-    """Generates an ISO 20022 pain.001 XML file from input data.
+    xml_template_path: str,
+    xsd_schema_path: str,
+) -> str:
+    """Generate ISO 20022 pain.001 XML content as a string (in-memory).
+
+    This function is ideal for serverless architectures, REST APIs, and
+    microservices where XML needs to be returned without writing to disk.
 
     Args:
-        data: List of dictionaries containing payment data
-        payment_initiation_message_type: String indicating message type
-        such as "pain.001.001.03, pain.001.001.04, pain.001.001.05,
-        pain.001.001.06, pain.001.001.07, pain.001.001.08, etc."
-        xml_file_path: Path to write generated XML file to
-        xsd_file_path: Path to XML schema file for validation
+        data: List of dictionaries containing payment data.
+        payment_initiation_message_type: Message type (e.g., "pain.001.001.03").
+        xml_template_path: Path to the Jinja2 XML template file.
+        xsd_schema_path: Path to XSD schema file for validation.
 
     Returns:
-        None
+        str: The generated and validated XML content.
+
+    Raises:
+        ValueError: If message type is invalid or data is empty.
+        RuntimeError: If XML validation fails against XSD schema.
+
+    Examples:
+        >>> data = [{"id": "MSG001", "date": "2026-01-15", ...}]
+        >>> xml_str = generate_xml_string(
+        ...     data,
+        ...     "pain.001.001.03",
+        ...     "templates/pain.001.001.03/template.xml",
+        ...     "templates/pain.001.001.03/pain.001.001.03.xsd"
+        ... )  # doctest: +SKIP
+        >>> xml_str.startswith('<?xml')
+        True
     """
-    # TODO: centralize this mapping and required fields in a single registry object.
-    # Define a mapping between XML types and data preparation functions
+    # Define mapping between XML types and data preparation functions
     xml_data_preparers = {
         "pain.001.001.03": _prepare_xml_data_v03,
         "pain.001.001.04": _prepare_xml_data_v04,
@@ -294,28 +309,70 @@ def generate_xml(
 
     # Validate message type
     if payment_initiation_message_type not in xml_data_preparers:
-        print(
-            "Error: Invalid XML message type:",
-            payment_initiation_message_type,
+        raise ValueError(
+            f"Invalid XML message type: {payment_initiation_message_type}"
         )
-        sys.exit(1)
 
     # Check if data is not empty
     if not data:
-        print("Error: No data to process.")
-        sys.exit(1)
+        raise ValueError("No data to process - data list is empty")
 
     # Prepare XML data using appropriate function
     preparer = xml_data_preparers[payment_initiation_message_type]
     xml_data = preparer(data)
 
-    # TODO: restrict template loader to a trusted templates directory and cache env per run.
     # Create a Jinja2 environment and load template
     env = Environment(loader=FileSystemLoader("."), autoescape=True)
-    template = env.get_template(xml_file_path)
+    template = env.get_template(xml_template_path)
 
-    # Render the template
+    # Render the template to string
     xml_content = template.render(**xml_data)
+
+    # Validate the XML content against the XSD schema
+    is_valid = validate_xml_string_via_xsd(xml_content, xsd_schema_path)
+
+    if not is_valid:
+        raise RuntimeError(
+            f"Generated XML failed validation against {xsd_schema_path}"
+        )
+
+    return xml_content
+
+
+def generate_xml(
+    data: list[dict[str, Any]],
+    payment_initiation_message_type: str,
+    xml_file_path: str,
+    xsd_file_path: str,
+) -> None:
+    """Generates an ISO 20022 pain.001 XML file from input data.
+
+    This function writes XML to a file. For in-memory XML generation
+    (serverless/API use cases), use generate_xml_string() instead.
+
+    Args:
+        data: List of dictionaries containing payment data
+        payment_initiation_message_type: String indicating message type
+        such as "pain.001.001.03, pain.001.001.04, pain.001.001.05,
+        pain.001.001.06, pain.001.001.07, pain.001.001.08, etc."
+        xml_file_path: Path to write generated XML file to
+        xsd_file_path: Path to XML schema file for validation
+
+    Returns:
+        None
+
+    Raises:
+        ValueError: If message type is invalid or data is empty.
+        RuntimeError: If XML validation fails.
+    """
+    # Generate XML content as string
+    try:
+        xml_content = generate_xml_string(
+            data, payment_initiation_message_type, xml_file_path, xsd_file_path
+        )
+    except (ValueError, RuntimeError) as e:
+        print(f"Error: {e}")
+        sys.exit(1)
 
     # Generate updated XML file path
     updated_xml_file_path = generate_updated_xml_file_path(
@@ -327,12 +384,4 @@ def generate_xml(
         xml_file.write(xml_content)
 
     print(f"A new XML file has been created at `{updated_xml_file_path}`")
-
-    # Validate the updated XML file against the XSD schema
-    is_valid = validate_via_xsd(updated_xml_file_path, xsd_file_path)
-
-    if not is_valid:
-        print("Error: Invalid XML data.")
-        sys.exit(1)
-
     print(f"The XML has been validated against `{xsd_file_path}`")
