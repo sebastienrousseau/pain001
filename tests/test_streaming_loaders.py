@@ -41,7 +41,7 @@ class TestStreamingLoaders(unittest.TestCase):
         """Test streaming CSV data in chunks."""
         # Use existing template CSV file (already valid)
         csv_file = Path("pain001/templates/pain.001.001.03/template.csv")
-        
+
         if not csv_file.exists():
             self.skipTest("Template CSV not found")
 
@@ -181,7 +181,7 @@ class TestStreamingLoaders(unittest.TestCase):
         """Test that streaming uses constant memory (O(chunk_size))."""
         # Use real template CSV
         csv_file = Path("pain001/templates/pain.001.001.03/template.csv")
-        
+
         if not csv_file.exists():
             self.skipTest("Template CSV not found")
 
@@ -269,7 +269,7 @@ class TestStreamingLoaders(unittest.TestCase):
         """Test streaming with chunk_size=1."""
         # Use real template CSV with small chunk size
         csv_file = Path("pain001/templates/pain.001.001.03/template.csv")
-        
+
         if not csv_file.exists():
             self.skipTest("Template CSV not found")
 
@@ -290,7 +290,7 @@ class TestStreamingLoaders(unittest.TestCase):
         """Test streaming with chunk_size larger than total data."""
         # Use real template CSV with very large chunk size
         csv_file = Path("pain001/templates/pain.001.001.03/template.csv")
-        
+
         if not csv_file.exists():
             self.skipTest("Template CSV not found")
 
@@ -317,7 +317,7 @@ class TestStreamingLoaders(unittest.TestCase):
 
         # Use real template CSV
         csv_file = Path("pain001/templates/pain.001.001.03/template.csv")
-        
+
         if not csv_file.exists():
             self.skipTest("Template CSV not found")
 

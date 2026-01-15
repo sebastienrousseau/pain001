@@ -54,10 +54,14 @@ Field Naming Convention:
 
 import json
 import logging
+import logging.handlers
+import os
+import sys
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Any, Optional
+from pathlib import Path
+from typing import Any, Optional, Union
 
 # Context variable for request tracing across async operations
 _request_id_context: ContextVar[Optional[str]] = ContextVar(
@@ -66,6 +70,16 @@ _request_id_context: ContextVar[Optional[str]] = ContextVar(
 
 
 # Execution Status Constants
+class LogLevel:  # pylint: disable=too-few-public-methods
+    """Standard log level names for structured logging."""
+
+    DEBUG = "DEBUG"
+    INFO = "INFO"
+    WARNING = "WARNING"
+    ERROR = "ERROR"
+    CRITICAL = "CRITICAL"
+
+
 class ExecutionStatus:  # pylint: disable=too-few-public-methods
     """High-level execution status for summary reports."""
 
@@ -326,7 +340,7 @@ def log_event(
     # Redact PII before logging
     redacted_data = _redact_pii_from_dict(log_data)
 
-    logger.log(level, json.dumps(redacted_data))
+    logger.log(level, json.dumps(redacted_data, sort_keys=True))
 
 
 def log_process_start(
@@ -722,3 +736,305 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
             self.abort()
 
         self.log_summary()
+
+
+# ==============================================================================
+# JSON Logging Configuration (Issue #149)
+# ==============================================================================
+
+
+class JSONFormatter(logging.Formatter):
+    """Custom JSON formatter for structured logging output.
+
+    This formatter ensures all log records are emitted as valid JSON,
+    regardless of the logging method used (logger.info(), logger.error(), etc.).
+    It automatically adds standard fields (timestamp, level, logger name,
+    request_id) and merges them with structured log_event() calls.
+
+    Example:
+        >>> handler = logging.StreamHandler()
+        >>> handler.setFormatter(JSONFormatter())
+        >>> logger.addHandler(handler)
+    """
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record as JSON.
+
+        Args:
+            record: LogRecord to format.
+
+        Returns:
+            JSON-formatted log entry as string.
+        """
+        from pain001 import (
+            __version__,  # pylint: disable=import-outside-toplevel
+        )
+
+        # Try to parse existing JSON from log_event() calls
+        try:
+            # If message is already JSON from log_event(), use it
+            log_data: dict[str, Any] = json.loads(record.getMessage())
+        except (json.JSONDecodeError, ValueError):
+            # Plain text message - wrap in JSON structure
+            log_data = {
+                Fields.TIMESTAMP: time.strftime(
+                    "%Y-%m-%dT%H:%M:%SZ", time.gmtime(record.created)
+                ),
+                Fields.LEVEL: record.levelname,
+                Fields.LOGGER_NAME: record.name,
+                Fields.REQUEST_ID: get_request_id(),
+                Fields.VERSION: __version__,
+                "message": record.getMessage(),
+            }
+
+            # Add exception info if present
+            if record.exc_info:
+                log_data["exception"] = self.formatException(record.exc_info)
+
+        return json.dumps(log_data, sort_keys=True)
+
+
+def configure_json_logging(
+    logger: Optional[logging.Logger] = None,
+    level: Union[str, int] = logging.INFO,
+    log_file: Optional[str] = None,
+    max_bytes: int = 10 * 1024 * 1024,  # 10 MB
+    backup_count: int = 5,
+    console_output: bool = True,
+) -> logging.Logger:
+    """Configure structured JSON logging for Pain001.
+
+    This function sets up production-ready JSON logging with:
+    - JSON formatter for all handlers
+    - Optional file rotation (for persistent logs)
+    - Console output (for containerized environments)
+    - PII redaction (automatic via log_event())
+    - Request ID tracing
+
+    Environment Variables:
+        PAIN001_LOG_LEVEL: Override log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
+        PAIN001_LOG_FILE: Override log file path
+        PAIN001_LOG_JSON: Enable JSON logging (true/false)
+
+    Args:
+        logger: Logger to configure (defaults to root logger).
+        level: Minimum log level (DEBUG, INFO, WARNING, ERROR, CRITICAL).
+        log_file: Path to log file (None = console only).
+        max_bytes: Max file size before rotation (default: 10MB).
+        backup_count: Number of backup files to keep (default: 5).
+        console_output: Whether to log to console (default: True).
+
+    Returns:
+        Configured logger instance.
+
+    Example:
+        >>> # Simple console logging
+        >>> logger = configure_json_logging()
+        >>> log_event(logger, logging.INFO, Events.PROCESS_START)
+
+        >>> # Production setup with file rotation
+        >>> logger = configure_json_logging(
+        ...     log_file="/var/log/pain001/app.log",
+        ...     level=logging.INFO,
+        ...     max_bytes=50*1024*1024,  # 50MB
+        ...     backup_count=10
+        ... )
+
+        >>> # Docker/Kubernetes setup (console only)
+        >>> logger = configure_json_logging(console_output=True)
+    """
+    # Use root logger if none provided
+    if logger is None:
+        logger = logging.getLogger()
+
+    # Apply environment variable overrides
+    env_level = os.environ.get("PAIN001_LOG_LEVEL")
+    if env_level:
+        level = getattr(logging, env_level.upper(), level)
+
+    env_log_file = os.environ.get("PAIN001_LOG_FILE")
+    if env_log_file:
+        log_file = env_log_file
+
+    # Clear existing handlers to avoid duplicates
+    logger.handlers = []
+    logger.setLevel(level)
+
+    formatter = JSONFormatter()
+
+    # Console handler (for Docker/K8s or dev environments)
+    if console_output:
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(level)
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+    # File handler with rotation (for persistent logs)
+    if log_file:
+        log_path = Path(log_file)
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_file, maxBytes=max_bytes, backupCount=backup_count
+        )
+        file_handler.setLevel(level)
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+    return logger
+
+
+class ExecutionMetrics:
+    """Enhanced execution metrics tracking with detailed telemetry.
+
+    This class extends ExecutionSummaryTracker with additional metrics
+    for API observability, performance monitoring, and distributed tracing.
+    Tracks detailed timing breakdowns, resource usage, and validation results.
+
+    Example:
+        >>> metrics = ExecutionMetrics(
+        ...     logger=logger,
+        ...     operation="xml_generation",
+        ...     message_type="pain.001.001.03"
+        ... )
+        >>> metrics.start()
+        >>> metrics.track_phase("data_load", duration_ms=120)
+        >>> metrics.track_phase("xml_generation", duration_ms=350)
+        >>> metrics.track_validation("schema", "PASSED")
+        >>> metrics.log_telemetry()
+    """
+
+    def __init__(
+        self,
+        logger: logging.Logger,
+        operation: str,
+        message_type: Optional[str] = None,
+        request_id: Optional[str] = None,
+    ):
+        """Initialize execution metrics tracker.
+
+        Args:
+            logger: Logger instance for telemetry output.
+            operation: Operation being tracked (e.g., "xml_generation").
+            message_type: ISO 20022 message type (if applicable).
+            request_id: Request ID for distributed tracing (auto-generated if None).
+        """
+        self.logger = logger
+        self.operation = operation
+        self.message_type = message_type
+        self.request_id = request_id or generate_request_id()
+        set_request_id(self.request_id)
+
+        # Timing metrics
+        self.start_time: Optional[float] = None
+        self.end_time: Optional[float] = None
+        self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
+
+        # Validation tracking
+        self.validation_results: dict[str, str] = {}  # validation_type -> status
+
+        # Record counts
+        self.records_processed = 0
+        self.records_failed = 0
+
+        # Status tracking
+        self.status = ExecutionStatus.SUCCESS
+        self.error_message: Optional[str] = None
+
+    def start(self) -> None:
+        """Mark operation start time."""
+        self.start_time = time.time()
+        log_event(
+            self.logger,
+            logging.INFO,
+            Events.PROCESS_START,
+            operation=self.operation,
+            message_type=self.message_type,
+            request_id=self.request_id,
+        )
+
+    def track_phase(self, phase_name: str, duration_ms: int) -> None:
+        """Track timing for a specific phase.
+
+        Args:
+            phase_name: Name of the phase (e.g., "data_load", "xml_generation").
+            duration_ms: Duration in milliseconds.
+        """
+        self.phase_timings[phase_name] = duration_ms
+
+    def track_validation(self, validation_type: str, status: str) -> None:
+        """Track validation result.
+
+        Args:
+            validation_type: Type of validation (e.g., "schema", "business_rules").
+            status: Result status (e.g., "PASSED", "FAILED").
+        """
+        self.validation_results[validation_type] = status
+        if status == "FAILED":
+            self.status = ExecutionStatus.FAILED
+
+    def increment_processed(self, count: int = 1) -> None:
+        """Increment processed record count.
+
+        Args:
+            count: Number of records to add (default: 1).
+        """
+        self.records_processed += count
+
+    def increment_failed(self, count: int = 1) -> None:
+        """Increment failed record count.
+
+        Args:
+            count: Number of failed records to add (default: 1).
+        """
+        self.records_failed += count
+        self.status = ExecutionStatus.FAILED
+
+    def set_error(self, error_message: str) -> None:
+        """Set error message and mark as failed.
+
+        Args:
+            error_message: Error description.
+        """
+        self.error_message = error_message
+        self.status = ExecutionStatus.FAILED
+
+    def log_telemetry(self) -> None:
+        """Log comprehensive telemetry report."""
+        self.end_time = time.time()
+
+        duration_ms = 0
+        if self.start_time is not None:
+            duration_ms = int((self.end_time - self.start_time) * 1000)
+
+        telemetry_data = {
+            "operation": self.operation,
+            "status": self.status,
+            "duration_ms": duration_ms,
+            "records_processed": self.records_processed,
+            "records_failed": self.records_failed,
+        }
+
+        # Add message type if provided
+        if self.message_type:
+            telemetry_data["message_type"] = self.message_type
+
+        # Add phase timings if tracked
+        if self.phase_timings:
+            telemetry_data["phase_timings"] = self.phase_timings
+
+        # Add validation results if tracked
+        if self.validation_results:
+            telemetry_data["validation_results"] = self.validation_results
+
+        # Add error message if present
+        if self.error_message:
+            telemetry_data["error_message"] = self.error_message
+
+        log_event(
+            self.logger,
+            logging.INFO if self.status == ExecutionStatus.SUCCESS else logging.ERROR,
+            Events.EXECUTION_SUMMARY,
+            message="Execution Telemetry",
+            telemetry=telemetry_data,
+        )
