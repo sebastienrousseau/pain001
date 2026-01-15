@@ -461,8 +461,8 @@ def log_validation_event(
         )
 
 
-def log_data_load_event(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    logger: logging.Logger,
+def log_data_load_event(
+    logger: logging.Logger,  # pylint: disable=too-many-arguments,too-many-positional-arguments
     data_source_type: str,
     success: bool,
     record_count: Optional[int] = None,
@@ -499,8 +499,8 @@ def log_data_load_event(  # pylint: disable=too-many-arguments,too-many-position
         )
 
 
-def log_xml_generation_event(  # pylint: disable=too-many-arguments,too-many-positional-arguments
-    logger: logging.Logger,
+def log_xml_generation_event(
+    logger: logging.Logger,  # pylint: disable=too-many-arguments,too-many-positional-arguments
     message_type: str,
     success: bool,
     record_count: Optional[int] = None,
@@ -931,9 +931,9 @@ class ExecutionMetrics:
         self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
 
         # Validation tracking
-        self.validation_results: dict[str, str] = (
-            {}
-        )  # validation_type -> status
+        self.validation_results: dict[
+            str, str
+        ] = {}  # validation_type -> status
 
         # Record counts
         self.records_processed = 0
