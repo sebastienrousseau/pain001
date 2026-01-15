@@ -16,7 +16,7 @@
 """Pydantic models for FastAPI request/response validation."""
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -112,7 +112,7 @@ class ValidationResponse(BaseModel):
     total_rows: int = Field(..., description="Total number of rows")
     valid_rows: int = Field(default=0, description="Number of valid rows")
     invalid_rows: int = Field(default=0, description="Number of invalid rows")
-    errors: List[ValidationError] = Field(
+    errors: list[ValidationError] = Field(
         default_factory=list,
         description="List of validation errors",
     )
@@ -131,7 +131,7 @@ class GenerateXMLResponse(BaseModel):
     success: bool = Field(..., description="Whether generation succeeded")
     message: str = Field(..., description="Result message")
     file_path: Optional[str] = Field(None, description="Path to generated XML")
-    validation_errors: List[ValidationError] = Field(
+    validation_errors: list[ValidationError] = Field(
         default_factory=list,
         description="Validation errors if validation failed",
     )

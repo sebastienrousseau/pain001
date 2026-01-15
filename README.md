@@ -752,6 +752,100 @@ if __name__ == '__main__':
         print(f"Payment file ready for submission: {result}")
 ```
 
+## REST API (FastAPI)
+
+Starting from v0.0.47, Pain001 provides a **production-ready REST API** for
+integration with web services and microservices architectures.
+
+### Starting the API Server
+
+```sh
+# Install with FastAPI support
+pip install pain001
+
+# Start the development server
+python -m uvicorn pain001.api:app --reload --host 0.0.0.0 --port 8000
+
+# Or use production server (gunicorn + uvicorn)
+pip install gunicorn
+gunicorn --workers 4 --worker-class uvicorn.workers.UvicornWorker \
+  --bind 0.0.0.0:8000 pain001.api:app
+```
+
+### API Endpoints
+
+**Health Check:**
+
+```bash
+curl -X GET http://localhost:8000/api/health
+```
+
+Response:
+```json
+{
+  "status": "healthy",
+  "version": "0.0.47",
+  "message": "Pain001 API is running"
+}
+```
+
+**Validate Payment Data:**
+
+```bash
+curl -X POST http://localhost:8000/api/validate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file_path": "/path/to/payments.csv",
+    "data_source": "csv",
+    "message_type": "pain.001.001.03"
+  }'
+```
+
+**Generate XML (Synchronous):**
+
+```bash
+curl -X POST http://localhost:8000/api/generate \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file_path": "/path/to/payments.csv",
+    "data_source": "csv",
+    "message_type": "pain.001.001.03",
+    "output_dir": "/tmp/output",
+    "validate_only": false
+  }'
+```
+
+**Generate XML (Asynchronous):**
+
+```bash
+# Submit job
+curl -X POST http://localhost:8000/api/generate/async \
+  -H "Content-Type: application/json" \
+  -d '{
+    "file_path": "/path/to/payments.csv",
+    "data_source": "csv",
+    "message_type": "pain.001.001.03"
+  }'
+```
+
+**Poll Job Status:**
+
+```bash
+curl -X GET http://localhost:8000/api/status/550e8400-e29b-41d4-a716-446655440000
+```
+
+**Download Generated XML:**
+
+```bash
+curl -X GET http://localhost:8000/api/download/550e8400-e29b-41d4-a716-446655440000 \
+  --output payment.xml
+```
+
+**Interactive API Documentation:**
+
+Once the server is running, visit `http://localhost:8000/api/docs` for
+interactive Swagger UI or `http://localhost:8000/api/redoc` for ReDoc.
+
 ### Validation
 
 **Pain001** implements **mandatory data validation** to ensure all payment files are ISO 20022-compliant.

@@ -110,9 +110,10 @@ class TestJobStatusEndpoint:
         # Cleanup
         job_manager.cancel_job(job_id)
 
-    def test_status_completed_job(self):
+    def test_status_completed_job(self, tmp_path):
         """Test status of completed job."""
         job_id = job_manager.create_job()
+        xml_output = str(tmp_path / "output.xml")
         job_manager.update_status(
             job_id,
             JobStatus.SUCCESS,
@@ -120,7 +121,7 @@ class TestJobStatusEndpoint:
             result={
                 "success": True,
                 "message": "✓ XML generated successfully",
-                "file_path": "/tmp/test.xml",
+                "file_path": xml_output,
             },
         )
 
@@ -129,7 +130,7 @@ class TestJobStatusEndpoint:
         data = response.json()
         assert data["status"] == "success"
         assert data["result"] is not None
-        assert data["result"]["file_path"] == "/tmp/test.xml"
+        assert data["result"]["file_path"] == xml_output
 
 
 class TestJobCancellationEndpoint:
