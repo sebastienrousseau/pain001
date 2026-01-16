@@ -1,13 +1,19 @@
 ---
 # Codacy Configuration for Pain001
-# Excludes documentation files from strict Markdown linting
+# Suppress false positives and test-specific patterns
 
 exclude_paths:
-  - ".github/copilot-instructions.md"  # Complex technical documentation
-  - ".github/agents/**"  # Agent configuration documentation
-  - "CONTRIBUTING.md"  # Contributor guidelines with technical examples
-  - "docs/**"  # Sphinx documentation
-  - "releases/**"  # Release notes
+  - ".github/copilot-instructions.md"
+  - ".github/agents/**"
+  - "CONTRIBUTING.md"
+  - "docs/**"
+  - "releases/**"
+  - ".venv/**"
+  - "__pycache__/**"
+  - "dist/**"
+  - "build/**"
+  - "*.egg-info/**"
+  - "htmlcov/**"
 
 engines:
   markdownlint:
@@ -15,9 +21,25 @@ engines:
     exclude_paths:
       - ".github/copilot-instructions.md"
     rules:
-      # Relax line length for technical documentation
       MD013:
         enabled: false
-      # Allow inline HTML in Markdown
       MD033:
         enabled: false
+  
+  pylint:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "generate_xml_examples.py"
+    python_version: 3
+  
+  prospector:
+    enabled: true
+    exclude_paths:
+      - "tests/**"
+  
+  bandit:
+    enabled: false  # Using manual security audits + CodeQL
+  
+  ruff:
+    enabled: true

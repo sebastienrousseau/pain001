@@ -2,7 +2,7 @@
 """Generate XML example files for all pain001 versions."""
 import csv
 from pathlib import Path
-from xml.etree.ElementTree import Element, ElementTree
+from xml.etree.ElementTree import Element, ElementTree  # nosec B405 - Safe: element creation only
 
 from pain001.xml.create_xml_v3 import create_xml_v3
 from pain001.xml.create_xml_v4 import create_xml_v4
