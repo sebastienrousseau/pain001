@@ -35,7 +35,7 @@ class TestCLIConfigFile:
             "xsd_schema_file_path": "pain001/templates/pain.001.001.03/pain.001.001.03.xsd",
             "data_file_path": str(tmp_path / "data.csv"),
         }
-        with open(config_file, "w") as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             config.write(f)
 
         # Create minimal CSV

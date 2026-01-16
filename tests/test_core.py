@@ -54,7 +54,7 @@ class TestProcessFiles(unittest.TestCase):
         os.makedirs("tests/data", exist_ok=True)
 
         # Create valid_data_unique.csv
-        with open(self.csv_file_path, "w") as f:
+        with open(self.csv_file_path, "w", encoding="utf-8") as f:
             f.write(
                 "id,date,nb_of_txs,initiator_name,initiator_street_name,"
                 "initiator_building_number,initiator_postal_code,"
@@ -87,19 +87,21 @@ class TestProcessFiles(unittest.TestCase):
             )
 
         # Create invalid_data_unique.csv
-        with open(self.invalid_csv_file_path, "w") as f:
+        with open(self.invalid_csv_file_path, "w", encoding="utf-8") as f:
             f.write("id,date,nb_of_txs\n1,invalid_date,2\n")
 
         # Create empty_unique.csv
-        with open(self.empty_csv_file_path, "w") as f:
+        with open(self.empty_csv_file_path, "w", encoding="utf-8") as f:
             f.write("")
 
         # Create single_column_unique.csv
-        with open(self.single_column_csv_file_path, "w") as f:
+        with open(
+            self.single_column_csv_file_path, "w", encoding="utf-8"
+        ) as f:
             f.write("id\n1\n")
 
         # Create single_row_unique.csv
-        with open(self.single_row_csv_file_path, "w") as f:
+        with open(self.single_row_csv_file_path, "w", encoding="utf-8") as f:
             f.write(
                 "id,date,nb_of_txs,initiator_name,initiator_street_name,"
                 "initiator_building_number,initiator_postal_code,"
@@ -129,7 +131,7 @@ class TestProcessFiles(unittest.TestCase):
             )
 
         # Create template_unique.xml
-        with open(self.xml_template_file_path, "w") as f:
+        with open(self.xml_template_file_path, "w", encoding="utf-8") as f:
             f.write(
                 """<?xml version="1.0" encoding="UTF-8"?>
                 <note>
@@ -141,7 +143,7 @@ class TestProcessFiles(unittest.TestCase):
             )
 
         # Create template_unique.xsd with valid XSD content
-        with open(self.xsd_schema_file_path, "w") as f:
+        with open(self.xsd_schema_file_path, "w", encoding="utf-8") as f:
             f.write(
                 """<?xml version="1.0" encoding="UTF-8"?>
                 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
@@ -159,15 +161,15 @@ class TestProcessFiles(unittest.TestCase):
             )
 
         # Create valid_data_unique.db
-        with open(self.sqlite_file_path, "w") as f:
+        with open(self.sqlite_file_path, "w", encoding="utf-8") as f:
             f.write("SQLite format 3")
 
         # Create invalid_data_unique.db
-        with open(self.invalid_sqlite_file_path, "w") as f:
+        with open(self.invalid_sqlite_file_path, "w", encoding="utf-8") as f:
             f.write("")
 
         # Create unsupported_data_type_unique.txt
-        with open(self.unsupported_file_path, "w") as f:
+        with open(self.unsupported_file_path, "w", encoding="utf-8") as f:
             f.write("Unsupported content")
 
     def test_invalid_xml_message_type(self) -> None:

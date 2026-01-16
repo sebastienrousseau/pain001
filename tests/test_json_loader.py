@@ -65,7 +65,7 @@ def sample_payment_data():
     ]
 
 
-@pytest.fixture
+@pytest.fixture  # noqa: F811
 def json_array_file(sample_payment_data, tmp_path):
     """Create a temporary JSON file with array format."""
     json_file = tmp_path / "payments.json"
@@ -83,7 +83,7 @@ def json_single_object_file(sample_payment_data, tmp_path):
     return str(json_file)
 
 
-@pytest.fixture
+@pytest.fixture  # noqa: F811
 def jsonl_file(sample_payment_data, tmp_path):
     """Create a temporary JSONL file."""
     jsonl_file = tmp_path / "payments.jsonl"
@@ -95,7 +95,7 @@ def jsonl_file(sample_payment_data, tmp_path):
 
 @pytest.fixture
 def large_jsonl_file(tmp_path):
-    """Create a large JSONL file for streaming tests (5000 records)."""
+    """Create a large JSONL file for streaming tests (5000 records)."""  # noqa: F811
     jsonl_file = tmp_path / "large_payments.jsonl"
     with open(jsonl_file, "w", encoding="utf-8") as f:
         for i in range(5000):
@@ -119,7 +119,7 @@ def large_jsonl_file(tmp_path):
 # load_json_data Tests
 # =============================================================================
 
-
+  # noqa: F811
 def test_load_json_data_array_format(json_array_file, sample_payment_data):
     """Test loading JSON file with array format."""
     data = load_json_data(json_array_file)

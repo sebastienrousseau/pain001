@@ -46,7 +46,7 @@ class TestWriteXmlToFile:
             assert os.path.exists(temp_file)
 
             # Read the file and verify content
-            with open(temp_file) as f:
+            with open(temp_file, encoding="utf-8") as f:
                 content = f.read()
                 assert "<?xml version=" in content
                 assert "<root>" in content
@@ -72,7 +72,7 @@ class TestWriteXmlToFile:
         try:
             write_xml_to_file(temp_file, root)
 
-            with open(temp_file) as f:
+            with open(temp_file, encoding="utf-8") as f:
                 content = f.read()
                 assert 'version="1.0"' in content
                 assert 'id="1"' in content
@@ -97,7 +97,7 @@ class TestWriteXmlToFile:
         try:
             write_xml_to_file(temp_file, root)
 
-            with open(temp_file) as f:
+            with open(temp_file, encoding="utf-8") as f:
                 content = f.read()
                 assert "<root>" in content
                 assert "<parent>" in content
@@ -124,7 +124,7 @@ class TestWriteXmlToFile:
         try:
             write_xml_to_file(temp_file, root)
 
-            with open(temp_file) as f:
+            with open(temp_file, encoding="utf-8") as f:
                 content = f.read()
                 # Check that content has indentation (multiple spaces/tabs)
                 lines = content.split("\n")
@@ -159,7 +159,7 @@ class TestWriteXmlToFile:
         try:
             write_xml_to_file(temp_file, root)
 
-            with open(temp_file) as f:
+            with open(temp_file, encoding="utf-8") as f:
                 content = f.read()
                 # Special characters should be escaped
                 assert "<child>" in content
@@ -202,7 +202,7 @@ class TestWriteXmlToFile:
         try:
             write_xml_to_file(temp_file, root)
 
-            with open(temp_file) as f:
+            with open(temp_file, encoding="utf-8") as f:
                 content = f.read()
                 # Verify proper indentation applied
                 assert "<empty_child" in content

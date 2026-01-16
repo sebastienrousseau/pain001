@@ -155,7 +155,7 @@ class TestDataLoader:
         import json
 
         json_file = tmp_path / "payments.json"
-        with open(json_file, "w") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump(sample_payment_data, f)
 
         data = load_payment_data(str(json_file))
@@ -170,7 +170,7 @@ class TestDataLoader:
         import json
 
         jsonl_file = tmp_path / "payments.jsonl"
-        with open(jsonl_file, "w") as f:
+        with open(jsonl_file, "w", encoding="utf-8") as f:
             for record in sample_payment_data:
                 f.write(json.dumps(record) + "\n")
 

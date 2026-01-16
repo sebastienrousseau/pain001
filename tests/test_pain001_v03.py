@@ -45,7 +45,7 @@ class TestPain001V3XMLGeneration(unittest.TestCase):
 
         # Load test data from CSV template
         csv_path = Path("pain001/templates/pain.001.001.03/template.csv")
-        with open(csv_path) as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             self.test_data = list(reader)[:2]  # Use first 2 rows
 
@@ -177,14 +177,14 @@ class TestPain001V3CSVIntegration(unittest.TestCase):
 
     def test_csv_template_readable(self) -> None:
         """Test that CSV template is readable."""
-        with open(self.csv_template) as f:
+        with open(self.csv_template, encoding="utf-8") as f:
             content = f.read()
             self.assertGreater(len(content), 0)
             self.assertIn("id", content)
 
     def test_csv_has_required_columns(self) -> None:
         """Test that CSV template has required columns."""
-        with open(self.csv_template) as f:
+        with open(self.csv_template, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             headers = reader.fieldnames
             self.assertIsNotNone(headers)
@@ -240,14 +240,14 @@ class TestPain001V3Templates(unittest.TestCase):
 
     def test_jinja2_template_has_variables(self) -> None:
         """Test that Jinja2 template has expected variables."""
-        with open(self.xml_template) as f:
+        with open(self.xml_template, encoding="utf-8") as f:
             content = f.read()
             self.assertIn("{{", content)
             self.assertIn("}}", content)
 
     def test_jinja2_template_has_loop(self) -> None:
         """Test that Jinja2 template has for loop."""
-        with open(self.xml_template) as f:
+        with open(self.xml_template, encoding="utf-8") as f:
             content = f.read()
             # Most templates have loops for transactions
             self.assertTrue(

@@ -210,7 +210,7 @@ class TestStreamingLoaders(unittest.TestCase):
     def test_streaming_empty_csv(self):
         """Test streaming with empty CSV file."""
         csv_file = Path(self.test_dir) / "empty.csv"
-        with open(csv_file, "w") as f:
+        with open(csv_file, "w", encoding="utf-8") as f:
             f.write("id,currency,amount,bic,iban,name\n")
 
         with self.assertRaises(DataSourceError) as cm:

@@ -215,7 +215,7 @@ class TestPain001V10CSVIntegration(unittest.TestCase):
     def test_csv_template_readable(self) -> None:
         """Test that CSV template is readable."""
         try:
-            with open(self.csv_template) as f:
+            with open(self.csv_template, encoding="utf-8") as f:
                 content = f.read()
                 self.assertGreater(len(content), 0)
                 # Check for headers
@@ -229,7 +229,7 @@ class TestPain001V10CSVIntegration(unittest.TestCase):
         """Test that CSV has all required columns."""
         import csv
 
-        with open(self.csv_template) as f:
+        with open(self.csv_template, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             headers = reader.fieldnames
 
@@ -307,7 +307,7 @@ class TestPain001V10Templates(unittest.TestCase):
 
     def test_jinja2_template_has_variables(self) -> None:
         """Test that Jinja2 template has expected variables."""
-        with open(self.xml_template) as f:
+        with open(self.xml_template, encoding="utf-8") as f:
             content = f.read()
 
             expected_vars = [
@@ -329,7 +329,7 @@ class TestPain001V10Templates(unittest.TestCase):
 
     def test_jinja2_template_has_loop(self) -> None:
         """Test that Jinja2 template has transaction loop."""
-        with open(self.xml_template) as f:
+        with open(self.xml_template, encoding="utf-8") as f:
             content = f.read()
             self.assertIn("{% for tx in transactions %}", content)
             self.assertIn("{% endfor %}", content)
