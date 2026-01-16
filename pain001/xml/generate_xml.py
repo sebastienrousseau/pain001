@@ -28,9 +28,7 @@ from jinja2 import Environment, FileSystemLoader
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
-from pain001.xml.validate_via_xsd import (
-    validate_xml_string_via_xsd,
-)
+from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
 
 
 def _prepare_xml_data_v03(data: list[dict[str, Any]]) -> dict[str, Any]:

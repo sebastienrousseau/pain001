@@ -41,10 +41,7 @@ from pain001.db.load_db_data import load_db_data
 from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.db.validate_db_data import validate_db_data
 from pain001.exceptions import PaymentValidationError
-from pain001.json.load_json_data import (
-    load_json_data,
-    load_jsonl_data,
-)
+from pain001.json.load_json_data import load_json_data, load_jsonl_data
 from pain001.validation.bic_validator import validate_bic
 from pain001.validation.iban_validator import validate_iban
 
@@ -269,9 +266,7 @@ class TestParquetLoaderBackwardCompat(unittest.TestCase):
     def test_parquet_loader_available(self) -> None:
         """Parquet loader should be importable."""
         if self.has_parquet:
-            from pain001.parquet.load_parquet_data import (
-                load_parquet_data,
-            )
+            from pain001.parquet.load_parquet_data import load_parquet_data
 
             self.assertIsNotNone(load_parquet_data)
 
