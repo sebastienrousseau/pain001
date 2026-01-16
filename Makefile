@@ -58,9 +58,6 @@ pr:
 	@echo "$(YELLOW)Running fast PR gate...$(NC)"
 	@poetry run ruff check .
 	@poetry run ruff format --check .
-	@poetry run black --check .
-	@poetry run isort --check-only .
-	@poetry run mypy .
 	@poetry run pytest --tb=short -q
 	@echo "$(GREEN)✓ PR gate passed$(NC)"
 

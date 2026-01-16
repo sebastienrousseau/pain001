@@ -28,9 +28,11 @@ from pain001.api.models import (
     GenerateXMLResponse,
     HealthResponse,
     JobStatusResponse,
-    ValidationError as ValidationErrorModel,
     ValidationRequest,
     ValidationResponse,
+)
+from pain001.api.models import (
+    ValidationError as ValidationErrorModel,
 )
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
