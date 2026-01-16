@@ -119,7 +119,8 @@ def large_jsonl_file(tmp_path):
 # load_json_data Tests
 # =============================================================================
 
-  # noqa: F811
+
+# noqa: F811
 def test_load_json_data_array_format(json_array_file, sample_payment_data):
     """Test loading JSON file with array format."""
     data = load_json_data(json_array_file)
