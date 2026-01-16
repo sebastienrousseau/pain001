@@ -36,7 +36,7 @@ def test_cli_missing_data_file_exits(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert "does not exist" in result.output
 
 

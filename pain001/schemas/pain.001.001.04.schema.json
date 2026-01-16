@@ -66,7 +66,10 @@
     },
     "payment_method": {
       "type": "string",
-      "enum": ["TRF", "DD"],
+      "enum": [
+        "TRF",
+        "DD"
+      ],
       "description": "Payment method (TRF = Transfer, DD = Direct Debit)"
     },
     "batch_booking": {
@@ -75,7 +78,10 @@
     },
     "service_level_code": {
       "type": "string",
-      "enum": ["SEPA", "URNS"],
+      "enum": [
+        "SEPA",
+        "URNS"
+      ],
       "description": "Service level code"
     },
     "requested_execution_date": {
@@ -108,7 +114,12 @@
     },
     "charge_bearer": {
       "type": "string",
-      "enum": ["SLEV", "SHAR", "CRED", "DEBT"],
+      "enum": [
+        "SLEV",
+        "SHAR",
+        "CRED",
+        "DEBT"
+      ],
       "description": "Charge bearer code (SLEV=Following, SHAR=Shared, CRED=Creditor, DEBT=Debtor)"
     },
     "payment_id": {

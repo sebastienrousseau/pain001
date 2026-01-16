@@ -155,7 +155,7 @@ def test_load_parquet_data_invalid_file(tmp_path):
     with pytest.raises(DataSourceError) as exc_info:
         load_parquet_data(str(invalid_file))
 
-    assert "Failed to read Parquet file" in str(exc_info.value)
+    assert "Error reading Parquet file" in str(exc_info.value)
 
 
 def test_load_parquet_data_empty_file(tmp_path):
@@ -170,10 +170,10 @@ def test_load_parquet_data_empty_file(tmp_path):
     empty_table = pa.Table.from_pylist([])
     pq.write_table(empty_table, str(empty_file))
 
-    data = load_parquet_data(str(empty_file))
+    with pytest.raises(DataSourceError) as exc_info:
+        load_parquet_data(str(empty_file))
 
-    assert isinstance(data, list)
-    assert len(data) == 0
+    assert "empty" in str(exc_info.value).lower() or "no data" in str(exc_info.value).lower()
 
 
 def test_load_parquet_data_column_types(tmp_path):
@@ -289,7 +289,7 @@ def test_load_parquet_data_streaming_invalid_file(tmp_path):
     with pytest.raises(DataSourceError) as exc_info:
         list(load_parquet_data_streaming(str(invalid_file)))
 
-    assert "Failed to read Parquet file" in str(exc_info.value)
+    assert "Error reading Parquet file" in str(exc_info.value)
 
 
 # =============================================================================

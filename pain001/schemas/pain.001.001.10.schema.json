@@ -4,30 +4,166 @@
   "description": "Schema for ISO 20022 pain.001.001.10 Customer Credit Transfer Initiation",
   "version": "0.0.47",
   "type": "object",
-  "required": ["id", "date", "nb_of_txs", "ctrl_sum", "initiator_name", "payment_information_id", "payment_method", "batch_booking", "service_level_code", "requested_execution_date", "debtor_name", "debtor_account_IBAN", "debtor_agent_BIC", "charge_bearer", "payment_id", "payment_amount", "currency", "creditor_agent_BIC", "creditor_name", "creditor_account_IBAN", "remittance_information"],
+  "required": [
+    "id",
+    "date",
+    "nb_of_txs",
+    "ctrl_sum",
+    "initiator_name",
+    "payment_information_id",
+    "payment_method",
+    "batch_booking",
+    "service_level_code",
+    "requested_execution_date",
+    "debtor_name",
+    "debtor_account_IBAN",
+    "debtor_agent_BIC",
+    "charge_bearer",
+    "payment_id",
+    "payment_amount",
+    "currency",
+    "creditor_agent_BIC",
+    "creditor_name",
+    "creditor_account_IBAN",
+    "remittance_information"
+  ],
   "properties": {
-    "id": {"type": "string", "minLength": 1, "maxLength": 35, "pattern": "^[A-Za-z0-9\\-?:().,'+/\\s]*$", "description": "Message identification"},
-    "date": {"type": "string", "format": "date", "description": "Date of the payment initiation"},
-    "nb_of_txs": {"type": "integer", "minimum": 1, "description": "Number of transactions"},
-    "ctrl_sum": {"type": "number", "minimum": 0.01, "maximum": 999999999.99, "description": "Total control sum"},
-    "initiator_name": {"type": "string", "minLength": 1, "maxLength": 70, "description": "Initiator name"},
-    "payment_information_id": {"type": "string", "minLength": 1, "maxLength": 35, "pattern": "^[A-Za-z0-9\\-?:().,'+/\\s]*$", "description": "Payment information ID"},
-    "payment_method": {"type": "string", "enum": ["TRF", "DD"], "description": "Payment method"},
-    "batch_booking": {"type": "boolean", "description": "Batch booking"},
-    "service_level_code": {"type": "string", "enum": ["SEPA", "URNS"], "description": "Service level code"},
-    "requested_execution_date": {"type": "string", "format": "date", "description": "Execution date"},
-    "debtor_name": {"type": "string", "minLength": 1, "maxLength": 70, "description": "Debtor name"},
-    "debtor_account_IBAN": {"type": "string", "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]+$", "minLength": 15, "maxLength": 34, "description": "Debtor IBAN"},
-    "debtor_agent_BIC": {"type": "string", "pattern": "^[A-Z0-9]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$", "description": "Debtor BIC"},
-    "forwarding_agent_BIC": {"type": "string", "pattern": "^[A-Z0-9]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$", "description": "Forwarding agent BIC"},
-    "charge_bearer": {"type": "string", "enum": ["SLEV", "SHAR", "CRED", "DEBT"], "description": "Charge bearer"},
-    "payment_id": {"type": "string", "minLength": 1, "maxLength": 35, "pattern": "^[A-Za-z0-9\\-?:().,'+/\\s]*$", "description": "Payment ID"},
-    "payment_amount": {"type": "number", "minimum": 0.01, "maximum": 999999999.99, "description": "Amount"},
-    "currency": {"type": "string", "pattern": "^[A-Z]{3}$", "description": "Currency code"},
-    "creditor_agent_BIC": {"type": "string", "pattern": "^[A-Z0-9]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$", "description": "Creditor BIC"},
-    "creditor_name": {"type": "string", "minLength": 1, "maxLength": 70, "description": "Creditor name"},
-    "creditor_account_IBAN": {"type": "string", "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]+$", "minLength": 15, "maxLength": 34, "description": "Creditor IBAN"},
-    "remittance_information": {"type": "string", "minLength": 1, "maxLength": 140, "description": "Remittance info"}
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "pattern": "^[A-Za-z0-9\\-?:().,'+/\\s]*$",
+      "description": "Message identification"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the payment initiation"
+    },
+    "nb_of_txs": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Number of transactions"
+    },
+    "ctrl_sum": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 999999999.99,
+      "description": "Total control sum"
+    },
+    "initiator_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 70,
+      "description": "Initiator name"
+    },
+    "payment_information_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "pattern": "^[A-Za-z0-9\\-?:().,'+/\\s]*$",
+      "description": "Payment information ID"
+    },
+    "payment_method": {
+      "type": "string",
+      "enum": [
+        "TRF",
+        "DD"
+      ],
+      "description": "Payment method"
+    },
+    "batch_booking": {
+      "type": "boolean",
+      "description": "Batch booking"
+    },
+    "service_level_code": {
+      "type": "string",
+      "enum": [
+        "SEPA",
+        "URNS"
+      ],
+      "description": "Service level code"
+    },
+    "requested_execution_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Execution date"
+    },
+    "debtor_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 70,
+      "description": "Debtor name"
+    },
+    "debtor_account_IBAN": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]+$",
+      "minLength": 15,
+      "maxLength": 34,
+      "description": "Debtor IBAN"
+    },
+    "debtor_agent_BIC": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$",
+      "description": "Debtor BIC"
+    },
+    "forwarding_agent_BIC": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$",
+      "description": "Forwarding agent BIC"
+    },
+    "charge_bearer": {
+      "type": "string",
+      "enum": [
+        "SLEV",
+        "SHAR",
+        "CRED",
+        "DEBT"
+      ],
+      "description": "Charge bearer"
+    },
+    "payment_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "pattern": "^[A-Za-z0-9\\-?:().,'+/\\s]*$",
+      "description": "Payment ID"
+    },
+    "payment_amount": {
+      "type": "number",
+      "minimum": 0.01,
+      "maximum": 999999999.99,
+      "description": "Amount"
+    },
+    "currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "Currency code"
+    },
+    "creditor_agent_BIC": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$",
+      "description": "Creditor BIC"
+    },
+    "creditor_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 70,
+      "description": "Creditor name"
+    },
+    "creditor_account_IBAN": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}[0-9]{2}[A-Z0-9]+$",
+      "minLength": 15,
+      "maxLength": 34,
+      "description": "Creditor IBAN"
+    },
+    "remittance_information": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140,
+      "description": "Remittance info"
+    }
   },
   "additionalProperties": true
 }

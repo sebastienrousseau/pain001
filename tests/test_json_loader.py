@@ -69,7 +69,7 @@ def sample_payment_data():
 def json_array_file(sample_payment_data, tmp_path):
     """Create a temporary JSON file with array format."""
     json_file = tmp_path / "payments.json"
-    with open(json_file, "w") as f:
+    with open(json_file, "w", encoding="utf-8") as f:
         json.dump(sample_payment_data, f, indent=2)
     return str(json_file)
 
@@ -78,7 +78,7 @@ def json_array_file(sample_payment_data, tmp_path):
 def json_single_object_file(sample_payment_data, tmp_path):
     """Create a temporary JSON file with single object."""
     json_file = tmp_path / "payment.json"
-    with open(json_file, "w") as f:
+    with open(json_file, "w", encoding="utf-8") as f:
         json.dump(sample_payment_data[0], f, indent=2)
     return str(json_file)
 
@@ -87,7 +87,7 @@ def json_single_object_file(sample_payment_data, tmp_path):
 def jsonl_file(sample_payment_data, tmp_path):
     """Create a temporary JSONL file."""
     jsonl_file = tmp_path / "payments.jsonl"
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         for record in sample_payment_data:
             f.write(json.dumps(record) + "\n")
     return str(jsonl_file)
@@ -97,7 +97,7 @@ def jsonl_file(sample_payment_data, tmp_path):
 def large_jsonl_file(tmp_path):
     """Create a large JSONL file for streaming tests (5000 records)."""
     jsonl_file = tmp_path / "large_payments.jsonl"
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         for i in range(5000):
             record = {
                 "id": f"MSG{i:05d}",
@@ -154,7 +154,7 @@ def test_load_json_data_file_not_found():
 def test_load_json_data_invalid_json(tmp_path):
     """Test DataSourceError for malformed JSON."""
     invalid_json_file = tmp_path / "invalid.json"
-    with open(invalid_json_file, "w") as f:
+    with open(invalid_json_file, "w", encoding="utf-8") as f:
         f.write("{invalid json content")
 
     with pytest.raises(DataSourceError) as exc_info:
@@ -177,7 +177,7 @@ def test_load_json_data_empty_file(tmp_path):
 def test_load_json_data_non_dict_list(tmp_path):
     """Test DataSourceError for JSON containing non-dict items."""
     invalid_data_file = tmp_path / "invalid_data.json"
-    with open(invalid_data_file, "w") as f:
+    with open(invalid_data_file, "w", encoding="utf-8") as f:
         json.dump(["string1", "string2", 123], f)
 
     with pytest.raises(DataSourceError) as exc_info:
@@ -249,7 +249,7 @@ def test_load_jsonl_data_file_not_found():
 def test_load_jsonl_data_invalid_line(tmp_path):
     """Test DataSourceError for malformed JSONL line."""
     invalid_jsonl = tmp_path / "invalid.jsonl"
-    with open(invalid_jsonl, "w") as f:
+    with open(invalid_jsonl, "w", encoding="utf-8") as f:
         f.write('{"valid": "json"}\n')
         f.write("{invalid json}\n")
 
@@ -263,7 +263,7 @@ def test_load_jsonl_data_invalid_line(tmp_path):
 def test_load_jsonl_data_empty_lines(tmp_path):
     """Test JSONL file with empty lines (should be skipped)."""
     jsonl_file = tmp_path / "with_empty_lines.jsonl"
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         f.write('{"id": "MSG001", "amount": "100"}\n')
         f.write("\n")  # Empty line
         f.write('{"id": "MSG002", "amount": "200"}\n')
@@ -279,7 +279,7 @@ def test_load_jsonl_data_empty_lines(tmp_path):
 def test_load_jsonl_data_non_dict(tmp_path):
     """Test DataSourceError for JSONL containing non-dict."""
     invalid_jsonl = tmp_path / "non_dict.jsonl"
-    with open(invalid_jsonl, "w") as f:
+    with open(invalid_jsonl, "w", encoding="utf-8") as f:
         f.write('{"valid": "dict"}\n')
         f.write('["not", "a", "dict"]\n')
 
@@ -334,7 +334,7 @@ def test_load_jsonl_data_streaming_file_not_found():
 def test_load_jsonl_data_streaming_invalid_line(tmp_path):
     """Test DataSourceError for malformed line in streaming mode."""
     invalid_jsonl = tmp_path / "invalid_streaming.jsonl"
-    with open(invalid_jsonl, "w") as f:
+    with open(invalid_jsonl, "w", encoding="utf-8") as f:
         f.write('{"id": "MSG001"}\n')
         f.write("{invalid}\n")
 
@@ -350,7 +350,7 @@ def test_load_jsonl_data_streaming_invalid_line(tmp_path):
 def test_load_jsonl_data_streaming_partial_last_chunk(tmp_path):
     """Test streaming with partial last chunk."""
     jsonl_file = tmp_path / "partial.jsonl"
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         for i in range(25):  # 25 records
             f.write(json.dumps({"id": f"MSG{i:03d}"}) + "\n")
 
@@ -373,11 +373,11 @@ def test_json_vs_jsonl_equivalence(sample_payment_data, tmp_path):
     jsonl_file = tmp_path / "data.jsonl"
 
     # Write JSON (array format)
-    with open(json_file, "w") as f:
+    with open(json_file, "w", encoding="utf-8") as f:
         json.dump(sample_payment_data, f)
 
     # Write JSONL
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         for record in sample_payment_data:
             f.write(json.dumps(record) + "\n")
 
@@ -390,7 +390,7 @@ def test_json_vs_jsonl_equivalence(sample_payment_data, tmp_path):
 def test_streaming_equivalence(sample_payment_data, tmp_path):
     """Test that streaming and non-streaming produce same results."""
     jsonl_file = tmp_path / "streaming_test.jsonl"
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         for record in sample_payment_data:
             f.write(json.dumps(record) + "\n")
 
@@ -437,7 +437,7 @@ def test_load_jsonl_data_large_values(tmp_path):
     record = {"id": "MSG001", "amount": "100", "note": large_note}
 
     jsonl_file = tmp_path / "large_values.jsonl"
-    with open(jsonl_file, "w") as f:
+    with open(jsonl_file, "w", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")
 
     data = load_jsonl_data(str(jsonl_file))
@@ -456,7 +456,7 @@ def test_load_json_data_nested_objects(tmp_path):
     ]
 
     json_file = tmp_path / "nested.json"
-    with open(json_file, "w") as f:
+    with open(json_file, "w", encoding="utf-8") as f:
         json.dump(nested_data, f)
 
     data = load_json_data(str(json_file))
