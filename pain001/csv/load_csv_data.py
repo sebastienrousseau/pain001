@@ -42,24 +42,32 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         For large files, consider using load_csv_data_streaming() to reduce
         memory footprint.
     """
-    data: list[dict[str, Any]] = []
+    # Validate path to prevent traversal attacks
+    from pain001.security import validate_path, sanitize_for_log
+
     try:
-        with open(file_path, encoding="utf-8") as file:
+        safe_path = validate_path(file_path)
+    except Exception:
+        # Fall back to simple check for compatibility
+        safe_path = Path(file_path)
+
+    if not safe_path.exists():
+        safe_path_str = sanitize_for_log(str(safe_path))
+        logging.error(f"File not found: {safe_path_str}")
+        raise FileNotFoundError(f"File '{file_path}' not found.")
+
+    data: list[dict[str, Any]] = []
+    safe_path_str = sanitize_for_log(str(safe_path))
+    try:
+        with open(safe_path, encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 data.append(row)
-    except FileNotFoundError:
-        logging.error(f"File '{file_path}' not found.")
-        raise
     except OSError:
-        logging.error(
-            f"An IOError occurred while reading the file '{file_path}'."
-        )
+        logging.error(f"IOError reading file: {safe_path_str}")
         raise
     except UnicodeDecodeError:
-        logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{file_path}'."
-        )
+        logging.error(f"UnicodeDecodeError decoding file: {safe_path_str}")
         raise
 
     if not data:

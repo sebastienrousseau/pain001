@@ -51,16 +51,23 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         >>> data = load_json_data('payment.json')
         # Automatically wrapped: [{'id': 'MSG001', ...}]
     """
-    file_path_obj = Path(file_path)
+    # Validate path to prevent traversal attacks
+    from pain001.security import validate_path
 
-    if not file_path_obj.exists():
+    try:
+        safe_path = validate_path(file_path)
+    except Exception:
+        # Fall back to original error for compatibility
+        raise FileNotFoundError(f"JSON file not found: {file_path}")
+
+    if not safe_path.exists():
         raise FileNotFoundError(f"JSON file not found: {file_path}")
 
     try:
-        with open(file_path, encoding="utf-8") as f:
+        with open(safe_path, encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
-        raise DataSourceError(f"Invalid JSON in file {file_path}: {e}") from e
+        raise DataSourceError(f"Invalid JSON: {e}") from e
 
     # Handle both single object and array formats
     if isinstance(data, dict):

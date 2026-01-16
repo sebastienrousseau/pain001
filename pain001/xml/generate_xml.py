@@ -379,9 +379,18 @@ def generate_xml(
         xml_file_path, payment_initiation_message_type
     )
 
+    # Validate path to prevent traversal attacks
+    from pain001.security import validate_path
+
+    try:
+        safe_xml_path = validate_path(updated_xml_file_path)
+    except Exception as e:
+        print(f"Error: Path validation failed: {e}")
+        sys.exit(1)
+
     # Write the XML content to the file
-    with open(updated_xml_file_path, "w", encoding="utf-8") as xml_file:
+    with open(safe_xml_path, "w", encoding="utf-8") as xml_file:
         xml_file.write(xml_content)
 
-    print(f"A new XML file has been created at `{updated_xml_file_path}`")
+    print(f"A new XML file has been created at `{safe_xml_path}`")
     print(f"The XML has been validated against `{xsd_file_path}`")
