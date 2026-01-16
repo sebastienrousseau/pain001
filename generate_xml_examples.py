@@ -36,7 +36,7 @@ for version, (create_func, _ns) in versions.items():
         output_path = template_dir / f"pain.001.001.{version}.xml"
 
         # Read CSV data
-        with open(csv_path) as f:
+        with open(csv_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             data = list(reader)[:2]  # Use first 2 rows
 
