@@ -168,12 +168,12 @@ class TestIntegrationMatrix(unittest.TestCase):
 
         # Create JSON file (array format)
         cls.json_file = cls.temp_dir / "test_data.json"
-        with open(cls.json_file, "w") as f:
+        with open(cls.json_file, "w", encoding="utf-8") as f:
             json.dump(sample_data, f, indent=2)
 
         # Create JSONL file (JSON Lines format)
         cls.jsonl_file = cls.temp_dir / "test_data.jsonl"
-        with open(cls.jsonl_file, "w") as f:
+        with open(cls.jsonl_file, "w", encoding="utf-8") as f:
             for record in sample_data:
                 f.write(json.dumps(record) + "\n")
 
@@ -547,12 +547,12 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(csv_file.exists(), f"CSV missing for {version}")
 
         # Convert CSV to JSON in temp directory
-        with open(csv_file) as f:
+        with open(csv_file, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             data = list(reader)
 
         json_file = self.temp_dir / f"{version}_data.json"
-        with open(json_file, "w") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
 
         # Generate XML
@@ -657,7 +657,7 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(csv_file.exists(), f"CSV missing for {version}")
 
         # Convert CSV to Parquet in temp directory
-        with open(csv_file) as f:
+        with open(csv_file, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             data = list(reader)
 

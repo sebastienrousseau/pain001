@@ -35,7 +35,7 @@ class TestCliModule(unittest.TestCase):
 
         # Create a simple XML template
         self.xml_template = os.path.join(self.temp_dir, "template.xml")
-        with open(self.xml_template, "w") as f:
+        with open(self.xml_template, "w", encoding="utf-8") as f:
             f.write(
                 """<?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
@@ -49,7 +49,7 @@ class TestCliModule(unittest.TestCase):
 
         # Create a simple XSD schema
         self.xsd_schema = os.path.join(self.temp_dir, "schema.xsd")
-        with open(self.xsd_schema, "w") as f:
+        with open(self.xsd_schema, "w", encoding="utf-8") as f:
             f.write(
                 """<?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -79,7 +79,7 @@ class TestCliModule(unittest.TestCase):
 
         # Create a test CSV file
         self.csv_file = os.path.join(self.temp_dir, "data.csv")
-        with open(self.csv_file, "w") as f:
+        with open(self.csv_file, "w", encoding="utf-8") as f:
             f.write(
                 "id,date,nb_of_txs,initiator_name,payment_id,payment_method\n"
             )
@@ -158,7 +158,7 @@ class TestCliModule(unittest.TestCase):
     def test_cli_with_config_file(self) -> None:
         """Test CLI with config file."""
         config_file = os.path.join(self.temp_dir, "config.ini")
-        with open(config_file, "w") as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             f.write("[Paths]\n")
             f.write(f"xml_template_file_path = {self.xml_template}\n")
             f.write(f"xsd_schema_file_path = {self.xsd_schema}\n")
@@ -257,7 +257,7 @@ class TestCliModule(unittest.TestCase):
         """Test that CLI expands user paths correctly."""
         # Create a file in the temp directory
         home_xml = os.path.join(self.temp_dir, "home_template.xml")
-        with open(home_xml, "w") as f:
+        with open(home_xml, "w", encoding="utf-8") as f:
             f.write("<root></root>")
 
         with patch("os.path.expanduser", autospec=True, return_value=home_xml):

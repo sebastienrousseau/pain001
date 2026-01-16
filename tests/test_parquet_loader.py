@@ -81,7 +81,7 @@ def parquet_file(sample_payment_data, tmp_path):
         import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
-
+  # noqa: F811
     parquet_file = tmp_path / "payments.parquet"
 
     # Convert to PyArrow Table and write
@@ -101,7 +101,7 @@ def large_parquet_file(tmp_path):
         import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
-
+  # noqa: F811
     parquet_file = tmp_path / "large_payments.parquet"
 
     # Generate large dataset
@@ -131,7 +131,7 @@ def large_parquet_file(tmp_path):
 # load_parquet_data Tests
 # =============================================================================
 
-
+  # noqa: F811
 def test_load_parquet_data_basic(parquet_file, sample_payment_data):
     """Test loading Parquet file."""
     data = load_parquet_data(parquet_file)
@@ -194,7 +194,7 @@ def test_load_parquet_data_column_types(tmp_path):
         import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
-
+  # noqa: F811
     parquet_file = tmp_path / "types.parquet"
     data = [
         {
@@ -231,7 +231,7 @@ def test_load_parquet_data_streaming_chunks(parquet_file):
     assert chunks[0][0]["id"] == "MSG001"
     assert chunks[1][0]["id"] == "MSG002"
 
-
+  # noqa: F811
 def test_load_parquet_data_streaming_large_chunk(parquet_file):
     """Test streaming with chunk_size larger than data."""
     chunks = list(load_parquet_data_streaming(parquet_file, chunk_size=10))
@@ -239,7 +239,7 @@ def test_load_parquet_data_streaming_large_chunk(parquet_file):
     assert len(chunks) == 1
     assert len(chunks[0]) == 2
 
-
+  # noqa: F811
 def test_load_parquet_data_streaming_default_chunk_size(parquet_file):
     """Test streaming with default chunk_size (1000)."""
     chunks = list(load_parquet_data_streaming(parquet_file))
@@ -247,7 +247,7 @@ def test_load_parquet_data_streaming_default_chunk_size(parquet_file):
     assert len(chunks) == 1
     assert len(chunks[0]) == 2
 
-
+  # noqa: F811
 def test_load_parquet_data_streaming_large_dataset(large_parquet_file):
     """Test streaming large Parquet file (10,000 records)."""
     chunks = list(
@@ -513,7 +513,7 @@ def test_parquet_vs_json_equivalence(sample_payment_data, tmp_path):
 
     # Write JSON
     json_file = tmp_path / "data.json"
-    with open(json_file, "w") as f:
+    with open(json_file, "w", encoding="utf-8") as f:
         json.dump(sample_payment_data, f)
 
     # Load both

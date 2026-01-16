@@ -32,7 +32,7 @@ class TestValidateViaXsd(unittest.TestCase):
         self.xsd_file = "test_schema.xsd"
 
         # Create valid XML test file
-        with open(self.valid_xml_file, "w") as f:
+        with open(self.valid_xml_file, "w", encoding="utf-8") as f:
             f.write(
                 """<root>
                             <element>Valid data</element>
@@ -40,7 +40,7 @@ class TestValidateViaXsd(unittest.TestCase):
             )
 
         # Create invalid XML test file
-        with open(self.invalid_xml_file, "w") as f:
+        with open(self.invalid_xml_file, "w", encoding="utf-8") as f:
             f.write(
                 """
             <root>
@@ -50,7 +50,7 @@ class TestValidateViaXsd(unittest.TestCase):
             )
 
         # Create test XSD schema file
-        with open(self.xsd_file, "w") as f:
+        with open(self.xsd_file, "w", encoding="utf-8") as f:
             f.write(
                 """
             <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
@@ -104,7 +104,7 @@ class TestValidateViaXsd(unittest.TestCase):
         malformed_xml = "malformed_test.xml"
 
         # Create malformed XML
-        with open(malformed_xml, "w") as f:
+        with open(malformed_xml, "w", encoding="utf-8") as f:
             f.write("<root><unclosed>")
 
         try:
@@ -121,7 +121,7 @@ class TestValidateViaXsd(unittest.TestCase):
         invalid_xsd = "invalid_schema.xsd"
 
         # Create invalid XSD
-        with open(invalid_xsd, "w") as f:
+        with open(invalid_xsd, "w", encoding="utf-8") as f:
             f.write("<invalid>schema</invalid>")
 
         try:
@@ -150,10 +150,10 @@ class TestValidateViaXsd(unittest.TestCase):
         valid_xml = "test_valid.xml"
         valid_xsd = "test_valid.xsd"
 
-        with open(valid_xml, "w") as f:
+        with open(valid_xml, "w", encoding="utf-8") as f:
             f.write("<root><element>data</element></root>")
 
-        with open(valid_xsd, "w") as f:
+        with open(valid_xsd, "w", encoding="utf-8") as f:
             f.write(
                 """
                 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
