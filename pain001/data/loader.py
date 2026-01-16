@@ -259,7 +259,7 @@ def load_payment_data_streaming(
         )
 
 
-def _load_from_file_streaming(
+def _load_from_file_streaming(  # pylint: disable=too-many-branches
     file_path: str, chunk_size: int, validate: bool = True
 ) -> Generator[list[dict[str, Any]], None, None]:
     """

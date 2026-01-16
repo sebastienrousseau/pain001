@@ -31,7 +31,7 @@ class JobStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
-class JobResult:
+class JobResult:  # pylint: disable=too-few-public-methods
     """Represents a job result."""
 
     def __init__(
@@ -106,7 +106,7 @@ class JobManager:
         """
         return self.jobs.get(job_id)
 
-    def update_status(
+    def update_status(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
         job_id: str,
         status: JobStatus,

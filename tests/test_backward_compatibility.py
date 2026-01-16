@@ -312,7 +312,7 @@ class TestIBANValidatorBackwardCompat(unittest.TestCase):
             "FR1420041010050500013M02606",  # Valid French IBAN
         ]
         for iban in valid_ibans:
-            is_valid, error = validate_iban(iban, strict=False)
+            is_valid, error = validate_iban(iban, strict=False)  # noqa: F841
             self.assertTrue(is_valid, f"Should validate {iban}: {error}")
 
     def test_validate_invalid_iban_checksum(self) -> None:
@@ -322,7 +322,7 @@ class TestIBANValidatorBackwardCompat(unittest.TestCase):
             "FR1420041010050500013M02607",  # Wrong checksum
         ]
         for iban in invalid_ibans:
-            is_valid, error = validate_iban(iban, strict=False)
+            is_valid, _error = validate_iban(iban, strict=False)
             self.assertFalse(is_valid, f"Should reject {iban}")
 
     def test_validate_iban_case_insensitive(self) -> None:
@@ -358,12 +358,12 @@ class TestBICValidatorBackwardCompat(unittest.TestCase):
             "GENODEM1GLS",
         ]
         for bic in valid_bics:
-            is_valid, error = validate_bic(bic, strict=False)
+            is_valid, error = validate_bic(bic, strict=False)  # noqa: F841
             self.assertTrue(is_valid, f"Should validate {bic}: {error}")
 
     def test_validate_short_bic(self) -> None:
         """BIC validator should accept short BICs (8 chars)."""
-        is_valid, error = validate_bic("BANKDEFF", strict=False)
+        is_valid, _error = validate_bic("BANKDEFF", strict=False)
         self.assertTrue(is_valid)
 
     def test_validate_invalid_bic_format(self) -> None:
@@ -374,7 +374,7 @@ class TestBICValidatorBackwardCompat(unittest.TestCase):
             "BANK$$$$XXXX",  # Invalid characters
         ]
         for bic in invalid_bics:
-            is_valid, error = validate_bic(bic, strict=False)
+            is_valid, error = validate_bic(bic, strict=False)  # noqa: F841
             self.assertFalse(is_valid, f"Should reject {bic}: {error}")
 
     def test_validate_bic_case_insensitive(self) -> None:

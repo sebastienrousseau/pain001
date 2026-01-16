@@ -133,6 +133,7 @@ def large_parquet_file(tmp_path):
 
 
 # noqa: F811
+# noqa: F811
 def test_load_parquet_data_basic(parquet_file, sample_payment_data):
     """Test loading Parquet file."""
     data = load_parquet_data(parquet_file)
@@ -194,7 +195,7 @@ def test_load_parquet_data_column_types(tmp_path):
         import pyarrow as pa  # type: ignore[import-untyped,no-redef]
         import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
-        pytest.skip("pyarrow not available")
+        pytest.skip("pyarrow not available")  # noqa: F811
     # noqa: F811
     parquet_file = tmp_path / "types.parquet"
     data = [
@@ -234,12 +235,15 @@ def test_load_parquet_data_streaming_chunks(parquet_file):
 
 
 # noqa: F811
+
+
+# noqa: F811
 def test_load_parquet_data_streaming_large_chunk(parquet_file):
     """Test streaming with chunk_size larger than data."""
     chunks = list(load_parquet_data_streaming(parquet_file, chunk_size=10))
 
     assert len(chunks) == 1
-    assert len(chunks[0]) == 2
+    assert len(chunks[0]) == 2  # noqa: F811
 
 
 # noqa: F811
@@ -247,7 +251,7 @@ def test_load_parquet_data_streaming_default_chunk_size(parquet_file):
     """Test streaming with default chunk_size (1000)."""
     chunks = list(load_parquet_data_streaming(parquet_file))
 
-    assert len(chunks) == 1
+    assert len(chunks) == 1  # noqa: F811
     assert len(chunks[0]) == 2
 
 

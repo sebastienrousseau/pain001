@@ -884,7 +884,7 @@ def configure_json_logging(
     return logger
 
 
-class ExecutionMetrics:
+class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
     """Enhanced execution metrics tracking with detailed telemetry.
 
     This class extends ExecutionSummaryTracker with additional metrics

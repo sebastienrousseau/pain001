@@ -154,7 +154,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
 
         # Format errors
         error_models = []
-        for _row_idx, row_errors in errors:
+        for _, row_errors in errors:
             for error in row_errors:
                 error_models.append(
                     ValidationErrorModel(
@@ -222,7 +222,7 @@ async def generate_xml_sync(
 
         if errors:
             error_models = []
-            for _row_idx, row_errors in errors:
+            for _, row_errors in errors:
                 for error in row_errors:
                     error_models.append(
                         ValidationErrorModel(
