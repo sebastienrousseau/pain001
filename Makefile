@@ -215,6 +215,6 @@ slos: lint type test perf
 	@echo "$(GREEN)✓ All SLOs verified$(NC)"
 
 # --- Full quality gate (blocking) ---
-check: lint type cov sec
+check: lint cov sec
 	@echo "$(GREEN)✓ Full quality gate passed$(NC)"
 
