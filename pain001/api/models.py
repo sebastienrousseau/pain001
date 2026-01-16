@@ -45,7 +45,7 @@ class MessageType(str, Enum):
     PAIN_001_11 = "pain.001.001.11"
 
 
-class ValidationRequest(BaseModel):
+class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
     """Request model for data validation."""
 
     data_source: DataSourceType = Field(

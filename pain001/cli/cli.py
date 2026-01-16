@@ -141,7 +141,7 @@ console.print(table)
     default=False,
     help="Enable detailed logging output (INFO and DEBUG messages)",
 )
-def main(  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-statements,too-many-locals  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
