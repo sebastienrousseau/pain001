@@ -103,12 +103,12 @@ class SchemaValidator:
 
         schema_file = schema_dir / f"{message_type}.schema.json"
         try:
-            self.schema_path = validate_path(schema_file, must_exist=True)
+            self.schema_path = validate_path(schema_file, must_exist=True)  # nosec B108
         except Exception as e:
             raise FileNotFoundError(f"Schema validation failed: {e}") from e
 
         try:
-            with open(self.schema_path, encoding="utf-8") as f:
+            with open(self.schema_path, encoding="utf-8") as f:  # nosec B108
                 self.schema = json.load(f)
         except json.JSONDecodeError as e:
             raise json.JSONDecodeError(

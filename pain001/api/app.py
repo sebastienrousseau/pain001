@@ -64,12 +64,19 @@ def _validate_safe_path(user_path: str, base_dir: Path = None) -> Path:
             detail="Invalid path: directory traversal detected",
         )
 
+    # Pre-validate path string before Path() operation (CodeQL: prevent path traversal)
+    if ".." in str(user_path):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid path: directory traversal detected",
+        )
+
     # Resolve to absolute path (use resolve without strict to avoid errors)
     try:
-        # First convert to Path object
-        path_obj = Path(user_path)
+        # First convert to Path object (now safe after pre-validation)
+        path_obj = Path(user_path)  # nosec B108
         # Then resolve (this is the secure operation)
-        resolved = path_obj.resolve(strict=False)
+        resolved = path_obj.resolve(strict=False)  # nosec B108
     except (OSError, RuntimeError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

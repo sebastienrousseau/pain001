@@ -383,13 +383,13 @@ def generate_xml(
     from pain001.security import validate_path
 
     try:
-        safe_xml_path = validate_path(updated_xml_file_path)
+        safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
     except Exception as e:
         print(f"Error: Path validation failed: {e}")
         sys.exit(1)
 
-    # Write the XML content to the file
-    with open(safe_xml_path, "w", encoding="utf-8") as xml_file:
+    # Write the XML content to the file (now safe after validation)
+    with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108
         xml_file.write(xml_content)
 
     print(f"A new XML file has been created at `{safe_xml_path}`")

@@ -55,16 +55,16 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
     from pain001.security import validate_path
 
     try:
-        safe_path = validate_path(file_path)
+        safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
-        # Fall back to original error for compatibility
-        raise FileNotFoundError(f"JSON file not found: {file_path}") from e
+        # Fail securely - do not fall back to unsafe path
+        raise FileNotFoundError(f"JSON file not found or invalid path: {file_path}") from e
 
     if not safe_path.exists():
         raise FileNotFoundError(f"JSON file not found: {file_path}")
 
     try:
-        with open(safe_path, encoding="utf-8") as f:
+        with open(safe_path, encoding="utf-8") as f:  # nosec B108
             data = json.load(f)
     except json.JSONDecodeError as e:
         raise DataSourceError(f"Invalid JSON: {e}") from e
@@ -144,14 +144,19 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
     Examples:
         >>> data = load_jsonl_data('payments.jsonl')
     """
-    file_path_obj = Path(file_path)
+    from pain001.security import validate_path
+
+    try:
+        file_path_obj = validate_path(file_path)  # nosec B108
+    except Exception as e:
+        raise FileNotFoundError(f"JSONL file not found or invalid path: {file_path}") from e
 
     if not file_path_obj.exists():
         raise FileNotFoundError(f"JSONL file not found: {file_path}")
 
     data = []
     try:
-        with open(file_path, encoding="utf-8") as f:
+        with open(file_path_obj, encoding="utf-8") as f:  # nosec B108
             for line_num, line in enumerate(f, start=1):
                 line = line.strip()
                 if not line:

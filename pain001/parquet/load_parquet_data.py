@@ -74,17 +74,16 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
     from pain001.security import validate_path
 
     try:
-        safe_path = validate_path(file_path)
-    except Exception:
-        # Fall back to simple check for compatibility
-        safe_path = Path(file_path)
+        safe_path = validate_path(file_path)  # nosec B108
+    except Exception as e:
+        raise FileNotFoundError(f"Parquet file path validation failed: {file_path}") from e
 
     if not safe_path.exists():
         raise FileNotFoundError(f"Parquet file not found: {file_path}")
 
     try:
-        # Read Parquet file
-        table = pq.read_table(str(safe_path))
+        # Read Parquet file (now safe after validation)
+        table = pq.read_table(str(safe_path))  # nosec B108
 
         # Convert to list of dicts
         data = table.to_pylist()
