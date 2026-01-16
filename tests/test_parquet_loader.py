@@ -173,7 +173,10 @@ def test_load_parquet_data_empty_file(tmp_path):
     with pytest.raises(DataSourceError) as exc_info:
         load_parquet_data(str(empty_file))
 
-    assert "empty" in str(exc_info.value).lower() or "no data" in str(exc_info.value).lower()
+    assert (
+        "empty" in str(exc_info.value).lower()
+        or "no data" in str(exc_info.value).lower()
+    )
 
 
 def test_load_parquet_data_column_types(tmp_path):

@@ -101,8 +101,13 @@ class TestPain001V7XSDValidation(unittest.TestCase):
     def test_xml_example_exists(self) -> None:
         """Test that XML example file exists."""
         # Use absolute path to ensure we find the file regardless of working directory
-        abs_path = (Path(__file__).parent.parent / "pain001" / "templates" /
-                   "pain.001.001.07" / "pain.001.001.07.xml")
+        abs_path = (
+            Path(__file__).parent.parent
+            / "pain001"
+            / "templates"
+            / "pain.001.001.07"
+            / "pain.001.001.07.xml"
+        )
         self.assertTrue(
             abs_path.exists(), f"XML example not found: {abs_path}"
         )
@@ -110,8 +115,13 @@ class TestPain001V7XSDValidation(unittest.TestCase):
     def test_xml_example_well_formed(self) -> None:
         """Test that XML example is well-formed."""
         # Use absolute path to ensure we find the file
-        abs_path = (Path(__file__).parent.parent / "pain001" / "templates" /
-                   "pain.001.001.07" / "pain.001.001.07.xml")
+        abs_path = (
+            Path(__file__).parent.parent
+            / "pain001"
+            / "templates"
+            / "pain.001.001.07"
+            / "pain.001.001.07.xml"
+        )
         try:
             tree = et.parse(abs_path)
             root = tree.getroot()
@@ -122,8 +132,13 @@ class TestPain001V7XSDValidation(unittest.TestCase):
     def test_xml_has_correct_namespace(self) -> None:
         """Test that XML example has correct namespace."""
         # Use absolute path to ensure we find the file
-        abs_path = (Path(__file__).parent.parent / "pain001" / "templates" /
-                   "pain.001.001.07" / "pain.001.001.07.xml")
+        abs_path = (
+            Path(__file__).parent.parent
+            / "pain001"
+            / "templates"
+            / "pain.001.001.07"
+            / "pain.001.001.07.xml"
+        )
         tree = et.parse(abs_path)
         xml_string = et.tostring(tree.getroot(), encoding="unicode")
         self.assertIn("pain.001.001.07", xml_string)

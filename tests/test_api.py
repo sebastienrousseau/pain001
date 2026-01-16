@@ -107,7 +107,9 @@ class TestSyncGenerationEndpoint:
         if response.status_code == 200:
             # If it passes CSV validation, check response structure
             assert "success" in data
-            assert data.get("file_path") is None  # No XML file generated in validate-only mode
+            assert (
+                data.get("file_path") is None
+            )  # No XML file generated in validate-only mode
         else:
             # CSV validation error is also valid behavior
             assert "detail" in data
@@ -140,11 +142,15 @@ class TestSyncGenerationEndpoint:
         """Test successful XML generation with existing test data."""
         # Use existing test file that we know is valid
         import os
-        test_data_path = os.path.join(os.path.dirname(__file__), "data", "valid_data_unique.csv")
+
+        test_data_path = os.path.join(
+            os.path.dirname(__file__), "data", "valid_data_unique.csv"
+        )
 
         if not os.path.exists(test_data_path):
             # Skip if test data doesn't exist
             import pytest
+
             pytest.skip("Test data file not found")
 
         response = client.post(
@@ -168,10 +174,14 @@ class TestSyncGenerationEndpoint:
     def test_generate_with_validate_only_real_data(self):
         """Test validate-only mode with real valid data."""
         import os
-        test_data_path = os.path.join(os.path.dirname(__file__), "data", "valid_data_unique.csv")
+
+        test_data_path = os.path.join(
+            os.path.dirname(__file__), "data", "valid_data_unique.csv"
+        )
 
         if not os.path.exists(test_data_path):
             import pytest
+
             pytest.skip("Test data file not found")
 
         response = client.post(
@@ -185,7 +195,9 @@ class TestSyncGenerationEndpoint:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["file_path"] is None  # No XML generated in validate-only mode
+        assert (
+            data["file_path"] is None
+        )  # No XML generated in validate-only mode
         # Either success (validated) or validation errors
         assert "success" in data
 
@@ -239,11 +251,15 @@ class TestValidateEndpoint:
         """Test successful validation with existing test data."""
         # Use existing test file
         import os
-        test_data_path = os.path.join(os.path.dirname(__file__), "data", "valid_data_unique.csv")
+
+        test_data_path = os.path.join(
+            os.path.dirname(__file__), "data", "valid_data_unique.csv"
+        )
 
         if not os.path.exists(test_data_path):
             # Skip if test data doesn't exist
             import pytest
+
             pytest.skip("Test data file not found")
 
         response = client.post(
@@ -494,6 +510,7 @@ class TestAsyncGenerationEndpoint:
         # Job should fail eventually due to nonexistent file
         # Wait a bit for async processing
         import time
+
         time.sleep(0.5)
 
         job = job_manager.get_job(job_id)
@@ -504,10 +521,14 @@ class TestAsyncGenerationEndpoint:
         """Test async generation processes successfully with valid data."""
         # Use existing test file
         import os
-        test_data_path = os.path.join(os.path.dirname(__file__), "data", "valid_data_unique.csv")
+
+        test_data_path = os.path.join(
+            os.path.dirname(__file__), "data", "valid_data_unique.csv"
+        )
 
         if not os.path.exists(test_data_path):
             import pytest
+
             pytest.skip("Test data file not found")
 
         response = client.post(
@@ -527,6 +548,7 @@ class TestAsyncGenerationEndpoint:
 
         # Wait for async processing
         import time
+
         for _ in range(20):  # Wait up to 2 seconds
             job = job_manager.get_job(job_id)
             if job.status in [JobStatus.SUCCESS, JobStatus.FAILED]:
@@ -562,6 +584,7 @@ class TestAsyncGenerationEndpoint:
 
             # Wait for async processing
             import time
+
             time.sleep(0.5)
 
             # Job should fail due to CSV validation

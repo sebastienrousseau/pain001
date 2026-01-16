@@ -931,9 +931,9 @@ class ExecutionMetrics:
         self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
 
         # Validation tracking
-        self.validation_results: dict[
-            str, str
-        ] = {}  # validation_type -> status
+        self.validation_results: dict[str, str] = (
+            {}
+        )  # validation_type -> status
 
         # Record counts
         self.records_processed = 0

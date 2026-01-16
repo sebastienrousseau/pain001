@@ -111,13 +111,17 @@ class TestParquetCoverage:
             )
 
             parquet_file = tmp_path / "test.parquet"
-            df = pd.DataFrame({
-                "id": [str(i) for i in range(15)],
-                "amount": [i * 10.5 for i in range(15)]
-            })
+            df = pd.DataFrame(
+                {
+                    "id": [str(i) for i in range(15)],
+                    "amount": [i * 10.5 for i in range(15)],
+                }
+            )
             df.to_parquet(parquet_file)
 
-            chunks = list(load_parquet_data_streaming(str(parquet_file), chunk_size=4))
+            chunks = list(
+                load_parquet_data_streaming(str(parquet_file), chunk_size=4)
+            )
 
             assert len(chunks) >= 3
             assert all(isinstance(c, list) for c in chunks)
@@ -153,11 +157,15 @@ class TestDBStreamingCoverage:
         cursor = conn.cursor()
         cursor.execute("CREATE TABLE test_table (id TEXT, value INTEGER)")
         for i in range(7):
-            cursor.execute("INSERT INTO test_table VALUES (?, ?)", (str(i), i*10))
+            cursor.execute(
+                "INSERT INTO test_table VALUES (?, ?)", (str(i), i * 10)
+            )
         conn.commit()
         conn.close()
 
-        chunks = list(load_db_data_streaming(str(db_file), "test_table", chunk_size=3))
+        chunks = list(
+            load_db_data_streaming(str(db_file), "test_table", chunk_size=3)
+        )
 
         assert len(chunks) >= 2
         assert all(isinstance(c, list) for c in chunks)
@@ -172,7 +180,9 @@ class TestXMLValidatorCoverage:
 
         # Create invalid XML
         xml_file = tmp_path / "invalid.xml"
-        xml_file.write_text("<?xml version='1.0'?><invalid>no schema</invalid>")
+        xml_file.write_text(
+            "<?xml version='1.0'?><invalid>no schema</invalid>"
+        )
 
         # Use real schema
         xsd_path = "pain001/templates/pain.001.001.03/pain.001.001.03.xsd"
