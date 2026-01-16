@@ -56,9 +56,9 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
 
     try:
         safe_path = validate_path(file_path)
-    except Exception:
+    except Exception as e:
         # Fall back to original error for compatibility
-        raise FileNotFoundError(f"JSON file not found: {file_path}")
+        raise FileNotFoundError(f"JSON file not found: {file_path}") from e
 
     if not safe_path.exists():
         raise FileNotFoundError(f"JSON file not found: {file_path}")

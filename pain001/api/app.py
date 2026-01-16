@@ -74,18 +74,18 @@ def _validate_safe_path(user_path: str, base_dir: Path = None) -> Path:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid path: {e}",
-        )
+        ) from e
 
     # If base_dir specified, ensure resolved path is within it
     if base_dir:
         base_resolved = base_dir.resolve()
         try:
             resolved.relative_to(base_resolved)
-        except ValueError:
+        except ValueError as e:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied: path outside allowed directory",
-            )
+            ) from e
 
     return resolved
 
@@ -254,11 +254,17 @@ async def generate_xml_sync(
         else:
             output_dir = Path.cwd()
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Validate template paths (constructed from enum, but CodeQL requires validation)
         template_base = Path("pain001/templates") / request.message_type.value
-        xsd_file_path = str(_validate_safe_path(str(template_base / f"{request.message_type.value}.xsd")))
-        xml_template_path = str(_validate_safe_path(str(template_base / "template.xml")))
+        xsd_file_path = str(
+            _validate_safe_path(
+                str(template_base / f"{request.message_type.value}.xsd")
+            )
+        )
+        xml_template_path = str(
+            _validate_safe_path(str(template_base / "template.xml"))
+        )
 
         # Generate XML
         generate_xml(
@@ -512,11 +518,17 @@ async def _process_generation_job(
         else:
             output_dir = Path.cwd()
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         # Validate template paths (constructed from enum, but CodeQL requires validation)
         template_base = Path("pain001/templates") / request.message_type.value
-        xsd_file_path = str(_validate_safe_path(str(template_base / f"{request.message_type.value}.xsd")))
-        xml_template_path = str(_validate_safe_path(str(template_base / "template.xml")))
+        xsd_file_path = str(
+            _validate_safe_path(
+                str(template_base / f"{request.message_type.value}.xsd")
+            )
+        )
+        xml_template_path = str(
+            _validate_safe_path(str(template_base / "template.xml"))
+        )
 
         # Generate XML
         generate_xml(

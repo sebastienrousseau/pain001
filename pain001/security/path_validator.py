@@ -50,15 +50,13 @@ def validate_path(
 
     # Reject paths with obvious traversal attempts
     if ".." in path_str:
-        raise PathValidationError(
-            "Invalid path: directory traversal detected"
-        )
+        raise PathValidationError("Invalid path: directory traversal detected")
 
     # Resolve to absolute path
     try:
         resolved = Path(path_str).resolve()
     except (OSError, RuntimeError) as e:
-        raise PathValidationError(f"Invalid path: {e}")
+        raise PathValidationError(f"Invalid path: {e}") from e
 
     # Check existence if required
     if must_exist and not resolved.exists():
