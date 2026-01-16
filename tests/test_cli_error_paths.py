@@ -59,7 +59,10 @@ class TestCliErrorPaths:
                 ],
             )
             assert result.exit_code == 2
-            assert "Missing option '-t'" in result.output or "Missing option" in result.output
+            assert (
+                "Missing option '-t'" in result.output
+                or "Missing option" in result.output
+            )
 
     def test_cli_missing_template_path(self) -> None:
         """Test CLI when xml_template_file_path is not provided."""
@@ -84,7 +87,10 @@ class TestCliErrorPaths:
                 ],
             )
             assert result.exit_code == 2
-            assert "Missing option '-m'" in result.output or "Missing option" in result.output
+            assert (
+                "Missing option '-m'" in result.output
+                or "Missing option" in result.output
+            )
 
     def test_cli_missing_schema_path(self) -> None:
         """Test CLI when xsd_schema_file_path is not provided."""
@@ -109,7 +115,10 @@ class TestCliErrorPaths:
                 ],
             )
             assert result.exit_code == 2
-            assert "Missing option '-s'" in result.output or "Missing option" in result.output
+            assert (
+                "Missing option '-s'" in result.output
+                or "Missing option" in result.output
+            )
 
     def test_cli_missing_data_path(self) -> None:
         """Test CLI when data_file_path is not provided."""
@@ -134,7 +143,10 @@ class TestCliErrorPaths:
                 ],
             )
             assert result.exit_code == 2
-            assert "Missing option '-d'" in result.output or "Missing option" in result.output
+            assert (
+                "Missing option '-d'" in result.output
+                or "Missing option" in result.output
+            )
 
     def test_cli_nonexistent_files(self) -> None:
         """Test CLI when provided files don't exist."""

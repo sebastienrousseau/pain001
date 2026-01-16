@@ -46,8 +46,10 @@ class TestCLIConfigFile:
         result = runner.invoke(
             main,
             [
-                "--config", str(config_file),
-                "--type", "pain.001.001.03",
+                "--config",
+                str(config_file),
+                "--type",
+                "pain.001.001.03",
             ],
             catch_exceptions=False,
         )
@@ -64,9 +66,12 @@ class TestCLIConfigFile:
         result = runner.invoke(
             main,
             [
-                "--data-file", str(csv_file),
-                "--output-dir", str(output_dir),
-                "--type", "pain.001.001.03",
+                "--data-file",
+                str(csv_file),
+                "--output-dir",
+                str(output_dir),
+                "--type",
+                "pain.001.001.03",
             ],
             catch_exceptions=False,
         )
@@ -89,8 +94,10 @@ class TestCLIErrorPaths:
         result = runner.invoke(
             main,
             [
-                "--data-file", str(csv_file),
-                "--type", "pain.001.001.03",  # Valid type to pass Click
+                "--data-file",
+                str(csv_file),
+                "--type",
+                "pain.001.001.03",  # Valid type to pass Click
             ],
             catch_exceptions=False,
         )
@@ -107,8 +114,10 @@ class TestCLIErrorPaths:
         result = runner.invoke(
             main,
             [
-                "--data-file", str(csv_file),
-                "--type", "pain.001.001.03",
+                "--data-file",
+                str(csv_file),
+                "--type",
+                "pain.001.001.03",
                 "--dry-run",
             ],
             catch_exceptions=False,

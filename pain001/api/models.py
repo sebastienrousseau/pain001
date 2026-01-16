@@ -141,7 +141,10 @@ class JobStatusResponse(BaseModel):
     """Response model for job status."""
 
     job_id: str = Field(..., description="Unique job identifier")
-    status: str = Field(..., description="Current job status (pending, processing, success, failed, cancelled)")
+    status: str = Field(
+        ...,
+        description="Current job status (pending, processing, success, failed, cancelled)",
+    )
     message: str = Field(..., description="Status message")
     result: Optional[GenerateXMLResponse] = Field(
         None, description="Result when status is success"

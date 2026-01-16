@@ -182,7 +182,11 @@ class SchemaValidator:
         """
         properties = self.schema.get("properties", {})
         field_schema = properties.get(field_name)
-        return dict(field_schema) if field_schema and isinstance(field_schema, dict) else None
+        return (
+            dict(field_schema)
+            if field_schema and isinstance(field_schema, dict)
+            else None
+        )
 
     def get_field_description(self, field_name: str) -> Optional[str]:
         """Get the description for a specific field.

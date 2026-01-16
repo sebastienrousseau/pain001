@@ -200,10 +200,20 @@ async def generate_xml_sync(
 
         # Generate XML
         # Use temporary template path in output directory
-        output_dir = Path(request.output_dir) if request.output_dir else Path.cwd()
+        output_dir = (
+            Path(request.output_dir) if request.output_dir else Path.cwd()
+        )
         output_dir.mkdir(parents=True, exist_ok=True)
-        xsd_file_path = str(Path(f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"))
-        xml_template_path = str(Path(f"pain001/templates/{request.message_type.value}/template.xml"))
+        xsd_file_path = str(
+            Path(
+                f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"
+            )
+        )
+        xml_template_path = str(
+            Path(
+                f"pain001/templates/{request.message_type.value}/template.xml"
+            )
+        )
 
         # Generate XML
         generate_xml(
@@ -452,10 +462,20 @@ async def _process_generation_job(
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=70)
 
         # Generate XML
-        output_dir = Path(request.output_dir) if request.output_dir else Path.cwd()
+        output_dir = (
+            Path(request.output_dir) if request.output_dir else Path.cwd()
+        )
         output_dir.mkdir(parents=True, exist_ok=True)
-        xsd_file_path = str(Path(f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"))
-        xml_template_path = str(Path(f"pain001/templates/{request.message_type.value}/template.xml"))
+        xsd_file_path = str(
+            Path(
+                f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"
+            )
+        )
+        xml_template_path = str(
+            Path(
+                f"pain001/templates/{request.message_type.value}/template.xml"
+            )
+        )
 
         # Generate XML
         generate_xml(
