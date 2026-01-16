@@ -14,8 +14,12 @@
 # limitations under the License.
 
 """Pain001 FastAPI REST API module."""
-from pain001.api.app import app
-from pain001.api.job_manager import JobManager, JobStatus, job_manager
+from pain001.api.app import app  # noqa: F401
+from pain001.api.job_manager import (  # noqa: F401
+    JobManager,
+    JobStatus,
+    job_manager,
+)
 from pain001.api.models import (
     DataSourceType,
     GenerateXMLRequest,

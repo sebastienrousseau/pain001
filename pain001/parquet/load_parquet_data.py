@@ -26,7 +26,7 @@ logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 # Optional import: pyarrow is not a required dependency
 try:
-    import pyarrow.parquet as pq
+    import pyarrow.parquet as pq  # type: ignore[import-not-found]
 
     HAS_PARQUET_SUPPORT = True
 except ImportError:

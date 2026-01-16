@@ -181,7 +181,8 @@ class TestSchemaValidator(unittest.TestCase):
         validator = SchemaValidator("pain.001.001.03")
         description = validator.get_field_description("id")
         self.assertIsNotNone(description)
-        self.assertIn("message", description.lower())
+        if description:
+            self.assertIn("message", description.lower())
 
     def test_get_field_description_nonexistent(self) -> None:
         """Validator should return None for nonexistent field description."""

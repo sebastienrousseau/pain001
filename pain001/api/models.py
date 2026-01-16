@@ -116,10 +116,12 @@ class ValidationResponse(BaseModel):
     )
 
     @validator("invalid_rows", always=True)
-    def calculate_invalid_rows(cls, v, values):
+    def calculate_invalid_rows(cls, v: int, values: dict[str, Any]) -> int:
         """Calculate invalid rows."""
         if "total_rows" in values and "valid_rows" in values:
-            return values["total_rows"] - values["valid_rows"]
+            total = int(values["total_rows"])
+            valid = int(values["valid_rows"])
+            return total - valid
         return v
 
 
@@ -135,21 +137,11 @@ class GenerateXMLResponse(BaseModel):
     )
 
 
-class JobStatus(str, Enum):
-    """Async job status."""
-
-    PENDING = "pending"
-    PROCESSING = "processing"
-    SUCCESS = "success"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-
-
 class JobStatusResponse(BaseModel):
     """Response model for job status."""
 
     job_id: str = Field(..., description="Unique job identifier")
-    status: JobStatus = Field(..., description="Current job status")
+    status: str = Field(..., description="Current job status (pending, processing, success, failed, cancelled)")
     message: str = Field(..., description="Status message")
     result: Optional[GenerateXMLResponse] = Field(
         None, description="Result when status is success"

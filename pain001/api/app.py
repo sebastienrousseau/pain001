@@ -34,10 +34,13 @@ from pain001.api.models import (
 from pain001.api.models import (
     ValidationError as ValidationErrorModel,
 )
-from pain001.core.core import generate_xml
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
 from pain001.validation.schema_validator import SchemaValidator
+from pain001.xml.generate_updated_xml_file_path import (
+    generate_updated_xml_file_path,
+)
+from pain001.xml.generate_xml import generate_xml
 
 # Create FastAPI application
 app = FastAPI(
@@ -120,6 +123,8 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
             errors=error_models,
         )
 
+    except HTTPException:
+        raise
     except PaymentValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -181,6 +186,7 @@ async def generate_xml_sync(
             return GenerateXMLResponse(
                 success=False,
                 message=f"Validation failed: {valid}/{total} rows valid",
+                file_path=None,
                 validation_errors=error_models,
             )
 
@@ -189,24 +195,38 @@ async def generate_xml_sync(
             return GenerateXMLResponse(
                 success=True,
                 message=f"✓ All {valid} rows are valid",
+                file_path=None,
             )
 
         # Generate XML
-        output_dir = Path(request.output_dir) if request.output_dir else None
-        result = generate_xml(
-            file_path=str(file_path),
-            message_type=request.message_type.value,
-            data_source=request.data_source.value,
-            output_dir=output_dir,
-            table_name=request.table_name,
+        # Use temporary template path in output directory
+        output_dir = Path(request.output_dir) if request.output_dir else Path.cwd()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        xsd_file_path = str(Path(f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"))
+        xml_template_path = str(Path(f"pain001/templates/{request.message_type.value}/template.xml"))
+
+        # Generate XML
+        generate_xml(
+            data,
+            request.message_type.value,
+            xml_template_path,
+            xsd_file_path,
+        )
+
+        # Get the generated file path
+        result_path = generate_updated_xml_file_path(
+            xml_template_path,
+            request.message_type.value,
         )
 
         return GenerateXMLResponse(
             success=True,
             message="✓ XML generated successfully",
-            file_path=str(result),
+            file_path=str(result_path),
         )
 
+    except HTTPException:
+        raise
     except PaymentValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -225,7 +245,7 @@ async def generate_xml_sync(
     tags=["Generation"],
     summary="Generate XML (asynchronous)",
 )
-async def generate_xml_async(request: GenerateXMLRequest) -> dict:
+async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
     """Start async XML generation job.
 
     Args:
@@ -250,6 +270,8 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict:
             "message": f"Job {job_id} created. Check status with /api/status/{job_id}",
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -306,7 +328,7 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     tags=["Job Management"],
     summary="Cancel job",
 )
-async def cancel_job(job_id: str) -> dict:
+async def cancel_job(job_id: str) -> dict[str, str]:
     """Cancel an async job.
 
     Args:
@@ -430,13 +452,23 @@ async def _process_generation_job(
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=70)
 
         # Generate XML
-        output_dir = Path(request.output_dir) if request.output_dir else None
-        result = generate_xml(
-            file_path=str(file_path),
-            message_type=request.message_type.value,
-            data_source=request.data_source.value,
-            output_dir=output_dir,
-            table_name=request.table_name,
+        output_dir = Path(request.output_dir) if request.output_dir else Path.cwd()
+        output_dir.mkdir(parents=True, exist_ok=True)
+        xsd_file_path = str(Path(f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"))
+        xml_template_path = str(Path(f"pain001/templates/{request.message_type.value}/template.xml"))
+
+        # Generate XML
+        generate_xml(
+            data,
+            request.message_type.value,
+            xml_template_path,
+            xsd_file_path,
+        )
+
+        # Get the generated file path
+        result_path = generate_updated_xml_file_path(
+            xml_template_path,
+            request.message_type.value,
         )
 
         job_manager.update_status(
@@ -446,7 +478,7 @@ async def _process_generation_job(
             result={
                 "success": True,
                 "message": "✓ XML generated successfully",
-                "file_path": str(result),
+                "file_path": str(result_path),
                 "validation_errors": [],
             },
         )

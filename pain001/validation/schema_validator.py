@@ -140,7 +140,7 @@ class SchemaValidator:
                 message=e.message,
                 path=path,
                 value=e.instance,
-                rule=e.validator,
+                rule=str(e.validator) if e.validator else "unknown",
             )
             errors.append(error)
         except jsonschema.SchemaError as e:
@@ -168,7 +168,8 @@ class SchemaValidator:
         Returns:
             List of required field names.
         """
-        return self.schema.get("required", [])
+        required = self.schema.get("required", [])
+        return list(required) if required else []
 
     def get_field_schema(self, field_name: str) -> Optional[dict[str, Any]]:
         """Get the schema definition for a specific field.
@@ -180,7 +181,8 @@ class SchemaValidator:
             Field schema dictionary, or None if field not in schema.
         """
         properties = self.schema.get("properties", {})
-        return properties.get(field_name)
+        field_schema = properties.get(field_name)
+        return dict(field_schema) if field_schema and isinstance(field_schema, dict) else None
 
     def get_field_description(self, field_name: str) -> Optional[str]:
         """Get the description for a specific field.

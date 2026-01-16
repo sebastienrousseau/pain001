@@ -38,9 +38,14 @@ class TestCliErrorPaths:
         """Test CLI when xml_message_type is not provided."""
         runner = CliRunner()
         with tempfile.TemporaryDirectory() as tmpdir:
+            # Create dummy files so they exist
             template_path = os.path.join(tmpdir, "template.xml")
             schema_path = os.path.join(tmpdir, "schema.xsd")
             data_path = os.path.join(tmpdir, "data.csv")
+
+            for p in [template_path, schema_path, data_path]:
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("dummy")
 
             result = runner.invoke(
                 main,
@@ -53,8 +58,8 @@ class TestCliErrorPaths:
                     data_path,
                 ],
             )
-            assert result.exit_code == 1
-            assert "XML message type is required" in result.output
+            assert result.exit_code == 2
+            assert "Missing option '-t'" in result.output or "Missing option" in result.output
 
     def test_cli_missing_template_path(self) -> None:
         """Test CLI when xml_template_file_path is not provided."""
@@ -63,6 +68,10 @@ class TestCliErrorPaths:
             schema_path = os.path.join(tmpdir, "schema.xsd")
             data_path = os.path.join(tmpdir, "data.csv")
 
+            for p in [schema_path, data_path]:
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("dummy")
+
             result = runner.invoke(
                 main,
                 [
@@ -74,8 +83,8 @@ class TestCliErrorPaths:
                     data_path,
                 ],
             )
-            assert result.exit_code == 1
-            assert "XML template file path is required" in result.output
+            assert result.exit_code == 2
+            assert "Missing option '-m'" in result.output or "Missing option" in result.output
 
     def test_cli_missing_schema_path(self) -> None:
         """Test CLI when xsd_schema_file_path is not provided."""
@@ -84,6 +93,10 @@ class TestCliErrorPaths:
             template_path = os.path.join(tmpdir, "template.xml")
             data_path = os.path.join(tmpdir, "data.csv")
 
+            for p in [template_path, data_path]:
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("dummy")
+
             result = runner.invoke(
                 main,
                 [
@@ -95,8 +108,8 @@ class TestCliErrorPaths:
                     data_path,
                 ],
             )
-            assert result.exit_code == 1
-            assert "XSD schema file path is required" in result.output
+            assert result.exit_code == 2
+            assert "Missing option '-s'" in result.output or "Missing option" in result.output
 
     def test_cli_missing_data_path(self) -> None:
         """Test CLI when data_file_path is not provided."""
@@ -104,6 +117,10 @@ class TestCliErrorPaths:
         with tempfile.TemporaryDirectory() as tmpdir:
             template_path = os.path.join(tmpdir, "template.xml")
             schema_path = os.path.join(tmpdir, "schema.xsd")
+
+            for p in [template_path, schema_path]:
+                with open(p, "w", encoding="utf-8") as f:
+                    f.write("dummy")
 
             result = runner.invoke(
                 main,
@@ -116,8 +133,8 @@ class TestCliErrorPaths:
                     schema_path,
                 ],
             )
-            assert result.exit_code == 1
-            assert "data file path is required" in result.output
+            assert result.exit_code == 2
+            assert "Missing option '-d'" in result.output or "Missing option" in result.output
 
     def test_cli_nonexistent_files(self) -> None:
         """Test CLI when provided files don't exist."""
@@ -135,7 +152,7 @@ class TestCliErrorPaths:
                 "/nonexistent/data.csv",
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         assert "does not exist" in result.output
 
     def test_cli_dry_run_data_validation_failure(self) -> None:

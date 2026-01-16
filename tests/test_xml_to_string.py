@@ -17,7 +17,7 @@ Unit tests for pain001.xml.xml_to_string module.
 Tests XML-to-string conversion for serverless/API architectures.
 """
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # noqa: N817
 
 from pain001.xml.xml_to_string import xml_to_string
 

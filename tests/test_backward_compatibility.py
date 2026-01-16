@@ -203,7 +203,7 @@ class TestJSONLoaderBackwardCompat(unittest.TestCase):
     def test_load_json_array_format(self) -> None:
         """JSON loader should handle array format."""
         json_file = self.temp_dir / "test.json"
-        with open(json_file, "w") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump(self.sample_data, f)
 
         result = load_json_data(str(json_file))
@@ -214,7 +214,7 @@ class TestJSONLoaderBackwardCompat(unittest.TestCase):
     def test_load_json_single_object_format(self) -> None:
         """JSON loader should handle single object format."""
         json_file = self.temp_dir / "test.json"
-        with open(json_file, "w") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump(self.sample_data[0], f)
 
         result = load_json_data(str(json_file))
@@ -224,7 +224,7 @@ class TestJSONLoaderBackwardCompat(unittest.TestCase):
     def test_load_jsonl_format(self) -> None:
         """JSON loader should handle JSONL (JSON Lines) format."""
         jsonl_file = self.temp_dir / "test.jsonl"
-        with open(jsonl_file, "w") as f:
+        with open(jsonl_file, "w", encoding="utf-8") as f:
             for record in self.sample_data:
                 f.write(json.dumps(record) + "\n")
 
@@ -417,7 +417,7 @@ class TestEdgeCases(unittest.TestCase):
     def test_csv_with_only_headers(self) -> None:
         """CSV loader should handle files with only headers."""
         csv_file = self.temp_dir / "headers_only.csv"
-        with open(csv_file, "w") as f:
+        with open(csv_file, "w", encoding="utf-8") as f:
             f.write("id,name,value\n")
 
         # Should raise DataSourceError since file is empty (no data rows)
@@ -429,7 +429,7 @@ class TestEdgeCases(unittest.TestCase):
     def test_csv_with_special_characters(self) -> None:
         """CSV loader should handle special characters in data."""
         csv_file = self.temp_dir / "special_chars.csv"
-        with open(csv_file, "w") as f:
+        with open(csv_file, "w", encoding="utf-8") as f:
             f.write("id,description\n")
             f.write('1,"Payment for: €100, £50, ¥1000"\n')
             f.write('2,"Special chars: @#$%^&*()"\n')
@@ -441,7 +441,7 @@ class TestEdgeCases(unittest.TestCase):
     def test_csv_with_quoted_fields(self) -> None:
         """CSV loader should handle quoted fields correctly."""
         csv_file = self.temp_dir / "quoted.csv"
-        with open(csv_file, "w") as f:
+        with open(csv_file, "w", encoding="utf-8") as f:
             f.write("id,name,description\n")
             f.write('1,"John Doe","Has comma, in name"\n')
             f.write('2,"Jane Smith","No comma here"\n')
@@ -453,7 +453,7 @@ class TestEdgeCases(unittest.TestCase):
     def test_json_with_empty_array(self) -> None:
         """JSON loader should handle empty arrays."""
         json_file = self.temp_dir / "empty.json"
-        with open(json_file, "w") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump([], f)
 
         result = load_json_data(str(json_file))
@@ -463,7 +463,7 @@ class TestEdgeCases(unittest.TestCase):
         """JSON loader should handle null values."""
         json_file = self.temp_dir / "nulls.json"
         data = [{"id": "1", "value": None}, {"id": "2", "value": "test"}]
-        with open(json_file, "w") as f:
+        with open(json_file, "w", encoding="utf-8") as f:
             json.dump(data, f)
 
         result = load_json_data(str(json_file))
@@ -545,7 +545,7 @@ class TestRegressionScenarios(unittest.TestCase):
         temp_dir = Path(tempfile.mkdtemp())
         try:
             csv_file = temp_dir / "mixed_types.csv"
-            with open(csv_file, "w") as f:
+            with open(csv_file, "w", encoding="utf-8") as f:
                 f.write("id,amount,date,active\n")
                 f.write("1,100.50,2023-01-01,true\n")
                 f.write("2,200.75,2023-01-02,false\n")
