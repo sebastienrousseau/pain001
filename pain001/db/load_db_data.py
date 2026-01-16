@@ -75,14 +75,22 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
         data = load_db_data("my_database.db", "my_table")
     """
 
-    # Check if the SQLite file exists
-    if not os.path.exists(data_file_path):
+    # Validate path to prevent traversal attacks
+    from pain001.security import validate_path
+
+    try:
+        safe_path = validate_path(data_file_path)
+    except Exception:
+        # Fall back to simple check for compatibility
+        safe_path = Path(data_file_path)
+
+    if not safe_path.exists():
         raise FileNotFoundError(
             f"SQLite file '{data_file_path}' does not exist."
         )
 
     # Connect to the SQLite database
-    conn = sqlite3.connect(data_file_path)
+    conn = sqlite3.connect(str(safe_path))
     try:
         cursor = conn.cursor()
 

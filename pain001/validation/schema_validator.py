@@ -98,12 +98,14 @@ class SchemaValidator:
         if schema_dir is None:
             schema_dir = Path(__file__).parent.parent / "schemas"
 
-        self.schema_path = schema_dir / f"{message_type}.schema.json"
+        # Validate path to prevent traversal attacks
+        from pain001.security import validate_path
 
-        if not self.schema_path.exists():
-            raise FileNotFoundError(
-                f"Schema file not found: {self.schema_path}"
-            )
+        schema_file = schema_dir / f"{message_type}.schema.json"
+        try:
+            self.schema_path = validate_path(schema_file, must_exist=True)
+        except Exception as e:
+            raise FileNotFoundError(f"Schema validation failed: {e}")
 
         try:
             with open(self.schema_path) as f:

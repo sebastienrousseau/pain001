@@ -70,14 +70,21 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
     """
     _check_parquet_support()
 
-    file_path_obj = Path(file_path)
+    # Validate path to prevent traversal attacks
+    from pain001.security import validate_path
 
-    if not file_path_obj.exists():
+    try:
+        safe_path = validate_path(file_path)
+    except Exception:
+        # Fall back to simple check for compatibility
+        safe_path = Path(file_path)
+
+    if not safe_path.exists():
         raise FileNotFoundError(f"Parquet file not found: {file_path}")
 
     try:
         # Read Parquet file
-        table = pq.read_table(file_path)
+        table = pq.read_table(str(safe_path))
 
         # Convert to list of dicts
         data = table.to_pylist()

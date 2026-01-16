@@ -188,9 +188,11 @@ class TestDataLoader:
         self, sample_payment_data, tmp_path
     ) -> None:
         """Test loading from Parquet file (new feature, requires pyarrow)."""
+        pa = None  # Initialize to satisfy CodeQL
+        pq = None
         try:
-            import pyarrow as pa
-            import pyarrow.parquet as pq
+            import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+            import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
         except ImportError:
             pytest.skip("pyarrow not available")
 

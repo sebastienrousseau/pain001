@@ -16,7 +16,6 @@
 """Pain001 FastAPI application."""
 
 import asyncio
-import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
@@ -65,10 +64,13 @@ def _validate_safe_path(user_path: str, base_dir: Path = None) -> Path:
             detail="Invalid path: directory traversal detected",
         )
 
-    # Resolve to absolute path
+    # Resolve to absolute path (use resolve without strict to avoid errors)
     try:
-        resolved = Path(user_path).resolve(strict=False)
-    except (OSError, RuntimeError) as e:
+        # First convert to Path object
+        path_obj = Path(user_path)
+        # Then resolve (this is the secure operation)
+        resolved = path_obj.resolve(strict=False)
+    except (OSError, RuntimeError, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Invalid path: {e}",
@@ -252,16 +254,11 @@ async def generate_xml_sync(
         else:
             output_dir = Path.cwd()
         output_dir.mkdir(parents=True, exist_ok=True)
-        xsd_file_path = str(
-            Path(
-                f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"
-            )
-        )
-        xml_template_path = str(
-            Path(
-                f"pain001/templates/{request.message_type.value}/template.xml"
-            )
-        )
+        
+        # Validate template paths (constructed from enum, but CodeQL requires validation)
+        template_base = Path("pain001/templates") / request.message_type.value
+        xsd_file_path = str(_validate_safe_path(str(template_base / f"{request.message_type.value}.xsd")))
+        xml_template_path = str(_validate_safe_path(str(template_base / "template.xml")))
 
         # Generate XML
         generate_xml(
@@ -515,16 +512,11 @@ async def _process_generation_job(
         else:
             output_dir = Path.cwd()
         output_dir.mkdir(parents=True, exist_ok=True)
-        xsd_file_path = str(
-            Path(
-                f"pain001/templates/{request.message_type.value}/{request.message_type.value}.xsd"
-            )
-        )
-        xml_template_path = str(
-            Path(
-                f"pain001/templates/{request.message_type.value}/template.xml"
-            )
-        )
+        
+        # Validate template paths (constructed from enum, but CodeQL requires validation)
+        template_base = Path("pain001/templates") / request.message_type.value
+        xsd_file_path = str(_validate_safe_path(str(template_base / f"{request.message_type.value}.xsd")))
+        xml_template_path = str(_validate_safe_path(str(template_base / "template.xml")))
 
         # Generate XML
         generate_xml(
