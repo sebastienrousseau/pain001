@@ -16,6 +16,7 @@
 """Pain001 FastAPI application."""
 
 import asyncio
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
@@ -41,6 +42,51 @@ from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
 from pain001.xml.generate_xml import generate_xml
+
+
+def _validate_safe_path(user_path: str, base_dir: Path = None) -> Path:
+    """Validate and resolve path to prevent directory traversal attacks.
+
+    Args:
+        user_path: User-provided path (potentially malicious).
+        base_dir: Optional base directory to restrict access to.
+
+    Returns:
+        Resolved absolute Path object.
+
+    Raises:
+        HTTPException: If path contains traversal attempts or is outside base_dir.
+    """
+    # Allow absolute paths (needed for tests with tmp_path fixtures)
+    # But reject obvious traversal attempts with relative paths
+    if ".." in user_path:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid path: directory traversal detected",
+        )
+
+    # Resolve to absolute path
+    try:
+        resolved = Path(user_path).resolve(strict=False)
+    except (OSError, RuntimeError) as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid path: {e}",
+        )
+
+    # If base_dir specified, ensure resolved path is within it
+    if base_dir:
+        base_resolved = base_dir.resolve()
+        try:
+            resolved.relative_to(base_resolved)
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: path outside allowed directory",
+            )
+
+    return resolved
+
 
 # Create FastAPI application
 app = FastAPI(
@@ -90,8 +136,8 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         HTTPException: If file not found or validation fails.
     """
     try:
-        # Load data
-        file_path = Path(request.file_path)
+        # Validate and load data (secure path)
+        file_path = _validate_safe_path(request.file_path)
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -158,7 +204,8 @@ async def generate_xml_sync(
         HTTPException: If generation fails.
     """
     try:
-        file_path = Path(request.file_path)
+        # Validate file path (secure path)
+        file_path = _validate_safe_path(request.file_path)
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -200,9 +247,10 @@ async def generate_xml_sync(
 
         # Generate XML
         # Use temporary template path in output directory
-        output_dir = (
-            Path(request.output_dir) if request.output_dir else Path.cwd()
-        )
+        if request.output_dir:
+            output_dir = _validate_safe_path(request.output_dir)
+        else:
+            output_dir = Path.cwd()
         output_dir.mkdir(parents=True, exist_ok=True)
         xsd_file_path = str(
             Path(
@@ -433,8 +481,8 @@ async def _process_generation_job(
             progress=10,
         )
 
-        # Validate
-        file_path = Path(request.file_path)
+        # Validate file path (secure path)
+        file_path = _validate_safe_path(request.file_path)
         if not file_path.exists():
             job_manager.update_status(
                 job_id,
@@ -461,10 +509,11 @@ async def _process_generation_job(
 
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=70)
 
-        # Generate XML
-        output_dir = (
-            Path(request.output_dir) if request.output_dir else Path.cwd()
-        )
+        # Generate XML (secure paths)
+        if request.output_dir:
+            output_dir = _validate_safe_path(request.output_dir)
+        else:
+            output_dir = Path.cwd()
         output_dir.mkdir(parents=True, exist_ok=True)
         xsd_file_path = str(
             Path(

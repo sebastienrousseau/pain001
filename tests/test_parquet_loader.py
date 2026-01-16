@@ -74,9 +74,11 @@ def sample_payment_data():
 @pytest.fixture
 def parquet_file(sample_payment_data, tmp_path):
     """Create a temporary Parquet file."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -92,9 +94,11 @@ def parquet_file(sample_payment_data, tmp_path):
 @pytest.fixture
 def large_parquet_file(tmp_path):
     """Create a large Parquet file for streaming tests (10,000 records)."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -160,9 +164,11 @@ def test_load_parquet_data_invalid_file(tmp_path):
 
 def test_load_parquet_data_empty_file(tmp_path):
     """Test loading empty Parquet file."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -181,9 +187,11 @@ def test_load_parquet_data_empty_file(tmp_path):
 
 def test_load_parquet_data_column_types(tmp_path):
     """Test Parquet file with various column types."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -256,9 +264,11 @@ def test_load_parquet_data_streaming_large_dataset(large_parquet_file):
 
 def test_load_parquet_data_streaming_partial_last_chunk(tmp_path):
     """Test streaming with partial last chunk."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -338,9 +348,11 @@ def test_streaming_memory_efficiency(large_parquet_file):
 
 def test_load_parquet_data_unicode_strings(tmp_path):
     """Test Parquet file with Unicode strings."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -364,9 +376,11 @@ def test_load_parquet_data_unicode_strings(tmp_path):
 
 def test_load_parquet_data_null_values(tmp_path):
     """Test Parquet file with null values."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -387,9 +401,11 @@ def test_load_parquet_data_null_values(tmp_path):
 
 def test_load_parquet_data_compression(tmp_path):
     """Test Parquet file with compression (snappy, gzip)."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -455,9 +471,11 @@ def test_load_parquet_data_streaming_without_pyarrow():
 
 def test_parquet_roundtrip(sample_payment_data, tmp_path):
     """Test writing and reading back Parquet file."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
@@ -478,9 +496,11 @@ def test_parquet_roundtrip(sample_payment_data, tmp_path):
 
 def test_parquet_vs_json_equivalence(sample_payment_data, tmp_path):
     """Test that Parquet and JSON produce equivalent results."""
+    pa = None  # Initialize to satisfy CodeQL
+    pq = None
     try:
-        import pyarrow as pa
-        import pyarrow.parquet as pq
+        import pyarrow as pa  # type: ignore[import-untyped,no-redef]
+        import pyarrow.parquet as pq  # type: ignore[import-untyped,no-redef]
     except ImportError:
         pytest.skip("pyarrow not available")
 
