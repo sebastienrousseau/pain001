@@ -189,15 +189,19 @@ class TestStreamPaymentData:
         assert len(chunks) >= 1
         assert all(isinstance(chunk, list) for chunk in chunks)
 
-    def test_stream_unsupported_file_type(self):
+    def test_stream_unsupported_file_type(self, tmp_path):
         """Test streaming with unsupported file type."""
         # Create a file with unsupported extension
         from pain001.exceptions import DataSourceError
 
+        # Use tmp_path fixture instead of hardcoded /tmp
+        unsupported_file = tmp_path / "test.unsupported"
+        unsupported_file.write_text("invalid data", encoding="utf-8")
+
         with pytest.raises((DataSourceError, ValueError)):
             list(
                 load_payment_data_streaming(
-                    "/tmp/test.unsupported", chunk_size=10
+                    str(unsupported_file), chunk_size=10
                 )
             )
 

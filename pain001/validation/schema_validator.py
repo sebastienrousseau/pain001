@@ -108,7 +108,7 @@ class SchemaValidator:
             raise FileNotFoundError(f"Schema validation failed: {e}") from e
 
         try:
-            with open(self.schema_path) as f:
+            with open(self.schema_path, encoding="utf-8") as f:
                 self.schema = json.load(f)
         except json.JSONDecodeError as e:
             raise json.JSONDecodeError(
