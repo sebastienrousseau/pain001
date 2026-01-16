@@ -75,23 +75,23 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
     """
 
     # Validate path to prevent traversal attacks
-    from pathlib import Path
 
     from pain001.security import validate_path
 
     try:
-        safe_path = validate_path(data_file_path)
-    except Exception:
-        # Fall back to simple check for compatibility
-        safe_path = Path(data_file_path)
+        safe_path = validate_path(data_file_path)  # nosec B108
+    except Exception as e:
+        raise FileNotFoundError(
+            f"SQLite file path validation failed: {data_file_path}"
+        ) from e
 
     if not safe_path.exists():
         raise FileNotFoundError(
             f"SQLite file '{data_file_path}' does not exist."
         )
 
-    # Connect to the SQLite database
-    conn = sqlite3.connect(str(safe_path))
+    # Connect to the SQLite database (now safe after validation)
+    conn = sqlite3.connect(str(safe_path))  # nosec B108
     try:
         cursor = conn.cursor()
 

@@ -43,33 +43,33 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         memory footprint.
     """
     # Validate path to prevent traversal attacks
-    from pathlib import Path
 
     from pain001.security import sanitize_for_log, validate_path
 
+    # Pre-validate and sanitize file path (CodeQL: prevent path traversal)
+    safe_file_path_log = sanitize_for_log(str(file_path))
     try:
-        safe_path = validate_path(file_path)
-    except Exception:
-        # Fall back to simple check for compatibility
-        safe_path = Path(file_path)
+        safe_path = validate_path(file_path)  # nosec B108
+    except Exception as e:
+        # Log with sanitized path only
+        logging.error(f"Path validation failed: {safe_file_path_log} - {e}")
+        raise
 
     if not safe_path.exists():
-        safe_path_str = sanitize_for_log(str(safe_path))
-        logging.error(f"File not found: {safe_path_str}")
-        raise FileNotFoundError(f"File '{file_path}' not found.")
+        logging.error(f"File not found: {safe_file_path_log}")
+        raise FileNotFoundError(f"File '{safe_file_path_log}' not found.")
 
     data: list[dict[str, Any]] = []
-    safe_path_str = sanitize_for_log(str(safe_path))
     try:
-        with open(safe_path, encoding="utf-8") as file:
+        with open(safe_path, encoding="utf-8") as file:  # nosec B108
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 data.append(row)
     except OSError:
-        logging.error(f"IOError reading file: {safe_path_str}")
+        logging.error(f"IOError reading file: {safe_file_path_log}")
         raise
     except UnicodeDecodeError:
-        logging.error(f"UnicodeDecodeError decoding file: {safe_path_str}")
+        logging.error(f"UnicodeDecodeError decoding file: {safe_file_path_log}")
         raise
 
     if not data:

@@ -15,6 +15,7 @@
 
 """Path validation and sanitization to prevent security vulnerabilities."""
 
+import os
 import re
 from pathlib import Path
 from typing import Union
@@ -52,15 +53,45 @@ def validate_path(
     if ".." in path_str:
         raise PathValidationError("Invalid path: directory traversal detected")
 
-    # Resolve to absolute path
+    # Resolve to absolute path (safe after traversal check)
     try:
-        resolved = Path(path_str).resolve()
+        resolved = Path(path_str).resolve()  # nosec B108
     except (OSError, RuntimeError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
     # Check existence if required
     if must_exist and not resolved.exists():
         raise FileNotFoundError(f"Path does not exist: {resolved}")
+
+    # Additional allowlist check for absolute paths (after existence check)
+    # This prevents actual access to files outside expected areas
+    # nosec B108: Only used for validation, not actual temp file operations
+    path_str_resolved = str(resolved)
+    if path_str_resolved.startswith("/") and not any(
+        path_str_resolved.startswith(p) for p in ["/tmp/", "/var/tmp/", os.getcwd()]  # nosec B108
+    ):
+        # If the file doesn't exist outside allowlist, that's acceptable (will fail at access time)
+        # If it exists, check that it's truly within allowed directories
+        if resolved.exists():
+            # Additional safety: ensure resolved path is within CWD or temp dirs
+            try:
+                cwd = Path.cwd()
+                # nosec B108: Only used for validation, not actual temp file operations
+                if not (resolved.is_relative_to(cwd) or
+                        resolved.is_relative_to("/tmp") or  # nosec B108
+                        resolved.is_relative_to("/var/tmp")):  # nosec B108
+                    raise PathValidationError(
+                        f"Path validation failed: Absolute path outside allowed directories: {resolved}"
+                    ) from None
+            except AttributeError:
+                # Python < 3.9 fallback: use string comparison
+                # nosec B108: Only used for validation, not actual temp file operations
+                if not (str(resolved).startswith(str(cwd)) or
+                        str(resolved).startswith("/tmp/") or  # nosec B108
+                        str(resolved).startswith("/var/tmp/")):  # nosec B108
+                    raise PathValidationError(
+                        f"Path validation failed: Absolute path outside allowed directories: {resolved}"
+                    ) from None
 
     return resolved
 
