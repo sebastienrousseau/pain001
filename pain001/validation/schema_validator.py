@@ -105,7 +105,7 @@ class SchemaValidator:
         try:
             self.schema_path = validate_path(schema_file, must_exist=True)
         except Exception as e:
-            raise FileNotFoundError(f"Schema validation failed: {e}")
+            raise FileNotFoundError(f"Schema validation failed: {e}") from e
 
         try:
             with open(self.schema_path) as f:

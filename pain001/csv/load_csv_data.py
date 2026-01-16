@@ -43,7 +43,9 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         memory footprint.
     """
     # Validate path to prevent traversal attacks
-    from pain001.security import validate_path, sanitize_for_log
+    from pathlib import Path
+
+    from pain001.security import sanitize_for_log, validate_path
 
     try:
         safe_path = validate_path(file_path)

@@ -13,7 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sqlite3
 from typing import Any
 
@@ -76,6 +75,8 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
     """
 
     # Validate path to prevent traversal attacks
+    from pathlib import Path
+
     from pain001.security import validate_path
 
     try:
