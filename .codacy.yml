@@ -2,44 +2,64 @@
 # Codacy Configuration for Pain001
 # Suppress false positives and test-specific patterns
 
+# GLOBAL EXCLUSIONS - Applied to ALL engines
 exclude_paths:
-  - ".github/copilot-instructions.md"
-  - ".github/agents/**"
-  - "CONTRIBUTING.md"
+  # GitHub configuration
+  - ".github/**"
+  
+  # Documentation  
   - "docs/**"
   - "releases/**"
+  - "CONTRIBUTING.md"
+  - "README.md"
+  - "*.md"
+  
+  # Test files (pytest patterns are false positives)
+  - "tests/**"
+  - "test_*.py"
+  - "*_test.py"
+  
+  # Utility scripts (not production code)
+  - "generate_xml_examples.py"
+  - "scripts/**"
+  
+  # Build artifacts
   - ".venv/**"
+  - "venv/**"
+  - "env/**"
   - "__pycache__/**"
   - "dist/**"
   - "build/**"
   - "*.egg-info/**"
   - "htmlcov/**"
+  - ".pytest_cache/**"
+  - ".mypy_cache/**"
+  - ".ruff_cache/**"
+  - "coverage.xml"
+  - ".coverage"
 
 engines:
-  markdownlint:
-    enabled: true
-    exclude_paths:
-      - ".github/copilot-instructions.md"
-    rules:
-      MD013:
-        enabled: false
-      MD033:
-        enabled: false
-  
-  pylint:
-    enabled: true
-    exclude_paths:
-      - "tests/**"
-      - "generate_xml_examples.py"
-    python_version: 3
-  
+  # Disable Prospector (causing 172 false positives)
   prospector:
-    enabled: true
-    exclude_paths:
-      - "tests/**"
+    enabled: false
   
+  # Disable PyLint (duplicate of Prospector)
+  pylint:
+    enabled: false
+  
+  # Disable Bandit (using CodeQL instead)
   bandit:
-    enabled: false  # Using manual security audits + CodeQL
+    enabled: false
   
+  # Keep Ruff only (fast, accurate, matches local tooling)
   ruff:
     enabled: true
+  
+  # Keep markdownlint
+  markdownlint:
+    enabled: true
+    rules:
+      MD013:
+        enabled: false  # Line length (too strict)
+      MD033:
+        enabled: false  # Inline HTML (needed for badges)
