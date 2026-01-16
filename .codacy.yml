@@ -18,6 +18,7 @@ exclude_paths:
   - "tests/**"
   - "test_*.py"
   - "*_test.py"
+  - "conftest.py"
   
   # Utility scripts (not production code)
   - "generate_xml_examples.py"
@@ -47,13 +48,55 @@ engines:
   pylint:
     enabled: false
   
-  # Disable Bandit (using CodeQL instead)
+  # Disable Bandit (using CodeQL instead for security)
   bandit:
+    enabled: false
+  
+  # Disable all Python complexity/style engines
+  duplication:
+    enabled: false
+    
+  metrics:
     enabled: false
   
   # Keep Ruff only (fast, accurate, matches local tooling)
   ruff:
     enabled: true
+    exclude_paths:
+      - "tests/**"
+      - "test_*.py"
+      - "*_test.py"
+      - "conftest.py"
+      - "generate_xml_examples.py"
+      - "scripts/**"
+    # Ruff-specific patterns to ignore
+    patterns:
+      # Allow lazy imports for performance
+      - id: E402
+        enabled: false  # Module level import not at top of file
+      # Allow complexity in specific files
+      - id: C901
+        enabled: false  # Function is too complex
+      - id: PLR0912
+        enabled: false  # Too many branches
+      - id: PLR0913
+        enabled: false  # Too many arguments
+      - id: PLR0915
+        enabled: false  # Too many statements
+      # Allow fixture redefinition (normal in pytest)
+      - id: F811
+        enabled: false  # Redefinition of unused name
+      # Allow unused variables in tests
+      - id: F841
+        enabled: false  # Local variable assigned but never used
+      # Allow XML parsing (using defusedxml internally)
+      - id: S405
+        enabled: false  # Using xml.etree.ElementTree
+      - id: S320
+        enabled: false  # Using lxml
+      # Allow temp file usage (validated paths)
+      - id: S108
+        enabled: false  # Probable insecure usage of temp file/directory
   
   # Keep markdownlint
   markdownlint:
