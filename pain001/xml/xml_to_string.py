@@ -65,8 +65,8 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
     # Decode to string
     xml_str: str = xml_bytes.decode("utf-8")
 
-    # Add XML declaration if requested
+    # Add XML declaration if requested (match ElementTree.write() format)
     if include_declaration and not xml_str.startswith("<?xml"):
-        xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str
+        xml_str = "<?xml version='1.0' encoding='utf-8'?>\\n" + xml_str
 
     return xml_str
