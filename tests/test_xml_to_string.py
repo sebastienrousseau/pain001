@@ -34,8 +34,8 @@ class TestXmlToString:
 
         result = xml_to_string(root, include_declaration=True)
 
-        # Match ElementTree.write() format: single quotes, lowercase utf-8
-        assert result.startswith("<?xml version='1.0' encoding='utf-8'?>")
+        # Match our XML normalization: double quotes, uppercase UTF-8
+        assert result.startswith('<?xml version="1.0" encoding="UTF-8"?>')
         assert "<Document" in result
         assert (
             'xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"' in result
@@ -211,8 +211,8 @@ class TestXmlToString:
 
         result = xml_to_string(root)  # No parameter specified
 
-        # Match ElementTree.write() format: single quotes, lowercase utf-8
-        assert result.startswith("<?xml version='1.0' encoding='utf-8'?>")
+        # Match our XML normalization: double quotes, uppercase UTF-8
+        assert result.startswith('<?xml version="1.0" encoding="UTF-8"?>')
 
 
 # Integration test placeholder

@@ -57,12 +57,12 @@ def main():
                 payment_data,
                 version_str,
                 xml_template_path="template.xml",
-                xsd_schema_path=str(xsd_path.resolve())
+                xsd_schema_path=str(xsd_path.resolve()),
             )
 
             # Change back and write
             os.chdir(orig_dir)
-            output_file.write_text(xml_content, encoding='utf-8')
+            output_file.write_text(xml_content, encoding="utf-8")
 
             print(f"  ✓ Generated XML: {len(xml_content)} bytes")
             print(f"  ✓ Saved to: {output_file}")
@@ -74,7 +74,9 @@ def main():
 
     print("\n" + "=" * 60)
     print(f"✅ Successfully generated all {len(versions)} XML example files")
-    print("\nThese files enable XSD validation tests for all ISO 20022 versions.")
+    print(
+        "\nThese files enable XSD validation tests for all ISO 20022 versions."
+    )
     return 0
 
 

@@ -596,7 +596,7 @@ class TestAsyncGenerationEndpoint:
         """Test validation endpoint exception handling."""
         # Test with corrupted file to trigger general exception
         bad_file = tmp_path / "bad.csv"
-        bad_file.write_bytes(b"\x00\xFF\xFE\xFD")  # Binary garbage
+        bad_file.write_bytes(b"\x00\xff\xfe\xfd")  # Binary garbage
 
         response = client.post(
             "/api/validate",
@@ -613,7 +613,7 @@ class TestAsyncGenerationEndpoint:
         """Test generation endpoint exception handling."""
         # Test with corrupted file
         bad_file = tmp_path / "corrupt.csv"
-        bad_file.write_bytes(b"\xFF\xFE")
+        bad_file.write_bytes(b"\xff\xfe")
 
         response = client.post(
             "/api/generate",

@@ -27,6 +27,8 @@ while JSON/Parquet tests use v03-compatible data (most widely compatible).
 """
 
 import json
+import os
+import shutil
 import tempfile
 import unittest
 from pathlib import Path
@@ -396,16 +398,28 @@ class TestIntegrationMatrix(unittest.TestCase):
             version: ISO 20022 version (e.g., 'pain.001.001.03')
         """
         version_dir = self.templates_dir / version
-        template_file = version_dir / "template.xml"
-        schema_file = version_dir / f"{version}.xsd"
-        data_file = version_dir / "template.csv"
+        source_template = version_dir / "template.xml"
+        source_schema = version_dir / f"{version}.xsd"
+        source_data = version_dir / "template.csv"
 
         # Verify all required files exist
         self.assertTrue(
-            template_file.exists(), f"Template missing for {version}"
+            source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
-        self.assertTrue(data_file.exists(), f"CSV data missing for {version}")
+        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(source_data.exists(), f"CSV data missing for {version}")
+
+        # Copy to temp dir to avoid polluting/deleting source files
+        temp_version_dir = self.temp_dir / version
+        temp_version_dir.mkdir(exist_ok=True)
+
+        template_file = temp_version_dir / "template.xml"
+        schema_file = temp_version_dir / f"{version}.xsd"
+        data_file = temp_version_dir / "template.csv"
+
+        shutil.copy2(source_template, template_file)
+        shutil.copy2(source_schema, schema_file)
+        shutil.copy2(source_data, data_file)
 
         # Generate XML
         process_files(
@@ -416,8 +430,8 @@ class TestIntegrationMatrix(unittest.TestCase):
         )
 
         # Verify XML generated and valid
-        # XML is created in the template directory, not current directory
-        xml_file = version_dir / f"{version}.xml"
+        # XML is created in the temp directory
+        xml_file = temp_version_dir / f"{version}.xml"
         self.assertTrue(
             xml_file.exists(), f"XML not generated for {version} with CSV"
         )
@@ -431,7 +445,7 @@ class TestIntegrationMatrix(unittest.TestCase):
         content = xml_file.read_text()
         self._assert_xml_structure(content, version)
 
-        # Clean up generated XML
+        # Clean up generated XML (not strictly necessary as temp dir is nuked, but good hygiene)
         xml_file.unlink()
 
     def _test_version_with_sqlite(self, version: str) -> None:
@@ -441,16 +455,28 @@ class TestIntegrationMatrix(unittest.TestCase):
             version: ISO 20022 version (e.g., 'pain.001.001.03')
         """
         version_dir = self.templates_dir / version
-        template_file = version_dir / "template.xml"
-        schema_file = version_dir / f"{version}.xsd"
-        data_file = version_dir / "template.db"
+        source_template = version_dir / "template.xml"
+        source_schema = version_dir / f"{version}.xsd"
+        source_data = version_dir / "template.db"
 
         # Verify all required files exist
         self.assertTrue(
-            template_file.exists(), f"Template missing for {version}"
+            source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
-        self.assertTrue(data_file.exists(), f"SQLite DB missing for {version}")
+        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(source_data.exists(), f"SQLite DB missing for {version}")
+
+        # Copy to temp dir to avoid polluting/deleting source files
+        temp_version_dir = self.temp_dir / version
+        temp_version_dir.mkdir(exist_ok=True)
+
+        template_file = temp_version_dir / "template.xml"
+        schema_file = temp_version_dir / f"{version}.xsd"
+        data_file = temp_version_dir / "template.db"
+
+        shutil.copy2(source_template, template_file)
+        shutil.copy2(source_schema, schema_file)
+        shutil.copy2(source_data, data_file)
 
         # Generate XML
         process_files(
@@ -461,8 +487,8 @@ class TestIntegrationMatrix(unittest.TestCase):
         )
 
         # Verify XML generated and valid
-        # XML is created in the template directory, not current directory
-        xml_file = version_dir / f"{version}.xml"
+        # XML is created in the temp directory
+        xml_file = temp_version_dir / f"{version}.xml"
         self.assertTrue(
             xml_file.exists(), f"XML not generated for {version} with SQLite"
         )
@@ -486,14 +512,24 @@ class TestIntegrationMatrix(unittest.TestCase):
             version: ISO 20022 version (e.g., 'pain.001.001.03')
         """
         version_dir = self.templates_dir / version
-        template_file = version_dir / "template.xml"
-        schema_file = version_dir / f"{version}.xsd"
+        source_template = version_dir / "template.xml"
+        source_schema = version_dir / f"{version}.xsd"
 
         # Verify required files exist
         self.assertTrue(
-            template_file.exists(), f"Template missing for {version}"
+            source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
+        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+
+        # Copy to temp dir to avoid polluting/deleting source files
+        temp_version_dir = self.temp_dir / version
+        temp_version_dir.mkdir(exist_ok=True)
+
+        template_file = temp_version_dir / "template.xml"
+        schema_file = temp_version_dir / f"{version}.xsd"
+
+        shutil.copy2(source_template, template_file)
+        shutil.copy2(source_schema, schema_file)
 
         # Generate XML
         process_files(
@@ -504,8 +540,8 @@ class TestIntegrationMatrix(unittest.TestCase):
         )
 
         # Verify XML generated and valid
-        # XML is created in the template directory, not current directory
-        xml_file = version_dir / f"{version}.xml"
+        # XML is created in the temp directory
+        xml_file = temp_version_dir / f"{version}.xml"
         self.assertTrue(
             xml_file.exists(), f"XML not generated for {version} with JSON"
         )
@@ -535,25 +571,35 @@ class TestIntegrationMatrix(unittest.TestCase):
         import csv
 
         version_dir = self.templates_dir / version
-        template_file = version_dir / "template.xml"
-        schema_file = version_dir / f"{version}.xsd"
-        csv_file = version_dir / "template.csv"
+        source_template = version_dir / "template.xml"
+        source_schema = version_dir / f"{version}.xsd"
+        source_csv = version_dir / "template.csv"
 
         # Verify required files exist
         self.assertTrue(
-            template_file.exists(), f"Template missing for {version}"
+            source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
-        self.assertTrue(csv_file.exists(), f"CSV missing for {version}")
+        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(source_csv.exists(), f"CSV missing for {version}")
 
         # Convert CSV to JSON in temp directory
-        with open(csv_file, encoding="utf-8") as f:
+        with open(source_csv, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             data = list(reader)
 
         json_file = self.temp_dir / f"{version}_data.json"
         with open(json_file, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+
+        # Copy to temp dir to avoid polluting/deleting source files
+        temp_version_dir = self.temp_dir / version
+        temp_version_dir.mkdir(exist_ok=True)
+
+        template_file = temp_version_dir / "template.xml"
+        schema_file = temp_version_dir / f"{version}.xsd"
+
+        shutil.copy2(source_template, template_file)
+        shutil.copy2(source_schema, schema_file)
 
         # Generate XML
         process_files(
@@ -564,7 +610,7 @@ class TestIntegrationMatrix(unittest.TestCase):
         )
 
         # Verify XML generated and valid
-        xml_file = version_dir / f"{version}.xml"
+        xml_file = temp_version_dir / f"{version}.xml"
         self.assertTrue(
             xml_file.exists(),
             f"XML not generated for {version} with JSON-from-CSV",
@@ -590,14 +636,24 @@ class TestIntegrationMatrix(unittest.TestCase):
             version: ISO 20022 version (e.g., 'pain.001.001.03')
         """
         version_dir = self.templates_dir / version
-        template_file = version_dir / "template.xml"
-        schema_file = version_dir / f"{version}.xsd"
+        source_template = version_dir / "template.xml"
+        source_schema = version_dir / f"{version}.xsd"
 
         # Verify required files exist
         self.assertTrue(
-            template_file.exists(), f"Template missing for {version}"
+            source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
+        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+
+        # Copy to temp dir to avoid polluting/deleting source files
+        temp_version_dir = self.temp_dir / version
+        temp_version_dir.mkdir(exist_ok=True)
+
+        template_file = temp_version_dir / "template.xml"
+        schema_file = temp_version_dir / f"{version}.xsd"
+
+        shutil.copy2(source_template, template_file)
+        shutil.copy2(source_schema, schema_file)
 
         # Generate XML
         process_files(
@@ -608,8 +664,8 @@ class TestIntegrationMatrix(unittest.TestCase):
         )
 
         # Verify XML generated and valid
-        # XML is created in the template directory, not current directory
-        xml_file = version_dir / f"{version}.xml"
+        # XML is created in the temp directory
+        xml_file = temp_version_dir / f"{version}.xml"
         self.assertTrue(
             xml_file.exists(), f"XML not generated for {version} with Parquet"
         )
@@ -645,19 +701,19 @@ class TestIntegrationMatrix(unittest.TestCase):
             self.skipTest("pyarrow not available")
 
         version_dir = self.templates_dir / version
-        template_file = version_dir / "template.xml"
-        schema_file = version_dir / f"{version}.xsd"
-        csv_file = version_dir / "template.csv"
+        source_template = version_dir / "template.xml"
+        source_schema = version_dir / f"{version}.xsd"
+        source_csv = version_dir / "template.csv"
 
         # Verify required files exist
         self.assertTrue(
-            template_file.exists(), f"Template missing for {version}"
+            source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(schema_file.exists(), f"Schema missing for {version}")
-        self.assertTrue(csv_file.exists(), f"CSV missing for {version}")
+        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(source_csv.exists(), f"CSV missing for {version}")
 
         # Convert CSV to Parquet in temp directory
-        with open(csv_file, encoding="utf-8") as f:
+        with open(source_csv, encoding="utf-8") as f:
             reader = csv.DictReader(f)
             data = list(reader)
 
@@ -666,6 +722,16 @@ class TestIntegrationMatrix(unittest.TestCase):
 
         parquet_file = self.temp_dir / f"{version}_data.parquet"
         pq.write_table(table, parquet_file)
+
+        # Copy to temp dir to avoid polluting/deleting source files
+        temp_version_dir = self.temp_dir / version
+        temp_version_dir.mkdir(exist_ok=True)
+
+        template_file = temp_version_dir / "template.xml"
+        schema_file = temp_version_dir / f"{version}.xsd"
+
+        shutil.copy2(source_template, template_file)
+        shutil.copy2(source_schema, schema_file)
 
         # Generate XML
         process_files(
@@ -676,7 +742,8 @@ class TestIntegrationMatrix(unittest.TestCase):
         )
 
         # Verify XML generated and valid
-        xml_file = version_dir / f"{version}.xml"
+        # XML is created in the temp directory
+        xml_file = temp_version_dir / f"{version}.xml"
         self.assertTrue(
             xml_file.exists(),
             f"XML not generated for {version} with Parquet-from-CSV",

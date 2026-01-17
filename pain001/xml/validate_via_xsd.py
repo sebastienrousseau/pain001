@@ -49,13 +49,11 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
 
     # Validate XML file against XSD schema.
     try:
-        is_valid = xsd.is_valid(xml_tree)
+        xsd.validate(xml_tree)
+        return True
     except xmlschema.XMLSchemaException as e:
         print(f"Error validating XML: {e}")
         return False
-
-    # Return True if XML file is valid, False otherwise.
-    return is_valid
 
 
 def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
@@ -94,10 +92,8 @@ def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
 
     # Validate XML against XSD schema.
     try:
-        is_valid = xsd.is_valid(xml_tree)
+        xsd.validate(xml_tree)
+        return True
     except xmlschema.XMLSchemaException as e:
         print(f"Error validating XML: {e}")
         return False
-
-    # Return True if XML is valid, False otherwise.
-    return is_valid

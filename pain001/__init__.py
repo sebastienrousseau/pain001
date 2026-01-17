@@ -15,7 +15,7 @@
 
 """The Python pain001 module."""
 
-__version__ = "0.0.46"
+__version__ = "0.0.47"
 
 # Import main functions for easier access
 from pain001.__main__ import main
