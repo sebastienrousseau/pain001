@@ -43,6 +43,7 @@ help:
 	@echo "  complex       - Code complexity analysis"
 	@echo "  mutate        - Mutation testing"
 	@echo "  docs          - Build documentation"
+	@echo "  xml-examples  - Generate XML example files for XSD validation tests"
 	@echo ""
 	@echo "Advanced Tollgates (Enterprise Production):"
 	@echo "  tollgate-deps        - Verify no new dependencies (Dependency Governance)"
@@ -209,6 +210,12 @@ tollgate-envparity:
 
 tollgates: tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity
 	@echo "$(GREEN)✓ All 4 Advanced Production Tollgates PASSED$(NC)"
+
+# --- XML Example Generation ---
+xml-examples:
+	@echo "$(YELLOW)Generating XML example files for XSD validation tests...$(NC)"
+	@poetry run python scripts/generate_xml_examples.py
+	@echo "$(GREEN)✓ XML examples generated$(NC)"
 
 # --- SLO verification (recommended before commit) ---
 slos: lint type test perf
