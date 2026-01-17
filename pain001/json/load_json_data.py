@@ -52,7 +52,7 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         # Automatically wrapped: [{'id': 'MSG001', ...}]
     """
     # Validate path to prevent traversal attacks
-    from pain001.security import validate_path
+    from pain001.security import validate_path  # noqa: PYI100
 
     try:
         safe_path = validate_path(file_path)  # nosec B108
