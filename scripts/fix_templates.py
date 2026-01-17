@@ -1,50 +1,31 @@
 import glob
 import re
 
+# Narrowing back to likely optional text fields that cause empty tag errors
+TAGS_TO_FIX = [
+    "StrtNm",
+    "BldgNb",
+    "PstCd",
+    "TwnNm",
+    "Ctry",
+    "AdrLine",
+    "CtrySubDvsn",
+    "Dept",
+    "SubDept",
+]
+
 
 def fix_templates():
     template_files = glob.glob("pain001/templates/pain.001.001.*/template.xml")
 
-    # Tags to wrap in if blocks
-    # Added AdrLine, and others just in case.
-    tags_to_fix = [
-        "StrtNm",
-        "BldgNb",
-        "PstCd",
-        "TwnNm",
-        "Ctry",
-        "AdrLine",
-        "CtrySubDvsn",
-        "Dept",
-        "SubDept",
-        "Nm",
-        "Id",
-        "BICFI",
-        "IBAN",  # Maybe irrelevant for address but good for safety?
-        # Actually Nm is mandatory usually. Leaving it alone unless it breaks.
-    ]
-
-    # Narrowing back to likely optional text fields that cause empty tag errors
-    tags_to_fix = [
-        "StrtNm",
-        "BldgNb",
-        "PstCd",
-        "TwnNm",
-        "Ctry",
-        "AdrLine",
-        "CtrySubDvsn",
-        "Dept",
-        "SubDept",
-    ]
-
-    tags_pattern = "|".join(tags_to_fix)
+    tags_pattern = "|".join(TAGS_TO_FIX)
     # UPDATED REGEX: Added \. to the character class for variable name
     pattern_str = r"(<(" + tags_pattern + r")>\{\{([a-zA-Z0-9_\.]+)\}\}</\2>)"
     pattern = re.compile(pattern_str)
 
     for file_path in template_files:
         print(f"Processing {file_path}...")
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         # No need to read line by line if we trust the regex and replacement
@@ -64,7 +45,7 @@ def fix_templates():
             # Check if line contains one of the targets AND is not already wrapped in jinja if
             # Using loop to check tag presence to speed up
             if (
-                any(f"<{t}>" in line for t in tags_to_fix)
+                any(f"<{t}>" in line for t in TAGS_TO_FIX)
                 and "{% if" not in line
             ):
                 new_line = pattern.sub(replacement, line)
@@ -76,7 +57,7 @@ def fix_templates():
 
         if changes_count > 0:
             print(f"  Fixed {changes_count} occurrences.")
-            with open(file_path, "w") as f:
+            with open(file_path, "w", encoding="utf-8") as f:
                 f.write("\n".join(new_lines) + "\n")
         else:
             print("  No changes needed.")

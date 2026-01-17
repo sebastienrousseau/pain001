@@ -15,6 +15,7 @@
 
 """JSON data loader for payment data."""
 
+# pylint: disable=duplicate-code
 import json
 import logging
 from collections.abc import Generator
@@ -22,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import DataSourceError
+from pain001.security import validate_path
 
 logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
@@ -52,7 +54,6 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         # Automatically wrapped: [{'id': 'MSG001', ...}]
     """
     # Validate path to prevent traversal attacks
-    from pain001.security import validate_path  # noqa: PYI100
 
     try:
         safe_path = validate_path(file_path)  # nosec B108
@@ -146,8 +147,6 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
     Examples:
         >>> data = load_jsonl_data('payments.jsonl')
     """
-    from pain001.security import validate_path
-
     try:
         file_path_obj = validate_path(file_path)  # nosec B108
     except Exception as e:

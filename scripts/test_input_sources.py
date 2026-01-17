@@ -7,7 +7,7 @@ from typing import Any
 # Ensure we can import pain001
 sys.path.append(os.getcwd())
 
-from pain001.core.core import process_files
+from pain001.core.core import process_files  # noqa: E402
 
 # Constants
 ISO_VERSIONS = [f"pain.001.001.{str(i).zfill(2)}" for i in range(3, 12)]
@@ -50,11 +50,11 @@ def run_matrix_test():
     # 1. Prepare Data Payload from CSV
     try:
         # Detect delimiter
-        with open(CSV_PATH) as f:
+        with open(CSV_PATH, encoding="utf-8") as f:
             line = f.readline()
             delimiter = ";" if ";" in line else ","
 
-        with open(CSV_PATH) as f:
+        with open(CSV_PATH, encoding="utf-8") as f:
             reader = csv.DictReader(f, delimiter=delimiter)
             data_list = list(reader)
     except Exception as e:

@@ -103,9 +103,7 @@ class SchemaValidator:
         # Validate path to prevent traversal attacks
         schema_file = schema_dir / f"{message_type}.schema.json"
         try:
-            self.schema_path = validate_path(
-                schema_file, must_exist=True
-            )  # nosec B108
+            self.schema_path = validate_path(schema_file, must_exist=True)  # nosec B108
         except Exception as e:
             raise FileNotFoundError(f"Schema validation failed: {e}") from e
 

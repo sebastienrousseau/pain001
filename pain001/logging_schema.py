@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 # Copyright (C) 2023-2026 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -60,8 +61,14 @@ import sys
 import time
 import uuid
 from contextvars import ContextVar
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Any, Optional, Union
+
+try:
+    __version__ = version("pain001")
+except PackageNotFoundError:
+    __version__ = "0.0.0"
 
 # Context variable for request tracing across async operations
 _request_id_context: ContextVar[Optional[str]] = ContextVar(
@@ -324,7 +331,6 @@ def log_event(
         # Output: {"timestamp": "2026-01-14T21:59:55Z", "level": "INFO",
         #          "request_id": "req-88f24b21", "event": "process_start", ...}
     """
-    from pain001 import __version__  # pylint: disable=import-outside-toplevel
 
     # Build flat JSON structure
     log_data = {
@@ -462,13 +468,14 @@ def log_validation_event(
 
 
 def log_data_load_event(
-    logger: logging.Logger,  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    logger: logging.Logger,
     data_source_type: str,
     success: bool,
     record_count: Optional[int] = None,
     error: Optional[Exception] = None,
     duration_ms: Optional[int] = None,
 ) -> None:
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Log data loading event.
 
     Args:
@@ -500,13 +507,14 @@ def log_data_load_event(
 
 
 def log_xml_generation_event(
-    logger: logging.Logger,  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    logger: logging.Logger,
     message_type: str,
     success: bool,
     record_count: Optional[int] = None,
     error: Optional[Exception] = None,
     duration_ms: Optional[int] = None,
 ) -> None:
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Log XML generation event.
 
     Args:
@@ -766,9 +774,6 @@ class JSONFormatter(logging.Formatter):
         Returns:
             JSON-formatted log entry as string.
         """
-        from pain001 import (
-            __version__,  # pylint: disable=import-outside-toplevel
-        )
 
         # Try to parse existing JSON from log_event() calls
         try:
@@ -802,6 +807,7 @@ def configure_json_logging(
     backup_count: int = 5,
     console_output: bool = True,
 ) -> logging.Logger:
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Configure structured JSON logging for Pain001.
 
     This function sets up production-ready JSON logging with:
@@ -931,9 +937,9 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
 
         # Validation tracking
-        self.validation_results: dict[str, str] = (
-            {}
-        )  # validation_type -> status
+        self.validation_results: dict[
+            str, str
+        ] = {}  # validation_type -> status
 
         # Record counts
         self.records_processed = 0

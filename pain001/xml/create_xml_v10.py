@@ -26,11 +26,11 @@ returns the root element of the modified XML tree.
 # pylint: disable=duplicate-code
 
 # Import the ElementTree package
-import xml.etree.ElementTree as et  # nosec B405 - Only used for element creation, not parsing; defused_et used for parsing
+import xml.etree.ElementTree as et  # nosec B405
 from pathlib import Path
 from typing import Any
 
-from defusedxml import ElementTree as defused_et
+import defusedxml.ElementTree as defused_et
 from jinja2 import Environment, FileSystemLoader
 
 

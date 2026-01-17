@@ -24,6 +24,8 @@ from pain001.db.load_db_data import load_db_data
 from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.db.validate_db_data import validate_db_data
 from pain001.exceptions import DataSourceError, PaymentValidationError
+
+# pylint: disable=duplicate-code
 from pain001.json.load_json_data import (
     load_json_data,
     load_json_data_streaming,
@@ -83,8 +85,9 @@ def load_payment_data(
         ...     'id': 'MSG001', 'amount': '1000.00', ...
         ... })
     """
+    # pylint: disable=fixme
     # TODO: add streaming/chunked loaders for large CSV/DB sources to reduce memory usage.
-    # Handle file path (existing behavior - backward compatible)
+    # Handle file path (existing behaviour - backward compatible)
     if isinstance(data_source, str):
         return _load_from_file(data_source)
 
@@ -106,7 +109,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     """
     Load data from file (CSV, SQLite, JSON, or Parquet).
 
-    This preserves the existing behavior for backward compatibility
+    This preserves the existing behaviour for backward compatibility.
     and adds support for JSON and Parquet formats.
     """
     if file_path.endswith(".csv"):

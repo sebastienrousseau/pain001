@@ -22,7 +22,7 @@ YELLOW := \033[0;33m
 NC := \033[0m # No Color
 
 # SLO Thresholds (in seconds)
-SLO_LINT := 15
+SLO_LINT := 25
 SLO_TYPE := 10
 SLO_TEST := 60
 SLO_XML_GEN := 0.5

@@ -112,6 +112,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Ensures pip packages contain all data files
   - Verified with tarball inspection (45 templates + 9 schemas confirmed)
 
+- **Standardisation** - British English consistency:
+  - Updated README, FAQ, and Configuration docs to use British English spelling (Licence, Behaviour, Parameterised).
+  - Ensured consistent terminology across all documentation.
+
 ## [0.0.46] - 2026-01-14
 
 ### Added

@@ -90,7 +90,7 @@ class TestDataLoader:
     def csv_file(self, sample_payment_data, tmp_path):  # type: ignore
         """Create temporary CSV file."""
         csv_path = tmp_path / "test_data.csv"
-        with open(csv_path, "w", newline="") as f:
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
             writer = csv.DictWriter(
                 f, fieldnames=sample_payment_data[0].keys()
             )

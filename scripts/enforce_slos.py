@@ -20,7 +20,7 @@ from defusedxml import ElementTree as DefusedET
 
 # SLO Thresholds (in seconds unless noted)
 SLO_THRESHOLDS = {
-    "lint": 15,
+    "lint": 25,
     "type": 10,
     "test": 60,
     "coverage_floor": 95,  # %

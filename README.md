@@ -7,7 +7,7 @@
 [![PyPI Version][pypi-badge]][03]
 [![Python Versions][python-versions-badge]][03]
 [![PyPI Downloads][pypi-downloads-badge]][07]
-[![License][license-badge]][01]
+[![Licence][licence-badge]][01]
 [![Codecov][codecov-badge]][06]
 [![Tests][tests-badge]][tests-url]
 [![Quality][quality-badge]][quality-url]
@@ -172,7 +172,7 @@ flowchart LR
     - [Setting Up Development Environment](#setting-up-development-environment)
     - [Running Tests](#running-tests)
     - [Code Quality Tools](#code-quality-tools)
-  - [License](#license)
+  - [Licence](#licence)
   - [Contribution](#contribution)
   - [Acknowledgements](#acknowledgements)
 
@@ -204,7 +204,7 @@ flowchart LR
   - **PII Protection:** Automatic masking of sensitive fields (IBANs,
     BICs, names, account numbers) in logs to ensure GDPR Article 32 and
     PCI-DSS Requirement 3.4 compliance
-  - **Event Standardization:** 17 standardized event types for
+  - **Event Standardisation:** 17 standardised event types for
     consistent observability across payment processing lifecycle
   - **Zero PII Leakage:** Logs never expose clear-text payment data—all
     sensitive information automatically redacted before logging
@@ -1274,13 +1274,13 @@ poetry run pytest --cov=pain001 --cov-report=html
 
 **However, we strongly recommend using `make check` instead of individual commands to ensure nothing is missed.**
 
-## License
+## Licence
 
-The project is licensed under the terms of both the MIT license and the Apache
-License (Version 2.0).
+The project is licensed under the terms of both the MIT licence and the Apache
+Licence (Version 2.0).
 
-- [Apache License, Version 2.0][01]
-- [MIT license][02]
+- [Apache Licence, Version 2.0][01]
+- [MIT licence][02]
 
 ## Contribution
 
@@ -1288,7 +1288,7 @@ We welcome contributions to **Pain001**. Please see the
 [contributing instructions][04] for more information.
 
 Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in the work by you, as defined in the Apache-2.0 license, shall
+for inclusion in the work by you, as defined in the Apache-2.0 licence, shall
 be dual licensed as above, without any additional terms or conditions.
 
 ## Acknowledgements
@@ -1313,7 +1313,7 @@ We would like to extend a big thank you to all the awesome contributors of
 [coverage-floor-badge]: https://img.shields.io/badge/coverage-98.55%25-brightgreen?style=for-the-badge 'Coverage 98.55%'
 [docs-badge]: https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pain001/docs.yml?branch=main&label=Docs&style=for-the-badge 'Documentation badge'
 [docs-url]: https://docs.pain001.com/
-[license-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'License badge'
+[licence-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'Licence badge'
 [pypi-badge]: https://img.shields.io/pypi/v/pain001?style=for-the-badge 'PyPI version badge'
 [pypi-downloads-badge]: https://img.shields.io/pypi/dm/pain001.svg?style=for-the-badge 'PyPI Downloads badge'
 [python-matrix-badge]: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue?style=for-the-badge 'Python 3.9-3.12'

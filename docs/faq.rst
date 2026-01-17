@@ -7,7 +7,7 @@ General Questions
 
 **What is Pain001?**
 
-Pain001 is a Python library for automating ISO 20022-compliant payment file creation. It simplifies the process of generating standardized payment initiation files (pain.001) from CSV or database sources.
+Pain001 is a Python library for automating ISO 20022-compliant payment file creation. It simplifies the process of generating standardised payment initiation files (pain.001) from CSV or database sources.
 
 **Who should use Pain001?**
 
@@ -36,7 +36,7 @@ Pain001 requires Python 3.9 or higher. It's tested on:
 
 **How much does Pain001 cost?**
 
-Pain001 is open-source and completely free under the Apache 2.0 and MIT licenses.
+Pain001 is open-source and completely free under the Apache 2.0 and MIT licences.
 
 Installation & Setup
 ====================
@@ -358,7 +358,7 @@ Security
 
 Yes! Pain001 implements:
 - XXE attack prevention (defusedxml)
-- SQL injection protection (parameterized queries)
+- SQL injection protection (parameterised queries)
 - Input validation and sanitization
 - Secure error messages (no sensitive data)
 - Audit logging
@@ -404,7 +404,7 @@ Create an issue on GitHub with:
 1. Python version
 2. Pain001 version
 3. Minimal reproducible example
-4. Expected vs actual behavior
+4. Expected vs actual behaviour
 5. Error traceback
 
 **Can I contribute to Pain001?**

@@ -15,6 +15,7 @@
 
 """JSON data loaders for pain001."""
 
+# pylint: disable=duplicate-code
 from pain001.json.load_json_data import (
     load_json_data,
     load_json_data_streaming,
