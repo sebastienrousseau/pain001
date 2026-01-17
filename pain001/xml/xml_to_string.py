@@ -56,17 +56,21 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
     indent_xml(root)
 
     # Convert to bytes with proper encoding
+    # Use short_empty_elements=True to match legacy ElementTree.write() behavior
     xml_bytes: bytes = et.tostring(
         root,
         encoding="utf-8",
         method="xml",
+        short_empty_elements=True,
     )
 
     # Decode to string
     xml_str: str = xml_bytes.decode("utf-8")
 
     # Add XML declaration if requested (match ElementTree.write() format)
+    # Use double quotes and UTF-8 capitalization for byte-for-byte compatibility
     if include_declaration and not xml_str.startswith("<?xml"):
-        xml_str = "<?xml version='1.0' encoding='utf-8'?>\\n" + xml_str
+        xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str
 
-    return xml_str
+    # Remove trailing newlines to match master regression files
+    return xml_str.rstrip('\n')
