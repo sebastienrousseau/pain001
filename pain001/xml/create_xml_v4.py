@@ -54,12 +54,12 @@ def create_xml_v4(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
 
     # Create a Jinja2 environment with package-relative path
     template_dir = Path(__file__).parent.parent / "templates"
-    env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
+    env = Environment(
+        loader=FileSystemLoader(str(template_dir)), autoescape=True
+    )
 
     # Load the Jinja2 template
-    template = env.get_template(
-        "pain.001.001.04/template.xml"
-    )
+    template = env.get_template("pain.001.001.04/template.xml")
 
     # Prepare the data for rendering, ensuring all required keys are present
     xml_data_pain001_001_04 = {
