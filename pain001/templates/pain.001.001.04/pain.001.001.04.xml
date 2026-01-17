@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.04"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.04 pain.001.001.04.xsd">
+    <CstmrCdtTrfInitn>
+        <GrpHdr>
+            <MsgId>1</MsgId>
+            <CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
+            <NbOfTxs>2</NbOfTxs>
+            <InitgPty>
+                <Nm>John Doe</Nm>
+                <PstlAdr>
+                    <StrtNm>John&#39;s Street</StrtNm>
+                    <BldgNb>1</BldgNb>
+                    <PstCd>12345</PstCd>
+                    <TwnNm>John&#39;s Town</TwnNm>
+                    <Ctry>DE</Ctry>
+                </PstlAdr>
+            </InitgPty>
+        </GrpHdr>
+        <PmtInf>
+            <PmtInfId>1234567890</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <ReqdExctnDt>2023-03-12</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Acme Corp</Nm>
+                <PstlAdr>
+                    <StrtNm>Acme Street</StrtNm>
+                    <BldgNb>2</BldgNb>
+                    <PstCd>67890</PstCd>
+                    <TwnNm>Acme Town</TwnNm>
+                    <Ctry>DE</Ctry>
+                </PstlAdr>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <Othr>
+                        <Id>DE75512108001245126162</Id>
+                    </Othr>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BICFI>BANKDEFFXXX</BICFI>
+                </FinInstnId>
+            </DbtrAgt>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>1234567890</InstrId>
+                    <EndToEndId>1234567890</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">
+                        300
+                    </InstdAmt>
+                </Amt>
+                <ChrgBr>SHAR</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BICFI>SPUEDE2UXXX</BICFI>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Green Energy</Nm>
+                    <PstlAdr>
+                        <AdrLine>Green Street</AdrLine>
+                        <AdrLine>30</AdrLine>
+                        <AdrLine>78901</AdrLine>
+                        <AdrLine>Green Town</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>DE89370400440532013008</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>OTHR</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>Invoice-12345</Nb>
+                            <RltdDt>2023-03-31</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+    </CstmrCdtTrfInitn>
+</Document>

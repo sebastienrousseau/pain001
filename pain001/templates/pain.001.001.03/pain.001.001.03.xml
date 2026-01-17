@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
+    <CstmrCdtTrfInitn>
+        <GrpHdr>
+            <MsgId>1</MsgId>
+            <CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
+            <NbOfTxs>2</NbOfTxs>
+            <InitgPty>
+                <Nm>John Doe</Nm>
+                <PstlAdr>
+                    <StrtNm>John&#39;s Street</StrtNm>
+                    <BldgNb>1</BldgNb>
+                    <PstCd>12345</PstCd>
+                    <TwnNm>John&#39;s Town</TwnNm>
+                    <Ctry>DE</Ctry>
+                </PstlAdr>
+            </InitgPty>
+        </GrpHdr>
+        <PmtInf>
+            <PmtInfId>PaymentID6789</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>
+            true</BtchBookg>
+            <ReqdExctnDt>2023-03-12</ReqdExctnDt>
+            <Dbtr>
+                <Nm>Acme Corp</Nm>
+                <PstlAdr>
+                    <StrtNm>Acme Street</StrtNm>
+                    <BldgNb>2</BldgNb>
+                    <PstCd>67890</PstCd>
+                    <TwnNm>Acme Town</TwnNm>
+                    <Ctry>DE</Ctry>
+                </PstlAdr>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <Othr>
+                        <Id>DE75512108001245126162</Id>
+                    </Othr>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BIC>BANKDEFFXXX</BIC>
+                </FinInstnId>
+            </DbtrAgt>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>TX-1</InstrId>
+                    <EndToEndId>PaymentID6789</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">150</InstdAmt>
+                </Amt>
+                <ChrgBr>SLEV</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Global Tech</Nm>
+                    <PstlAdr>
+                        <AdrLine>Global Street</AdrLine>
+                        <AdrLine>3</AdrLine>
+                        <AdrLine>11223</AdrLine>
+                        <AdrLine>Global Town</AdrLine>
+                        <AdrLine>DE</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>DE68210501700024690959</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>OTHR</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>Invoice-98765</Nb>
+                            <RltdDt>2023-03-09</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>TX-2</InstrId>
+                    <EndToEndId>PaymentID4321</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">300</InstdAmt>
+                </Amt>
+                <ChrgBr>SHAR</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Green Energy</Nm>
+                    <PstlAdr>
+                        <AdrLine>Green Street</AdrLine>
+                        <AdrLine>30</AdrLine>
+                        <AdrLine>78901</AdrLine>
+                        <AdrLine>Green Town</AdrLine>
+                        <AdrLine>DE</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>DE89370400440532013008</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>OTHR</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>Invoice-12345</Nb>
+                            <RltdDt>2023-03-13</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>TX-3</InstrId>
+                    <EndToEndId>PaymentID1357</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">250</InstdAmt>
+                </Amt>
+                <ChrgBr>SLEV</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Beta Chemicals</Nm>
+                    <PstlAdr>
+                        <AdrLine>Beta Street</AdrLine>
+                        <AdrLine>35</AdrLine>
+                        <AdrLine>65432</AdrLine>
+                        <AdrLine>Beta Town</AdrLine>
+                        <AdrLine>DE</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>DE44500105175407123457</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>OTHR</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>Invoice-24680</Nb>
+                            <RltdDt>2023-03-11</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>TX-4</InstrId>
+                    <EndToEndId>PaymentID8642</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">200</InstdAmt>
+                </Amt>
+                <ChrgBr>SHAR</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BIC>SPUEDE2UXXX</BIC>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>Theta Solutions</Nm>
+                    <PstlAdr>
+                        <AdrLine>Theta Street</AdrLine>
+                        <AdrLine>38</AdrLine>
+                        <AdrLine>54321</AdrLine>
+                        <AdrLine>Theta Town</AdrLine>
+                        <AdrLine>DE</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>DE75512108001245123456</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>OTHR</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>Invoice-36912</Nb>
+                            <RltdDt>2023-03-14</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+            </PmtInf>
+    </CstmrCdtTrfInitn>
+</Document>

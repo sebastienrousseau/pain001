@@ -117,7 +117,6 @@ class TestPain001V10XMLGeneration(unittest.TestCase):
         self.assertIn("pain.001.001.10", xml_string)
 
 
-@pytest.mark.skip(reason="XML example file generation not fully integrated")
 class TestPain001V10XSDValidation(unittest.TestCase):
     """Test XSD validation for pain.001.001.10 format."""
 
