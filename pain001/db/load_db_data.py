@@ -13,10 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import re
 import sqlite3
 from typing import Any
 
 from pain001.exceptions import ConfigurationError
+from pain001.security import validate_path
 
 
 def sanitize_table_name(table_name: str) -> str:
@@ -34,7 +36,6 @@ def sanitize_table_name(table_name: str) -> str:
     Raises:
         ConfigurationError: If the table name is empty or contains invalid characters.
     """
-    import re
 
     if not table_name:
         raise ConfigurationError("Table name cannot be empty")
@@ -77,8 +78,6 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
     # Validate path to prevent traversal attacks
 
-    from pain001.security import validate_path  # noqa: PYI100
-
     try:
         safe_path = validate_path(data_file_path)  # nosec B108
     except Exception as e:
@@ -104,7 +103,7 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
         cursor.execute(f"PRAGMA table_info({table_name})")  # nosec B608
         columns = [column[1] for column in cursor.fetchall()]
 
-        # Use parameterized query to prevent SQL injection
+        # Use parameterised query to prevent SQL injection
         # Note: SQLite does not support ? placeholders for table names.
         # sanitize_table_name() enforces strict validation: ^[a-zA-Z][a-zA-Z0-9_]*$
         query = f"SELECT * FROM [{table_name}]"  # nosec B608

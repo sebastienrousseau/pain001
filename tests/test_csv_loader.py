@@ -251,7 +251,7 @@ class TestLoadCsvData(unittest.TestCase):
                 "CHARGE-IBAN-36912",
             ],
         ]
-        with open("tests/data/valid_data.csv", "w", newline="") as file:
+        with open("tests/data/valid_data.csv", "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(valid_data)
 
@@ -346,16 +346,16 @@ class TestLoadCsvData(unittest.TestCase):
                 "CHARGE-IBAN-12345",
             ],
         ]
-        with open("tests/data/invalid_data.csv", "w", newline="") as file:
+        with open("tests/data/invalid_data.csv", "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(invalid_data)
 
         # empty.csv
-        open("tests/data/empty.csv", "w").close()
+        open("tests/data/empty.csv", "w", encoding="utf-8").close()
 
         # single_column.csv
         single_column = [["id"], ["1"], ["2"], ["3"]]
-        with open("tests/data/single_column.csv", "w", newline="") as file:
+        with open("tests/data/single_column.csv", "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(single_column)
 
@@ -450,7 +450,7 @@ class TestLoadCsvData(unittest.TestCase):
                 "CHARGE-IBAN-12345",
             ],
         ]
-        with open("tests/data/single_row.csv", "w", newline="") as file:
+        with open("tests/data/single_row.csv", "w", newline="", encoding="utf-8") as file:
             writer = csv.writer(file)
             writer.writerows(single_row)
 

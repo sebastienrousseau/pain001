@@ -18,6 +18,7 @@ import configparser
 import logging
 import os
 import sys
+import traceback
 from typing import Optional
 
 import click
@@ -204,7 +205,7 @@ def _validate_payment_data(
 
 
 def _generate_xml_files(
-    logger: logging.Logger,
+    _logger: logging.Logger,
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
@@ -212,6 +213,7 @@ def _generate_xml_files(
     output_dir: Optional[str],
     verbose: bool,
 ) -> None:
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Generate XML payment files.
 
     Args:
@@ -258,8 +260,6 @@ def _generate_xml_files(
             style="red",
         )
         if verbose:
-            import traceback
-
             console.print("\n[yellow]Traceback:[/yellow]")
             console.print(traceback.format_exc())
         sys.exit(1)
@@ -360,6 +360,7 @@ def main(
     dry_run: bool,
     verbose: bool,
 ) -> None:
+    # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
 
     Args:

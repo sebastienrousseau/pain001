@@ -25,7 +25,7 @@ parsing. It is advisable to consider measures to prevent XML vulnerabilities
 when using it.
 """
 
-import xml.etree.ElementTree as et  # nosec B405 - Only used for element creation, not parsing untrusted XML
+import xml.etree.ElementTree as et  # nosec B405
 
 # Namespace and schema-related constants
 NAMESPACE = "urn:iso:std:iso:20022:tech:xsd:"

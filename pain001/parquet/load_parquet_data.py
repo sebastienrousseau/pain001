@@ -15,12 +15,14 @@
 
 """Parquet data loader for payment data (optional feature)."""
 
+# pylint: disable=duplicate-code
 import logging
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import DataSourceError
+from pain001.security import validate_path
 
 logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
@@ -71,7 +73,6 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
     _check_parquet_support()
 
     # Validate path to prevent traversal attacks
-    from pain001.security import validate_path  # noqa: PYI100
 
     try:
         safe_path = validate_path(file_path)  # nosec B108

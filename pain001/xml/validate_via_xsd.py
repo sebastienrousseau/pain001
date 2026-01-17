@@ -32,6 +32,7 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
         bool: True if the XML file is valid, False otherwise.
     """
 
+    # pylint: disable=fixme
     # TODO: cache parsed schemas for repeated calls in a single run to avoid reload cost.
     # Load XML file into an ElementTree object using defusedxml for security.
     try:

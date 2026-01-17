@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import xml.etree.ElementTree as et  # nosec B405 - Only used for namespace registration, not parsing untrusted XML
+import xml.etree.ElementTree as et  # nosec B405
 
 # Register the namespace prefixes with the ElementTree module so that
 # they are automatically added to the XML tags when the XML elements

@@ -113,31 +113,34 @@ def _validate_inputs(
         raise FileNotFoundError(error_message)
 
 
+def _determine_data_source_type(
+    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
+) -> str:
+    """Determine the type of the data source."""
+    if isinstance(data_file_path, list):
+        return "list"
+    if isinstance(data_file_path, dict):
+        return "dict"
+    if not isinstance(data_file_path, str):
+        return "unknown"
+
+    if data_file_path.endswith(".db") or "sqlite" in data_file_path:
+        return "sqlite"
+
+    for ext in [".csv", ".jsonl", ".json", ".parquet"]:
+        if data_file_path.endswith(ext):
+            return ext.lstrip(".")
+
+    return "file"
+
+
 def _load_data(
     data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
     start_time: float,
 ) -> list[dict[str, Any]]:
     """Load and validate payment data from files or Python objects."""
     # Determine data source type
-    if isinstance(data_file_path, str):
-        if data_file_path.endswith(".csv"):
-            data_source_type = "csv"
-        elif data_file_path.endswith(".db") or "sqlite" in data_file_path:
-            data_source_type = "sqlite"
-        elif data_file_path.endswith(".json"):
-            data_source_type = "json"
-        elif data_file_path.endswith(".jsonl"):
-            data_source_type = "jsonl"
-        elif data_file_path.endswith(".parquet"):
-            data_source_type = "parquet"
-        else:
-            data_source_type = "file"
-    elif isinstance(data_file_path, list):
-        data_source_type = "list"
-    elif isinstance(data_file_path, dict):
-        data_source_type = "dict"
-    else:
-        data_source_type = "unknown"
+    data_source_type = _determine_data_source_type(data_file_path)
 
     log_event(
         logger,
@@ -239,25 +242,7 @@ def process_files(
     context_logger = Context.get_instance().get_logger()
 
     # Determine data source type
-    if isinstance(data_file_path, str):
-        if data_file_path.endswith(".csv"):
-            data_source_type = "csv"
-        elif data_file_path.endswith(".db") or "sqlite" in data_file_path:
-            data_source_type = "sqlite"
-        elif data_file_path.endswith(".json"):
-            data_source_type = "json"
-        elif data_file_path.endswith(".jsonl"):
-            data_source_type = "jsonl"
-        elif data_file_path.endswith(".parquet"):
-            data_source_type = "parquet"
-        else:
-            data_source_type = "file"
-    elif isinstance(data_file_path, list):
-        data_source_type = "list"
-    elif isinstance(data_file_path, dict):
-        data_source_type = "dict"
-    else:
-        data_source_type = "unknown"
+    data_source_type = _determine_data_source_type(data_file_path)
 
     # Log process start
     start_time = log_process_start(logger, xml_message_type, data_source_type)

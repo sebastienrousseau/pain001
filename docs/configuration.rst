@@ -248,7 +248,7 @@ Pain001 implements security best practices:
 - Sanitizes external input
 
 **Database Security**
-- Parameterized queries prevent SQL injection
+- Parameterised queries prevent SQL injection
 - Input validation for all fields
 - No plain text credential storage
 

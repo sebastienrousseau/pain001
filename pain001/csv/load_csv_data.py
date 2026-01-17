@@ -19,6 +19,10 @@ from collections.abc import Generator
 from typing import Any
 
 from pain001.exceptions import DataSourceError
+from pain001.security import (  # noqa: PYI100
+    sanitize_for_log,
+    validate_path,
+)
 
 logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
@@ -43,11 +47,6 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         memory footprint.
     """
     # Validate path to prevent traversal attacks
-
-    from pain001.security import (  # noqa: PYI100
-        sanitize_for_log,
-        validate_path,
-    )
 
     # Pre-validate and sanitize file path (CodeQL: prevent path traversal)
     safe_file_path_log = sanitize_for_log(str(file_path))

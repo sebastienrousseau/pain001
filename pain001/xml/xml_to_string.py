@@ -18,7 +18,7 @@ This module provides utilities for converting XML ElementTree objects to strings
 Supports serverless/API architectures where in-memory XML processing is preferred.
 """
 
-import xml.etree.ElementTree as et  # nosec B405 - Only used for tostring(), not parsing untrusted XML
+import xml.etree.ElementTree as et  # nosec B405
 
 from pain001.xml.write_xml_to_file import indent_xml
 

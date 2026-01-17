@@ -25,7 +25,43 @@ from typing import Union
 class PathValidationError(ValueError):
     """Raised when path validation fails."""
 
-    pass
+
+def _is_allowed_directory(resolved_path: Path) -> bool:
+    """Check if the path is within allowed directories.
+
+    Args:
+        resolved_path: The absolute Path object to check.
+
+    Returns:
+        True if the path is valid and within allowed directories, False otherwise.
+    """
+    path_str_resolved = str(resolved_path)
+    temp_dir = tempfile.gettempdir()
+    var_tmp = os.path.join(os.path.sep, "var", "tmp")
+    allowed_dirs = [temp_dir, var_tmp, os.getcwd()]
+
+    if not path_str_resolved.startswith(os.path.sep) or any(
+        path_str_resolved.startswith(str(p)) for p in allowed_dirs
+    ):
+        return True
+
+    if not resolved_path.exists():
+        return True
+
+    try:
+        cwd = Path.cwd()
+        # Check safely against all allowed bases
+        for base in [cwd, Path(temp_dir), Path(var_tmp)]:
+            if resolved_path.is_relative_to(base):
+                return True
+    except AttributeError:
+        # Should not happen in Python 3.9+, but handled for safety
+        if str(resolved_path).startswith(str(Path.cwd())):
+            return True
+    except Exception:  # nosec B110, B112
+        pass
+
+    return False
 
 
 def validate_path(
@@ -66,48 +102,10 @@ def validate_path(
 
     # Additional allowlist check for absolute paths (after existence check)
     # This prevents actual access to files outside expected areas
-    # nosec B108: Only used for validation, not actual temp file operations
-    path_str_resolved = str(resolved)
-
-    # Use dynamic temp dir and construct specific paths to avoid hardcoded strings
-    temp_dir = tempfile.gettempdir()
-    var_tmp = os.path.join(os.path.sep, "var", "tmp")
-    allowed_dirs = [temp_dir, var_tmp, os.getcwd()]
-
-    if path_str_resolved.startswith("/") and not any(
-        path_str_resolved.startswith(str(p))
-        for p in allowed_dirs
-    ):
-        # If the file doesn't exist outside allowlist, that's acceptable (will fail at access time)
-        # If it exists, check that it's truly within allowed directories
-        if resolved.exists():
-            # Additional safety: ensure resolved path is within CWD or temp dirs
-            try:
-                cwd = Path.cwd()
-                is_valid = False
-
-                # Check safely against all allowed bases
-                for base in [cwd, Path(temp_dir), Path(var_tmp)]:
-                    try:
-                        if hasattr(resolved, "is_relative_to"):
-                            if resolved.is_relative_to(base):
-                                is_valid = True
-                                break
-                        else:
-                            # Python < 3.9 fallback
-                            if str(resolved).startswith(str(base)):
-                                is_valid = True
-                                break
-                    except Exception:  # nosec B112
-                        continue
-
-                if not is_valid:
-                    raise PathValidationError(
-                        f"Path validation failed: Absolute path outside allowed directories: {resolved}"
-                    ) from None
-
-            except AttributeError:
-                pass  # Should be covered by logic above
+    if not _is_allowed_directory(resolved):
+        raise PathValidationError(
+            f"Path validation failed: Absolute path outside allowed directories: {resolved}"
+        ) from None
 
     return resolved
 
