@@ -32,6 +32,7 @@ from pathlib import Path
 
 import pytest
 
+from pain001.core.core import process_files
 from pain001.xml.create_xml_v8 import create_xml_v8
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
@@ -47,7 +48,8 @@ class TestPain001V8XMLGeneration(unittest.TestCase):
         csv_path = Path("pain001/templates/pain.001.001.08/template.csv")
         with open(csv_path, encoding="utf-8") as f:
             reader = csv.DictReader(f)
-            self.test_data = list(reader)[:2]  # Use first 2 rows
+            # Use first 2 rows to simulate multiple transactions
+            self.test_data = list(reader)[:2]
 
     def test_create_xml_v8_basic(self) -> None:
         """Test basic XML creation for pain.001.001.08."""
@@ -91,6 +93,26 @@ class TestPain001V8XSDValidation(unittest.TestCase):
         self.xsd_path = self.template_dir / "pain.001.001.08.xsd"
         self.xml_example = self.template_dir / "pain.001.001.08.xml"
 
+        # Ensure example exists (regenerate if missing/deleted by other tests)
+        if not self.xml_example.exists():
+            template_path = self.template_dir / "template.xml"
+            csv_path = self.template_dir / "template.csv"
+            if (
+                template_path.exists()
+                and self.xsd_path.exists()
+                and csv_path.exists()
+            ):
+                try:
+                    # Use process_files to regenerate
+                    process_files(
+                        "pain.001.001.08",
+                        str(template_path),
+                        str(self.xsd_path),
+                        str(csv_path),
+                    )
+                except Exception as e:
+                    print(f"Failed to regenerate example in setUp: {e}")
+
     def test_xsd_file_exists(self) -> None:
         """Test that XSD schema file exists."""
         self.assertTrue(
@@ -99,30 +121,15 @@ class TestPain001V8XSDValidation(unittest.TestCase):
 
     def test_xml_example_exists(self) -> None:
         """Test that XML example file exists."""
-        # Use absolute path to ensure we find the file regardless of working directory
-        abs_path = (
-            Path(__file__).parent.parent
-            / "pain001"
-            / "templates"
-            / "pain.001.001.08"
-            / "pain.001.001.08.xml"
-        )
         self.assertTrue(
-            abs_path.exists(), f"XML example not found: {abs_path}"
+            self.xml_example.exists(),
+            f"XML example not found: {self.xml_example}",
         )
 
     def test_xml_example_well_formed(self) -> None:
         """Test that XML example is well-formed."""
-        # Use absolute path to ensure we find the file
-        abs_path = (
-            Path(__file__).parent.parent
-            / "pain001"
-            / "templates"
-            / "pain.001.001.08"
-            / "pain.001.001.08.xml"
-        )
         try:
-            tree = et.parse(abs_path)
+            tree = et.parse(self.xml_example)
             root = tree.getroot()
             self.assertIsNotNone(root)
         except et.ParseError as e:
@@ -130,15 +137,7 @@ class TestPain001V8XSDValidation(unittest.TestCase):
 
     def test_xml_has_correct_namespace(self) -> None:
         """Test that XML example has correct namespace."""
-        # Use absolute path to ensure we find the file
-        abs_path = (
-            Path(__file__).parent.parent
-            / "pain001"
-            / "templates"
-            / "pain.001.001.08"
-            / "pain.001.001.08.xml"
-        )
-        tree = et.parse(abs_path)
+        tree = et.parse(self.xml_example)
         xml_string = et.tostring(tree.getroot(), encoding="unicode")
         self.assertIn("pain.001.001.08", xml_string)
 
@@ -245,7 +244,7 @@ class TestPain001V8Templates(unittest.TestCase):
             self.assertIn("}}", content)
 
     def test_jinja2_template_has_loop(self) -> None:
-        """Test that Jinja2 template has for loop or is single-transaction."""
+        """Test that Jinja2 template has for loop."""
         with open(self.xml_template, encoding="utf-8") as f:
             content = f.read()
             # Templates may have loops for multiple transactions or be single-transaction

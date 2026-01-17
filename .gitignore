@@ -155,3 +155,4 @@ tests/data/template_unique.xsd
 tests/data/unsupported_data_type_unique.txt
 tests/data/valid_data_unique.csv
 tests/data/valid_data_unique.db
+tmp_env/

@@ -67,12 +67,12 @@ def create_xml_v4(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
         "date": data[0].get("date", ""),
         "nb_of_txs": data[0].get("nb_of_txs", ""),
         "initiator_name": data[0].get("initiator_name", ""),
-        "initiator_street": data[0].get("initiator_street", ""),
+        "initiator_street": data[0].get("initiator_street_name", ""),
         "initiator_building_number": data[0].get(
             "initiator_building_number", ""
         ),
         "initiator_postal_code": data[0].get("initiator_postal_code", ""),
-        "initiator_town": data[0].get("initiator_town", ""),
+        "initiator_town": data[0].get("initiator_town_name", ""),
         "initiator_country": data[0].get("initiator_country", ""),
         "payment_information_id": data[0].get("payment_information_id", ""),
         "payment_method": data[0].get("payment_method", ""),
@@ -81,10 +81,10 @@ def create_xml_v4(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
             "requested_execution_date", ""
         ),
         "debtor_name": data[0].get("debtor_name", ""),
-        "debtor_street": data[0].get("debtor_street", ""),
+        "debtor_street": data[0].get("debtor_street_name", ""),
         "debtor_building_number": data[0].get("debtor_building_number", ""),
         "debtor_postal_code": data[0].get("debtor_postal_code", ""),
-        "debtor_town": data[0].get("debtor_town", ""),
+        "debtor_town": data[0].get("debtor_town_name", ""),
         "debtor_country": data[0].get("debtor_country", ""),
         "debtor_account_IBAN": data[0].get("debtor_account_IBAN", ""),
         "debtor_agent_BIC": data[0].get("debtor_agent_BIC", ""),
@@ -95,12 +95,12 @@ def create_xml_v4(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
         "charge_bearer": data[0].get("charge_bearer", ""),
         "creditor_agent_BIC": data[0].get("creditor_agent_BIC", ""),
         "creditor_name": data[0].get("creditor_name", ""),
-        "creditor_street": data[0].get("creditor_street", ""),
+        "creditor_street": data[0].get("creditor_street_name", ""),
         "creditor_building_number": data[0].get(
             "creditor_building_number", ""
         ),
         "creditor_postal_code": data[0].get("creditor_postal_code", ""),
-        "creditor_town": data[0].get("creditor_town", ""),
+        "creditor_town": data[0].get("creditor_town_name", ""),
         "creditor_account_IBAN": data[0].get("creditor_account_IBAN", ""),
         "purpose_code": data[0].get("purpose_code", ""),
         "reference_number": data[0].get("reference_number", ""),

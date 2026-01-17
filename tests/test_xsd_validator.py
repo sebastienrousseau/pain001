@@ -176,7 +176,7 @@ class TestValidateViaXsd(unittest.TestCase):
                 # Create instance mock from the class mock
                 mock_xsd = mock_schema_class.return_value
                 # Use the actual exception type that our code catches
-                mock_xsd.is_valid.side_effect = xmlschema.XMLSchemaException(
+                mock_xsd.validate.side_effect = xmlschema.XMLSchemaException(
                     "Validation error"
                 )
 

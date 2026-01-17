@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Generate XML example files for all pain001 versions."""
+
 import csv
 from pathlib import Path
 from xml.etree.ElementTree import (  # nosec B405 - Safe: element creation only

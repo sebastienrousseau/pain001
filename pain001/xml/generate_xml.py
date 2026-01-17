@@ -127,12 +127,12 @@ def _prepare_xml_data_v04(data: list[dict[str, Any]]) -> dict[str, Any]:
         "payment_amount": data[0].get("payment_amount", ""),
         "creditor_agent_BIC": data[0].get("creditor_agent_BIC", ""),
         "creditor_name": data[0].get("creditor_name", ""),
-        "creditor_street": data[0].get("creditor_street", ""),
+        "creditor_street": data[0].get("creditor_street_name", ""),
         "creditor_building_number": data[0].get(
             "creditor_building_number", ""
         ),
         "creditor_postal_code": data[0].get("creditor_postal_code", ""),
-        "creditor_town": data[0].get("creditor_town", ""),
+        "creditor_town": data[0].get("creditor_town_name", ""),
         "creditor_account_IBAN": data[0].get("creditor_account_IBAN", ""),
         "purpose_code": data[0].get("purpose_code", ""),
         "reference_number": data[0].get("reference_number", ""),
@@ -196,7 +196,9 @@ def _prepare_xml_data_v05_to_v08(data: list[dict[str, Any]]) -> dict[str, Any]:
         "debtor_building_number": data[0].get("debtor_building_number", ""),
         "debtor_postal_code": data[0].get("debtor_postal_code", ""),
         "debtor_town": data[0].get("debtor_town_name", ""),
-        "debtor_country": data[0].get("debtor_country_code", ""),
+        "debtor_country": data[0].get(
+            "debtor_country_code", data[0].get("debtor_country", "")
+        ),
         "debtor_account_IBAN": data[0].get("debtor_account_IBAN", ""),
         "debtor_agent_BIC": data[0].get("debtor_agent_BIC", ""),
         "transactions": [
@@ -221,7 +223,9 @@ def _prepare_xml_data_v05_to_v08(data: list[dict[str, Any]]) -> dict[str, Any]:
                 ),
                 "creditor_postal_code": row.get("creditor_postal_code", ""),
                 "creditor_town": row.get("creditor_town_name", ""),
-                "creditor_country": row.get("creditor_country_code", ""),
+                "creditor_country": row.get(
+                    "creditor_country_code", row.get("creditor_country", "")
+                ),
                 "creditor_account_IBAN": row.get("creditor_account_IBAN", ""),
                 "creditor_agent_BICFI": row.get("creditor_agent_BICFI", ""),
                 "purpose_code": row.get("purpose_code", ""),
