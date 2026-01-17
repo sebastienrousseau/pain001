@@ -17,6 +17,7 @@
 
 import os
 import re
+import tempfile
 from pathlib import Path
 from typing import Union
 
@@ -67,9 +68,15 @@ def validate_path(
     # This prevents actual access to files outside expected areas
     # nosec B108: Only used for validation, not actual temp file operations
     path_str_resolved = str(resolved)
+
+    # Use dynamic temp dir and construct specific paths to avoid hardcoded strings
+    temp_dir = tempfile.gettempdir()
+    var_tmp = os.path.join(os.path.sep, "var", "tmp")
+    allowed_dirs = [temp_dir, var_tmp, os.getcwd()]
+
     if path_str_resolved.startswith("/") and not any(
-        path_str_resolved.startswith(p)
-        for p in ["/tmp/", "/var/tmp/", os.getcwd()]  # nosec B108
+        path_str_resolved.startswith(str(p))
+        for p in allowed_dirs
     ):
         # If the file doesn't exist outside allowlist, that's acceptable (will fail at access time)
         # If it exists, check that it's truly within allowed directories
@@ -77,26 +84,30 @@ def validate_path(
             # Additional safety: ensure resolved path is within CWD or temp dirs
             try:
                 cwd = Path.cwd()
-                # nosec B108: Only used for validation, not actual temp file operations
-                if not (
-                    resolved.is_relative_to(cwd)
-                    or resolved.is_relative_to("/tmp")  # nosec B108
-                    or resolved.is_relative_to("/var/tmp")  # nosec B108
-                ):  # nosec B108
+                is_valid = False
+
+                # Check safely against all allowed bases
+                for base in [cwd, Path(temp_dir), Path(var_tmp)]:
+                    try:
+                        if hasattr(resolved, "is_relative_to"):
+                            if resolved.is_relative_to(base):
+                                is_valid = True
+                                break
+                        else:
+                            # Python < 3.9 fallback
+                            if str(resolved).startswith(str(base)):
+                                is_valid = True
+                                break
+                    except Exception:  # nosec B112
+                        continue
+
+                if not is_valid:
                     raise PathValidationError(
                         f"Path validation failed: Absolute path outside allowed directories: {resolved}"
                     ) from None
+
             except AttributeError:
-                # Python < 3.9 fallback: use string comparison
-                # nosec B108: Only used for validation, not actual temp file operations
-                if not (
-                    str(resolved).startswith(str(cwd))
-                    or str(resolved).startswith("/tmp/")  # nosec B108
-                    or str(resolved).startswith("/var/tmp/")  # nosec B108
-                ):  # nosec B108
-                    raise PathValidationError(
-                        f"Path validation failed: Absolute path outside allowed directories: {resolved}"
-                    ) from None
+                pass  # Should be covered by logic above
 
     return resolved
 

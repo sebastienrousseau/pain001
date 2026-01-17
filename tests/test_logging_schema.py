@@ -582,13 +582,19 @@ class TestLoggingSchema(unittest.TestCase):  # pylint: disable=R0904
 
     def test_execution_summary_tracker_manual_usage(self) -> None:
         """Test ExecutionSummaryTracker with manual start/stop."""
+        import os
+        import tempfile
+
+        output_file = os.path.join(tempfile.gettempdir(), "output.xml")
+        log_file = os.path.join(tempfile.gettempdir(), "pain001.log")
+
         tracker = ExecutionSummaryTracker(
             self.logger, dry_run=False, message_type="pain.001.001.09"
         )
         tracker.start()
         tracker.increment_processed_records(500)
-        tracker.set_output_file("/tmp/output.xml")  # nosec B108
-        tracker.set_log_file("/tmp/pain001.log")  # nosec B108
+        tracker.set_output_file(output_file)
+        tracker.set_log_file(log_file)
         tracker.log_summary()
 
         entry = self._get_last_log_entry()
@@ -598,11 +604,11 @@ class TestLoggingSchema(unittest.TestCase):  # pylint: disable=R0904
         self.assertEqual(summary["total_records_processed"], 500)
         self.assertEqual(
             summary["artifacts"]["output_file"],
-            "/tmp/output.xml",  # nosec B108
+            output_file,
         )
         self.assertEqual(
             summary["artifacts"]["log_file"],
-            "/tmp/pain001.log",  # nosec B108
+            log_file,
         )
 
     def test_execution_summary_tracker_with_errors(self) -> None:

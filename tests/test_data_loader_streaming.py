@@ -191,7 +191,6 @@ class TestStreamPaymentData:
     def test_stream_unsupported_file_type(self, tmp_path):
         """Test streaming with unsupported file type."""
         # Create a file with unsupported extension
-        from pain001.exceptions import DataSourceError
 
         # Use tmp_path fixture instead of hardcoded /tmp
         unsupported_file = tmp_path / "test.unsupported"

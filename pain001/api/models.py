@@ -15,6 +15,8 @@
 
 """Pydantic models for FastAPI request/response validation."""
 
+# pylint: disable=too-few-public-methods
+
 from enum import Enum
 from typing import Any, Optional
 
