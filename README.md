@@ -13,8 +13,8 @@
 [![Quality][quality-badge]][quality-url]
 [![Documentation][docs-badge]][docs-url]
 
-> **Latest Release: v0.0.46** - Enhanced exception hierarchy, validation service architecture, and IBAN/BIC pre-validation.
-> [See what's new →][release-046]
+> **Latest Release: v0.0.47** - Enhanced exception hierarchy, validation service architecture, and IBAN/BIC pre-validation.
+> [See what's new →][release-047]
 
 ## Overview
 
@@ -1306,6 +1306,7 @@ We would like to extend a big thank you to all the awesome contributors of
 [07]: https://pypi.org/project/pain001/
 [release-045]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.45
 [release-046]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.46
+[release-047]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.47
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge 'Codecov badge'

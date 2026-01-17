@@ -81,7 +81,7 @@ def validate_path(
                 if not (
                     resolved.is_relative_to(cwd)
                     or resolved.is_relative_to("/tmp")  # nosec B108
-                    or resolved.is_relative_to("/var/tmp")
+                    or resolved.is_relative_to("/var/tmp")  # nosec B108
                 ):  # nosec B108
                     raise PathValidationError(
                         f"Path validation failed: Absolute path outside allowed directories: {resolved}"
@@ -92,7 +92,7 @@ def validate_path(
                 if not (
                     str(resolved).startswith(str(cwd))
                     or str(resolved).startswith("/tmp/")  # nosec B108
-                    or str(resolved).startswith("/var/tmp/")
+                    or str(resolved).startswith("/var/tmp/")  # nosec B108
                 ):  # nosec B108
                     raise PathValidationError(
                         f"Path validation failed: Absolute path outside allowed directories: {resolved}"
