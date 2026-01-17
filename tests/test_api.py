@@ -15,6 +15,8 @@
 
 """Pain001 FastAPI simplified tests."""
 
+# pylint: disable=too-few-public-methods
+
 import uuid
 
 from fastapi.testclient import TestClient

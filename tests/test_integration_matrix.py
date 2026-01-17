@@ -27,7 +27,6 @@ while JSON/Parquet tests use v03-compatible data (most widely compatible).
 """
 
 import json
-import os
 import shutil
 import tempfile
 import unittest
@@ -64,7 +63,6 @@ class TestIntegrationMatrix(unittest.TestCase):
     @classmethod
     def tearDownClass(cls) -> None:
         """Clean up temporary files after all tests."""
-        import shutil
 
         if cls.temp_dir.exists():
             shutil.rmtree(cls.temp_dir)

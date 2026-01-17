@@ -15,6 +15,8 @@
 
 """Tests for additional module coverage."""
 
+# pylint: disable=too-few-public-methods
+
 import json
 
 import pytest
