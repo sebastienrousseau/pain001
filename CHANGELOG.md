@@ -47,6 +47,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **XML String Normalization** - Byte-for-byte regression test compatibility (Commit: 03becb5):
+  - **XML Declaration**: Changed from single quotes to double quotes: `<?xml version="1.0" encoding="UTF-8"?>`
+  - **Empty Elements**: Added `short_empty_elements=True` to produce `<Amt />` instead of `<Amt></Amt>`
+  - **Trailing Newlines**: Strip trailing newlines to match legacy ElementTree.write() format
+  - **Namespace Registration**: Verified global registration prevents `ns0:` prefix pollution
+  - Ensures `xml_to_string()` produces identical output to file-based `write_xml_to_file()`
+  - Resolves regression test failures where Golden Master files use legacy format
+  - Critical for financial XML validation requiring byte-for-byte comparison
+
+- **Log Injection (Streaming)** - Enhanced sanitization in error handlers (Commit: 03becb5):
+  - Added explicit newline removal in `load_csv_data_streaming()` error logs
+  - Prevents log forging via malicious file paths containing control characters
+  - Complements existing `sanitize_for_log()` function with defensive programming
+  - CodeQL CWE-117 compliance: Zero log injection vulnerabilities
+
 - **CI/CD Template Loading** - Path resolution for installed packages (Commit: 6930670):
   - Fixed FileNotFoundError in GitHub Actions when package installed via pip
   - Changed 9 XML generator files from `FileSystemLoader(".")` to `Path(__file__).parent.parent / "templates"`
