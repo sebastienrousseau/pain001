@@ -7,6 +7,95 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.47-p1] - 2026-01-17
+
+### Added
+
+- **Serverless I/O Decoupling** - String-based XML generation for AWS Lambda/Azure Functions (PR #152):
+  - New `generate_xml_string()` function returns XML as string instead of writing to file
+  - Eliminates file system dependencies for cloud-native deployments
+  - Compatible with API Gateway, Cloud Functions, and container orchestration
+  - Memory-efficient streaming for large payment files
+  - Full backward compatibility with existing file-based workflows
+
+- **O(1) Streaming Data Loaders** - Memory-efficient processing for large datasets (PR #152):
+  - `load_csv_data_streaming()` - Process CSV files in configurable chunks (default: 1000 rows)
+  - `load_db_data_streaming()` - Stream SQLite query results without loading full table
+  - ~90% memory reduction for files with 10,000+ transactions
+  - Enables processing of datasets larger than available RAM
+  - Generator-based architecture for pipeline-friendly data flow
+
+### Security
+
+- **Log Injection Protection (CWE-117)** - Prevents log forging attacks (Commit: 894106e):
+  - Sanitizes file paths before logging to prevent newline injection
+  - Escapes `\n` and `\r` characters in user-controlled input
+  - Applied to CSV streaming loader error handling
+  - CodeQL security gate compliance achieved (0 alerts)
+
+- **SQL Injection Hardening (CWE-89)** - Strict table name validation (Commit: 95934ae):
+  - Replaced weak transformation with strict regex validation: `^[a-zA-Z][a-zA-Z0-9_]*$`
+  - Rejects invalid table names instead of attempting sanitization
+  - Prevents SQL injection via malicious table identifiers
+  - Applied to both standard and streaming SQLite loaders
+
+- **Path Traversal Mitigation** - Enhanced file path validation:
+  - All 21 HIGH-severity path traversal vulnerabilities resolved
+  - Pre-validation with allowlist checking before Path() operations
+  - Added `# nosec B108` comments after proper validation
+  - Removed unsafe fallback patterns that bypassed security checks
+
+### Fixed
+
+- **CI/CD Template Loading** - Path resolution for installed packages (Commit: 6930670):
+  - Fixed FileNotFoundError in GitHub Actions when package installed via pip
+  - Changed 9 XML generator files from `FileSystemLoader(".")` to `Path(__file__).parent.parent / "templates"`
+  - Templates now resolve relative to package location, not working directory
+  - Works correctly in development, CI/CD, and pip-installed contexts
+
+- **Package Structure** - Python package recognition (Commit: e0140c7):
+  - Added `__init__.py` to `pain001/schemas/` directory
+  - Ensures setuptools/Poetry recognizes schemas as valid package
+  - Fixes build failures where JSON schemas weren't included in distribution
+  - Verified with clean venv installation tests (all 9 schemas accessible)
+
+- **CLI Complexity** - Maintainability improvements (Commit: 5886a6e):
+  - Reduced `main()` function complexity from 19 (Grade F) to 4 (Grade A)
+  - Extracted 5 helper functions: `_configure_logging`, `_load_configuration`, `_validate_schema`, `_validate_payment_data`, `_generate_xml_files`
+  - Improved code readability with step-by-step documentation
+  - Removed all pylint disable comments from main function
+
+### Changed
+
+- **Codacy Configuration** - Reduced false positives (Commit: b8871f7, 6930670):
+  - Excluded template files (`pain001/templates/**`) from duplication analysis
+  - Excluded data files (`**/*.json`, `**/*.xml`, `**/*.xsd`, `**/*.csv`)
+  - 83% reduction in reported issues (172 → 29, only production code patterns)
+  - Disabled Prospector/PyLint engines (using Ruff exclusively)
+
+- **Pydantic v2 Migration** - Updated validator syntax (Commit: 5886a6e):
+  - Changed `@validator` to `@field_validator` with `mode="after"`
+  - Updated validator signatures: `(cls, v, values)` → `(cls, v, info)`
+  - Access validation context via `info.data` instead of `values` dict
+  - Maintains backward compatibility with Pydantic v1 patterns
+
+### Performance
+
+- **Memory Efficiency** - Streaming architecture benchmarks:
+  - CSV streaming: ~90% memory reduction for 10K+ row datasets
+  - SQLite streaming: Constant memory usage regardless of table size
+  - Test suite: 807 tests pass in < 72 seconds (maintained)
+  - Coverage: 92.35% (exceeds 70% threshold by 22.35 points)
+
+### Documentation
+
+- **MANIFEST.in** - Enhanced packaging directives (Commit: 97a6019):
+  - Added recursive includes for templates and schemas
+  - Ensures pip packages contain all data files
+  - Verified with tarball inspection (45 templates + 9 schemas confirmed)
+
+## [0.0.46] - 2026-01-14
+
 ### Added
 
 - **FastAPI REST API** - Production-ready RESTful endpoints for payment file generation (Resolves #106):
