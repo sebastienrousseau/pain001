@@ -114,6 +114,9 @@ def load_csv_data_streaming(
     chunk: list[dict[str, Any]] = []
     row_count = 0
 
+    # Sanitize file path for logging to prevent Log Injection (CWE-117)
+    safe_file_path = str(file_path).replace('\n', '\\n').replace('\r', '\\r')
+
     try:
         with open(file_path, encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
@@ -129,18 +132,18 @@ def load_csv_data_streaming(
                 yield chunk
 
     except FileNotFoundError:
-        logging.error(f"File '{file_path}' not found.")
+        logging.error(f"File '{safe_file_path}' not found.")
         raise
     except OSError:
         logging.error(
-            f"An IOError occurred while reading the file '{file_path}'."
+            f"An IOError occurred while reading the file '{safe_file_path}'."
         )
         raise
     except UnicodeDecodeError:
         logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{file_path}'."
+            f"A UnicodeDecodeError occurred while decoding the file '{safe_file_path}'."
         )
         raise
 
     if row_count == 0:
-        raise DataSourceError(f"The CSV file '{file_path}' is empty.")
+        raise DataSourceError(f"The CSV file '{safe_file_path}' is empty.")
