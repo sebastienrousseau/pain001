@@ -58,7 +58,9 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
         # Fail securely - do not fall back to unsafe path
-        raise FileNotFoundError(f"JSON file not found or invalid path: {file_path}") from e
+        raise FileNotFoundError(
+            f"JSON file not found or invalid path: {file_path}"
+        ) from e
 
     if not safe_path.exists():
         raise FileNotFoundError(f"JSON file not found: {file_path}")
@@ -149,7 +151,9 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
     try:
         file_path_obj = validate_path(file_path)  # nosec B108
     except Exception as e:
-        raise FileNotFoundError(f"JSONL file not found or invalid path: {file_path}") from e
+        raise FileNotFoundError(
+            f"JSONL file not found or invalid path: {file_path}"
+        ) from e
 
     if not file_path_obj.exists():
         raise FileNotFoundError(f"JSONL file not found: {file_path}")

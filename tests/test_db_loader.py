@@ -36,11 +36,11 @@ def test_sanitize_table_name_invalid() -> None:
     # Table name with spaces
     with pytest.raises(ConfigurationError, match="Invalid table name"):
         sanitize_table_name("invalid table name")
-    
+
     # Table name starting with number
     with pytest.raises(ConfigurationError, match="Invalid table name"):
         sanitize_table_name("123invalidname")
-    
+
     # Table name with special characters
     with pytest.raises(ConfigurationError, match="Invalid table name"):
         sanitize_table_name("table!@#name")

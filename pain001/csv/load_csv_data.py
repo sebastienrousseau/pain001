@@ -69,7 +69,9 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         logging.error(f"IOError reading file: {safe_file_path_log}")
         raise
     except UnicodeDecodeError:
-        logging.error(f"UnicodeDecodeError decoding file: {safe_file_path_log}")
+        logging.error(
+            f"UnicodeDecodeError decoding file: {safe_file_path_log}"
+        )
         raise
 
     if not data:

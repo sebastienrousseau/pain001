@@ -58,10 +58,10 @@ console.print(table)
 
 def _configure_logging(verbose: bool) -> logging.Logger:
     """Configure logging level based on verbosity flag.
-    
+
     Args:
         verbose: If True, enable DEBUG logging; otherwise INFO.
-        
+
     Returns:
         Configured logger instance.
     """
@@ -81,22 +81,22 @@ def _load_configuration(
     data_file_path: str,
 ) -> tuple[str, str, str]:
     """Load paths from configuration file if provided.
-    
+
     Args:
         config_file: Path to INI configuration file (optional).
         xml_template_file_path: Default template path.
         xsd_schema_file_path: Default schema path.
         data_file_path: Default data file path.
-        
+
     Returns:
         Tuple of (template_path, schema_path, data_path) with config overrides applied.
     """
     if not config_file:
         return xml_template_file_path, xsd_schema_file_path, data_file_path
-    
+
     config = configparser.ConfigParser()
     config.read(config_file)
-    
+
     if "Paths" in config:
         xml_template_file_path = config["Paths"].get(
             "xml_template_file_path", xml_template_file_path
@@ -104,10 +104,8 @@ def _load_configuration(
         xsd_schema_file_path = config["Paths"].get(
             "xsd_schema_file_path", xsd_schema_file_path
         )
-        data_file_path = config["Paths"].get(
-            "data_file_path", data_file_path
-        )
-    
+        data_file_path = config["Paths"].get("data_file_path", data_file_path)
+
     return xml_template_file_path, xsd_schema_file_path, data_file_path
 
 
@@ -118,23 +116,29 @@ def _validate_schema(
     xml_message_type: str,
 ) -> None:
     """Validate XML template against XSD schema.
-    
+
     Args:
         logger: Logger instance for event recording.
         xml_template_file_path: Path to XML template.
         xsd_schema_file_path: Path to XSD schema.
         xml_message_type: ISO 20022 message type.
-        
+
     Raises:
         SystemExit: If validation fails (exit code 1).
     """
-    console.print("[cyan]→ Validating XML template against XSD schema...[/cyan]")
+    console.print(
+        "[cyan]→ Validating XML template against XSD schema...[/cyan]"
+    )
     try:
         validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
-        log_validation_event(logger, "xsd_schema", True, message_type=xml_message_type)
+        log_validation_event(
+            logger, "xsd_schema", True, message_type=xml_message_type
+        )
         console.print("[bold green]✓ Schema validation passed[/bold green]")
     except Exception as e:
-        log_validation_event(logger, "xsd_schema", False, e, message_type=xml_message_type)
+        log_validation_event(
+            logger, "xsd_schema", False, e, message_type=xml_message_type
+        )
         console.print(
             f"[bold red]✗ Schema validation failed:[/bold red] {e}",
             style="red",
@@ -152,15 +156,15 @@ def _validate_payment_data(
     xml_message_type: str,
 ) -> int:
     """Validate payment data and return record count.
-    
+
     Args:
         logger: Logger instance for event recording.
         data_file_path: Path to payment data file.
         xml_message_type: ISO 20022 message type.
-        
+
     Returns:
         Number of valid payment records.
-        
+
     Raises:
         SystemExit: If validation fails (exit code 1).
     """
@@ -168,14 +172,18 @@ def _validate_payment_data(
     try:
         data = load_payment_data(data_file_path)
         record_count = len(data)
-        log_validation_event(logger, "payment_data", True, message_type=xml_message_type)
+        log_validation_event(
+            logger, "payment_data", True, message_type=xml_message_type
+        )
         console.print(
             f"[bold green]✓ Data validation passed[/bold green] "
             f"({record_count} payment records)"
         )
         return record_count
     except (FileNotFoundError, ValueError, Exception) as e:
-        log_validation_event(logger, "payment_data", False, e, message_type=xml_message_type)
+        log_validation_event(
+            logger, "payment_data", False, e, message_type=xml_message_type
+        )
         console.print(
             f"[bold red]✗ Data validation failed:[/bold red] {e}",
             style="red",
@@ -205,7 +213,7 @@ def _generate_xml_files(
     verbose: bool,
 ) -> None:
     """Generate XML payment files.
-    
+
     Args:
         logger: Logger instance for event recording.
         xml_message_type: ISO 20022 message type.
@@ -214,13 +222,13 @@ def _generate_xml_files(
         data_file_path: Path to payment data.
         output_dir: Optional output directory.
         verbose: If True, show detailed error traceback.
-        
+
     Raises:
         SystemExit: If generation fails (exit code 1).
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
     original_cwd = os.getcwd()
-    
+
     try:
         # Change to output directory if specified
         if output_dir:
@@ -251,6 +259,7 @@ def _generate_xml_files(
         )
         if verbose:
             import traceback
+
             console.print("\n[yellow]Traceback:[/yellow]")
             console.print(traceback.format_exc())
         sys.exit(1)
@@ -375,8 +384,15 @@ def main(
     data_file_path = os.path.expanduser(data_file_path)
 
     # Step 3: Load configuration file if provided
-    xml_template_file_path, xsd_schema_file_path, data_file_path = _load_configuration(
-        config_file, xml_template_file_path, xsd_schema_file_path, data_file_path
+    (
+        xml_template_file_path,
+        xsd_schema_file_path,
+        data_file_path,
+    ) = _load_configuration(
+        config_file,
+        xml_template_file_path,
+        xsd_schema_file_path,
+        data_file_path,
     )
 
     # Step 4: Create output directory if specified
@@ -409,11 +425,15 @@ def main(
         sys.exit(2)
 
     # Step 7: Validate XML template against XSD schema
-    _validate_schema(logger, xml_template_file_path, xsd_schema_file_path, xml_message_type)
+    _validate_schema(
+        logger, xml_template_file_path, xsd_schema_file_path, xml_message_type
+    )
 
     # Step 8: Handle dry-run mode (validation only)
     if dry_run:
-        record_count = _validate_payment_data(logger, data_file_path, xml_message_type)
+        record_count = _validate_payment_data(
+            logger, data_file_path, xml_message_type
+        )
         log_event(
             logger,
             logging.INFO,

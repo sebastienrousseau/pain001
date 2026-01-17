@@ -1,2 +1,4 @@
 include LICENSE-APACHE
 include LICENSE-MIT
+recursive-include pain001/templates *
+recursive-include pain001/schemas *.json

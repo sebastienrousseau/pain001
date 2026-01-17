@@ -76,7 +76,9 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
     try:
         safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
-        raise FileNotFoundError(f"Parquet file path validation failed: {file_path}") from e
+        raise FileNotFoundError(
+            f"Parquet file path validation failed: {file_path}"
+        ) from e
 
     if not safe_path.exists():
         raise FileNotFoundError(f"Parquet file not found: {file_path}")
