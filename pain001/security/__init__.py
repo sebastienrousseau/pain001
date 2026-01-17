@@ -15,9 +15,6 @@
 
 """Security utilities for Pain001."""
 
-from pain001.security.path_validator import (
-    sanitize_for_log,
-    validate_path,
-)
+from pain001.security.path_validator import sanitize_for_log, validate_path
 
 __all__ = ["validate_path", "sanitize_for_log"]

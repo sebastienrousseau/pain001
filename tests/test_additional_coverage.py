@@ -28,7 +28,7 @@ class TestJSONLoaderStreaming:
         from pain001.json.load_json_data import load_jsonl_data_streaming
 
         jsonl_file = tmp_path / "test.jsonl"
-        lines = [f'{{"id": "{i}", "amount": {i*100}}}\n' for i in range(10)]
+        lines = [f'{{"id": "{i}", "amount": {i * 100}}}\n' for i in range(10)]
         jsonl_file.write_text("".join(lines))
 
         chunks = list(load_jsonl_data_streaming(str(jsonl_file), chunk_size=3))

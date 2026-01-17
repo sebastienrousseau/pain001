@@ -406,8 +406,12 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(
             source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
-        self.assertTrue(source_data.exists(), f"CSV data missing for {version}")
+        self.assertTrue(
+            source_schema.exists(), f"Schema missing for {version}"
+        )
+        self.assertTrue(
+            source_data.exists(), f"CSV data missing for {version}"
+        )
 
         # Copy to temp dir to avoid polluting/deleting source files
         temp_version_dir = self.temp_dir / version
@@ -463,8 +467,12 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(
             source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
-        self.assertTrue(source_data.exists(), f"SQLite DB missing for {version}")
+        self.assertTrue(
+            source_schema.exists(), f"Schema missing for {version}"
+        )
+        self.assertTrue(
+            source_data.exists(), f"SQLite DB missing for {version}"
+        )
 
         # Copy to temp dir to avoid polluting/deleting source files
         temp_version_dir = self.temp_dir / version
@@ -519,7 +527,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(
             source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(
+            source_schema.exists(), f"Schema missing for {version}"
+        )
 
         # Copy to temp dir to avoid polluting/deleting source files
         temp_version_dir = self.temp_dir / version
@@ -579,7 +589,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(
             source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(
+            source_schema.exists(), f"Schema missing for {version}"
+        )
         self.assertTrue(source_csv.exists(), f"CSV missing for {version}")
 
         # Convert CSV to JSON in temp directory
@@ -643,7 +655,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(
             source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(
+            source_schema.exists(), f"Schema missing for {version}"
+        )
 
         # Copy to temp dir to avoid polluting/deleting source files
         temp_version_dir = self.temp_dir / version
@@ -709,7 +723,9 @@ class TestIntegrationMatrix(unittest.TestCase):
         self.assertTrue(
             source_template.exists(), f"Template missing for {version}"
         )
-        self.assertTrue(source_schema.exists(), f"Schema missing for {version}")
+        self.assertTrue(
+            source_schema.exists(), f"Schema missing for {version}"
+        )
         self.assertTrue(source_csv.exists(), f"CSV missing for {version}")
 
         # Convert CSV to Parquet in temp directory

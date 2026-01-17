@@ -47,7 +47,7 @@
             <CdtTrfTxInf>
                 <PmtId>
                     <InstrId>1234567890</InstrId>
-                    <EndToEndId>1234567890</EndToEndId>
+                    <EndToEndId>Invoice-12345</EndToEndId>
                 </PmtId>
                 <Amt>
                     <InstdAmt Ccy="EUR">
