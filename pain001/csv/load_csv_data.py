@@ -135,13 +135,15 @@ def load_csv_data_streaming(
         logging.error(f"File '{safe_file_path}' not found.")
         raise
     except OSError:
+        # Sanitize file path to prevent log injection (CodeQL CWE-117)
         logging.error(
-            f"An IOError occurred while reading the file '{safe_file_path}'."
+            f"An IOError occurred while reading the file '{safe_file_path.replace(chr(10), '')}'."  # noqa: E501
         )
         raise
     except UnicodeDecodeError:
+        # Sanitize file path to prevent log injection (CodeQL CWE-117)
         logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{safe_file_path}'."
+            f"A UnicodeDecodeError occurred while decoding the file '{safe_file_path.replace(chr(10), '')}'."  # noqa: E501
         )
         raise
 
