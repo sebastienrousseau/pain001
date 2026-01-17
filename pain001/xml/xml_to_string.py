@@ -72,5 +72,9 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
     if include_declaration and not xml_str.startswith("<?xml"):
         xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str
 
-    # Remove trailing newlines to match master regression files
-    return xml_str.rstrip('\n')
+    # Add trailing newline to match ElementTree.write() behavior
+    # Legacy file-based writer adds newline at EOF - critical for regression tests
+    if not xml_str.endswith('\n'):
+        xml_str += '\n'
+    
+    return xml_str
