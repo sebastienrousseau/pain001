@@ -115,7 +115,7 @@ def load_csv_data_streaming(
     row_count = 0
 
     # Sanitize file path for logging to prevent Log Injection (CWE-117)
-    safe_file_path = str(file_path).replace('\n', '\\n').replace('\r', '\\r')
+    safe_file_path = str(file_path).replace("\n", "\\n").replace("\r", "\\r")
 
     try:
         with open(file_path, encoding="utf-8") as file:

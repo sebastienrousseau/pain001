@@ -52,12 +52,12 @@ def create_xml_v8(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
 
     # Create a Jinja2 environment with package-relative path
     template_dir = Path(__file__).parent.parent / "templates"
-    env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
+    env = Environment(
+        loader=FileSystemLoader(str(template_dir)), autoescape=True
+    )
 
     # Load pain.001.001.08 template
-    template = env.get_template(
-        "pain.001.001.08/template.xml"
-    )
+    template = env.get_template("pain.001.001.08/template.xml")
 
     # Prepare data for rendering
     xml_data = {
