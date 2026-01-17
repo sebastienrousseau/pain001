@@ -56,6 +56,206 @@ table.width = 80
 console.print(table)
 
 
+def _configure_logging(verbose: bool) -> logging.Logger:
+    """Configure logging level based on verbosity flag.
+    
+    Args:
+        verbose: If True, enable DEBUG logging; otherwise INFO.
+        
+    Returns:
+        Configured logger instance.
+    """
+    logger = Context.get_instance().get_logger()
+    if verbose:
+        logger.setLevel(logging.DEBUG)
+        console.print("[bold cyan]ℹ Verbose logging enabled[/bold cyan]")
+    else:
+        logger.setLevel(logging.INFO)
+    return logger
+
+
+def _load_configuration(
+    config_file: Optional[str],
+    xml_template_file_path: str,
+    xsd_schema_file_path: str,
+    data_file_path: str,
+) -> tuple[str, str, str]:
+    """Load paths from configuration file if provided.
+    
+    Args:
+        config_file: Path to INI configuration file (optional).
+        xml_template_file_path: Default template path.
+        xsd_schema_file_path: Default schema path.
+        data_file_path: Default data file path.
+        
+    Returns:
+        Tuple of (template_path, schema_path, data_path) with config overrides applied.
+    """
+    if not config_file:
+        return xml_template_file_path, xsd_schema_file_path, data_file_path
+    
+    config = configparser.ConfigParser()
+    config.read(config_file)
+    
+    if "Paths" in config:
+        xml_template_file_path = config["Paths"].get(
+            "xml_template_file_path", xml_template_file_path
+        )
+        xsd_schema_file_path = config["Paths"].get(
+            "xsd_schema_file_path", xsd_schema_file_path
+        )
+        data_file_path = config["Paths"].get(
+            "data_file_path", data_file_path
+        )
+    
+    return xml_template_file_path, xsd_schema_file_path, data_file_path
+
+
+def _validate_schema(
+    logger: logging.Logger,
+    xml_template_file_path: str,
+    xsd_schema_file_path: str,
+    xml_message_type: str,
+) -> None:
+    """Validate XML template against XSD schema.
+    
+    Args:
+        logger: Logger instance for event recording.
+        xml_template_file_path: Path to XML template.
+        xsd_schema_file_path: Path to XSD schema.
+        xml_message_type: ISO 20022 message type.
+        
+    Raises:
+        SystemExit: If validation fails (exit code 1).
+    """
+    console.print("[cyan]→ Validating XML template against XSD schema...[/cyan]")
+    try:
+        validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
+        log_validation_event(logger, "xsd_schema", True, message_type=xml_message_type)
+        console.print("[bold green]✓ Schema validation passed[/bold green]")
+    except Exception as e:
+        log_validation_event(logger, "xsd_schema", False, e, message_type=xml_message_type)
+        console.print(
+            f"[bold red]✗ Schema validation failed:[/bold red] {e}",
+            style="red",
+        )
+        console.print(
+            f"\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
+            f"Expected: {xml_message_type}"
+        )
+        sys.exit(1)
+
+
+def _validate_payment_data(
+    logger: logging.Logger,
+    data_file_path: str,
+    xml_message_type: str,
+) -> int:
+    """Validate payment data and return record count.
+    
+    Args:
+        logger: Logger instance for event recording.
+        data_file_path: Path to payment data file.
+        xml_message_type: ISO 20022 message type.
+        
+    Returns:
+        Number of valid payment records.
+        
+    Raises:
+        SystemExit: If validation fails (exit code 1).
+    """
+    console.print("[cyan]→ Validating payment data...[/cyan]")
+    try:
+        data = load_payment_data(data_file_path)
+        record_count = len(data)
+        log_validation_event(logger, "payment_data", True, message_type=xml_message_type)
+        console.print(
+            f"[bold green]✓ Data validation passed[/bold green] "
+            f"({record_count} payment records)"
+        )
+        return record_count
+    except (FileNotFoundError, ValueError, Exception) as e:
+        log_validation_event(logger, "payment_data", False, e, message_type=xml_message_type)
+        console.print(
+            f"[bold red]✗ Data validation failed:[/bold red] {e}",
+            style="red",
+        )
+        # Provide helpful error messages based on file extension
+        file_ext = os.path.splitext(data_file_path)[1].lower()
+        if file_ext == ".parquet":
+            console.print(
+                "\n[yellow]Tip:[/yellow] Parquet files require pyarrow. "
+                "Install with: [cyan]pip install pyarrow[/cyan]"
+            )
+        elif file_ext in [".json", ".jsonl"]:
+            console.print(
+                "\n[yellow]Tip:[/yellow] Ensure JSON is valid. "
+                "Check for syntax errors or invalid structure."
+            )
+        sys.exit(1)
+
+
+def _generate_xml_files(
+    logger: logging.Logger,
+    xml_message_type: str,
+    xml_template_file_path: str,
+    xsd_schema_file_path: str,
+    data_file_path: str,
+    output_dir: Optional[str],
+    verbose: bool,
+) -> None:
+    """Generate XML payment files.
+    
+    Args:
+        logger: Logger instance for event recording.
+        xml_message_type: ISO 20022 message type.
+        xml_template_file_path: Path to XML template.
+        xsd_schema_file_path: Path to XSD schema.
+        data_file_path: Path to payment data.
+        output_dir: Optional output directory.
+        verbose: If True, show detailed error traceback.
+        
+    Raises:
+        SystemExit: If generation fails (exit code 1).
+    """
+    console.print("[cyan]→ Generating XML payment files...[/cyan]")
+    original_cwd = os.getcwd()
+    
+    try:
+        # Change to output directory if specified
+        if output_dir:
+            os.chdir(output_dir)
+
+        process_files(
+            xml_message_type,
+            xml_template_file_path,
+            xsd_schema_file_path,
+            data_file_path,
+        )
+
+        # Restore original directory
+        if output_dir:
+            os.chdir(original_cwd)
+
+        console.print(
+            f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
+            f"[cyan]Message Type:[/cyan] {xml_message_type}\n"
+            f"[cyan]Output Location:[/cyan] {output_dir or os.getcwd()}"
+        )
+    except Exception as e:
+        if output_dir:
+            os.chdir(original_cwd)
+        console.print(
+            f"[bold red]✗ Generation failed:[/bold red] {e}",
+            style="red",
+        )
+        if verbose:
+            import traceback
+            console.print("\n[yellow]Traceback:[/yellow]")
+            console.print(traceback.format_exc())
+        sys.exit(1)
+
+
 @click.command(
     help=(
         "Generate ISO 20022-compliant payment XML files from CSV, SQLite, JSON, or Parquet data.\n\n"
@@ -141,7 +341,7 @@ console.print(table)
     default=False,
     help="Enable detailed logging output (INFO and DEBUG messages)",
 )
-def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-statements,too-many-locals  # pylint: disable=too-many-arguments,too-many-positional-arguments,too-many-locals
+def main(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
@@ -166,50 +366,33 @@ def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-state
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
     """
-    # Configure logging level based on verbose flag
-    logger = Context.get_instance().get_logger()
-    if verbose:
-        logger.setLevel(logging.DEBUG)
-        console.print("[bold cyan]ℹ Verbose logging enabled[/bold cyan]")
-    else:
-        logger.setLevel(logging.INFO)
+    # Step 1: Configure logging
+    logger = _configure_logging(verbose)
 
-    # Expand user-friendly paths
+    # Step 2: Expand user-friendly paths
     xml_template_file_path = os.path.expanduser(xml_template_file_path)
     xsd_schema_file_path = os.path.expanduser(xsd_schema_file_path)
     data_file_path = os.path.expanduser(data_file_path)
 
-    # Load configuration file if provided
-    if config_file:
-        config = configparser.ConfigParser()
-        config.read(config_file)
-        if "Paths" in config:
-            xml_template_file_path = config["Paths"].get(
-                "xml_template_file_path", xml_template_file_path
-            )
-            xsd_schema_file_path = config["Paths"].get(
-                "xsd_schema_file_path", xsd_schema_file_path
-            )
-            data_file_path = config["Paths"].get(
-                "data_file_path", data_file_path
-            )
+    # Step 3: Load configuration file if provided
+    xml_template_file_path, xsd_schema_file_path, data_file_path = _load_configuration(
+        config_file, xml_template_file_path, xsd_schema_file_path, data_file_path
+    )
 
-    # Create output directory if specified
+    # Step 4: Create output directory if specified
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         console.print(f"[cyan]ℹ Output directory: {output_dir}[/cyan]")
 
+    # Step 5: Log CLI invocation
     log_event(
         logger,
         logging.INFO,
         Events.CLI_ARGS_PARSED,
-        **{
-            Fields.MESSAGE_TYPE: xml_message_type,
-            "dry_run": dry_run,
-        },
+        **{Fields.MESSAGE_TYPE: xml_message_type, "dry_run": dry_run},
     )
 
-    # Message type validation (Click already validates via Choice, this is redundant but kept for logging)
+    # Step 6: Validate message type (redundant with Click validation, kept for logging)
     if xml_message_type not in valid_xml_types:
         log_validation_event(
             logger,
@@ -225,79 +408,12 @@ def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-state
         )
         sys.exit(2)
 
-    # Validate XML template against XSD schema
-    console.print(
-        "[cyan]→ Validating XML template against XSD schema...[/cyan]"
-    )
-    try:
-        validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
-        log_validation_event(
-            logger,
-            "xsd_schema",
-            True,
-            message_type=xml_message_type,
-        )
-        console.print("[bold green]✓ Schema validation passed[/bold green]")
-    except Exception as e:
-        log_validation_event(
-            logger,
-            "xsd_schema",
-            False,
-            e,
-            message_type=xml_message_type,
-        )
-        console.print(
-            f"[bold red]✗ Schema validation failed:[/bold red] {e}",
-            style="red",
-        )
-        console.print(
-            "\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
-            f"Expected: {xml_message_type}"
-        )
-        sys.exit(1)
+    # Step 7: Validate XML template against XSD schema
+    _validate_schema(logger, xml_template_file_path, xsd_schema_file_path, xml_message_type)
 
+    # Step 8: Handle dry-run mode (validation only)
     if dry_run:
-        # Validate payment data (same path as generation) but skip XML output
-        console.print("[cyan]→ Validating payment data...[/cyan]")
-        try:
-            data = load_payment_data(data_file_path)
-            record_count = len(data)
-            log_validation_event(
-                logger,
-                "payment_data",
-                True,
-                message_type=xml_message_type,
-            )
-            console.print(
-                f"[bold green]✓ Data validation passed[/bold green] "
-                f"({record_count} payment records)"
-            )
-        except (FileNotFoundError, ValueError, Exception) as e:
-            log_validation_event(
-                logger,
-                "payment_data",
-                False,
-                e,
-                message_type=xml_message_type,
-            )
-            console.print(
-                f"[bold red]✗ Data validation failed:[/bold red] {e}",
-                style="red",
-            )
-            # Provide helpful error messages based on file extension
-            file_ext = os.path.splitext(data_file_path)[1].lower()
-            if file_ext == ".parquet":
-                console.print(
-                    "\n[yellow]Tip:[/yellow] Parquet files require pyarrow. "
-                    "Install with: [cyan]pip install pyarrow[/cyan]"
-                )
-            elif file_ext in [".json", ".jsonl"]:
-                console.print(
-                    "\n[yellow]Tip:[/yellow] Ensure JSON is valid. "
-                    "Check for syntax errors or invalid structure."
-                )
-            sys.exit(1)
-
+        record_count = _validate_payment_data(logger, data_file_path, xml_message_type)
         log_event(
             logger,
             logging.INFO,
@@ -314,43 +430,16 @@ def main(  # pylint: disable=too-many-arguments,too-many-branches,too-many-state
         )
         return
 
-    # Generate XML files
-    console.print("[cyan]→ Generating XML payment files...[/cyan]")
-    try:
-        # Change to output directory if specified
-        original_cwd = os.getcwd()
-        if output_dir:
-            os.chdir(output_dir)
-
-        process_files(
-            xml_message_type,
-            xml_template_file_path,
-            xsd_schema_file_path,
-            data_file_path,
-        )
-
-        # Restore original directory
-        if output_dir:
-            os.chdir(original_cwd)
-
-        console.print(
-            f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
-            f"[cyan]Message Type:[/cyan] {xml_message_type}\n"
-            f"[cyan]Output Location:[/cyan] {output_dir or os.getcwd()}"
-        )
-    except Exception as e:
-        if output_dir:
-            os.chdir(original_cwd)
-        console.print(
-            f"[bold red]✗ Generation failed:[/bold red] {e}",
-            style="red",
-        )
-        if verbose:
-            import traceback
-
-            console.print("\n[yellow]Traceback:[/yellow]")
-            console.print(traceback.format_exc())
-        sys.exit(1)
+    # Step 9: Generate XML files
+    _generate_xml_files(
+        logger,
+        xml_message_type,
+        xml_template_file_path,
+        xsd_schema_file_path,
+        data_file_path,
+        output_dir,
+        verbose,
+    )
 
 
 if __name__ == "__main__":

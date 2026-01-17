@@ -18,7 +18,7 @@
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 
 class DataSourceType(str, Enum):
@@ -115,13 +115,25 @@ class ValidationResponse(BaseModel):
         description="List of validation errors",
     )
 
-    @validator("invalid_rows", always=True)
-    def calculate_invalid_rows(cls, v: int, values: dict[str, Any]) -> int:
-        """Calculate invalid rows."""
-        if "total_rows" in values and "valid_rows" in values:
-            total = int(values["total_rows"])
-            valid = int(values["valid_rows"])
-            return total - valid
+    @field_validator("invalid_rows", mode="after")
+    @classmethod
+    def calculate_invalid_rows(cls, v: int, info) -> int:
+        """Calculate invalid rows from total and valid counts.
+        
+        Args:
+            v: Current invalid_rows value.
+            info: Validation info containing all field values.
+            
+        Returns:
+            Calculated invalid rows (total - valid).
+        """
+        # Pydantic v2 uses info.data instead of values dict
+        if hasattr(info, 'data'):
+            data = info.data
+            if "total_rows" in data and "valid_rows" in data:
+                total = int(data["total_rows"])
+                valid = int(data["valid_rows"])
+                return total - valid
         return v
 
 
