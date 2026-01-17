@@ -39,6 +39,8 @@ from typing import Any, Optional
 
 import jsonschema
 
+from pain001.security import validate_path
+
 
 class ValidationError:
     """Represents a validation error."""
@@ -99,8 +101,6 @@ class SchemaValidator:
             schema_dir = Path(__file__).parent.parent / "schemas"
 
         # Validate path to prevent traversal attacks
-        from pain001.security import validate_path
-
         schema_file = schema_dir / f"{message_type}.schema.json"
         try:
             self.schema_path = validate_path(

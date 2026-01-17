@@ -44,7 +44,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     """
     # Validate path to prevent traversal attacks
 
-    from pain001.security import sanitize_for_log, validate_path
+    from pain001.security import sanitize_for_log, validate_path  # noqa: PYI100
 
     # Pre-validate and sanitize file path (CodeQL: prevent path traversal)
     safe_file_path_log = sanitize_for_log(str(file_path))

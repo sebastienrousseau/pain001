@@ -380,7 +380,7 @@ def generate_xml(
     )
 
     # Validate path to prevent traversal attacks
-    from pain001.security import validate_path
+    from pain001.security import validate_path  # noqa: PYI100
 
     try:
         safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108

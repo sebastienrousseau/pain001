@@ -77,7 +77,7 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
     # Validate path to prevent traversal attacks
 
-    from pain001.security import validate_path
+    from pain001.security import validate_path  # noqa: PYI100
 
     try:
         safe_path = validate_path(data_file_path)  # nosec B108
