@@ -47,10 +47,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- **XML String Normalization** - Byte-for-byte regression test compatibility (Commit: 03becb5):
+- **XML String Normalization** - Byte-for-byte regression test compatibility (Commits: 03becb5, 8c4b589):
   - **XML Declaration**: Changed from single quotes to double quotes: `<?xml version="1.0" encoding="UTF-8"?>`
   - **Empty Elements**: Added `short_empty_elements=True` to produce `<Amt />` instead of `<Amt></Amt>`
-  - **Trailing Newlines**: Strip trailing newlines to match legacy ElementTree.write() format
+  - **Trailing Newlines**: ADD trailing newline to match `ElementTree.write()` behavior (CRITICAL FIX: 8c4b589)
+    - Changed from `rstrip('\n')` (removed newlines) to `+= '\n'` (adds newline)
+    - Golden Master files have EOF newline from legacy file-based writer
+    - Resolves byte-for-byte mismatch in regression tests
   - **Namespace Registration**: Verified global registration prevents `ns0:` prefix pollution
   - Ensures `xml_to_string()` produces identical output to file-based `write_xml_to_file()`
   - Resolves regression test failures where Golden Master files use legacy format
