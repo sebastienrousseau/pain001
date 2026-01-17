@@ -76,5 +76,5 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
     # Legacy file-based writer adds newline at EOF - critical for regression tests
     if not xml_str.endswith('\n'):
         xml_str += '\n'
-    
+
     return xml_str
