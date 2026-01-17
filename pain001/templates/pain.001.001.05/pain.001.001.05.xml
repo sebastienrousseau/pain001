@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.05 pain.001.001.05.xsd">
+    <CstmrCdtTrfInitn>
+        <GrpHdr>
+            <MsgId>1</MsgId>
+            <CreDtTm>2023-01-01T12:00:00Z</CreDtTm>
+            <NbOfTxs>3</NbOfTxs>
+            <CtrlSum>2</CtrlSum>
+            <InitgPty>
+                <Nm>John Doe</Nm>
+                <PstlAdr>
+                    <StrtNm>Main St</StrtNm>
+                    <BldgNb>123</BldgNb>
+                    <PstCd>12345</PstCd>
+                    <TwnNm>London</TwnNm>
+                    <Ctry>GB</Ctry>
+                </PstlAdr>
+            </InitgPty>
+        </GrpHdr>
+        <PmtInf>
+            <PmtInfId>Payment001</PmtInfId>
+            <PmtMtd>TRF</PmtMtd>
+            <BtchBookg>true</BtchBookg>
+            <ReqdExctnDt>2023-01-04</ReqdExctnDt>
+            <Dbtr>
+                <Nm>John Doe</Nm>
+                <PstlAdr>
+                    <StrtNm>Main St</StrtNm>
+                    <BldgNb>123</BldgNb>
+                    <PstCd>12345</PstCd>
+                    <TwnNm>London</TwnNm>
+                    <Ctry>GB</Ctry>
+                </PstlAdr>
+            </Dbtr>
+            <DbtrAcct>
+                <Id>
+                    <Othr>
+                        <Id>GB123456789</Id>
+                    </Othr>
+                </Id>
+            </DbtrAcct>
+            <DbtrAgt>
+                <FinInstnId>
+                    <BICFI>DEUTDEFF</BICFI>
+                </FinInstnId>
+            </DbtrAgt>
+            <CdtTrfTxInf>
+                <PmtId>
+                    <InstrId>123456</InstrId>
+                    <EndToEndId>90876</EndToEndId>
+                </PmtId>
+                <Amt>
+                    <InstdAmt Ccy="EUR">100</InstdAmt>
+                </Amt>
+                <ChrgBr>SLEV</ChrgBr>
+                <CdtrAgt>
+                    <FinInstnId>
+                        <BICFI>BANKEU2L</BICFI>
+                    </FinInstnId>
+                </CdtrAgt>
+                <Cdtr>
+                    <Nm>ABC Corp</Nm>
+                    <PstlAdr>
+                        <AdrLine>Church St</AdrLine>
+                        <AdrLine>5</AdrLine>
+                        <AdrLine>54321</AdrLine>
+                        <AdrLine>Paris</AdrLine>
+                    </PstlAdr>
+                </Cdtr>
+                <CdtrAcct>
+                    <Id>
+                        <Othr>
+                            <Id>FR123456789</Id>
+                        </Othr>
+                    </Id>
+                </CdtrAcct>
+                <Purp>
+                    <Cd>INV</Cd>
+                </Purp>
+                <RmtInf>
+                    <Strd>
+                        <RfrdDocInf>
+                            <Nb>123</Nb>
+                            <RltdDt>2023-01-02</RltdDt>
+                        </RfrdDocInf>
+                    </Strd>
+                </RmtInf>
+            </CdtTrfTxInf>
+        </PmtInf>
+    </CstmrCdtTrfInitn>
+</Document>

@@ -113,8 +113,10 @@ class TestGenerateXmlString:
                 "schema.xsd",
             )
 
-    def test_generate_xml_string_all_versions(self, sample_payment_data_v03):
+    def test_generate_xml_string_all_versions(self):
         """Test generate_xml_string for all supported versions."""
+        from pain001.csv.load_csv_data import load_csv_data
+
         versions = [
             "pain.001.001.03",
             "pain.001.001.04",
@@ -130,24 +132,20 @@ class TestGenerateXmlString:
         for version in versions:
             template_path = f"pain001/templates/{version}/template.xml"
             xsd_path = f"pain001/templates/{version}/{version}.xsd"
+            csv_path = f"pain001/templates/{version}/template.csv"
 
-            try:
-                xml_content = generate_xml_string(
-                    sample_payment_data_v03,
-                    version,
-                    template_path,
-                    xsd_path,
-                )
+            # Load version-specific CSV data instead of using v03 fixture
+            payment_data = load_csv_data(csv_path)
 
-                assert xml_content is not None
-                assert version in xml_content
-                assert "MSG001" in xml_content
-            except (FileNotFoundError, RuntimeError) as e:
-                # Some versions might have different data requirements
-                # This is expected - we're testing the function works, not the data
-                pytest.skip(
-                    f"Version {version} requires different data structure: {e}"
-                )
+            xml_content = generate_xml_string(
+                payment_data,
+                version,
+                template_path,
+                xsd_path,
+            )
+
+            assert xml_content is not None
+            assert version in xml_content
 
 
 class TestValidateXmlStringViaXsd:

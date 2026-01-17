@@ -1,0 +1,170 @@
+<?xml version="1.0"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09 pain.001.001.09.xsd">
+	<CstmrCdtTrfInitn>
+		<GrpHdr>
+			<MsgId>1</MsgId>
+			<CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
+			<NbOfTxs>2</NbOfTxs>
+			<InitgPty>
+				<Nm>John Doe</Nm>
+			</InitgPty>
+		</GrpHdr>
+		<PmtInf>
+			<PmtInfId>PaymentID6789</PmtInfId>
+			<PmtMtd>TRF</PmtMtd>
+			<ReqdExctnDt>
+				<Dt>2023-03-12</Dt>
+			</ReqdExctnDt>
+			<Dbtr>
+				<Nm>Acme Corp</Nm>
+			</Dbtr>
+			<DbtrAcct>
+				<Id>
+					<IBAN>DE75512108001245126162</IBAN>
+				</Id>
+			</DbtrAcct>
+			<DbtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</DbtrAgt>
+			<ChrgBr>DEBT</ChrgBr>
+			 <CdtTrfTxInf>
+			<PmtId>
+				<EndToEndId>PaymentID6789</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="EUR">150.00</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>Global Tech</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>DE68210501700024690959</IBAN>
+				</Id>
+			</CdtrAcct>
+			
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
+			 <CdtTrfTxInf>
+			<PmtId>
+				<EndToEndId>PaymentID4321</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="EUR">300.00</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>Green Energy</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>DE89370400440532013008</IBAN>
+				</Id>
+			</CdtrAcct>
+			
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
+			 <CdtTrfTxInf>
+			<PmtId>
+				<EndToEndId>PaymentID1357</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="EUR">250.00</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>Beta Chemicals</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>DE44500105175407123457</IBAN>
+				</Id>
+			</CdtrAcct>
+			
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
+			 <CdtTrfTxInf>
+			<PmtId>
+				<EndToEndId>PaymentID2468</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="EUR">175.00</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>Gamma Logistics</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>DE53500105176502098765</IBAN>
+				</Id>
+			</CdtrAcct>
+			
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
+			 <CdtTrfTxInf>
+			<PmtId>
+				<EndToEndId>PaymentID4815</EndToEndId>
+			</PmtId>
+			<Amt>
+				<InstdAmt Ccy="EUR">225.00</InstdAmt>
+			</Amt>
+			<CdtrAgt>
+				<FinInstnId>
+					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">DEUTDEFFXXX</BICFI>
+				</FinInstnId>
+			</CdtrAgt>
+			<Cdtr>
+				<Nm>Eco Innovations</Nm>
+			</Cdtr>
+			<CdtrAcct>
+				<Id>
+					<IBAN>DE18500105175001478962</IBAN>
+				</Id>
+			</CdtrAcct>
+			
+			<SplmtryData>
+				<Envlp>
+					<WC />
+				</Envlp>
+			</SplmtryData>
+	</CdtTrfTxInf>
+			 </PmtInf>
+</CstmrCdtTrfInitn>
+</Document>
