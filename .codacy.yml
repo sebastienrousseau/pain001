@@ -20,6 +20,15 @@ exclude_paths:
   - "*_test.py"
   - "conftest.py"
   
+  # Templates and data files (schema structures, not code)
+  - "pain001/templates/**"
+  - "**/templates/**"
+  - "**/data/**"
+  - "**/*.json"
+  - "**/*.xml"
+  - "**/*.xsd"
+  - "**/*.csv"
+  
   # Utility scripts (not production code)
   - "generate_xml_examples.py"
   - "scripts/**"

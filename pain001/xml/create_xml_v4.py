@@ -27,6 +27,7 @@ returns the root element of the modified XML tree.
 
 # Import the ElementTree package
 import xml.etree.ElementTree as et  # nosec B405 - Only used for element creation, not parsing; defused_et used for parsing
+from pathlib import Path
 from typing import Any
 
 from defusedxml import ElementTree as defused_et
@@ -51,12 +52,13 @@ def create_xml_v4(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
     cstmr_cdt_trf_initn_element = et.Element("CstmrCdtTrfInitn")
     root.append(cstmr_cdt_trf_initn_element)
 
-    # Create a Jinja2 environment
-    env = Environment(loader=FileSystemLoader("."), autoescape=True)
+    # Create a Jinja2 environment with package-relative path
+    template_dir = Path(__file__).parent.parent / "templates"
+    env = Environment(loader=FileSystemLoader(str(template_dir)), autoescape=True)
 
     # Load the Jinja2 template
     template = env.get_template(
-        "pain001/templates/pain.001.001.04/template.xml"
+        "pain.001.001.04/template.xml"
     )
 
     # Prepare the data for rendering, ensuring all required keys are present
