@@ -35,12 +35,12 @@ def sanitize_table_name(table_name: str) -> str:
         ConfigurationError: If the table name is empty or contains invalid characters.
     """
     import re
-    
+
     if not table_name:
         raise ConfigurationError("Table name cannot be empty")
 
     # Strict validation: only alphanumeric and underscore, must start with letter
-    if not re.match(r'^[a-zA-Z][a-zA-Z0-9_]*$', table_name):
+    if not re.match(r"^[a-zA-Z][a-zA-Z0-9_]*$", table_name):
         raise ConfigurationError(
             f"Invalid table name '{table_name}'. "
             "Table names must start with a letter and contain only "

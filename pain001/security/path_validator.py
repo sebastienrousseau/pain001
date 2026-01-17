@@ -68,7 +68,8 @@ def validate_path(
     # nosec B108: Only used for validation, not actual temp file operations
     path_str_resolved = str(resolved)
     if path_str_resolved.startswith("/") and not any(
-        path_str_resolved.startswith(p) for p in ["/tmp/", "/var/tmp/", os.getcwd()]  # nosec B108
+        path_str_resolved.startswith(p)
+        for p in ["/tmp/", "/var/tmp/", os.getcwd()]  # nosec B108
     ):
         # If the file doesn't exist outside allowlist, that's acceptable (will fail at access time)
         # If it exists, check that it's truly within allowed directories
@@ -77,18 +78,22 @@ def validate_path(
             try:
                 cwd = Path.cwd()
                 # nosec B108: Only used for validation, not actual temp file operations
-                if not (resolved.is_relative_to(cwd) or
-                        resolved.is_relative_to("/tmp") or  # nosec B108
-                        resolved.is_relative_to("/var/tmp")):  # nosec B108
+                if not (
+                    resolved.is_relative_to(cwd)
+                    or resolved.is_relative_to("/tmp")  # nosec B108
+                    or resolved.is_relative_to("/var/tmp")
+                ):  # nosec B108
                     raise PathValidationError(
                         f"Path validation failed: Absolute path outside allowed directories: {resolved}"
                     ) from None
             except AttributeError:
                 # Python < 3.9 fallback: use string comparison
                 # nosec B108: Only used for validation, not actual temp file operations
-                if not (str(resolved).startswith(str(cwd)) or
-                        str(resolved).startswith("/tmp/") or  # nosec B108
-                        str(resolved).startswith("/var/tmp/")):  # nosec B108
+                if not (
+                    str(resolved).startswith(str(cwd))
+                    or str(resolved).startswith("/tmp/")  # nosec B108
+                    or str(resolved).startswith("/var/tmp/")
+                ):  # nosec B108
                     raise PathValidationError(
                         f"Path validation failed: Absolute path outside allowed directories: {resolved}"
                     ) from None

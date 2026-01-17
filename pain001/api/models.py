@@ -18,7 +18,7 @@
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator
 
 
 class DataSourceType(str, Enum):
@@ -119,16 +119,16 @@ class ValidationResponse(BaseModel):
     @classmethod
     def calculate_invalid_rows(cls, v: int, info) -> int:
         """Calculate invalid rows from total and valid counts.
-        
+
         Args:
             v: Current invalid_rows value.
             info: Validation info containing all field values.
-            
+
         Returns:
             Calculated invalid rows (total - valid).
         """
         # Pydantic v2 uses info.data instead of values dict
-        if hasattr(info, 'data'):
+        if hasattr(info, "data"):
             data = info.data
             if "total_rows" in data and "valid_rows" in data:
                 total = int(data["total_rows"])
