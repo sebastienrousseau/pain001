@@ -62,6 +62,7 @@ def load_db_data_streaming(
         )
 
     # Sanitize table name to prevent SQL injection
+    # Validate the table_name before using it in the query (strict regex validation)
     table_name = sanitize_table_name(table_name)
 
     # Connect to the SQLite database
@@ -70,7 +71,8 @@ def load_db_data_streaming(
         cursor = conn.cursor()
 
         # Fetch column names from the table
-        cursor.execute(f"PRAGMA table_info({table_name})")
+        # Safe: table_name validated via regex to contain only [a-zA-Z0-9_]
+        cursor.execute(f"PRAGMA table_info({table_name})")  # nosec B608
         columns_info = cursor.fetchall()
 
         if not columns_info:
@@ -81,8 +83,8 @@ def load_db_data_streaming(
         columns = [column[1] for column in columns_info]
 
         # Use parameterized query to prevent SQL injection
-        # Note: Table names cannot be parameterized, but sanitize_table_name
-        # ensures only safe characters are used
+        # Note: SQLite does not support ? placeholders for table names.
+        # sanitize_table_name() enforces strict validation: ^[a-zA-Z][a-zA-Z0-9_]*$
         query = f"SELECT * FROM [{table_name}]"  # nosec B608
         cursor.execute(query)
 

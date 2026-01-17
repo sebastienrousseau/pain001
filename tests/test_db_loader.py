@@ -24,10 +24,26 @@ from pain001.exceptions import ConfigurationError
 
 # Test sanitize_table_name function
 def test_sanitize_table_name():
+    """Test that valid table names pass strict validation."""
     assert sanitize_table_name("valid_table_name") == "valid_table_name"
-    assert sanitize_table_name("invalid table name") == "invalid_table_name"
-    assert sanitize_table_name("123invalidname") == "table_123invalidname"
-    assert sanitize_table_name("table!@#name") == "table___name"
+    assert sanitize_table_name("ValidTableName") == "ValidTableName"
+    assert sanitize_table_name("Table123") == "Table123"
+    assert sanitize_table_name("table_name_123") == "table_name_123"
+
+
+def test_sanitize_table_name_invalid() -> None:
+    """Test that invalid table names raise ConfigurationError."""
+    # Table name with spaces
+    with pytest.raises(ConfigurationError, match="Invalid table name"):
+        sanitize_table_name("invalid table name")
+    
+    # Table name starting with number
+    with pytest.raises(ConfigurationError, match="Invalid table name"):
+        sanitize_table_name("123invalidname")
+    
+    # Table name with special characters
+    with pytest.raises(ConfigurationError, match="Invalid table name"):
+        sanitize_table_name("table!@#name")
 
 
 def test_sanitize_table_name_empty() -> None:
@@ -37,8 +53,9 @@ def test_sanitize_table_name_empty() -> None:
 
 
 def test_sanitize_table_name_all_special_chars() -> None:
-    """Test table name with all special characters."""
-    assert sanitize_table_name("!@#$%") == "table______"
+    """Test table name with all special characters raises error."""
+    with pytest.raises(ConfigurationError, match="Invalid table name"):
+        sanitize_table_name("!@#$%")
 
 
 # Test load_db_data function
