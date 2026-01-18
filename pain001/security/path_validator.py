@@ -69,34 +69,44 @@ def validate_path(
         PathValidationError: If path contains traversal attempts.
         FileNotFoundError: If must_exist=True and path doesn't exist.
     """
+    from pain001.constants.constants import BASE_DIR
+
     if not user_path:
         raise PathValidationError("Path cannot be empty")
 
-    # Convert to string if Path object
-    path_str = str(user_path)
-
-    # Reject paths with obvious traversal attempts
-    if ".." in path_str:
-        raise PathValidationError("Invalid path: directory traversal detected")
-
-    # Resolve to absolute path (safe after traversal check)
     try:
-        resolved = Path(path_str).resolve()  # nosec B108
-    except (OSError, RuntimeError) as e:
+        resolved_path = Path(user_path).resolve()
+    except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
+    base_resolved = BASE_DIR.resolve()
+
+    # Reject paths with obvious traversal attempts
+    if ".." in str(user_path):
+        raise PathValidationError("Invalid path: directory traversal detected")
+
+    # Strict Boundary Check
+    # Allow system temp directories or configured base dir
+    allowed_bases = [
+        base_resolved,
+        Path(tempfile.gettempdir()).resolve(),
+        Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
+    ]
+
+    is_allowed = any(
+        str(resolved_path).startswith(str(base)) for base in allowed_bases
+    )
+
+    if not is_allowed:
+        raise PermissionError(
+            f"Security Alert: Attempted access outside of allowed directories: {base_resolved}"
+        )
+
     # Check existence if required
-    if must_exist and not resolved.exists():
-        raise FileNotFoundError(f"Path does not exist: {resolved}")
+    if must_exist and not resolved_path.exists():
+        raise FileNotFoundError(f"Path does not exist: {resolved_path}")
 
-    # Additional allowlist check for absolute paths (after existence check)
-    # This prevents actual access to files outside expected areas
-    if not _is_allowed_directory(resolved):
-        raise PathValidationError(
-            f"Path validation failed: Absolute path outside allowed directories: {resolved}"
-        ) from None
-
-    return resolved
+    return resolved_path
 
 
 def sanitize_for_log(user_input: str, max_length: int = 100) -> str:

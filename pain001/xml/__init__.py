@@ -31,5 +31,5 @@ __all__ = [
     "xml_to_string",
     "validate_via_xsd",
     "validate_xml_string_via_xsd",
-    "write_xml_to_file"
+    "write_xml_to_file",
 ]

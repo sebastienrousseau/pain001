@@ -19,10 +19,7 @@ from collections.abc import Generator
 from typing import Any
 
 from pain001.exceptions import DataSourceError
-from pain001.security import (  # noqa: PYI100
-    sanitize_for_log,
-    validate_path,
-)
+from pain001.security import sanitize_for_log, validate_path  # noqa: PYI100
 
 logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 

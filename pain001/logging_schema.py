@@ -286,12 +286,18 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
         # Handle lists of dicts
         elif isinstance(value, list):
             redacted[key] = [
-                _redact_pii_from_dict(item) if isinstance(item, dict) else _sanitize_value(item)
+                (
+                    _redact_pii_from_dict(item)
+                    if isinstance(item, dict)
+                    else _sanitize_value(item)
+                )
                 for item in value
             ]
         # Redact IBAN fields
         elif "iban" in key_lower and isinstance(value, str):
-            redacted[key] = mask_sensitive_data(_sanitize_value(value), visible_chars=4)
+            redacted[key] = mask_sensitive_data(
+                _sanitize_value(value), visible_chars=4
+            )
         # Redact BIC fields
         elif "bic" in key_lower and isinstance(value, str):
             val = _sanitize_value(value)
@@ -303,7 +309,9 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
             redacted[key] = "[REDACTED]"
         # Redact account number fields
         elif "account" in key_lower and isinstance(value, str):
-            redacted[key] = mask_sensitive_data(_sanitize_value(value), visible_chars=4)
+            redacted[key] = mask_sensitive_data(
+                _sanitize_value(value), visible_chars=4
+            )
         else:
             redacted[key] = _sanitize_value(value)
 
