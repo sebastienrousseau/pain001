@@ -48,13 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Pre-validation with allowlist checking before Path() operations
   - Added `# nosec B108` comments after proper validation
   - Removed unsafe fallback patterns that bypassed security checks
+  - **SchemaValidator Hardening**: Added strict whitelist validation for `message_type` to prevent path traversal in schema loading (CodeQL High Severity fix).
 
 ### Fixed
 
 - **XML String Normalization** - Byte-for-byte regression test compatibility (Commits: 03becb5, 8c4b589):
   - **XML Declaration**: Changed from single quotes to double quotes: `<?xml version="1.0" encoding="UTF-8"?>`
   - **Empty Elements**: Added `short_empty_elements=True` to produce `<Amt />` instead of `<Amt></Amt>`
-  - **Trailing Newlines**: ADD trailing newline to match `ElementTree.write()` behavior (CRITICAL FIX: 8c4b589)
+  - **Trailing Newlines**: ADD trailing newline to match `ElementTree.write()` behaviour (CRITICAL FIX: 8c4b589)
     - Changed from `rstrip('\n')` (removed newlines) to `+= '\n'` (adds newline)
     - Golden Master files have EOF newline from legacy file-based writer
     - Resolves byte-for-byte mismatch in regression tests
@@ -295,7 +296,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Extracted `_register_message_namespaces()`: Manages XML namespace registration with logging
   - Extracted `_generate_and_log()`: Orchestrates XML generation and returns generation duration
   - Simplified `process_files()`: Now calls focused helpers, improving readability and testability
-  - Preserved all existing behavior, logging, error handling, and backward compatibility
+  - Preserved all existing behaviour, logging, error handling, and backward compatibility
 
 ### Quality Assurance
 
@@ -347,7 +348,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Notes
 
 - All v0.0.41 functionality fully preserved
-- Purely CI/CD workflow optimization
+- Purely CI/CD workflow optimisation
 
 ---
 
@@ -693,7 +694,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Repository Organisation** - Improved project structure and configuration:
   - Added `.editorconfig` for consistent coding styles across editors (Python, YAML, JSON, Markdown)
-  - Added `.gitattributes` for consistent line endings and diff behavior across platforms
+  - Added `.gitattributes` for consistent line endings and diff behaviour across platforms
   - Added comprehensive `.gitignore` patterns for temporary files and build artifacts
 
 - **Comprehensive Documentation Updates** - All 41 Python modules now fully documented:

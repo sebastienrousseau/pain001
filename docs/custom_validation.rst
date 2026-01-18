@@ -234,7 +234,7 @@ The original `validate_csv_data()` function still works but is now powered by sc
 
 - Schema files are loaded once during validator initialization
 - Validation is performed efficiently by jsonschema library
-- Batch validation optimized for large datasets
+- Batch validation optimised for large datasets
 
 ## Future Enhancements
 
