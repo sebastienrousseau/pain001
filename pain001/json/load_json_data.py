@@ -18,6 +18,7 @@
 # pylint: disable=duplicate-code
 import json
 import logging
+import os
 from collections.abc import Generator
 from typing import Any
 
@@ -55,14 +56,15 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
     # Validate path to prevent traversal attacks
 
     try:
-        safe_path = validate_path(file_path)  # nosec B108
+        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Fail securely - do not fall back to unsafe path
         raise FileNotFoundError(
             f"JSON file not found or invalid path: {file_path}"
         ) from e
 
-    if not safe_path.exists():
+    # Check file existence using os.path for string path
+    if not os.path.isfile(safe_path):
         raise FileNotFoundError(f"JSON file not found: {file_path}")
 
     try:
@@ -147,18 +149,19 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
         >>> data = load_jsonl_data('payments.jsonl')
     """
     try:
-        file_path_obj = validate_path(file_path)  # nosec B108
+        file_path_validated = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"JSONL file not found or invalid path: {file_path}"
         ) from e
 
-    if not file_path_obj.exists():
+    # Check file existence using os.path for string path
+    if not os.path.isfile(file_path_validated):
         raise FileNotFoundError(f"JSONL file not found: {file_path}")
 
     data = []
     try:
-        with open(file_path_obj, encoding="utf-8") as f:  # nosec B108
+        with open(file_path_validated, encoding="utf-8") as f:  # nosec B108
             for line_num, line in enumerate(f, start=1):
                 line = line.strip()
                 if not line:
@@ -213,19 +216,20 @@ def load_jsonl_data_streaming(
         ...     process_batch(chunk)
     """
     try:
-        file_path_obj = validate_path(file_path)  # nosec B108
+        file_path_validated = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"JSONL file not found or invalid path: {file_path}"
         ) from e
 
-    if not file_path_obj.exists():
+    # Check file existence using os.path for string path
+    if not os.path.isfile(file_path_validated):
         raise FileNotFoundError(f"JSONL file not found: {file_path}")
 
     chunk: list[dict[str, Any]] = []
 
     try:
-        with open(file_path_obj, encoding="utf-8") as f:
+        with open(file_path_validated, encoding="utf-8") as f:
             for line_num, line in enumerate(f, start=1):
                 line = line.strip()
                 if not line:

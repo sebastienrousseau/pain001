@@ -15,6 +15,7 @@
 
 import csv
 import logging
+import os
 from collections.abc import Generator
 from typing import Any
 
@@ -47,7 +48,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
 
     # Pre-validate file path (CodeQL: prevent path traversal)
     try:
-        safe_path = validate_path(file_path)  # nosec B108
+        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
@@ -56,7 +57,8 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         )
         raise
 
-    if not safe_path.exists():
+    # Check file existence using os.path for string path
+    if not os.path.isfile(safe_path):
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
             f"File not found: {sanitize_for_log(str(file_path))}"
