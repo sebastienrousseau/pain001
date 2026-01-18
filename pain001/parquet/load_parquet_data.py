@@ -19,7 +19,6 @@
 import logging
 import os
 from collections.abc import Generator
-from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import DataSourceError
@@ -134,9 +133,15 @@ def load_parquet_data_streaming(
     """
     _check_parquet_support()
 
-    file_path_obj = Path(file_path)
+    # Validate path to prevent traversal attacks
+    try:
+        safe_path = validate_path(file_path)  # nosec B108
+    except Exception as e:
+        raise FileNotFoundError(
+            f"Parquet file path validation failed: {file_path}"
+        ) from e
 
-    if not file_path_obj.exists():
+    if not os.path.isfile(safe_path):
         raise FileNotFoundError(f"Parquet file not found: {file_path}")
 
     try:

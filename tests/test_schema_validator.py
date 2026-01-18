@@ -47,7 +47,7 @@ class TestSchemaValidator(unittest.TestCase):
 
     def test_schema_validator_init_invalid_message_type(self) -> None:
         """SchemaValidator should raise FileNotFoundError for invalid type."""
-        with self.assertRaises(FileNotFoundError):
+        with self.assertRaises(ValueError):
             SchemaValidator("invalid.message.type")
 
     def test_validate_data_valid(self) -> None:

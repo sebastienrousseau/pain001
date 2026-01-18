@@ -21,8 +21,6 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
-from pain001.constants import BASE_DIR
-
 
 class PathValidationError(ValueError):
     """Raised when path validation fails."""
