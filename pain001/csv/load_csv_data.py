@@ -51,12 +51,20 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
         # Log with sanitized path only
-        logging.error(f"Path validation failed: {safe_file_path_log} - {e}")
+        logging.error(
+            "Path validation failed: "
+            f"{safe_file_path_log.replace('\n', '').replace('\r', '')} - {e}"
+        )
         raise
 
     if not safe_path.exists():
-        logging.error(f"File not found: {safe_file_path_log}")
-        raise FileNotFoundError(f"File '{safe_file_path_log}' not found.")
+        logging.error(
+            "File not found: "
+            f"{safe_file_path_log.replace('\n', '').replace('\r', '')}"
+        )
+        raise FileNotFoundError(
+            f"File '{safe_file_path_log}' not found."
+        )
 
     data: list[dict[str, Any]] = []
     try:
@@ -65,7 +73,10 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
             for row in csv_reader:
                 data.append(row)
     except OSError:
-        logging.error(f"IOError reading file: {safe_file_path_log}")
+        logging.error(
+            "IOError reading file: "
+            f"{safe_file_path_log.replace('\n', '').replace('\r', '')}"
+        )
         raise
     except UnicodeDecodeError:
         logging.error(

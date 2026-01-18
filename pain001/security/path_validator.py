@@ -79,27 +79,22 @@ def validate_path(
         raise PathValidationError("Path cannot be empty")
 
     try:
-        # Resolve to an absolute, canonical path
-        safe_path = Path(untrusted_path).resolve()
+        base = os.path.abspath(BASE_DIR)
+        requested = os.path.abspath(untrusted_path)
     except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
-
-    base_resolved = BASE_DIR.resolve()
 
     # Reject paths with obvious traversal attempts (redundant with resolve() but good depth defense)
     if ".." in str(untrusted_path):
         raise PathValidationError("Invalid path: directory traversal detected")
 
     # Strict Boundary Check (CWE-22)
-    if not (
-        safe_path == base_resolved
-        or safe_path.is_relative_to(base_resolved)
-    ):
-        raise PermissionError(
-            f"Security Alert: Blocked access to {safe_path}"
-        )
+    if not requested.startswith(base):
+        raise PermissionError("Security: Path traversal")
 
     # Check existence if required
+    safe_path = Path(requested)
+
     if must_exist and not safe_path.exists():
         raise FileNotFoundError(f"Path does not exist: {safe_path}")
 

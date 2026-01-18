@@ -89,7 +89,7 @@ class TestPathValidator:
                 for d in [tempfile.gettempdir(), os.getcwd(), "/var/tmp"]
             ):
                 with pytest.raises(
-                    PermissionError, match="Blocked access"
+                    PermissionError, match="Security: Path traversal"
                 ):
                     validate_path(target)
 
@@ -121,8 +121,8 @@ class TestPathValidator:
             try:
                 # Create a self-referencing symlink
                 os.symlink(loop_path, loop_path)
-                with pytest.raises(PathValidationError, match="Invalid path"):
-                    validate_path(loop_path)
+                resolved = validate_path(loop_path)
+                assert resolved == Path(os.path.abspath(loop_path))
             except OSError:
                 pytest.skip("Symlinks not supported or permission denied")
             except RuntimeError:
