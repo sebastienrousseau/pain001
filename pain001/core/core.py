@@ -20,6 +20,8 @@ import sys
 import time
 from typing import Any, Union
 
+import pain001.xml.generate_xml as xml_generate
+import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
 from pain001.data.loader import load_payment_data
@@ -34,9 +36,7 @@ from pain001.logging_schema import (
 )
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
-# CORRECTION: Circular import workaround. Imports moved to inside functions.
-# from pain001.xml.generate_xml import generate_xml
-# from pain001.xml.register_namespaces import register_namespaces
+# CORRECTION: Circular import workaround. Imports moved to top-level.
 
 # Configure structured logging
 logger = logging.getLogger(__name__)
@@ -49,6 +49,11 @@ if not logger.handlers:
     )
     handler.setFormatter(formatter)
     logger.addHandler(handler)
+
+
+def sanitize_log(value: str) -> str:
+    """Neutralize line breaks to prevent log injection (CWE-117)."""
+    return str(value).replace("\n", "").replace("\r", "")
 
 
 def _validate_inputs(
@@ -69,7 +74,7 @@ def _validate_inputs(
             f"Error: Invalid XML message type: '{xml_message_type}'."
         )
         context_logger.error(
-            sanitize_for_log(error_message).replace("\n", "")
+            sanitize_log(sanitize_for_log(error_message))
         )
         log_event(
             logger,
@@ -88,7 +93,7 @@ def _validate_inputs(
     except Exception as e:
         error_message = f"Error: XML template '{xml_template_file_path}' does not exist or is invalid: {e}."
         context_logger.error(
-            sanitize_for_log(error_message).replace("\n", "")
+            sanitize_log(sanitize_for_log(error_message))
         )
         log_event(
             logger,
@@ -107,7 +112,7 @@ def _validate_inputs(
     except Exception as e:
         error_message = f"Error: XSD schema file '{xsd_schema_file_path}' does not exist or is invalid: {e}."
         context_logger.error(
-            sanitize_for_log(error_message).replace("\n", "")
+            sanitize_log(sanitize_for_log(error_message))
         )
         log_event(
             logger,
@@ -190,15 +195,13 @@ def _load_data(
 
 def _register_message_namespaces(xml_message_type: str) -> None:
     """Register XML namespace prefixes and URIs for the given message type."""
-    from pain001.xml.register_namespaces import register_namespaces
-
     log_event(
         logger,
         logging.INFO,
         Events.NAMESPACE_REGISTER,
         **{Fields.MESSAGE_TYPE: xml_message_type},
     )
-    register_namespaces(xml_message_type)
+    xml_namespaces.register_namespaces(xml_message_type)
 
 
 def _generate_and_log(
@@ -208,8 +211,6 @@ def _generate_and_log(
     xsd_schema_file_path: str,
 ) -> int:
     """Generate the XML and return generation duration in milliseconds."""
-    from pain001.xml.generate_xml import generate_xml
-
     gen_start = time.time()
     log_event(
         logger,
@@ -221,7 +222,7 @@ def _generate_and_log(
         },
     )
 
-    generate_xml(
+    xml_generate.generate_xml(
         data,
         xml_message_type,
         xml_template_file_path,
@@ -276,9 +277,11 @@ def process_files(
         # Confirm success (template existence check retained for backward compatibility)
         if os.path.exists(xml_template_file_path):
             context_logger.info(
-                sanitize_for_log(
-                    f"Successfully generated XML file '{xml_template_file_path}'"
-                ).replace("\n", "")
+                sanitize_log(
+                    sanitize_for_log(
+                        f"Successfully generated XML file '{xml_template_file_path}'"
+                    )
+                )
             )
             log_process_success(
                 logger,
@@ -292,7 +295,7 @@ def process_files(
                 f"Failed to generate XML file at '{xml_template_file_path}'"
             )
             context_logger.error(
-                sanitize_for_log(error_msg).replace("\n", "")
+                sanitize_log(sanitize_for_log(error_msg))
             )
             log_event(
                 logger,

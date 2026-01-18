@@ -24,6 +24,7 @@ from pathlib import Path
 # Parent is .../pain001
 BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).resolve()
 SCHEMAS_DIR = BASE_DIR / "schemas"
+TEMPLATES_DIR = BASE_DIR / "templates"
 VERSION = "0.0.47"
 
 # Valid XML types for ISO 20022 Payment Initiation
@@ -52,6 +53,7 @@ __all__ = [
     "APP_NAME",
     "BASE_DIR",
     "SCHEMAS_DIR",
+    "TEMPLATES_DIR",
     "VERSION",
     "valid_xml_types",
 ]
