@@ -33,8 +33,10 @@ from pain001.logging_schema import (
     log_process_success,
 )
 from pain001.security.path_validator import sanitize_for_log, validate_path
-from pain001.xml.generate_xml import generate_xml
-from pain001.xml.register_namespaces import register_namespaces
+
+# CORRECTION: Circular import workaround. Imports moved to inside functions.
+# from pain001.xml.generate_xml import generate_xml
+# from pain001.xml.register_namespaces import register_namespaces
 
 # Configure structured logging
 logger = logging.getLogger(__name__)
@@ -82,9 +84,7 @@ def _validate_inputs(
     try:
         validate_path(xml_template_file_path, must_exist=True)
     except Exception as e:
-        error_message = (
-            f"Error: XML template '{xml_template_file_path}' does not exist or is invalid: {e}."
-        )
+        error_message = f"Error: XML template '{xml_template_file_path}' does not exist or is invalid: {e}."
         context_logger.error(sanitize_for_log(error_message))
         log_event(
             logger,
@@ -101,9 +101,7 @@ def _validate_inputs(
     try:
         validate_path(xsd_schema_file_path, must_exist=True)
     except Exception as e:
-        error_message = (
-            f"Error: XSD schema file '{xsd_schema_file_path}' does not exist or is invalid: {e}."
-        )
+        error_message = f"Error: XSD schema file '{xsd_schema_file_path}' does not exist or is invalid: {e}."
         context_logger.error(sanitize_for_log(error_message))
         log_event(
             logger,
@@ -186,6 +184,8 @@ def _load_data(
 
 def _register_message_namespaces(xml_message_type: str) -> None:
     """Register XML namespace prefixes and URIs for the given message type."""
+    from pain001.xml.register_namespaces import register_namespaces
+
     log_event(
         logger,
         logging.INFO,
@@ -202,6 +202,8 @@ def _generate_and_log(
     xsd_schema_file_path: str,
 ) -> int:
     """Generate the XML and return generation duration in milliseconds."""
+    from pain001.xml.generate_xml import generate_xml
+
     gen_start = time.time()
     log_event(
         logger,

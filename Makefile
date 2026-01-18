@@ -75,7 +75,7 @@ lint:
 	@time_start=$$(date +%s%N); \
 	poetry run ruff check . && \
 	poetry run flake8 pain001 && \
-	poetry run pylint -j 4 pain001 --exit-zero; \
+	poetry run pylint pain001 --exit-zero; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
 	if [ $$elapsed -gt $(SLO_LINT) ]; then \

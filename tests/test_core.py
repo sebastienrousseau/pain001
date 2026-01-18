@@ -248,7 +248,7 @@ class TestProcessFiles(unittest.TestCase):
 
     def test_valid_csv_data(self) -> None:
         with patch(
-            "pain001.core.core.generate_xml", autospec=True
+            "pain001.xml.generate_xml.generate_xml", autospec=True
         ) as mock_generate_xml:
             process_files(
                 self.xml_message_type,
@@ -271,7 +271,7 @@ class TestProcessFiles(unittest.TestCase):
                 return_value=True,
             ),
             patch(
-                "pain001.core.core.generate_xml", autospec=True
+                "pain001.xml.generate_xml.generate_xml", autospec=True
             ) as mock_generate_xml,
         ):
             process_files(
