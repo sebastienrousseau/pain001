@@ -33,35 +33,24 @@ def _is_allowed_directory(resolved_path: Path) -> bool:
         resolved_path: The absolute Path object to check.
 
     Returns:
-        True if the path is valid and within allowed directories, False otherwise.
+        True if the path is within allowed directories, False otherwise.
     """
-    path_str_resolved = str(resolved_path)
-    temp_dir = tempfile.gettempdir()
-    var_tmp = os.path.join(os.path.sep, "var", "tmp")
-    allowed_dirs = [temp_dir, var_tmp, os.getcwd()]
-
-    if not path_str_resolved.startswith(os.path.sep) or any(
-        path_str_resolved.startswith(str(p)) for p in allowed_dirs
-    ):
-        return True
-
-    if not resolved_path.exists():
-        return True
-
     try:
-        cwd = Path.cwd()
-        # Check safely against all allowed bases
-        for base in [cwd, Path(temp_dir), Path(var_tmp)]:
-            if resolved_path.is_relative_to(base):
-                return True
-    except AttributeError:
-        # Should not happen in Python 3.9+, but handled for safety
-        if str(resolved_path).startswith(str(Path.cwd())):
-            return True
-    except Exception:  # nosec B110, B112
-        pass
+        # Define base allowed directories
+        allowed_bases = [
+            Path.cwd().resolve(),
+            Path(tempfile.gettempdir()).resolve(),
+            Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
+        ]
 
-    return False
+        # Use efficient pathlib ancestry check (Python 3.9+)
+        return any(
+            resolved_path == base or resolved_path.is_relative_to(base)
+            for base in allowed_bases
+        )
+
+    except Exception:  # nosec B110
+        return False
 
 
 def validate_path(

@@ -92,9 +92,9 @@ class TestPathValidator:
 
     def test_is_allowed_directory_logic(self):
         """Test internal logic of _is_allowed_directory directly."""
-        # Non-existent files are allowed (assuming they will be created safely or fail later)
+        # Non-existent files MUST be in allowed directories to be valid
         assert (
-            _is_allowed_directory(Path("/non/existent/absolute/path")) is True
+            _is_allowed_directory(Path("/non/existent/absolute/path")) is False
         )
 
     def test_sanitize_for_log(self):
@@ -123,46 +123,3 @@ class TestPathValidator:
             except OSError:
                 pytest.skip("Symlinks not supported or permission denied")
 
-    def test_coverage_legacy_python(self):
-        """Force execution of Python < 3.9 fallback logic (missing is_relative_to)."""
-        # pylint: disable=import-outside-toplevel
-        from unittest.mock import patch
-
-        # Create a Mock object that behaves like a Path but lacks is_relative_to
-        class LegacyPath:
-            """Mock path class to simulate Python < 3.9 behavior."""
-
-            def __init__(self, path_str):
-                self.path_str = str(path_str)
-
-            def __str__(self):
-                return self.path_str
-
-            def exists(self):
-                return True
-
-            def startswith(self, other):
-                return self.path_str.startswith(other)
-
-        # Define paths
-        dummy_base = "/dummy/base"
-        real_base_path = Path("/real/base")
-        target_path_str = str(real_base_path / "valid_file.txt")
-
-        target = LegacyPath(target_path_str)
-
-        # We need to ensure the INITIAL string check in _is_allowed_directory fails
-        # The initial check allows: temp_dir, var_tmp, os.getcwd()
-        # We mock these to be unrelated to our target
-
-        with patch("os.getcwd", return_value=dummy_base), patch(
-            "tempfile.gettempdir", return_value="/dummy/temp"
-        ), patch("pathlib.Path.cwd", return_value=real_base_path):
-            # Now, _is_allowed_directory will:
-            # 1. Check if target starts with dummy_base, /dummy/temp, or var/tmp. (False)
-            # 2. Check if target exists (True)
-            # 3. Iterate bases. One base is Path.cwd() which is mocked to real_base_path.
-            # 4. Check hasattr(target, "is_relative_to") -> False (LegacyPath doesn't have it)
-            # 5. Fallback: str(target).startswith(str(real_base_path)) -> True
-
-            assert _is_allowed_directory(target) is True

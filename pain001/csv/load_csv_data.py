@@ -117,10 +117,17 @@ def load_csv_data_streaming(
     row_count = 0
 
     # Sanitize file path for logging to prevent Log Injection (CWE-117)
-    safe_file_path = str(file_path).replace("\n", "\\n").replace("\r", "\\r")
+    safe_file_path_log = sanitize_for_log(str(file_path))
 
     try:
-        with open(file_path, encoding="utf-8") as file:
+        # CodeQL: Prevent path traversal
+        safe_path = validate_path(file_path)  # nosec B108
+    except Exception as e:
+        logging.error(f"Path validation failed: {safe_file_path_log} - {e}")
+        raise
+
+    try:
+        with open(safe_path, encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 chunk.append(row)
@@ -134,20 +141,21 @@ def load_csv_data_streaming(
                 yield chunk
 
     except FileNotFoundError:
-        logging.error(f"File '{safe_file_path}' not found.")
+        logging.error(f"File '{safe_file_path_log}' not found.")
         raise
     except OSError:
         # Sanitize file path to prevent log injection (CodeQL CWE-117)
+        # safe_file_path_log is already sanitized
         logging.error(
-            f"An IOError occurred while reading the file '{safe_file_path.replace(chr(10), '')}'."  # noqa: E501
+            f"An IOError occurred while reading the file '{safe_file_path_log}'."  # noqa: E501
         )
         raise
     except UnicodeDecodeError:
         # Sanitize file path to prevent log injection (CodeQL CWE-117)
         logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{safe_file_path.replace(chr(10), '')}'."  # noqa: E501
+            f"A UnicodeDecodeError occurred while decoding the file '{safe_file_path_log}'."  # noqa: E501
         )
         raise
 
     if row_count == 0:
-        raise DataSourceError(f"The CSV file '{safe_file_path}' is empty.")
+        raise DataSourceError(f"The CSV file '{safe_file_path_log}' is empty.")
