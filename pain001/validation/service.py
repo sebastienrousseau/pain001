@@ -242,11 +242,11 @@ class ValidationService:
             )
 
         data_path_str = str(data_path)
-        
+
         # Check if path is a directory instead of a file
         if os.path.isdir(data_path_str):
             # Extract directory name to suggest the correct file
-            dir_name = os.path.basename(data_path_str)
+
             return ValidationResult(
                 is_valid=False,
                 error=(
@@ -256,7 +256,7 @@ class ValidationService:
                 ),
                 field="data_file_path",
             )
-        
+
         if not os.path.isfile(data_path_str):
             return ValidationResult(
                 is_valid=False,
