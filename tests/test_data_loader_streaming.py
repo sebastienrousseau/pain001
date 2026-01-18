@@ -15,8 +15,9 @@
 
 """Tests for data loader streaming functionality."""
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from pain001.data.loader import load_payment_data_streaming
 from pain001.exceptions import DataSourceError, PaymentValidationError

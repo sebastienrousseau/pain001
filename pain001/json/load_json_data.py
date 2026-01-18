@@ -19,7 +19,6 @@
 import json
 import logging
 from collections.abc import Generator
-from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import DataSourceError

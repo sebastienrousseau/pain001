@@ -13,4 +13,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Command-line interface module for pain001."""
+"""
+The pain001.cli package provides the command-line interface for the
+Pain001 application.
+"""
+
+from pain001.cli.cli import main
+
+__all__ = ["main"]

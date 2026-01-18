@@ -32,6 +32,8 @@ from typing import Any
 import defusedxml.ElementTree as defused_et
 from jinja2 import Environment, FileSystemLoader
 
+from pain001.security.path_validator import validate_path
+
 
 def create_xml_v3(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
     """
@@ -62,6 +64,7 @@ def create_xml_v3(root: et.Element, data: list[dict[str, Any]]) -> et.Element:
 
     # Initialize the Jinja2 environment with package-relative path
     template_dir = Path(__file__).parent.parent / "templates"
+    validate_path(template_dir, must_exist=True)
     env = Environment(
         loader=FileSystemLoader(str(template_dir)), autoescape=True
     )

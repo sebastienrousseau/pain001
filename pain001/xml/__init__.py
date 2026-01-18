@@ -13,4 +13,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""XML generation and validation module for pain001."""
+"""
+The pain001.xml package provides functionality for generating, validating,
+and manipulating ISO 20022 XML payment files.
+"""
+
+from pain001.xml.generate_xml import generate_xml
+from pain001.xml.validate_via_xsd import (
+    validate_via_xsd,
+    validate_xml_string_via_xsd,
+)
+from pain001.xml.write_xml_to_file import write_xml_to_file
+from pain001.xml.xml_to_string import xml_to_string
+
+__all__ = [
+    "generate_xml",
+    "xml_to_string",
+    "validate_via_xsd",
+    "validate_xml_string_via_xsd",
+    "write_xml_to_file"
+]
