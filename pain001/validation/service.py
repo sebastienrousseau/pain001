@@ -242,6 +242,21 @@ class ValidationService:
             )
 
         data_path_str = str(data_path)
+        
+        # Check if path is a directory instead of a file
+        if os.path.isdir(data_path_str):
+            # Extract directory name to suggest the correct file
+            dir_name = os.path.basename(data_path_str)
+            return ValidationResult(
+                is_valid=False,
+                error=(
+                    f"Data file does not exist: {data_path_str}\n"
+                    f"The path points to a directory. Please specify a data file:\n"
+                    f"  Example: {data_path_str}/template.csv"
+                ),
+                field="data_file_path",
+            )
+        
         if not os.path.isfile(data_path_str):
             return ValidationResult(
                 is_valid=False,
@@ -394,20 +409,24 @@ class ValidationService:
             )
 
         # Only proceed with content validation if files exist
-        if (
-            report.results["template"].is_valid
-            and report.results["schema"].is_valid
-        ):
-            result = self.validate_template_schema_compatibility(
-                config.xml_template_file_path, config.xsd_schema_file_path
-            )
-            report.results["template_schema_compatibility"] = result
-            if not result.is_valid:
-                report.is_valid = False
-                report.errors.append(
-                    result.error
-                    or "Template/schema compatibility check failed"
-                )
+        # SKIP template-schema validation here because the template contains
+        # Jinja2 variables ({{date}}, {{id}}, etc.) which are not valid XML.
+        # The generated XML (after rendering with data) will be validated
+        # in the generate_xml_string() function instead.
+        # if (
+        #     report.results["template"].is_valid
+        #     and report.results["schema"].is_valid
+        # ):
+        #     result = self.validate_template_schema_compatibility(
+        #         config.xml_template_file_path, config.xsd_schema_file_path
+        #     )
+        #     report.results["template_schema_compatibility"] = result
+        #     if not result.is_valid:
+        #         report.is_valid = False
+        #         report.errors.append(
+        #             result.error
+        #             or "Template/schema compatibility check failed"
+        #         )
 
         if report.results["data_source"].is_valid:
             result = self.validate_data_content(config.data_file_path)
