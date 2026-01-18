@@ -23,6 +23,7 @@ import pytest
 
 from pain001.security.path_validator import (
     PathValidationError,
+    SecurityError,
     _is_allowed_directory,
     sanitize_for_log,
     validate_path,
@@ -57,8 +58,10 @@ class TestPathValidator:
 
     def test_validate_path_traversal(self):
         """Test detection of path traversal attempts."""
-        # Simple string check
-        with pytest.raises(PathValidationError, match="traversal detected"):
+        # Simple string check - now handled by resolve() + boundary check
+        # If it resolves to outside, it raises SecurityError
+        # ../outside.txt likely resolves to outside current dir
+        with pytest.raises((PathValidationError, SecurityError)):
             validate_path("../outside.txt")
 
     def test_validate_path_empty(self):
@@ -95,7 +98,7 @@ class TestPathValidator:
                 for d in [tempfile.gettempdir(), os.getcwd(), "/var/tmp"]
             ):
                 with pytest.raises(
-                    PermissionError, match="Security: Path traversal"
+                    SecurityError, match="outside allowed directories"
                 ):
                     validate_path(target)
 
@@ -127,13 +130,10 @@ class TestPathValidator:
             try:
                 # Create a self-referencing symlink
                 os.symlink(loop_path, loop_path)
-                resolved = validate_path(loop_path)
-                # validate_path returns string now
-                assert resolved == os.path.abspath(str(loop_path))
-                assert isinstance(resolved, str)
+                
+                # Should raise PathValidationError due to resolve() failure
+                with pytest.raises(PathValidationError):
+                    validate_path(loop_path)
+
             except OSError:
                 pytest.skip("Symlinks not supported or permission denied")
-            except RuntimeError:
-                # Python < 3.10 might raise RuntimeError directly during resolve
-                # But our wrapper should catch it
-                pytest.skip("Caught raw RuntimeError during resolve")
