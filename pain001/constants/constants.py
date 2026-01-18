@@ -13,12 +13,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Defines the valid XML types for the ISO 20022 Payment Initiation
-# message types that are supported by the pain001 library.
+"""Shared constants and configuration for the pain001 library."""
+
 import os
 from pathlib import Path
 
-# All versions support Customer Credit Transfer Initiation (CstmrCdtTrfInitn)
+# Centralize paths to prevent circular imports
+# BASE_DIR should point to the pain001 inner package directory (where __init__.py is)
+# os.path.dirname(os.path.abspath(__file__)) is .../pain001/constants
+# Parent is .../pain001
+BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).resolve()
+SCHEMAS_DIR = BASE_DIR / "schemas"
+VERSION = "0.0.47"
+
+# Valid XML types for ISO 20022 Payment Initiation
 valid_xml_types = [
     "pain.001.001.03",  # Customer Credit Transfer Initiation V03
     "pain.001.001.04",  # Customer Credit Transfer Initiation V04
@@ -30,11 +38,6 @@ valid_xml_types = [
     "pain.001.001.10",  # Customer Credit Transfer Initiation V10
     "pain.001.001.11",  # Customer Credit Transfer Initiation V11
 ]
-
-# Fixes Collection Error: Centralized paths for all modules
-BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).parent.parent
-SCHEMAS_DIR = BASE_DIR / "pain001" / "schemas"
-VERSION = "0.0.47"
 
 # Application metadata
 APP_NAME = "Pain001"
