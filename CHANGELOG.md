@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.47] - 2026-01-17
+## [0.0.47] - 2026-01-18
+
+### Highlights
+- **Full I/O decoupling for Serverless and API architectures.**
+- **Introduced O(1) memory streaming data loaders for CSV and SQLite.**
+- **Hardened path validation and security against Log/SQL injection.**
+- **Achieved 92.22% test coverage with 851 passing tests.**
 
 ### Added
 
