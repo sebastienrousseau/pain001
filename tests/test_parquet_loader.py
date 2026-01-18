@@ -21,8 +21,9 @@ Tests load_parquet_data and load_parquet_data_streaming functions,
 including optional pyarrow dependency handling.
 """
 
-import pytest
 from pathlib import Path
+
+import pytest
 
 from pain001.exceptions import DataSourceError
 

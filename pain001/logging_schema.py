@@ -245,11 +245,20 @@ def mask_sensitive_data(value: str, visible_chars: int = 4) -> str:
     )
 
 
+def _sanitize_value(value: Any) -> Any:
+    """Sanitize value to prevent log injection (remove newlines)."""
+    if isinstance(value, str):
+        return value.replace("\n", "").replace("\r", "")
+    return value
+
+
 def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
     """Redact PII from dictionary fields recursively.
 
     This function implements GDPR/PCI-DSS compliant logging by automatically
     masking sensitive fields before they reach log aggregation systems.
+
+    It also sanitizes all string values to prevent log injection (CWE-117).
 
     Redacted fields:
     - *iban* (any key containing 'iban'): Shows first 4 + last 4 chars
@@ -261,7 +270,7 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
         data: Dictionary that may contain PII fields.
 
     Returns:
-        New dictionary with PII fields redacted.
+        New dictionary with PII fields redacted and strings sanitized.
 
     Example:
         >>> _redact_pii_from_dict({"debtor_iban": "GB29NWBK60161331926819"})
@@ -277,25 +286,26 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
         # Handle lists of dicts
         elif isinstance(value, list):
             redacted[key] = [
-                _redact_pii_from_dict(item) if isinstance(item, dict) else item
+                _redact_pii_from_dict(item) if isinstance(item, dict) else _sanitize_value(item)
                 for item in value
             ]
         # Redact IBAN fields
         elif "iban" in key_lower and isinstance(value, str):
-            redacted[key] = mask_sensitive_data(value, visible_chars=4)
+            redacted[key] = mask_sensitive_data(_sanitize_value(value), visible_chars=4)
         # Redact BIC fields
         elif "bic" in key_lower and isinstance(value, str):
+            val = _sanitize_value(value)
             redacted[key] = (
-                f"{value[:4]}**{value[-2:]}" if len(value) > 6 else "****"
+                f"{val[:4]}**{val[-2:]}" if len(val) > 6 else "****"
             )
         # Redact name fields
         elif "name" in key_lower and isinstance(value, str):
             redacted[key] = "[REDACTED]"
         # Redact account number fields
         elif "account" in key_lower and isinstance(value, str):
-            redacted[key] = mask_sensitive_data(value, visible_chars=4)
+            redacted[key] = mask_sensitive_data(_sanitize_value(value), visible_chars=4)
         else:
-            redacted[key] = value
+            redacted[key] = _sanitize_value(value)
 
     return redacted
 
