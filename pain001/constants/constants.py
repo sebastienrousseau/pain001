@@ -27,3 +27,11 @@ valid_xml_types = [
     "pain.001.001.10",  # Customer Credit Transfer Initiation V10
     "pain.001.001.11",  # Customer Credit Transfer Initiation V11
 ]
+
+# Application metadata
+APP_NAME = "Pain001"
+APP_DESCRIPTION = """
+A powerful Python library that enables you to create
+ISO 20022-compliant payment files directly from CSV or SQLite Data files.\n
+https://pain001.com
+"""

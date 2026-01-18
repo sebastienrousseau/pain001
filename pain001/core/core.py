@@ -32,6 +32,7 @@ from pain001.logging_schema import (
     log_process_start,
     log_process_success,
 )
+from pain001.security.path_validator import sanitize_for_log, validate_path
 from pain001.xml.generate_xml import generate_xml
 from pain001.xml.register_namespaces import register_namespaces
 
@@ -65,7 +66,7 @@ def _validate_inputs(
         error_message = (
             f"Error: Invalid XML message type: '{xml_message_type}'."
         )
-        context_logger.error(error_message)
+        context_logger.error(sanitize_for_log(error_message))
         log_event(
             logger,
             logging.ERROR,
@@ -78,11 +79,13 @@ def _validate_inputs(
         )
         raise XMLGenerationError(error_message)
 
-    if not os.path.exists(xml_template_file_path):
+    try:
+        validate_path(xml_template_file_path, must_exist=True)
+    except Exception as e:
         error_message = (
-            f"Error: XML template '{xml_template_file_path}' does not exist."
+            f"Error: XML template '{xml_template_file_path}' does not exist or is invalid: {e}."
         )
-        context_logger.error(error_message)
+        context_logger.error(sanitize_for_log(error_message))
         log_event(
             logger,
             logging.ERROR,
@@ -93,13 +96,15 @@ def _validate_inputs(
                 Fields.ERROR_MESSAGE: error_message,
             },
         )
-        raise FileNotFoundError(error_message)
+        raise FileNotFoundError(error_message) from e
 
-    if not os.path.exists(xsd_schema_file_path):
+    try:
+        validate_path(xsd_schema_file_path, must_exist=True)
+    except Exception as e:
         error_message = (
-            f"Error: XSD schema file '{xsd_schema_file_path}' does not exist."
+            f"Error: XSD schema file '{xsd_schema_file_path}' does not exist or is invalid: {e}."
         )
-        context_logger.error(error_message)
+        context_logger.error(sanitize_for_log(error_message))
         log_event(
             logger,
             logging.ERROR,
@@ -110,7 +115,7 @@ def _validate_inputs(
                 Fields.ERROR_MESSAGE: error_message,
             },
         )
-        raise FileNotFoundError(error_message)
+        raise FileNotFoundError(error_message) from e
 
 
 def _determine_data_source_type(
@@ -263,7 +268,9 @@ def process_files(
         # Confirm success (template existence check retained for backward compatibility)
         if os.path.exists(xml_template_file_path):
             context_logger.info(
-                f"Successfully generated XML file '{xml_template_file_path}'"
+                sanitize_for_log(
+                    f"Successfully generated XML file '{xml_template_file_path}'"
+                )
             )
             log_process_success(
                 logger,
@@ -276,7 +283,7 @@ def process_files(
             error_msg = (
                 f"Failed to generate XML file at '{xml_template_file_path}'"
             )
-            context_logger.error(error_msg)
+            context_logger.error(sanitize_for_log(error_msg))
             log_event(
                 logger,
                 logging.ERROR,

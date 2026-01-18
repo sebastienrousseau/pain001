@@ -192,7 +192,7 @@ class TestProcessFiles(unittest.TestCase):
                 )
         self.assertIn(
             "Error: XML template 'tests/data/non_existent_template.xml' "
-            "does not exist.",
+            "does not exist or is invalid",
             log.output[-1],
         )
 

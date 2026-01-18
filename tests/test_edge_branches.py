@@ -80,11 +80,11 @@ def test_process_files_missing_output_branch(
 ) -> None:
     """Cover branch where output file is reported missing after generation."""
 
-    # First two existence checks must pass, final check returns False.
-    exists_calls = iter([True, True, False])
-    monkeypatch.setattr(
-        core.os.path, "exists", lambda _path: next(exists_calls)
-    )
+    # Mock validate_path to always succeed (pass-through)
+    monkeypatch.setattr(core, "validate_path", lambda p, **kwargs: Path(p))
+
+    # Mock os.path.exists to return False (simulating output file check failure)
+    monkeypatch.setattr(core.os.path, "exists", lambda _path: False)
 
     monkeypatch.setattr(core, "_load_data", lambda _path, _start: [])
     monkeypatch.setattr(core, "_register_message_namespaces", lambda _t: None)
