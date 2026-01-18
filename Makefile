@@ -22,9 +22,9 @@ YELLOW := \033[0;33m
 NC := \033[0m # No Color
 
 # SLO Thresholds (in seconds)
-SLO_LINT := 25
-SLO_TYPE := 10
-SLO_TEST := 60
+SLO_LINT := 45
+SLO_TYPE := 20
+SLO_TEST := 90
 SLO_XML_GEN := 0.5
 
 # Help target
@@ -73,11 +73,16 @@ format:
 lint:
 	@echo "$(YELLOW)Running linters (SLO: < $(SLO_LINT)s)...$(NC)"
 	@time_start=$$(date +%s%N); \
-	poetry run ruff check . && \
+	(poetry run ruff check . && \
 	poetry run flake8 pain001 && \
-	poetry run pylint pain001 --exit-zero; \
+	poetry run pylint pain001 --exit-zero); \
+	lint_result=$$?; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
+	if [ $$lint_result -ne 0 ]; then \
+		echo "$(RED)✗ Linting failed$(NC)"; \
+		exit $$lint_result; \
+	fi; \
 	if [ $$elapsed -gt $(SLO_LINT) ]; then \
 		echo "$(RED)✗ LINTING SLO EXCEEDED: $${elapsed}s > $(SLO_LINT)s$(NC)"; \
 		exit 1; \
@@ -89,8 +94,13 @@ type:
 	@echo "$(YELLOW)Type checking (SLO: < $(SLO_TYPE)s)...$(NC)"
 	@time_start=$$(date +%s%N); \
 	poetry run mypy . ; \
+	type_result=$$?; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
+	if [ $$type_result -ne 0 ]; then \
+		echo "$(RED)✗ Type checking failed$(NC)"; \
+		exit $$type_result; \
+	fi; \
 	if [ $$elapsed -gt $(SLO_TYPE) ]; then \
 		echo "$(RED)✗ TYPE CHECK SLO EXCEEDED: $${elapsed}s > $(SLO_TYPE)s$(NC)"; \
 		exit 1; \

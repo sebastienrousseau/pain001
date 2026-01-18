@@ -1,13 +1,9 @@
-
 import os
 import sys
-from pathlib import Path
 
-# Add project root to sys.path
-sys.path.append(os.getcwd())
-
-from pain001.xml.generate_xml import generate_xml
 from pain001.constants import valid_xml_types
+from pain001.xml.generate_xml import generate_xml
+
 
 def test_all_versions():
     data = [{
@@ -53,35 +49,29 @@ def test_all_versions():
     }]
 
     print(f"Testing {len(valid_xml_types)} XML versions...")
-    
+
     success_count = 0
     for xml_type in valid_xml_types:
         try:
             # Construct paths
             template_path = os.path.join("pain001", "templates", xml_type, "template.xml")
             xsd_path = os.path.join("pain001", "templates", xml_type, f"{xml_type}.xsd")
-            output_path = f"test_output_{xml_type}.xml"
-            
+
             # Call generate_xml with template_path as 3rd Arg (it determines output path internally)
             generate_xml(data, xml_type, template_path, xsd_path)
-            
-            # note: generate_xml writes to a timestamped file, we can't easily assert the specific filename here 
+
+            # note: generate_xml writes to a timestamped file, we can't easily assert the specific filename here
             # without duplicating logic, but if it doesn't crash, it's a good sign.
             print("OK")
             success_count += 1
-            
-            # Clean up output
-            if os.path.exists(output_path):
-                os.remove(output_path)
-            print("OK")
-            success_count += 1
+
         except Exception as e:
             print(f"FAILED: {e}")
             import traceback
             traceback.print_exc()
 
     print(f"\nSummary: {success_count}/{len(valid_xml_types)} versions passed.")
-    
+
     if success_count == len(valid_xml_types):
         sys.exit(0)
     else:
