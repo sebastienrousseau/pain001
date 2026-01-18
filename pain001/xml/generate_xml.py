@@ -322,6 +322,18 @@ def generate_xml_string(
         "pain.001.001.11": _prepare_xml_data_v09_to_v11,
     }
 
+    # Validate template path
+    try:
+        xml_template_path = validate_path(xml_template_path)
+    except Exception as e:
+        raise ValueError(f"Invalid template path: {e}") from e
+
+    # Validate schema path
+    try:
+        xsd_schema_path = validate_path(xsd_schema_path)
+    except Exception as e:
+        raise ValueError(f"Invalid schema path: {e}") from e
+
     # Validate message type
     if payment_initiation_message_type not in xml_data_preparers:
         raise ValueError(

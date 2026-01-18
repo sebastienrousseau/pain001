@@ -145,8 +145,7 @@ class TestDataLoader:
         """Test that FileNotFoundError is raised for missing files."""
         # Use a path in CWD to pass path validation, but fail existence check
         missing_file = (
-            Path("pain001/test_fixtures")
-            / "nonexistent_data_loader_test.csv"
+            Path("pain001/test_fixtures") / "nonexistent_data_loader_test.csv"
         )
         # Ensure it really doesn't exist
         if missing_file.exists():
