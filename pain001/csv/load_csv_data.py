@@ -45,25 +45,24 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     """
     # Validate path to prevent traversal attacks
 
-    # Pre-validate and sanitize file path (CodeQL: prevent path traversal)
-    safe_file_path_log = sanitize_for_log(str(file_path))
+    # Pre-validate file path (CodeQL: prevent path traversal)
     try:
         safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
-        # Log with sanitized path only
+        # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
             "Path validation failed: "
-            f"{safe_file_path_log.replace('\n', '').replace('\r', '')} - {e}"
+            f"{sanitize_for_log(str(file_path))} - {e}"
         )
         raise
 
     if not safe_path.exists():
+        # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            "File not found: "
-            f"{safe_file_path_log.replace('\n', '').replace('\r', '')}"
+            f"File not found: {sanitize_for_log(str(file_path))}"
         )
         raise FileNotFoundError(
-            f"File '{safe_file_path_log}' not found."
+            f"File '{sanitize_for_log(str(file_path))}' not found."
         )
 
     data: list[dict[str, Any]] = []
@@ -73,14 +72,15 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
             for row in csv_reader:
                 data.append(row)
     except OSError:
+        # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            "IOError reading file: "
-            f"{safe_file_path_log.replace('\n', '').replace('\r', '')}"
+            f"IOError reading file: {sanitize_for_log(str(file_path))}"
         )
         raise
     except UnicodeDecodeError:
+        # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            f"UnicodeDecodeError decoding file: {safe_file_path_log}"
+            f"UnicodeDecodeError decoding file: {sanitize_for_log(str(file_path))}"
         )
         raise
 
@@ -124,14 +124,12 @@ def load_csv_data_streaming(
     chunk: list[dict[str, Any]] = []
     row_count = 0
 
-    # Sanitize file path for logging to prevent Log Injection (CWE-117)
-    safe_file_path_log = sanitize_for_log(str(file_path))
-
     try:
         # CodeQL: Prevent path traversal
         safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
-        logging.error(f"Path validation failed: {safe_file_path_log} - {e}")
+        # Sanitize at sink (CWE-117: Log Injection prevention)
+        logging.error(f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}")
         raise
 
     try:
@@ -149,21 +147,22 @@ def load_csv_data_streaming(
                 yield chunk
 
     except FileNotFoundError:
-        logging.error(f"File '{safe_file_path_log}' not found.")
+        # Sanitize at sink (CWE-117: Log Injection prevention)
+        logging.error(f"File '{sanitize_for_log(str(file_path))}' not found.")
         raise
     except OSError:
-        # Sanitize file path to prevent log injection (CodeQL CWE-117)
-        # safe_file_path_log is already sanitized
+        # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            f"An IOError occurred while reading the file '{safe_file_path_log}'."  # noqa: E501
+            f"An IOError occurred while reading the file '{sanitize_for_log(str(file_path))}'."  # noqa: E501
         )
         raise
     except UnicodeDecodeError:
-        # Sanitize file path to prevent log injection (CodeQL CWE-117)
+        # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{safe_file_path_log}'."  # noqa: E501
+            f"A UnicodeDecodeError occurred while decoding the file '{sanitize_for_log(str(file_path))}'."  # noqa: E501
         )
         raise
 
     if row_count == 0:
-        raise DataSourceError(f"The CSV file '{safe_file_path_log}' is empty.")
+        # Sanitize at sink (CWE-117: Log Injection prevention)
+        raise DataSourceError(f"The CSV file '{sanitize_for_log(str(file_path))}' is empty.")
