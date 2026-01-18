@@ -32,26 +32,36 @@ from pain001.exceptions import (
 class TestProcessFiles(unittest.TestCase):
     def setUp(self) -> None:
         self.xml_message_type = "pain.001.001.03"
-        self.xml_template_file_path = "tests/data/template_unique.xml"
-        self.xsd_schema_file_path = "tests/data/template_unique.xsd"
-        self.csv_file_path = "tests/data/valid_data_unique.csv"
-
-        self.invalid_csv_file_path = "tests/data/invalid_data_unique.csv"
-        self.empty_csv_file_path = "tests/data/empty_unique.csv"
-        self.single_column_csv_file_path = (
-            "tests/data/single_column_unique.csv"
+        self.xml_template_file_path = (
+            "pain001/test_fixtures/template_unique.xml"
         )
-        self.single_row_csv_file_path = "tests/data/single_row_unique.csv"
-        self.sqlite_file_path = "tests/data/valid_data_unique.db"
-        self.invalid_sqlite_file_path = "tests/data/invalid_data_unique.db"
+        self.xsd_schema_file_path = (
+            "pain001/test_fixtures/template_unique.xsd"
+        )
+        self.csv_file_path = "pain001/test_fixtures/valid_data_unique.csv"
+
+        self.invalid_csv_file_path = (
+            "pain001/test_fixtures/invalid_data_unique.csv"
+        )
+        self.empty_csv_file_path = "pain001/test_fixtures/empty_unique.csv"
+        self.single_column_csv_file_path = (
+            "pain001/test_fixtures/single_column_unique.csv"
+        )
+        self.single_row_csv_file_path = (
+            "pain001/test_fixtures/single_row_unique.csv"
+        )
+        self.sqlite_file_path = "pain001/test_fixtures/valid_data_unique.db"
+        self.invalid_sqlite_file_path = (
+            "pain001/test_fixtures/invalid_data_unique.db"
+        )
         self.unsupported_file_path = (
-            "tests/data/unsupported_data_type_unique.txt"
+            "pain001/test_fixtures/unsupported_data_type_unique.txt"
         )
 
         self.create_test_files()
 
     def create_test_files(self) -> None:
-        os.makedirs("tests/data", exist_ok=True)
+        os.makedirs("pain001/test_fixtures", exist_ok=True)
 
         # Create valid_data_unique.csv
         with open(self.csv_file_path, "w", encoding="utf-8") as f:
@@ -186,12 +196,12 @@ class TestProcessFiles(unittest.TestCase):
             with self.assertLogs(level="ERROR") as log:
                 process_files(
                     self.xml_message_type,
-                    "tests/data/non_existent_template.xml",
+                    "pain001/test_fixtures/non_existent_template.xml",
                     self.xsd_schema_file_path,
                     self.csv_file_path,
                 )
         self.assertIn(
-            "Error: XML template 'tests/data/non_existent_template.xml' "
+            "Error: XML template 'pain001/test_fixtures/non_existent_template.xml' "
             "does not exist or is invalid",
             log.output[-1],
         )
@@ -201,7 +211,7 @@ class TestProcessFiles(unittest.TestCase):
             process_files(
                 self.xml_message_type,
                 self.xml_template_file_path,
-                "tests/data/non_existent_schema.xsd",
+                "pain001/test_fixtures/non_existent_schema.xsd",
                 self.csv_file_path,
             )
 
@@ -211,7 +221,7 @@ class TestProcessFiles(unittest.TestCase):
                 self.xml_message_type,
                 self.xml_template_file_path,
                 self.xsd_schema_file_path,
-                "tests/data/non_existent_data.csv",
+                "pain001/test_fixtures/non_existent_data.csv",
             )
 
     def test_empty_csv_data(self) -> None:

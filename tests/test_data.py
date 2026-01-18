@@ -27,7 +27,7 @@ from pain001.exceptions import DataSourceError
 class TestLoadCsvData(unittest.TestCase):
     def setUp(self) -> None:
         """Create test files before each test."""
-        os.makedirs("tests/data", exist_ok=True)
+        os.makedirs("pain001/test_fixtures", exist_ok=True)
 
         # valid_data.csv
         valid_data = [
@@ -253,7 +253,10 @@ class TestLoadCsvData(unittest.TestCase):
             ],
         ]
         with open(
-            "tests/data/valid_data.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/valid_data.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(valid_data)
@@ -350,18 +353,24 @@ class TestLoadCsvData(unittest.TestCase):
             ],
         ]
         with open(
-            "tests/data/invalid_data.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/invalid_data.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(invalid_data)
 
         # empty.csv
-        open("tests/data/empty.csv", "w", encoding="utf-8").close()
+        open("pain001/test_fixtures/empty.csv", "w", encoding="utf-8").close()
 
         # single_column.csv
         single_column = [["id"], ["1"], ["2"], ["3"]]
         with open(
-            "tests/data/single_column.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/single_column.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(single_column)
@@ -458,7 +467,10 @@ class TestLoadCsvData(unittest.TestCase):
             ],
         ]
         with open(
-            "tests/data/single_row.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/single_row.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(single_row)
@@ -466,40 +478,40 @@ class TestLoadCsvData(unittest.TestCase):
     def tearDown(self) -> None:
         """Delete test files after each test."""
         files = [
-            "tests/data/valid_data.csv",
-            "tests/data/invalid_data.csv",
-            "tests/data/empty.csv",
-            "tests/data/single_column.csv",
-            "tests/data/single_row.csv",
+            "pain001/test_fixtures/valid_data.csv",
+            "pain001/test_fixtures/invalid_data.csv",
+            "pain001/test_fixtures/empty.csv",
+            "pain001/test_fixtures/single_column.csv",
+            "pain001/test_fixtures/single_row.csv",
         ]
         for file in files:
             if os.path.exists(file):
                 os.remove(file)
 
     def test_load_valid_csv(self) -> None:
-        file_path = "tests/data/valid_data.csv"
+        file_path = "pain001/test_fixtures/valid_data.csv"
         data = load_csv_data(file_path)
         self.assertEqual(len(data), 4)
         self.assertEqual(data[0]["id"], "1")
 
     def test_load_empty_csv(self) -> None:
-        file_path = "tests/data/empty.csv"
+        file_path = "pain001/test_fixtures/empty.csv"
         with self.assertRaises(DataSourceError):
             load_csv_data(file_path)
 
     def test_load_csv_with_invalid_data(self) -> None:
-        file_path = "tests/data/invalid_data.csv"
+        file_path = "pain001/test_fixtures/invalid_data.csv"
         data = load_csv_data(file_path)
         self.assertFalse(validate_csv_data(data))
 
     def test_load_single_row_csv(self) -> None:
-        file_path = "tests/data/single_row.csv"
+        file_path = "pain001/test_fixtures/single_row.csv"
         data = load_csv_data(file_path)
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]["id"], "1")
 
     def test_load_single_column_csv(self) -> None:
-        file_path = "tests/data/single_column.csv"
+        file_path = "pain001/test_fixtures/single_column.csv"
         data = load_csv_data(file_path)
         self.assertEqual(len(data), 3)
         self.assertEqual(data[0]["id"], "1")
@@ -509,17 +521,17 @@ class TestProcessFiles(unittest.TestCase):
     def test_successful_execution(self) -> None:
         process_files(
             "pain.001.001.03",
-            "tests/data/template.xml",
-            "tests/data/template.xsd",
-            "tests/data/template.csv",
+            "pain001/test_fixtures/template.xml",
+            "pain001/test_fixtures/template.xsd",
+            "pain001/test_fixtures/template.csv",
         )
 
     def test_valid_xml_message_type(self) -> None:
         process_files(
             "pain.001.001.03",
-            "tests/data/template.xml",
-            "tests/data/template.xsd",
-            "tests/data/template.csv",
+            "pain001/test_fixtures/template.xml",
+            "pain001/test_fixtures/template.xsd",
+            "pain001/test_fixtures/template.csv",
         )
 
 

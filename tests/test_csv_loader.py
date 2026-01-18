@@ -26,7 +26,7 @@ from pain001.exceptions import DataSourceError
 class TestLoadCsvData(unittest.TestCase):
     def setUp(self) -> None:
         """Create test files before each test."""
-        os.makedirs("tests/data", exist_ok=True)
+        os.makedirs("pain001/test_fixtures", exist_ok=True)
 
         # valid_data.csv
         valid_data = [
@@ -252,7 +252,10 @@ class TestLoadCsvData(unittest.TestCase):
             ],
         ]
         with open(
-            "tests/data/valid_data.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/valid_data.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(valid_data)
@@ -349,18 +352,26 @@ class TestLoadCsvData(unittest.TestCase):
             ],
         ]
         with open(
-            "tests/data/invalid_data.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/invalid_data.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(invalid_data)
 
         # empty.csv
-        open("tests/data/empty.csv", "w", encoding="utf-8").close()
+        open(
+            "pain001/test_fixtures/empty.csv", "w", encoding="utf-8"
+        ).close()
 
         # single_column.csv
         single_column = [["id"], ["1"], ["2"], ["3"]]
         with open(
-            "tests/data/single_column.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/single_column.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(single_column)
@@ -457,7 +468,10 @@ class TestLoadCsvData(unittest.TestCase):
             ],
         ]
         with open(
-            "tests/data/single_row.csv", "w", newline="", encoding="utf-8"
+            "pain001/test_fixtures/single_row.csv",
+            "w",
+            newline="",
+            encoding="utf-8",
         ) as file:
             writer = csv.writer(file)
             writer.writerows(single_row)
@@ -465,44 +479,44 @@ class TestLoadCsvData(unittest.TestCase):
     def tearDown(self) -> None:
         """Delete test files after each test."""
         files = [
-            "tests/data/valid_data.csv",
-            "tests/data/invalid_data.csv",
-            "tests/data/empty.csv",
-            "tests/data/single_column.csv",
-            "tests/data/single_row.csv",
+            "pain001/test_fixtures/valid_data.csv",
+            "pain001/test_fixtures/invalid_data.csv",
+            "pain001/test_fixtures/empty.csv",
+            "pain001/test_fixtures/single_column.csv",
+            "pain001/test_fixtures/single_row.csv",
         ]
         for file in files:
             if os.path.exists(file):
                 os.remove(file)
 
     def test_load_valid_csv(self) -> None:
-        file_path = "tests/data/valid_data.csv"
+        file_path = "pain001/test_fixtures/valid_data.csv"
         data = load_csv_data(file_path)
         self.assertEqual(len(data), 4)
 
     def test_load_csv_with_invalid_data(self) -> None:
-        file_path = "tests/data/invalid_data.csv"
+        file_path = "pain001/test_fixtures/invalid_data.csv"
         data = load_csv_data(file_path)
         self.assertFalse(validate_csv_data(data))
 
     def test_load_empty_csv(self) -> None:
-        file_path = "tests/data/empty.csv"
+        file_path = "pain001/test_fixtures/empty.csv"
         with self.assertRaises(DataSourceError):
             load_csv_data(file_path)
 
     def test_load_single_column_csv(self) -> None:
-        file_path = "tests/data/single_column.csv"
+        file_path = "pain001/test_fixtures/single_column.csv"
         data = load_csv_data(file_path)
         self.assertEqual(len(data), 3)
 
     def test_load_single_row_csv(self) -> None:
-        file_path = "tests/data/single_row.csv"
+        file_path = "pain001/test_fixtures/single_row.csv"
         data = load_csv_data(file_path)
         self.assertEqual(len(data), 1)
 
     def test_load_csv_file_not_found(self) -> None:
         """Test that FileNotFoundError is raised for non-existent file."""
-        file_path = "tests/data/nonexistent_file.csv"
+        file_path = "pain001/test_fixtures/nonexistent_file.csv"
         with self.assertRaises(FileNotFoundError):
             load_csv_data(file_path)
 
@@ -560,13 +574,13 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
 
     def setUp(self) -> None:
         """Create test files before each test."""
-        os.makedirs("tests/data", exist_ok=True)
+        os.makedirs("pain001/test_fixtures", exist_ok=True)
 
     def test_streaming_valid_csv(self) -> None:
         """Test streaming with valid CSV data."""
         chunks = list(
             load_csv_data_streaming(
-                "tests/data/valid_data_unique.csv", chunk_size=1
+                "pain001/test_fixtures/valid_data_unique.csv", chunk_size=1
             )
         )
         # Should have multiple chunks for the valid_data.csv file
@@ -582,14 +596,14 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
         # Test with chunk size of 2
         chunks_size_2 = list(
             load_csv_data_streaming(
-                "tests/data/valid_data_unique.csv", chunk_size=2
+                "pain001/test_fixtures/valid_data_unique.csv", chunk_size=2
             )
         )
 
         # Test with chunk size of 10
         chunks_size_10 = list(
             load_csv_data_streaming(
-                "tests/data/valid_data_unique.csv", chunk_size=10
+                "pain001/test_fixtures/valid_data_unique.csv", chunk_size=10
             )
         )
 
@@ -599,7 +613,11 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
     def test_streaming_file_not_found(self) -> None:
         """Test streaming with non-existent file."""
         with self.assertRaises(FileNotFoundError):
-            list(load_csv_data_streaming("non_existent.csv"))
+            list(
+                load_csv_data_streaming(
+                    "pain001/test_fixtures/non_existent.csv"
+                )
+            )
 
     def test_streaming_empty_csv(self) -> None:
         """Test streaming with empty CSV file."""
@@ -668,12 +686,12 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
     def test_streaming_yields_all_data(self) -> None:
         """Test that streaming yields all rows from the file."""
         # Load data normally
-        normal_data = load_csv_data("tests/data/valid_data_unique.csv")
+        normal_data = load_csv_data("pain001/test_fixtures/valid_data_unique.csv")
 
         # Load data via streaming and flatten
         streaming_data = []
         for chunk in load_csv_data_streaming(
-            "tests/data/valid_data_unique.csv", chunk_size=1
+            "pain001/test_fixtures/valid_data_unique.csv", chunk_size=1
         ):
             streaming_data.extend(chunk)
 
@@ -684,7 +702,7 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
         """Test that chunk boundaries are correctly handled."""
         chunks = list(
             load_csv_data_streaming(
-                "tests/data/valid_data_unique.csv", chunk_size=2
+                "pain001/test_fixtures/valid_data_unique.csv", chunk_size=2
             )
         )
 

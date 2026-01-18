@@ -51,7 +51,7 @@ class TestCSVLoaderBackwardCompat(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_data_dir = Path("tests/data")
+        self.test_data_dir = Path("pain001/test_fixtures")
         self.valid_csv = self.test_data_dir / "template.csv"
 
     def test_load_csv_returns_list_of_dicts(self) -> None:
@@ -91,7 +91,7 @@ class TestCSVLoaderBackwardCompat(unittest.TestCase):
     def test_load_csv_file_not_found(self) -> None:
         """CSV loader should raise error for missing file."""
         with self.assertRaises(FileNotFoundError):
-            load_csv_data("nonexistent_file.csv")
+            load_csv_data("pain001/test_fixtures/nonexistent_file.csv")
 
     def test_validate_csv_data_with_valid_data(self) -> None:
         """CSV validator should pass valid data."""
@@ -115,7 +115,7 @@ class TestSQLiteLoaderBackwardCompat(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_data_dir = Path("tests/data")
+        self.test_data_dir = Path("pain001/test_fixtures")
         self.valid_db = self.test_data_dir / "template.db"
 
     def test_load_db_returns_list_of_dicts(self) -> None:
@@ -489,7 +489,7 @@ class TestRegressionScenarios(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_data_dir = Path("tests/data")
+        self.test_data_dir = Path("pain001/test_fixtures")
 
     def test_csv_and_db_load_same_data(self) -> None:
         """CSV and DB loaders should return equivalent data."""

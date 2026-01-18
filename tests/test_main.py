@@ -14,6 +14,7 @@
 # limitations under the License.
 
 import re
+from pathlib import Path
 
 from click.testing import CliRunner
 
@@ -24,9 +25,9 @@ class TestMain:
     def setup_method(self) -> None:
         self.runner = CliRunner()
         self.xml_message_type = "pain.001.001.03"
-        self.xml_file = "tests/data/template.xml"
-        self.xsd_file = "tests/data/template.xsd"
-        self.csv_file = "tests/data/template.csv"
+        self.xml_file = "pain001/test_fixtures/template.xml"
+        self.xsd_file = "pain001/test_fixtures/template.xsd"
+        self.csv_file = "pain001/test_fixtures/template.csv"
 
     def test_main_with_valid_files(self) -> None:
         result = self.runner.invoke(
@@ -43,8 +44,9 @@ class TestMain:
             ],
         )
         assert result.exit_code == 0
+        resolved_xsd = Path(self.xsd_file).resolve()
         assert (
-            "The XML has been validated against `tests/data/template.xsd`"
+            f"The XML has been validated against `{resolved_xsd}`"
             in result.output
         )
 

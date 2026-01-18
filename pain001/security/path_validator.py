@@ -58,12 +58,12 @@ def _is_allowed_directory(resolved_path: Path) -> bool:
 
 
 def validate_path(
-    user_path: Union[str, Path], must_exist: bool = False
+    untrusted_path: Union[str, Path], must_exist: bool = False
 ) -> Path:
     """Validate and resolve path to prevent directory traversal attacks.
 
     Args:
-        user_path: User-provided path (potentially malicious).
+        untrusted_path: User-provided path (potentially malicious).
         must_exist: If True, raise error if path doesn't exist.
 
     Returns:
@@ -75,32 +75,35 @@ def validate_path(
     """
     from pain001.constants import BASE_DIR
 
-    if not user_path:
+    if not untrusted_path:
         raise PathValidationError("Path cannot be empty")
 
     try:
-        # Resolve resolves symlinks and '..' components
-        resolved_path = Path(user_path).resolve()
+        # Resolve to an absolute, canonical path
+        safe_path = Path(untrusted_path).resolve()
     except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
     base_resolved = BASE_DIR.resolve()
 
     # Reject paths with obvious traversal attempts (redundant with resolve() but good depth defense)
-    if ".." in str(user_path):
+    if ".." in str(untrusted_path):
         raise PathValidationError("Invalid path: directory traversal detected")
 
     # Strict Boundary Check (CWE-22)
-    if not str(resolved_path).startswith(str(base_resolved)):
-        raise SecurityError(
-            "Security Alert: Attempted access outside of allowed directories."
+    if not (
+        safe_path == base_resolved
+        or safe_path.is_relative_to(base_resolved)
+    ):
+        raise PermissionError(
+            f"Security Alert: Blocked access to {safe_path}"
         )
 
     # Check existence if required
-    if must_exist and not resolved_path.exists():
-        raise FileNotFoundError(f"Path does not exist: {resolved_path}")
+    if must_exist and not safe_path.exists():
+        raise FileNotFoundError(f"Path does not exist: {safe_path}")
 
-    return resolved_path
+    return safe_path
 
 
 def sanitize_for_log(user_input: str, max_length: int = 100) -> str:

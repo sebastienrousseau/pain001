@@ -33,7 +33,7 @@ class TestAllVersionsComprehensive(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_data_dir = Path("tests/data")
+        self.test_data_dir = Path("pain001/test_fixtures")
         self.csv_file = self.test_data_dir / "template.csv"
         self.xml_template = self.test_data_dir / "template.xml"
         self.xsd_schema = self.test_data_dir / "template.xsd"
@@ -332,7 +332,7 @@ class TestVersionSpecificFeatures(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_data_dir = Path("tests/data")
+        self.test_data_dir = Path("pain001/test_fixtures")
         self.csv_file = self.test_data_dir / "template.csv"
         self.xml_template = self.test_data_dir / "template.xml"
         self.xsd_schema = self.test_data_dir / "template.xsd"

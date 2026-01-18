@@ -55,7 +55,9 @@ class TestStreamPaymentData:
 
     def test_stream_nonexistent_file(self):
         """Test streaming from nonexistent file raises error."""
-        missing = Path.cwd() / "nonexistent_streaming_test.csv"
+        missing = (
+            Path("pain001/test_fixtures") / "nonexistent_streaming_test.csv"
+        )
         with pytest.raises((FileNotFoundError, DataSourceError)):
             list(load_payment_data_streaming(str(missing), chunk_size=10))
 

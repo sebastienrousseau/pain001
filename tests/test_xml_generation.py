@@ -623,8 +623,8 @@ class TestGenerateXMLFunction(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_template_path = "tests/data/template.xml"
-        self.test_xsd_path = "tests/data/template.xsd"
+        self.test_template_path = "pain001/test_fixtures/template.xml"
+        self.test_xsd_path = "pain001/test_fixtures/template.xsd"
 
         # Sample data for pain.001.001.03
         self.sample_data_v3 = [
@@ -710,7 +710,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
         )
 
         # Check that the output file was created
-        output_path = "tests/data/pain.001.001.03.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.03.xml"
         self.assertTrue(os.path.exists(output_path))
 
         # Clean up
@@ -772,7 +772,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.test_xsd_path,
         )
 
-        output_path = "tests/data/pain.001.001.04.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.04.xml"
         self.assertTrue(os.path.exists(output_path))
 
         if os.path.exists(output_path):
@@ -837,7 +837,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.test_xsd_path,
         )
 
-        output_path = "tests/data/pain.001.001.05.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.05.xml"
         self.assertTrue(os.path.exists(output_path))
 
         if os.path.exists(output_path):
@@ -905,7 +905,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.test_xsd_path,
         )
 
-        output_path = "tests/data/pain.001.001.06.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.06.xml"
         self.assertTrue(os.path.exists(output_path))
 
         if os.path.exists(output_path):
@@ -973,7 +973,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.test_xsd_path,
         )
 
-        output_path = "tests/data/pain.001.001.07.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.07.xml"
         self.assertTrue(os.path.exists(output_path))
 
         if os.path.exists(output_path):
@@ -1041,7 +1041,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.test_xsd_path,
         )
 
-        output_path = "tests/data/pain.001.001.08.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.08.xml"
         self.assertTrue(os.path.exists(output_path))
 
         if os.path.exists(output_path):
@@ -1109,7 +1109,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.test_xsd_path,
         )
 
-        output_path = "tests/data/pain.001.001.09.xml"
+        output_path = "pain001/test_fixtures/pain.001.001.09.xml"
         self.assertTrue(os.path.exists(output_path))
 
         if os.path.exists(output_path):
@@ -1153,7 +1153,7 @@ class TestGenerateXMLFunction(unittest.TestCase):
             self.assertEqual(cm.exception.code, 1)
 
             # Clean up if file was created
-            output_path = "tests/data/pain.001.001.03.xml"
+            output_path = "pain001/test_fixtures/pain.001.001.03.xml"
             if os.path.exists(output_path):
                 os.remove(output_path)
 

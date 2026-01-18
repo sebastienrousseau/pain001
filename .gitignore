@@ -156,3 +156,4 @@ tests/data/unsupported_data_type_unique.txt
 tests/data/valid_data_unique.csv
 tests/data/valid_data_unique.db
 tmp_env/
+pain001/tmp/
