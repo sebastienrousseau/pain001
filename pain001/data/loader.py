@@ -113,7 +113,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     and adds support for JSON and Parquet formats.
     """
     import os
-    
+
     # First, check if file extension is supported (for better error messages)
     supported_extensions = [".csv", ".db", ".json", ".jsonl", ".parquet"]
     if not any(file_path.endswith(ext) for ext in supported_extensions):
@@ -121,7 +121,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
             f"Unsupported file type: {file_path}. "
             f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
-    
+
     # Then validate that the path is a file, not a directory
     if os.path.isdir(file_path):
         raise DataSourceError(
@@ -131,13 +131,13 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
             f"  - For JSON: {file_path}/data.json\n"
             f"  - For SQLite: {file_path}/data.db"
         )
-    
+
     if not os.path.isfile(file_path):
         raise FileNotFoundError(
             f"Data file does not exist: {file_path}\n"
             f"Please provide a valid file path to CSV, JSON, JSONL, Parquet, or SQLite database."
         )
-    
+
     if file_path.endswith(".csv"):
         data = load_csv_data(file_path)
         if not validate_csv_data(data):
