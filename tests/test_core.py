@@ -35,9 +35,7 @@ class TestProcessFiles(unittest.TestCase):
         self.xml_template_file_path = (
             "pain001/test_fixtures/template_unique.xml"
         )
-        self.xsd_schema_file_path = (
-            "pain001/test_fixtures/template_unique.xsd"
-        )
+        self.xsd_schema_file_path = "pain001/test_fixtures/template_unique.xsd"
         self.csv_file_path = "pain001/test_fixtures/valid_data_unique.csv"
 
         self.invalid_csv_file_path = (

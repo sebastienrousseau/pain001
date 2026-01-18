@@ -105,9 +105,7 @@ def _validate_inputs(
         raise FileNotFoundError(error_message) from e
 
     try:
-        safe_schema_path = validate_path(
-            xsd_schema_file_path, must_exist=True
-        )
+        safe_schema_path = validate_path(xsd_schema_file_path, must_exist=True)
     except Exception as e:
         error_message = f"Error: XSD schema file '{xsd_schema_file_path}' does not exist or is invalid: {e}."
         context_logger.error(

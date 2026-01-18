@@ -361,9 +361,7 @@ class TestLoadCsvData(unittest.TestCase):
             writer.writerows(invalid_data)
 
         # empty.csv
-        open(
-            "pain001/test_fixtures/empty.csv", "w", encoding="utf-8"
-        ).close()
+        open("pain001/test_fixtures/empty.csv", "w", encoding="utf-8").close()
 
         # single_column.csv
         single_column = [["id"], ["1"], ["2"], ["3"]]
@@ -686,7 +684,9 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
     def test_streaming_yields_all_data(self) -> None:
         """Test that streaming yields all rows from the file."""
         # Load data normally
-        normal_data = load_csv_data("pain001/test_fixtures/valid_data_unique.csv")
+        normal_data = load_csv_data(
+            "pain001/test_fixtures/valid_data_unique.csv"
+        )
 
         # Load data via streaming and flatten
         streaming_data = []

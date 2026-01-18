@@ -48,7 +48,9 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
 
     # Pre-validate file path (CodeQL: prevent path traversal)
     try:
-        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
+        safe_path = validate_path(
+            file_path
+        )  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
@@ -60,9 +62,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     # Check file existence using os.path for string path
     if not os.path.isfile(safe_path):
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
-            f"File not found: {sanitize_for_log(str(file_path))}"
-        )
+        logging.error(f"File not found: {sanitize_for_log(str(file_path))}")
         raise FileNotFoundError(
             f"File '{sanitize_for_log(str(file_path))}' not found."
         )
@@ -131,7 +131,9 @@ def load_csv_data_streaming(
         safe_path = validate_path(file_path)  # nosec B108
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}")
+        logging.error(
+            f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}"
+        )
         raise
 
     try:
@@ -167,4 +169,6 @@ def load_csv_data_streaming(
 
     if row_count == 0:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        raise DataSourceError(f"The CSV file '{sanitize_for_log(str(file_path))}' is empty.")
+        raise DataSourceError(
+            f"The CSV file '{sanitize_for_log(str(file_path))}' is empty."
+        )
