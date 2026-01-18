@@ -20,7 +20,7 @@ import sys
 import time
 from typing import Any, Union
 
-from pain001.constants.constants import valid_xml_types
+from pain001.constants import valid_xml_types
 from pain001.context.context import Context
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import XMLGenerationError
@@ -68,7 +68,9 @@ def _validate_inputs(
         error_message = (
             f"Error: Invalid XML message type: '{xml_message_type}'."
         )
-        context_logger.error(sanitize_for_log(error_message))
+        context_logger.error(
+            sanitize_for_log(error_message).replace("\n", "")
+        )
         log_event(
             logger,
             logging.ERROR,
@@ -85,7 +87,9 @@ def _validate_inputs(
         validate_path(xml_template_file_path, must_exist=True)
     except Exception as e:
         error_message = f"Error: XML template '{xml_template_file_path}' does not exist or is invalid: {e}."
-        context_logger.error(sanitize_for_log(error_message))
+        context_logger.error(
+            sanitize_for_log(error_message).replace("\n", "")
+        )
         log_event(
             logger,
             logging.ERROR,
@@ -102,7 +106,9 @@ def _validate_inputs(
         validate_path(xsd_schema_file_path, must_exist=True)
     except Exception as e:
         error_message = f"Error: XSD schema file '{xsd_schema_file_path}' does not exist or is invalid: {e}."
-        context_logger.error(sanitize_for_log(error_message))
+        context_logger.error(
+            sanitize_for_log(error_message).replace("\n", "")
+        )
         log_event(
             logger,
             logging.ERROR,
@@ -272,7 +278,7 @@ def process_files(
             context_logger.info(
                 sanitize_for_log(
                     f"Successfully generated XML file '{xml_template_file_path}'"
-                )
+                ).replace("\n", "")
             )
             log_process_success(
                 logger,
@@ -285,7 +291,9 @@ def process_files(
             error_msg = (
                 f"Failed to generate XML file at '{xml_template_file_path}'"
             )
-            context_logger.error(sanitize_for_log(error_msg))
+            context_logger.error(
+                sanitize_for_log(error_msg).replace("\n", "")
+            )
             log_event(
                 logger,
                 logging.ERROR,

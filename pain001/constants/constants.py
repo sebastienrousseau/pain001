@@ -13,36 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Shared constants and configuration for the pain001 library."""
+"""Legacy constants module (kept for backward compatibility)."""
 
-import os
-from pathlib import Path
-
-# Centralize paths to prevent circular imports
-# BASE_DIR should point to the pain001 inner package directory (where __init__.py is)
-# os.path.dirname(os.path.abspath(__file__)) is .../pain001/constants
-# Parent is .../pain001
-BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).resolve()
-SCHEMAS_DIR = BASE_DIR / "schemas"
-VERSION = "0.0.47"
-
-# Valid XML types for ISO 20022 Payment Initiation
-valid_xml_types = [
-    "pain.001.001.03",  # Customer Credit Transfer Initiation V03
-    "pain.001.001.04",  # Customer Credit Transfer Initiation V04
-    "pain.001.001.05",  # Customer Credit Transfer Initiation V05
-    "pain.001.001.06",  # Customer Credit Transfer Initiation V06
-    "pain.001.001.07",  # Customer Credit Transfer Initiation V07
-    "pain.001.001.08",  # Customer Credit Transfer Initiation V08
-    "pain.001.001.09",  # Customer Credit Transfer Initiation V09
-    "pain.001.001.10",  # Customer Credit Transfer Initiation V10
-    "pain.001.001.11",  # Customer Credit Transfer Initiation V11
-]
-
-# Application metadata
-APP_NAME = "Pain001"
-APP_DESCRIPTION = """
-A powerful Python library that enables you to create
-ISO 20022-compliant payment files directly from CSV or SQLite Data files.\n
-https://pain001.com
-"""
+from pain001.constants import *  # noqa: F401,F403

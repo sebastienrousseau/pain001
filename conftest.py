@@ -3,10 +3,15 @@ PySentinel pytest plugin for real-time SLO enforcement.
 Monitors test execution time and warns if approaching thresholds.
 """
 
+import os
+import tempfile
 import time
+from pathlib import Path
 from typing import Optional
 
 import pytest
+
+from pain001.constants import BASE_DIR
 
 
 class SLOMonitor:
@@ -88,6 +93,14 @@ def pytest_addoption(parser: pytest.Parser) -> None:
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register plugin if enabled."""
+    tmp_root = Path(BASE_DIR) / "tmp"
+    tmp_root.mkdir(parents=True, exist_ok=True)
+    os.environ["TMPDIR"] = str(tmp_root)
+    os.environ["TEMP"] = str(tmp_root)
+    os.environ["TMP"] = str(tmp_root)
+    tempfile.tempdir = str(tmp_root)
+    config.option.basetemp = str(tmp_root / "pytest")
+
     if config.getoption("--enforce-slos"):
         config.addinivalue_line(
             "markers", "slo: mark test as subject to SLO enforcement"
