@@ -125,10 +125,13 @@ class TestPathValidator:
 
     def test_coverage_legacy_python(self):
         """Force execution of Python < 3.9 fallback logic (missing is_relative_to)."""
+        # pylint: disable=import-outside-toplevel
         from unittest.mock import patch
 
         # Create a Mock object that behaves like a Path but lacks is_relative_to
         class LegacyPath:
+            """Mock path class to simulate Python < 3.9 behavior."""
+
             def __init__(self, path_str):
                 self.path_str = str(path_str)
 
