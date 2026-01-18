@@ -7,17 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.47] - 2026-01-18
 
-### Fixed
-- Turned CI/Green gates green
-- Fixed CI crashes
-- Executed Emergency Audit Directive:
-    - Broken Circular Dependencies
-    - Initialized Sub-packages
-    - Hardened Path Validation (CWE-22)
-    - Sanitized Logging (CWE-117)
-
-## [0.0.47] - 2026-01-18
-
 ### Highlights
 - **Full I/O decoupling for Serverless and API architectures.**
 - **Introduced O(1) memory streaming data loaders for CSV and SQLite.**

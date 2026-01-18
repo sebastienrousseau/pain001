@@ -75,13 +75,14 @@ def validate_path(
         raise PathValidationError("Path cannot be empty")
 
     try:
+        # Resolve resolves symlinks and '..' components
         resolved_path = Path(user_path).resolve()
     except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
     base_resolved = BASE_DIR.resolve()
 
-    # Reject paths with obvious traversal attempts
+    # Reject paths with obvious traversal attempts (redundant with resolve() but good depth defense)
     if ".." in str(user_path):
         raise PathValidationError("Invalid path: directory traversal detected")
 
@@ -89,17 +90,31 @@ def validate_path(
     # Allow system temp directories or configured base dir
     allowed_bases = [
         base_resolved,
+        Path.cwd().resolve(),
         Path(tempfile.gettempdir()).resolve(),
         Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
     ]
 
-    is_allowed = any(
-        str(resolved_path).startswith(str(base)) for base in allowed_bases
-    )
+    is_allowed = False
+    for base in allowed_bases:
+        try:
+            # Python 3.9+ method
+            if resolved_path.is_relative_to(base):
+                is_allowed = True
+                break
+        except AttributeError:
+            # Fallback for Python < 3.9
+            try:
+                resolved_path.relative_to(base)
+                is_allowed = True
+                break
+            except ValueError:
+                continue
 
     if not is_allowed:
+        # Strip potentially sensitive path info from error message
         raise PermissionError(
-            f"Security Alert: Attempted access outside of allowed directories: {base_resolved}"
+            "Security Alert: Attempted access outside of allowed directories."
         )
 
     # Check existence if required
