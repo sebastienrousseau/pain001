@@ -79,24 +79,23 @@ def validate_path(
         raise PathValidationError("Path cannot be empty")
 
     try:
-        base = os.path.abspath(BASE_DIR)
-        requested = os.path.abspath(untrusted_path)
+        # Convert to Path object and resolve absolute path
+        # resolve() handles symlinks and removes '..' components (CWE-22 mitigation)
+        resolved_path = Path(untrusted_path).resolve()
     except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
-    # Reject paths with obvious traversal attempts (redundant with resolve() but good depth defense)
-    if ".." in str(untrusted_path):
-        raise PathValidationError("Invalid path: directory traversal detected")
+    # Check against allowed directories (Strict Boundary Check)
+    if not _is_allowed_directory(resolved_path):
+        raise SecurityError(
+            f"Path '{resolved_path}' is outside allowed directories."
+        )
 
-    # Strict Boundary Check (CWE-22)
-    if not requested.startswith(base):
-        raise PermissionError("Security: Path traversal")
+    # Check existence if required
+    if must_exist and not resolved_path.exists():
+        raise FileNotFoundError(f"Path does not exist: {resolved_path}")
 
-    # Check existence if required (CodeQL: return string for taint tracking)
-    if must_exist and not Path(requested).exists():
-        raise FileNotFoundError(f"Path does not exist: {requested}")
-
-    return requested
+    return str(resolved_path)
 
 
 def sanitize_for_log(user_input: str, max_length: int = 100) -> str:
