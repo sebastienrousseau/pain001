@@ -35,7 +35,7 @@ from pain001.json.load_json_data import (
 
 
 @pytest.fixture
-def payment_input_data():
+def payment_data_input():
     """Sample payment data for testing."""
     return [
         {
@@ -66,29 +66,29 @@ def payment_input_data():
 
 
 @pytest.fixture(name="json_array_file")
-def fixture_json_array_file(payment_input_data, tmp_path):
+def fixture_json_array_file(payment_data_input, tmp_path):
     """Create a temporary JSON file with array format."""
     json_file = tmp_path / "payments.json"
     with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(payment_input_data, f, indent=2)
+        json.dump(payment_data_input, f, indent=2)
     return str(json_file)
 
 
 @pytest.fixture(name="json_single_object_file")
-def fixture_json_single_object_file(payment_input_data, tmp_path):
+def fixture_json_single_object_file(payment_data_input, tmp_path):
     """Create a temporary JSON file with single object."""
     json_file = tmp_path / "payment.json"
     with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(payment_input_data[0], f, indent=2)
+        json.dump(payment_data_input[0], f, indent=2)
     return str(json_file)
 
 
 @pytest.fixture(name="jsonl_file")
-def fixture_jsonl_file(payment_input_data, tmp_path):
+def fixture_jsonl_file(payment_data_input, tmp_path):
     """Create a temporary JSONL file."""
     jsonl_file = tmp_path / "payments.jsonl"
     with open(jsonl_file, "w", encoding="utf-8") as f:
-        for record in payment_input_data:
+        for record in payment_data_input:
             f.write(json.dumps(record) + "\n")
     return str(jsonl_file)
 
@@ -122,26 +122,26 @@ def fixture_large_jsonl_file(tmp_path):
 
 # noqa: F811
 # noqa: F811
-def test_load_json_data_array_format(json_array_file, payment_input_data):
+def test_load_json_data_array_format(json_array_file, payment_data_input):
     """Test loading JSON file with array format."""
     data = load_json_data(json_array_file)
 
     assert isinstance(data, list)
     assert len(data) == 2
-    assert data == payment_input_data
+    assert data == payment_data_input
     assert data[0]["id"] == "MSG001"
     assert data[1]["amount"] == "500.50"
 
 
 def test_load_json_data_single_object(
-    json_single_object_file, payment_input_data
+    json_single_object_file, payment_data_input
 ):
     """Test loading JSON file with single object (converts to list)."""
     data = load_json_data(json_single_object_file)
 
     assert isinstance(data, list)
     assert len(data) == 1
-    assert data[0] == payment_input_data[0]
+    assert data[0] == payment_data_input[0]
     assert data[0]["id"] == "MSG001"
 
 
@@ -231,13 +231,13 @@ def test_load_json_data_streaming_file_not_found():
 # =============================================================================
 
 
-def test_load_jsonl_data_basic(jsonl_file, payment_input_data):
+def test_load_jsonl_data_basic(jsonl_file, payment_data_input):
     """Test loading JSONL file."""
     data = load_jsonl_data(jsonl_file)
 
     assert isinstance(data, list)
     assert len(data) == 2
-    assert data == payment_input_data
+    assert data == payment_data_input
 
 
 def test_load_jsonl_data_file_not_found():
@@ -369,18 +369,18 @@ def test_load_jsonl_data_streaming_partial_last_chunk(tmp_path):
 # =============================================================================
 
 
-def test_json_vs_jsonl_equivalence(payment_input_data, tmp_path):
+def test_json_vs_jsonl_equivalence(payment_data_input, tmp_path):
     """Test that JSON and JSONL produce equivalent results."""
     json_file = tmp_path / "data.json"
     jsonl_file = tmp_path / "data.jsonl"
 
     # Write JSON (array format)
     with open(json_file, "w", encoding="utf-8") as f:
-        json.dump(payment_input_data, f)
+        json.dump(payment_data_input, f)
 
     # Write JSONL
     with open(jsonl_file, "w", encoding="utf-8") as f:
-        for record in payment_input_data:
+        for record in payment_data_input:
             f.write(json.dumps(record) + "\n")
 
     json_data = load_json_data(str(json_file))
@@ -389,11 +389,11 @@ def test_json_vs_jsonl_equivalence(payment_input_data, tmp_path):
     assert json_data == jsonl_data
 
 
-def test_streaming_equivalence(payment_input_data, tmp_path):
+def test_streaming_equivalence(payment_data_input, tmp_path):
     """Test that streaming and non-streaming produce same results."""
     jsonl_file = tmp_path / "streaming_test.jsonl"
     with open(jsonl_file, "w", encoding="utf-8") as f:
-        for record in payment_input_data:
+        for record in payment_data_input:
             f.write(json.dumps(record) + "\n")
 
     # Non-streaming
