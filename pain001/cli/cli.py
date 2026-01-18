@@ -28,7 +28,15 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from pain001.constants.constants import valid_xml_types
+from pain001.constants.constants import (
+    APP_DESCRIPTION as description,
+)
+from pain001.constants.constants import (
+    APP_NAME as title,
+)
+from pain001.constants.constants import (
+    valid_xml_types,
+)
 from pain001.context.context import Context
 from pain001.core.core import process_files
 from pain001.data.loader import load_payment_data
@@ -41,13 +49,6 @@ from pain001.logging_schema import (
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
-
-description = """
-A powerful Python library that enables you to create
-ISO 20022-compliant payment files directly from CSV or SQLite Data files.\n
-https://pain001.com
-"""
-title = "Pain001"
 
 table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
 
