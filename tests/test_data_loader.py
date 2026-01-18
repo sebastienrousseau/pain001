@@ -17,6 +17,7 @@
 
 import csv
 import sqlite3
+from pathlib import Path
 
 import pytest
 
@@ -142,8 +143,14 @@ class TestDataLoader:
 
     def test_file_not_found_error(self) -> None:
         """Test that FileNotFoundError is raised for missing files."""
+        # Use a path in CWD to pass path validation, but fail existence check
+        missing_file = Path.cwd() / "nonexistent_data_loader_test.csv"
+        # Ensure it really doesn't exist
+        if missing_file.exists():
+            missing_file.unlink()
+
         with pytest.raises(FileNotFoundError):
-            load_payment_data("/nonexistent/path/data.csv")
+            load_payment_data(str(missing_file))
 
     def test_unsupported_file_type(self) -> None:
         """Test that DataSourceError is raised for unsupported file types."""

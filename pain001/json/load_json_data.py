@@ -213,7 +213,12 @@ def load_jsonl_data_streaming(
         >>> for chunk in load_jsonl_data_streaming('large_payments.jsonl'):
         ...     process_batch(chunk)
     """
-    file_path_obj = Path(file_path)
+    try:
+        file_path_obj = validate_path(file_path)  # nosec B108
+    except Exception as e:
+        raise FileNotFoundError(
+            f"JSONL file not found or invalid path: {file_path}"
+        ) from e
 
     if not file_path_obj.exists():
         raise FileNotFoundError(f"JSONL file not found: {file_path}")
@@ -221,7 +226,7 @@ def load_jsonl_data_streaming(
     chunk: list[dict[str, Any]] = []
 
     try:
-        with open(file_path, encoding="utf-8") as f:
+        with open(file_path_obj, encoding="utf-8") as f:
             for line_num, line in enumerate(f, start=1):
                 line = line.strip()
                 if not line:

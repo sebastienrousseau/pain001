@@ -259,8 +259,9 @@ class TestStreamingLoaders(unittest.TestCase):
 
     def test_streaming_file_not_found(self):
         """Test streaming with non-existent file."""
+        missing = Path.cwd() / "nonexistent_streaming_loader_test.csv"
         with self.assertRaises(FileNotFoundError):
-            list(load_payment_data_streaming("/nonexistent/file.csv"))
+            list(load_payment_data_streaming(str(missing)))
 
     def test_streaming_invalid_list_items(self):
         """Test streaming with invalid list items."""

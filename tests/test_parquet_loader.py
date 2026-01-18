@@ -22,6 +22,7 @@ including optional pyarrow dependency handling.
 """
 
 import pytest
+from pathlib import Path
 
 from pain001.exceptions import DataSourceError
 
@@ -146,8 +147,9 @@ def test_load_parquet_data_basic(parquet_file, sample_payment_data):
 
 def test_load_parquet_data_file_not_found():
     """Test FileNotFoundError for nonexistent Parquet file."""
+    missing = Path.cwd() / "nonexistent_parquet_test.parquet"
     with pytest.raises(FileNotFoundError) as exc_info:
-        load_parquet_data("/nonexistent/path/payments.parquet")
+        load_parquet_data(str(missing))
 
     assert "not found" in str(exc_info.value).lower()
 

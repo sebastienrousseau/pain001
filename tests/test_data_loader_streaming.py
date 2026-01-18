@@ -16,6 +16,7 @@
 """Tests for data loader streaming functionality."""
 
 import pytest
+from pathlib import Path
 
 from pain001.data.loader import load_payment_data_streaming
 from pain001.exceptions import DataSourceError, PaymentValidationError
@@ -53,10 +54,11 @@ class TestStreamPaymentData:
 
     def test_stream_nonexistent_file(self):
         """Test streaming from nonexistent file raises error."""
+        missing = Path.cwd() / "nonexistent_streaming_test.csv"
         with pytest.raises((FileNotFoundError, DataSourceError)):
             list(
                 load_payment_data_streaming(
-                    "/nonexistent/file.csv", chunk_size=10
+                    str(missing), chunk_size=10
                 )
             )
 
