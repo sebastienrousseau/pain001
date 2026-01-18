@@ -4,86 +4,86 @@
     xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.07 pain.001.001.07.xsd">
     <CstmrCdtTrfInitn>
         <GrpHdr>
-            <MsgId>MSG001</MsgId>
-            <CreDtTm>2024-01-15T12:00:00</CreDtTm>
-            <NbOfTxs>1</NbOfTxs>
-            <CtrlSum>100.5</CtrlSum>
+            <MsgId>1</MsgId>
+            <CreDtTm>2023-01-01T12:00:00Z</CreDtTm>
+            <NbOfTxs>3</NbOfTxs>
+            <CtrlSum>500.75</CtrlSum>
             <InitgPty>
-                <Nm>ACME Corp</Nm>
+                <Nm>John Doe</Nm>
                 <PstlAdr>
-                    <StrtNm>Main Street</StrtNm>
+                    <StrtNm>Main St</StrtNm>
                     <BldgNb>123</BldgNb>
                     <PstCd>12345</PstCd>
-                    <TwnNm>Anytown</TwnNm>
-                    <Ctry>DE</Ctry>
+                    <TwnNm>London</TwnNm>
+                    <Ctry>GB</Ctry>
                 </PstlAdr>
             </InitgPty>
         </GrpHdr>
         <PmtInf>
-            <PmtInfId>PYT001</PmtInfId>
+            <PmtInfId>Payment001</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
-            <BtchBookg>false</BtchBookg>
-            <ReqdExctnDt>2024-01-16</ReqdExctnDt>
+            <BtchBookg>true</BtchBookg>
+            <ReqdExctnDt>2023-01-04</ReqdExctnDt>
             <Dbtr>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
-                    <StrtNm>Debtor St</StrtNm>
-                    <BldgNb>456</BldgNb>
-                    <PstCd>67890</PstCd>
-                    <TwnNm>Debtortown</TwnNm>
-                    <Ctry>DE</Ctry>
+                    <StrtNm>Main St</StrtNm>
+                    <BldgNb>123</BldgNb>
+                    <PstCd>12345</PstCd>
+                    <TwnNm>London</TwnNm>
+                    <Ctry>GB</Ctry>
                 </PstlAdr>
             </Dbtr>
             <DbtrAcct>
                 <Id>
                     <Othr>
-                        <Id>DE89370400440532013000</Id>
+                        <Id>GB123456789</Id>
                     </Othr>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
                 <FinInstnId>
-                    <BICFI>DEUTDEFF</BICFI>
+                    <BICFI>BANKGB2L</BICFI>
                 </FinInstnId>
             </DbtrAgt>
             <CdtTrfTxInf>
                 <PmtId>
-                    <InstrId>PAY001</InstrId>
-                    <EndToEndId>REF123</EndToEndId>
+                    <InstrId>123456</InstrId>
+                    <EndToEndId>90876</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="EUR">100.5</InstdAmt>
+                    <InstdAmt Ccy="EUR">100</InstdAmt>
                 </Amt>
                 <ChrgBr>SLEV</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BICFI>COBADEFF</BICFI>
+                        <BICFI>BANKEU2L</BICFI>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
-                    <Nm>Creditor Corp</Nm>
+                    <Nm>ABC Corp</Nm>
                     <PstlAdr>
-                        <AdrLine>Creditor St</AdrLine>
-                        <AdrLine>789</AdrLine>
-                        <AdrLine>11223</AdrLine>
-                        <AdrLine>Creditortown</AdrLine>
+                        <AdrLine>Church St</AdrLine>
+                        <AdrLine>5</AdrLine>
+                        <AdrLine>54321</AdrLine>
+                        <AdrLine>Paris</AdrLine>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
                         <Othr>
-                            <Id>DE89370400440532013001</Id>
+                            <Id>FR123456789</Id>
                         </Othr>
                     </Id>
                 </CdtrAcct>
                 <Purp>
-                    <Cd>CASH</Cd>
+                    <Cd>INV</Cd>
                 </Purp>
                 <RmtInf>
                     <Strd>
                         <RfrdDocInf>
-                            <Nb>REF123</Nb>
-                            <RltdDt>2024-01-14</RltdDt>
+                            <Nb>123</Nb>
+                            <RltdDt>2023-02-01</RltdDt>
                         </RfrdDocInf>
                     </Strd>
                 </RmtInf>
