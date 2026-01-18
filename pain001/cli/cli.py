@@ -28,13 +28,13 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from pain001.constants.constants import (
+from pain001.constants import (
     APP_DESCRIPTION as description,
 )
-from pain001.constants.constants import (
+from pain001.constants import (
     APP_NAME as title,
 )
-from pain001.constants.constants import (
+from pain001.constants import (
     valid_xml_types,
 )
 from pain001.context.context import Context

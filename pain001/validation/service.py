@@ -41,7 +41,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional, Union
 
-from pain001.constants.constants import valid_xml_types
+from pain001.constants import valid_xml_types
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import (
     ConfigurationError,

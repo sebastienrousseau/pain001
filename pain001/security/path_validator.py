@@ -26,6 +26,10 @@ class PathValidationError(ValueError):
     """Raised when path validation fails."""
 
 
+class SecurityError(PermissionError):
+    """Raised when a security boundary is violated."""
+
+
 def _is_allowed_directory(resolved_path: Path) -> bool:
     """Check if the path is within allowed directories.
 
@@ -69,7 +73,7 @@ def validate_path(
         PathValidationError: If path contains traversal attempts.
         FileNotFoundError: If must_exist=True and path doesn't exist.
     """
-    from pain001.constants.constants import BASE_DIR
+    from pain001.constants import BASE_DIR
 
     if not user_path:
         raise PathValidationError("Path cannot be empty")
@@ -86,34 +90,9 @@ def validate_path(
     if ".." in str(user_path):
         raise PathValidationError("Invalid path: directory traversal detected")
 
-    # Strict Boundary Check
-    # Allow system temp directories or configured base dir
-    allowed_bases = [
-        base_resolved,
-        Path.cwd().resolve(),
-        Path(tempfile.gettempdir()).resolve(),
-        Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
-    ]
-
-    is_allowed = False
-    for base in allowed_bases:
-        try:
-            # Python 3.9+ method
-            if resolved_path.is_relative_to(base):
-                is_allowed = True
-                break
-        except AttributeError:
-            # Fallback for Python < 3.9
-            try:
-                resolved_path.relative_to(base)
-                is_allowed = True
-                break
-            except ValueError:
-                continue
-
-    if not is_allowed:
-        # Strip potentially sensitive path info from error message
-        raise PermissionError(
+    # Strict Boundary Check (CWE-22)
+    if not str(resolved_path).startswith(str(base_resolved)):
+        raise SecurityError(
             "Security Alert: Attempted access outside of allowed directories."
         )
 
