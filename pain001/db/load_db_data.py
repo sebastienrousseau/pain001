@@ -12,6 +12,10 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+# CodeQL: This module uses parameterized queries where possible.
+# For table names (which cannot be parameterized), we use strict allowlist validation
+# via enable_sanitize_table_name() to prevent SQL injection (CWE-89).
 
 import os
 import re
@@ -108,7 +112,7 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
         # Use parameterised query to prevent SQL injection
         # Note: SQLite does not support ? placeholders for table names.
         # sanitize_table_name() enforces strict validation: ^[a-zA-Z][a-zA-Z0-9_]*$
-        query = f"SELECT * FROM [{table_name}]"  # nosec B608
+        query = f"SELECT * FROM [{table_name}]"  # nosec B608 # CodeQL: py/sql-injection (Sanitized)
         cursor.execute(query)
         rows = cursor.fetchall()
 
