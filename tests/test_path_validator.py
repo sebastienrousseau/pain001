@@ -130,7 +130,7 @@ class TestPathValidator:
             try:
                 # Create a self-referencing symlink
                 os.symlink(loop_path, loop_path)
-                
+
                 # Should raise PathValidationError due to resolve() failure
                 with pytest.raises(PathValidationError):
                     validate_path(loop_path)

@@ -39,6 +39,7 @@ from typing import Any, Optional
 
 import jsonschema
 
+from pain001.constants import valid_xml_types
 from pain001.security import validate_path
 
 
@@ -99,6 +100,10 @@ class SchemaValidator:
         """
         if schema_dir is None:
             schema_dir = Path(__file__).parent.parent / "schemas"
+
+        # Validate message_type to prevent path traversal (CodeQL)
+        if message_type not in valid_xml_types:
+            raise ValueError(f"Invalid message type: {message_type}")
 
         # Validate path to prevent traversal attacks
         schema_file = schema_dir / f"{message_type}.schema.json"
