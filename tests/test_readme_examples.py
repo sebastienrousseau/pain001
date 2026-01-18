@@ -30,7 +30,7 @@ class TestReadmeExamples(unittest.TestCase):
 
     def setUp(self) -> None:
         """Set up test fixtures."""
-        self.test_data_dir = Path("tests/data")
+        self.test_data_dir = Path("pain001/test_fixtures")
         self.csv_file = self.test_data_dir / "template.csv"
         self.xml_template = self.test_data_dir / "template.xml"
         self.xsd_schema = self.test_data_dir / "template.xsd"
@@ -38,7 +38,7 @@ class TestReadmeExamples(unittest.TestCase):
 
     def tearDown(self) -> None:
         """Clean up generated files after tests."""
-        # Generated files are created in tests/data directory
+        # Generated files are created in pain001/test_fixtures directory
         # alongside the template
         generated_files = [
             self.test_data_dir / "pain.001.001.03.xml",

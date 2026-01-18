@@ -34,7 +34,8 @@ class TestPathValidator:
 
     def test_validate_path_valid_cwd(self):
         """Test validation of a file in the current working directory."""
-        cwd_file = Path("test_file_cwd.txt")
+        cwd_file = Path("pain001/test_fixtures/test_file_cwd.txt")
+        cwd_file.parent.mkdir(parents=True, exist_ok=True)
         cwd_file.touch()
         try:
             resolved = validate_path(cwd_file)
@@ -64,7 +65,9 @@ class TestPathValidator:
     def test_validate_path_must_exist(self):
         """Test the must_exist parameter."""
         # Create a unique non-existent filename
-        path = Path("non_existent_file_path_validator_test.txt")
+        path = Path(
+            "pain001/test_fixtures/non_existent_file_path_validator_test.txt"
+        )
         if path.exists():
             path.unlink()
 
@@ -86,7 +89,7 @@ class TestPathValidator:
                 for d in [tempfile.gettempdir(), os.getcwd(), "/var/tmp"]
             ):
                 with pytest.raises(
-                    PermissionError, match="outside of allowed directories"
+                    PermissionError, match="Blocked access"
                 ):
                     validate_path(target)
 

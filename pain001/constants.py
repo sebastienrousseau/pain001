@@ -18,14 +18,13 @@
 import os
 from pathlib import Path
 
-# Centralize paths to prevent circular imports
-# BASE_DIR should point to the repository root (one level above the package dir)
-# os.path.dirname(os.path.abspath(__file__)) is .../pain001/pain001
-# Parent is .../pain001
-BASE_DIR = Path(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))).resolve()
+# The absolute root of the package - derived safely
+BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
+
+# Shared metadata
+VERSION = "0.0.47"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 TEMPLATES_DIR = BASE_DIR / "templates"
-VERSION = "0.0.47"
 
 # Valid XML types for ISO 20022 Payment Initiation
 valid_xml_types = [

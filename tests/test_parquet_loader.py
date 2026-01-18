@@ -148,7 +148,9 @@ def test_load_parquet_data_basic(parquet_file, sample_payment_data):
 
 def test_load_parquet_data_file_not_found():
     """Test FileNotFoundError for nonexistent Parquet file."""
-    missing = Path.cwd() / "nonexistent_parquet_test.parquet"
+    missing = (
+        Path("pain001/test_fixtures") / "nonexistent_parquet_test.parquet"
+    )
     with pytest.raises(FileNotFoundError) as exc_info:
         load_parquet_data(str(missing))
 
@@ -301,7 +303,11 @@ def test_load_parquet_data_streaming_partial_last_chunk(tmp_path):
 def test_load_parquet_data_streaming_file_not_found():
     """Test FileNotFoundError in streaming mode."""
     with pytest.raises(FileNotFoundError):
-        list(load_parquet_data_streaming("/nonexistent/file.parquet"))
+        list(
+            load_parquet_data_streaming(
+                "pain001/test_fixtures/nonexistent_streaming.parquet"
+            )
+        )
 
 
 def test_load_parquet_data_streaming_invalid_file(tmp_path):

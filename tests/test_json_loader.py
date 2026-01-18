@@ -124,25 +124,25 @@ def fixture_large_jsonl_file(tmp_path):
 # noqa: F811
 def test_load_json_data_array_format(json_array_file, payment_data_input):
     """Test loading JSON file with array format."""
-    data = load_json_data(json_array_file)
+    payment_data = load_json_data(json_array_file)
 
-    assert isinstance(data, list)
-    assert len(data) == 2
-    assert data == payment_data_input
-    assert data[0]["id"] == "MSG001"
-    assert data[1]["amount"] == "500.50"
+    assert isinstance(payment_data, list)
+    assert len(payment_data) == 2
+    assert payment_data == payment_data_input
+    assert payment_data[0]["id"] == "MSG001"
+    assert payment_data[1]["amount"] == "500.50"
 
 
 def test_load_json_data_single_object(
     json_single_object_file, payment_data_input
 ):
     """Test loading JSON file with single object (converts to list)."""
-    data = load_json_data(json_single_object_file)
+    payment_data = load_json_data(json_single_object_file)
 
-    assert isinstance(data, list)
-    assert len(data) == 1
-    assert data[0] == payment_data_input[0]
-    assert data[0]["id"] == "MSG001"
+    assert isinstance(payment_data, list)
+    assert len(payment_data) == 1
+    assert payment_data[0] == payment_data_input[0]
+    assert payment_data[0]["id"] == "MSG001"
 
 
 def test_load_json_data_file_not_found():
@@ -233,11 +233,11 @@ def test_load_json_data_streaming_file_not_found():
 
 def test_load_jsonl_data_basic(jsonl_file, payment_data_input):
     """Test loading JSONL file."""
-    data = load_jsonl_data(jsonl_file)
+    payment_data = load_jsonl_data(jsonl_file)
 
-    assert isinstance(data, list)
-    assert len(data) == 2
-    assert data == payment_data_input
+    assert isinstance(payment_data, list)
+    assert len(payment_data) == 2
+    assert payment_data == payment_data_input
 
 
 def test_load_jsonl_data_file_not_found():
@@ -271,11 +271,11 @@ def test_load_jsonl_data_empty_lines(tmp_path):
         f.write('{"id": "MSG002", "amount": "200"}\n')
         f.write("   \n")  # Whitespace-only line
 
-    data = load_jsonl_data(str(jsonl_file))
+    payment_data = load_jsonl_data(str(jsonl_file))
 
-    assert len(data) == 2
-    assert data[0]["id"] == "MSG001"
-    assert data[1]["id"] == "MSG002"
+    assert len(payment_data) == 2
+    assert payment_data[0]["id"] == "MSG001"
+    assert payment_data[1]["id"] == "MSG002"
 
 
 def test_load_jsonl_data_non_dict(tmp_path):
@@ -427,10 +427,10 @@ def test_load_json_data_unicode_characters(tmp_path):
     with open(json_file, "w", encoding="utf-8") as f:
         json.dump(unicode_data, f, ensure_ascii=False)
 
-    data = load_json_data(str(json_file))
+    payment_data = load_json_data(str(json_file))
 
-    assert data[0]["creditor_name"] == "Société Générale"
-    assert "中文" in data[0]["note"]
+    assert payment_data[0]["creditor_name"] == "Société Générale"
+    assert "中文" in payment_data[0]["note"]
 
 
 def test_load_jsonl_data_large_values(tmp_path):
@@ -442,9 +442,9 @@ def test_load_jsonl_data_large_values(tmp_path):
     with open(jsonl_file, "w", encoding="utf-8") as f:
         f.write(json.dumps(record) + "\n")
 
-    data = load_jsonl_data(str(jsonl_file))
+    payment_data = load_jsonl_data(str(jsonl_file))
 
-    assert len(data[0]["note"]) == 10000
+    assert len(payment_data[0]["note"]) == 10000
 
 
 def test_load_json_data_nested_objects(tmp_path):
@@ -461,10 +461,10 @@ def test_load_json_data_nested_objects(tmp_path):
     with open(json_file, "w", encoding="utf-8") as f:
         json.dump(nested_data, f)
 
-    data = load_json_data(str(json_file))
+    payment_data = load_json_data(str(json_file))
 
-    assert isinstance(data[0]["metadata"], dict)
-    assert data[0]["metadata"]["priority"] == "high"
+    assert isinstance(payment_data[0]["metadata"], dict)
+    assert payment_data[0]["metadata"]["priority"] == "high"
 
 
 def test_jsonl_streaming_memory_efficiency(large_jsonl_file):

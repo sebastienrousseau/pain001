@@ -13,6 +13,7 @@ packages = [
 include = [
     "pain001/templates/**/*",
     "pain001/schemas/*.json",
+    "pain001/test_fixtures/**/*",
 ]
 
 [tool.poetry.scripts]
