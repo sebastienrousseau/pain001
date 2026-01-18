@@ -17,6 +17,7 @@
 
 # pylint: disable=duplicate-code
 import logging
+import os
 from collections.abc import Generator
 from pathlib import Path
 from typing import Any
@@ -75,13 +76,14 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
     # Validate path to prevent traversal attacks
 
     try:
-        safe_path = validate_path(file_path)  # nosec B108
+        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"Parquet file path validation failed: {file_path}"
         ) from e
 
-    if not safe_path.exists():
+    # Check file existence using os.path for string path
+    if not os.path.isfile(safe_path):
         raise FileNotFoundError(f"Parquet file not found: {file_path}")
 
     try:

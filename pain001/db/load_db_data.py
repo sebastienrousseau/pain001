@@ -13,6 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import re
 import sqlite3
 from typing import Any
@@ -79,13 +80,14 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
     # Validate path to prevent traversal attacks
 
     try:
-        safe_path = validate_path(data_file_path)  # nosec B108
+        safe_path = validate_path(data_file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"SQLite file path validation failed: {data_file_path}"
         ) from e
 
-    if not safe_path.exists():
+    # Check file existence using os.path for string path
+    if not os.path.isfile(safe_path):
         raise FileNotFoundError(
             f"SQLite file '{data_file_path}' does not exist."
         )

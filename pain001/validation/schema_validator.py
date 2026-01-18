@@ -103,12 +103,14 @@ class SchemaValidator:
         # Validate path to prevent traversal attacks
         schema_file = schema_dir / f"{message_type}.schema.json"
         try:
-            self.schema_path = validate_path(schema_file, must_exist=True)  # nosec B108
+            # CodeQL: validate_path returns sanitized string for taint tracking
+            validated_schema_path = validate_path(schema_file, must_exist=True)  # nosec B108
         except Exception as e:
             raise FileNotFoundError(f"Schema validation failed: {e}") from e
 
+        self.schema_path = validated_schema_path
         try:
-            with open(self.schema_path, encoding="utf-8") as f:  # nosec B108
+            with open(validated_schema_path, encoding="utf-8") as f:  # nosec B108
                 self.schema = json.load(f)
         except json.JSONDecodeError as e:
             raise json.JSONDecodeError(

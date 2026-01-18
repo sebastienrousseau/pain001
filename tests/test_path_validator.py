@@ -39,7 +39,9 @@ class TestPathValidator:
         cwd_file.touch()
         try:
             resolved = validate_path(cwd_file)
-            assert resolved == cwd_file.resolve()
+            # validate_path now returns string for CodeQL taint tracking
+            assert resolved == str(cwd_file.resolve())
+            assert isinstance(resolved, str)
         finally:
             if cwd_file.exists():
                 cwd_file.unlink()
@@ -49,7 +51,9 @@ class TestPathValidator:
         with tempfile.NamedTemporaryFile() as tmp:
             path = Path(tmp.name)
             resolved = validate_path(path)
-            assert resolved == path.resolve()
+            # validate_path now returns string for CodeQL taint tracking
+            assert resolved == str(path.resolve())
+            assert isinstance(resolved, str)
 
     def test_validate_path_traversal(self):
         """Test detection of path traversal attempts."""
@@ -71,8 +75,10 @@ class TestPathValidator:
         if path.exists():
             path.unlink()
 
-        # Should pass if must_exist=False
-        assert validate_path(path, must_exist=False) == path.resolve()
+        # Should pass if must_exist=False (returns string)
+        result = validate_path(path, must_exist=False)
+        assert result == str(path.resolve())
+        assert isinstance(result, str)
 
         # Should fail if must_exist=True
         with pytest.raises(FileNotFoundError):
@@ -122,7 +128,9 @@ class TestPathValidator:
                 # Create a self-referencing symlink
                 os.symlink(loop_path, loop_path)
                 resolved = validate_path(loop_path)
-                assert resolved == Path(os.path.abspath(loop_path))
+                # validate_path returns string now
+                assert resolved == os.path.abspath(str(loop_path))
+                assert isinstance(resolved, str)
             except OSError:
                 pytest.skip("Symlinks not supported or permission denied")
             except RuntimeError:

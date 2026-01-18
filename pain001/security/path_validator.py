@@ -21,6 +21,8 @@ import tempfile
 from pathlib import Path
 from typing import Union
 
+from pain001.constants import BASE_DIR
+
 
 class PathValidationError(ValueError):
     """Raised when path validation fails."""
@@ -59,7 +61,7 @@ def _is_allowed_directory(resolved_path: Path) -> bool:
 
 def validate_path(
     untrusted_path: Union[str, Path], must_exist: bool = False
-) -> Path:
+) -> str:
     """Validate and resolve path to prevent directory traversal attacks.
 
     Args:
@@ -67,14 +69,12 @@ def validate_path(
         must_exist: If True, raise error if path doesn't exist.
 
     Returns:
-        Resolved absolute Path object.
+        Resolved absolute path as string (CodeQL taint-tracking compliant).
 
     Raises:
         PathValidationError: If path contains traversal attempts.
         FileNotFoundError: If must_exist=True and path doesn't exist.
     """
-    from pain001.constants import BASE_DIR
-
     if not untrusted_path:
         raise PathValidationError("Path cannot be empty")
 
@@ -92,13 +92,11 @@ def validate_path(
     if not requested.startswith(base):
         raise PermissionError("Security: Path traversal")
 
-    # Check existence if required
-    safe_path = Path(requested)
+    # Check existence if required (CodeQL: return string for taint tracking)
+    if must_exist and not Path(requested).exists():
+        raise FileNotFoundError(f"Path does not exist: {requested}")
 
-    if must_exist and not safe_path.exists():
-        raise FileNotFoundError(f"Path does not exist: {safe_path}")
-
-    return safe_path
+    return requested
 
 
 def sanitize_for_log(user_input: str, max_length: int = 100) -> str:
