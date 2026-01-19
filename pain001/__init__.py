@@ -17,16 +17,7 @@
 
 __version__ = "0.0.47"
 
+from pain001.__main__ import main
+from pain001.core.core import process_files
+
 __all__ = ["main", "process_files", "__version__"]
-
-
-def __getattr__(name):
-    if name == "main":
-        from pain001.__main__ import main
-
-        return main
-    if name == "process_files":
-        from pain001.core.core import process_files
-
-        return process_files
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
