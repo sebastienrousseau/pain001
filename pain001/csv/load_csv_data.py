@@ -48,9 +48,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
 
     # Pre-validate file path (CodeQL: prevent path traversal)
     try:
-        safe_path = validate_path(
-            file_path
-        )  # nosec B108 - Returns sanitized string
+        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(

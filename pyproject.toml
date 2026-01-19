@@ -91,6 +91,7 @@ force_grid_wrap = 0
 combine_as_imports = true
 known_first_party = "pain001"
 known_third_party = "xmlschema"
+skip = ["tmp_env", ".venv", ".git", ".eggs"]
 
 [tool.pytest.ini_options]
 # Test discovery
@@ -133,7 +134,7 @@ timeout = 5
 [tool.ruff]
 line-length = 79
 target-version = "py39"
-extend-exclude = [".github/*.md", "*.md", "docs/**/*.md", "releases/**/*.md"]
+extend-exclude = [".github/*.md", "*.md", "docs/**/*.md", "releases/**/*.md", "tmp_env", ".venv", ".eggs"]
 
 [tool.ruff.lint]
 select = [
@@ -173,6 +174,9 @@ exclude = [
     "pain001/templates/",
     "setup.py",
     "scripts/",
+    "tmp_env/",
+    ".venv/",
+    ".eggs/",
 ]
 
 [[tool.mypy.overrides]]
