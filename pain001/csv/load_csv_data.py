@@ -48,12 +48,17 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
 
     # Pre-validate file path (CodeQL: prevent path traversal)
     try:
-        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
+        # Restrict CSV file access to the current working directory by default.
+        base_dir = os.getcwd()
+        safe_path = validate_path(
+            file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            "Path validation failed: "
-            f"{sanitize_for_log(str(file_path))} - {e}"
+            f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}"
         )
         raise
 
@@ -126,7 +131,12 @@ def load_csv_data_streaming(
 
     try:
         # CodeQL: Prevent path traversal
-        safe_path = validate_path(file_path)  # nosec B108
+        base_dir = os.getcwd()
+        safe_path = validate_path(
+            file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )  # nosec B108
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
@@ -155,13 +165,13 @@ def load_csv_data_streaming(
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            f"An IOError occurred while reading the file '{sanitize_for_log(str(file_path))}'."  # noqa: E501
+            f"An IOError occurred while reading the file '{sanitize_for_log(str(file_path))}'."
         )
         raise
     except UnicodeDecodeError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logging.error(
-            f"A UnicodeDecodeError occurred while decoding the file '{sanitize_for_log(str(file_path))}'."  # noqa: E501
+            f"A UnicodeDecodeError occurred while decoding the file '{sanitize_for_log(str(file_path))}'."
         )
         raise
 

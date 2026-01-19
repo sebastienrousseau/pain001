@@ -47,9 +47,9 @@ def _is_allowed_directory(resolved_path: Path) -> bool:
             Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
         ]
 
-        # Use efficient pathlib ancestry check (Python 3.9+)
+        # Use efficient pathlib ancestry check
         return any(
-            resolved_path == base or resolved_path.is_relative_to(base)
+            resolved_path == base or _is_relative_to(resolved_path, base)
             for base in allowed_bases
         )
 
@@ -57,8 +57,19 @@ def _is_allowed_directory(resolved_path: Path) -> bool:
         return False
 
 
+def _is_relative_to(path: Path, base: Path) -> bool:
+    """Check if path is relative to base (Python < 3.9 compat)."""
+    try:
+        path.relative_to(base)
+        return True
+    except ValueError:
+        return False
+
+
 def validate_path(
-    untrusted_path: Union[str, Path], must_exist: bool = False
+    untrusted_path: Union[str, Path],
+    must_exist: bool = False,
+    base_dir: Union[str, Path, None] = None,
 ) -> str:
     """Validate and resolve path to prevent directory traversal attacks.
 
@@ -76,15 +87,46 @@ def validate_path(
     if not untrusted_path:
         raise PathValidationError("Path cannot be empty")
 
+    # Work with a string representation for initial validation/normalization
+    path_str = str(untrusted_path)
+
+    # Quick traversal guard before constructing Path object
+    if ".." in path_str:
+        raise PathValidationError("Path contains invalid traversal sequences")
+
+    # Normalize the path string to collapse any redundant separators/components
+    normalized_str = os.path.normpath(path_str)
+
     try:
         # Convert to Path object and resolve absolute path
         # resolve() handles symlinks and removes '..' components (CWE-22 mitigation)
-        resolved_path = Path(untrusted_path).resolve()
+        resolved_path = Path(normalized_str).resolve()
     except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
-    # Check against allowed directories (Strict Boundary Check)
-    if not _is_allowed_directory(resolved_path):
+    # Determine allowed bases
+    if base_dir is not None:
+        base_resolved = Path(base_dir).resolve()
+        allowed_bases = [base_resolved]
+    else:
+        # Default allowed bases
+        allowed_bases = [
+            Path.cwd().resolve(),
+            Path(tempfile.gettempdir()).resolve(),
+            Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
+        ]
+
+    # strict boundary check: resolved path must be within at least one allowed base
+    is_allowed = any(
+        resolved_path == base or _is_relative_to(resolved_path, base)
+        for base in allowed_bases
+    )
+
+    if not is_allowed:
+        if base_dir:
+            raise SecurityError(
+                f"Path '{resolved_path}' escapes base directory '{base_dir}'."
+            )
         raise SecurityError(
             f"Path '{resolved_path}' is outside allowed directories."
         )

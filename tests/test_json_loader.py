@@ -34,8 +34,8 @@ from pain001.json.load_json_data import (
 )
 
 
-@pytest.fixture
-def payment_input_data():
+@pytest.fixture(name="payment_input_data")
+def fixture_payment_input_data():
     """Sample payment data for testing."""
     return [
         {

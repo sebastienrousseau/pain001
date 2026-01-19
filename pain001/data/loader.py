@@ -122,56 +122,60 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
             f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
 
-    # Then validate that the path is a file, not a directory
-    if os.path.isdir(file_path):
-        raise DataSourceError(
-            f"Data file does not exist: {file_path}\n"
-            f"The path points to a directory. Please specify a data file:\n"
-            f"  - For CSV: {file_path}/template.csv\n"
-            f"  - For JSON: {file_path}/data.json\n"
-            f"  - For SQLite: {file_path}/data.db"
-        )
-
-    if not os.path.isfile(file_path):
+    # CodeQL: Prevent path traversal by anchoring to current working directory
+    try:
+        from pain001.security import validate_path
+        base_dir = os.getcwd()
+        safe_path = validate_path(file_path, must_exist=True, base_dir=base_dir)
+    except Exception as e: # Catch PathValidationError, SecurityError, FileNotFoundError
+        if os.path.isdir(file_path):
+             raise DataSourceError(
+                f"Data file does not exist: {file_path}\n"
+                f"The path points to a directory. Please specify a data file:\n"
+                f"  - For CSV: {file_path}/template.csv\n"
+                f"  - For JSON: {file_path}/data.json\n"
+                f"  - For SQLite: {file_path}/data.db"
+            ) from e
         raise FileNotFoundError(
-            f"Data file does not exist: {file_path}\n"
-            f"Please provide a valid file path to CSV, JSON, JSONL, Parquet, or SQLite database."
-        )
+            f"Data file validation failed: {file_path}\n"
+            f"Error: {e}"
+        ) from e
 
-    if file_path.endswith(".csv"):
-        data = load_csv_data(file_path)
+    # Use safe_path for all subsequent operations
+    if safe_path.endswith(".csv"):
+        data = load_csv_data(safe_path)
         if not validate_csv_data(data):
             raise PaymentValidationError(
                 f"CSV data validation failed for {file_path}"
             )
         return data
 
-    elif file_path.endswith(".db"):
-        data = load_db_data(file_path, table_name="pain001")
+    elif safe_path.endswith(".db"):
+        data = load_db_data(safe_path, table_name="pain001")
         if not validate_db_data(data):
             raise PaymentValidationError(
                 f"Database data validation failed for {file_path}"
             )
         return data
 
-    elif file_path.endswith(".json"):
-        data = load_json_data(file_path)
+    elif safe_path.endswith(".json"):
+        data = load_json_data(safe_path)
         if not validate_csv_data(data):  # Reuse CSV validator
             raise PaymentValidationError(
                 f"JSON data validation failed for {file_path}"
             )
         return data
 
-    elif file_path.endswith(".jsonl"):
-        data = load_jsonl_data(file_path)
+    elif safe_path.endswith(".jsonl"):
+        data = load_jsonl_data(safe_path)
         if not validate_csv_data(data):  # Reuse CSV validator
             raise PaymentValidationError(
                 f"JSONL data validation failed for {file_path}"
             )
         return data
 
-    elif file_path.endswith(".parquet"):
-        data = load_parquet_data(file_path)
+    elif safe_path.endswith(".parquet"):
+        data = load_parquet_data(safe_path)
         if not validate_csv_data(data):  # Reuse CSV validator
             raise PaymentValidationError(
                 f"Parquet data validation failed for {file_path}"

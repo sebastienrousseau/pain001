@@ -56,7 +56,13 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
     # Validate path to prevent traversal attacks
 
     try:
-        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
+        # Restrict JSON file access to the current working directory by default.
+        base_dir = os.getcwd()
+        safe_path = validate_path(
+            file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )  # nosec B108 - Returns sanitized, normalized string
     except Exception as e:
         # Fail securely - do not fall back to unsafe path
         raise FileNotFoundError(
@@ -149,7 +155,13 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
         >>> data = load_jsonl_data('payments.jsonl')
     """
     try:
-        file_path_validated = validate_path(file_path)  # nosec B108 - Returns sanitized string
+        # Restrict JSONL file access to the current working directory by default.
+        base_dir = os.getcwd()
+        file_path_validated = validate_path(
+            file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"JSONL file not found or invalid path: {file_path}"
@@ -216,7 +228,12 @@ def load_jsonl_data_streaming(
         ...     process_batch(chunk)
     """
     try:
-        file_path_validated = validate_path(file_path)  # nosec B108 - Returns sanitized string
+        base_dir = os.getcwd()
+        file_path_validated = validate_path(
+            file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"JSONL file not found or invalid path: {file_path}"

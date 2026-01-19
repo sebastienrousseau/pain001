@@ -146,7 +146,7 @@ def load_parquet_data_streaming(
 
     try:
         # Open Parquet file for streaming
-        parquet_file = pq.ParquetFile(file_path)
+        parquet_file = pq.ParquetFile(str(safe_path))
 
         # Read in batches
         for batch in parquet_file.iter_batches(batch_size=chunk_size):
