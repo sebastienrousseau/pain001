@@ -75,9 +75,7 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
     # Validate path to prevent traversal attacks
 
     try:
-        safe_path = validate_path(
-            file_path
-        )  # nosec B108 - Returns sanitized string
+        safe_path = validate_path(file_path)  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"Parquet file path validation failed: {file_path}"
