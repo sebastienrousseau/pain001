@@ -109,7 +109,12 @@ class SchemaValidator:
         schema_file = schema_dir / f"{message_type}.schema.json"
         try:
             # CodeQL: validate_path returns sanitized string for taint tracking
-            validated_schema_path = validate_path(schema_file, must_exist=True)  # nosec B108
+            # Ensure schema file is within the schemas directory
+            validated_schema_path = validate_path(
+                schema_file,
+                must_exist=True,
+                base_dir=schema_dir
+            )  # nosec B108
         except Exception as e:
             raise FileNotFoundError(f"Schema validation failed: {e}") from e
 

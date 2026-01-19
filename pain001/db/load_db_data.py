@@ -84,7 +84,11 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
     # Validate path to prevent traversal attacks
 
     try:
-        safe_path = validate_path(data_file_path)  # nosec B108 - Returns sanitized string
+        # must_exist=True ensures both validation and existence check
+        safe_path = validate_path(
+            data_file_path,
+            must_exist=True,
+        )  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
             f"SQLite file path validation failed: {data_file_path}"
