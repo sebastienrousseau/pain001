@@ -125,11 +125,16 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     # CodeQL: Prevent path traversal by anchoring to current working directory
     try:
         from pain001.security import validate_path
+
         base_dir = os.getcwd()
-        safe_path = validate_path(file_path, must_exist=True, base_dir=base_dir)
-    except Exception as e: # Catch PathValidationError, SecurityError, FileNotFoundError
+        safe_path = validate_path(
+            file_path, must_exist=True, base_dir=base_dir
+        )
+    except (
+        Exception
+    ) as e:  # Catch PathValidationError, SecurityError, FileNotFoundError
         if os.path.isdir(file_path):
-             raise DataSourceError(
+            raise DataSourceError(
                 f"Data file does not exist: {file_path}\n"
                 f"The path points to a directory. Please specify a data file:\n"
                 f"  - For CSV: {file_path}/template.csv\n"
@@ -137,8 +142,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
                 f"  - For SQLite: {file_path}/data.db"
             ) from e
         raise FileNotFoundError(
-            f"Data file validation failed: {file_path}\n"
-            f"Error: {e}"
+            f"Data file validation failed: {file_path}\n" f"Error: {e}"
         ) from e
 
     # Use safe_path for all subsequent operations
