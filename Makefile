@@ -57,23 +57,23 @@ help:
 # --- Fast PR gate (recommended on every PR) ---
 pr:
 	@echo "$(YELLOW)Running fast PR gate...$(NC)"
-	@poetry run ruff check pain001 tests scripts verify_versions.py
-	@poetry run ruff format --check pain001 tests scripts verify_versions.py
+	@poetry run ruff check pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py
+	@poetry run ruff format --check pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py
 	@poetry run pytest --tb=short -q
 	@echo "$(GREEN)✓ PR gate passed$(NC)"
 
 # --- Full local gate (heavier) with SLO verification ---
 format:
 	@echo "$(YELLOW)Formatting code...$(NC)"
-	@poetry run ruff format pain001 tests scripts verify_versions.py
-	@poetry run isort pain001 tests scripts verify_versions.py
-	@poetry run black pain001 tests scripts verify_versions.py
+	@poetry run ruff format pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py
+	@poetry run isort pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py
+	@poetry run black pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py
 	@echo "$(GREEN)✓ Code formatted$(NC)"
 
 lint:
 	@echo "$(YELLOW)Running linters (SLO: < $(SLO_LINT)s)...$(NC)"
 	@time_start=$$(date +%s%N); \
-	(poetry run ruff check pain001 tests scripts verify_versions.py && \
+	(poetry run ruff check pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py && \
 	poetry run flake8 pain001 && \
 	poetry run pylint pain001 --exit-zero); \
 	lint_result=$$?; \
@@ -93,7 +93,7 @@ lint:
 type:
 	@echo "$(YELLOW)Type checking (SLO: < $(SLO_TYPE)s)...$(NC)"
 	@time_start=$$(date +%s%N); \
-	poetry run mypy pain001 tests scripts verify_versions.py ; \
+	poetry run mypy pain001 tests scripts verify_versions.py generate_xml_examples.py conftest.py ; \
 	type_result=$$?; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
