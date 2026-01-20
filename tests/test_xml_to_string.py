@@ -215,13 +215,3 @@ class TestXmlToString:
 
         # Match our XML normalization: double quotes, uppercase UTF-8
         assert result.startswith('<?xml version="1.0" encoding="UTF-8"?>')
-
-
-# Integration test placeholder
-class TestXmlToStringIntegration:
-    """Integration tests for xml_to_string with actual pain001 workflows."""
-
-    def test_integration_placeholder(self):
-        """Placeholder for future integration tests."""
-        # TODO: Add integration tests with generate_xml when refactored
-        pass

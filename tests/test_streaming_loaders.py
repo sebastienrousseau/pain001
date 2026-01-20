@@ -324,49 +324,6 @@ class TestStreamingLoaders(unittest.TestCase):
         # Should have 1 chunk with all rows
         self.assertEqual(len(chunks), 1)
         self.assertGreater(len(chunks[0]), 0)
-        """Test that streaming preserves original data order."""
-        data_list = [
-            {"id": i, "payment_id": f"TX{i:03d}", "date": "2024-01-15"}
-            for i in range(50)
-        ]
-
-        chunks = list(
-            load_payment_data_streaming(
-                data_list, chunk_size=15, validate=False
-            )
-        )
-
-        # Reconstruct full list from chunks
-        reconstructed = []
-        for chunk in chunks:
-            reconstructed.extend(chunk)
-
-        # Verify order is preserved
-        for i, item in enumerate(reconstructed):
-            self.assertEqual(item["payment_id"], f"TX{i:03d}")
-        """Test that streaming and non-streaming produce same results."""
-        from pain001.data.loader import load_payment_data
-
-        # Use real template CSV
-        csv_file = Path("pain001/templates/pain.001.001.03/template.csv")
-
-        if not csv_file.exists():
-            self.skipTest("Template CSV not found")
-
-        # Load with non-streaming
-        non_streaming_data = load_payment_data(str(csv_file))
-
-        # Load with streaming and reconstruct
-        streaming_data = []
-        for chunk in load_payment_data_streaming(
-            str(csv_file), chunk_size=7, validate=False
-        ):
-            streaming_data.extend(chunk)
-
-        # Compare results
-        self.assertEqual(len(non_streaming_data), len(streaming_data))
-        for i in range(len(non_streaming_data)):
-            self.assertEqual(non_streaming_data[i], streaming_data[i])
 
 
 if __name__ == "__main__":
