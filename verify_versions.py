@@ -1,5 +1,6 @@
 import os
 import sys
+import traceback
 
 from pain001.constants import valid_xml_types
 from pain001.xml.generate_xml import generate_xml
@@ -73,8 +74,6 @@ def test_all_versions():
 
         except Exception as e:
             print(f"FAILED: {e}")
-            import traceback
-
             traceback.print_exc()
 
     print(

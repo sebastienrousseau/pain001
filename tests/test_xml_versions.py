@@ -163,7 +163,8 @@ class TestGenerateXmlAllVersions:
     ) -> None:
         """Test XML generation for pain.001.001.04."""
         try:
-            # Skip XSD validation for this test as we're testing data transformation
+            # These tests expect SystemExit because generate_xml() calls sys.exit(1)
+            # when validation fails (see generate_xml.py line 407)
             with pytest.raises((FileNotFoundError, Exception, SystemExit)):
                 # This will fail on template loading, but tests the data transformation logic
                 generate_xml(

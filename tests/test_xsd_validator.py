@@ -169,13 +169,13 @@ class TestValidateViaXsd(unittest.TestCase):
             )
 
         try:
-            # Mock xsd.is_valid to raise an XMLSchemaException during validation
+            # Mock xsd.validate to raise an XMLSchemaException during validation
             with patch(
                 "xmlschema.XMLSchema", autospec=True
             ) as mock_schema_class:
                 # Create instance mock from the class mock
                 mock_xsd = mock_schema_class.return_value
-                # Use the actual exception type that our code catches
+                # Mock the validate() method that our production code calls (line 53 in validate_via_xsd.py)
                 mock_xsd.validate.side_effect = xmlschema.XMLSchemaException(
                     "Validation error"
                 )
