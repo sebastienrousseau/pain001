@@ -86,22 +86,24 @@ def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
             detail="Access denied: path outside allowed directory",
         ) from e
 
-    # Explicit startswith guard that CodeQL recognises as a path-injection
-    # sanitiser barrier (CWE-22).  validate_path already performs this check
-    # but CodeQL cannot trace the guard through interprocedural calls.
+    result = Path(validated)
+
+    # Explicit startswith guard on the returned Path so CodeQL can link
+    # the guard to all downstream uses of ``result`` (CWE-22 barrier).
+    result_str = str(result)
     cwd_prefix = str(Path.cwd().resolve())
     tmp_prefix = str(Path(tempfile.gettempdir()).resolve())
     if not (
-        validated == cwd_prefix
-        or validated.startswith(cwd_prefix + os.sep)
-        or validated == tmp_prefix
-        or validated.startswith(tmp_prefix + os.sep)
+        result_str == cwd_prefix
+        or result_str.startswith(cwd_prefix + os.sep)
+        or result_str == tmp_prefix
+        or result_str.startswith(tmp_prefix + os.sep)
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: path outside allowed directory",
         )
-    return Path(validated)
+    return result
 
 
 def _format_validation_errors(
