@@ -413,6 +413,15 @@ def generate_xml(
     except Exception as e:
         raise ValueError(f"Path validation failed: {e}") from e
 
+    # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
+    # validate_path already enforces this, but CodeQL requires the guard
+    # at the call site for interprocedural taint tracking.
+    cwd_prefix = str(os.path.realpath(os.getcwd()))
+    if not safe_xml_path.startswith(cwd_prefix + os.sep):
+        raise ValueError(
+            f"Output path outside working directory: {safe_xml_path}"
+        )
+
     # Write the XML content to the file (now safe after validation)
     with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108
         xml_file.write(xml_content)

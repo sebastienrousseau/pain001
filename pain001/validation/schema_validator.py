@@ -116,6 +116,15 @@ class SchemaValidator:
         except Exception as e:
             raise FileNotFoundError(f"Schema validation failed: {e}") from e
 
+        # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
+        # validate_path already enforces this, but CodeQL requires the guard
+        # at the call site for interprocedural taint tracking.
+        schema_dir_prefix = str(Path(schema_dir).resolve())
+        if not validated_schema_path.startswith(schema_dir_prefix):
+            raise FileNotFoundError(
+                f"Schema path escapes schema directory: {schema_dir}"
+            )
+
         self.schema_path = validated_schema_path
         try:
             with open(validated_schema_path, encoding="utf-8") as f:  # nosec B108
