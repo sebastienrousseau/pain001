@@ -58,6 +58,63 @@ def _is_allowed_directory(resolved_path: Path) -> bool:
         return False
 
 
+def _resolve_within_allowed_bases(
+    untrusted_path: Union[str, Path],
+    base_dir: Union[str, Path, None] = None,
+) -> str:
+    """Resolve and validate that a path is within allowed directories.
+
+    This is the core validation logic, separated so that its return value
+    is marked as taint-free by the CodeQL neutralModel extension.  The
+    ``validate_path`` wrapper adds the optional existence check on the
+    *already-clean* return value, keeping ``os.path.exists`` outside the
+    tainted data-flow graph.
+
+    Returns:
+        Resolved absolute path string proven to be within allowed bases.
+
+    Raises:
+        PathValidationError: If path is empty or contains traversal.
+        SecurityError: If path escapes all allowed directories.
+    """
+    if not untrusted_path:
+        raise PathValidationError("Path cannot be empty")
+
+    path_str = str(untrusted_path)
+
+    if ".." in path_str:
+        raise PathValidationError("Path contains invalid traversal sequences")
+
+    normalized_str = os.path.normpath(path_str)
+
+    try:
+        resolved_str = os.path.realpath(normalized_str)
+    except (RuntimeError, OSError) as e:
+        raise PathValidationError(f"Invalid path: {e}") from e
+
+    if base_dir is not None:
+        base_str = os.path.realpath(str(base_dir))
+        allowed_bases = [base_str]
+    else:
+        allowed_bases = [
+            os.path.realpath(os.getcwd()),
+            os.path.realpath(tempfile.gettempdir()),
+            os.path.realpath(os.path.join(os.path.sep, "var", "tmp")),
+        ]
+
+    for base in allowed_bases:
+        if resolved_str == base or resolved_str.startswith(base + os.sep):
+            return base + resolved_str[len(base) :]
+
+    if base_dir:
+        raise SecurityError(
+            f"Path '{resolved_str}' escapes base directory '{base_dir}'."
+        )
+    raise SecurityError(
+        f"Path '{resolved_str}' is outside allowed directories."
+    )
+
+
 def validate_path(
     untrusted_path: Union[str, Path],
     must_exist: bool = False,
@@ -68,66 +125,23 @@ def validate_path(
     Args:
         untrusted_path: User-provided path (potentially malicious).
         must_exist: If True, raise error if path doesn't exist.
+        base_dir: Optional base directory to constrain resolution.
 
     Returns:
         Resolved absolute path as string (CodeQL taint-tracking compliant).
 
     Raises:
         PathValidationError: If path contains traversal attempts.
+        SecurityError: If path escapes allowed directories.
         FileNotFoundError: If must_exist=True and path doesn't exist.
     """
-    if not untrusted_path:
-        raise PathValidationError("Path cannot be empty")
+    # Core validation — return value is taint-free per neutralModel.
+    safe_path = _resolve_within_allowed_bases(untrusted_path, base_dir)
 
-    # Work with a string representation for initial validation/normalization
-    path_str = str(untrusted_path)
+    if must_exist and not os.path.exists(safe_path):
+        raise FileNotFoundError(f"Path does not exist: {safe_path}")
 
-    # Quick traversal guard before constructing Path object
-    if ".." in path_str:
-        raise PathValidationError("Path contains invalid traversal sequences")
-
-    # Normalize the path string to collapse any redundant separators/components
-    normalized_str = os.path.normpath(path_str)
-
-    try:
-        # Use os.path.realpath() so the resolved value is a plain string
-        # that CodeQL can track through the startswith() guard below.
-        resolved_str = os.path.realpath(normalized_str)
-    except (RuntimeError, OSError) as e:
-        raise PathValidationError(f"Invalid path: {e}") from e
-
-    # Determine allowed bases
-    if base_dir is not None:
-        base_str = os.path.realpath(str(base_dir))
-        allowed_bases = [base_str]
-    else:
-        # Default allowed bases
-        allowed_bases = [
-            os.path.realpath(os.getcwd()),
-            os.path.realpath(tempfile.gettempdir()),
-            os.path.realpath(os.path.join(os.path.sep, "var", "tmp")),
-        ]
-
-    # Strict boundary check: resolved path must be within at least one
-    # allowed base.  The str.startswith() guard is a pattern that static
-    # analysis tools (including CodeQL) recognise as a path-injection
-    # sanitiser barrier (CWE-22).
-    for base in allowed_bases:
-        if resolved_str == base or resolved_str.startswith(base + os.sep):
-            # Path is within this allowed base — reconstruct from the
-            # trusted base so CodeQL's taint tracker sees a clean value.
-            safe_path = base + resolved_str[len(base) :]
-            if must_exist and not os.path.exists(safe_path):
-                raise FileNotFoundError(f"Path does not exist: {safe_path}")
-            return safe_path
-
-    if base_dir:
-        raise SecurityError(
-            f"Path '{resolved_str}' escapes base directory '{base_dir}'."
-        )
-    raise SecurityError(
-        f"Path '{resolved_str}' is outside allowed directories."
-    )
+    return safe_path
 
 
 def sanitize_for_log(user_input: str, max_length: int = 100) -> str:

@@ -10,5 +10,6 @@ extensions:
     data:
       # (type, path, kind)
       - ["pain001.security.path_validator", "Member[validate_path]", "summary"]
+      - ["pain001.security.path_validator", "Member[_resolve_within_allowed_bases]", "summary"]
       - ["pain001.security", "Member[validate_path]", "summary"]
       - ["pain001.api.app", "Member[_validate_safe_path]", "summary"]
