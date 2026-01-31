@@ -3,6 +3,7 @@
 import json
 import os
 import sqlite3
+import sys
 import tempfile
 import xml.etree.ElementTree as et  # nosec B405
 from pathlib import Path
@@ -718,8 +719,10 @@ class TestParquetCoverage2:
         """Cover lines 34-35, 45: pyarrow not installed."""
         from pain001.exceptions import DataSourceError
 
-        with patch(
-            "pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "HAS_PARQUET_SUPPORT",
+            False,
         ):
             from pain001.parquet.load_parquet_data import (
                 _check_parquet_support,
@@ -1088,8 +1091,9 @@ class TestJSONLoaderFileMissing:
         f = tmp_path / "test.json"
         f.write_text("{}")
 
-        with patch(
-            "pain001.json.load_json_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.json.load_json_data"],
+            "validate_path",
             return_value=str(tmp_path),  # return directory path
         ):
             with pytest.raises(FileNotFoundError):
@@ -1099,8 +1103,9 @@ class TestJSONLoaderFileMissing:
         """Cover line 172: JSONL os.path.isfile returns False."""
         from pain001.json.load_json_data import load_jsonl_data
 
-        with patch(
-            "pain001.json.load_json_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.json.load_json_data"],
+            "validate_path",
             return_value=str(tmp_path),
         ):
             with pytest.raises(FileNotFoundError):
@@ -1114,8 +1119,9 @@ class TestJSONLoaderFileMissing:
         f = tmp_path / "test.jsonl"
         f.write_text('{"id": "1"}\n')
 
-        with patch(
-            "pain001.json.load_json_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.json.load_json_data"],
+            "validate_path",
             return_value=str(f),
         ):
             with patch("builtins.open", side_effect=OSError("disk error")):
@@ -1139,8 +1145,9 @@ class TestJSONLoaderFileMissing:
         """Cover line 244: JSONL streaming os.path.isfile returns False."""
         from pain001.json.load_json_data import load_jsonl_data_streaming
 
-        with patch(
-            "pain001.json.load_json_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.json.load_json_data"],
+            "validate_path",
             return_value=str(tmp_path),
         ):
             with pytest.raises(FileNotFoundError):
@@ -1188,8 +1195,9 @@ class TestParquetFileMissing:
         """Cover lines 79-80: os.path.isfile returns False."""
         from pain001.parquet.load_parquet_data import load_parquet_data
 
-        with patch(
-            "pain001.parquet.load_parquet_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "validate_path",
             return_value=str(tmp_path),
         ):
             with pytest.raises(FileNotFoundError):
@@ -1201,8 +1209,9 @@ class TestParquetFileMissing:
             load_parquet_data_streaming,
         )
 
-        with patch(
-            "pain001.parquet.load_parquet_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "validate_path",
             return_value=str(tmp_path),
         ):
             with pytest.raises(FileNotFoundError):
@@ -1229,8 +1238,10 @@ class TestParquetFileMissing:
         """Cover line 34-35: HAS_PARQUET_SUPPORT is False."""
         from pain001.exceptions import DataSourceError
 
-        with patch(
-            "pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "HAS_PARQUET_SUPPORT",
+            False,
         ):
             with pytest.raises(DataSourceError, match="pyarrow"):
                 from pain001.parquet.load_parquet_data import load_parquet_data
@@ -1686,8 +1697,10 @@ class TestParquetDeepCoverage:
         from pain001.exceptions import DataSourceError
         from pain001.parquet.load_parquet_data import _check_parquet_support
 
-        with patch(
-            "pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "HAS_PARQUET_SUPPORT",
+            False,
         ):
             with pytest.raises(DataSourceError, match="pyarrow"):
                 _check_parquet_support()
@@ -1696,8 +1709,9 @@ class TestParquetDeepCoverage:
         """Cover lines 79-80: file not found after validate_path."""
         from pain001.parquet.load_parquet_data import load_parquet_data
 
-        with patch(
-            "pain001.parquet.load_parquet_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "validate_path",
             return_value=str(tmp_path / "gone.parquet"),
         ):
             with pytest.raises(FileNotFoundError):
@@ -1709,8 +1723,9 @@ class TestParquetDeepCoverage:
             load_parquet_data_streaming,
         )
 
-        with patch(
-            "pain001.parquet.load_parquet_data.validate_path",
+        with patch.object(
+            sys.modules["pain001.parquet.load_parquet_data"],
+            "validate_path",
             return_value=str(tmp_path / "gone.parquet"),
         ):
             with pytest.raises(FileNotFoundError):
@@ -1742,8 +1757,9 @@ class TestAPIAppLine101And149:
         from pain001.api.app import _validate_safe_path
 
         # A path that validate_path accepts but fails startswith
-        with patch(
-            "pain001.api.app.validate_path",
+        with patch.object(
+            sys.modules["pain001.api.app"],
+            "validate_path",
             return_value="/usr/local/some_file",
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -1840,8 +1856,9 @@ class TestAPIAppLine101And149:
 
         client = TestClient(app)
 
-        with patch(
-            "pain001.api.app.job_manager.create_job",
+        with patch.object(
+            sys.modules["pain001.api.app"].job_manager,
+            "create_job",
             side_effect=RuntimeError("boom"),
         ):
             response = client.post(
@@ -1876,7 +1893,9 @@ class TestAPIAppEndpoints:
             mock_error.message = "required"
             mock_error.value = None
 
-            with patch("pain001.api.app.SchemaValidator") as MockValidator:
+            with patch.object(
+                sys.modules["pain001.api.app"], "SchemaValidator"
+            ) as MockValidator:
                 instance = MockValidator.return_value
                 instance.validate_batch.return_value = (
                     1,
@@ -1915,7 +1934,9 @@ class TestAPIAppEndpoints:
             mock_error.message = "required"
             mock_error.value = None
 
-            with patch("pain001.api.app.SchemaValidator") as MockValidator:
+            with patch.object(
+                sys.modules["pain001.api.app"], "SchemaValidator"
+            ) as MockValidator:
                 instance = MockValidator.return_value
                 instance.validate_batch.return_value = (
                     1,
@@ -1948,11 +1969,14 @@ class TestAPIAppEndpoints:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
@@ -1982,25 +2006,32 @@ class TestAPIAppEndpoints:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
-                    with patch(
-                        "pain001.api.app._resolve_generation_paths"
+                    with patch.object(
+                        sys.modules["pain001.api.app"],
+                        "_resolve_generation_paths",
                     ) as mock_paths:
                         mock_paths.return_value = (
                             str(cwd),
                             "schema.xsd",
                             "template.xml",
                         )
-                        with patch("pain001.api.app.generate_xml"):
-                            with patch(
-                                "pain001.api.app.generate_updated_xml_file_path",
+                        with patch.object(
+                            sys.modules["pain001.api.app"], "generate_xml"
+                        ):
+                            with patch.object(
+                                sys.modules["pain001.api.app"],
+                                "generate_updated_xml_file_path",
                                 return_value="output.xml",
                             ):
                                 response = client.post(
@@ -2031,25 +2062,32 @@ class TestAPIAppEndpoints:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
-                    with patch(
-                        "pain001.api.app._resolve_generation_paths"
+                    with patch.object(
+                        sys.modules["pain001.api.app"],
+                        "_resolve_generation_paths",
                     ) as mock_paths:
                         mock_paths.return_value = (
                             str(cwd),
                             "schema.xsd",
                             "template.xml",
                         )
-                        with patch("pain001.api.app.generate_xml"):
-                            with patch(
-                                "pain001.api.app.generate_updated_xml_file_path",
+                        with patch.object(
+                            sys.modules["pain001.api.app"], "generate_xml"
+                        ):
+                            with patch.object(
+                                sys.modules["pain001.api.app"],
+                                "generate_updated_xml_file_path",
                                 return_value="output.xml",
                             ):
                                 response = client.post(
@@ -2193,11 +2231,14 @@ class TestAPIValidateEndpoint:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
@@ -2254,11 +2295,14 @@ class TestAPIValidateEndpoint:
                 (),
                 {"path": "field1", "message": "bad", "value": "x"},
             )()
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (
                         1,
@@ -2294,8 +2338,9 @@ class TestAPIValidateEndpoint:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 side_effect=PaymentValidationError("bad data"),
             ):
                 response = client.post(
@@ -2323,8 +2368,9 @@ class TestAPIValidateEndpoint:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 side_effect=RuntimeError("unexpected"),
             ):
                 response = client.post(
@@ -2361,11 +2407,14 @@ class TestAPIGenerateWithErrors:
                 (),
                 {"path": "field1", "message": "bad", "value": "x"},
             )()
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (
                         1,
@@ -2396,8 +2445,9 @@ class TestAPIGenerateWithErrors:
 
         client = TestClient(app)
 
-        with patch(
-            "pain001.api.app.job_manager.create_job",
+        with patch.object(
+            sys.modules["pain001.api.app"].job_manager,
+            "create_job",
             side_effect=RuntimeError("creation failed"),
         ):
             response = client.post(
@@ -2488,11 +2538,14 @@ class TestAPIAsyncProcessing:
             mock_error = type(
                 "MockError", (), {"path": "f", "message": "bad", "value": "x"}
             )()
-            with patch(
-                "pain001.api.app.load_payment_data",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch("pain001.api.app.SchemaValidator") as MockValidator:
+                with patch.object(
+                    sys.modules["pain001.api.app"], "SchemaValidator"
+                ) as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (
                         1,
@@ -2536,8 +2589,9 @@ class TestResolveGenerationPaths:
         )
 
         # Mock _validate_safe_path to return a path outside CWD
-        with patch(
-            "pain001.api.app._validate_safe_path",
+        with patch.object(
+            sys.modules["pain001.api.app"],
+            "_validate_safe_path",
             return_value=Path("/tmp/outside_test"),
         ):
             with pytest.raises(HTTPException) as exc_info:
@@ -2979,8 +3033,9 @@ class TestAPIGuardLines:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app._validate_safe_path",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "_validate_safe_path",
                 return_value=Path("/tmp/outsidecwd/file.csv"),
             ):
                 response = client.post(
@@ -3008,8 +3063,9 @@ class TestAPIGuardLines:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app._validate_safe_path",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "_validate_safe_path",
                 return_value=Path("/tmp/outsidecwd/file.csv"),
             ):
                 response = client.post(
@@ -3046,8 +3102,9 @@ class TestAPIGuardLines:
             },
         )
 
-        with patch(
-            "pain001.api.app._validate_safe_path",
+        with patch.object(
+            sys.modules["pain001.api.app"],
+            "_validate_safe_path",
             return_value=Path("/tmp/outsidecwd/output.xml"),
         ):
             response = client.get(f"/api/download/{job_id}")
@@ -3068,8 +3125,9 @@ class TestAPIGuardLines:
         csv.write_text("id\n1\n")
 
         try:
-            with patch(
-                "pain001.api.app._validate_safe_path",
+            with patch.object(
+                sys.modules["pain001.api.app"],
+                "_validate_safe_path",
                 return_value=Path("/tmp/outsidecwd/file.csv"),
             ):
                 response = client.post(
@@ -3097,8 +3155,9 @@ class TestAPIGuardLines:
 
         client = TestClient(app)
 
-        with patch(
-            "pain001.api.app.job_manager.create_job",
+        with patch.object(
+            sys.modules["pain001.api.app"].job_manager,
+            "create_job",
             side_effect=ValueError("unexpected error"),
         ):
             response = client.post(
@@ -3120,8 +3179,9 @@ class TestAPIGuardLines:
 
         client = TestClient(app)
 
-        with patch(
-            "pain001.api.app.job_manager.create_job",
+        with patch.object(
+            sys.modules["pain001.api.app"].job_manager,
+            "create_job",
             side_effect=HTTPException(status_code=429, detail="Rate limited"),
         ):
             response = client.post(
@@ -3330,8 +3390,9 @@ class TestParquetImportTimeBranch:
 
         try:
             # Mock pq.ParquetFile to raise FileNotFoundError
-            with patch(
-                "pain001.parquet.load_parquet_data.pq.ParquetFile",
+            with patch.object(
+                sys.modules["pain001.parquet.load_parquet_data"].pq,
+                "ParquetFile",
                 side_effect=FileNotFoundError("file vanished"),
             ):
                 with pytest.raises(FileNotFoundError):
@@ -3353,8 +3414,9 @@ class TestParquetImportTimeBranch:
         f.write_bytes(b"PAR1dummy")
 
         try:
-            with patch(
-                "pain001.parquet.load_parquet_data.pq.ParquetFile",
+            with patch.object(
+                sys.modules["pain001.parquet.load_parquet_data"].pq,
+                "ParquetFile",
                 side_effect=DataSourceError("data error"),
             ):
                 with pytest.raises(DataSourceError, match="data error"):
@@ -3391,8 +3453,9 @@ class TestParquetImportTimeBranch:
         )()
 
         try:
-            with patch(
-                "pain001.parquet.load_parquet_data.pq.ParquetFile",
+            with patch.object(
+                sys.modules["pain001.parquet.load_parquet_data"].pq,
+                "ParquetFile",
                 return_value=mock_pf,
             ):
                 chunks = list(parquet_mod.load_parquet_data_streaming(str(f)))
