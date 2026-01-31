@@ -15,7 +15,6 @@ from click.testing import CliRunner
 # path_validator.py — lines 57-58 (exception branch in _is_allowed_directory)
 #                     line 97 (PathValidationError from realpath)
 # ---------------------------------------------------------------------------
-
 from pain001.security.path_validator import (
     PathValidationError,
     SecurityError,
@@ -31,7 +30,9 @@ class TestPathValidatorCoverage:
         """_is_allowed_directory returns False on internal exception (lines 57-58)."""
         # Pass something that triggers an exception inside the helper
         # e.g. a Path object whose resolution fails
-        with patch("pain001.security.path_validator.Path.cwd", side_effect=OSError):
+        with patch(
+            "pain001.security.path_validator.Path.cwd", side_effect=OSError
+        ):
             result = _is_allowed_directory(Path("/some/path"))
             assert result is False
 
@@ -50,7 +51,9 @@ class TestPathValidatorCoverage:
             with tempfile.TemporaryDirectory() as other:
                 outside_file = Path(other) / "outside.txt"
                 outside_file.touch()
-                with pytest.raises(SecurityError, match="escapes base directory"):
+                with pytest.raises(
+                    SecurityError, match="escapes base directory"
+                ):
                     validate_path(str(outside_file), base_dir=base)
 
     def test_validate_path_exact_base_equality(self):
@@ -105,22 +108,24 @@ class TestCLICoverage:
 
     def test_validate_payment_data_parquet_tip(self, tmp_path):
         """_validate_payment_data shows parquet tip on failure (line 196)."""
-        from pain001.cli.cli import _validate_payment_data
-
         import logging
+
+        from pain001.cli.cli import _validate_payment_data
 
         logger = logging.getLogger("test_parquet_tip")
         parquet_file = tmp_path / "bad.parquet"
         parquet_file.write_text("not parquet")
 
         with pytest.raises(SystemExit):
-            _validate_payment_data(logger, str(parquet_file), "pain.001.001.03")
+            _validate_payment_data(
+                logger, str(parquet_file), "pain.001.001.03"
+            )
 
     def test_validate_payment_data_json_tip(self, tmp_path):
         """_validate_payment_data shows JSON tip on failure (line 201)."""
-        from pain001.cli.cli import _validate_payment_data
-
         import logging
+
+        from pain001.cli.cli import _validate_payment_data
 
         logger = logging.getLogger("test_json_tip")
         json_file = tmp_path / "bad.json"
@@ -131,9 +136,9 @@ class TestCLICoverage:
 
     def test_generate_xml_files_exception_branch(self, tmp_path):
         """_generate_xml_files exception path with verbose (lines 256-266)."""
-        from pain001.cli.cli import _generate_xml_files
-
         import logging
+
+        from pain001.cli.cli import _generate_xml_files
 
         logger = logging.getLogger("test_gen_fail")
         template = tmp_path / "template.xml"
@@ -173,9 +178,7 @@ class TestMainModuleCoverage:
         data = tmp_path / "data.csv"
 
         # Write valid-enough content
-        template.write_text(
-            '<?xml version="1.0"?><Document></Document>'
-        )
+        template.write_text('<?xml version="1.0"?><Document></Document>')
         schema.write_text(
             '<?xml version="1.0"?>'
             '<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">'
@@ -224,9 +227,9 @@ class TestAPIAppCoverage:
 
     def test_validate_safe_path_403_startswith_guard(self):
         """_validate_safe_path rejects path not starting with cwd/tmp (line 101)."""
-        from pain001.api.app import _validate_safe_path
-
         from fastapi import HTTPException
+
+        from pain001.api.app import _validate_safe_path
 
         with pytest.raises(HTTPException) as exc_info:
             # Use an absolute path outside cwd and tmp
@@ -323,7 +326,6 @@ class TestAPIAppCoverage:
 
     def test_process_generation_job_access_denied(self):
         """_process_generation_job sets FAILED when path outside cwd (lines 546-549)."""
-        import asyncio
         import time
 
         from fastapi.testclient import TestClient
@@ -384,9 +386,16 @@ class TestJobManagerFullCoverage:
             jid = mgr.create_job()
             mgr.update_status(jid, JobStatus.SUCCESS, progress=100)
 
-        assert len([j for j in mgr.jobs.values() if j.status == JobStatus.SUCCESS]) == 15
+        assert (
+            len(
+                [j for j in mgr.jobs.values() if j.status == JobStatus.SUCCESS]
+            )
+            == 15
+        )
         mgr.cleanup_old_jobs(keep_count=5)
-        remaining = [j for j in mgr.jobs.values() if j.status == JobStatus.SUCCESS]
+        remaining = [
+            j for j in mgr.jobs.values() if j.status == JobStatus.SUCCESS
+        ]
         assert len(remaining) == 5
 
 
@@ -415,7 +424,11 @@ class TestModelsCoverage:
         from pain001.api.models import ValidationResponse
 
         resp = ValidationResponse(
-            is_valid=True, total_rows=5, valid_rows=3, invalid_rows=2, errors=[]
+            is_valid=True,
+            total_rows=5,
+            valid_rows=3,
+            invalid_rows=2,
+            errors=[],
         )
         assert resp.total_rows == 5
 
@@ -497,8 +510,8 @@ class TestDataLoaderCoverage:
 
     def test_load_payment_data_unsupported_ext(self, tmp_path):
         """Cover line 177: unsupported file extension."""
-        from pain001.exceptions import DataSourceError
         from pain001.data.loader import load_payment_data
+        from pain001.exceptions import DataSourceError
 
         weird = tmp_path / "data.xyz"
         weird.write_text("data")
@@ -514,7 +527,9 @@ class TestDataLoaderCoverage:
 
         # Should yield chunks (validation may or may not pass)
         try:
-            chunks = list(load_payment_data_streaming(str(csv_file), chunk_size=1))
+            chunks = list(
+                load_payment_data_streaming(str(csv_file), chunk_size=1)
+            )
             assert len(chunks) >= 1
         except Exception:
             pass  # Either way, the branch is covered
@@ -668,7 +683,7 @@ class TestJSONLoaderCoverage:
         f.write_text('{"id": "1"}\n')
 
         # Patch open to raise a non-DataSourceError
-        with patch("builtins.open", side_effect=IOError("disk error")):
+        with patch("builtins.open", side_effect=OSError("disk error")):
             with pytest.raises(DataSourceError, match="Error reading JSONL"):
                 list(load_jsonl_data_streaming(str(f)))
 
@@ -703,8 +718,12 @@ class TestParquetCoverage2:
         """Cover lines 34-35, 45: pyarrow not installed."""
         from pain001.exceptions import DataSourceError
 
-        with patch("pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False):
-            from pain001.parquet.load_parquet_data import _check_parquet_support
+        with patch(
+            "pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False
+        ):
+            from pain001.parquet.load_parquet_data import (
+                _check_parquet_support,
+            )
 
             with pytest.raises(DataSourceError, match="pyarrow"):
                 _check_parquet_support()
@@ -723,7 +742,9 @@ class TestParquetCoverage2:
 
     def test_parquet_streaming_file_not_found(self, tmp_path):
         """Cover lines 139-140: streaming file not found."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         f = tmp_path / "will_vanish.parquet"
         f.write_text("x")
@@ -736,7 +757,9 @@ class TestParquetCoverage2:
     def test_parquet_streaming_corrupt(self, tmp_path):
         """Cover line 160: general error during streaming."""
         from pain001.exceptions import DataSourceError
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         f = tmp_path / "corrupt.parquet"
         f.write_text("not a parquet file at all")
@@ -793,8 +816,12 @@ class TestSchemaValidatorCoverage:
         """Cover lines 116-117: validate_path raises on schema file."""
         from pain001.validation.schema_validator import SchemaValidator
 
-        with pytest.raises(FileNotFoundError, match="Schema validation failed"):
-            SchemaValidator("pain.001.001.03", schema_dir=tmp_path / "nonexistent")
+        with pytest.raises(
+            FileNotFoundError, match="Schema validation failed"
+        ):
+            SchemaValidator(
+                "pain.001.001.03", schema_dir=tmp_path / "nonexistent"
+            )
 
     def test_schema_startswith_guard(self, tmp_path):
         """Cover line 124: startswith guard rejects path."""
@@ -811,7 +838,9 @@ class TestSchemaValidatorCoverage:
             "pain001.validation.schema_validator.validate_path",
             return_value="/outside/path/pain.001.001.03.schema.json",
         ):
-            with pytest.raises(FileNotFoundError, match="escapes schema directory"):
+            with pytest.raises(
+                FileNotFoundError, match="escapes schema directory"
+            ):
                 SchemaValidator("pain.001.001.03", schema_dir=schema_dir)
 
     def test_schema_invalid_json(self, tmp_path):
@@ -834,12 +863,14 @@ class TestSchemaValidatorCoverage:
         schema_dir.mkdir()
         schema_file = schema_dir / "pain.001.001.03.schema.json"
         # Write a schema that has an invalid structure
-        schema_file.write_text(json.dumps({
-            "type": "object",
-            "properties": {
-                "id": {"type": "invalid_type_here"}
-            }
-        }))
+        schema_file.write_text(
+            json.dumps(
+                {
+                    "type": "object",
+                    "properties": {"id": {"type": "invalid_type_here"}},
+                }
+            )
+        )
 
         validator = SchemaValidator("pain.001.001.03", schema_dir=schema_dir)
         # This should trigger SchemaError
@@ -877,7 +908,9 @@ class TestValidationServiceCoverage:
             "pain001.validation.service.validate_via_xsd",
             side_effect=SchemaValidationError("mock schema error"),
         ):
-            result = service.validate_template_schema_compatibility("t.xml", "s.xsd")
+            result = service.validate_template_schema_compatibility(
+                "t.xml", "s.xsd"
+            )
             assert result.is_valid is False
             assert "Schema validation failed" in result.error
 
@@ -891,7 +924,9 @@ class TestValidationServiceCoverage:
             "pain001.validation.service.validate_via_xsd",
             side_effect=RuntimeError("unexpected"),
         ):
-            result = service.validate_template_schema_compatibility("t.xml", "s.xsd")
+            result = service.validate_template_schema_compatibility(
+                "t.xml", "s.xsd"
+            )
             assert result.is_valid is False
             assert "Unexpected" in result.error
 
@@ -980,7 +1015,9 @@ class TestGenerateXMLCoverage:
                     "pain001.xml.generate_xml.validate_path",
                     return_value="/tmp/outside.xml",
                 ):
-                    with pytest.raises(ValueError, match="Output path outside"):
+                    with pytest.raises(
+                        ValueError, match="Output path outside"
+                    ):
                         generate_xml(
                             [{"id": "1"}],
                             "pain.001.001.03",
@@ -999,7 +1036,7 @@ class TestWriteXMLCoverage:
 
     def test_indent_xml_with_text(self, tmp_path):
         """Cover branch 40->42: elem.text is set and has content."""
-        from pain001.xml.write_xml_to_file import indent_xml, write_xml_to_file
+        from pain001.xml.write_xml_to_file import indent_xml
 
         root = et.Element("root")
         root.text = "  "  # whitespace-only text
@@ -1017,9 +1054,11 @@ class TestWriteXMLCoverage:
         root = et.Element("root")
         child1 = et.SubElement(root, "child1")
         child1.text = "text"
-        child1.tail = "existing_tail"  # non-whitespace tail should be preserved
+        child1.tail = (
+            "existing_tail"  # non-whitespace tail should be preserved
+        )
         child2 = et.SubElement(root, "child2")
-        grandchild = et.SubElement(child2, "grandchild")
+        _grandchild = et.SubElement(child2, "grandchild")
 
         indent_xml(root)
 
@@ -1079,8 +1118,10 @@ class TestJSONLoaderFileMissing:
             "pain001.json.load_json_data.validate_path",
             return_value=str(f),
         ):
-            with patch("builtins.open", side_effect=IOError("disk error")):
-                with pytest.raises(DataSourceError, match="Error reading JSONL"):
+            with patch("builtins.open", side_effect=OSError("disk error")):
+                with pytest.raises(
+                    DataSourceError, match="Error reading JSONL"
+                ):
                     load_jsonl_data(str(f))
 
     def test_load_jsonl_bad_json_line(self, tmp_path):
@@ -1111,7 +1152,7 @@ class TestJSONLoaderFileMissing:
         from pain001.json.load_json_data import load_jsonl_data_streaming
 
         f = tmp_path / "non_dict.jsonl"
-        f.write_text('[1, 2, 3]\n')
+        f.write_text("[1, 2, 3]\n")
 
         with pytest.raises(DataSourceError, match="Expected JSON object"):
             list(load_jsonl_data_streaming(str(f)))
@@ -1156,19 +1197,27 @@ class TestParquetFileMissing:
 
     def test_parquet_streaming_isfile_false(self, tmp_path):
         """Cover lines 139-140: streaming os.path.isfile returns False."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         with patch(
             "pain001.parquet.load_parquet_data.validate_path",
             return_value=str(tmp_path),
         ):
             with pytest.raises(FileNotFoundError):
-                list(load_parquet_data_streaming(str(tmp_path / "test.parquet")))
+                list(
+                    load_parquet_data_streaming(str(tmp_path / "test.parquet"))
+                )
 
-    def test_parquet_streaming_corrupt_raises_data_source_error(self, tmp_path):
+    def test_parquet_streaming_corrupt_raises_data_source_error(
+        self, tmp_path
+    ):
         """Cover line 160: general error during streaming read."""
         from pain001.exceptions import DataSourceError
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         f = tmp_path / "corrupt.parquet"
         f.write_bytes(b"\x00" * 100)
@@ -1180,9 +1229,12 @@ class TestParquetFileMissing:
         """Cover line 34-35: HAS_PARQUET_SUPPORT is False."""
         from pain001.exceptions import DataSourceError
 
-        with patch("pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False):
+        with patch(
+            "pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False
+        ):
             with pytest.raises(DataSourceError, match="pyarrow"):
                 from pain001.parquet.load_parquet_data import load_parquet_data
+
                 load_parquet_data("test.parquet")
 
 
@@ -1237,6 +1289,7 @@ class TestAPIAppDeepCoverage:
     def test_resolve_generation_paths_outside_cwd(self):
         """Cover line 149: output_dir fails startswith check."""
         from fastapi import HTTPException
+
         from pain001.api.app import _resolve_generation_paths
         from pain001.api.models import GenerateXMLRequest
 
@@ -1253,6 +1306,7 @@ class TestAPIAppDeepCoverage:
     def test_validate_endpoint_with_valid_csv_in_cwd(self, tmp_path):
         """Cover lines 218, 222, 230-236: full validate flow."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1279,6 +1333,7 @@ class TestAPIAppDeepCoverage:
     def test_generate_sync_with_valid_csv_in_cwd(self, tmp_path):
         """Cover lines 282, 294-333: full generate sync flow."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1304,6 +1359,7 @@ class TestAPIAppDeepCoverage:
     def test_generate_sync_validate_only(self, tmp_path):
         """Cover validate_only branch in generate sync."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1330,7 +1386,9 @@ class TestAPIAppDeepCoverage:
     def test_async_generation_file_not_found(self):
         """Cover lines 551-556: async job fails due to file not found."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -1355,7 +1413,9 @@ class TestAPIAppDeepCoverage:
     def test_async_generation_validation_errors(self):
         """Cover lines 560-594: async job with validation and generation."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -1385,6 +1445,7 @@ class TestAPIAppDeepCoverage:
     def test_download_xml_file_not_found_on_disk(self):
         """Cover lines 509, 512-516: download when file doesn't exist."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -1408,6 +1469,7 @@ class TestAPIAppDeepCoverage:
     def test_async_generation_exception_handling(self):
         """Cover lines 384-387, 606-612: async generation exception."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1428,8 +1490,9 @@ class TestCLIDeepCoverage:
 
     def test_cli_generate_xml_failure_verbose(self, tmp_path):
         """Cover lines 257-266: _generate_xml_files exception with output_dir."""
-        from pain001.cli.cli import _generate_xml_files
         import logging
+
+        from pain001.cli.cli import _generate_xml_files
 
         logger = logging.getLogger("test_gen_verbose")
         template = tmp_path / "template.xml"
@@ -1455,8 +1518,9 @@ class TestCLIDeepCoverage:
 
     def test_cli_generate_xml_failure_no_verbose(self, tmp_path):
         """Cover lines 257-259: _generate_xml_files exception without verbose."""
-        from pain001.cli.cli import _generate_xml_files
         import logging
+
+        from pain001.cli.cli import _generate_xml_files
 
         logger = logging.getLogger("test_gen_noverbose")
         template = tmp_path / "template.xml"
@@ -1514,7 +1578,9 @@ class TestValidationServiceLine291:
             "pain001.validation.service.validate_via_xsd",
             return_value=True,
         ):
-            result = service.validate_template_schema_compatibility("t.xml", "s.xsd")
+            result = service.validate_template_schema_compatibility(
+                "t.xml", "s.xsd"
+            )
             assert result.is_valid is True
 
 
@@ -1620,7 +1686,9 @@ class TestParquetDeepCoverage:
         from pain001.exceptions import DataSourceError
         from pain001.parquet.load_parquet_data import _check_parquet_support
 
-        with patch("pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False):
+        with patch(
+            "pain001.parquet.load_parquet_data.HAS_PARQUET_SUPPORT", False
+        ):
             with pytest.raises(DataSourceError, match="pyarrow"):
                 _check_parquet_support()
 
@@ -1637,19 +1705,25 @@ class TestParquetDeepCoverage:
 
     def test_parquet_streaming_file_vanished(self, tmp_path):
         """Cover lines 139-140: streaming file not found."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         with patch(
             "pain001.parquet.load_parquet_data.validate_path",
             return_value=str(tmp_path / "gone.parquet"),
         ):
             with pytest.raises(FileNotFoundError):
-                list(load_parquet_data_streaming(str(tmp_path / "gone.parquet")))
+                list(
+                    load_parquet_data_streaming(str(tmp_path / "gone.parquet"))
+                )
 
     def test_parquet_streaming_read_error(self, tmp_path):
         """Cover line 160: error during streaming read."""
         from pain001.exceptions import DataSourceError
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         f = tmp_path / "bad.parquet"
         f.write_bytes(b"PAR1" + b"\x00" * 100)  # Fake parquet magic bytes
@@ -1664,6 +1738,7 @@ class TestAPIAppLine101And149:
     def test_validate_safe_path_returns_403(self):
         """Cover line 101: path outside cwd and tmp."""
         from fastapi import HTTPException
+
         from pain001.api.app import _validate_safe_path
 
         # A path that validate_path accepts but fails startswith
@@ -1678,6 +1753,7 @@ class TestAPIAppLine101And149:
     def test_generate_sync_full_flow_in_cwd(self):
         """Cover lines 282, 294-333: generate sync with file in cwd."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1702,6 +1778,7 @@ class TestAPIAppLine101And149:
     def test_validate_endpoint_full_flow(self):
         """Cover lines 218, 222, 230-236: validate endpoint full."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1726,7 +1803,9 @@ class TestAPIAppLine101And149:
     def test_async_gen_full_flow_in_cwd(self):
         """Cover lines 546-594: async gen with cwd file."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -1756,11 +1835,15 @@ class TestAPIAppLine101And149:
     def test_async_gen_exception_path(self):
         """Cover lines 384-387: async gen exception path."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
 
-        with patch("pain001.api.app.job_manager.create_job", side_effect=RuntimeError("boom")):
+        with patch(
+            "pain001.api.app.job_manager.create_job",
+            side_effect=RuntimeError("boom"),
+        ):
             response = client.post(
                 "/api/generate/async",
                 json={
@@ -1778,6 +1861,7 @@ class TestAPIAppEndpoints:
     def test_validate_endpoint_full_with_mock_schema(self):
         """Cover lines 230-236: validate endpoint with mocked SchemaValidator."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1792,11 +1876,13 @@ class TestAPIAppEndpoints:
             mock_error.message = "required"
             mock_error.value = None
 
-            with patch(
-                "pain001.api.app.SchemaValidator"
-            ) as MockValidator:
+            with patch("pain001.api.app.SchemaValidator") as MockValidator:
                 instance = MockValidator.return_value
-                instance.validate_batch.return_value = (1, 0, [(0, [mock_error])])
+                instance.validate_batch.return_value = (
+                    1,
+                    0,
+                    [(0, [mock_error])],
+                )
 
                 response = client.post(
                     "/api/validate",
@@ -1815,6 +1901,7 @@ class TestAPIAppEndpoints:
     def test_generate_sync_validation_errors(self):
         """Cover lines 294-305: generate sync with validation errors."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1828,11 +1915,13 @@ class TestAPIAppEndpoints:
             mock_error.message = "required"
             mock_error.value = None
 
-            with patch(
-                "pain001.api.app.SchemaValidator"
-            ) as MockValidator:
+            with patch("pain001.api.app.SchemaValidator") as MockValidator:
                 instance = MockValidator.return_value
-                instance.validate_batch.return_value = (1, 0, [(0, [mock_error])])
+                instance.validate_batch.return_value = (
+                    1,
+                    0,
+                    [(0, [mock_error])],
+                )
 
                 response = client.post(
                     "/api/generate",
@@ -1850,6 +1939,7 @@ class TestAPIAppEndpoints:
     def test_generate_sync_validate_only_success(self):
         """Cover lines 308-313: validate_only returns success."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1862,9 +1952,7 @@ class TestAPIAppEndpoints:
                 "pain001.api.app.load_payment_data",
                 return_value=[{"id": "1"}],
             ):
-                with patch(
-                    "pain001.api.app.SchemaValidator"
-                ) as MockValidator:
+                with patch("pain001.api.app.SchemaValidator") as MockValidator:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
@@ -1885,6 +1973,7 @@ class TestAPIAppEndpoints:
     def test_generate_sync_full_generation(self):
         """Cover lines 316-337: full XML generation."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -1901,8 +1990,14 @@ class TestAPIAppEndpoints:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
-                    with patch("pain001.api.app._resolve_generation_paths") as mock_paths:
-                        mock_paths.return_value = (str(cwd), "schema.xsd", "template.xml")
+                    with patch(
+                        "pain001.api.app._resolve_generation_paths"
+                    ) as mock_paths:
+                        mock_paths.return_value = (
+                            str(cwd),
+                            "schema.xsd",
+                            "template.xml",
+                        )
                         with patch("pain001.api.app.generate_xml"):
                             with patch(
                                 "pain001.api.app.generate_updated_xml_file_path",
@@ -1924,7 +2019,9 @@ class TestAPIAppEndpoints:
     def test_async_generation_full_flow(self):
         """Cover lines 560-594: async generation full flow."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -1942,8 +2039,14 @@ class TestAPIAppEndpoints:
                     instance = MockValidator.return_value
                     instance.validate_batch.return_value = (1, 1, [])
 
-                    with patch("pain001.api.app._resolve_generation_paths") as mock_paths:
-                        mock_paths.return_value = (str(cwd), "schema.xsd", "template.xml")
+                    with patch(
+                        "pain001.api.app._resolve_generation_paths"
+                    ) as mock_paths:
+                        mock_paths.return_value = (
+                            str(cwd),
+                            "schema.xsd",
+                            "template.xml",
+                        )
                         with patch("pain001.api.app.generate_xml"):
                             with patch(
                                 "pain001.api.app.generate_updated_xml_file_path",
@@ -1972,6 +2075,7 @@ class TestAPIAppEndpoints:
     def test_download_file_not_on_disk(self):
         """Cover line 509+: download when file doesn't exist on disk."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -2080,6 +2184,7 @@ class TestAPIValidateEndpoint:
     def test_validate_data_success(self):
         """Cover lines 227-241: successful validation path."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2115,6 +2220,7 @@ class TestAPIValidateEndpoint:
     def test_validate_data_file_not_found(self):
         """Cover line 222: file not found check."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2134,6 +2240,7 @@ class TestAPIValidateEndpoint:
     def test_validate_data_with_errors(self):
         """Cover lines 230-236: validation with errors."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2142,7 +2249,11 @@ class TestAPIValidateEndpoint:
         csv.write_text("id\n1\n")
 
         try:
-            mock_error = type("MockError", (), {"path": "field1", "message": "bad", "value": "x"})()
+            mock_error = type(
+                "MockError",
+                (),
+                {"path": "field1", "message": "bad", "value": "x"},
+            )()
             with patch(
                 "pain001.api.app.load_payment_data",
                 return_value=[{"id": "1"}],
@@ -2172,9 +2283,10 @@ class TestAPIValidateEndpoint:
 
     def test_validate_data_payment_validation_error(self):
         """Cover line 246-249: PaymentValidationError in validate."""
-        from pain001.exceptions import PaymentValidationError
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
+        from pain001.exceptions import PaymentValidationError
 
         client = TestClient(app)
         cwd = Path.cwd()
@@ -2202,6 +2314,7 @@ class TestAPIValidateEndpoint:
     def test_validate_data_unexpected_error(self):
         """Cover lines 250-254: unexpected exception in validate."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2234,6 +2347,7 @@ class TestAPIGenerateWithErrors:
     def test_generate_sync_validation_errors(self):
         """Cover lines 297-305: generation with validation errors."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2242,7 +2356,11 @@ class TestAPIGenerateWithErrors:
         csv.write_text("id\n1\n")
 
         try:
-            mock_error = type("MockError", (), {"path": "field1", "message": "bad", "value": "x"})()
+            mock_error = type(
+                "MockError",
+                (),
+                {"path": "field1", "message": "bad", "value": "x"},
+            )()
             with patch(
                 "pain001.api.app.load_payment_data",
                 return_value=[{"id": "1"}],
@@ -2273,6 +2391,7 @@ class TestAPIGenerateWithErrors:
     def test_generate_async_creation_error(self):
         """Cover lines 384-390: async generation exception."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2298,6 +2417,7 @@ class TestAPIDownloadGuard:
     def test_download_startswith_guard(self):
         """Cover line 508-511: startswith guard on download path."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -2326,7 +2446,9 @@ class TestAPIAsyncProcessing:
     def test_async_file_not_found(self):
         """Cover lines 550-556: file not found in async processing."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -2351,7 +2473,9 @@ class TestAPIAsyncProcessing:
     def test_async_validation_fails(self):
         """Cover lines 565-572: validation fails in async processing."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -2361,14 +2485,20 @@ class TestAPIAsyncProcessing:
         csv.write_text("id\n1\n")
 
         try:
-            mock_error = type("MockError", (), {"path": "f", "message": "bad", "value": "x"})()
+            mock_error = type(
+                "MockError", (), {"path": "f", "message": "bad", "value": "x"}
+            )()
             with patch(
                 "pain001.api.app.load_payment_data",
                 return_value=[{"id": "1"}],
             ):
                 with patch("pain001.api.app.SchemaValidator") as MockValidator:
                     instance = MockValidator.return_value
-                    instance.validate_batch.return_value = (1, 0, [(0, [mock_error])])
+                    instance.validate_batch.return_value = (
+                        1,
+                        0,
+                        [(0, [mock_error])],
+                    )
 
                     response = client.post(
                         "/api/generate/async",
@@ -2393,9 +2523,10 @@ class TestResolveGenerationPaths:
 
     def test_resolve_paths_outside_cwd(self):
         """Cover line 148-151: output_dir outside cwd after _validate_safe_path passes."""
+        from fastapi import HTTPException
+
         from pain001.api.app import _resolve_generation_paths
         from pain001.api.models import GenerateXMLRequest
-        from fastapi import HTTPException
 
         request = GenerateXMLRequest(
             file_path="dummy.csv",
@@ -2425,13 +2556,15 @@ class TestModelInvalidRows:
         from pain001.api.models import ValidationResponse
 
         # Must explicitly provide invalid_rows for the validator to fire
-        resp = ValidationResponse.model_validate({
-            "is_valid": True,
-            "total_rows": 10,
-            "valid_rows": 7,
-            "invalid_rows": 0,
-            "errors": [],
-        })
+        resp = ValidationResponse.model_validate(
+            {
+                "is_valid": True,
+                "total_rows": 10,
+                "valid_rows": 7,
+                "invalid_rows": 0,
+                "errors": [],
+            }
+        )
         # The validator computes 10-7=3
         assert resp.invalid_rows == 3
 
@@ -2495,7 +2628,6 @@ class TestCLIInvalidMessageType:
         Since Click's Choice validation catches this before the function body,
         we need to bypass Click by calling main() directly.
         """
-        from click.testing import CliRunner
         from pain001.cli.cli import main
 
         runner = CliRunner()
@@ -2524,7 +2656,9 @@ class TestCoreLine328:
         import sys
 
         with patch.object(
-            sys, "argv", ["core.py", "pain.001.001.03", "t.xml", "s.xsd", "d.csv"]
+            sys,
+            "argv",
+            ["core.py", "pain.001.001.03", "t.xml", "s.xsd", "d.csv"],
         ):
             try:
                 exec(
@@ -2556,8 +2690,8 @@ class TestDataLoaderLine177:
 
     def test_load_unsupported_extension(self):
         """Cover line 177: unsupported file extension."""
-        from pain001.exceptions import DataSourceError
         from pain001.data.loader import load_payment_data
+        from pain001.exceptions import DataSourceError
 
         cwd = Path.cwd()
         txt = cwd / "test_unsupported.txt"
@@ -2579,7 +2713,11 @@ class TestDataLoaderLine177:
             "pain001.data.loader.validate_csv_data", return_value=False
         ):
             with pytest.raises(PaymentValidationError):
-                list(_load_from_list_streaming(data, chunk_size=2, validate=True))
+                list(
+                    _load_from_list_streaming(
+                        data, chunk_size=2, validate=True
+                    )
+                )
 
 
 class TestJSONLEmptyFile:
@@ -2660,7 +2798,9 @@ class TestParquetImportFallback:
 
     def test_parquet_streaming_file_not_found(self):
         """Cover lines 139-140, 160: streaming path validation fails."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         with pytest.raises(FileNotFoundError):
             list(load_parquet_data_streaming("nonexistent.parquet"))
@@ -2673,7 +2813,7 @@ class TestParquetImportFallback:
             load_parquet_data("/etc/nonexistent.parquet")
 
 
-class TestCSVStreamingFileNotFound:
+class TestCSVStreamingFileNotFoundAfterValidation:
     """Cover csv/load_csv_data.py lines 163-164: FileNotFoundError after validation."""
 
     def test_file_deleted_after_validation(self):
@@ -2738,6 +2878,7 @@ class TestWriteXMLBranches2:
     def test_parent_elem_tail_with_content(self):
         """Cover branch 42->44: parent element tail has non-whitespace content."""
         import xml.etree.ElementTree as et
+
         from pain001.xml.write_xml_to_file import indent_xml
 
         root = et.Element("root")
@@ -2753,6 +2894,7 @@ class TestWriteXMLBranches2:
     def test_last_child_tail_with_content(self):
         """Cover branch 46->exit: last child in for loop, tail has content."""
         import xml.etree.ElementTree as et
+
         from pain001.xml.write_xml_to_file import indent_xml
 
         root = et.Element("root")
@@ -2774,7 +2916,9 @@ class TestParquetStreamingCoverage:
 
     def test_parquet_streaming_valid_path_no_file(self):
         """Cover lines 139-140: path validates but file not found for streaming."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         cwd = Path.cwd()
         f = cwd / "test_missing.parquet"
@@ -2784,8 +2928,10 @@ class TestParquetStreamingCoverage:
 
     def test_parquet_streaming_corrupt_file(self):
         """Cover line 160: error reading parquet file."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
         from pain001.exceptions import DataSourceError
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         cwd = Path.cwd()
         f = cwd / "test_corrupt.parquet"
@@ -2824,6 +2970,7 @@ class TestAPIGuardLines:
         We mock _validate_safe_path to return a path outside cwd.
         """
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2852,6 +2999,7 @@ class TestAPIGuardLines:
     def test_generate_endpoint_startswith_guard(self):
         """Cover line 282: startswith guard in generate_xml_sync endpoint."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2880,6 +3028,7 @@ class TestAPIGuardLines:
     def test_download_endpoint_startswith_guard(self):
         """Cover line 509: startswith guard in download endpoint."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -2907,7 +3056,9 @@ class TestAPIGuardLines:
     def test_async_processing_startswith_guard(self):
         """Cover lines 546-549: startswith guard in async processing."""
         import time
+
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
         from pain001.api.job_manager import JobStatus, job_manager
 
@@ -2941,6 +3092,7 @@ class TestAPIGuardLines:
     def test_async_creation_general_exception(self):
         """Cover lines 386-390: general exception in async generation endpoint."""
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2963,6 +3115,7 @@ class TestAPIGuardLines:
         """Cover line 385: HTTPException re-raised from try block."""
         from fastapi import HTTPException
         from fastapi.testclient import TestClient
+
         from pain001.api.app import app
 
         client = TestClient(app)
@@ -2987,7 +3140,6 @@ class TestCLIBypassClickValidation:
 
     def test_invalid_message_type_direct_call(self):
         """Cover lines 414-427: call main.callback directly to bypass Click Choice."""
-        import logging
         import tempfile
 
         from pain001.cli.cli import main
@@ -3034,10 +3186,16 @@ class TestValidateDatetimeFallback:
         from pain001.csv.validate_csv_data import _validate_datetime
 
         # Use patch to replace the datetime class in the module
-        mock_dt = type("MockDatetime", (), {
-            "fromisoformat": staticmethod(lambda s: (_ for _ in ()).throw(ValueError("mock"))),
-            "strptime": staticmethod(lambda s, fmt: True),
-        })
+        mock_dt = type(
+            "MockDatetime",
+            (),
+            {
+                "fromisoformat": staticmethod(
+                    lambda s: (_ for _ in ()).throw(ValueError("mock"))
+                ),
+                "strptime": staticmethod(lambda s, fmt: True),
+            },
+        )
 
         with patch("pain001.csv.validate_csv_data.datetime", mock_dt):
             result = _validate_datetime("2026-01-31")
@@ -3050,6 +3208,7 @@ class TestContextLoggerNone:
     def test_set_log_level_without_logger(self):
         """Cover branch 103->exit: logger is None when set_log_level is called."""
         import logging as log_mod
+
         from pain001.context.context import Context
 
         ctx = Context.__new__(Context)
@@ -3066,6 +3225,7 @@ class TestLoggingSchemaPartialBranches:
     def test_increment_unknown_level(self):
         """Cover branch 644->647: level not in counts dict."""
         import logging as log_mod
+
         from pain001.logging_schema import ExecutionSummaryTracker
 
         logger = log_mod.getLogger("test_increment")
@@ -3078,6 +3238,7 @@ class TestLoggingSchemaPartialBranches:
     def test_summary_without_start_time(self):
         """Cover branch 709->712: start_time is None."""
         import logging as log_mod
+
         from pain001.logging_schema import ExecutionSummaryTracker
 
         logger = log_mod.getLogger("test_summary")
@@ -3090,6 +3251,7 @@ class TestLoggingSchemaPartialBranches:
     def test_telemetry_without_start_time(self):
         """Cover branch 1033->1036: start_time is None in telemetry."""
         import logging as log_mod
+
         from pain001.logging_schema import ExecutionMetrics
 
         logger = log_mod.getLogger("test_telemetry")
@@ -3135,7 +3297,9 @@ class TestDataLoaderLine177Direct:
                 "pain001.data.loader._get_file_loaders",
                 return_value={},
             ):
-                with pytest.raises(DataSourceError, match="Unsupported file type"):
+                with pytest.raises(
+                    DataSourceError, match="Unsupported file type"
+                ):
                     _load_from_file(str(f))
         finally:
             if f.exists():
@@ -3147,7 +3311,9 @@ class TestParquetImportTimeBranch:
 
     def test_streaming_path_validation_fails(self):
         """Cover lines 139-140: validate_path raises for outside path."""
-        from pain001.parquet.load_parquet_data import load_parquet_data_streaming
+        from pain001.parquet.load_parquet_data import (
+            load_parquet_data_streaming,
+        )
 
         with pytest.raises(FileNotFoundError, match="path validation failed"):
             list(load_parquet_data_streaming("/etc/test.parquet"))
@@ -3177,6 +3343,7 @@ class TestParquetImportTimeBranch:
     def test_streaming_datasource_error_reraise(self):
         """Cover line 160: DataSourceError re-raised from parquet reading."""
         import sys
+
         from pain001.exceptions import DataSourceError
 
         parquet_mod = sys.modules["pain001.parquet.load_parquet_data"]
@@ -3207,11 +3374,20 @@ class TestParquetImportTimeBranch:
         f.write_bytes(b"PAR1dummy")
 
         # Mock ParquetFile to yield an empty batch then a non-empty one
-        mock_batch_empty = type("MockBatch", (), {"to_pylist": lambda self: []})()
-        mock_batch_data = type("MockBatch", (), {"to_pylist": lambda self: [{"a": 1}]})()
+        mock_batch_empty = type(
+            "MockBatch", (), {"to_pylist": lambda self: []}
+        )()
+        mock_batch_data = type(
+            "MockBatch", (), {"to_pylist": lambda self: [{"a": 1}]}
+        )()
         mock_pf = type(
-            "MockParquetFile", (),
-            {"iter_batches": lambda self, batch_size=1000: iter([mock_batch_empty, mock_batch_data])},
+            "MockParquetFile",
+            (),
+            {
+                "iter_batches": lambda self, batch_size=1000: iter(
+                    [mock_batch_empty, mock_batch_data]
+                )
+            },
         )()
 
         try:
