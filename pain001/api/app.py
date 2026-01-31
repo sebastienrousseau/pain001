@@ -145,10 +145,7 @@ def _resolve_generation_paths(
     else:
         output_dir = str(Path.cwd())
     # CodeQL CWE-22 guard: same variable for guard and sink
-    if not (
-        output_dir.startswith(str(Path.cwd().resolve()) + os.sep)
-        or output_dir == str(Path.cwd().resolve())
-    ):
+    if not output_dir.startswith(str(Path.cwd().resolve())):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
