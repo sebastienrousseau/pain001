@@ -381,7 +381,9 @@ def main(
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
     """
     # Display banner
-    table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
+    table = Table(
+        box=box.ROUNDED, safe_box=True, show_header=False, title=title
+    )
     table.add_column(justify="center", no_wrap=False, vertical="middle")
     table.add_row(description)
     table.width = 80

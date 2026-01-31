@@ -11,6 +11,7 @@ def _get_cached_schema(xsd_file_path: str) -> xmlschema.XMLSchema:
     """Return a cached XMLSchema instance for the given XSD file path."""
     return xmlschema.XMLSchema(xsd_file_path)
 
+
 # Copyright (C) 2023-2026 Sebastien Rousseau.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
