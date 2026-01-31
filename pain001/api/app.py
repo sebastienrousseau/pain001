@@ -15,6 +15,8 @@
 
 """Pain001 FastAPI application."""
 
+from __future__ import annotations
+
 import asyncio
 from pathlib import Path
 
@@ -48,9 +50,7 @@ from pain001.xml.generate_updated_xml_file_path import (
 from pain001.xml.generate_xml import generate_xml
 
 
-def _validate_safe_path(
-    user_path: str, base_dir: Path | None = None
-) -> Path:
+def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
     """Validate and resolve path to prevent directory traversal attacks.
 
     Delegates to the centralized ``validate_path`` security module and

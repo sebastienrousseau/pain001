@@ -37,13 +37,14 @@ from pain001.parquet.load_parquet_data import (
 )
 
 
-def _get_file_loaders() -> (
-    dict[str, tuple[
+def _get_file_loaders() -> dict[
+    str,
+    tuple[
         Callable[[str], list[dict[str, Any]]],
         Callable[[list[dict[str, Any]]], bool],
         str,
-    ]]
-):
+    ],
+]:
     """Build dispatch table at call time so mocks are respected."""
     return {
         ".csv": (load_csv_data, validate_csv_data, "CSV"),
@@ -58,13 +59,14 @@ def _get_file_loaders() -> (
     }
 
 
-def _get_file_stream_loaders() -> (
-    dict[str, tuple[
+def _get_file_stream_loaders() -> dict[
+    str,
+    tuple[
         Callable[..., Generator[list[dict[str, Any]], None, None]],
         Callable[[list[dict[str, Any]]], bool],
         str,
-    ]]
-):
+    ],
+]:
     """Build streaming dispatch table at call time so mocks are respected."""
     return {
         ".csv": (load_csv_data_streaming, validate_csv_data, "CSV"),
@@ -75,7 +77,11 @@ def _get_file_stream_loaders() -> (
         ),
         ".json": (load_json_data_streaming, validate_csv_data, "JSON"),
         ".jsonl": (load_jsonl_data_streaming, validate_csv_data, "JSONL"),
-        ".parquet": (load_parquet_data_streaming, validate_csv_data, "Parquet"),
+        ".parquet": (
+            load_parquet_data_streaming,
+            validate_csv_data,
+            "Parquet",
+        ),
     }
 
 
