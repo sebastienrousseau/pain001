@@ -40,16 +40,13 @@ class TestXmlGenerator(unittest.TestCase):
         xsd_file_path = "schema.xsd"
 
         # Act
-        with self.assertRaises(SystemExit):
+        with self.assertRaises(ValueError):
             generate_xml(
                 data,
                 payment_initiation_message_type,
                 xml_file_path,
                 xsd_file_path,
             )
-
-        # Assert
-        # self.assertEqual(sys.exitcode, 1)
 
 
 if __name__ == "__main__":

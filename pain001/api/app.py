@@ -73,16 +73,16 @@ def _validate_safe_path(
             base_dir=str(base_dir) if base_dir else None,
         )
         return Path(validated)
-    except PathValidationError:
+    except PathValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid path",
-        )
-    except SecurityError:
+        ) from e
+    except SecurityError as e:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: path outside allowed directory",
-        )
+        ) from e
 
 
 def _format_validation_errors(
@@ -217,11 +217,11 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Validation failed",
-        )
+        ) from e
 
 
 @app.post(
@@ -308,11 +308,11 @@ async def generate_xml_sync(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Generation failed",
-        )
+        ) from e
 
 
 @app.post(
@@ -348,11 +348,11 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
 
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create job",
-        )
+        ) from e
 
 
 @app.get(

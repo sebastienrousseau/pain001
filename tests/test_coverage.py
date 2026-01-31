@@ -158,7 +158,7 @@ class TestCoverageComplete:
 
         try:
             # Test with empty data
-            with pytest.raises(SystemExit):
+            with pytest.raises(ValueError):
                 generate_xml(
                     [],
                     "pain.001.001.03",

@@ -668,10 +668,10 @@ class TestGenerateXMLFunction(unittest.TestCase):
         ]
 
     def test_generate_xml_with_empty_data(self) -> None:
-        """Test that generate_xml exits when data is empty."""
+        """Test that generate_xml raises ValueError when data is empty."""
         from pain001.xml.generate_xml import generate_xml
 
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(ValueError):
             generate_xml(
                 [],
                 "pain.001.001.03",
@@ -679,21 +679,17 @@ class TestGenerateXMLFunction(unittest.TestCase):
                 self.test_xsd_path,
             )
 
-        self.assertEqual(cm.exception.code, 1)
-
     def test_generate_xml_with_invalid_message_type(self) -> None:
-        """Test that generate_xml exits with invalid message type."""
+        """Test that generate_xml raises ValueError with invalid message type."""
         from pain001.xml.generate_xml import generate_xml
 
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(ValueError):
             generate_xml(
                 self.sample_data_v3,
                 "invalid.type",
                 self.test_template_path,
                 self.test_xsd_path,
             )
-
-        self.assertEqual(cm.exception.code, 1)
 
     def test_generate_xml_pain_001_001_03(self) -> None:
         """Test generate_xml with pain.001.001.03 message type."""
@@ -1116,18 +1112,16 @@ class TestGenerateXMLFunction(unittest.TestCase):
             os.remove(output_path)
 
     def test_generate_xml_unsupported_version(self) -> None:
-        """Test generate_xml with unsupported version in supported format."""
+        """Test generate_xml raises ValueError with unsupported version."""
         from pain001.xml.generate_xml import generate_xml
 
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(ValueError):
             generate_xml(
                 self.sample_data_v3,
                 "pain.001.001.12",  # Unsupported version
                 self.test_template_path,
                 self.test_xsd_path,
             )
-
-        self.assertEqual(cm.exception.code, 1)
 
     def test_generate_xml_invalid_xsd_validation(self) -> None:
         """Test generate_xml with invalid XML that fails XSD validation."""
@@ -1142,15 +1136,13 @@ class TestGenerateXMLFunction(unittest.TestCase):
             autospec=True,
             return_value=False,
         ):
-            with self.assertRaises(SystemExit) as cm:
+            with self.assertRaises(RuntimeError):
                 generate_xml(
                     self.sample_data_v3,
                     "pain.001.001.03",
                     self.test_template_path,
                     self.test_xsd_path,
                 )
-
-            self.assertEqual(cm.exception.code, 1)
 
             # Clean up if file was created
             output_path = "pain001/test_fixtures/pain.001.001.03.xml"
@@ -1185,14 +1177,13 @@ class TestGenerateXMLFunction(unittest.TestCase):
         self.assertEqual(len(supported_types), 7)
 
         # Verify unsupported types fail at the outer check
-        with self.assertRaises(SystemExit) as cm:
+        with self.assertRaises(ValueError):
             generate_xml(
                 self.sample_data_v3,
                 "pain.001.001.99",  # Not in xml_generators
                 self.test_template_path,
                 self.test_xsd_path,
             )
-        self.assertEqual(cm.exception.code, 1)
 
     def test_validate_xml_string_via_xsd_parsing_exception(self) -> None:
         """Test exception handling in validate_xml_string_via_xsd with malformed XML."""

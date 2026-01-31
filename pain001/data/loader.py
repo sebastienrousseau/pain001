@@ -18,14 +18,13 @@
 from collections.abc import Callable, Generator
 from typing import Any, Union
 
+# pylint: disable=duplicate-code
 from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
 from pain001.csv.validate_csv_data import validate_csv_data
 from pain001.db.load_db_data import load_db_data
 from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.db.validate_db_data import validate_db_data
 from pain001.exceptions import DataSourceError, PaymentValidationError
-
-# pylint: disable=duplicate-code
 from pain001.json.load_json_data import (
     load_json_data,
     load_json_data_streaming,
@@ -37,41 +36,47 @@ from pain001.parquet.load_parquet_data import (
     load_parquet_data_streaming,
 )
 
-# Type aliases for dispatch table entries
-_LoaderFn = Callable[[str], list[dict[str, Any]]]
-_ValidatorFn = Callable[[list[dict[str, Any]]], bool]
-_StreamLoaderFn = Callable[..., Generator[list[dict[str, Any]], None, None]]
+
+def _get_file_loaders() -> (
+    dict[str, tuple[
+        Callable[[str], list[dict[str, Any]]],
+        Callable[[list[dict[str, Any]]], bool],
+        str,
+    ]]
+):
+    """Build dispatch table at call time so mocks are respected."""
+    return {
+        ".csv": (load_csv_data, validate_csv_data, "CSV"),
+        ".db": (
+            lambda p: load_db_data(p, table_name="pain001"),
+            validate_db_data,
+            "Database",
+        ),
+        ".json": (load_json_data, validate_csv_data, "JSON"),
+        ".jsonl": (load_jsonl_data, validate_csv_data, "JSONL"),
+        ".parquet": (load_parquet_data, validate_csv_data, "Parquet"),
+    }
 
 
-def _db_loader(path: str) -> list[dict[str, Any]]:
-    """Wrapper to pass table_name to load_db_data."""
-    return load_db_data(path, table_name="pain001")
-
-
-def _db_stream_loader(
-    path: str, chunk_size: int
-) -> Generator[list[dict[str, Any]], None, None]:
-    """Wrapper to pass table_name to load_db_data_streaming."""
-    return load_db_data_streaming(path, "pain001", chunk_size)
-
-
-# Dispatch table: extension -> (loader, validator, format_name)
-_FILE_LOADERS: dict[str, tuple[_LoaderFn, _ValidatorFn, str]] = {
-    ".csv": (load_csv_data, validate_csv_data, "CSV"),
-    ".db": (_db_loader, validate_db_data, "Database"),
-    ".json": (load_json_data, validate_csv_data, "JSON"),
-    ".jsonl": (load_jsonl_data, validate_csv_data, "JSONL"),
-    ".parquet": (load_parquet_data, validate_csv_data, "Parquet"),
-}
-
-# Streaming dispatch table: extension -> (stream_loader, validator, format_name)
-_FILE_STREAM_LOADERS: dict[str, tuple[_StreamLoaderFn, _ValidatorFn, str]] = {
-    ".csv": (load_csv_data_streaming, validate_csv_data, "CSV"),
-    ".db": (_db_stream_loader, validate_db_data, "Database"),
-    ".json": (load_json_data_streaming, validate_csv_data, "JSON"),
-    ".jsonl": (load_jsonl_data_streaming, validate_csv_data, "JSONL"),
-    ".parquet": (load_parquet_data_streaming, validate_csv_data, "Parquet"),
-}
+def _get_file_stream_loaders() -> (
+    dict[str, tuple[
+        Callable[..., Generator[list[dict[str, Any]], None, None]],
+        Callable[[list[dict[str, Any]]], bool],
+        str,
+    ]]
+):
+    """Build streaming dispatch table at call time so mocks are respected."""
+    return {
+        ".csv": (load_csv_data_streaming, validate_csv_data, "CSV"),
+        ".db": (
+            lambda p, cs: load_db_data_streaming(p, "pain001", cs),
+            validate_db_data,
+            "Database",
+        ),
+        ".json": (load_json_data_streaming, validate_csv_data, "JSON"),
+        ".jsonl": (load_jsonl_data_streaming, validate_csv_data, "JSONL"),
+        ".parquet": (load_parquet_data_streaming, validate_csv_data, "Parquet"),
+    }
 
 
 def load_payment_data(
@@ -183,7 +188,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
 
     # Use safe_path for all subsequent operations
     ext = os.path.splitext(safe_path)[1]
-    entry = _FILE_LOADERS.get(ext)
+    entry = _get_file_loaders().get(ext)
     if entry is None:
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
@@ -313,7 +318,7 @@ def _load_from_file_streaming(
     import os
 
     ext = os.path.splitext(file_path)[1]
-    entry = _FILE_STREAM_LOADERS.get(ext)
+    entry = _get_file_stream_loaders().get(ext)
     if entry is None:
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
