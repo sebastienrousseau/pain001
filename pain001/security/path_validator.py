@@ -90,47 +90,41 @@ def validate_path(
     normalized_str = os.path.normpath(path_str)
 
     try:
-        # Convert to Path object and resolve absolute path
-        # resolve() handles symlinks and removes '..' components (CWE-22 mitigation)
-        resolved_path = Path(normalized_str).resolve()
+        # Use os.path.realpath() so the resolved value is a plain string
+        # that CodeQL can track through the startswith() guard below.
+        resolved_str = os.path.realpath(normalized_str)
     except (RuntimeError, OSError) as e:
         raise PathValidationError(f"Invalid path: {e}") from e
 
     # Determine allowed bases
     if base_dir is not None:
-        base_resolved = Path(base_dir).resolve()
-        allowed_bases = [base_resolved]
+        base_str = os.path.realpath(str(base_dir))
+        allowed_bases = [base_str]
     else:
         # Default allowed bases
         allowed_bases = [
-            Path.cwd().resolve(),
-            Path(tempfile.gettempdir()).resolve(),
-            Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
+            os.path.realpath(os.getcwd()),
+            os.path.realpath(tempfile.gettempdir()),
+            os.path.realpath(os.path.join(os.path.sep, "var", "tmp")),
         ]
 
     # Strict boundary check: resolved path must be within at least one
     # allowed base.  The str.startswith() guard is a pattern that static
     # analysis tools (including CodeQL) recognise as a path-injection
     # sanitiser barrier (CWE-22).
-    resolved_str = str(resolved_path)
     for base in allowed_bases:
-        base_str = str(base)
-        if resolved_str == base_str or resolved_str.startswith(
-            base_str + os.sep
-        ):
+        if resolved_str == base or resolved_str.startswith(base + os.sep):
             # Path is within this allowed base — safe to use.
-            if must_exist and not resolved_path.exists():
-                raise FileNotFoundError(
-                    f"Path does not exist: {resolved_path}"
-                )
+            if must_exist and not os.path.exists(resolved_str):
+                raise FileNotFoundError(f"Path does not exist: {resolved_str}")
             return resolved_str
 
     if base_dir:
         raise SecurityError(
-            f"Path '{resolved_path}' escapes base directory '{base_dir}'."
+            f"Path '{resolved_str}' escapes base directory '{base_dir}'."
         )
     raise SecurityError(
-        f"Path '{resolved_path}' is outside allowed directories."
+        f"Path '{resolved_str}' is outside allowed directories."
     )
 
 

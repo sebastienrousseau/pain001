@@ -124,16 +124,21 @@ class TestPathValidator:
         assert len(sanitized) == 13
 
     def test_validate_path_symlink_loop(self):
-        """Test validation of a path with a symlink loop (RuntimeError)."""
+        """Test validation of a path with a symlink loop.
+
+        os.path.realpath() resolves symlink loops without raising,
+        so the path simply won't exist when must_exist=True.
+        """
         with tempfile.TemporaryDirectory() as tmp_dir:
             loop_path = Path(tmp_dir) / "loop"
             try:
                 # Create a self-referencing symlink
                 os.symlink(loop_path, loop_path)
 
-                # Should raise PathValidationError due to resolve() failure
-                with pytest.raises(PathValidationError):
-                    validate_path(loop_path)
+                # With must_exist=True, realpath resolves the loop
+                # but the resulting path won't exist on disk.
+                with pytest.raises(FileNotFoundError):
+                    validate_path(loop_path, must_exist=True)
 
             except OSError:
                 pytest.skip("Symlinks not supported or permission denied")

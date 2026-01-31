@@ -31,7 +31,7 @@ try:
     import pyarrow.parquet as pq  # type: ignore[import-not-found]
 
     HAS_PARQUET_SUPPORT = True
-except ImportError:
+except ImportError:  # pragma: no cover
     HAS_PARQUET_SUPPORT = False
 
 

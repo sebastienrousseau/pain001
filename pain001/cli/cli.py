@@ -149,7 +149,7 @@ def _validate_schema(
             f"\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
             f"Expected: {xml_message_type}"
         )
-        sys.exit(1)
+        raise SystemExit(1) from e
 
 
 def _validate_payment_data(
@@ -202,8 +202,7 @@ def _validate_payment_data(
                 "\n[yellow]Tip:[/yellow] Ensure JSON is valid. "
                 "Check for syntax errors or invalid structure."
             )
-        sys.exit(1)
-        return 0  # unreachable; satisfies consistent-return-type analysis
+        raise SystemExit(1) from e
 
 
 def _generate_xml_files(

@@ -67,7 +67,7 @@ from typing import Any, Optional, Union
 
 try:
     __version__ = version("pain001")
-except PackageNotFoundError:
+except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0"
 
 # Context variable for request tracing across async operations
