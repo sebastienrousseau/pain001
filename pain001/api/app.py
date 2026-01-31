@@ -36,6 +36,11 @@ from pain001.api.models import (
 )
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
+from pain001.security.path_validator import (
+    PathValidationError,
+    SecurityError,
+    validate_path,
+)
 from pain001.validation.schema_validator import SchemaValidator
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
@@ -43,8 +48,13 @@ from pain001.xml.generate_updated_xml_file_path import (
 from pain001.xml.generate_xml import generate_xml
 
 
-def _validate_safe_path(user_path: str, base_dir: Path = None) -> Path:
+def _validate_safe_path(
+    user_path: str, base_dir: Path | None = None
+) -> Path:
     """Validate and resolve path to prevent directory traversal attacks.
+
+    Delegates to the centralized ``validate_path`` security module and
+    converts library exceptions into appropriate HTTP responses.
 
     Args:
         user_path: User-provided path (potentially malicious).
@@ -54,47 +64,78 @@ def _validate_safe_path(user_path: str, base_dir: Path = None) -> Path:
         Resolved absolute Path object.
 
     Raises:
-        HTTPException: If path contains traversal attempts or is outside base_dir.
+        HTTPException: If path is invalid or outside allowed directories.
     """
-    # Allow absolute paths (needed for tests with tmp_path fixtures)
-    # But reject obvious traversal attempts with relative paths
-    if ".." in user_path:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid path: directory traversal detected",
-        )
-
-    # Pre-validate path string before Path() operation (CodeQL: prevent path traversal)
-    if ".." in str(user_path):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid path: directory traversal detected",
-        )
-
-    # Resolve to absolute path (use resolve without strict to avoid errors)
     try:
-        # First convert to Path object (now safe after pre-validation)
-        path_obj = Path(user_path)  # nosec B108
-        # Then resolve (this is the secure operation)
-        resolved = path_obj.resolve(strict=False)  # nosec B108
-    except (OSError, RuntimeError, ValueError) as e:
+        validated = validate_path(
+            user_path,
+            must_exist=False,
+            base_dir=str(base_dir) if base_dir else None,
+        )
+        return Path(validated)
+    except PathValidationError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Invalid path: {e}",
-        ) from e
+            detail="Invalid path",
+        )
+    except SecurityError:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied: path outside allowed directory",
+        )
 
-    # If base_dir specified, ensure resolved path is within it
-    if base_dir:
-        base_resolved = base_dir.resolve()
-        try:
-            resolved.relative_to(base_resolved)
-        except ValueError as e:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: path outside allowed directory",
-            ) from e
 
-    return resolved
+def _format_validation_errors(
+    errors: list[tuple[int, list]],  # type: ignore[type-arg]
+) -> list[ValidationErrorModel]:
+    """Format schema validation errors into API response models.
+
+    Args:
+        errors: List of (row_index, error_list) tuples from SchemaValidator.
+
+    Returns:
+        List of ValidationErrorModel instances.
+    """
+    error_models: list[ValidationErrorModel] = []
+    for _, row_errors in errors:
+        for error in row_errors:
+            error_models.append(
+                ValidationErrorModel(
+                    field=error.path,
+                    message=error.message,
+                    value=str(error.value),
+                )
+            )
+    return error_models
+
+
+def _resolve_generation_paths(
+    request: GenerateXMLRequest,
+) -> tuple[Path, str, str]:
+    """Resolve and validate output directory and template paths for XML generation.
+
+    Args:
+        request: Generation request with message type and optional output dir.
+
+    Returns:
+        Tuple of (output_dir, xsd_file_path, xml_template_path).
+    """
+    if request.output_dir:
+        output_dir = _validate_safe_path(request.output_dir)
+    else:
+        output_dir = Path.cwd()
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    template_base = Path("pain001/templates") / request.message_type.value
+    xsd_file_path = str(
+        _validate_safe_path(
+            str(template_base / f"{request.message_type.value}.xsd")
+        )
+    )
+    xml_template_path = str(
+        _validate_safe_path(str(template_base / "template.xml"))
+    )
+    return output_dir, xsd_file_path, xml_template_path
 
 
 # Create FastAPI application
@@ -150,7 +191,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {request.file_path}",
+                detail="File not found",
             )
 
         data = load_payment_data(str(file_path))
@@ -160,16 +201,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         total, valid, errors = validator.validate_batch(data)
 
         # Format errors
-        error_models = []
-        for _, row_errors in errors:
-            for error in row_errors:
-                error_models.append(
-                    ValidationErrorModel(
-                        field=error.path,
-                        message=error.message,
-                        value=str(error.value),
-                    )
-                )
+        error_models = _format_validation_errors(errors)
 
         return ValidationResponse(
             is_valid=len(errors) == 0,
@@ -185,11 +217,11 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Validation failed: {str(e)}",
-        ) from e
+            detail="Validation failed",
+        )
 
 
 @app.post(
@@ -201,7 +233,6 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
 async def generate_xml_sync(
     request: GenerateXMLRequest,
 ) -> GenerateXMLResponse:
-    # pylint: disable=too-many-locals
     """Generate XML synchronously.
 
     Args:
@@ -219,7 +250,7 @@ async def generate_xml_sync(
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"File not found: {request.file_path}",
+                detail="File not found",
             )
 
         # Validate first
@@ -229,16 +260,7 @@ async def generate_xml_sync(
         total, valid, errors = validator.validate_batch(data)
 
         if errors:
-            error_models = []
-            for _, row_errors in errors:
-                for error in row_errors:
-                    error_models.append(
-                        ValidationErrorModel(
-                            field=error.path,
-                            message=error.message,
-                            value=str(error.value),
-                        )
-                    )
+            error_models = _format_validation_errors(errors)
 
             return GenerateXMLResponse(
                 success=False,
@@ -251,30 +273,15 @@ async def generate_xml_sync(
         if request.validate_only:
             return GenerateXMLResponse(
                 success=True,
-                message=f"✓ All {valid} rows are valid",
+                message=f"All {valid} rows are valid",
                 file_path=None,
             )
 
         # Generate XML
-        # Use temporary template path in output directory
-        if request.output_dir:
-            output_dir = _validate_safe_path(request.output_dir)
-        else:
-            output_dir = Path.cwd()
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Validate template paths (constructed from enum, but CodeQL requires validation)
-        template_base = Path("pain001/templates") / request.message_type.value
-        xsd_file_path = str(
-            _validate_safe_path(
-                str(template_base / f"{request.message_type.value}.xsd")
-            )
-        )
-        xml_template_path = str(
-            _validate_safe_path(str(template_base / "template.xml"))
+        _, xsd_file_path, xml_template_path = _resolve_generation_paths(
+            request
         )
 
-        # Generate XML
         generate_xml(
             data,
             request.message_type.value,
@@ -290,7 +297,7 @@ async def generate_xml_sync(
 
         return GenerateXMLResponse(
             success=True,
-            message="✓ XML generated successfully",
+            message="XML generated successfully",
             file_path=str(result_path),
         )
 
@@ -301,11 +308,11 @@ async def generate_xml_sync(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Generation failed: {str(e)}",
-        ) from e
+            detail="Generation failed",
+        )
 
 
 @app.post(
@@ -341,11 +348,11 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
 
     except HTTPException:
         raise
-    except Exception as e:
+    except Exception:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create job: {str(e)}",
-        ) from e
+            detail="Failed to create job",
+        )
 
 
 @app.get(
@@ -461,11 +468,11 @@ async def download_xml(job_id: str) -> FileResponse:
             detail="No file available for download",
         )
 
-    file_path = Path(job.result["file_path"])
+    file_path = _validate_safe_path(job.result["file_path"])
     if not file_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"File not found: {file_path}",
+            detail="Generated file not found",
         )
 
     return FileResponse(
@@ -498,7 +505,7 @@ async def _process_generation_job(
             job_manager.update_status(
                 job_id,
                 JobStatus.FAILED,
-                error=f"File not found: {request.file_path}",
+                error="File not found",
             )
             return
 
@@ -521,24 +528,10 @@ async def _process_generation_job(
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=70)
 
         # Generate XML (secure paths)
-        if request.output_dir:
-            output_dir = _validate_safe_path(request.output_dir)
-        else:
-            output_dir = Path.cwd()
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        # Validate template paths (constructed from enum, but CodeQL requires validation)
-        template_base = Path("pain001/templates") / request.message_type.value
-        xsd_file_path = str(
-            _validate_safe_path(
-                str(template_base / f"{request.message_type.value}.xsd")
-            )
-        )
-        xml_template_path = str(
-            _validate_safe_path(str(template_base / "template.xml"))
+        _, xsd_file_path, xml_template_path = _resolve_generation_paths(
+            request
         )
 
-        # Generate XML
         generate_xml(
             data,
             request.message_type.value,
@@ -564,10 +557,10 @@ async def _process_generation_job(
             },
         )
 
-    except Exception as e:
+    except Exception:
         job_manager.update_status(
             job_id,
             JobStatus.FAILED,
             progress=100,
-            error=f"Processing failed: {str(e)}",
+            error="Processing failed",
         )

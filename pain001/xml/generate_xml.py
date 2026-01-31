@@ -21,7 +21,6 @@
 
 # Import the CSV library
 import os
-import sys
 from typing import Any
 
 from jinja2 import Environment, FileSystemLoader
@@ -398,13 +397,9 @@ def generate_xml(
         RuntimeError: If XML validation fails.
     """
     # Generate XML content as string
-    try:
-        xml_content = generate_xml_string(
-            data, payment_initiation_message_type, xml_file_path, xsd_file_path
-        )
-    except (ValueError, RuntimeError) as e:
-        print(f"Error: {e}")
-        sys.exit(1)
+    xml_content = generate_xml_string(
+        data, payment_initiation_message_type, xml_file_path, xsd_file_path
+    )
 
     # Generate updated XML file path
     updated_xml_file_path = generate_updated_xml_file_path(
@@ -416,8 +411,7 @@ def generate_xml(
     try:
         safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
     except Exception as e:
-        print(f"Error: Path validation failed: {e}")
-        sys.exit(1)
+        raise ValueError(f"Path validation failed: {e}") from e
 
     # Write the XML content to the file (now safe after validation)
     with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108

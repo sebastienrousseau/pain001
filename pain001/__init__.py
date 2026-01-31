@@ -19,5 +19,14 @@ __version__ = "0.0.47"
 
 from pain001.__main__ import main
 from pain001.core.core import process_files
+from pain001.exceptions import DataSourceError, PaymentValidationError
+from pain001.xml.generate_xml import generate_xml_string
 
-__all__ = ["main", "process_files", "__version__"]
+__all__ = [
+    "main",
+    "process_files",
+    "generate_xml_string",
+    "PaymentValidationError",
+    "DataSourceError",
+    "__version__",
+]

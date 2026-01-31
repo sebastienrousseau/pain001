@@ -15,7 +15,7 @@
 
 """Universal data loader supporting multiple input sources."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from typing import Any, Union
 
 from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
@@ -36,6 +36,42 @@ from pain001.parquet.load_parquet_data import (
     load_parquet_data,
     load_parquet_data_streaming,
 )
+
+# Type aliases for dispatch table entries
+_LoaderFn = Callable[[str], list[dict[str, Any]]]
+_ValidatorFn = Callable[[list[dict[str, Any]]], bool]
+_StreamLoaderFn = Callable[..., Generator[list[dict[str, Any]], None, None]]
+
+
+def _db_loader(path: str) -> list[dict[str, Any]]:
+    """Wrapper to pass table_name to load_db_data."""
+    return load_db_data(path, table_name="pain001")
+
+
+def _db_stream_loader(
+    path: str, chunk_size: int
+) -> Generator[list[dict[str, Any]], None, None]:
+    """Wrapper to pass table_name to load_db_data_streaming."""
+    return load_db_data_streaming(path, "pain001", chunk_size)
+
+
+# Dispatch table: extension -> (loader, validator, format_name)
+_FILE_LOADERS: dict[str, tuple[_LoaderFn, _ValidatorFn, str]] = {
+    ".csv": (load_csv_data, validate_csv_data, "CSV"),
+    ".db": (_db_loader, validate_db_data, "Database"),
+    ".json": (load_json_data, validate_csv_data, "JSON"),
+    ".jsonl": (load_jsonl_data, validate_csv_data, "JSONL"),
+    ".parquet": (load_parquet_data, validate_csv_data, "Parquet"),
+}
+
+# Streaming dispatch table: extension -> (stream_loader, validator, format_name)
+_FILE_STREAM_LOADERS: dict[str, tuple[_StreamLoaderFn, _ValidatorFn, str]] = {
+    ".csv": (load_csv_data_streaming, validate_csv_data, "CSV"),
+    ".db": (_db_stream_loader, validate_db_data, "Database"),
+    ".json": (load_json_data_streaming, validate_csv_data, "JSON"),
+    ".jsonl": (load_jsonl_data_streaming, validate_csv_data, "JSONL"),
+    ".parquet": (load_parquet_data_streaming, validate_csv_data, "Parquet"),
+}
 
 
 def load_payment_data(
@@ -142,55 +178,25 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
                 f"  - For SQLite: {file_path}/data.db"
             ) from e
         raise FileNotFoundError(
-            f"Data file validation failed: {file_path}\n" f"Error: {e}"
+            f"Data file validation failed: {file_path}\nError: {e}"
         ) from e
 
     # Use safe_path for all subsequent operations
-    if safe_path.endswith(".csv"):
-        data = load_csv_data(safe_path)
-        if not validate_csv_data(data):
-            raise PaymentValidationError(
-                f"CSV data validation failed for {file_path}"
-            )
-        return data
-
-    elif safe_path.endswith(".db"):
-        data = load_db_data(safe_path, table_name="pain001")
-        if not validate_db_data(data):
-            raise PaymentValidationError(
-                f"Database data validation failed for {file_path}"
-            )
-        return data
-
-    elif safe_path.endswith(".json"):
-        data = load_json_data(safe_path)
-        if not validate_csv_data(data):  # Reuse CSV validator
-            raise PaymentValidationError(
-                f"JSON data validation failed for {file_path}"
-            )
-        return data
-
-    elif safe_path.endswith(".jsonl"):
-        data = load_jsonl_data(safe_path)
-        if not validate_csv_data(data):  # Reuse CSV validator
-            raise PaymentValidationError(
-                f"JSONL data validation failed for {file_path}"
-            )
-        return data
-
-    elif safe_path.endswith(".parquet"):
-        data = load_parquet_data(safe_path)
-        if not validate_csv_data(data):  # Reuse CSV validator
-            raise PaymentValidationError(
-                f"Parquet data validation failed for {file_path}"
-            )
-        return data
-
-    else:
+    ext = os.path.splitext(safe_path)[1]
+    entry = _FILE_LOADERS.get(ext)
+    if entry is None:
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
             f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
+
+    loader_fn, validator_fn, format_name = entry
+    data = loader_fn(safe_path)
+    if not validator_fn(data):
+        raise PaymentValidationError(
+            f"{format_name} data validation failed for {file_path}"
+        )
+    return data
 
 
 def _load_from_list(data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -296,7 +302,7 @@ def load_payment_data_streaming(
         )
 
 
-def _load_from_file_streaming(  # pylint: disable=too-many-branches
+def _load_from_file_streaming(
     file_path: str, chunk_size: int, validate: bool = True
 ) -> Generator[list[dict[str, Any]], None, None]:
     """
@@ -304,51 +310,23 @@ def _load_from_file_streaming(  # pylint: disable=too-many-branches
 
     Memory-efficient for large files.
     """
-    if file_path.endswith(".csv"):
-        for chunk in load_csv_data_streaming(file_path, chunk_size):
-            if validate and not validate_csv_data(chunk):
-                raise PaymentValidationError(
-                    f"CSV data validation failed for chunk in {file_path}"
-                )
-            yield chunk
+    import os
 
-    elif file_path.endswith(".db"):
-        for chunk in load_db_data_streaming(file_path, "pain001", chunk_size):
-            if validate and not validate_db_data(chunk):
-                raise PaymentValidationError(
-                    f"Database data validation failed for chunk in {file_path}"
-                )
-            yield chunk
-
-    elif file_path.endswith(".json"):
-        for chunk in load_json_data_streaming(file_path, chunk_size):
-            if validate and not validate_csv_data(chunk):
-                raise PaymentValidationError(
-                    f"JSON data validation failed for chunk in {file_path}"
-                )
-            yield chunk
-
-    elif file_path.endswith(".jsonl"):
-        for chunk in load_jsonl_data_streaming(file_path, chunk_size):
-            if validate and not validate_csv_data(chunk):
-                raise PaymentValidationError(
-                    f"JSONL data validation failed for chunk in {file_path}"
-                )
-            yield chunk
-
-    elif file_path.endswith(".parquet"):
-        for chunk in load_parquet_data_streaming(file_path, chunk_size):
-            if validate and not validate_csv_data(chunk):
-                raise PaymentValidationError(
-                    f"Parquet data validation failed for chunk in {file_path}"
-                )
-            yield chunk
-
-    else:
+    ext = os.path.splitext(file_path)[1]
+    entry = _FILE_STREAM_LOADERS.get(ext)
+    if entry is None:
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
             f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
+
+    stream_loader_fn, validator_fn, format_name = entry
+    for chunk in stream_loader_fn(file_path, chunk_size):
+        if validate and not validator_fn(chunk):
+            raise PaymentValidationError(
+                f"{format_name} data validation failed for chunk in {file_path}"
+            )
+        yield chunk
 
 
 def _load_from_list_streaming(
