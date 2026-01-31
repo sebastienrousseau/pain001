@@ -48,6 +48,8 @@ jobs:
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
+          # Use custom config that registers validate_path as a sanitizer
+          config-file: .github/codeql/codeql-config.yml
           # Override default queries with custom configuration
           queries: +security-and-quality
           # Advanced setup options

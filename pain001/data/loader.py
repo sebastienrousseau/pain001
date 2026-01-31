@@ -166,14 +166,6 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     except (
         Exception
     ) as e:  # Catch PathValidationError, SecurityError, FileNotFoundError
-        if os.path.isdir(file_path):
-            raise DataSourceError(
-                f"Data file does not exist: {file_path}\n"
-                f"The path points to a directory. Please specify a data file:\n"
-                f"  - For CSV: {file_path}/template.csv\n"
-                f"  - For JSON: {file_path}/data.json\n"
-                f"  - For SQLite: {file_path}/data.db"
-            ) from e
         raise FileNotFoundError(
             f"Data file validation failed: {file_path}\nError: {e}"
         ) from e

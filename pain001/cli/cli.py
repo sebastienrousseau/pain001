@@ -203,6 +203,7 @@ def _validate_payment_data(
                 "Check for syntax errors or invalid structure."
             )
         sys.exit(1)
+        return 0  # unreachable; satisfies consistent-return-type analysis
 
 
 def _generate_xml_files(

@@ -1,0 +1,12 @@
+name: "Pain001 CodeQL Configuration"
+
+# Paths to exclude from analysis (generated / vendored code)
+paths-ignore:
+  - "docs"
+  - "**/*.md"
+
+# Register local model pack that marks validate_path as a sanitizer
+# barrier for path-injection (CWE-22) queries.
+packs:
+  python:
+    - .github/codeql/extensions

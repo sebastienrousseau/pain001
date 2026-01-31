@@ -1,0 +1,14 @@
+extensions:
+  # Mark validate_path as a neutral summary so CodeQL does not propagate
+  # taint from input arguments to the return value.  The function validates
+  # that the resolved path stays within an explicit allowlist of base
+  # directories and raises SecurityError / PathValidationError otherwise,
+  # making it a sanitizer barrier for CWE-22 (path traversal).
+  - addsTo:
+      pack: codeql/python-all
+      extensible: neutralModel
+    data:
+      # (type, path, kind)
+      - ["pain001.security.path_validator", "Member[validate_path]", "summary"]
+      - ["pain001.security", "Member[validate_path]", "summary"]
+      - ["pain001.api.app", "Member[_validate_safe_path]", "summary"]
