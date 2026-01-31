@@ -18,6 +18,8 @@
 from __future__ import annotations
 
 import asyncio
+import os
+import tempfile
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, status
@@ -66,9 +68,6 @@ def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
     Raises:
         HTTPException: If path is invalid or outside allowed directories.
     """
-    import os
-    import tempfile
-
     try:
         validated = validate_path(
             user_path,
@@ -145,6 +144,15 @@ def _resolve_generation_paths(
         output_dir = _validate_safe_path(request.output_dir)
     else:
         output_dir = Path.cwd()
+    # CodeQL CWE-22 inline guard (startswith barrier)
+    _d = str(output_dir)
+    if not (
+        _d.startswith(str(Path.cwd().resolve()) + os.sep)
+        or _d == str(Path.cwd().resolve())
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     template_base = Path("pain001/templates") / request.message_type.value
@@ -209,6 +217,11 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
     try:
         # Validate and load data (secure path)
         file_path = _validate_safe_path(request.file_path)
+        # CodeQL CWE-22 inline guard
+        if not str(file_path).startswith(str(Path.cwd().resolve()) + os.sep):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            )
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -268,6 +281,11 @@ async def generate_xml_sync(
     try:
         # Validate file path (secure path)
         file_path = _validate_safe_path(request.file_path)
+        # CodeQL CWE-22 inline guard
+        if not str(file_path).startswith(str(Path.cwd().resolve()) + os.sep):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+            )
         if not file_path.exists():
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -490,6 +508,11 @@ async def download_xml(job_id: str) -> FileResponse:
         )
 
     file_path = _validate_safe_path(job.result["file_path"])
+    # CodeQL CWE-22 inline guard
+    if not str(file_path).startswith(str(Path.cwd().resolve()) + os.sep):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
+        )
     if not file_path.exists():
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -522,6 +545,12 @@ async def _process_generation_job(
 
         # Validate file path (secure path)
         file_path = _validate_safe_path(request.file_path)
+        # CodeQL CWE-22 inline guard
+        if not str(file_path).startswith(str(Path.cwd().resolve()) + os.sep):
+            job_manager.update_status(
+                job_id, JobStatus.FAILED, error="Access denied"
+            )
+            return
         if not file_path.exists():
             job_manager.update_status(
                 job_id,
