@@ -15,7 +15,7 @@
 
 """Universal data loader supporting multiple input sources."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Generator
 from typing import Any, Union
 
 # pylint: disable=duplicate-code
@@ -37,14 +37,7 @@ from pain001.parquet.load_parquet_data import (
 )
 
 
-def _get_file_loaders() -> dict[
-    str,
-    tuple[
-        Callable[[str], list[dict[str, Any]]],
-        Callable[[list[dict[str, Any]]], bool],
-        str,
-    ],
-]:
+def _get_file_loaders() -> dict[str, tuple[Any, Any, str]]:
     """Build dispatch table at call time so mocks are respected."""
     return {
         ".csv": (load_csv_data, validate_csv_data, "CSV"),
@@ -59,14 +52,7 @@ def _get_file_loaders() -> dict[
     }
 
 
-def _get_file_stream_loaders() -> dict[
-    str,
-    tuple[
-        Callable[..., Generator[list[dict[str, Any]], None, None]],
-        Callable[[list[dict[str, Any]]], bool],
-        str,
-    ],
-]:
+def _get_file_stream_loaders() -> dict[str, tuple[Any, Any, str]]:
     """Build streaming dispatch table at call time so mocks are respected."""
     return {
         ".csv": (load_csv_data_streaming, validate_csv_data, "CSV"),
