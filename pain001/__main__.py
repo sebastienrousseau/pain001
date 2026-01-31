@@ -3,91 +3,13 @@
 import sys
 from typing import Optional
 
-import click
-from rich import box
 from rich.console import Console
-from rich.table import Table
 
+from pain001.cli.cli import main as cli
 from pain001.core.core import process_files
 from pain001.validation import ValidationConfig, ValidationService
 
 console = Console()
-
-description = None
-title = "Pain001"
-
-table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
-table.add_column(justify="center", no_wrap=False, vertical="middle")
-table.add_row(description)
-table.width = 80
-console.print(table)
-
-
-@click.command(
-    help=("To use Pain001, you must specify the following options:\n\n"),
-    context_settings={"help_option_names": ["-h", "--help"]},
-)
-@click.option(
-    "-t",
-    "--xml_message_type",
-    default=None,
-    help="Type of XML message (required)",
-)
-@click.option(
-    "-m",
-    "--xml_template_file_path",
-    default=None,
-    type=click.Path(),
-    help="Path to XML template file (required)",
-)
-@click.option(
-    "-s",
-    "--xsd_schema_file_path",
-    default=None,
-    type=click.Path(),
-    help="Path to XSD template file (required)",
-)
-@click.option(
-    "-d",
-    "--data_file_path",
-    default=None,
-    type=click.Path(),
-    help="Path to data file (CSV or SQLite) (required)",
-)
-@click.option(
-    "--dry-run",
-    "--validate-only",
-    "dry_run",
-    is_flag=True,
-    default=False,
-    help=(
-        "Validate templates, schema, and data without generating XML output. "
-        "Returns exit code 0 on success."
-    ),
-)
-def cli(
-    xml_message_type: Optional[str],
-    xml_template_file_path: Optional[str],
-    xsd_schema_file_path: Optional[str],
-    data_file_path: Optional[str],
-    dry_run: bool = False,
-) -> None:
-    """Click CLI wrapper for Pain001.
-
-    Args:
-        xml_message_type: ISO 20022 message type.
-        xml_template_file_path: Path to XML template.
-        xsd_schema_file_path: Path to XSD schema.
-        data_file_path: Path to data file (CSV/SQLite).
-        dry_run: Validate without generating XML.
-    """
-    main(
-        xml_message_type,
-        xml_template_file_path,
-        xsd_schema_file_path,
-        data_file_path,
-        dry_run,
-    )
 
 
 def main(

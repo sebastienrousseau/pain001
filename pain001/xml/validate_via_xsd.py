@@ -1,8 +1,15 @@
+from functools import lru_cache
 from io import StringIO
 
 import xmlschema
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
+
+
+@lru_cache(maxsize=16)
+def _get_cached_schema(xsd_file_path: str) -> xmlschema.XMLSchema:
+    """Return a cached XMLSchema instance for the given XSD file path."""
+    return xmlschema.XMLSchema(xsd_file_path)
 
 # Copyright (C) 2023-2026 Sebastien Rousseau.
 #
@@ -32,8 +39,6 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
         bool: True if the XML file is valid, False otherwise.
     """
 
-    # pylint: disable=fixme
-    # TODO: cache parsed schemas for repeated calls in a single run to avoid reload cost.
     # Load XML file into an ElementTree object using defusedxml for security.
     try:
         xml_tree = defused_et.parse(xml_file_path)
@@ -41,9 +46,9 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
         print(f"Error parsing XML file: {e}")
         return False
 
-    # Load XSD schema into an XMLSchema object.
+    # Load XSD schema into an XMLSchema object (cached).
     try:
-        xsd = xmlschema.XMLSchema(xsd_file_path)
+        xsd = _get_cached_schema(xsd_file_path)
     except (xmlschema.XMLSchemaException, ParseError, OSError) as e:
         print(f"Error loading XSD schema: {e}")
         return False
@@ -84,9 +89,9 @@ def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
         print(f"Error parsing XML string: {e}")
         return False
 
-    # Load XSD schema into an XMLSchema object.
+    # Load XSD schema into an XMLSchema object (cached).
     try:
-        xsd = xmlschema.XMLSchema(xsd_file_path)
+        xsd = _get_cached_schema(xsd_file_path)
     except (xmlschema.XMLSchemaException, ParseError, OSError) as e:
         print(f"Error loading XSD schema: {e}")
         return False

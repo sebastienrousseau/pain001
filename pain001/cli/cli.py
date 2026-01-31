@@ -15,6 +15,7 @@
 # limitations under the License.
 
 import configparser
+import contextlib
 import logging
 import os
 import sys
@@ -49,13 +50,6 @@ from pain001.logging_schema import (
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
-
-table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
-
-table.add_column(justify="center", no_wrap=False, vertical="middle")
-table.add_row(description)
-table.width = 80
-console.print(table)
 
 
 def _configure_logging(verbose: bool) -> logging.Logger:
@@ -205,6 +199,17 @@ def _validate_payment_data(
         raise SystemExit(1) from e
 
 
+@contextlib.contextmanager
+def _working_directory(path):
+    """Context manager that temporarily changes the working directory."""
+    original = os.getcwd()
+    try:
+        os.chdir(path)
+        yield
+    finally:
+        os.chdir(original)
+
+
 def _generate_xml_files(
     _logger: logging.Logger,
     xml_message_type: str,
@@ -230,23 +235,23 @@ def _generate_xml_files(
         SystemExit: If generation fails (exit code 1).
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
-    original_cwd = os.getcwd()
 
     try:
-        # Change to output directory if specified
         if output_dir:
-            os.chdir(output_dir)
-
-        process_files(
-            xml_message_type,
-            xml_template_file_path,
-            xsd_schema_file_path,
-            data_file_path,
-        )
-
-        # Restore original directory
-        if output_dir:
-            os.chdir(original_cwd)
+            with _working_directory(output_dir):
+                process_files(
+                    xml_message_type,
+                    xml_template_file_path,
+                    xsd_schema_file_path,
+                    data_file_path,
+                )
+        else:
+            process_files(
+                xml_message_type,
+                xml_template_file_path,
+                xsd_schema_file_path,
+                data_file_path,
+            )
 
         console.print(
             f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
@@ -254,8 +259,6 @@ def _generate_xml_files(
             f"[cyan]Output Location:[/cyan] {output_dir or os.getcwd()}"
         )
     except Exception as e:
-        if output_dir:
-            os.chdir(original_cwd)
         console.print(
             f"[bold red]✗ Generation failed:[/bold red] {e}",
             style="red",
@@ -377,6 +380,13 @@ def main(
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
     """
+    # Display banner
+    table = Table(box=box.ROUNDED, safe_box=True, show_header=False, title=title)
+    table.add_column(justify="center", no_wrap=False, vertical="middle")
+    table.add_row(description)
+    table.width = 80
+    console.print(table)
+
     # Step 1: Configure logging
     logger = _configure_logging(verbose)
 
