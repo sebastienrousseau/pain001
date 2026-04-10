@@ -39,7 +39,7 @@ from pain001.constants import (
     valid_xml_types,
 )
 from pain001.context.context import Context
-from pain001.core.core import process_files
+from pain001.core.core import process_files, process_files_streaming
 from pain001.data.loader import load_payment_data
 from pain001.logging_schema import (
     Events,
@@ -217,6 +217,8 @@ def _generate_xml_files(
     xsd_schema_file_path: str,
     data_file_path: str,
     output_dir: Optional[str],
+    streaming: bool,
+    chunk_size: int,
     verbose: bool,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
@@ -239,19 +241,37 @@ def _generate_xml_files(
     try:
         if output_dir:
             with _working_directory(output_dir):
+                if streaming:
+                    process_files_streaming(
+                        xml_message_type,
+                        xml_template_file_path,
+                        xsd_schema_file_path,
+                        data_file_path,
+                        chunk_size=chunk_size,
+                    )
+                else:
+                    process_files(
+                        xml_message_type,
+                        xml_template_file_path,
+                        xsd_schema_file_path,
+                        data_file_path,
+                    )
+        else:
+            if streaming:
+                process_files_streaming(
+                    xml_message_type,
+                    xml_template_file_path,
+                    xsd_schema_file_path,
+                    data_file_path,
+                    chunk_size=chunk_size,
+                )
+            else:
                 process_files(
                     xml_message_type,
                     xml_template_file_path,
                     xsd_schema_file_path,
                     data_file_path,
                 )
-        else:
-            process_files(
-                xml_message_type,
-                xml_template_file_path,
-                xsd_schema_file_path,
-                data_file_path,
-            )
 
         console.print(
             f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
@@ -354,6 +374,18 @@ def _generate_xml_files(
     default=False,
     help="Enable detailed logging output (INFO and DEBUG messages)",
 )
+@click.option(
+    "--streaming/--no-streaming",
+    default=False,
+    help="Process input in chunks and generate one XML file per chunk.",
+)
+@click.option(
+    "--chunk-size",
+    default=1000,
+    show_default=True,
+    type=click.IntRange(min=1),
+    help="Number of payment rows per streaming chunk.",
+)
 def main(
     xml_message_type: str,
     xml_template_file_path: str,
@@ -363,6 +395,8 @@ def main(
     output_dir: Optional[str],
     dry_run: bool,
     verbose: bool,
+    streaming: bool,
+    chunk_size: int,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -472,6 +506,8 @@ def main(
         xsd_schema_file_path,
         data_file_path,
         output_dir,
+        streaming,
+        chunk_size,
         verbose,
     )
 

@@ -24,7 +24,7 @@ import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
-from pain001.data.loader import load_payment_data
+from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.exceptions import XMLGenerationError
 from pain001.logging_schema import (
     Events,
@@ -290,7 +290,6 @@ def process_files(
                 len(payment_data),
                 generation_ms=gen_duration,
             )
-            return generated_xml_path
         else:
             error_msg = (
                 f"Failed to generate XML file at '{generated_xml_path}'"
@@ -310,9 +309,54 @@ def process_files(
             )
             raise XMLGenerationError(error_msg)
 
+        return generated_xml_path
+
     except Exception as e:
         log_process_error(logger, e, xml_message_type)
         raise
+
+
+def process_files_streaming(
+    xml_message_type: str,
+    xml_template_file_path: str,
+    xsd_schema_file_path: str,
+    data_file_path: str,
+    chunk_size: int = 1000,
+) -> list[str]:
+    """Generate multiple XML files from streamed input chunks."""
+    safe_template_path, safe_schema_path = _validate_inputs(
+        xml_message_type, xml_template_file_path, xsd_schema_file_path
+    )
+    _register_message_namespaces(xml_message_type)
+    output_dir = os.path.dirname(os.path.realpath(data_file_path))
+
+    generated_paths: list[str] = []
+    for chunk_index, payment_chunk in enumerate(
+        load_payment_data_streaming(
+            data_file_path, chunk_size=chunk_size, validate=False
+        ),
+        start=1,
+    ):
+        xml_content = xml_generate.generate_xml_string(
+            payment_chunk,
+            xml_message_type,
+            safe_template_path,
+            safe_schema_path,
+        )
+        chunked_path = _chunk_output_path(
+            os.path.join(output_dir, f"{xml_message_type}.xml"), chunk_index
+        )
+        with open(chunked_path, "w", encoding="utf-8") as handle:
+            handle.write(xml_content)
+        generated_paths.append(chunked_path)
+
+    return generated_paths
+
+
+def _chunk_output_path(base_xml_path: str, chunk_index: int) -> str:
+    """Build a chunk-specific XML output path."""
+    stem, suffix = os.path.splitext(base_xml_path)
+    return f"{stem}.chunk{chunk_index:04d}{suffix}"
 
 
 if __name__ == "__main__":

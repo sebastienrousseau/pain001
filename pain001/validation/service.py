@@ -48,6 +48,7 @@ from pain001.exceptions import (
     DataSourceError,
     SchemaValidationError,
 )
+from pain001.security import validate_path
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 
@@ -174,7 +175,15 @@ class ValidationService:
             )
 
         template_path_str = str(template_path)
-        if not os.path.isfile(template_path_str):
+        try:
+            safe_path = validate_path(template_path_str, must_exist=True)
+        except Exception as exc:
+            return ValidationResult(
+                is_valid=False,
+                error=f"XML template file does not exist or is invalid: {exc}",
+                field="xml_template_file_path",
+            )
+        if not os.path.isfile(safe_path):
             return ValidationResult(
                 is_valid=False,
                 error=f"XML template file does not exist: {template_path_str}",
@@ -208,7 +217,15 @@ class ValidationService:
             )
 
         schema_path_str = str(schema_path)
-        if not os.path.isfile(schema_path_str):
+        try:
+            safe_path = validate_path(schema_path_str, must_exist=True)
+        except Exception as exc:
+            return ValidationResult(
+                is_valid=False,
+                error=f"XSD schema file does not exist or is invalid: {exc}",
+                field="xsd_schema_file_path",
+            )
+        if not os.path.isfile(safe_path):
             return ValidationResult(
                 is_valid=False,
                 error=f"XSD schema file does not exist: {schema_path_str}",
@@ -257,7 +274,16 @@ class ValidationService:
                 field="data_file_path",
             )
 
-        if not os.path.isfile(data_path_str):
+        try:
+            safe_path = validate_path(data_path_str, must_exist=True)
+        except Exception as exc:
+            return ValidationResult(
+                is_valid=False,
+                error=f"Data file does not exist or is invalid: {exc}",
+                field="data_file_path",
+            )
+
+        if not os.path.isfile(safe_path):
             return ValidationResult(
                 is_valid=False,
                 error=f"Data file does not exist: {data_path_str}",
