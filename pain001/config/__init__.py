@@ -8,23 +8,13 @@
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-# implied.
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""ISO 20022 payment initiation templates for pain001."""
+"""Configuration loading and profile resolution."""
 
-from pain001.templates.guardrails import validate_registry
-from pain001.templates.registry import (
-    DEFAULT_TEMPLATE_REGISTRY,
-    TemplateMetadata,
-    TemplateRegistry,
-)
+from pain001.config.manager import ConfigManager
 
-__all__ = [
-    "DEFAULT_TEMPLATE_REGISTRY",
-    "TemplateMetadata",
-    "TemplateRegistry",
-    "validate_registry",
-]
+__all__ = ["ConfigManager"]
+

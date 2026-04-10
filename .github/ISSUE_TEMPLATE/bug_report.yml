@@ -1,0 +1,59 @@
+name: Bug Report
+description: Report a reproducible problem in pain001
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: pain001 Version
+      placeholder: "0.0.47"
+    validations:
+      required: true
+  - type: dropdown
+    id: python_version
+    attributes:
+      label: Python Version
+      options:
+        - "3.9"
+        - "3.10"
+        - "3.11"
+        - "3.12"
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System
+      options:
+        - Linux
+        - macOS
+        - Windows
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What happened and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal Reproducible Example
+      render: python
+    validations:
+      required: true
+  - type: textarea
+    id: error_output
+    attributes:
+      label: Error Output
+    validations:
+      required: true
+  - type: textarea
+    id: payment_context
+    attributes:
+      label: Payment File Context
+      description: Message type, row count, file size, and other useful context.
+

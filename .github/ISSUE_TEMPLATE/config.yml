@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: GitHub Discussions
+    url: https://github.com/sebastienrousseau/pain001/discussions
+    about: Ask usage questions and start broader design discussions.
+  - name: Documentation
+    url: https://github.com/sebastienrousseau/pain001/blob/main/README.md
+    about: Read the docs before opening an issue.
+  - name: Contributing Guide
+    url: https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md
+    about: Follow contribution and review expectations.
+

@@ -3,6 +3,12 @@ name: 🚀 Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Skip the publish step and only build/check artifacts
+        required: false
+        default: "true"
 
 jobs:
   release:
@@ -23,7 +29,19 @@ jobs:
       - name: Build package
         run: python -m build
 
+      - name: Check dist metadata
+        run: python -m twine check dist/*
+
+      - name: Verify PyPI token
+        if: ${{ github.event_name == 'push' || inputs.dry_run != 'true' }}
+        run: |
+          if [ -z "${{ secrets.PYPI_API_TOKEN }}" ]; then
+            echo "PYPI_API_TOKEN is not configured for this repository."
+            exit 1
+          fi
+
       - name: Publish to PyPI
+        if: ${{ github.event_name == 'push' || inputs.dry_run != 'true' }}
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}

@@ -21,17 +21,39 @@
 
 # Import the CSV library
 import os
+import re
+import time
 from typing import Any
 
-from jinja2 import FileSystemLoader, select_autoescape
+from jinja2 import select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
 
+from pain001.observability import emit_metric_event
 from pain001.security import validate_path
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
 from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
 from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
+
+_TEMPLATE_DIRECTIVE_PATTERN = re.compile(
+    r"{%\s*(include|import|from|extends)\b", re.IGNORECASE
+)
+
+
+def _load_trusted_template_source(xml_template_path: str) -> str:
+    """Read a trusted template and reject filesystem-expanding directives."""
+    if not str(xml_template_path).endswith(".xml"):
+        raise ValueError("Template path must point to an .xml file")
+
+    with open(xml_template_path, "r", encoding="utf-8") as handle:  # nosec B108
+        template_source = handle.read()
+
+    if _TEMPLATE_DIRECTIVE_PATTERN.search(template_source):
+        raise ValueError(
+            "Template contains disabled Jinja filesystem directives"
+        )
+    return template_source
 
 
 def generate_xml_string(
@@ -92,33 +114,53 @@ def generate_xml_string(
         raise ValueError(f"Invalid schema path: {e}") from e
 
     # Prepare XML data using appropriate function
+    prepare_started = time.time()
     xml_data = prepare_xml_data(data, payment_initiation_message_type)
+    emit_metric_event(
+        "xml_prepared",
+        message_type=payment_initiation_message_type,
+        record_count=len(data),
+        duration_ms=int((time.time() - prepare_started) * 1000),
+    )
 
-    # Create a Jinja2 environment and load template
-    template_dir = os.path.dirname(xml_template_path)
-    template_file = os.path.basename(xml_template_path)
-    # Use current directory if path has no directory component
-    loader_path = template_dir if template_dir else "."
-
+    template_source = _load_trusted_template_source(str(xml_template_path))
     env = SandboxedEnvironment(
-        loader=FileSystemLoader(loader_path),
         autoescape=select_autoescape(
             enabled_extensions=("xml",),
             default_for_string=True,
         ),
     )
-    template = env.get_template(template_file)
+    template = env.from_string(template_source)
 
     # Render the template to string
+    render_started = time.time()
     xml_content = template.render(**xml_data)
+    emit_metric_event(
+        "xml_rendered",
+        message_type=payment_initiation_message_type,
+        duration_ms=int((time.time() - render_started) * 1000),
+    )
 
     # Validate the XML content against the XSD schema
+    validation_started = time.time()
     is_valid = validate_xml_string_via_xsd(xml_content, xsd_schema_path)
 
     if not is_valid:
+        emit_metric_event(
+            "validation_failed",
+            message_type=payment_initiation_message_type,
+            schema_path=str(xsd_schema_path),
+        )
         raise RuntimeError(
             f"Generated XML failed validation against {xsd_schema_path}"
         )
+
+    emit_metric_event(
+        "xsd_validation_passed",
+        message_type=payment_initiation_message_type,
+        schema_path=str(xsd_schema_path),
+        duration_ms=int((time.time() - validation_started) * 1000),
+    )
 
     return xml_content
 
@@ -178,6 +220,13 @@ def generate_xml(
     # Write the XML content to the file (now safe after validation)
     with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108
         xml_file.write(xml_content)
+
+    emit_metric_event(
+        "xml_generated",
+        message_type=payment_initiation_message_type,
+        output_path=str(safe_xml_path),
+        file_size_bytes=len(xml_content.encode("utf-8")),
+    )
 
     print(f"A new XML file has been created at `{safe_xml_path}`")
     print(f"The XML has been validated against `{xsd_file_path}`")

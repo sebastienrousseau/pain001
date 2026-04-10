@@ -12,7 +12,8 @@ packages = [
 ]
 include = [
     "pain001/schemas/*",
-    "pain001/templates/*",
+    "pain001/templates/**/*",
+    "pain001/config/*.yaml",
     "pain001/test_fixtures/**/*",
 ]
 
@@ -35,6 +36,7 @@ fastapi = ">=0.95"
 uvicorn = {version = ">=0.20", extras = ["standard"]}
 httpx = ">=0.23"
 pyarrow = ">=18.0.0,<19.0.0"
+pyyaml = ">=6.0,<7.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0.0"

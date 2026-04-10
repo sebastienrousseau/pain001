@@ -101,3 +101,26 @@ jobs:
       - uses: abatilo/actions-poetry@v2
       - run: poetry install --no-interaction
       - run: poetry run make lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    name: 🔠 Typecheck And Guardrails
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - uses: abatilo/actions-poetry@v2
+      - run: poetry install --no-interaction
+      - run: >
+          poetry run mypy
+          pain001/config/manager.py
+          pain001/templates/registry.py
+          pain001/templates/guardrails.py
+          pain001/observability/__init__.py
+          pain001/async_adapter.py
+          tests/test_config_manager.py
+          tests/test_template_registry.py
+          tests/test_schema_guardrails.py
+          tests/test_async_adapters.py
+      - run: poetry run pytest -q --no-cov tests/test_schema_guardrails.py

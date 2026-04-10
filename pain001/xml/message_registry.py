@@ -232,10 +232,10 @@ def _prepare_xml_data_v05_to_v08(
     }
 
 
-def _prepare_xml_data_v09_to_v11(
+def _prepare_xml_data_v09_to_v12(
     data: list[dict[str, Any]]
 ) -> dict[str, Any]:
-    """Prepare XML data for pain.001.001.09-11 message types."""
+    """Prepare XML data for pain.001.001.09-12 message types."""
     return {
         "id": data[0]["id"],
         "date": data[0]["date"],
@@ -337,13 +337,16 @@ MESSAGE_REGISTRY: dict[str, MessageDefinition] = {
         "pain.001.001.08", "legacy_v05_to_v08", _prepare_xml_data_v05_to_v08
     ),
     "pain.001.001.09": MessageDefinition(
-        "pain.001.001.09", "modern_v09_to_v11", _prepare_xml_data_v09_to_v11
+        "pain.001.001.09", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
     "pain.001.001.10": MessageDefinition(
-        "pain.001.001.10", "modern_v09_to_v11", _prepare_xml_data_v09_to_v11
+        "pain.001.001.10", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
     "pain.001.001.11": MessageDefinition(
-        "pain.001.001.11", "modern_v09_to_v11", _prepare_xml_data_v09_to_v11
+        "pain.001.001.11", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
+    ),
+    "pain.001.001.12": MessageDefinition(
+        "pain.001.001.12", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
     "pain.008.001.02": MessageDefinition(
         "pain.008.001.02", "direct_debit_v02", _prepare_xml_data_v08_direct_debit

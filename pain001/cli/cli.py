@@ -14,7 +14,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import configparser
 import contextlib
 import logging
 import os
@@ -29,6 +28,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from pain001.config import ConfigManager
 from pain001.constants import (
     APP_DESCRIPTION as description,
 )
@@ -47,6 +47,11 @@ from pain001.logging_schema import (
     log_event,
     log_validation_event,
 )
+from pain001.observability import (
+    clear_metrics_callbacks,
+    register_metrics_callback,
+)
+from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
@@ -68,41 +73,6 @@ def _configure_logging(verbose: bool) -> logging.Logger:
     else:
         logger.setLevel(logging.INFO)
     return logger
-
-
-def _load_configuration(
-    config_file: Optional[str],
-    xml_template_file_path: str,
-    xsd_schema_file_path: str,
-    data_file_path: str,
-) -> tuple[str, str, str]:
-    """Load paths from configuration file if provided.
-
-    Args:
-        config_file: Path to INI configuration file (optional).
-        xml_template_file_path: Default template path.
-        xsd_schema_file_path: Default schema path.
-        data_file_path: Default data file path.
-
-    Returns:
-        Tuple of (template_path, schema_path, data_path) with config overrides applied.
-    """
-    if not config_file:
-        return xml_template_file_path, xsd_schema_file_path, data_file_path
-
-    config = configparser.ConfigParser()
-    config.read(config_file)
-
-    if "Paths" in config:
-        xml_template_file_path = config["Paths"].get(
-            "xml_template_file_path", xml_template_file_path
-        )
-        xsd_schema_file_path = config["Paths"].get(
-            "xsd_schema_file_path", xsd_schema_file_path
-        )
-        data_file_path = config["Paths"].get("data_file_path", data_file_path)
-
-    return xml_template_file_path, xsd_schema_file_path, data_file_path
 
 
 def _validate_schema(
@@ -210,6 +180,62 @@ def _working_directory(path):
         os.chdir(original)
 
 
+def _console_metrics_callback(event) -> None:
+    """Render lightweight metrics to the terminal when requested."""
+    console.print(
+        f"[dim]metric[/dim] {event.name} {event.attributes}",
+        highlight=False,
+    )
+
+
+def _print_template_list() -> None:
+    """Print all discovered bundled templates."""
+    table = Table(box=box.SIMPLE_HEAVY)
+    table.add_column("Message Type")
+    table.add_column("Category")
+    table.add_column("Deprecated")
+    for metadata in DEFAULT_TEMPLATE_REGISTRY.list_templates():
+        table.add_row(
+            metadata.message_type,
+            metadata.message_category,
+            "yes" if metadata.deprecated else "no",
+        )
+    console.print(table)
+
+
+def _print_template_details(message_type: str) -> None:
+    """Print metadata for a single template."""
+    metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
+    console.print(f"[bold]{metadata.message_type}[/bold]")
+    console.print(f"category: {metadata.message_category}")
+    console.print(f"template: {metadata.template_path}")
+    console.print(f"schema: {metadata.xsd_path}")
+    if metadata.example_data_path:
+        console.print(f"example data: {metadata.example_data_path}")
+    if metadata.example_xml_path:
+        console.print(f"example xml: {metadata.example_xml_path}")
+    console.print(
+        f"input formats: {', '.join(metadata.supported_input_formats)}"
+    )
+
+
+def _resolve_template_assets(
+    xml_message_type: str,
+    xml_template_file_path: Optional[str],
+    xsd_schema_file_path: Optional[str],
+) -> tuple[str, str]:
+    """Resolve template/schema from registry when paths are omitted."""
+    if xml_template_file_path and xsd_schema_file_path:
+        return xml_template_file_path, xsd_schema_file_path
+    template_path, schema_path = DEFAULT_TEMPLATE_REGISTRY.resolve_paths(
+        xml_message_type
+    )
+    return (
+        xml_template_file_path or template_path,
+        xsd_schema_file_path or schema_path,
+    )
+
+
 def _generate_xml_files(
     _logger: logging.Logger,
     xml_message_type: str,
@@ -314,7 +340,7 @@ def _generate_xml_files(
     "-t",
     "--xml-message-type",
     "xml_message_type",
-    required=True,
+    required=False,
     type=click.Choice(valid_xml_types, case_sensitive=False),
     help="ISO 20022 message type (e.g., 'pain.001.001.03', 'pain.001.001.11')",
 )
@@ -322,24 +348,24 @@ def _generate_xml_files(
     "-m",
     "--template",
     "xml_template_file_path",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    help="Path to Jinja2 XML template file",
+    required=False,
+    type=click.Path(dir_okay=False, readable=True),
+    help="Path to Jinja2 XML template file (auto-resolved when omitted)",
 )
 @click.option(
     "-s",
     "--schema",
     "xsd_schema_file_path",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    help="Path to XSD schema file for validation",
+    required=False,
+    type=click.Path(dir_okay=False, readable=True),
+    help="Path to XSD schema file for validation (auto-resolved when omitted)",
 )
 @click.option(
     "-d",
     "--data",
     "data_file_path",
-    required=True,
-    type=click.Path(exists=True, dir_okay=False, readable=True),
+    required=False,
+    type=click.Path(dir_okay=False, readable=True),
     help="Path to payment data file (CSV, SQLite, JSON, JSONL, or Parquet)",
 )
 @click.option(
@@ -347,7 +373,7 @@ def _generate_xml_files(
     "--config",
     "config_file",
     type=click.Path(exists=True, dir_okay=False, readable=True),
-    help="Path to configuration INI file (optional)",
+    help="Path to configuration YAML, TOML, or INI file (optional)",
 )
 @click.option(
     "-o",
@@ -386,17 +412,50 @@ def _generate_xml_files(
     type=click.IntRange(min=1),
     help="Number of payment rows per streaming chunk.",
 )
+@click.option(
+    "--profile",
+    type=str,
+    help="Configuration profile or built-in preset to apply.",
+)
+@click.option(
+    "--show-config",
+    is_flag=True,
+    default=False,
+    help="Print the resolved configuration and exit.",
+)
+@click.option(
+    "--list-templates",
+    is_flag=True,
+    default=False,
+    help="List bundled templates and exit.",
+)
+@click.option(
+    "--show-template",
+    type=str,
+    help="Show metadata for one bundled template and exit.",
+)
+@click.option(
+    "--emit-metrics",
+    is_flag=True,
+    default=False,
+    help="Emit lightweight timing and lifecycle metrics to stdout.",
+)
 def main(
-    xml_message_type: str,
-    xml_template_file_path: str,
-    xsd_schema_file_path: str,
-    data_file_path: str,
+    xml_message_type: Optional[str],
+    xml_template_file_path: Optional[str],
+    xsd_schema_file_path: Optional[str],
+    data_file_path: Optional[str],
     config_file: Optional[str],
     output_dir: Optional[str],
     dry_run: bool,
     verbose: bool,
     streaming: bool,
     chunk_size: int,
+    profile: Optional[str],
+    show_config: bool,
+    list_templates: bool,
+    show_template: Optional[str],
+    emit_metrics: bool,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -426,24 +485,69 @@ def main(
     # Step 1: Configure logging
     logger = _configure_logging(verbose)
 
-    # Step 2: Expand user-friendly paths
-    xml_template_file_path = os.path.expanduser(xml_template_file_path)
-    xsd_schema_file_path = os.path.expanduser(xsd_schema_file_path)
-    data_file_path = os.path.expanduser(data_file_path)
+    if list_templates:
+        _print_template_list()
+        return
 
-    # Step 3: Load configuration file if provided
+    if show_template:
+        _print_template_details(show_template)
+        return
+
+    # Step 2: Expand user-friendly paths
+    config_manager = ConfigManager()
+    resolved_config = config_manager.resolve(
+        {
+            "xml_message_type": xml_message_type,
+            "xml_template_file_path": (
+                os.path.expanduser(xml_template_file_path)
+                if xml_template_file_path
+                else None
+            ),
+            "xsd_schema_file_path": (
+                os.path.expanduser(xsd_schema_file_path)
+                if xsd_schema_file_path
+                else None
+            ),
+            "data_file_path": (
+                os.path.expanduser(data_file_path) if data_file_path else None
+            ),
+            "config_file": config_file,
+            "output_dir": output_dir,
+            "streaming": streaming,
+            "chunk_size": chunk_size,
+            "profile": profile,
+            "emit_metrics": emit_metrics,
+        }
+    )
+
+    xml_message_type = resolved_config.get("xml_message_type")
+    data_file_path = resolved_config.get("data_file_path")
+    if not xml_message_type:
+        console.print("[bold red]✗ Error:[/bold red] Missing XML message type")
+        sys.exit(2)
+    if not data_file_path:
+        console.print("[bold red]✗ Error:[/bold red] Missing data file path")
+        sys.exit(2)
+
     (
         xml_template_file_path,
         xsd_schema_file_path,
-        data_file_path,
-    ) = _load_configuration(
-        config_file,
-        xml_template_file_path,
-        xsd_schema_file_path,
-        data_file_path,
+    ) = _resolve_template_assets(
+        xml_message_type,
+        resolved_config.get("xml_template_file_path"),
+        resolved_config.get("xsd_schema_file_path"),
     )
 
+    if show_config:
+        console.print(resolved_config)
+        console.print({"template": xml_template_file_path, "schema": xsd_schema_file_path})
+        return
+
+    if resolved_config.get("emit_metrics"):
+        register_metrics_callback(_console_metrics_callback)
+
     # Step 4: Create output directory if specified
+    output_dir = resolved_config.get("output_dir")
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         console.print(f"[cyan]ℹ Output directory: {output_dir}[/cyan]")
@@ -506,10 +610,12 @@ def main(
         xsd_schema_file_path,
         data_file_path,
         output_dir,
-        streaming,
-        chunk_size,
+        resolved_config["streaming"],
+        resolved_config["chunk_size"],
         verbose,
     )
+
+    clear_metrics_callbacks()
 
 
 if __name__ == "__main__":

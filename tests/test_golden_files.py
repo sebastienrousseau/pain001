@@ -19,6 +19,7 @@ def test_golden_xml_outputs_for_supported_versions() -> None:
         "pain.001.001.09",
         "pain.001.001.10",
         "pain.001.001.11",
+        "pain.001.001.12",
         "pain.008.001.02",
     ]
 
@@ -33,4 +34,3 @@ def test_golden_xml_outputs_for_supported_versions() -> None:
         )
         expected = (base / f"{version}.xml").read_text(encoding="utf-8")
         assert _normalize_xml(generated) == _normalize_xml(expected)
-

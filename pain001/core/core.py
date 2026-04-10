@@ -34,6 +34,7 @@ from pain001.logging_schema import (
     log_process_start,
     log_process_success,
 )
+from pain001.observability import emit_metric_event
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
 # CORRECTION: Circular import workaround. Imports moved to top-level.
@@ -165,6 +166,16 @@ def _load_data(
     try:
         payment_data = load_payment_data(data_file_path)
         duration_ms = int((time.time() - start_time) * 1000)
+        file_size_bytes = None
+        if isinstance(data_file_path, str) and os.path.exists(data_file_path):
+            file_size_bytes = os.path.getsize(data_file_path)
+        emit_metric_event(
+            "file_loaded",
+            data_source_type=data_source_kind,
+            record_count=len(payment_data),
+            file_size_bytes=file_size_bytes,
+            duration_ms=duration_ms,
+        )
         log_event(
             logger,
             logging.INFO,
@@ -348,6 +359,13 @@ def process_files_streaming(
         )
         with open(chunked_path, "w", encoding="utf-8") as handle:
             handle.write(xml_content)
+        emit_metric_event(
+            "xml_generated",
+            message_type=xml_message_type,
+            output_path=chunked_path,
+            chunk_index=chunk_index,
+            record_count=len(payment_chunk),
+        )
         generated_paths.append(chunked_path)
 
     return generated_paths

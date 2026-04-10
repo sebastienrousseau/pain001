@@ -1,0 +1,11 @@
+message_type: pain.001.001.03
+message_category: CustomerCreditTransferInitiation
+iso_version: "03"
+files:
+  template: template.xml
+  schema: pain.001.001.03.xsd
+  example_data: template.csv
+  example_xml: pain.001.001.03.xml
+supported_input_formats: [csv, sqlite, dict, list]
+deprecated: false
+
