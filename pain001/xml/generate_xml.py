@@ -375,7 +375,7 @@ def generate_xml(
     payment_initiation_message_type: str,
     xml_file_path: str,
     xsd_file_path: str,
-) -> None:
+) -> str:
     """Generates an ISO 20022 pain.001 XML file from input data.
 
     This function writes XML to a file. For in-memory XML generation
@@ -390,7 +390,7 @@ def generate_xml(
         xsd_file_path: Path to XML schema file for validation
 
     Returns:
-        None
+        str: The generated XML file path.
 
     Raises:
         ValueError: If message type is invalid or data is empty.
@@ -428,3 +428,5 @@ def generate_xml(
 
     print(f"A new XML file has been created at `{safe_xml_path}`")
     print(f"The XML has been validated against `{xsd_file_path}`")
+
+    return safe_xml_path

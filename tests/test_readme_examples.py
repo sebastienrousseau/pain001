@@ -77,7 +77,7 @@ class TestReadmeExamples(unittest.TestCase):
         with programmatic API.
         """
         # Test using the process_files function directly
-        pain001.process_files(
+        result = pain001.process_files(
             "pain.001.001.03",
             str(self.xml_template),
             str(self.xsd_schema),
@@ -86,6 +86,7 @@ class TestReadmeExamples(unittest.TestCase):
 
         # Verify XML file was generated
         generated_file = self.test_data_dir / "pain.001.001.03.xml"
+        self.assertEqual(Path(result).resolve(), generated_file.resolve())
         self.assertTrue(generated_file.exists())
         self.assertGreater(generated_file.stat().st_size, 0)
 
