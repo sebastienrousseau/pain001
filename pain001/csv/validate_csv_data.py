@@ -44,6 +44,33 @@ from datetime import datetime
 from typing import Any
 
 
+def _redact_row_for_error(row: dict[str, Any]) -> dict[str, str]:
+    """Return a log-safe copy of a payment row for validation errors."""
+    redacted: dict[str, str] = {}
+    for key, value in row.items():
+        text = "" if value is None else str(value)
+        key_lower = key.lower()
+
+        if "iban" in key_lower or "account" in key_lower:
+            redacted[key] = _mask_value(text, 4)
+        elif "bic" in key_lower:
+            redacted[key] = _mask_value(text, 3)
+        elif "name" in key_lower:
+            redacted[key] = "[REDACTED]"
+        elif "remittance" in key_lower or "reference" in key_lower:
+            redacted[key] = "[REDACTED]"
+        else:
+            redacted[key] = text
+    return redacted
+
+
+def _mask_value(value: str, visible_chars: int) -> str:
+    """Mask a sensitive value while keeping a small prefix and suffix."""
+    if len(value) <= visible_chars * 2:
+        return "*" * len(value)
+    return f"{value[:visible_chars]}****{value[-visible_chars:]}"
+
+
 def _validate_datetime(value: str) -> bool:
     """Validate datetime field.
 
@@ -148,9 +175,10 @@ def _format_errors(
         list: List of formatted error messages.
     """
     errors = []
+    safe_row = _redact_row_for_error(row)
     if missing_columns:
         errors.append(
-            f"Error: Missing value(s) for column(s) {missing_columns} in row: {row}"
+            f"Error: Missing value(s) for column(s) {missing_columns} in row: {safe_row}"
         )
     if invalid_columns:
         expected_types = [
@@ -158,7 +186,7 @@ def _format_errors(
         ]
         errors.append(
             f"Error: Invalid data type for column(s) "
-            f"{invalid_columns}, expected {expected_types} in row: {row}"
+            f"{invalid_columns}, expected {expected_types} in row: {safe_row}"
         )
     return errors
 

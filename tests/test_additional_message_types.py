@@ -1,3 +1,5 @@
+from typing import Any, cast
+
 from pain001.camt053 import parse_camt053_statement
 from pain001.pain002 import parse_pain002_report
 from pain001.xml.generate_xml import generate_xml_string
@@ -5,7 +7,10 @@ from pain001.csv.load_csv_data import load_csv_data
 
 
 def test_parse_pain002_report_fixture() -> None:
-    report = parse_pain002_report("pain001/test_fixtures/pain002_sample.xml")
+    report = cast(
+        dict[str, Any],
+        parse_pain002_report("pain001/test_fixtures/pain002_sample.xml"),
+    )
 
     assert report["message_id"] == "STAT-001"
     assert report["original_message_id"] == "PMT-BATCH-001"
@@ -15,8 +20,9 @@ def test_parse_pain002_report_fixture() -> None:
 
 
 def test_parse_camt053_statement_fixture() -> None:
-    statement = parse_camt053_statement(
-        "pain001/test_fixtures/camt053_sample.xml"
+    statement = cast(
+        dict[str, Any],
+        parse_camt053_statement("pain001/test_fixtures/camt053_sample.xml"),
     )
 
     assert statement["statement_id"] == "STMT-001"
@@ -40,4 +46,3 @@ def test_generate_pain008_string_from_template_fixture() -> None:
     assert "CstmrDrctDbtInitn" in xml
     assert "MANDATE-001" in xml
     assert "SeqTp" in xml
-

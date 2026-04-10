@@ -19,6 +19,7 @@ import logging
 import os
 import sys
 import traceback
+from collections.abc import Iterator
 from typing import Optional
 
 import click
@@ -48,6 +49,7 @@ from pain001.logging_schema import (
     log_validation_event,
 )
 from pain001.observability import (
+    MetricEvent,
     clear_metrics_callbacks,
     register_metrics_callback,
 )
@@ -170,7 +172,7 @@ def _validate_payment_data(
 
 
 @contextlib.contextmanager
-def _working_directory(path):
+def _working_directory(path: str) -> Iterator[None]:
     """Context manager that temporarily changes the working directory."""
     original = os.getcwd()
     try:
@@ -180,7 +182,7 @@ def _working_directory(path):
         os.chdir(original)
 
 
-def _console_metrics_callback(event) -> None:
+def _console_metrics_callback(event: MetricEvent) -> None:
     """Render lightweight metrics to the terminal when requested."""
     console.print(
         f"[dim]metric[/dim] {event.name} {event.attributes}",

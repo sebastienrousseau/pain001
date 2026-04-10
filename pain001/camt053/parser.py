@@ -17,6 +17,9 @@
 
 from __future__ import annotations
 
+from typing import Optional
+from xml.etree.ElementTree import Element
+
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
 
@@ -48,6 +51,8 @@ def parse_camt053_statement(
         root = defused_et.parse(safe_xml_path).getroot()
     except (ParseError, OSError) as exc:
         raise DataSourceError(f"Unable to parse camt.053 XML: {exc}") from exc
+    if root is None:
+        raise DataSourceError("camt.053 XML document is empty")
 
     ns = _detect_namespace(root)
     statement = root.find(f".//{ns}Stmt")
@@ -83,19 +88,20 @@ def parse_camt053_statement(
     }
 
 
-def _detect_namespace(root: defused_et.Element) -> str:
+def _detect_namespace(root: Element) -> str:
     """Return the element namespace in ElementTree search format."""
     if root.tag.startswith("{"):
         return root.tag.split("}", maxsplit=1)[0] + "}"
     return ""
 
 
-def _find_text(parent: defused_et.Element, ns: str, path: str) -> str:
+def _find_text(parent: Element, ns: str, path: str) -> str:
     """Read nested text using slash-separated relative paths."""
-    current = parent
+    current: Optional[Element] = parent
     for part in path.split("/"):
         current = current.find(f"{ns}{part}") if current is not None else None
         if current is None:
             return ""
+    if current is None:
+        return ""
     return (current.text or "").strip()
-

@@ -20,9 +20,9 @@ from __future__ import annotations
 import csv
 import os
 from pathlib import Path
-from typing import Any
+from typing import Any, Mapping
 
-import yaml
+import yaml  # type: ignore[import-untyped]
 
 from pain001.constants import TEMPLATES_DIR
 from pain001.csv.load_csv_data import load_csv_data
@@ -76,7 +76,8 @@ class VersionMapper:
         mapping_file = self.mappings_dir / f"{source}_to_{target}.yaml"
         if mapping_file.exists():
             with open(mapping_file, encoding="utf-8") as handle:
-                return yaml.safe_load(handle) or {}
+                loaded = yaml.safe_load(handle) or {}
+                return dict(loaded)
 
         if self._is_supported_generic_pair(source, target):
             return self._generic_legacy_to_modern_mapping()
@@ -105,10 +106,12 @@ class VersionMapper:
         migrated: list[dict[str, Any]] = []
         for row in rows:
             migrated_row: dict[str, Any] = {}
-            for target_field, source_field in mapping.get("field_map", {}).items():
+            field_map = cast_mapping(mapping.get("field_map", {}))
+            for target_field, source_field in field_map.items():
                 migrated_row[target_field] = row.get(source_field, "")
 
-            for target_field, candidates in mapping.get("fallbacks", {}).items():
+            fallbacks = cast_list_mapping(mapping.get("fallbacks", {}))
+            for target_field, candidates in fallbacks.items():
                 if migrated_row.get(target_field):
                     continue
                 for candidate in candidates:
@@ -117,7 +120,8 @@ class VersionMapper:
                         migrated_row[target_field] = value
                         break
 
-            for target_field, default_value in mapping.get("defaults", {}).items():
+            defaults = cast_mapping(mapping.get("defaults", {}))
+            for target_field, default_value in defaults.items():
                 if migrated_row.get(target_field) in ("", None):
                     migrated_row[target_field] = default_value
 
@@ -254,3 +258,21 @@ class VersionMapper:
         if ext == ".parquet":
             return load_parquet_data(source_path)
         raise DataSourceError(f"Unsupported migration source file: {source_path}")
+
+
+def cast_mapping(value: object) -> dict[str, Any]:
+    """Cast a mapping loaded from YAML into a typed dictionary."""
+    if not isinstance(value, Mapping):
+        return {}
+    return {str(key): item for key, item in value.items()}
+
+
+def cast_list_mapping(value: object) -> dict[str, list[str]]:
+    """Cast a YAML mapping whose values are field-name lists."""
+    if not isinstance(value, Mapping):
+        return {}
+    converted: dict[str, list[str]] = {}
+    for key, item in value.items():
+        if isinstance(item, list):
+            converted[str(key)] = [str(part) for part in item]
+    return converted

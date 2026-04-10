@@ -19,7 +19,7 @@
 import logging
 import os
 from collections.abc import Generator
-from typing import Any
+from typing import Any, cast
 
 from pain001.exceptions import DataSourceError
 from pain001.security import validate_path
@@ -28,7 +28,7 @@ logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 # Optional import: pyarrow is not a required dependency
 try:
-    import pyarrow.parquet as pq  # type: ignore[import-not-found]
+    import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
     HAS_PARQUET_SUPPORT = True
 except ImportError:  # pragma: no cover
@@ -90,7 +90,7 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
         table = pq.read_table(str(safe_path))  # nosec B108
 
         # Convert to list of dicts
-        data = table.to_pylist()
+        data = cast(list[dict[str, Any]], table.to_pylist())
 
         if not data:
             raise DataSourceError(f"Parquet file is empty: {file_path}")
@@ -151,7 +151,7 @@ def load_parquet_data_streaming(
         # Read in batches
         for batch in parquet_file.iter_batches(batch_size=chunk_size):
             # Convert batch to list of dicts
-            chunk_data = batch.to_pylist()
+            chunk_data = cast(list[dict[str, Any]], batch.to_pylist())
             if chunk_data:
                 yield chunk_data
 
