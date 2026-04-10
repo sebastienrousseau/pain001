@@ -158,6 +158,7 @@ Contents
    version_migration
    security
    performance_large_batches
+   additional_message_types
    structured_logging
    examples
    modules

@@ -13,24 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""The Python pain001 module."""
+"""Pain.002 payment status report parsing utilities."""
 
-__version__ = "0.0.47"
+from pain001.pain002.parser import parse_pain002_report
 
-from pain001.__main__ import main
-from pain001.camt053 import parse_camt053_statement
-from pain001.core.core import process_files
-from pain001.exceptions import DataSourceError, PaymentValidationError
-from pain001.pain002 import parse_pain002_report
-from pain001.xml.generate_xml import generate_xml_string
+__all__ = ["parse_pain002_report"]
 
-__all__ = [
-    "main",
-    "process_files",
-    "generate_xml_string",
-    "parse_pain002_report",
-    "parse_camt053_statement",
-    "PaymentValidationError",
-    "DataSourceError",
-    "__version__",
-]

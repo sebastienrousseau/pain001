@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.053.001.08">
+  <BkToCstmrStmt>
+    <Stmt>
+      <Id>STMT-001</Id>
+      <ElctrncSeqNb>42</ElctrncSeqNb>
+      <Acct>
+        <Id>
+          <IBAN>DE89370400440532013000</IBAN>
+        </Id>
+        <Ccy>EUR</Ccy>
+      </Acct>
+      <Ntry>
+        <Amt Ccy="EUR">150.00</Amt>
+        <CdtDbtInd>CRDT</CdtDbtInd>
+        <Sts>BOOK</Sts>
+        <BookgDt>
+          <Dt>2026-04-10</Dt>
+        </BookgDt>
+        <ValDt>
+          <Dt>2026-04-10</Dt>
+        </ValDt>
+        <AcctSvcrRef>ENTRY-001</AcctSvcrRef>
+        <NtryDtls>
+          <TxDtls>
+            <RmtInf>
+              <Ustrd>Incoming transfer from Jane Subscriber</Ustrd>
+            </RmtInf>
+          </TxDtls>
+        </NtryDtls>
+      </Ntry>
+    </Stmt>
+  </BkToCstmrStmt>
+</Document>
+
