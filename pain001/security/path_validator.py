@@ -103,7 +103,7 @@ def _resolve_within_allowed_bases(
         ]
 
     for base in allowed_bases:
-        if resolved_str == base and resolved_str.startswith(base + os.sep):
+        if resolved_str == base or resolved_str.startswith(base + os.sep):
             return resolved_str
 
     if base_dir:
