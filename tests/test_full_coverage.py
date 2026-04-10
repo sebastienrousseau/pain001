@@ -157,6 +157,8 @@ class TestCLICoverage:
                 str(schema),
                 str(data),
                 str(tmp_path / "nonexistent_output"),
+                streaming=False,
+                chunk_size=1000,
                 verbose=True,
             )
 
@@ -353,6 +355,7 @@ class TestAPIAppCoverage:
                 job_id = response.json()["job_id"]
                 time.sleep(1)
                 job = job_manager.get_job(job_id)
+                assert job is not None
                 # Should have failed due to path guard
                 assert job.status in (JobStatus.FAILED, JobStatus.PROCESSING)
         finally:
@@ -898,6 +901,7 @@ class TestValidationServiceCoverage:
         service = ValidationService()
         result = service.validate_data_source(str(tmp_path))
         assert result.is_valid is False
+        assert result.error is not None
         assert "directory" in result.error.lower()
 
     def test_validate_template_schema_compatibility_schema_error(self):
@@ -915,6 +919,7 @@ class TestValidationServiceCoverage:
                 "t.xml", "s.xsd"
             )
             assert result.is_valid is False
+            assert result.error is not None
             assert "Schema validation failed" in result.error
 
     def test_validate_template_schema_compatibility_general_error(self):
@@ -931,6 +936,7 @@ class TestValidationServiceCoverage:
                 "t.xml", "s.xsd"
             )
             assert result.is_valid is False
+            assert result.error is not None
             assert "Unexpected" in result.error
 
     def test_validate_data_content_data_source_error(self, tmp_path):
@@ -1419,6 +1425,7 @@ class TestAPIAppDeepCoverage:
             job_id = response.json()["job_id"]
             time.sleep(1)
             job = job_manager.get_job(job_id)
+            assert job is not None
             assert job.status == JobStatus.FAILED
 
     def test_async_generation_validation_errors(self):
@@ -1448,6 +1455,7 @@ class TestAPIAppDeepCoverage:
                 job_id = response.json()["job_id"]
                 time.sleep(2)
                 job = job_manager.get_job(job_id)
+                assert job is not None
                 assert job.status in (JobStatus.SUCCESS, JobStatus.FAILED)
         finally:
             if csv_file.exists():
@@ -1524,6 +1532,8 @@ class TestCLIDeepCoverage:
                 str(schema),
                 str(data),
                 output,
+                streaming=False,
+                chunk_size=1000,
                 verbose=True,
             )
 
@@ -1549,6 +1559,8 @@ class TestCLIDeepCoverage:
                 str(schema),
                 str(data),
                 None,
+                streaming=False,
+                chunk_size=1000,
                 verbose=False,
             )
 
@@ -1843,6 +1855,7 @@ class TestAPIAppLine101And149:
                 job_id = response.json()["job_id"]
                 time.sleep(2)
                 job = job_manager.get_job(job_id)
+                assert job is not None
                 assert job.status in (JobStatus.SUCCESS, JobStatus.FAILED)
         finally:
             if csv.exists():
@@ -2102,6 +2115,7 @@ class TestAPIAppEndpoints:
                                     job_id = response.json()["job_id"]
                                     time.sleep(2)
                                     job = job_manager.get_job(job_id)
+                                    assert job is not None
                                     assert job.status in (
                                         JobStatus.SUCCESS,
                                         JobStatus.FAILED,
@@ -2518,6 +2532,7 @@ class TestAPIAsyncProcessing:
             job_id = response.json()["job_id"]
             time.sleep(1)
             job = job_manager.get_job(job_id)
+            assert job is not None
             assert job.status == JobStatus.FAILED
 
     def test_async_validation_fails(self):
@@ -2565,6 +2580,7 @@ class TestAPIAsyncProcessing:
                         job_id = response.json()["job_id"]
                         time.sleep(2)
                         job = job_manager.get_job(job_id)
+                        assert job is not None
                         assert job.status == JobStatus.FAILED
         finally:
             if csv.exists():
@@ -3142,6 +3158,7 @@ class TestAPIGuardLines:
                     job_id = response.json()["job_id"]
                     time.sleep(1)
                     job = job_manager.get_job(job_id)
+                    assert job is not None
                     assert job.status == JobStatus.FAILED
         finally:
             if csv.exists():
@@ -3217,8 +3234,10 @@ class TestCLIBypassClickValidation:
 
         try:
             # Call the underlying function directly (bypasses Click validation)
+            callback = main.callback
+            assert callback is not None
             with pytest.raises(SystemExit) as exc_info:
-                main.callback(
+                callback(
                     xml_message_type="invalid.type.999",
                     xml_template_file_path=template,
                     xsd_schema_file_path=schema,
@@ -3227,6 +3246,13 @@ class TestCLIBypassClickValidation:
                     output_dir=None,
                     dry_run=False,
                     verbose=False,
+                    streaming=False,
+                    chunk_size=1000,
+                    profile=None,
+                    show_config=False,
+                    list_templates=False,
+                    show_template=None,
+                    emit_metrics=False,
                 )
             assert exc_info.value.code == 2
         finally:

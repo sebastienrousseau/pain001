@@ -26,6 +26,11 @@ from pain001.exceptions import ConfigurationError
 from pain001.security import validate_path
 
 
+def _connect_sqlite_read_only(safe_path: str) -> sqlite3.Connection:
+    """Open an SQLite database in read-only mode."""
+    return sqlite3.connect(f"file:{safe_path}?mode=ro", uri=True)  # nosec B608
+
+
 def sanitize_table_name(table_name: str) -> str:
     """
     Validate and sanitize a table name to prevent SQL injection.
@@ -85,9 +90,11 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
     try:
         # must_exist=True ensures both validation and existence check
+        base_dir = os.getcwd()
         safe_path = validate_path(
             data_file_path,
             must_exist=True,
+            base_dir=base_dir,
         )  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
@@ -101,7 +108,7 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
         )
 
     # Connect to the SQLite database (now safe after validation)
-    conn = sqlite3.connect(str(safe_path))  # nosec B108
+    conn = _connect_sqlite_read_only(str(safe_path))
     try:
         cursor = conn.cursor()
 

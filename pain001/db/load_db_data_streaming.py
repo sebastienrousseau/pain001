@@ -20,8 +20,12 @@ import sqlite3
 from collections.abc import Generator
 from typing import Any
 
-from pain001.db.load_db_data import sanitize_table_name
+from pain001.db.load_db_data import (
+    _connect_sqlite_read_only,
+    sanitize_table_name,
+)
 from pain001.exceptions import DataSourceError
+from pain001.security import validate_path
 
 
 def load_db_data_streaming(
@@ -55,8 +59,19 @@ def load_db_data_streaming(
         - Enables processing of tables larger than available RAM
         - Uses cursor fetching for efficient streaming
     """
-    # Check if the SQLite file exists
-    if not os.path.exists(data_file_path):
+    try:
+        base_dir = os.getcwd()
+        safe_path = validate_path(
+            data_file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )
+    except Exception as exc:
+        raise FileNotFoundError(
+            f"SQLite file path validation failed: {data_file_path}"
+        ) from exc
+
+    if not os.path.exists(safe_path):
         raise FileNotFoundError(
             f"SQLite file '{data_file_path}' does not exist."
         )
@@ -66,7 +81,7 @@ def load_db_data_streaming(
     table_name = sanitize_table_name(table_name)
 
     # Connect to the SQLite database
-    conn = sqlite3.connect(data_file_path)
+    conn = _connect_sqlite_read_only(safe_path)
     try:
         cursor = conn.cursor()
 

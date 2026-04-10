@@ -54,7 +54,9 @@ The project uses Codecov for coverage tracking. To enable Codecov in your fork:
 3. Codecov will automatically detect coverage.xml uploads from GitHub Actions
 4. Coverage badge will appear once first upload is processed
 
-**Note**: The Codecov token (`AaUxKfRiou`) is stored in the badge URL for public repositories. For private repos, use GitHub Secrets:
+**Note**: Public Codecov badges may reference repository-specific identifiers in
+their URLs. For private repositories, use GitHub Secrets instead of embedding
+service tokens anywhere in the repository:
 
 ```bash
 # In GitHub Settings → Secrets → New repository secret

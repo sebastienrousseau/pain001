@@ -16,7 +16,7 @@
 """Universal data loader supporting multiple input sources."""
 
 from collections.abc import Generator
-from typing import Any, Union
+from typing import Any, Union, cast
 
 # pylint: disable=duplicate-code
 from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
@@ -180,7 +180,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
         )
 
     loader_fn, validator_fn, format_name = entry
-    data = loader_fn(safe_path)
+    data = cast(list[dict[str, Any]], loader_fn(safe_path))
     if not validator_fn(data):
         raise PaymentValidationError(
             f"{format_name} data validation failed for {file_path}"

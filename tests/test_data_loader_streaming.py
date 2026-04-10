@@ -147,13 +147,13 @@ class TestStreamPaymentData:
     def test_stream_parquet_data(self, tmp_path):
         """Test streaming Parquet data if pyarrow is available."""
         try:
-            import pyarrow  # noqa: F401
-            import pyarrow.parquet as pq  # noqa: F401
+            import pyarrow  # type: ignore[import-untyped]  # noqa: F401
+            import pyarrow.parquet as pq  # type: ignore[import-untyped]  # noqa: F401
 
             parquet_file = tmp_path / "test.parquet"
 
             # Create test data
-            import pandas as pd
+            import pandas as pd  # type: ignore[import-untyped]
 
             df = pd.DataFrame(
                 {

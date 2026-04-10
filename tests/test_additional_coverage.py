@@ -87,15 +87,18 @@ class TestJobManagerCoverage:
         # Test transitions
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=25)
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.progress_percent == 25
 
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=75)
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.progress_percent == 75
 
         # Failed with error
         job_manager.update_status(job_id, JobStatus.FAILED, error="Test error")
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.status == JobStatus.FAILED
         assert job.error == "Test error"
 
@@ -106,7 +109,7 @@ class TestParquetCoverage:
     def test_parquet_streaming_edge_cases(self, tmp_path):
         """Test Parquet streaming with various data."""
         try:
-            import pandas as pd
+            import pandas as pd  # type: ignore[import-untyped]
 
             from pain001.parquet.load_parquet_data import (
                 load_parquet_data_streaming,

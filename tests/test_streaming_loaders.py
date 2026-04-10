@@ -19,6 +19,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import pytest
+
 from pain001.data.loader import load_payment_data_streaming
 from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.exceptions import DataSourceError, PaymentValidationError
@@ -217,6 +219,19 @@ class TestStreamingLoaders(unittest.TestCase):
             list(load_payment_data_streaming(str(csv_file)))
 
         self.assertIn("empty", str(cm.exception).lower())
+
+
+def test_load_db_data_streaming_rejects_path_outside_cwd() -> None:
+    """Streaming DB loader should apply the same path validation policy."""
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir:
+        db_file = Path(tmp_dir) / "outside.db"
+        conn = sqlite3.connect(db_file)
+        conn.execute("CREATE TABLE pain001 (id INTEGER)")
+        conn.commit()
+        conn.close()
+
+        with pytest.raises(FileNotFoundError, match="validation failed"):
+            list(load_db_data_streaming(str(db_file), "pain001", chunk_size=1))
 
     def test_streaming_empty_db_table(self):
         """Test streaming with empty database table."""

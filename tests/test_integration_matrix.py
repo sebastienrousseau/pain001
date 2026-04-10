@@ -179,8 +179,8 @@ class TestIntegrationMatrix(unittest.TestCase):
 
         # Create Parquet file (if pyarrow available)
         try:
-            import pyarrow as pa
-            import pyarrow.parquet as pq
+            import pyarrow as pa  # type: ignore[import-untyped]
+            import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
             # Convert to PyArrow table
             table = pa.Table.from_pylist(sample_data)

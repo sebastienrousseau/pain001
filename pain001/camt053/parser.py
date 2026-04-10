@@ -17,8 +17,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
-from xml.etree.ElementTree import Element
+from typing import Any, Optional
 
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
@@ -88,16 +87,17 @@ def parse_camt053_statement(
     }
 
 
-def _detect_namespace(root: Element) -> str:
+def _detect_namespace(root: Any) -> str:
     """Return the element namespace in ElementTree search format."""
-    if root.tag.startswith("{"):
-        return root.tag.split("}", maxsplit=1)[0] + "}"
+    tag = str(root.tag)
+    if tag.startswith("{"):
+        return tag.split("}", maxsplit=1)[0] + "}"
     return ""
 
 
-def _find_text(parent: Element, ns: str, path: str) -> str:
+def _find_text(parent: Any, ns: str, path: str) -> str:
     """Read nested text using slash-separated relative paths."""
-    current: Optional[Element] = parent
+    current: Optional[Any] = parent
     for part in path.split("/"):
         current = current.find(f"{ns}{part}") if current is not None else None
         if current is None:

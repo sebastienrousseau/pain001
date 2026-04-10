@@ -369,6 +369,7 @@ class TestJobCancellationEndpoint:
 
         # Verify job is cancelled
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.status == JobStatus.CANCELLED
 
 
@@ -516,6 +517,7 @@ class TestAsyncGenerationEndpoint:
         time.sleep(0.5)
 
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.status == JobStatus.FAILED
         assert job.error is not None
 
@@ -553,12 +555,14 @@ class TestAsyncGenerationEndpoint:
 
         for _ in range(20):  # Wait up to 2 seconds
             job = job_manager.get_job(job_id)
+            assert job is not None
             if job.status in [JobStatus.SUCCESS, JobStatus.FAILED]:
                 break
             time.sleep(0.1)
 
         # Check final status
         job = job_manager.get_job(job_id)
+        assert job is not None
         # May succeed or fail depending on schema validation
         assert job.status in [JobStatus.SUCCESS, JobStatus.FAILED]
 
@@ -591,6 +595,7 @@ class TestAsyncGenerationEndpoint:
 
             # Job should fail due to CSV validation
             job = job_manager.get_job(job_id)
+            assert job is not None
             assert job.status == JobStatus.FAILED
             job_manager.cancel_job(job_id)
 

@@ -15,10 +15,16 @@
 
 
 import sqlite3
+import tempfile
+from pathlib import Path
 
 import pytest
 
-from pain001.db.load_db_data import load_db_data, sanitize_table_name
+from pain001.db.load_db_data import (
+    _connect_sqlite_read_only,
+    load_db_data,
+    sanitize_table_name,
+)
 from pain001.exceptions import ConfigurationError
 
 
@@ -87,6 +93,37 @@ def test_load_db_data(tmp_path):
     # Test sqlite3.OperationalError for non-existent table
     with pytest.raises(sqlite3.OperationalError):
         load_db_data(db_file, "non_existent_table")
+
+
+def test_load_db_data_rejects_path_outside_cwd() -> None:
+    """Absolute paths outside cwd should fail validation."""
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir:
+        db_file = Path(tmp_dir) / "external.db"
+        conn = sqlite3.connect(db_file)
+        conn.execute(
+            "CREATE TABLE test_table (id INTEGER PRIMARY KEY, name TEXT)"
+        )
+        conn.commit()
+        conn.close()
+
+        with pytest.raises(FileNotFoundError, match="validation failed"):
+            load_db_data(str(db_file), "test_table")
+
+
+def test_connect_sqlite_read_only_blocks_writes(tmp_path) -> None:
+    """Read-only helper must not allow mutating statements."""
+    db_file = tmp_path / "readonly.db"
+    conn = sqlite3.connect(db_file)
+    conn.execute("CREATE TABLE test_table (id INTEGER PRIMARY KEY, name TEXT)")
+    conn.commit()
+    conn.close()
+
+    ro_conn = _connect_sqlite_read_only(str(db_file))
+    try:
+        with pytest.raises(sqlite3.OperationalError):
+            ro_conn.execute("INSERT INTO test_table (name) VALUES ('Alice')")
+    finally:
+        ro_conn.close()
 
 
 # If the script is executed directly, run the tests
