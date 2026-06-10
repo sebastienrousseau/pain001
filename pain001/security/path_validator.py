@@ -30,34 +30,6 @@ class SecurityError(PermissionError):
     """Raised when a security boundary is violated."""
 
 
-def _is_allowed_directory(resolved_path: Path) -> bool:
-    """Check if the path is within allowed directories.
-
-    Args:
-        resolved_path: The absolute Path object to check.
-
-    Returns:
-        True if the path is within allowed directories, False otherwise.
-    """
-    try:
-        # Define base allowed directories
-        allowed_bases = [
-            Path.cwd().resolve(),
-            Path(tempfile.gettempdir()).resolve(),
-            Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
-        ]
-
-        resolved_str = str(resolved_path)
-        return any(
-            resolved_str == str(base)
-            or resolved_str.startswith(str(base) + os.sep)
-            for base in allowed_bases
-        )
-
-    except Exception:  # nosec B110
-        return False
-
-
 def _resolve_within_allowed_bases(
     untrusted_path: Union[str, Path],
     base_dir: Union[str, Path, None] = None,
@@ -96,10 +68,17 @@ def _resolve_within_allowed_bases(
         base_str = os.path.realpath(str(base_dir))
         allowed_bases = [base_str]
     else:
+        # The package's own directory is allowed so bundled templates and
+        # schemas resolve when pain001 is installed outside the cwd
+        # (e.g. site-packages).
+        package_dir = os.path.realpath(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
         allowed_bases = [
             os.path.realpath(os.getcwd()),
             os.path.realpath(tempfile.gettempdir()),
             os.path.realpath(os.path.join(os.path.sep, "var", "tmp")),
+            package_dir,
         ]
 
     for base in allowed_bases:

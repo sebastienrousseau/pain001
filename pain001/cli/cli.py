@@ -20,6 +20,7 @@ import logging
 import os
 import sys
 import traceback
+from collections.abc import Iterator
 from typing import Optional
 
 import click
@@ -200,7 +201,7 @@ def _validate_payment_data(
 
 
 @contextlib.contextmanager
-def _working_directory(path):
+def _working_directory(path: str) -> Iterator[None]:
     """Context manager that temporarily changes the working directory."""
     original = os.getcwd()
     try:

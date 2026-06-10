@@ -24,7 +24,6 @@ import pytest
 from pain001.security.path_validator import (
     PathValidationError,
     SecurityError,
-    _is_allowed_directory,
     sanitize_for_log,
     validate_path,
 )
@@ -101,13 +100,6 @@ class TestPathValidator:
                     SecurityError, match="outside allowed directories"
                 ):
                     validate_path(target)
-
-    def test_is_allowed_directory_logic(self):
-        """Test internal logic of _is_allowed_directory directly."""
-        # Non-existent files MUST be in allowed directories to be valid
-        assert (
-            _is_allowed_directory(Path("/non/existent/absolute/path")) is False
-        )
 
     def test_sanitize_for_log(self):
         """Test string sanitization for logging."""

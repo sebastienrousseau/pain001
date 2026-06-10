@@ -4,14 +4,6 @@ pain001.xml package
 Submodules
 ----------
 
-pain001.xml.create\_common\_elements module
---------------------------------------------
-
-.. automodule:: pain001.xml.create_common_elements
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 pain001.xml.create\_root\_element module
 -----------------------------------------
 
@@ -24,78 +16,6 @@ pain001.xml.create\_xml\_element module
 ----------------------------------------
 
 .. automodule:: pain001.xml.create_xml_element
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v3 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v3
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v4 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v4
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v5 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v5
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v6 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v6
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v7 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v7
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v8 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v8
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v9 module
------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v9
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v10 module
-------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v10
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-pain001.xml.create\_xml\_v11 module
-------------------------------------
-
-.. automodule:: pain001.xml.create_xml_v11
    :members:
    :undoc-members:
    :show-inheritance:
