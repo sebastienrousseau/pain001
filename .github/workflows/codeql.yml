@@ -41,7 +41,7 @@ jobs:
         uses: abatilo/actions-poetry@v3
 
       - name: Install dependencies
-        run: poetry install --no-interaction --no-root
+        run: poetry install --no-interaction --no-root --all-extras
 
       # Initializes the CodeQL tools for scanning
       - name: Initialize CodeQL
