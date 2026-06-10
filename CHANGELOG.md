@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.48] - 2026-06-10
+
+### Highlights
+- **Financial correctness:** amounts are parsed as `Decimal` and strictly
+  validated; `NbOfTxs` and `CtrlSum` are computed from the payment rows,
+  never trusted from input.
+- **Explicit output paths:** `process_files()` and `generate_xml()` accept
+  an `output_path` argument and return the written path.
+- **API hardening:** optional bearer-token auth, bounded job store, and
+  package-relative template resolution.
+- **Leaner packaging:** FastAPI/uvicorn and pyarrow moved to `[api]` and
+  `[parquet]` extras; unused runtime dependencies removed.
+
+### Added
+
+- `output_path` parameter on `process_files()` and `generate_xml()`; both
+  now return the path the XML was written to. The legacy behaviour of
+  writing next to the template is deprecated (emits `DeprecationWarning`).
+- Optional API authentication: set `PAIN001_API_KEY` to require
+  `Authorization: Bearer <key>` on all endpoints except `/api/health`.
+- Packaging extras: `pip install pain001[api]` for the REST API and
+  `pain001[parquet]` for Parquet support, with clear `ImportError` hints.
+
+### Changed
+
+- **Amount validation is strict:** missing, non-numeric, non-positive, or
+  more-than-2-decimal amounts now raise `PaymentValidationError` instead
+  of being silently passed through to the XML.
+- `NbOfTxs` and `CtrlSum` in generated XML are always computed from the
+  data rows; input values for these fields are ignored.
+- The REST API resolves bundled templates package-relatively and honours
+  `output_dir`; async jobs run in a worker thread and retain task
+  references (no mid-flight garbage collection).
+- Job store: terminal job states (success/failed/cancelled) are final and
+  the in-memory store is bounded; timestamps are timezone-aware UTC.
+- Runtime dependencies use floor pins (`>=x,<next-major`) instead of
+  exact pins; `jsonschema` constraint widened to `<5`.
+- Lint stack consolidated to Ruff (formatting, linting, import sorting);
+  black/isort/flake8/pylint removed from dev dependencies and CI.
+- Library logging is now well-behaved: no root-logger configuration, no
+  handler attachment, no `logging.basicConfig()` at import time; a
+  `NullHandler` is attached to the package logger.
+
+### Fixed
+
+- `process_files()` success check now verifies the actually written file
+  instead of a derived template path.
+- DB-sourced data is validated with the same type rules as CSV data
+  (including SQLite 0/1 booleans), and non-string values from JSON or
+  Python dicts no longer crash validation.
+- The security workflow now fails on known vulnerabilities instead of
+  always passing.
+
 ## [0.0.47] - 2026-01-18
 
 ### Highlights
