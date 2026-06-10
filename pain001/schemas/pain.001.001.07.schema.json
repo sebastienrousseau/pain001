@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "pain.001.001.07 Payment Data Schema",
   "description": "Schema for ISO 20022 pain.001.001.07 Customer Credit Transfer Initiation",
-  "version": "0.0.47",
+  "version": "0.0.48",
   "type": "object",
   "required": [
     "id",
