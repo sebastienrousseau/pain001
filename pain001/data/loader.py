@@ -180,7 +180,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
         )
 
     loader_fn, validator_fn, format_name = entry
-    data = loader_fn(safe_path)
+    data: list[dict[str, Any]] = loader_fn(safe_path)
     if not validator_fn(data):
         raise PaymentValidationError(
             f"{format_name} data validation failed for {file_path}"

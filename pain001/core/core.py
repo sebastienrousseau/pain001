@@ -18,7 +18,7 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Union
+from typing import Any, Optional, Union
 
 import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
@@ -36,19 +36,9 @@ from pain001.logging_schema import (
 )
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
-# CORRECTION: Circular import workaround. Imports moved to top-level.
-
-# Configure structured logging
+# Library code: no handlers, no level overrides — the host
+# application controls logging configuration.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
 
 
 def _validate_inputs(
@@ -208,8 +198,9 @@ def _generate_and_log(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
-) -> int:
-    """Generate the XML and return generation duration in milliseconds."""
+    output_path: Optional[str] = None,
+) -> tuple[str, int]:
+    """Generate the XML, returning (output file path, duration in ms)."""
     gen_start = time.time()
     log_event(
         logger,
@@ -221,14 +212,15 @@ def _generate_and_log(
         },
     )
 
-    xml_generate.generate_xml(
+    written_path = xml_generate.generate_xml(
         payment_data,
         xml_message_type,
         xml_template_file_path,
         xsd_schema_file_path,
+        output_path=output_path,
     )
 
-    return int((time.time() - gen_start) * 1000)
+    return written_path, int((time.time() - gen_start) * 1000)
 
 
 def process_files(
@@ -236,7 +228,8 @@ def process_files(
     xml_template_file_path: str,
     xsd_schema_file_path: str,
     data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
-) -> None:
+    output_path: Optional[str] = None,
+) -> str:
     """
     Generate an ISO 20022 payment message from various data sources.
 
@@ -245,6 +238,12 @@ def process_files(
         xml_template_file_path: Path to the XML template file.
         xsd_schema_file_path: Path to the XSD schema file.
         data_file_path: File path (CSV/DB/JSON/Parquet) or Python data (list/dict).
+        output_path: Explicit path for the generated XML file. When omitted,
+            the file is written next to the template (deprecated; requires
+            the template to live under the current working directory).
+
+    Returns:
+        The path the generated XML file was written to.
 
     Raises:
         ValueError: If the XML message type is not supported or data is invalid.
@@ -266,17 +265,17 @@ def process_files(
         )
         payment_data = _load_data(data_file_path, start_time)
         _register_message_namespaces(xml_message_type)
-        gen_duration = _generate_and_log(
+        written_path, gen_duration = _generate_and_log(
             payment_data,
             xml_message_type,
             safe_template_path,
             safe_schema_path,
+            output_path=output_path,
         )
 
-        # Confirm success (template existence check retained for backward compatibility)
-        if os.path.exists(safe_template_path):
+        if os.path.exists(written_path):
             context_logger.info(
-                f"Successfully generated XML file '{safe_template_path}'".replace(
+                f"Successfully generated XML file '{written_path}'".replace(
                     "\n", ""
                 )
             )
@@ -288,9 +287,7 @@ def process_files(
                 generation_ms=gen_duration,
             )
         else:
-            error_msg = (
-                f"Failed to generate XML file at '{safe_template_path}'"
-            )
+            error_msg = f"Failed to generate XML file at '{written_path}'"
             context_logger.error(
                 f"{sanitize_for_log(error_msg)}".replace("\n", "")
             )
@@ -304,6 +301,7 @@ def process_files(
                     Fields.ERROR_MESSAGE: error_msg,
                 },
             )
+        return written_path
 
     except Exception as e:
         log_process_error(logger, e, xml_message_type)

@@ -40,8 +40,11 @@
 # - remittance_information (str) - remittance information
 
 
+import logging
 from datetime import datetime
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 def _validate_datetime(value: str) -> bool:
@@ -84,7 +87,7 @@ def _validate_field_type(value: str, data_type: type) -> bool:
         elif data_type is float:
             float(value)
         elif data_type is bool:
-            if value.lower() not in ("true", "false"):
+            if value.lower() not in ("true", "false", "0", "1"):
                 return False
         elif data_type is datetime:
             return _validate_datetime(value)
@@ -112,12 +115,14 @@ def _validate_row(
     for column, data_type in required_columns.items():
         raw_value = row.get(column)
 
-        # Single strip operation, cached result
         if raw_value is None:
             missing_columns.append(column)
             continue
 
-        value = raw_value.strip()
+        # Non-file sources (JSON, SQLite, Python dicts) carry native
+        # types (int/float/bool); coerce to str so one type-check
+        # path serves every loader.
+        value = str(raw_value).strip()
 
         if not value:
             missing_columns.append(column)
@@ -198,7 +203,7 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
     }
 
     if not data:
-        print("Error: The CSV data is empty.")
+        logger.error("The CSV data is empty.")
         return False
 
     is_valid = True
@@ -215,8 +220,7 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
                 )
             )
 
-    # Single print operation for all errors
     if all_errors:
-        print("\n".join(all_errors))
+        logger.error("\n".join(all_errors))
 
     return is_valid
