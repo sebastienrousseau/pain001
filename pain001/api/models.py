@@ -20,7 +20,7 @@
 from enum import Enum
 from typing import Any, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class DataSourceType(str, Enum):
@@ -119,7 +119,7 @@ class ValidationResponse(BaseModel):
 
     @field_validator("invalid_rows", mode="after")
     @classmethod
-    def calculate_invalid_rows(cls, v: int, info) -> int:
+    def calculate_invalid_rows(cls, v: int, info: ValidationInfo) -> int:
         """Calculate invalid rows from total and valid counts.
 
         Args:
