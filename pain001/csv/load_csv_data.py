@@ -22,7 +22,7 @@ from typing import Any
 from pain001.exceptions import DataSourceError
 from pain001.security import sanitize_for_log, validate_path  # noqa: PYI100
 
-logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def load_csv_data(file_path: str) -> list[dict[str, Any]]:
@@ -57,7 +57,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         )  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}"
         )
         raise
@@ -65,7 +65,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     # Check file existence using os.path for string path
     if not os.path.isfile(safe_path):
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(f"File not found: {sanitize_for_log(str(file_path))}")
+        logger.error(f"File not found: {sanitize_for_log(str(file_path))}")
         raise FileNotFoundError(
             f"File '{sanitize_for_log(str(file_path))}' not found."
         )
@@ -78,13 +78,13 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
                 data.append(row)
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"IOError reading file: {sanitize_for_log(str(file_path))}"
         )
         raise
     except UnicodeDecodeError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"UnicodeDecodeError decoding file: {sanitize_for_log(str(file_path))}"
         )
         raise
@@ -139,7 +139,7 @@ def load_csv_data_streaming(
         )  # nosec B108
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}"
         )
         raise
@@ -160,17 +160,17 @@ def load_csv_data_streaming(
 
     except FileNotFoundError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(f"File '{sanitize_for_log(str(file_path))}' not found.")
+        logger.error(f"File '{sanitize_for_log(str(file_path))}' not found.")
         raise
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"An IOError occurred while reading the file '{sanitize_for_log(str(file_path))}'."
         )
         raise
     except UnicodeDecodeError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"A UnicodeDecodeError occurred while decoding the file '{sanitize_for_log(str(file_path))}'."
         )
         raise

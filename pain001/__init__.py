@@ -15,7 +15,13 @@
 
 """The Python pain001 module."""
 
-__version__ = "0.0.47"
+import logging
+
+__version__ = "0.0.48"
+
+# Library convention: emit nothing unless the host app configures
+# logging (PEP 282 / logging HOWTO).
+logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 from pain001.__main__ import main
 from pain001.core.core import process_files

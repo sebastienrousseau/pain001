@@ -16,7 +16,6 @@
 """Parquet data loader for payment data (optional feature)."""
 
 # pylint: disable=duplicate-code
-import logging
 import os
 from collections.abc import Generator
 from typing import Any
@@ -24,11 +23,9 @@ from typing import Any
 from pain001.exceptions import DataSourceError
 from pain001.security import validate_path
 
-logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
-
 # Optional import: pyarrow is not a required dependency
 try:
-    import pyarrow.parquet as pq  # type: ignore[import-not-found]
+    import pyarrow.parquet as pq  # type: ignore[import-untyped,import-not-found,unused-ignore]
 
     HAS_PARQUET_SUPPORT = True
 except ImportError:  # pragma: no cover
@@ -90,7 +87,7 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
         table = pq.read_table(str(safe_path))  # nosec B108
 
         # Convert to list of dicts
-        data = table.to_pylist()
+        data: list[dict[str, Any]] = table.to_pylist()
 
         if not data:
             raise DataSourceError(f"Parquet file is empty: {file_path}")

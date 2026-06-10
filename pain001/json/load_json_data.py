@@ -17,15 +17,12 @@
 
 # pylint: disable=duplicate-code
 import json
-import logging
 import os
 from collections.abc import Generator
 from typing import Any
 
 from pain001.exceptions import DataSourceError
 from pain001.security import validate_path
-
-logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
 def load_json_data(file_path: str) -> list[dict[str, Any]]:
