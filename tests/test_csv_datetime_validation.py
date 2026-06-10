@@ -95,9 +95,12 @@ class TestCsvFieldTypeValidation:
         assert _validate_field_type("false", bool) is True
         assert _validate_field_type("True", bool) is True
         assert _validate_field_type("False", bool) is True
+        # SQLite stores booleans as 0/1
+        assert _validate_field_type("0", bool) is True
+        assert _validate_field_type("1", bool) is True
 
     def test_field_type_validation_bool_invalid(self) -> None:
         """Test boolean field validation with invalid values."""
         assert _validate_field_type("yes", bool) is False
-        assert _validate_field_type("1", bool) is False
+        assert _validate_field_type("2", bool) is False
         assert _validate_field_type("invalid", bool) is False
