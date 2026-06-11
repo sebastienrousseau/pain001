@@ -34,8 +34,6 @@ Example:
     ...     log.error(f"Configuration error: {e}")
 """
 
-from typing import Optional
-
 __all__ = [
     "Pain001Error",
     "PaymentValidationError",
@@ -84,7 +82,7 @@ class PaymentValidationError(Pain001Error):
         ...     return {"error": str(e), "field": e.field}
     """
 
-    def __init__(self, message: str, field: Optional[str] = None):
+    def __init__(self, message: str, field: str | None = None):
         """Initialize validation error with optional field name.
 
         Args:
@@ -172,7 +170,7 @@ class SchemaValidationError(Pain001Error):
         ...     log.debug(f"Validation errors: {e.errors}")
     """
 
-    def __init__(self, message: str, errors: Optional[list[str]] = None):
+    def __init__(self, message: str, errors: list[str] | None = None):
         """Initialize schema validation error with optional error list.
 
         Args:
@@ -209,8 +207,8 @@ class InvalidIBANError(PaymentValidationError):
         self,
         message: str,
         iban: str,
-        field: Optional[str] = None,
-        reason: Optional[str] = None,
+        field: str | None = None,
+        reason: str | None = None,
     ):
         """Initialize IBAN validation error with IBAN value.
 
@@ -247,8 +245,8 @@ class InvalidBICError(PaymentValidationError):
         self,
         message: str,
         bic: str,
-        field: Optional[str] = None,
-        reason: Optional[str] = None,
+        field: str | None = None,
+        reason: str | None = None,
     ):
         """Initialize BIC validation error with BIC value.
 
@@ -285,8 +283,8 @@ class MissingRequiredFieldError(PaymentValidationError):
         self,
         message: str,
         field: str,
-        row_number: Optional[int] = None,
-        required_fields: Optional[list[str]] = None,
+        row_number: int | None = None,
+        required_fields: list[str] | None = None,
     ):
         """Initialize missing field error with field details.
 

@@ -26,7 +26,7 @@ import re
 import time
 import warnings
 from decimal import Decimal, InvalidOperation
-from typing import Any, Optional
+from typing import Any
 
 from jinja2 import select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
@@ -248,7 +248,7 @@ def generate_xml(
     payment_initiation_message_type: str,
     xml_file_path: str,
     xsd_file_path: str,
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
 ) -> str:
     """Generates an ISO 20022 pain.001 XML file from input data.
 

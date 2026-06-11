@@ -14,14 +14,13 @@
 # limitations under the License.
 
 import xml.etree.ElementTree as et  # nosec B405
-from typing import Optional
 
 
 def create_xml_element(
     parent: et.Element,
     tag: str,
-    text: Optional[str] = None,
-    attributes: Optional[dict[str, str]] = None,
+    text: str | None = None,
+    attributes: dict[str, str] | None = None,
 ) -> et.Element:
     """
     Create and append an XML element with the specified tag, text, and

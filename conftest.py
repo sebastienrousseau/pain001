@@ -7,7 +7,6 @@ import os
 import tempfile
 import time
 from pathlib import Path
-from typing import Optional
 
 import pytest
 
@@ -20,7 +19,7 @@ class SLOMonitor:
     def __init__(self, threshold_secs: float, name: str) -> None:
         self.threshold = threshold_secs
         self.name = name
-        self.start_time: Optional[float] = None
+        self.start_time: float | None = None
         self.elapsed = 0.0
 
     def start(self) -> None:

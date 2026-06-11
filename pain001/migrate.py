@@ -15,8 +15,6 @@
 
 """CLI for ISO 20022 version migration."""
 
-from typing import Optional
-
 import click
 
 from pain001.migration import VersionMapper
@@ -42,7 +40,7 @@ def main(
     from_version: str,
     to_version: str,
     source_path: str,
-    output_path: Optional[str],
+    output_path: str | None,
 ) -> None:
     """Migrate payment data between supported ISO 20022 versions."""
     mapper = VersionMapper()

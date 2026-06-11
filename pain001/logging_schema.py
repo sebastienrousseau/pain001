@@ -63,7 +63,7 @@ import uuid
 from contextvars import ContextVar
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     __version__ = version("pain001")
@@ -71,7 +71,7 @@ except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0"
 
 # Context variable for request tracing across async operations
-_request_id_context: ContextVar[Optional[str]] = ContextVar(
+_request_id_context: ContextVar[str | None] = ContextVar(
     "request_id", default=None
 )
 
@@ -427,7 +427,7 @@ def log_process_success(
 def log_process_error(
     logger: logging.Logger,
     error: Exception,
-    message_type: Optional[str] = None,
+    message_type: str | None = None,
     **extra_fields: Any,
 ) -> None:
     """Log process error event.
@@ -453,7 +453,7 @@ def log_validation_event(
     logger: logging.Logger,
     validation_type: str,
     success: bool,
-    error: Optional[Exception] = None,
+    error: Exception | None = None,
     **extra_fields: Any,
 ) -> None:
     """Log validation event (success or error).
@@ -489,9 +489,9 @@ def log_data_load_event(
     logger: logging.Logger,
     data_source_type: str,
     success: bool,
-    record_count: Optional[int] = None,
-    error: Optional[Exception] = None,
-    duration_ms: Optional[int] = None,
+    record_count: int | None = None,
+    error: Exception | None = None,
+    duration_ms: int | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Log data loading event.
@@ -528,9 +528,9 @@ def log_xml_generation_event(
     logger: logging.Logger,
     message_type: str,
     success: bool,
-    record_count: Optional[int] = None,
-    error: Optional[Exception] = None,
-    duration_ms: Optional[int] = None,
+    record_count: int | None = None,
+    error: Exception | None = None,
+    duration_ms: int | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Log XML generation event.
@@ -588,7 +588,7 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         self,
         logger: logging.Logger,
         dry_run: bool = False,
-        message_type: Optional[str] = None,
+        message_type: str | None = None,
     ):
         """Initialize execution summary tracker.
 
@@ -602,10 +602,10 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         self.message_type = message_type
 
         # Execution metrics
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
-        self.start_time_iso: Optional[str] = None
-        self.end_time_iso: Optional[str] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
+        self.start_time_iso: str | None = None
+        self.end_time_iso: str | None = None
 
         # Event counts
         self.counts = {
@@ -619,8 +619,8 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         # Processing metrics
         self.total_records_processed = 0
         self.validation_metrics: dict[str, str] = {}
-        self.output_file: Optional[str] = None
-        self.log_file: Optional[str] = None
+        self.output_file: str | None = None
+        self.log_file: str | None = None
 
         # Status tracking
         self.has_errors = False
@@ -666,7 +666,7 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         """
         self.validation_metrics[validation_type] = result
 
-    def set_output_file(self, file_path: Optional[str]) -> None:
+    def set_output_file(self, file_path: str | None) -> None:
         """Set output file path.
 
         Args:
@@ -818,9 +818,9 @@ class JSONFormatter(logging.Formatter):
 
 
 def configure_json_logging(
-    logger: Optional[logging.Logger] = None,
-    level: Union[str, int] = logging.INFO,
-    log_file: Optional[str] = None,
+    logger: logging.Logger | None = None,
+    level: str | int = logging.INFO,
+    log_file: str | None = None,
     max_bytes: int = 10 * 1024 * 1024,  # 10 MB
     backup_count: int = 5,
     console_output: bool = True,
@@ -933,8 +933,8 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         self,
         logger: logging.Logger,
         operation: str,
-        message_type: Optional[str] = None,
-        request_id: Optional[str] = None,
+        message_type: str | None = None,
+        request_id: str | None = None,
     ):
         """Initialize execution metrics tracker.
 
@@ -951,8 +951,8 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         set_request_id(self.request_id)
 
         # Timing metrics
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
         self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
 
         # Validation tracking
@@ -966,7 +966,7 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
 
         # Status tracking
         self.status = ExecutionStatus.SUCCESS
-        self.error_message: Optional[str] = None
+        self.error_message: str | None = None
 
     def start(self) -> None:
         """Mark operation start time."""

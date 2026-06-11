@@ -303,7 +303,9 @@ class TestDataLoader:
 
         # Compare values (ignoring potential type differences)
         assert len(data_from_csv) == len(data_from_dict)
-        for csv_row, dict_row in zip(data_from_csv, data_from_dict):
+        for csv_row, dict_row in zip(
+            data_from_csv, data_from_dict, strict=True
+        ):
             for key in csv_row.keys():
                 assert str(csv_row[key]) == str(dict_row[key])
 
@@ -316,7 +318,7 @@ class TestDataLoader:
 
         # Compare values
         assert len(data_from_db) == len(data_from_dict)
-        for db_row, dict_row in zip(data_from_db, data_from_dict):
+        for db_row, dict_row in zip(data_from_db, data_from_dict, strict=True):
             for key in db_row.keys():
                 assert str(db_row[key]) == str(dict_row[key])
 

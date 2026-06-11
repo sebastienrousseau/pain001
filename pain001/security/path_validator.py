@@ -19,7 +19,6 @@ import os
 import re
 import tempfile
 from pathlib import Path
-from typing import Union
 
 
 class PathValidationError(ValueError):
@@ -31,8 +30,8 @@ class SecurityError(PermissionError):
 
 
 def _resolve_within_allowed_bases(
-    untrusted_path: Union[str, Path],
-    base_dir: Union[str, Path, None] = None,
+    untrusted_path: str | Path,
+    base_dir: str | Path | None = None,
 ) -> str:
     """Resolve and validate that a path is within allowed directories.
 
@@ -95,9 +94,9 @@ def _resolve_within_allowed_bases(
 
 
 def validate_path(
-    untrusted_path: Union[str, Path],
+    untrusted_path: str | Path,
     must_exist: bool = False,
-    base_dir: Union[str, Path, None] = None,
+    base_dir: str | Path | None = None,
 ) -> str:
     """Validate and resolve path to prevent directory traversal attacks.
 

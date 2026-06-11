@@ -15,8 +15,9 @@
 
 """Registry-driven XML message preparation pipeline."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 XmlDataPreparer = Callable[[list[dict[str, Any]]], dict[str, Any]]
 

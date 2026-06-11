@@ -18,7 +18,7 @@
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class JobStatus(str, Enum):
@@ -43,8 +43,8 @@ class JobResult:  # pylint: disable=too-few-public-methods
         self,
         job_id: str,
         status: JobStatus,
-        result: Optional[dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ):
         """Initialize job result.
 
@@ -102,7 +102,7 @@ class JobManager:
         )
         return job_id
 
-    def get_job(self, job_id: str) -> Optional[JobResult]:
+    def get_job(self, job_id: str) -> JobResult | None:
         """Get job by ID.
 
         Args:
@@ -118,8 +118,8 @@ class JobManager:
         job_id: str,
         status: JobStatus,
         progress: int = 0,
-        result: Optional[dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> None:
         """Update job status.
 

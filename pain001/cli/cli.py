@@ -20,7 +20,6 @@ import os
 import sys
 import traceback
 from collections.abc import Iterator
-from typing import Optional
 
 import click
 from rich import box
@@ -223,8 +222,8 @@ def _print_template_details(message_type: str) -> None:
 
 def _resolve_template_assets(
     xml_message_type: str,
-    xml_template_file_path: Optional[str],
-    xsd_schema_file_path: Optional[str],
+    xml_template_file_path: str | None,
+    xsd_schema_file_path: str | None,
 ) -> tuple[str, str]:
     """Resolve template/schema from registry when paths are omitted."""
     if xml_template_file_path and xsd_schema_file_path:
@@ -244,7 +243,7 @@ def _generate_xml_files(
     xml_template_file_path: str,
     xsd_schema_file_path: str,
     data_file_path: str,
-    output_dir: Optional[str],
+    output_dir: str | None,
     streaming: bool,
     chunk_size: int,
     verbose: bool,
@@ -443,20 +442,20 @@ def _generate_xml_files(
     help="Emit lightweight timing and lifecycle metrics to stdout.",
 )
 def main(
-    xml_message_type: Optional[str],
-    xml_template_file_path: Optional[str],
-    xsd_schema_file_path: Optional[str],
-    data_file_path: Optional[str],
-    config_file: Optional[str],
-    output_dir: Optional[str],
+    xml_message_type: str | None,
+    xml_template_file_path: str | None,
+    xsd_schema_file_path: str | None,
+    data_file_path: str | None,
+    config_file: str | None,
+    output_dir: str | None,
     dry_run: bool,
     verbose: bool,
     streaming: bool,
     chunk_size: int,
-    profile: Optional[str],
+    profile: str | None,
     show_config: bool,
     list_templates: bool,
-    show_template: Optional[str],
+    show_template: str | None,
     emit_metrics: bool,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments

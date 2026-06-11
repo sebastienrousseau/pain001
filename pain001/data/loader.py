@@ -16,7 +16,7 @@
 """Universal data loader supporting multiple input sources."""
 
 from collections.abc import Generator
-from typing import Any, Union, cast
+from typing import Any, cast
 
 # pylint: disable=duplicate-code
 from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
@@ -72,7 +72,7 @@ def _get_file_stream_loaders() -> dict[str, tuple[Any, Any, str]]:
 
 
 def load_payment_data(
-    data_source: Union[str, list[dict[str, Any]], dict[str, Any]],
+    data_source: str | list[dict[str, Any]] | dict[str, Any],
 ) -> list[dict[str, Any]]:
     """
     Universal data loader supporting multiple input sources.
@@ -226,7 +226,7 @@ def _load_from_dict(data_dict: dict[str, Any]) -> list[dict[str, Any]]:
 
 
 def load_payment_data_streaming(
-    data_source: Union[str, list[dict[str, Any]]],
+    data_source: str | list[dict[str, Any]],
     chunk_size: int = 1000,
     validate: bool = True,
 ) -> Generator[list[dict[str, Any]], None, None]:

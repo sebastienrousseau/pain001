@@ -18,7 +18,7 @@ import logging
 import os
 import sys
 import time
-from typing import Any, Optional, Union
+from typing import Any
 
 import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
@@ -118,7 +118,7 @@ def _validate_inputs(
 
 
 def _determine_data_source_type(
-    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
 ) -> str:
     """Determine the type of the data source."""
     if isinstance(data_file_path, list):
@@ -139,7 +139,7 @@ def _determine_data_source_type(
 
 
 def _load_data(
-    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
     start_time: float,
 ) -> list[dict[str, Any]]:
     """Load and validate payment data from files or Python objects."""
@@ -209,7 +209,7 @@ def _generate_and_log(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
 ) -> tuple[str, int]:
     """Generate the XML, returning (output file path, duration in ms)."""
     gen_start = time.time()
@@ -238,8 +238,8 @@ def process_files(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
-    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
-    output_path: Optional[str] = None,
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
+    output_path: str | None = None,
 ) -> str:
     """
     Generate an ISO 20022 payment message from various data sources.

@@ -35,7 +35,7 @@ Example:
 
 import json
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any
 
 import jsonschema
 
@@ -86,7 +86,7 @@ class SchemaValidator:
     def __init__(
         self,
         message_type: str,
-        schema_dir: Optional[Path] = None,
+        schema_dir: Path | None = None,
     ):
         """Initialize the schema validator.
 
@@ -192,7 +192,7 @@ class SchemaValidator:
         required = self.schema.get("required", [])
         return list(required) if required else []
 
-    def get_field_schema(self, field_name: str) -> Optional[dict[str, Any]]:
+    def get_field_schema(self, field_name: str) -> dict[str, Any] | None:
         """Get the schema definition for a specific field.
 
         Args:
@@ -209,7 +209,7 @@ class SchemaValidator:
             else None
         )
 
-    def get_field_description(self, field_name: str) -> Optional[str]:
+    def get_field_description(self, field_name: str) -> str | None:
         """Get the description for a specific field.
 
         Args:

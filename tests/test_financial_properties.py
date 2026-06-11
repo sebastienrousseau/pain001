@@ -102,7 +102,7 @@ class TestNormalizeFinancialFieldsProperties:
 
         assert nb_of_txs == str(len(amounts))
         assert Decimal(ctrl_sum) == sum(amounts)
-        for row, original in zip(normalized, amounts):
+        for row, original in zip(normalized, amounts, strict=True):
             assert Decimal(row["payment_amount"]) == original
 
     @given(amounts=st.lists(valid_amounts, min_size=1, max_size=20))

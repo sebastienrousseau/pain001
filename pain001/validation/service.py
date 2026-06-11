@@ -39,7 +39,6 @@ Example:
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
 
 from pain001.constants import valid_xml_types
 from pain001.data.loader import load_payment_data
@@ -64,9 +63,9 @@ class ValidationResult:
     """
 
     is_valid: bool
-    error: Optional[str] = None
-    field: Optional[str] = None
-    details: Optional[str] = None
+    error: str | None = None
+    field: str | None = None
+    details: str | None = None
 
 
 @dataclass
@@ -150,9 +149,7 @@ class ValidationService:
 
         return ValidationResult(is_valid=True)
 
-    def validate_template(
-        self, template_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_template(self, template_path: str | Path) -> ValidationResult:
         """Validate that the XML template file exists and is accessible.
 
         Args:
@@ -192,9 +189,7 @@ class ValidationService:
 
         return ValidationResult(is_valid=True)
 
-    def validate_schema(
-        self, schema_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_schema(self, schema_path: str | Path) -> ValidationResult:
         """Validate that the XSD schema file exists and is accessible.
 
         Args:
@@ -234,9 +229,7 @@ class ValidationService:
 
         return ValidationResult(is_valid=True)
 
-    def validate_data_source(
-        self, data_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_data_source(self, data_path: str | Path) -> ValidationResult:
         """Validate that the data source file exists and is accessible.
 
         Args:
@@ -293,7 +286,7 @@ class ValidationService:
         return ValidationResult(is_valid=True)
 
     def validate_template_schema_compatibility(
-        self, template_path: Union[str, Path], schema_path: Union[str, Path]
+        self, template_path: str | Path, schema_path: str | Path
     ) -> ValidationResult:
         """Validate that the XML template conforms to the XSD schema.
 
@@ -328,9 +321,7 @@ class ValidationService:
                 details=str(exc),
             )
 
-    def validate_data_content(
-        self, data_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_data_content(self, data_path: str | Path) -> ValidationResult:
         """Validate that the data file can be loaded and parsed.
 
         Args:
