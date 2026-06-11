@@ -98,22 +98,32 @@ def _format_amount(value: Any, row_index: int) -> str:
 def _normalize_financial_fields(
     data: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], str, str]:
-    """Normalize amounts and compute batch totals from the actual rows.
+    """Normalize amounts and booleans, computing batch totals from rows.
 
     Args:
         data: Payment rows, each carrying a "payment_amount" value.
 
     Returns:
-        Tuple of (rows with normalized payment_amount, nb_of_txs, ctrl_sum)
-        where nb_of_txs and ctrl_sum are computed from the data instead of
-        trusting caller-provided header fields.
+        Tuple of (normalized rows, nb_of_txs, ctrl_sum) where amounts are
+        two-decimal strings, booleans are XSD-style "true"/"false", and
+        nb_of_txs/ctrl_sum are computed from the data instead of trusting
+        caller-provided header fields.
     """
     normalized: list[dict[str, Any]] = []
     total = Decimal("0.00")
     for index, row in enumerate(data, start=1):
         formatted = _format_amount(row.get("payment_amount"), index)
         total += Decimal(formatted)
-        updated = dict(row)
+        # XSD xs:boolean only accepts "true"/"false"; Python bools from
+        # typed sources (JSON, SQLite) would otherwise render as "True".
+        updated = {
+            key: (
+                ("true" if value else "false")
+                if isinstance(value, bool)
+                else value
+            )
+            for key, value in row.items()
+        }
         updated["payment_amount"] = formatted
         normalized.append(updated)
     return normalized, str(len(normalized)), f"{total:.2f}"

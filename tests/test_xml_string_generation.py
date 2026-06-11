@@ -91,6 +91,26 @@ class TestGenerateXmlString:
         assert "John Doe" in xml_content
         assert "Jane Smith" in xml_content
 
+    def test_generate_xml_string_python_bool_batch_booking(
+        self, sample_payment_data_v03
+    ):
+        """Python bools must render as XSD "true"/"false", not "True"."""
+        data = [dict(sample_payment_data_v03[0])]
+        data[0]["batch_booking"] = True
+
+        xml_content = generate_xml_string(
+            data,
+            "pain.001.001.03",
+            "pain001/templates/pain.001.001.03/template.xml",
+            "pain001/templates/pain.001.001.03/pain.001.001.03.xsd",
+        )
+
+        import re
+
+        match = re.search(r"<BtchBookg>\s*(\S+)</BtchBookg>", xml_content)
+        assert match is not None
+        assert match.group(1) == "true"
+
     def test_generate_xml_string_invalid_message_type(
         self, sample_payment_data_v03
     ):

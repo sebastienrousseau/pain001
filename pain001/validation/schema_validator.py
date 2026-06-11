@@ -136,8 +136,48 @@ class SchemaValidator:
                 e.pos,
             ) from e
 
+    def _coerce_types_for_validation(
+        self, data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Return a copy with strings coerced to the schema's declared types.
+
+        CSV and other text-based loaders deliver every value as a string,
+        while the JSON schemas declare integer/number/boolean types. Values
+        that cannot be coerced are left unchanged so jsonschema reports
+        them as type errors.
+
+        Args:
+            data: Dictionary containing payment data to validate.
+
+        Returns:
+            A shallow copy of ``data`` with coercible strings converted.
+        """
+        properties = self.schema.get("properties", {})
+        coerced = dict(data)
+        for key, value in data.items():
+            if not isinstance(value, str):
+                continue
+            expected = properties.get(key, {}).get("type")
+            text = value.strip()
+            try:
+                if expected == "integer":
+                    coerced[key] = int(text)
+                elif expected == "number":
+                    coerced[key] = float(text)
+                elif expected == "boolean" and text.lower() in {
+                    "true",
+                    "false",
+                }:
+                    coerced[key] = text.lower() == "true"
+            except ValueError:
+                continue
+        return coerced
+
     def validate_data(self, data: dict[str, Any]) -> list[ValidationError]:
         """Validate a data dictionary against the schema.
+
+        String values are first coerced to the schema's declared types so
+        text-based sources (CSV, SQLite) validate the same as typed JSON.
 
         Args:
             data: Dictionary containing payment data to validate.
@@ -151,7 +191,10 @@ class SchemaValidator:
         errors: list[ValidationError] = []
 
         try:
-            jsonschema.validate(instance=data, schema=self.schema)
+            jsonschema.validate(
+                instance=self._coerce_types_for_validation(data),
+                schema=self.schema,
+            )
         except jsonschema.ValidationError as e:
             # Format the path to JSON pointer notation
             path = (
