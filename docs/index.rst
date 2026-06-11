@@ -40,11 +40,11 @@ Key Features
 
 .. rst-class:: feature-grid
 
-* **🏦 ISO 20022 Compliance** — Generate files compliant with pain.001.001.03 through pain.001.001.11
+* **🏦 ISO 20022 Compliance** — Generate files compliant with pain.001.001.03 through pain.001.001.12 and pain.008.001.02
 * **📊 Multiple Data Sources** — Support for CSV files, SQLite databases, and Python data structures
 * **✅ Automatic Validation** — Built-in XSD schema validation for generated XML files
 * **🔒 Secure by Design** — Uses defusedxml to prevent XXE attacks and SQL injection protection
-* **🧪 Fully Tested** — 98.55% test coverage with 568 comprehensive tests
+* **🧪 Fully Tested** — over 1,000 tests with a 95% branch-coverage floor enforced in CI
 * **📦 Type-Safe** — Full type hints for better IDE support and mypy compatibility
 * **🚀 Production-Ready** — Used in production for SEPA and international payments
 * **💼 Enterprise Grade** — Robust error handling, comprehensive logging, and detailed reporting
@@ -96,6 +96,14 @@ Supported ISO 20022 Versions
      - ✅ Latest
      - 23
      - Advanced features & future-proof
+   * - pain.001.001.12
+     - ✅ New
+     - 23
+     - Current credit transfer pilot support
+   * - pain.008.001.02
+     - ✅ New
+     - 26
+     - SEPA direct debit initiation
 
 Why Pain001?
 ============
@@ -151,6 +159,16 @@ Contents
    installation
    usage
    configuration
+   template_registry
+   version_migration
+   security
+   performance_large_batches
+   performance_playbook
+   validate_only_streaming
+   additional_message_types
+   async_adapters
+   troubleshooting
+   testing_quality
    structured_logging
    examples
    modules

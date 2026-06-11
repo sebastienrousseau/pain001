@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
+import secrets
 import tempfile
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.responses import FileResponse
 
 from pain001 import __version__
@@ -38,6 +40,7 @@ from pain001.api.models import (
 from pain001.api.models import (
     ValidationError as ValidationErrorModel,
 )
+from pain001.constants import TEMPLATES_DIR
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
 from pain001.security.path_validator import (
@@ -46,10 +49,36 @@ from pain001.security.path_validator import (
     validate_path,
 )
 from pain001.validation.schema_validator import SchemaValidator
-from pain001.xml.generate_updated_xml_file_path import (
-    generate_updated_xml_file_path,
-)
 from pain001.xml.generate_xml import generate_xml
+
+logger = logging.getLogger(__name__)
+
+# References to in-flight background tasks. asyncio only keeps weak
+# references to tasks, so without this set a running job could be
+# garbage-collected mid-flight.
+_background_tasks: set[asyncio.Task[None]] = set()
+
+
+def _require_api_key(
+    authorization: str | None = Header(default=None),
+) -> None:
+    """Enforce bearer-token auth when PAIN001_API_KEY is configured.
+
+    When the environment variable is unset the API remains open
+    (local development mode); set it in any shared deployment.
+    """
+    expected = os.environ.get("PAIN001_API_KEY")
+    if not expected:
+        return
+    provided = ""
+    if authorization and authorization.startswith("Bearer "):
+        provided = authorization[len("Bearer ") :]
+    if not secrets.compare_digest(provided, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid or missing API key",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 
 def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
@@ -132,35 +161,29 @@ def _format_validation_errors(
 def _resolve_generation_paths(
     request: GenerateXMLRequest,
 ) -> tuple[str, str, str]:
-    """Resolve and validate output directory and template paths for XML generation.
+    """Resolve the output file path and bundled template/schema paths.
 
     Args:
         request: Generation request with message type and optional output dir.
 
     Returns:
-        Tuple of (output_dir, xsd_file_path, xml_template_path) as strings.
+        Tuple of (output_file_path, xsd_file_path, xml_template_path).
     """
     if request.output_dir:
         output_dir = str(_validate_safe_path(request.output_dir))
     else:
         output_dir = str(Path.cwd())
-    # CodeQL CWE-22 guard: same variable for guard and sink
-    if not output_dir.startswith(str(Path.cwd().resolve())):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
-        )
     os.makedirs(output_dir, exist_ok=True)
+    output_file_path = os.path.join(
+        output_dir, f"{request.message_type.value}.xml"
+    )
 
-    template_base = Path("pain001/templates") / request.message_type.value
-    xsd_file_path = str(
-        _validate_safe_path(
-            str(template_base / f"{request.message_type.value}.xsd")
-        )
-    )
-    xml_template_path = str(
-        _validate_safe_path(str(template_base / "template.xml"))
-    )
-    return output_dir, xsd_file_path, xml_template_path
+    # Bundled package data, resolved package-relative so the API works
+    # regardless of the server's working directory.
+    template_base = TEMPLATES_DIR / request.message_type.value
+    xsd_file_path = str(template_base / f"{request.message_type.value}.xsd")
+    xml_template_path = str(template_base / "template.xml")
+    return output_file_path, xsd_file_path, xml_template_path
 
 
 # Create FastAPI application
@@ -197,6 +220,7 @@ async def health() -> HealthResponse:
     response_model=ValidationResponse,
     tags=["Validation"],
     summary="Validate payment data",
+    dependencies=[Depends(_require_api_key)],
 )
 async def validate_data(request: ValidationRequest) -> ValidationResponse:
     """Validate payment data against schema.
@@ -259,6 +283,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
     response_model=GenerateXMLResponse,
     tags=["Generation"],
     summary="Generate XML (synchronous)",
+    dependencies=[Depends(_require_api_key)],
 )
 async def generate_xml_sync(
     request: GenerateXMLRequest,
@@ -313,21 +338,19 @@ async def generate_xml_sync(
             )
 
         # Generate XML
-        _, xsd_file_path, xml_template_path = _resolve_generation_paths(
-            request
-        )
+        (
+            output_file_path,
+            xsd_file_path,
+            xml_template_path,
+        ) = _resolve_generation_paths(request)
 
-        generate_xml(
+        result_path = await asyncio.to_thread(
+            generate_xml,
             data,
             request.message_type.value,
             xml_template_path,
             xsd_file_path,
-        )
-
-        # Get the generated file path
-        result_path = generate_updated_xml_file_path(
-            xml_template_path,
-            request.message_type.value,
+            output_file_path,
         )
 
         return GenerateXMLResponse(
@@ -344,6 +367,7 @@ async def generate_xml_sync(
             detail=str(e),
         ) from e
     except Exception as e:
+        logger.exception("Synchronous XML generation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Generation failed",
@@ -355,6 +379,7 @@ async def generate_xml_sync(
     response_model=dict,
     tags=["Generation"],
     summary="Generate XML (asynchronous)",
+    dependencies=[Depends(_require_api_key)],
 )
 async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
     """Start async XML generation job.
@@ -372,8 +397,10 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
         # Create job
         job_id = job_manager.create_job()
 
-        # Start background task
-        asyncio.create_task(_process_generation_job(job_id, request))
+        # Start background task, keeping a strong reference until done
+        task = asyncio.create_task(_process_generation_job(job_id, request))
+        _background_tasks.add(task)
+        task.add_done_callback(_background_tasks.discard)
 
         return {
             "job_id": job_id,
@@ -395,6 +422,7 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
     response_model=JobStatusResponse,
     tags=["Job Management"],
     summary="Get job status",
+    dependencies=[Depends(_require_api_key)],
 )
 async def get_job_status(job_id: str) -> JobStatusResponse:
     """Get status of async job.
@@ -438,6 +466,7 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     "/api/jobs/{job_id}",
     tags=["Job Management"],
     summary="Cancel job",
+    dependencies=[Depends(_require_api_key)],
 )
 async def cancel_job(job_id: str) -> dict[str, str]:
     """Cancel an async job.
@@ -470,6 +499,7 @@ async def cancel_job(job_id: str) -> dict[str, str]:
     "/api/download/{job_id}",
     tags=["Generation"],
     summary="Download generated XML",
+    dependencies=[Depends(_require_api_key)],
 )
 async def download_xml(job_id: str) -> FileResponse:
     """Download generated XML file.
@@ -574,21 +604,19 @@ async def _process_generation_job(
         job_manager.update_status(job_id, JobStatus.PROCESSING, progress=70)
 
         # Generate XML (secure paths)
-        _, xsd_file_path, xml_template_path = _resolve_generation_paths(
-            request
-        )
+        (
+            output_file_path,
+            xsd_file_path,
+            xml_template_path,
+        ) = _resolve_generation_paths(request)
 
-        generate_xml(
+        result_path = await asyncio.to_thread(
+            generate_xml,
             data,
             request.message_type.value,
             xml_template_path,
             xsd_file_path,
-        )
-
-        # Get the generated file path
-        result_path = generate_updated_xml_file_path(
-            xml_template_path,
-            request.message_type.value,
+            output_file_path,
         )
 
         job_manager.update_status(
@@ -604,6 +632,7 @@ async def _process_generation_job(
         )
 
     except Exception:
+        logger.exception("Job %s failed", job_id)
         job_manager.update_status(
             job_id,
             JobStatus.FAILED,

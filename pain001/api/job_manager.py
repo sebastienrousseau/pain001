@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,9 +16,9 @@
 """Job management for async XML generation."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
-from typing import Any, Optional
+from typing import Any
 
 
 class JobStatus(str, Enum):
@@ -31,30 +31,34 @@ class JobStatus(str, Enum):
     CANCELLED = "cancelled"
 
 
+TERMINAL_STATUSES = frozenset(
+    {JobStatus.SUCCESS, JobStatus.FAILED, JobStatus.CANCELLED}
+)
+
+
 class JobResult:  # pylint: disable=too-few-public-methods
-    """Represents a job result."""
+    """Represents a job result.
+
+    Args:
+        job_id: Unique job identifier.
+        status: Current job status.
+        result: Job result data.
+        error: Error message if failed.
+    """
 
     def __init__(
         self,
         job_id: str,
         status: JobStatus,
-        result: Optional[dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ):
-        """Initialize job result.
-
-        Args:
-            job_id: Unique job identifier.
-            status: Current job status.
-            result: Job result data.
-            error: Error message if failed.
-        """
         self.job_id = job_id
         self.status = status
         self.result = result
         self.error = error
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
         self.progress_percent = 0
 
     def to_dict(self) -> dict[str, Any]:
@@ -71,14 +75,13 @@ class JobResult:  # pylint: disable=too-few-public-methods
 
 
 class JobManager:
-    """Manages async job lifecycle."""
+    """Manages async job lifecycle.
+
+    Args:
+        max_jobs: Maximum number of jobs to keep in memory.
+    """
 
     def __init__(self, max_jobs: int = 1000):
-        """Initialize job manager.
-
-        Args:
-            max_jobs: Maximum number of jobs to keep in memory.
-        """
         self.jobs: dict[str, JobResult] = {}
         self.max_jobs = max_jobs
 
@@ -88,6 +91,8 @@ class JobManager:
         Returns:
             Job ID.
         """
+        if len(self.jobs) >= self.max_jobs:
+            self.cleanup_old_jobs()
         job_id = str(uuid.uuid4())
         self.jobs[job_id] = JobResult(
             job_id=job_id,
@@ -95,7 +100,7 @@ class JobManager:
         )
         return job_id
 
-    def get_job(self, job_id: str) -> Optional[JobResult]:
+    def get_job(self, job_id: str) -> JobResult | None:
         """Get job by ID.
 
         Args:
@@ -111,8 +116,8 @@ class JobManager:
         job_id: str,
         status: JobStatus,
         progress: int = 0,
-        result: Optional[dict[str, Any]] = None,
-        error: Optional[str] = None,
+        result: dict[str, Any] | None = None,
+        error: str | None = None,
     ) -> None:
         """Update job status.
 
@@ -122,12 +127,18 @@ class JobManager:
             progress: Progress percentage (0-100).
             result: Result data if completed.
             error: Error message if failed.
+
+        Terminal statuses (success/failed/cancelled) are final: a
+        late-arriving update (e.g. a worker finishing after the user
+        cancelled the job) must not resurrect or overwrite them.
         """
         if job_id in self.jobs:
             job = self.jobs[job_id]
+            if job.status in TERMINAL_STATUSES:
+                return
             job.status = status
             job.progress_percent = min(100, max(0, progress))
-            job.updated_at = datetime.utcnow()
+            job.updated_at = datetime.now(timezone.utc)
             if result:
                 job.result = result
             if error:
@@ -144,13 +155,9 @@ class JobManager:
         """
         if job_id in self.jobs:
             job = self.jobs[job_id]
-            if job.status not in [
-                JobStatus.SUCCESS,
-                JobStatus.FAILED,
-                JobStatus.CANCELLED,
-            ]:
+            if job.status not in TERMINAL_STATUSES:
                 job.status = JobStatus.CANCELLED
-                job.updated_at = datetime.utcnow()
+                job.updated_at = datetime.now(timezone.utc)
                 return True
         return False
 
@@ -163,12 +170,7 @@ class JobManager:
         completed_jobs = [
             (job_id, job)
             for job_id, job in self.jobs.items()
-            if job.status
-            in [
-                JobStatus.SUCCESS,
-                JobStatus.FAILED,
-                JobStatus.CANCELLED,
-            ]
+            if job.status in TERMINAL_STATUSES
         ]
 
         # Sort by updated_at and remove oldest

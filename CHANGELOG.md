@@ -5,6 +5,99 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.48] - 2026-06-12
+
+### Highlights
+- **New ISO 20022 coverage:** pain.001.001.12 generation (versions .03
+  through .12), pain.008.001.02 direct debits, plus pain.002 and
+  camt.053 parsers and a version-migration CLI.
+- **Financial correctness:** amounts are parsed as `Decimal` and strictly
+  validated; `NbOfTxs` and `CtrlSum` are computed from the payment rows,
+  never trusted from input.
+- **Explicit output paths:** `process_files()` and `generate_xml()` accept
+  an `output_path` argument and return the written path; the CLI writes
+  to the current directory by default.
+- **API hardening:** optional bearer-token auth, bounded job store, and
+  package-relative template resolution.
+- **Python 3.10+:** EOL Python 3.9 support dropped.
+- **Leaner packaging:** FastAPI/uvicorn and pyarrow moved to `[api]` and
+  `[parquet]` extras; unused runtime dependencies removed.
+
+### Added
+
+- pain.001.001.12 generation support; pain.008.001.02 (Customer Direct
+  Debit Initiation) as the first non-pain.001 generator.
+- pain.002 (payment status report) and camt.053 (bank statement) parsers.
+- Version migration tooling: `python -m pain001.migrate` maps payment
+  data between pain.001 versions via YAML mappings (generic fallback
+  through v12).
+- Template registry bundling Jinja2 template, official XSD, and metadata
+  per message type, with schema-drift guardrails;
+  `--list-templates` / `--show-template` CLI discovery.
+- `output_path` parameter on `process_files()` and `generate_xml()`; both
+  now return the path the XML was written to. The legacy behaviour of
+  writing next to the template is deprecated (emits `DeprecationWarning`).
+- `output_dir` parameter on `process_files_streaming()`.
+- Optional API authentication: set `PAIN001_API_KEY` to require
+  `Authorization: Bearer <key>` on all endpoints except `/api/health`.
+- Packaging extras: `pip install pain001[api]` for the REST API and
+  `pain001[parquet]` for Parquet support, with clear `ImportError` hints.
+- Runnable `examples/` suite (file/string generation, CLI workflows,
+  config profiles, API job lifecycle), executed as part of the test
+  suite.
+
+### Changed
+
+- **Python floor raised to 3.10** across packaging, CI, and tooling.
+- **Amount validation is strict:** missing, non-numeric, non-positive, or
+  more-than-2-decimal amounts now raise `PaymentValidationError` instead
+  of being silently passed through to the XML.
+- `NbOfTxs` and `CtrlSum` in generated XML are always computed from the
+  data rows; input values for these fields are ignored.
+- The CLI writes generated XML to the current directory by default
+  (previously next to the template) and resolves `-o/--output-dir`
+  explicitly instead of changing the working directory, so relative
+  data and template paths stay anchored to the caller's cwd.
+- The REST API resolves bundled templates package-relatively and honours
+  `output_dir`; async jobs run in a worker thread and retain task
+  references (no mid-flight garbage collection).
+- Job store: terminal job states (success/failed/cancelled) are final and
+  the in-memory store is bounded; timestamps are timezone-aware UTC.
+- Runtime dependencies use floor pins (`>=x,<next-major`) instead of
+  exact pins; `jsonschema` constraint widened to `<5`.
+- Lint stack consolidated to Ruff (formatting, linting, import sorting);
+  black/isort/flake8/pylint removed from dev dependencies and CI.
+- Library logging is now well-behaved: no root-logger configuration, no
+  handler attachment, no `logging.basicConfig()` at import time; a
+  `NullHandler` is attached to the package logger.
+- Documentation gates enforced in CI: 100% docstring coverage
+  (interrogate) and zero pydoclint errors.
+
+### Fixed
+
+- API generation works end to end for every input type: CSV string
+  values are coerced to the schema's declared types before validation,
+  and Python booleans render as XSD `"true"`/`"false"` instead of
+  `"True"` in v03-v08 templates.
+- Version migration accepts pain.001.001.12 as a generic mapping target.
+- XSD validators log errors via the module logger instead of printing
+  to stdout.
+- `process_files()` success check now verifies the actually written file
+  instead of a derived template path.
+- DB-sourced data is validated with the same type rules as CSV data
+  (including SQLite 0/1 booleans), and non-string values from JSON or
+  Python dicts no longer crash validation.
+- The security workflow now fails on known vulnerabilities instead of
+  always passing.
+
+### Security
+
+- 14 Dependabot alerts remediated (cryptography, fastapi, starlette,
+  urllib3, requests, idna, python-dotenv, pyarrow, Pygments, pytest
+  stack); wheel pinned >=0.46.2 (CVE-2026-24049).
+- Scoped, expiring safety-policy ignore for disputed CVE-2022-42969 in
+  `py` (dev-only transitive dependency of interrogate).
+
 ## [0.0.47] - 2026-01-18
 
 ### Highlights

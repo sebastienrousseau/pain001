@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,9 +39,40 @@
 # - creditor_account_IBAN (str) - creditor account IBAN
 # - remittance_information (str) - remittance information
 
+"""Validate CSV payment data against required-field rules."""
 
+import logging
 from datetime import datetime
 from typing import Any
+
+logger = logging.getLogger(__name__)
+
+
+def _redact_row_for_error(row: dict[str, Any]) -> dict[str, str]:
+    """Return a log-safe copy of a payment row for validation errors."""
+    redacted: dict[str, str] = {}
+    for key, value in row.items():
+        text = "" if value is None else str(value)
+        key_lower = key.lower()
+
+        if "iban" in key_lower or "account" in key_lower:
+            redacted[key] = _mask_value(text, 4)
+        elif "bic" in key_lower:
+            redacted[key] = _mask_value(text, 3)
+        elif "name" in key_lower:
+            redacted[key] = "[REDACTED]"
+        elif "remittance" in key_lower or "reference" in key_lower:
+            redacted[key] = "[REDACTED]"
+        else:
+            redacted[key] = text
+    return redacted
+
+
+def _mask_value(value: str, visible_chars: int) -> str:
+    """Mask a sensitive value while keeping a small prefix and suffix."""
+    if len(value) <= visible_chars * 2:
+        return "*" * len(value)
+    return f"{value[:visible_chars]}****{value[-visible_chars:]}"
 
 
 def _validate_datetime(value: str) -> bool:
@@ -84,7 +115,7 @@ def _validate_field_type(value: str, data_type: type) -> bool:
         elif data_type is float:
             float(value)
         elif data_type is bool:
-            if value.lower() not in ("true", "false"):
+            if value.lower() not in ("true", "false", "0", "1"):
                 return False
         elif data_type is datetime:
             return _validate_datetime(value)
@@ -112,12 +143,14 @@ def _validate_row(
     for column, data_type in required_columns.items():
         raw_value = row.get(column)
 
-        # Single strip operation, cached result
         if raw_value is None:
             missing_columns.append(column)
             continue
 
-        value = raw_value.strip()
+        # Non-file sources (JSON, SQLite, Python dicts) carry native
+        # types (int/float/bool); coerce to str so one type-check
+        # path serves every loader.
+        value = str(raw_value).strip()
 
         if not value:
             missing_columns.append(column)
@@ -148,9 +181,10 @@ def _format_errors(
         list: List of formatted error messages.
     """
     errors = []
+    safe_row = _redact_row_for_error(row)
     if missing_columns:
         errors.append(
-            f"Error: Missing value(s) for column(s) {missing_columns} in row: {row}"
+            f"Error: Missing value(s) for column(s) {missing_columns} in row: {safe_row}"
         )
     if invalid_columns:
         expected_types = [
@@ -158,7 +192,7 @@ def _format_errors(
         ]
         errors.append(
             f"Error: Invalid data type for column(s) "
-            f"{invalid_columns}, expected {expected_types} in row: {row}"
+            f"{invalid_columns}, expected {expected_types} in row: {safe_row}"
         )
     return errors
 
@@ -167,7 +201,7 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
     """Validate the CSV data before processing it.
 
     Args:
-        data (list): A list of dictionaries containing the CSV data.
+        data: A list of dictionaries containing the CSV data.
 
     Returns:
         bool: True if the data is valid, False otherwise.
@@ -198,7 +232,7 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
     }
 
     if not data:
-        print("Error: The CSV data is empty.")
+        logger.error("The CSV data is empty.")
         return False
 
     is_valid = True
@@ -215,8 +249,7 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
                 )
             )
 
-    # Single print operation for all errors
     if all_errors:
-        print("\n".join(all_errors))
+        logger.error("\n".join(all_errors))
 
     return is_valid

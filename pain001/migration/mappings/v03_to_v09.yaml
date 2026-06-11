@@ -1,0 +1,28 @@
+source_version: v03
+target_version: v09
+field_map:
+  id: id
+  date: date
+  nb_of_txs: nb_of_txs
+  initiator_name: initiator_name
+  payment_id: payment_id
+  payment_method: payment_method
+  requested_execution_date: requested_execution_date
+  debtor_name: debtor_name
+  debtor_account_IBAN: debtor_account_IBAN
+  debtor_agent_BIC: debtor_agent_BIC
+  charge_bearer: charge_bearer
+  payment_amount: payment_amount
+  payment_currency: payment_currency
+  creditor_agent_BIC: creditor_agent_BIC
+  creditor_name: creditor_name
+  creditor_account_IBAN: creditor_account_IBAN
+defaults:
+  payment_method: TRF
+  charge_bearer: SLEV
+fallbacks:
+  remittance_information:
+    - remittance_information
+    - reference_number
+    - payment_id
+

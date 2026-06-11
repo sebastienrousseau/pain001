@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,7 +39,6 @@ Example:
 import os
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional, Union
 
 from pain001.constants import valid_xml_types
 from pain001.data.loader import load_payment_data
@@ -48,6 +47,7 @@ from pain001.exceptions import (
     DataSourceError,
     SchemaValidationError,
 )
+from pain001.security import validate_path
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 
@@ -63,9 +63,9 @@ class ValidationResult:
     """
 
     is_valid: bool
-    error: Optional[str] = None
-    field: Optional[str] = None
-    details: Optional[str] = None
+    error: str | None = None
+    field: str | None = None
+    details: str | None = None
 
 
 @dataclass
@@ -149,9 +149,7 @@ class ValidationService:
 
         return ValidationResult(is_valid=True)
 
-    def validate_template(
-        self, template_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_template(self, template_path: str | Path) -> ValidationResult:
         """Validate that the XML template file exists and is accessible.
 
         Args:
@@ -174,7 +172,15 @@ class ValidationService:
             )
 
         template_path_str = str(template_path)
-        if not os.path.isfile(template_path_str):
+        try:
+            safe_path = validate_path(template_path_str, must_exist=True)
+        except Exception as exc:
+            return ValidationResult(
+                is_valid=False,
+                error=f"XML template file does not exist or is invalid: {exc}",
+                field="xml_template_file_path",
+            )
+        if not os.path.isfile(safe_path):
             return ValidationResult(
                 is_valid=False,
                 error=f"XML template file does not exist: {template_path_str}",
@@ -183,9 +189,7 @@ class ValidationService:
 
         return ValidationResult(is_valid=True)
 
-    def validate_schema(
-        self, schema_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_schema(self, schema_path: str | Path) -> ValidationResult:
         """Validate that the XSD schema file exists and is accessible.
 
         Args:
@@ -208,7 +212,15 @@ class ValidationService:
             )
 
         schema_path_str = str(schema_path)
-        if not os.path.isfile(schema_path_str):
+        try:
+            safe_path = validate_path(schema_path_str, must_exist=True)
+        except Exception as exc:
+            return ValidationResult(
+                is_valid=False,
+                error=f"XSD schema file does not exist or is invalid: {exc}",
+                field="xsd_schema_file_path",
+            )
+        if not os.path.isfile(safe_path):
             return ValidationResult(
                 is_valid=False,
                 error=f"XSD schema file does not exist: {schema_path_str}",
@@ -217,9 +229,7 @@ class ValidationService:
 
         return ValidationResult(is_valid=True)
 
-    def validate_data_source(
-        self, data_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_data_source(self, data_path: str | Path) -> ValidationResult:
         """Validate that the data source file exists and is accessible.
 
         Args:
@@ -257,7 +267,16 @@ class ValidationService:
                 field="data_file_path",
             )
 
-        if not os.path.isfile(data_path_str):
+        try:
+            safe_path = validate_path(data_path_str, must_exist=True)
+        except Exception as exc:
+            return ValidationResult(
+                is_valid=False,
+                error=f"Data file does not exist or is invalid: {exc}",
+                field="data_file_path",
+            )
+
+        if not os.path.isfile(safe_path):
             return ValidationResult(
                 is_valid=False,
                 error=f"Data file does not exist: {data_path_str}",
@@ -267,7 +286,7 @@ class ValidationService:
         return ValidationResult(is_valid=True)
 
     def validate_template_schema_compatibility(
-        self, template_path: Union[str, Path], schema_path: Union[str, Path]
+        self, template_path: str | Path, schema_path: str | Path
     ) -> ValidationResult:
         """Validate that the XML template conforms to the XSD schema.
 
@@ -302,9 +321,7 @@ class ValidationService:
                 details=str(exc),
             )
 
-    def validate_data_content(
-        self, data_path: Union[str, Path]
-    ) -> ValidationResult:
+    def validate_data_content(self, data_path: str | Path) -> ValidationResult:
         """Validate that the data file can be loaded and parsed.
 
         Args:

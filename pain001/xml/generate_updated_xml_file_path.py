@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
 # limitations under the License.
 
 # Standard library imports
+
+"""Derive the legacy template-relative output path for generated XML."""
+
 import os
 
 # Generate the path to the updated XML file based on the path to the
@@ -30,8 +33,8 @@ def generate_updated_xml_file_path(
     the provided message type in the filename.
 
     Args:
-        xml_file_path (str): The path to the original XML file.
-        payment_initiation_message_type (str): The payment message type
+        xml_file_path: The path to the original XML file.
+        payment_initiation_message_type: The payment message type
             (e.g. 'pain.001.001.04').
 
     Returns:

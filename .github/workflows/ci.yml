@@ -14,33 +14,32 @@ concurrency:
   cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') && github.ref != 'refs/heads/main' }}
 
 jobs:
-  # 1. TRINITY SYNC (Fastest Fail - 0s Setup)
-  trinity-sync:
+  # 1. VERSION SYNC (Fastest Fail - 0s Setup)
+  version-sync:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: ❯ Verify Trinity Version Sync
+      - name: ❯ Verify Version Sync
         run: |
           # Extract versions without executing code (no dependencies required)
           V_INIT=$(grep -E "^__version__" pain001/__init__.py | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
           V_TOML=$(grep -E "^version = " pyproject.toml | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
-          V_CFG=$(grep -E "^version = " setup.cfg | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
-          
-          echo "🔍 Trinity Status:"
-          echo "   Init: $V_INIT"
-          echo "   Toml: $V_TOML"
-          echo "   Cfg:  $V_CFG"
+          V_CONST=$(grep -E "^VERSION = " pain001/constants.py | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
 
-          if [ "$V_INIT" != "$V_TOML" ] || [ "$V_TOML" != "$V_CFG" ]; then
+          echo "🔍 Version Status:"
+          echo "   Init:      $V_INIT"
+          echo "   Toml:      $V_TOML"
+          echo "   Constants: $V_CONST"
+
+          if [ "$V_INIT" != "$V_TOML" ] || [ "$V_TOML" != "$V_CONST" ]; then
             echo "❌ CRITICAL: Version Desync Detected!"
             exit 1
           fi
-          echo "✅ Trinity Sync Verified."
-          echo "✅ Trinity Sync Verified."
+          echo "✅ Version Sync Verified."
 
   # 2. TOLLGATES (Blocking - Latest Python)
   tollgates:
-    needs: trinity-sync
+    needs: version-sync
     runs-on: ubuntu-latest
     name: 🛡️ Production Tollgates
     steps:
@@ -53,7 +52,7 @@ jobs:
           cache: "poetry" # ✅ Native Caching (Faster/Cleaner)
 
       - name: ❯ Install Dependencies
-        run: poetry install --no-interaction
+        run: poetry install --no-interaction --all-extras
 
       - name: 🛡️ Run Enterprise Tollgates
         run: poetry run make tollgates
@@ -65,7 +64,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"] # ✅ Enterprise Matrix
+        python-version: ["3.10", "3.11", "3.12"] # ✅ Enterprise Matrix
     name: 🧬 Quality Gate (Py ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v4
@@ -77,7 +76,7 @@ jobs:
           cache: "poetry"
 
       - name: ❯ Install Dependencies
-        run: poetry install --no-interaction
+        run: poetry install --no-interaction --all-extras
 
       - name: 🧪 Full Check
         run: poetry run make check
@@ -122,7 +121,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: "poetry"
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
 
       - name: ❯ Build & Metadata Check
         run: |

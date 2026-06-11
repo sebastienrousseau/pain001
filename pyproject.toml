@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.47"
+version = "0.0.48"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -12,7 +12,9 @@ packages = [
 ]
 include = [
     "pain001/schemas/*",
-    "pain001/templates/*",
+    "pain001/templates/**/*",
+    "pain001/config/*.yaml",
+    "pain001/migration/mappings/*.yaml",
     "pain001/test_fixtures/**/*",
 ]
 
@@ -20,35 +22,33 @@ include = [
 pain001 = "pain001.__main__:cli"
 
 [tool.poetry.dependencies]
-click = "8.1.7"
-colorama = "0.4.6"
-defusedxml = "0.7.1"
-jinja2 = "3.1.6"
-markupsafe = "2.1.5"
-pygments = "2.18.0"
-python = "^3.9.2"
-rich = "13.7.1"
-xmlschema = ">=3.4.0 <4.0.0"
-cryptography = ">=44.0.1,<47.0.0"
-jsonschema = ">=4.17,<4.18"
-fastapi = ">=0.95"
-uvicorn = {version = ">=0.20", extras = ["standard"]}
-httpx = ">=0.23"
-pyarrow = ">=18.0.0,<19.0.0"
+python = "^3.10"
+click = ">=8.1,<9"
+defusedxml = ">=0.7.1,<1"
+jinja2 = ">=3.1.6,<4"
+pyyaml = ">=6.0,<7.0"
+rich = ">=13.7,<15"
+xmlschema = ">=3.4.0,<4.0.0"
+jsonschema = ">=4.17,<5"
+# Optional feature sets — install with pain001[api] / pain001[parquet]
+fastapi = {version = ">=0.95", optional = true}
+uvicorn = {version = ">=0.20", extras = ["standard"], optional = true}
+pyarrow = {version = ">=23.0.1,<25.0.0", optional = true}
+
+[tool.poetry.extras]
+api = ["fastapi", "uvicorn"]
+parquet = ["pyarrow"]
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^8.0.0"
-pytest-cov = "^4.0.0"
-pytest-benchmark = "^4.0.0"
+httpx = ">=0.23"
+pytest = "^9.0.3"
+pytest-cov = "^7.0.0"
+pytest-benchmark = "^5.2.0"
 pytest-xdist = "^3.0.0"
-black = "^24.0.0"
-flake8 = "^7.0.0"
-isort = "^5.13.0"
 mypy = "^1.11.0"
-pylint = "^3.0.0"
 bandit = "^1.7.0"
 safety = "^2.3.0"
-ruff = "^0.1.0"
+ruff = "^0.15.0"
 types-defusedxml = "^0.7.0"
 diff-cover = "^8.0.0"
 types-setuptools = "^65.0.0"
@@ -63,6 +63,9 @@ pip-licenses = "^4.0.0"
 twine = "^6.2.0"
 types-jsonschema = "^4.26.0.20260109"
 pandas = "^2.3.3"
+wheel = ">=0.46.2"
+interrogate = "^1.7.0"
+pydoclint = "^0.7.3"
 
 [tool.poetry.group.docs]
 optional = true
@@ -78,21 +81,6 @@ myst-parser = "^2.0.0"
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-line-length = 79
-target-version = ['py39']
-
-[tool.isort]
-profile = "black"
-line_length = 79
-multi_line_output = 3
-include_trailing_comma = true
-force_grid_wrap = 0
-combine_as_imports = true
-known_first_party = "pain001"
-known_third_party = "xmlschema"
-skip = ["tmp_env", ".venv", ".git", ".eggs"]
-
 [tool.pytest.ini_options]
 # Test discovery
 testpaths = ["tests"]
@@ -100,14 +88,14 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 
-# Coverage enforcement (98% floor, fail-fast on regression)
+# Coverage enforcement (95% floor, fail-fast on regression)
 addopts = [
     "--cov=pain001",
     "--cov-branch",
     "--cov-report=term-missing:skip-covered",
     "--cov-report=xml",
     "--cov-report=html",
-    "--cov-fail-under=70",
+    "--cov-fail-under=95",
     "--tb=short",
     "-ra",
     "--strict-markers",
@@ -133,7 +121,7 @@ timeout = 5
 
 [tool.ruff]
 line-length = 79
-target-version = "py39"
+target-version = "py310"
 extend-exclude = [".github/*.md", "*.md", "docs/**/*.md", "releases/**/*.md", "tmp_env", ".venv", ".eggs"]
 
 [tool.ruff.lint]
@@ -151,14 +139,14 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"__init__.py" = ["F401"]  # unused imports in __init__.py
+"__init__.py" = ["F401", "E402"]  # re-exports after NullHandler setup
 
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.10"
 strict = true
 warn_return_any = true
 warn_unused_configs = true
@@ -195,3 +183,25 @@ disable_error_code = [
 [[tool.mypy.overrides]]
 module = "xmlschema.*"
 ignore_missing_imports = true
+
+# pyarrow 24 ships py.typed but leaves parquet entry points
+# (read_table, ParquetFile, iter_batches) unannotated.
+[[tool.mypy.overrides]]
+module = "pain001.parquet.load_parquet_data"
+disallow_untyped_calls = false
+
+[tool.interrogate]
+fail-under = 100
+ignore-init-method = true
+ignore-semiprivate = false
+ignore-private = false
+ignore-magic = true
+exclude = ["setup.py", "scripts", "tests", "docs"]
+
+[tool.pydoclint]
+style = "google"
+quiet = true
+arg-type-hints-in-docstring = false
+skip-checking-short-docstrings = true
+check-return-types = false
+exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/)"

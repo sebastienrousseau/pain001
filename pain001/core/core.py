@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""End-to-end orchestration of ISO 20022 payment file generation."""
+
 import logging
 import os
 import sys
 import time
-from typing import Any, Union
+from typing import Any
 
 import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
-from pain001.data.loader import load_payment_data
+from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.exceptions import XMLGenerationError
 from pain001.logging_schema import (
     Events,
@@ -34,21 +36,12 @@ from pain001.logging_schema import (
     log_process_start,
     log_process_success,
 )
+from pain001.observability import emit_metric_event
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
-# CORRECTION: Circular import workaround. Imports moved to top-level.
-
-# Configure structured logging
+# Library code: no handlers, no level overrides — the host
+# application controls logging configuration.
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-
-if not logger.handlers:
-    handler = logging.StreamHandler()
-    formatter = logging.Formatter(
-        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-    )
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
 
 
 def _validate_inputs(
@@ -58,9 +51,18 @@ def _validate_inputs(
 ) -> tuple[str, str]:
     """Validate message type and required file paths.
 
+    Args:
+        xml_message_type: ISO 20022 message type (e.g., 'pain.001.001.03').
+        xml_template_file_path: Path to the XML template file.
+        xsd_schema_file_path: Path to the XSD schema file.
+
+    Returns:
+        Tuple of (validated template path, validated schema path).
+
     Raises:
-        ValueError: If the XML message type is not supported.
-        FileNotFoundError: If required files do not exist.
+        XMLGenerationError: If the XML message type is not supported.
+        FileNotFoundError: If the template or schema file does not exist
+            or fails path validation.
     """
     context_logger = Context.get_instance().get_logger()
 
@@ -127,7 +129,7 @@ def _validate_inputs(
 
 
 def _determine_data_source_type(
-    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
 ) -> str:
     """Determine the type of the data source."""
     if isinstance(data_file_path, list):
@@ -148,11 +150,10 @@ def _determine_data_source_type(
 
 
 def _load_data(
-    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
     start_time: float,
 ) -> list[dict[str, Any]]:
     """Load and validate payment data from files or Python objects."""
-    # Determine data source type
     data_source_kind = _determine_data_source_type(data_file_path)
 
     log_event(
@@ -165,6 +166,16 @@ def _load_data(
     try:
         payment_data = load_payment_data(data_file_path)
         duration_ms = int((time.time() - start_time) * 1000)
+        file_size_bytes = None
+        if isinstance(data_file_path, str) and os.path.exists(data_file_path):
+            file_size_bytes = os.path.getsize(data_file_path)
+        emit_metric_event(
+            "file_loaded",
+            data_source_type=data_source_kind,
+            record_count=len(payment_data),
+            file_size_bytes=file_size_bytes,
+            duration_ms=duration_ms,
+        )
         log_event(
             logger,
             logging.INFO,
@@ -208,8 +219,9 @@ def _generate_and_log(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
-) -> int:
-    """Generate the XML and return generation duration in milliseconds."""
+    output_path: str | None = None,
+) -> tuple[str, int]:
+    """Generate the XML, returning (output file path, duration in ms)."""
     gen_start = time.time()
     log_event(
         logger,
@@ -221,22 +233,24 @@ def _generate_and_log(
         },
     )
 
-    xml_generate.generate_xml(
+    written_path = xml_generate.generate_xml(
         payment_data,
         xml_message_type,
         xml_template_file_path,
         xsd_schema_file_path,
+        output_path=output_path,
     )
 
-    return int((time.time() - gen_start) * 1000)
+    return written_path, int((time.time() - gen_start) * 1000)
 
 
 def process_files(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
-    data_file_path: Union[str, list[dict[str, Any]], dict[str, Any]],
-) -> None:
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
+    output_path: str | None = None,
+) -> str:
     """
     Generate an ISO 20022 payment message from various data sources.
 
@@ -245,19 +259,26 @@ def process_files(
         xml_template_file_path: Path to the XML template file.
         xsd_schema_file_path: Path to the XSD schema file.
         data_file_path: File path (CSV/DB/JSON/Parquet) or Python data (list/dict).
+        output_path: Explicit path for the generated XML file. When omitted,
+            the file is written next to the template (deprecated; requires
+            the template to live under the current working directory).
+
+    Returns:
+        The path the generated XML file was written to.
 
     Raises:
-        ValueError: If the XML message type is not supported or data is invalid.
-        FileNotFoundError: If required files do not exist.
+        XMLGenerationError: If the message type is not supported or the
+            XML file could not be written.
+        Exception: Any error raised while validating inputs, loading
+            data, or generating XML (e.g. FileNotFoundError for missing
+            files, PaymentValidationError for bad amounts) is logged and
+            re-raised unchanged.
     """
 
-    # Initialize context and timing
     context_logger = Context.get_instance().get_logger()
 
-    # Determine data source type
     data_source_kind = _determine_data_source_type(data_file_path)
 
-    # Log process start
     start_time = log_process_start(logger, xml_message_type, data_source_kind)
 
     try:
@@ -266,17 +287,17 @@ def process_files(
         )
         payment_data = _load_data(data_file_path, start_time)
         _register_message_namespaces(xml_message_type)
-        gen_duration = _generate_and_log(
+        written_path, gen_duration = _generate_and_log(
             payment_data,
             xml_message_type,
             safe_template_path,
             safe_schema_path,
+            output_path=output_path,
         )
 
-        # Confirm success (template existence check retained for backward compatibility)
-        if os.path.exists(safe_template_path):
+        if os.path.exists(written_path):
             context_logger.info(
-                f"Successfully generated XML file '{safe_template_path}'".replace(
+                f"Successfully generated XML file '{written_path}'".replace(
                     "\n", ""
                 )
             )
@@ -288,9 +309,7 @@ def process_files(
                 generation_ms=gen_duration,
             )
         else:
-            error_msg = (
-                f"Failed to generate XML file at '{safe_template_path}'"
-            )
+            error_msg = f"Failed to generate XML file at '{written_path}'"
             context_logger.error(
                 f"{sanitize_for_log(error_msg)}".replace("\n", "")
             )
@@ -300,14 +319,82 @@ def process_files(
                 Events.XML_GENERATE_ERROR,
                 **{
                     Fields.MESSAGE_TYPE: xml_message_type,
-                    Fields.TEMPLATE_PATH: safe_template_path,
+                    Fields.TEMPLATE_PATH: written_path,
                     Fields.ERROR_MESSAGE: error_msg,
                 },
             )
+            raise XMLGenerationError(error_msg)
+
+        return written_path
 
     except Exception as e:
         log_process_error(logger, e, xml_message_type)
         raise
+
+
+def process_files_streaming(
+    xml_message_type: str,
+    xml_template_file_path: str,
+    xsd_schema_file_path: str,
+    data_file_path: str,
+    chunk_size: int = 1000,
+    output_dir: str | None = None,
+) -> list[str]:
+    """Generate multiple XML files from streamed input chunks.
+
+    Args:
+        xml_message_type: XML message type (e.g., 'pain.001.001.03').
+        xml_template_file_path: Path to the XML template file.
+        xsd_schema_file_path: Path to the XSD schema file.
+        data_file_path: Path to the payment data file.
+        chunk_size: Rows per chunk; each chunk becomes one XML file.
+        output_dir: Directory to write chunked XML files to. When
+            omitted, files are written next to the data file.
+
+    Returns:
+        Paths of the generated chunk XML files, in chunk order.
+    """
+    safe_template_path, safe_schema_path = _validate_inputs(
+        xml_message_type, xml_template_file_path, xsd_schema_file_path
+    )
+    _register_message_namespaces(xml_message_type)
+    if output_dir is None:
+        output_dir = os.path.dirname(os.path.realpath(data_file_path))
+
+    generated_paths: list[str] = []
+    for chunk_index, payment_chunk in enumerate(
+        load_payment_data_streaming(
+            data_file_path, chunk_size=chunk_size, validate=False
+        ),
+        start=1,
+    ):
+        xml_content = xml_generate.generate_xml_string(
+            payment_chunk,
+            xml_message_type,
+            safe_template_path,
+            safe_schema_path,
+        )
+        chunked_path = _chunk_output_path(
+            os.path.join(output_dir, f"{xml_message_type}.xml"), chunk_index
+        )
+        with open(chunked_path, "w", encoding="utf-8") as handle:
+            handle.write(xml_content)
+        emit_metric_event(
+            "xml_generated",
+            message_type=xml_message_type,
+            output_path=chunked_path,
+            chunk_index=chunk_index,
+            record_count=len(payment_chunk),
+        )
+        generated_paths.append(chunked_path)
+
+    return generated_paths
+
+
+def _chunk_output_path(base_xml_path: str, chunk_index: int) -> str:
+    """Build a chunk-specific XML output path."""
+    stem, suffix = os.path.splitext(base_xml_path)
+    return f"{stem}.chunk{chunk_index:04d}{suffix}"
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,15 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Helper for creating XML child elements."""
+
 import xml.etree.ElementTree as et  # nosec B405
-from typing import Optional
 
 
 def create_xml_element(
     parent: et.Element,
     tag: str,
-    text: Optional[str] = None,
-    attributes: Optional[dict[str, str]] = None,
+    text: str | None = None,
+    attributes: dict[str, str] | None = None,
 ) -> et.Element:
     """
     Create and append an XML element with the specified tag, text, and

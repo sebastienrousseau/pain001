@@ -36,8 +36,9 @@ def test_cli_missing_data_file_exits(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 2
-    assert "does not exist" in result.output
+    assert result.exit_code == 1
+    output = " ".join(result.output.lower().split())
+    assert "failed" in output
 
 
 def test_process_files_invalid_message_type(tmp_path: Path) -> None:
@@ -88,9 +89,14 @@ def test_process_files_missing_output_branch(
 
     monkeypatch.setattr(core, "_load_data", lambda _path, _start: [])
     monkeypatch.setattr(core, "_register_message_namespaces", lambda _t: None)
-    monkeypatch.setattr(core, "_generate_and_log", lambda *_args, **_kwargs: 0)
+    monkeypatch.setattr(
+        core,
+        "_generate_and_log",
+        lambda *_args, **_kwargs: ("missing-output.xml", 0.0),
+    )
 
-    core.process_files("pain.001.001.03", "template.xml", "schema.xsd", [])
+    with pytest.raises(XMLGenerationError):
+        core.process_files("pain.001.001.03", "template.xml", "schema.xsd", [])
 
 
 def test_validate_field_type_boolean_branch() -> None:

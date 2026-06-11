@@ -14,14 +14,23 @@ We will acknowledge receipt within 48 hours and provide updates on remediation t
 
 ## Security Standards
 
-Pain001 adheres to OWASP Top 10 prevention practices:
-- **Input Validation**: All untrusted inputs validated for type, length, format, range
-- **Secrets Protection**: No credentials hardcoded; environment variables required
-- **XXE Prevention**: Uses `defusedxml` exclusively, never `xml.etree.ElementTree`
-- **SQL Protection**: Parameterized queries used; no string formatting
-- **Deserialization**: JSON only for untrusted data; never `pickle`
-- **Network Security**: TLS verification mandatory; explicit timeouts on all requests
-- **Cryptography**: AES-256, SHA-256+, bcrypt/argon2 for passwords
+Pain001 focuses on local file processing and generation, so the current
+security posture is centered on input handling rather than network-facing
+controls:
+
+- **Input Validation**: payment rows, paths, and schema/template combinations are validated before generation.
+- **Secrets Protection**: the library does not ship embedded credentials or secrets.
+- **XXE Prevention**: XML parsing for inbound reports uses `defusedxml`.
+- **Template Safety**: XML templates are rendered through a sandbox and filesystem-expanding Jinja directives are blocked.
+- **Path Safety**: data, template, and schema paths are constrained to approved directories.
+- **PII Minimization**: structured logging redacts IBAN/BIC/name fields, and validation errors avoid dumping raw payment rows.
+
+## Cryptography Status
+
+The library currently depends on `cryptography` as a transitive/runtime package
+constraint, but it does **not** implement payment signing, encryption,
+certificate validation, or password hashing features itself. Claims about
+AES/bcrypt/argon2 usage would be inaccurate for the current codebase.
 
 ## Dependency Security
 
@@ -32,10 +41,9 @@ Pain001 adheres to OWASP Top 10 prevention practices:
 
 ## Continuous Integration
 
-- PR gate runs: ruff, black, mypy, pytest on every PR
-- Nightly heavy validation: full `make check` including flake8, pylint, bandit
-- Daily security scanning: CVE detection, license compliance, SBOM generation
-- Coverage requirements: 95% minimum, 98%+ target
+- PR and quality workflows run linting, targeted type checks, tests, and release guardrails.
+- Mutation and benchmark jobs are available for focused validation of critical paths.
+- Dependency and code-scanning workflows remain the main automated controls for CVE and static analysis coverage.
 
 ## Codecov Setup
 
@@ -46,7 +54,9 @@ The project uses Codecov for coverage tracking. To enable Codecov in your fork:
 3. Codecov will automatically detect coverage.xml uploads from GitHub Actions
 4. Coverage badge will appear once first upload is processed
 
-**Note**: The Codecov token (`AaUxKfRiou`) is stored in the badge URL for public repositories. For private repos, use GitHub Secrets:
+**Note**: Public Codecov badges may reference repository-specific identifiers in
+their URLs. For private repositories, use GitHub Secrets instead of embedding
+service tokens anywhere in the repository:
 
 ```bash
 # In GitHub Settings → Secrets → New repository secret

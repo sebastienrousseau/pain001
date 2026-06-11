@@ -1,0 +1,12 @@
+profiles:
+  sepa_credit_transfer:
+    xml_message_type: pain.001.001.11
+  sepa_credit_transfer_v12:
+    xml_message_type: pain.001.001.12
+  sepa_direct_debit:
+    xml_message_type: pain.008.001.02
+  instant_credit_transfer:
+    xml_message_type: pain.001.001.06
+    streaming: true
+    chunk_size: 500
+

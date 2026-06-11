@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema
+    xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.12"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    elementFormDefault="qualified"
+    targetNamespace="urn:iso:std:iso:20022:tech:xsd:pain.001.001.12">
+  <xs:element name="Document">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:any minOccurs="1" maxOccurs="1" processContents="lax"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
+

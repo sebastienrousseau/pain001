@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -221,6 +221,48 @@ class TestValidateCsvData(unittest.TestCase):
             }
         ]
         self.assertFalse(validate_csv_data(data))
+
+    def test_validate_csv_redacts_sensitive_values_in_error_output(
+        self,
+    ) -> None:
+        """Validation errors should not print raw IBAN/BIC/name values."""
+        data = [
+            {
+                "id": "1",
+                "date": "2023-03-10T15:30:47.000Z",
+                "nb_of_txs": "2",
+                "initiator_name": "John Doe",
+                "payment_information_id": "Payment-Info-12345",
+                "payment_method": "TRF",
+                "batch_booking": "true",
+                "requested_execution_date": "2023-03-12",
+                "debtor_name": "Acme Corp",
+                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_agent_BIC": "BANKDEFFXXX",
+                "forwarding_agent_BIC": "SPUEDE2UXXX",
+                "charge_bearer": "SLEV",
+                "payment_id": "PaymentID6789",
+                "payment_amount": "150",
+                "currency": "EUR",
+                "ctrl_sum": "15000",
+                "service_level_code": "SEPA",
+                "creditor_agent_BIC": "SPUEDE2UXXX",
+                "creditor_name": "",  # force error
+                "creditor_account_IBAN": "DE68210501700024690959",
+                "remittance_information": "Invoice-12345",
+            }
+        ]
+        with self.assertLogs(
+            "pain001.csv.validate_csv_data", level="ERROR"
+        ) as captured:
+            self.assertFalse(validate_csv_data(data))
+
+        output = "\n".join(captured.output)
+        self.assertNotIn("DE75512108001245126162", output)
+        self.assertNotIn("DE68210501700024690959", output)
+        self.assertNotIn("BANKDEFFXXX", output)
+        self.assertNotIn("John Doe", output)
+        self.assertIn("[REDACTED]", output)
 
     def test_validate_csv_with_invalid_boolean(self) -> None:
         """Test validation with invalid boolean value."""

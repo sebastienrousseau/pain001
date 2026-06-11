@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,14 +39,14 @@ def create_root_element(message_type: str) -> et.Element:
     schema locations.
 
     Args:
-        message_type (str):
-        Specifies the message type, for example, "pain.001.001.09". This is
-        used to construct the namespace and schema location attributes.
+        message_type: The message type, for example "pain.001.001.09".
+            Used to construct the namespace and schema location
+            attributes.
 
     Returns:
-        et.Element:
-        The root Element node for the XML document, configured with the
-        necessary namespaces and schema location attributes.
+        et.Element: The root Element node for the XML document,
+            configured with the necessary namespaces and schema
+            location attributes.
 
     Examples:
         >>> create_root_element("pain.001.001.09")

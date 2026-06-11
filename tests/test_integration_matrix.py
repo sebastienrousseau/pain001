@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -179,8 +179,8 @@ class TestIntegrationMatrix(unittest.TestCase):
 
         # Create Parquet file (if pyarrow available)
         try:
-            import pyarrow as pa
-            import pyarrow.parquet as pq
+            import pyarrow as pa  # type: ignore[import-untyped]
+            import pyarrow.parquet as pq  # type: ignore[import-untyped]
 
             # Convert to PyArrow table
             table = pa.Table.from_pylist(sample_data)
@@ -190,18 +190,6 @@ class TestIntegrationMatrix(unittest.TestCase):
         except ImportError:
             cls.parquet_file = None
             cls.has_parquet = False
-
-    def tearDown(self) -> None:
-        """Clean up generated XML files after each test.
-
-        Note: Individual test methods now clean up their own XML files,
-        so this is a safety net for any remaining files.
-        """
-        for version in self.all_versions:
-            version_dir = self.templates_dir / version
-            xml_file = version_dir / f"{version}.xml"
-            if xml_file.exists():
-                xml_file.unlink()
 
     # ========================================================================
     # CSV INPUT TESTS (9 versions)

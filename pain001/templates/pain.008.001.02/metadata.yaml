@@ -1,0 +1,11 @@
+message_type: pain.008.001.02
+message_category: CustomerDirectDebitInitiation
+iso_version: "02"
+files:
+  template: template.xml
+  schema: pain.008.001.02.xsd
+  example_data: template.csv
+  example_xml: pain.008.001.02.xml
+supported_input_formats: [csv, dict, list]
+deprecated: false
+

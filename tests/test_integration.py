@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ class TestAllVersionsComprehensive(unittest.TestCase):
         for version in self.basic_versions:
             with self.subTest(version=version, method="CSV-positional"):
                 # Call with positional arguments
-                process_files(
+                result = process_files(
                     version,
                     str(self.xml_template),
                     str(self.xsd_schema),
@@ -83,6 +83,9 @@ class TestAllVersionsComprehensive(unittest.TestCase):
 
                 # Verify XML generated
                 generated_file = self.test_data_dir / f"{version}.xml"
+                self.assertEqual(
+                    Path(result).resolve(), generated_file.resolve()
+                )
                 self.assertTrue(
                     generated_file.exists(),
                     f"{version} should generate XML with CSV positional args",

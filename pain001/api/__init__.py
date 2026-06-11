@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,14 @@
 # limitations under the License.
 
 """Pain001 FastAPI REST API module."""
+
+try:
+    import fastapi  # noqa: F401
+except ImportError as _e:  # pragma: no cover
+    raise ImportError(
+        "The REST API requires the 'api' extra. "
+        "Install with: pip install pain001[api]"
+    ) from _e
 
 from pain001.api.app import app  # noqa: F401
 from pain001.api.job_manager import (  # noqa: F401

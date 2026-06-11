@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Singleton application context that owns the shared pain001 logger."""
+
 import logging
 from typing import Optional
 
 
 class Context:
-    """A class that can be used to manage logging.
+    """A singleton that manages the shared pain001 logger.
+
+    Instantiating the class directly raises RuntimeError once the
+    singleton exists; use get_instance() instead.
 
     Methods:
         __init__(self): Initializes the class and creates a logger.
@@ -37,6 +42,10 @@ class Context:
 
         Returns:
             A Context instance.
+
+        Raises:
+            RuntimeError: If the singleton failed to initialize
+                (defensive check; unreachable in practice).
         """
         if Context.instance is None:
             Context()
@@ -46,28 +55,26 @@ class Context:
         return Context.instance
 
     def __init__(self) -> None:
-        """Initializes the class and creates a logger.
-
-        Raises:
-            RuntimeError: If the class is already initialized.
-        """
         if Context.instance is not None:
             raise RuntimeError("This class is a singleton!")
         else:
             Context.instance = self
-            self.name: str = ""
+            # Never use the root logger ("") — a library must not
+            # reconfigure the host application's logging.
+            self.name: str = "pain001"
             self.log_level: int = logging.INFO
             self.logger: logging.Logger = logging.getLogger(self.name)
             self.logger.setLevel(self.log_level)
-            self.logger.info("Context initialized")
+            self.logger.debug("Context initialized")
 
     def set_name(self, name: str) -> None:
         """Sets the name of the logger.
 
         Args:
-            name: The name of the logger.
+            name: The name of the logger. Empty names are coerced to
+                "pain001" so the root logger is never claimed.
         """
-        self.name = name
+        self.name = name or "pain001"
 
     def set_log_level(self, log_level: int) -> None:
         """Sets the log level of the logger.

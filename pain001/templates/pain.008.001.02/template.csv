@@ -1,0 +1,4 @@
+id,date,nb_of_txs,initiator_name,payment_information_id,payment_method,batch_booking,ctrl_sum,service_level_code,requested_execution_date,debtor_name,debtor_account_IBAN,debtor_agent_BIC,forwarding_agent_BIC,charge_bearer,payment_id,payment_amount,currency,payment_currency,creditor_agent_BIC,creditor_name,creditor_account_IBAN,remittance_information,mandate_id,date_of_signature,sequence_type
+1,2026-01-15T10:30:00,2,ACME Collections,DD-INFO-001,DD,false,350.00,SEPA,2026-01-20,ACME Collections,DE89370400440532013000,DEUTDEFFXXX,DEUTDEFFXXX,SLEV,DD-0001,150.00,EUR,EUR,BANKFRPPXXX,Jane Subscriber,FR1420041010050500013M02606,Gym membership January,MANDATE-001,2025-11-15,RCUR
+1,2026-01-15T10:30:00,2,ACME Collections,DD-INFO-001,DD,false,350.00,SEPA,2026-01-20,ACME Collections,DE89370400440532013000,DEUTDEFFXXX,DEUTDEFFXXX,SLEV,DD-0002,200.00,EUR,EUR,BANKFRPPXXX,John Subscriber,FR1420041010050500013M02607,Consulting retainer January,MANDATE-002,2025-12-01,FRST
+

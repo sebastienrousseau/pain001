@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02 pain.008.001.02.xsd">
+    <CstmrDrctDbtInitn>
+        <GrpHdr>
+            <MsgId>{{id}}</MsgId>
+            <CreDtTm>{{date}}</CreDtTm>
+            <NbOfTxs>{{nb_of_txs}}</NbOfTxs>
+            <CtrlSum>{{ctrl_sum}}</CtrlSum>
+            <InitgPty>
+                <Nm>{{initiator_name}}</Nm>
+            </InitgPty>
+        </GrpHdr>
+        <PmtInf>
+            <PmtInfId>{{payment_information_id}}</PmtInfId>
+            <PmtMtd>{{payment_method}}</PmtMtd>
+            <BtchBookg>{{batch_booking}}</BtchBookg>
+            <NbOfTxs>{{nb_of_txs}}</NbOfTxs>
+            <CtrlSum>{{ctrl_sum}}</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>{{service_level_code}}</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdColltnDt>{{requested_execution_date}}</ReqdColltnDt>
+            <Cdtr>
+                <Nm>{{debtor_name}}</Nm>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>{{debtor_account_IBAN}}</IBAN>
+                </Id>
+            </CdtrAcct>
+            <CdtrAgt>
+                <FinInstnId>
+                    <BIC>{{debtor_agent_BIC}}</BIC>
+                </FinInstnId>
+            </CdtrAgt>
+            <ChrgBr>{{charge_bearer}}</ChrgBr>
+            {% for tx in transactions %}
+            <DrctDbtTxInf>
+                <PmtId>
+                    <EndToEndId>{{tx.payment_id}}</EndToEndId>
+                </PmtId>
+                <InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
+                <DrctDbtTx>
+                    <MndtRltdInf>
+                        <MndtId>{{tx.mandate_id}}</MndtId>
+                        <DtOfSgntr>{{tx.date_of_signature}}</DtOfSgntr>
+                    </MndtRltdInf>
+                </DrctDbtTx>
+                <DbtrAgt>
+                    <FinInstnId>
+                        <BIC>{{tx.creditor_agent_BIC}}</BIC>
+                    </FinInstnId>
+                </DbtrAgt>
+                <Dbtr>
+                    <Nm>{{tx.creditor_name}}</Nm>
+                </Dbtr>
+                <DbtrAcct>
+                    <Id>
+                        <IBAN>{{tx.creditor_account_IBAN}}</IBAN>
+                    </Id>
+                </DbtrAcct>
+                <RmtInf>
+                    <Ustrd>{{tx.remittance_information}}</Ustrd>
+                </RmtInf>
+                <SeqTp>{{tx.sequence_type}}</SeqTp>
+            </DrctDbtTxInf>
+            {% endfor %}
+        </PmtInf>
+    </CstmrDrctDbtInitn>
+</Document>
+

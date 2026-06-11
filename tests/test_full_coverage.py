@@ -5,6 +5,7 @@ import os
 import sqlite3
 import sys
 import tempfile
+import time
 import xml.etree.ElementTree as et  # nosec B405
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -12,30 +13,36 @@ from unittest.mock import MagicMock, patch
 import pytest
 from click.testing import CliRunner
 
-# ---------------------------------------------------------------------------
-# path_validator.py — lines 57-58 (exception branch in _is_allowed_directory)
-#                     line 97 (PathValidationError from realpath)
-# ---------------------------------------------------------------------------
 from pain001.security.path_validator import (
     PathValidationError,
     SecurityError,
-    _is_allowed_directory,
     validate_path,
 )
 
 
+def _wait_for_job(job_manager, job_id, timeout=5.0):
+    """Poll until the job reaches a terminal status (or timeout)."""
+    from pain001.api.job_manager import TERMINAL_STATUSES
+
+    deadline = time.monotonic() + timeout
+    job = job_manager.get_job(job_id)
+    while (
+        job is not None
+        and job.status not in TERMINAL_STATUSES
+        and time.monotonic() < deadline
+    ):
+        time.sleep(0.05)
+        job = job_manager.get_job(job_id)
+    return job
+
+
+# ---------------------------------------------------------------------------
+# path_validator.py — exception and boundary branches
+# ---------------------------------------------------------------------------
+
+
 class TestPathValidatorCoverage:
     """Cover missing branches in path_validator.py."""
-
-    def test_is_allowed_directory_exception_returns_false(self):
-        """_is_allowed_directory returns False on internal exception (lines 57-58)."""
-        # Pass something that triggers an exception inside the helper
-        # e.g. a Path object whose resolution fails
-        with patch(
-            "pain001.security.path_validator.Path.cwd", side_effect=OSError
-        ):
-            result = _is_allowed_directory(Path("/some/path"))
-            assert result is False
 
     def test_validate_path_realpath_exception(self):
         """validate_path raises PathValidationError when realpath fails (line 97)."""
@@ -65,8 +72,7 @@ class TestPathValidatorCoverage:
 
 
 # ---------------------------------------------------------------------------
-# cli.py — lines 102-111 (_load_configuration branch)
-#           lines 196, 201 (parquet/json tips in _validate_payment_data)
+# cli.py — lines 196, 201 (parquet/json tips in _validate_payment_data)
 #           lines 256-266 (_generate_xml_files exception branch)
 #           lines 415-427 (invalid message type branch — redundant)
 #           line 469 (if __name__ == "__main__")
@@ -75,37 +81,6 @@ class TestPathValidatorCoverage:
 
 class TestCLICoverage:
     """Cover missing branches in cli/cli.py."""
-
-    def test_load_configuration_with_config_file(self, tmp_path):
-        """Test _load_configuration reads INI Paths section (lines 102-111)."""
-        from pain001.cli.cli import _load_configuration
-
-        config_file = tmp_path / "config.ini"
-        config_file.write_text(
-            "[Paths]\n"
-            "xml_template_file_path = /new/template.xml\n"
-            "xsd_schema_file_path = /new/schema.xsd\n"
-            "data_file_path = /new/data.csv\n"
-        )
-        t, s, d = _load_configuration(
-            str(config_file), "old_t.xml", "old_s.xsd", "old_d.csv"
-        )
-        assert t == "/new/template.xml"
-        assert s == "/new/schema.xsd"
-        assert d == "/new/data.csv"
-
-    def test_load_configuration_without_paths_section(self, tmp_path):
-        """_load_configuration returns defaults when [Paths] is absent."""
-        from pain001.cli.cli import _load_configuration
-
-        config_file = tmp_path / "empty_config.ini"
-        config_file.write_text("[Other]\nkey = value\n")
-        t, s, d = _load_configuration(
-            str(config_file), "t.xml", "s.xsd", "d.csv"
-        )
-        assert t == "t.xml"
-        assert s == "s.xsd"
-        assert d == "d.csv"
 
     def test_validate_payment_data_parquet_tip(self, tmp_path):
         """_validate_payment_data shows parquet tip on failure (line 196)."""
@@ -157,6 +132,8 @@ class TestCLICoverage:
                 str(schema),
                 str(data),
                 str(tmp_path / "nonexistent_output"),
+                streaming=False,
+                chunk_size=1000,
                 verbose=True,
             )
 
@@ -327,8 +304,6 @@ class TestAPIAppCoverage:
 
     def test_process_generation_job_access_denied(self):
         """_process_generation_job sets FAILED when path outside cwd (lines 546-549)."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -351,10 +326,10 @@ class TestAPIAppCoverage:
             )
             if response.status_code == 200:
                 job_id = response.json()["job_id"]
-                time.sleep(1)
-                job = job_manager.get_job(job_id)
+                job = _wait_for_job(job_manager, job_id)
+                assert job is not None
                 # Should have failed due to path guard
-                assert job.status in (JobStatus.FAILED, JobStatus.PROCESSING)
+                assert job.status == JobStatus.FAILED
         finally:
             os.unlink(tmp_csv)
 
@@ -898,6 +873,7 @@ class TestValidationServiceCoverage:
         service = ValidationService()
         result = service.validate_data_source(str(tmp_path))
         assert result.is_valid is False
+        assert result.error is not None
         assert "directory" in result.error.lower()
 
     def test_validate_template_schema_compatibility_schema_error(self):
@@ -915,6 +891,7 @@ class TestValidationServiceCoverage:
                 "t.xml", "s.xsd"
             )
             assert result.is_valid is False
+            assert result.error is not None
             assert "Schema validation failed" in result.error
 
     def test_validate_template_schema_compatibility_general_error(self):
@@ -931,6 +908,7 @@ class TestValidationServiceCoverage:
                 "t.xml", "s.xsd"
             )
             assert result.is_valid is False
+            assert result.error is not None
             assert "Unexpected" in result.error
 
     def test_validate_data_content_data_source_error(self, tmp_path):
@@ -1396,8 +1374,6 @@ class TestAPIAppDeepCoverage:
 
     def test_async_generation_file_not_found(self):
         """Cover lines 551-556: async job fails due to file not found."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -1417,14 +1393,12 @@ class TestAPIAppDeepCoverage:
         )
         if response.status_code == 200:
             job_id = response.json()["job_id"]
-            time.sleep(1)
-            job = job_manager.get_job(job_id)
+            job = _wait_for_job(job_manager, job_id)
+            assert job is not None
             assert job.status == JobStatus.FAILED
 
     def test_async_generation_validation_errors(self):
         """Cover lines 560-594: async job with validation and generation."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -1446,8 +1420,8 @@ class TestAPIAppDeepCoverage:
             )
             if response.status_code == 200:
                 job_id = response.json()["job_id"]
-                time.sleep(2)
-                job = job_manager.get_job(job_id)
+                job = _wait_for_job(job_manager, job_id)
+                assert job is not None
                 assert job.status in (JobStatus.SUCCESS, JobStatus.FAILED)
         finally:
             if csv_file.exists():
@@ -1524,6 +1498,8 @@ class TestCLIDeepCoverage:
                 str(schema),
                 str(data),
                 output,
+                streaming=False,
+                chunk_size=1000,
                 verbose=True,
             )
 
@@ -1549,6 +1525,8 @@ class TestCLIDeepCoverage:
                 str(schema),
                 str(data),
                 None,
+                streaming=False,
+                chunk_size=1000,
                 verbose=False,
             )
 
@@ -1818,8 +1796,6 @@ class TestAPIAppLine101And149:
 
     def test_async_gen_full_flow_in_cwd(self):
         """Cover lines 546-594: async gen with cwd file."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -1841,8 +1817,8 @@ class TestAPIAppLine101And149:
             )
             if response.status_code == 200:
                 job_id = response.json()["job_id"]
-                time.sleep(2)
-                job = job_manager.get_job(job_id)
+                job = _wait_for_job(job_manager, job_id)
+                assert job is not None
                 assert job.status in (JobStatus.SUCCESS, JobStatus.FAILED)
         finally:
             if csv.exists():
@@ -2027,30 +2003,25 @@ class TestAPIAppEndpoints:
                             "template.xml",
                         )
                         with patch.object(
-                            sys.modules["pain001.api.app"], "generate_xml"
+                            sys.modules["pain001.api.app"],
+                            "generate_xml",
+                            return_value="output.xml",
                         ):
-                            with patch.object(
-                                sys.modules["pain001.api.app"],
-                                "generate_updated_xml_file_path",
-                                return_value="output.xml",
-                            ):
-                                response = client.post(
-                                    "/api/generate",
-                                    json={
-                                        "file_path": str(csv),
-                                        "data_source": "csv",
-                                        "message_type": "pain.001.001.03",
-                                    },
-                                )
-                                assert response.status_code in (200, 403, 500)
+                            response = client.post(
+                                "/api/generate",
+                                json={
+                                    "file_path": str(csv),
+                                    "data_source": "csv",
+                                    "message_type": "pain.001.001.03",
+                                },
+                            )
+                            assert response.status_code in (200, 403, 500)
         finally:
             if csv.exists():
                 csv.unlink()
 
     def test_async_generation_full_flow(self):
         """Cover lines 560-594: async generation full flow."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -2083,29 +2054,25 @@ class TestAPIAppEndpoints:
                             "template.xml",
                         )
                         with patch.object(
-                            sys.modules["pain001.api.app"], "generate_xml"
+                            sys.modules["pain001.api.app"],
+                            "generate_xml",
+                            return_value="output.xml",
                         ):
-                            with patch.object(
-                                sys.modules["pain001.api.app"],
-                                "generate_updated_xml_file_path",
-                                return_value="output.xml",
-                            ):
-                                response = client.post(
-                                    "/api/generate/async",
-                                    json={
-                                        "file_path": str(csv),
-                                        "data_source": "csv",
-                                        "message_type": "pain.001.001.03",
-                                    },
+                            response = client.post(
+                                "/api/generate/async",
+                                json={
+                                    "file_path": str(csv),
+                                    "data_source": "csv",
+                                    "message_type": "pain.001.001.03",
+                                },
+                            )
+                            if response.status_code == 200:
+                                job_id = response.json()["job_id"]
+                                job = _wait_for_job(job_manager, job_id)
+                                assert job.status in (
+                                    JobStatus.SUCCESS,
+                                    JobStatus.FAILED,
                                 )
-                                if response.status_code == 200:
-                                    job_id = response.json()["job_id"]
-                                    time.sleep(2)
-                                    job = job_manager.get_job(job_id)
-                                    assert job.status in (
-                                        JobStatus.SUCCESS,
-                                        JobStatus.FAILED,
-                                    )
         finally:
             if csv.exists():
                 csv.unlink()
@@ -2495,8 +2462,6 @@ class TestAPIAsyncProcessing:
 
     def test_async_file_not_found(self):
         """Cover lines 550-556: file not found in async processing."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -2516,14 +2481,12 @@ class TestAPIAsyncProcessing:
         )
         if response.status_code == 200:
             job_id = response.json()["job_id"]
-            time.sleep(1)
-            job = job_manager.get_job(job_id)
+            job = _wait_for_job(job_manager, job_id)
+            assert job is not None
             assert job.status == JobStatus.FAILED
 
     def test_async_validation_fails(self):
         """Cover lines 565-572: validation fails in async processing."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -2563,8 +2526,8 @@ class TestAPIAsyncProcessing:
                     )
                     if response.status_code == 200:
                         job_id = response.json()["job_id"]
-                        time.sleep(2)
-                        job = job_manager.get_job(job_id)
+                        job = _wait_for_job(job_manager, job_id)
+                        assert job is not None
                         assert job.status == JobStatus.FAILED
         finally:
             if csv.exists():
@@ -2572,10 +2535,31 @@ class TestAPIAsyncProcessing:
 
 
 class TestResolveGenerationPaths:
-    """Cover api/app.py line 149: _resolve_generation_paths guard."""
+    """Cover api/app.py: _resolve_generation_paths behavior."""
 
-    def test_resolve_paths_outside_cwd(self):
-        """Cover line 148-151: output_dir outside cwd after _validate_safe_path passes."""
+    def test_resolve_paths_with_output_dir(self):
+        """output_dir is honored and bundled assets resolve package-relative."""
+        from pain001.api.app import _resolve_generation_paths
+        from pain001.api.models import GenerateXMLRequest
+
+        out_dir = Path.cwd() / "tmp_resolve_paths_test"
+        request = GenerateXMLRequest(
+            file_path="dummy.csv",
+            data_source="csv",
+            message_type="pain.001.001.03",
+            output_dir=str(out_dir),
+        )
+        try:
+            output_file, xsd, template = _resolve_generation_paths(request)
+            assert output_file == str(out_dir / "pain.001.001.03.xml")
+            assert Path(xsd).exists()
+            assert Path(template).exists()
+        finally:
+            if out_dir.exists():
+                out_dir.rmdir()
+
+    def test_resolve_paths_outside_allowed_raises(self):
+        """output_dir outside allowed bases is rejected by _validate_safe_path."""
         from fastapi import HTTPException
 
         from pain001.api.app import _resolve_generation_paths
@@ -2585,18 +2569,11 @@ class TestResolveGenerationPaths:
             file_path="dummy.csv",
             data_source="csv",
             message_type="pain.001.001.03",
-            output_dir="/tmp/outside_test",
+            output_dir="/etc/pain001_outside_test",
         )
-
-        # Mock _validate_safe_path to return a path outside CWD
-        with patch.object(
-            sys.modules["pain001.api.app"],
-            "_validate_safe_path",
-            return_value=Path("/tmp/outside_test"),
-        ):
-            with pytest.raises(HTTPException) as exc_info:
-                _resolve_generation_paths(request)
-            assert exc_info.value.status_code == 403
+        with pytest.raises(HTTPException) as exc_info:
+            _resolve_generation_paths(request)
+        assert exc_info.value.status_code == 403
 
 
 class TestModelInvalidRows:
@@ -3112,8 +3089,6 @@ class TestAPIGuardLines:
 
     def test_async_processing_startswith_guard(self):
         """Cover lines 546-549: startswith guard in async processing."""
-        import time
-
         from fastapi.testclient import TestClient
 
         from pain001.api.app import app
@@ -3140,8 +3115,8 @@ class TestAPIGuardLines:
                 )
                 if response.status_code == 200:
                     job_id = response.json()["job_id"]
-                    time.sleep(1)
-                    job = job_manager.get_job(job_id)
+                    job = _wait_for_job(job_manager, job_id)
+                    assert job is not None
                     assert job.status == JobStatus.FAILED
         finally:
             if csv.exists():
@@ -3217,8 +3192,10 @@ class TestCLIBypassClickValidation:
 
         try:
             # Call the underlying function directly (bypasses Click validation)
+            callback = main.callback
+            assert callback is not None
             with pytest.raises(SystemExit) as exc_info:
-                main.callback(
+                callback(
                     xml_message_type="invalid.type.999",
                     xml_template_file_path=template,
                     xsd_schema_file_path=schema,
@@ -3227,6 +3204,13 @@ class TestCLIBypassClickValidation:
                     output_dir=None,
                     dry_run=False,
                     verbose=False,
+                    streaming=False,
+                    chunk_size=1000,
+                    profile=None,
+                    show_config=False,
+                    list_templates=False,
+                    show_template=None,
+                    emit_metrics=False,
                 )
             assert exc_info.value.code == 2
         finally:

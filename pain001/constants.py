@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ from pathlib import Path
 BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 
 # Shared metadata
-VERSION = "0.0.47"
+VERSION = "0.0.48"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
@@ -37,6 +37,8 @@ valid_xml_types = [
     "pain.001.001.09",  # Customer Credit Transfer Initiation V09
     "pain.001.001.10",  # Customer Credit Transfer Initiation V10
     "pain.001.001.11",  # Customer Credit Transfer Initiation V11
+    "pain.001.001.12",  # Customer Credit Transfer Initiation V12
+    "pain.008.001.02",  # Customer Direct Debit Initiation V02
 ]
 
 # Application metadata

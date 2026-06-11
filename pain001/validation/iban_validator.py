@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -35,8 +35,6 @@ Standards:
     - ISO 13616:2020 - International Bank Account Number (IBAN)
     - ISO 7064 - Check digit mod-97-10 algorithm
 """
-
-from typing import Optional
 
 from pain001.exceptions import InvalidIBANError
 
@@ -241,7 +239,7 @@ def validate_iban_checksum(iban: str) -> tuple[bool, str]:
 
 
 def validate_iban(
-    iban: str, field: Optional[str] = None, strict: bool = True
+    iban: str, field: str | None = None, strict: bool = True
 ) -> tuple[bool, str]:
     """Validate IBAN format and checksum.
 
@@ -297,7 +295,7 @@ def validate_iban(
     return True, ""
 
 
-def validate_iban_safe(iban: str, field: Optional[str] = None) -> bool:
+def validate_iban_safe(iban: str, field: str | None = None) -> bool:
     """Validate IBAN and return True/False (never raises exceptions).
 
     This is a convenience wrapper for validate_iban with strict=False.

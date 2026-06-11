@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import pytest
 from pain001.security.path_validator import (
     PathValidationError,
     SecurityError,
-    _is_allowed_directory,
     sanitize_for_log,
     validate_path,
 )
@@ -102,12 +101,31 @@ class TestPathValidator:
                 ):
                     validate_path(target)
 
-    def test_is_allowed_directory_logic(self):
-        """Test internal logic of _is_allowed_directory directly."""
-        # Non-existent files MUST be in allowed directories to be valid
-        assert (
-            _is_allowed_directory(Path("/non/existent/absolute/path")) is False
+    def test_validate_path_rejects_escape_from_explicit_base_dir(
+        self, tmp_path
+    ):
+        """Explicit base_dir should reject sibling paths outside the base."""
+        allowed_dir = tmp_path / "allowed"
+        blocked_dir = tmp_path / "blocked"
+        allowed_dir.mkdir()
+        blocked_dir.mkdir()
+        blocked_file = blocked_dir / "outside.txt"
+        blocked_file.write_text("blocked")
+
+        with pytest.raises(SecurityError, match="escapes base directory"):
+            validate_path(blocked_file, must_exist=True, base_dir=allowed_dir)
+
+    def test_validate_path_accepts_exact_base_dir(self, tmp_path):
+        """Exact base_dir should be accepted as an allowed resolved path."""
+        allowed_dir = tmp_path / "allowed"
+        allowed_dir.mkdir()
+
+        resolved = validate_path(
+            allowed_dir,
+            must_exist=True,
+            base_dir=allowed_dir,
         )
+        assert resolved == str(allowed_dir.resolve())
 
     def test_sanitize_for_log(self):
         """Test string sanitization for logging."""

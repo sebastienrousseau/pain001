@@ -1,0 +1,19 @@
+xml_message_type:
+  type: string
+xsd_schema_file_path:
+  type: string
+xml_template_file_path:
+  type: string
+data_file_path:
+  type: string
+output_dir:
+  type: string
+streaming:
+  type: boolean
+chunk_size:
+  type: integer
+emit_metrics:
+  type: boolean
+profiles:
+  type: object
+

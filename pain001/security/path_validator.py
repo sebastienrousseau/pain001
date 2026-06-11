@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ import os
 import re
 import tempfile
 from pathlib import Path
-from typing import Union
 
 
 class PathValidationError(ValueError):
@@ -30,37 +29,9 @@ class SecurityError(PermissionError):
     """Raised when a security boundary is violated."""
 
 
-def _is_allowed_directory(resolved_path: Path) -> bool:
-    """Check if the path is within allowed directories.
-
-    Args:
-        resolved_path: The absolute Path object to check.
-
-    Returns:
-        True if the path is within allowed directories, False otherwise.
-    """
-    try:
-        # Define base allowed directories
-        allowed_bases = [
-            Path.cwd().resolve(),
-            Path(tempfile.gettempdir()).resolve(),
-            Path(os.path.join(os.path.sep, "var", "tmp")).resolve(),
-        ]
-
-        resolved_str = str(resolved_path)
-        return any(
-            resolved_str == str(base)
-            or resolved_str.startswith(str(base) + os.sep)
-            for base in allowed_bases
-        )
-
-    except Exception:  # nosec B110
-        return False
-
-
 def _resolve_within_allowed_bases(
-    untrusted_path: Union[str, Path],
-    base_dir: Union[str, Path, None] = None,
+    untrusted_path: str | Path,
+    base_dir: str | Path | None = None,
 ) -> str:
     """Resolve and validate that a path is within allowed directories.
 
@@ -69,6 +40,12 @@ def _resolve_within_allowed_bases(
     ``validate_path`` wrapper adds the optional existence check on the
     *already-clean* return value, keeping ``os.path.exists`` outside the
     tainted data-flow graph.
+
+    Args:
+        untrusted_path: User-provided path (potentially malicious).
+        base_dir: Optional base directory to constrain resolution. When
+            omitted, the cwd, temp directories, and the installed
+            package directory are allowed.
 
     Returns:
         Resolved absolute path string proven to be within allowed bases.
@@ -96,15 +73,26 @@ def _resolve_within_allowed_bases(
         base_str = os.path.realpath(str(base_dir))
         allowed_bases = [base_str]
     else:
+        # The package's own directory is allowed so bundled templates and
+        # schemas resolve when pain001 is installed outside the cwd
+        # (e.g. site-packages).
+        package_dir = os.path.realpath(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        )
+        # Temp directories are allowed for callers (and tests) that
+        # write output to tempfile-created paths; /var/tmp is listed
+        # separately because gettempdir() may resolve elsewhere
+        # (e.g. /var/folders on macOS).
         allowed_bases = [
             os.path.realpath(os.getcwd()),
             os.path.realpath(tempfile.gettempdir()),
             os.path.realpath(os.path.join(os.path.sep, "var", "tmp")),
+            package_dir,
         ]
 
     for base in allowed_bases:
         if resolved_str == base or resolved_str.startswith(base + os.sep):
-            return base + resolved_str[len(base) :]
+            return resolved_str
 
     if base_dir:
         raise SecurityError(
@@ -116,9 +104,9 @@ def _resolve_within_allowed_bases(
 
 
 def validate_path(
-    untrusted_path: Union[str, Path],
+    untrusted_path: str | Path,
     must_exist: bool = False,
-    base_dir: Union[str, Path, None] = None,
+    base_dir: str | Path | None = None,
 ) -> str:
     """Validate and resolve path to prevent directory traversal attacks.
 
@@ -131,9 +119,10 @@ def validate_path(
         Resolved absolute path as string (CodeQL taint-tracking compliant).
 
     Raises:
-        PathValidationError: If path contains traversal attempts.
-        SecurityError: If path escapes allowed directories.
-        FileNotFoundError: If must_exist=True and path doesn't exist.
+        FileNotFoundError: If must_exist=True and the path doesn't
+            exist. PathValidationError (traversal attempts) and
+            SecurityError (path escapes allowed directories) from the
+            underlying resolution propagate unchanged.
     """
     # Core validation — return value is taint-free per neutralModel.
     safe_path = _resolve_within_allowed_bases(untrusted_path, base_dir)

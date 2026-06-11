@@ -1,7 +1,8 @@
-# Other imports remain the same
 # pylint: disable=duplicate-code
+
+"""Module entry point for ``python -m pain001``."""
+
 import sys
-from typing import Optional
 
 from rich.console import Console
 
@@ -13,10 +14,10 @@ console = Console()
 
 
 def main(
-    xml_message_type: Optional[str],
-    xml_template_file_path: Optional[str],
-    xsd_schema_file_path: Optional[str],
-    data_file_path: Optional[str],
+    xml_message_type: str | None,
+    xml_template_file_path: str | None,
+    xsd_schema_file_path: str | None,
+    data_file_path: str | None,
     dry_run: bool = False,
 ) -> None:
     """Main entry point for python -m pain001.

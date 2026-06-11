@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+    targetNamespace="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02"
+    xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02"
+    elementFormDefault="qualified">
+    <xs:element name="Document">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="CstmrDrctDbtInitn">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name="GrpHdr">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="MsgId" type="xs:string"/>
+                                        <xs:element name="CreDtTm" type="xs:string"/>
+                                        <xs:element name="NbOfTxs" type="xs:string"/>
+                                        <xs:element name="CtrlSum" type="xs:string"/>
+                                        <xs:element name="InitgPty">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Nm" type="xs:string"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                            <xs:element name="PmtInf">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="PmtInfId" type="xs:string"/>
+                                        <xs:element name="PmtMtd" type="xs:string"/>
+                                        <xs:element name="BtchBookg" type="xs:string"/>
+                                        <xs:element name="NbOfTxs" type="xs:string"/>
+                                        <xs:element name="CtrlSum" type="xs:string"/>
+                                        <xs:element name="PmtTpInf">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="SvcLvl">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Cd" type="xs:string"/>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="ReqdColltnDt" type="xs:string"/>
+                                        <xs:element name="Cdtr">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Nm" type="xs:string"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="CdtrAcct">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="Id">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="IBAN" type="xs:string"/>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="CdtrAgt">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="FinInstnId">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="BIC" type="xs:string"/>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                        <xs:element name="ChrgBr" type="xs:string"/>
+                                        <xs:element name="DrctDbtTxInf" maxOccurs="unbounded">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:element name="PmtId">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="EndToEndId" type="xs:string"/>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="InstdAmt">
+                                                        <xs:complexType>
+                                                            <xs:simpleContent>
+                                                                <xs:extension base="xs:string">
+                                                                    <xs:attribute name="Ccy" type="xs:string" use="required"/>
+                                                                </xs:extension>
+                                                            </xs:simpleContent>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="DrctDbtTx">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="MndtRltdInf">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="MndtId" type="xs:string"/>
+                                                                            <xs:element name="DtOfSgntr" type="xs:string"/>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="DbtrAgt">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="FinInstnId">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="BIC" type="xs:string"/>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="Dbtr">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Nm" type="xs:string"/>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="DbtrAcct">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Id">
+                                                                    <xs:complexType>
+                                                                        <xs:sequence>
+                                                                            <xs:element name="IBAN" type="xs:string"/>
+                                                                        </xs:sequence>
+                                                                    </xs:complexType>
+                                                                </xs:element>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="RmtInf">
+                                                        <xs:complexType>
+                                                            <xs:sequence>
+                                                                <xs:element name="Ustrd" type="xs:string"/>
+                                                            </xs:sequence>
+                                                        </xs:complexType>
+                                                    </xs:element>
+                                                    <xs:element name="SeqTp" type="xs:string"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+

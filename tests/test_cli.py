@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -128,10 +128,11 @@ class TestCliModule(unittest.TestCase):
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 2  # Click's exit code for invalid path
+        assert result.exit_code == 1
         assert (
             "does not exist" in result.output.lower()
             or "invalid value" in result.output.lower()
+            or "outside allowed" in result.output.lower()
         )
 
     def test_cli_invalid_xml_message_type(self) -> None:
@@ -450,9 +451,8 @@ class TestCliModule(unittest.TestCase):
             or "validation failed" in result.output.lower()
         )
 
-    def test_cli_required_fields_via_click(self) -> None:
-        """Test that Click enforces required fields."""
-        # Test missing --template
+    def test_cli_missing_template_uses_registry_resolution(self) -> None:
+        """Test that a missing --template falls back to bundled assets."""
         result = self.runner.invoke(
             main,
             [
@@ -464,7 +464,8 @@ class TestCliModule(unittest.TestCase):
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 2  # Click's exit code for usage errors
+        assert result.exit_code == 1
+        assert "generation failed" in result.output.lower()
 
     def test_cli_invalid_message_type_via_click_choice(self) -> None:
         """Test that Click validates message type via Choice."""

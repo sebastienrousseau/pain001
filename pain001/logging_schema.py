@@ -1,5 +1,5 @@
 # pylint: disable=too-many-lines
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -63,15 +63,17 @@ import uuid
 from contextvars import ContextVar
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import Any, Optional, Union
+from typing import Any
 
 try:
     __version__ = version("pain001")
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0"
 
-# Context variable for request tracing across async operations
-_request_id_context: ContextVar[Optional[str]] = ContextVar(
+# ContextVar rather than a module global or threading.local: the API
+# serves concurrent async requests, and each task must see its own
+# request id without leaking it to other in-flight requests.
+_request_id_context: ContextVar[str | None] = ContextVar(
     "request_id", default=None
 )
 
@@ -280,10 +282,8 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
     for key, value in data.items():
         key_lower = key.lower()
 
-        # Recursively handle nested dicts
         if isinstance(value, dict):
             redacted[key] = _redact_pii_from_dict(value)
-        # Handle lists of dicts
         elif isinstance(value, list):
             redacted[key] = [
                 (
@@ -293,21 +293,17 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
                 )
                 for item in value
             ]
-        # Redact IBAN fields
         elif "iban" in key_lower and isinstance(value, str):
             redacted[key] = mask_sensitive_data(
                 _sanitize_value(value), visible_chars=4
             )
-        # Redact BIC fields
         elif "bic" in key_lower and isinstance(value, str):
             val = _sanitize_value(value)
             redacted[key] = (
                 f"{val[:4]}**{val[-2:]}" if len(val) > 6 else "****"
             )
-        # Redact name fields
         elif "name" in key_lower and isinstance(value, str):
             redacted[key] = "[REDACTED]"
-        # Redact account number fields
         elif "account" in key_lower and isinstance(value, str):
             redacted[key] = mask_sensitive_data(
                 _sanitize_value(value), visible_chars=4
@@ -427,7 +423,7 @@ def log_process_success(
 def log_process_error(
     logger: logging.Logger,
     error: Exception,
-    message_type: Optional[str] = None,
+    message_type: str | None = None,
     **extra_fields: Any,
 ) -> None:
     """Log process error event.
@@ -453,7 +449,7 @@ def log_validation_event(
     logger: logging.Logger,
     validation_type: str,
     success: bool,
-    error: Optional[Exception] = None,
+    error: Exception | None = None,
     **extra_fields: Any,
 ) -> None:
     """Log validation event (success or error).
@@ -489,9 +485,9 @@ def log_data_load_event(
     logger: logging.Logger,
     data_source_type: str,
     success: bool,
-    record_count: Optional[int] = None,
-    error: Optional[Exception] = None,
-    duration_ms: Optional[int] = None,
+    record_count: int | None = None,
+    error: Exception | None = None,
+    duration_ms: int | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Log data loading event.
@@ -528,9 +524,9 @@ def log_xml_generation_event(
     logger: logging.Logger,
     message_type: str,
     success: bool,
-    record_count: Optional[int] = None,
-    error: Optional[Exception] = None,
-    duration_ms: Optional[int] = None,
+    record_count: int | None = None,
+    error: Exception | None = None,
+    duration_ms: int | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Log XML generation event.
@@ -570,6 +566,11 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
     metrics tracking for generating comprehensive summary reports.
     Use as a context manager for automatic start/end tracking.
 
+    Args:
+        logger: Logger instance to use for summary report.
+        dry_run: Whether this is a dry-run execution.
+        message_type: ISO 20022 message type (if applicable).
+
     Example:
         >>> with ExecutionSummaryTracker(logger) as tracker:
         ...     # Your execution logic here
@@ -588,24 +589,17 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         self,
         logger: logging.Logger,
         dry_run: bool = False,
-        message_type: Optional[str] = None,
+        message_type: str | None = None,
     ):
-        """Initialize execution summary tracker.
-
-        Args:
-            logger: Logger instance to use for summary report.
-            dry_run: Whether this is a dry-run execution.
-            message_type: ISO 20022 message type (if applicable).
-        """
         self.logger = logger
         self.dry_run = dry_run
         self.message_type = message_type
 
         # Execution metrics
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
-        self.start_time_iso: Optional[str] = None
-        self.end_time_iso: Optional[str] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
+        self.start_time_iso: str | None = None
+        self.end_time_iso: str | None = None
 
         # Event counts
         self.counts = {
@@ -619,8 +613,8 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         # Processing metrics
         self.total_records_processed = 0
         self.validation_metrics: dict[str, str] = {}
-        self.output_file: Optional[str] = None
-        self.log_file: Optional[str] = None
+        self.output_file: str | None = None
+        self.log_file: str | None = None
 
         # Status tracking
         self.has_errors = False
@@ -666,7 +660,7 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         """
         self.validation_metrics[validation_type] = result
 
-    def set_output_file(self, file_path: Optional[str]) -> None:
+    def set_output_file(self, file_path: str | None) -> None:
         """Set output file path.
 
         Args:
@@ -818,9 +812,9 @@ class JSONFormatter(logging.Formatter):
 
 
 def configure_json_logging(
-    logger: Optional[logging.Logger] = None,
-    level: Union[str, int] = logging.INFO,
-    log_file: Optional[str] = None,
+    logger: logging.Logger | None = None,
+    level: str | int = logging.INFO,
+    log_file: str | None = None,
     max_bytes: int = 10 * 1024 * 1024,  # 10 MB
     backup_count: int = 5,
     console_output: bool = True,
@@ -867,9 +861,10 @@ def configure_json_logging(
         >>> # Docker/Kubernetes setup (console only)
         >>> logger = configure_json_logging(console_output=True)
     """
-    # Use root logger if none provided
+    # Default to the package logger — never reconfigure the host
+    # application's root logger implicitly.
     if logger is None:
-        logger = logging.getLogger()
+        logger = logging.getLogger("pain001")
 
     # Apply environment variable overrides
     env_level = os.environ.get("PAIN001_LOG_LEVEL")
@@ -915,6 +910,13 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
     for API observability, performance monitoring, and distributed tracing.
     Tracks detailed timing breakdowns, resource usage, and validation results.
 
+    Args:
+        logger: Logger instance for telemetry output.
+        operation: Operation being tracked (e.g., "xml_generation").
+        message_type: ISO 20022 message type (if applicable).
+        request_id: Request ID for distributed tracing
+            (auto-generated if None).
+
     Example:
         >>> metrics = ExecutionMetrics(
         ...     logger=logger,
@@ -932,17 +934,9 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         self,
         logger: logging.Logger,
         operation: str,
-        message_type: Optional[str] = None,
-        request_id: Optional[str] = None,
+        message_type: str | None = None,
+        request_id: str | None = None,
     ):
-        """Initialize execution metrics tracker.
-
-        Args:
-            logger: Logger instance for telemetry output.
-            operation: Operation being tracked (e.g., "xml_generation").
-            message_type: ISO 20022 message type (if applicable).
-            request_id: Request ID for distributed tracing (auto-generated if None).
-        """
         self.logger = logger
         self.operation = operation
         self.message_type = message_type
@@ -950,8 +944,8 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         set_request_id(self.request_id)
 
         # Timing metrics
-        self.start_time: Optional[float] = None
-        self.end_time: Optional[float] = None
+        self.start_time: float | None = None
+        self.end_time: float | None = None
         self.phase_timings: dict[str, int] = {}  # phase_name -> duration_ms
 
         # Validation tracking
@@ -965,7 +959,7 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
 
         # Status tracking
         self.status = ExecutionStatus.SUCCESS
-        self.error_message: Optional[str] = None
+        self.error_message: str | None = None
 
     def start(self) -> None:
         """Mark operation start time."""

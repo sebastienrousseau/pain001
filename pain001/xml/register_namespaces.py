@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Register ISO 20022 XML namespaces for ElementTree serialization."""
+
 import xml.etree.ElementTree as et  # nosec B405
 
 # Register the namespace prefixes with the ElementTree module so that
@@ -25,11 +27,8 @@ def register_namespaces(payment_initiation_message_type: str) -> None:
     message type.
 
     Args:
-        payment_initiation_message_type (str):
-        The payment initiation message type.
-
-    Returns:
-        None.
+        payment_initiation_message_type: The payment initiation message
+            type (e.g. "pain.001.001.03").
     """
 
     # Create the namespace for the payment initiation message type.

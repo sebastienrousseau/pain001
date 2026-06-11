@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,10 +16,20 @@
 """Additional CLI tests for coverage."""
 
 import configparser
+import shutil
+from pathlib import Path
 
 from click.testing import CliRunner
 
+import pain001
 from pain001.cli.cli import main
+
+BUNDLED_V03_CSV = (
+    Path(pain001.__file__).parent
+    / "templates"
+    / "pain.001.001.03"
+    / "template.csv"
+)
 
 
 class TestCLIConfigFile:
@@ -125,3 +135,160 @@ class TestCLIErrorPaths:
 
         # Should validate but not generate
         assert result.exit_code in [0, 1, 2]
+
+
+class TestCLIIntrospectionFlags:
+    """Test template/config introspection flags."""
+
+    def test_cli_list_templates(self):
+        runner = CliRunner()
+        result = runner.invoke(main, ["--list-templates"])
+        assert result.exit_code == 0
+        output = " ".join(result.output.split())
+        assert "pain.001.001.03" in output
+        assert "pain.008.001.02" in output
+
+    def test_cli_show_template(self):
+        runner = CliRunner()
+        result = runner.invoke(main, ["--show-template", "pain.001.001.03"])
+        assert result.exit_code == 0
+        output = " ".join(result.output.lower().split())
+        assert "category" in output
+        assert "schema" in output
+
+    def test_cli_show_config(self):
+        runner = CliRunner()
+        result = runner.invoke(
+            main,
+            [
+                "-t",
+                "pain.001.001.03",
+                "-d",
+                "payments.csv",
+                "--show-config",
+            ],
+        )
+        assert result.exit_code == 0
+        output = " ".join(result.output.lower().split())
+        assert "template" in output
+
+    def test_cli_emit_metrics_registers_console_callback(self):
+        from unittest.mock import patch
+
+        from pain001.cli.cli import _console_metrics_callback
+
+        runner = CliRunner()
+        with patch(
+            "pain001.cli.cli.validate_via_xsd",
+            autospec=True,
+            return_value=True,
+        ):
+            with patch("pain001.cli.cli.process_files", autospec=True):
+                with patch(
+                    "pain001.cli.cli.register_metrics_callback",
+                    autospec=True,
+                ) as mock_register:
+                    result = runner.invoke(
+                        main,
+                        [
+                            "-t",
+                            "pain.001.001.03",
+                            "-d",
+                            "pain001/test_fixtures/template.csv",
+                            "--emit-metrics",
+                        ],
+                    )
+        assert result.exit_code == 0
+        mock_register.assert_called_once_with(_console_metrics_callback)
+
+    def test_console_metrics_callback_prints_event(self):
+        import time
+
+        from pain001.cli.cli import _console_metrics_callback
+        from pain001.observability import MetricEvent
+
+        _console_metrics_callback(
+            MetricEvent(
+                name="unit_test",
+                timestamp=time.time(),
+                attributes={"k": "v"},
+            )
+        )
+
+
+class TestCLIStreamingDispatch:
+    """Test streaming dispatch with and without output dir."""
+
+    def _invoke(self, args):
+        from unittest.mock import patch
+
+        runner = CliRunner()
+        with patch(
+            "pain001.cli.cli.validate_via_xsd",
+            autospec=True,
+            return_value=True,
+        ):
+            with patch(
+                "pain001.cli.cli.process_files_streaming", autospec=True
+            ) as mock_streaming:
+                result = runner.invoke(main, args)
+        return result, mock_streaming
+
+    def test_cli_streaming_without_output_dir(self):
+        result, mock_streaming = self._invoke(
+            [
+                "-t",
+                "pain.001.001.03",
+                "-d",
+                "pain001/test_fixtures/template.csv",
+                "--streaming",
+            ]
+        )
+        assert result.exit_code == 0
+        assert mock_streaming.called
+
+    def test_cli_streaming_with_output_dir(self, tmp_path):
+        result, mock_streaming = self._invoke(
+            [
+                "-t",
+                "pain.001.001.03",
+                "-d",
+                "pain001/test_fixtures/template.csv",
+                "--streaming",
+                "--output-dir",
+                str(tmp_path / "out"),
+            ]
+        )
+        assert result.exit_code == 0
+        assert mock_streaming.called
+        assert (tmp_path / "out").exists()
+
+
+class TestCLIOutputLocation:
+    """Output is written to explicit paths without changing directory."""
+
+    def test_default_output_is_current_directory(self, tmp_path, monkeypatch):
+        """Without -o, XML lands in the cwd, not next to the template."""
+        shutil.copyfile(BUNDLED_V03_CSV, tmp_path / "payments.csv")
+        monkeypatch.chdir(tmp_path)
+
+        result = CliRunner().invoke(
+            main,
+            ["-t", "pain.001.001.03", "-d", "payments.csv"],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "pain.001.001.03.xml").exists()
+
+    def test_output_dir_keeps_relative_data_path(self, tmp_path, monkeypatch):
+        """-o must not re-anchor relative data paths via chdir."""
+        shutil.copyfile(BUNDLED_V03_CSV, tmp_path / "payments.csv")
+        monkeypatch.chdir(tmp_path)
+
+        result = CliRunner().invoke(
+            main,
+            ["-t", "pain.001.001.03", "-d", "payments.csv", "-o", "out"],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "out" / "pain.001.001.03.xml").exists()

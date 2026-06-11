@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,268 +13,139 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# XML generator function that creates the XML file from the CSV data
-# and the mapping dictionary between XML tags and CSV columns names and
-# writes it to a file in the same directory as the CSV file
-
 # pylint: disable=duplicate-code
 
-# Import the CSV library
+"""Generate and XSD-validate ISO 20022 XML payment messages."""
+
+import logging
 import os
+import re
+import time
+import warnings
+from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import select_autoescape
+from jinja2.sandbox import SandboxedEnvironment
 
+from pain001.exceptions import PaymentValidationError
+from pain001.observability import emit_metric_event
 from pain001.security import validate_path
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
+from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
 from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
 
+logger = logging.getLogger(__name__)
 
-def _prepare_xml_data_v03(data: list[dict[str, Any]]) -> dict[str, Any]:
-    """Prepare XML data for pain.001.001.03 message type."""
-    return {
-        "id": data[0]["id"],
-        "date": data[0]["date"],
-        "nb_of_txs": data[0]["nb_of_txs"],
-        "initiator_name": data[0]["initiator_name"],
-        "initiator_street_name": data[0]["initiator_street_name"],
-        "initiator_building_number": data[0]["initiator_building_number"],
-        "initiator_postal_code": data[0]["initiator_postal_code"],
-        "initiator_town_name": data[0]["initiator_town_name"],
-        "initiator_country_code": data[0]["initiator_country_code"],
-        "payment_id": data[0]["payment_id"],
-        "payment_method": data[0]["payment_method"],
-        "batch_booking": data[0]["batch_booking"],
-        "requested_execution_date": data[0]["requested_execution_date"],
-        "debtor_name": data[0]["debtor_name"],
-        "debtor_street_name": data[0]["debtor_street_name"],
-        "debtor_building_number": data[0]["debtor_building_number"],
-        "debtor_postal_code": data[0]["debtor_postal_code"],
-        "debtor_town_name": data[0]["debtor_town_name"],
-        "debtor_country_code": data[0]["debtor_country_code"],
-        "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
-        "debtor_agent_BIC": data[0]["debtor_agent_BIC"],
-        "charge_bearer": data[0]["charge_bearer"],
-        "transactions": [
-            {
-                "payment_id": row["payment_id"],
-                "payment_amount": row.get("payment_amount", ""),
-                "payment_currency": row.get("payment_currency", ""),
-                "charge_bearer": row["charge_bearer"],
-                "creditor_agent_BIC": row["creditor_agent_BIC"],
-                "creditor_name": row["creditor_name"],
-                "creditor_street_name": row["creditor_street_name"],
-                "creditor_building_number": row["creditor_building_number"],
-                "creditor_postal_code": row["creditor_postal_code"],
-                "creditor_town_name": row["creditor_town_name"],
-                "creditor_country_code": row["creditor_country_code"],
-                "creditor_account_IBAN": row["creditor_account_IBAN"],
-                "purpose_code": row["purpose_code"],
-                "reference_number": row["reference_number"],
-                "reference_date": row["reference_date"],
-            }
-            for row in data[0:]
-        ],
-    }
+# Templates are trusted, but these directives would let one pull in
+# arbitrary files from disk, so they are rejected before rendering.
+_TEMPLATE_DIRECTIVE_PATTERN = re.compile(
+    r"{%\s*(include|import|from|extends)\b", re.IGNORECASE
+)
+
+# ISO 20022 amounts carry at most two decimal places.
+_AMOUNT_EXPONENT = Decimal("0.01")
 
 
-def _prepare_xml_data_v04(data: list[dict[str, Any]]) -> dict[str, Any]:
-    """Prepare XML data for pain.001.001.04 message type."""
-    return {
-        "id": data[0].get("id", ""),
-        "date": data[0].get("date", ""),
-        "nb_of_txs": data[0].get("nb_of_txs", ""),
-        "initiator_name": data[0].get("initiator_name", ""),
-        "initiator_street": data[0].get("initiator_street_name", ""),
-        "initiator_building_number": data[0].get(
-            "initiator_building_number", ""
-        ),
-        "initiator_postal_code": data[0].get("initiator_postal_code", ""),
-        "initiator_town": data[0].get("initiator_town_name", ""),
-        "initiator_country": data[0].get("initiator_country_code", ""),
-        "payment_information_id": data[0].get("payment_id", ""),
-        "payment_method": data[0].get("payment_method", ""),
-        "batch_booking": data[0].get("batch_booking", ""),
-        "requested_execution_date": data[0].get(
-            "requested_execution_date", ""
-        ),
-        "debtor_name": data[0].get("debtor_name", ""),
-        "debtor_street": data[0].get("debtor_street_name", ""),
-        "debtor_building_number": data[0].get("debtor_building_number", ""),
-        "debtor_postal_code": data[0].get("debtor_postal_code", ""),
-        "debtor_town": data[0].get("debtor_town_name", ""),
-        "debtor_country": data[0].get("debtor_country_code", ""),
-        "debtor_account_IBAN": data[0].get("debtor_account_IBAN", ""),
-        "debtor_agent_BIC": data[0].get("debtor_agent_BIC", ""),
-        "debtor_agent_account_IBAN": data[0].get(
-            "debtor_agent_account_IBAN", ""
-        ),
-        "instruction_for_debtor_agent": data[0].get(
-            "instruction_for_debtor_agent", ""
-        ),
-        "charge_bearer": data[0].get("charge_bearer", ""),
-        "charge_account_IBAN": data[0].get("charge_account_IBAN", ""),
-        "charge_agent_BICFI": data[0].get("charge_agent_BICFI", ""),
-        "payment_instruction_id": data[0].get(
-            "payment_instruction_id", data[0].get("payment_id", "")
-        ),
-        "payment_end_to_end_id": data[0].get(
-            "payment_end_to_end_id", data[0].get("reference_number", "")
-        ),
-        "payment_currency": data[0].get("payment_currency", ""),
-        "payment_amount": data[0].get("payment_amount", ""),
-        "creditor_agent_BIC": data[0].get("creditor_agent_BIC", ""),
-        "creditor_name": data[0].get("creditor_name", ""),
-        "creditor_street": data[0].get("creditor_street_name", ""),
-        "creditor_building_number": data[0].get(
-            "creditor_building_number", ""
-        ),
-        "creditor_postal_code": data[0].get("creditor_postal_code", ""),
-        "creditor_town": data[0].get("creditor_town_name", ""),
-        "creditor_account_IBAN": data[0].get("creditor_account_IBAN", ""),
-        "purpose_code": data[0].get("purpose_code", ""),
-        "reference_number": data[0].get("reference_number", ""),
-        "reference_date": data[0].get("reference_date", ""),
-        "transactions": [
-            {
-                "payment_instruction_id": row.get("payment_id", ""),
-                "payment_end_to_end_id": row.get("reference_number", ""),
-                "payment_currency": row.get("payment_currency", "EUR"),
-                "payment_amount": row.get("payment_amount", ""),
-                "charge_bearer": row.get("charge_bearer", ""),
-                "creditor_agent_BIC": row.get("creditor_agent_BIC", ""),
-                "creditor_name": row.get("creditor_name", ""),
-                "creditor_street": row.get("creditor_street_name", ""),
-                "creditor_building_number": row.get(
-                    "creditor_building_number", ""
-                ),
-                "creditor_postal_code": row.get("creditor_postal_code", ""),
-                "creditor_town": row.get("creditor_town_name", ""),
-                "creditor_account_IBAN": row.get("creditor_account_IBAN", ""),
-                "purpose_code": row.get("purpose_code", ""),
-                "reference_number": row.get("reference_number", ""),
-                "reference_date": row.get("reference_date", ""),
-            }
-            for row in data[0:]
-        ],
-    }
+def _format_amount(value: Any, row_index: int) -> str:
+    """Normalize a monetary amount to an exact two-decimal string.
+
+    Amounts are handled with Decimal end-to-end: floats are converted via
+    their shortest string representation so binary artifacts are surfaced
+    (and rejected) rather than silently rounded into the payment file.
+
+    Args:
+        value: The raw amount from the input row.
+        row_index: 1-based row number, used in error messages.
+
+    Returns:
+        The amount as an exact two-decimal string (e.g. "10.00").
+
+    Raises:
+        PaymentValidationError: If the amount is missing, not a number,
+            not positive, or carries more than two decimal places.
+    """
+    if value is None or (isinstance(value, str) and not value.strip()):
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount is required",
+            field="payment_amount",
+        )
+    try:
+        amount = Decimal(str(value).strip())
+    except InvalidOperation as e:
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount {value!r} is not a number",
+            field="payment_amount",
+        ) from e
+    if not amount.is_finite() or amount <= 0:
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount must be a positive amount, "
+            f"got {value!r}",
+            field="payment_amount",
+        )
+    quantized = amount.quantize(_AMOUNT_EXPONENT)
+    if amount != quantized:
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount {value!r} has more than two "
+            "decimal places; round it explicitly before generating",
+            field="payment_amount",
+        )
+    return f"{quantized:.2f}"
 
 
-def _prepare_xml_data_v05_to_v08(data: list[dict[str, Any]]) -> dict[str, Any]:
-    """Prepare XML data for pain.001.001.05-08 message types."""
-    return {
-        "id": data[0].get("id", ""),
-        "date": data[0].get("date", ""),
-        "nb_of_txs": data[0].get("nb_of_txs", ""),
-        "ctrl_sum": data[0].get("ctrl_sum", ""),
-        "initiator_name": data[0].get("initiator_name", ""),
-        "initiator_street_name": data[0].get("initiator_street_name", ""),
-        "initiator_building_number": data[0].get(
-            "initiator_building_number", ""
-        ),
-        "initiator_postal_code": data[0].get("initiator_postal_code", ""),
-        "initiator_town": data[0].get(
-            "initiator_town_name", data[0].get("initiator_town", "")
-        ),
-        "initiator_country": data[0].get(
-            "initiator_country_code", data[0].get("initiator_country", "")
-        ),
-        "ultimate_debtor_name": data[0].get(
-            "ultimate_debtor_name", data[0].get("debtor_name", "")
-        ),
-        "service_level_code": data[0].get("service_level_code", "SEPA"),
-        "requested_execution_date": data[0].get(
-            "requested_execution_date", ""
-        ),
-        "payment_information_id": data[0].get("payment_information_id", ""),
-        "payment_method": data[0].get("payment_method", "TRF"),
-        "batch_booking": data[0].get("batch_booking", "false"),
-        "debtor_name": data[0].get("debtor_name", ""),
-        "debtor_street": data[0].get("debtor_street_name", ""),
-        "debtor_building_number": data[0].get("debtor_building_number", ""),
-        "debtor_postal_code": data[0].get("debtor_postal_code", ""),
-        "debtor_town": data[0].get("debtor_town_name", ""),
-        "debtor_country": data[0].get(
-            "debtor_country_code", data[0].get("debtor_country", "")
-        ),
-        "debtor_account_IBAN": data[0].get("debtor_account_IBAN", ""),
-        "debtor_agent_BIC": data[0].get("debtor_agent_BIC", ""),
-        "transactions": [
-            {
-                "payment_id": row.get("payment_id", ""),
-                "payment_instruction_id": row.get(
-                    "payment_instruction_id", row.get("payment_id", "")
-                ),
-                "payment_end_to_end_id": row.get(
-                    "payment_end_to_end_id", row.get("reference_number", "")
-                ),
-                "payment_amount": row.get("payment_amount", ""),
-                "payment_currency": row.get("payment_currency", ""),
-                "charge_bearer": row.get("charge_bearer", "SLEV"),
-                "creditor_agent_BIC": row.get(
-                    "creditor_agent_BIC", row.get("creditor_agent_BICFI", "")
-                ),
-                "creditor_name": row.get("creditor_name", ""),
-                "creditor_street": row.get("creditor_street_name", ""),
-                "creditor_building_number": row.get(
-                    "creditor_building_number", ""
-                ),
-                "creditor_postal_code": row.get("creditor_postal_code", ""),
-                "creditor_town": row.get("creditor_town_name", ""),
-                "creditor_country": row.get(
-                    "creditor_country_code", row.get("creditor_country", "")
-                ),
-                "creditor_account_IBAN": row.get("creditor_account_IBAN", ""),
-                "creditor_agent_BICFI": row.get("creditor_agent_BICFI", ""),
-                "purpose_code": row.get("purpose_code", ""),
-                "reference_number": row.get("reference_number", ""),
-                "reference_date": row.get("reference_date", ""),
-                "remittance_information": row.get(
-                    "remittance_information", ""
-                ),
-            }
-            for row in data
-        ],
-    }
+def _normalize_financial_fields(
+    data: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], str, str]:
+    """Normalize amounts and booleans, computing batch totals from rows.
+
+    Args:
+        data: Payment rows, each carrying a "payment_amount" value.
+
+    Returns:
+        Tuple of (normalized rows, nb_of_txs, ctrl_sum) where amounts are
+        two-decimal strings, booleans are XSD-style "true"/"false", and
+        nb_of_txs/ctrl_sum are computed from the data instead of trusting
+        caller-provided header fields.
+    """
+    normalized: list[dict[str, Any]] = []
+    total = Decimal("0.00")
+    for index, row in enumerate(data, start=1):
+        formatted = _format_amount(row.get("payment_amount"), index)
+        total += Decimal(formatted)
+        # XSD xs:boolean only accepts "true"/"false"; Python bools from
+        # typed sources (JSON, SQLite) would otherwise render as "True".
+        updated = {
+            key: (
+                ("true" if value else "false")
+                if isinstance(value, bool)
+                else value
+            )
+            for key, value in row.items()
+        }
+        updated["payment_amount"] = formatted
+        normalized.append(updated)
+    return normalized, str(len(normalized)), f"{total:.2f}"
 
 
-def _prepare_xml_data_v09_to_v11(data: list[dict[str, Any]]) -> dict[str, Any]:
-    """Prepare XML data for pain.001.001.09-11 message types."""
-    return {
-        "id": data[0]["id"],
-        "date": data[0]["date"],
-        "nb_of_txs": data[0]["nb_of_txs"],
-        "initiator_name": data[0]["initiator_name"],
-        "payment_id": data[0]["payment_id"],
-        "payment_method": data[0]["payment_method"],
-        "payment_nb_of_txs": data[0]["nb_of_txs"],
-        "requested_execution_date": data[0]["requested_execution_date"],
-        "debtor_name": data[0]["debtor_name"],
-        "debtor_account_IBAN": data[0]["debtor_account_IBAN"],
-        "debtor_agent_BIC": data[0]["debtor_agent_BIC"],
-        "charge_bearer": data[0]["charge_bearer"],
-        "transactions": [
-            {
-                "payment_id": row["payment_id"],
-                "payment_amount": row["payment_amount"],
-                "payment_currency": row.get("payment_currency", ""),
-                "charge_bearer": row["charge_bearer"],
-                "creditor_agent_BIC": row["creditor_agent_BIC"],
-                "creditor_name": row["creditor_name"],
-                "creditor_account_IBAN": row["creditor_account_IBAN"],
-                "creditor_remittance_information": row[
-                    "remittance_information"
-                ],
-            }
-            for row in data[0:]
-        ],
-    }
+def _load_trusted_template_source(xml_template_path: str) -> str:
+    """Read a trusted template and reject filesystem-expanding directives."""
+    if not str(xml_template_path).endswith(".xml"):
+        raise ValueError("Template path must point to an .xml file")
+
+    with open(xml_template_path, encoding="utf-8") as handle:  # nosec B108
+        template_source = handle.read()
+
+    if _TEMPLATE_DIRECTIVE_PATTERN.search(template_source):
+        raise ValueError(
+            "Template contains disabled Jinja filesystem directives"
+        )
+    return template_source
 
 
 def generate_xml_string(
-    data: list[dict[str, Any]],
+    data: list[dict[str, object]],
     payment_initiation_message_type: str,
     xml_template_path: str,
     xsd_schema_path: str,
@@ -294,8 +165,14 @@ def generate_xml_string(
         str: The generated and validated XML content.
 
     Raises:
-        ValueError: If message type is invalid or data is empty.
+        ValueError: If message type is invalid, data is empty, the
+            template or schema path fails validation, or the template
+            contains disabled Jinja filesystem directives.
         RuntimeError: If XML validation fails against XSD schema.
+
+    PaymentValidationError from amount normalization (missing,
+    non-numeric, non-positive, or over-precise payment_amount values)
+    propagates unchanged.
 
     Examples:
         >>> data = [{"id": "MSG001", "date": "2026-01-15", ...}]
@@ -308,64 +185,86 @@ def generate_xml_string(
         >>> xml_str.startswith('<?xml')
         True
     """
-    # Define mapping between XML types and data preparation functions
-    xml_data_preparers = {
-        "pain.001.001.03": _prepare_xml_data_v03,
-        "pain.001.001.04": _prepare_xml_data_v04,
-        "pain.001.001.05": _prepare_xml_data_v05_to_v08,
-        "pain.001.001.06": _prepare_xml_data_v05_to_v08,
-        "pain.001.001.07": _prepare_xml_data_v05_to_v08,
-        "pain.001.001.08": _prepare_xml_data_v05_to_v08,
-        "pain.001.001.09": _prepare_xml_data_v09_to_v11,
-        "pain.001.001.10": _prepare_xml_data_v09_to_v11,
-        "pain.001.001.11": _prepare_xml_data_v09_to_v11,
-    }
+    # Validate message type first so caller errors stay stable.
+    if payment_initiation_message_type not in MESSAGE_REGISTRY:
+        raise ValueError(
+            f"Invalid XML message type: {payment_initiation_message_type}"
+        )
+
+    # Check if data is not empty before touching the filesystem.
+    if not data:
+        raise ValueError("No data to process - data list is empty")
 
     # Validate template path
     try:
-        xml_template_path = validate_path(xml_template_path)
+        xml_template_path = validate_path(xml_template_path, must_exist=True)
     except Exception as e:
         raise ValueError(f"Invalid template path: {e}") from e
 
     # Validate schema path
     try:
-        xsd_schema_path = validate_path(xsd_schema_path)
+        xsd_schema_path = validate_path(xsd_schema_path, must_exist=True)
     except Exception as e:
         raise ValueError(f"Invalid schema path: {e}") from e
 
-    # Validate message type
-    if payment_initiation_message_type not in xml_data_preparers:
-        raise ValueError(
-            f"Invalid XML message type: {payment_initiation_message_type}"
-        )
+    # Normalize amounts (Decimal, 2dp) and compute batch totals from the
+    # rows themselves — header fields like NbOfTxs/CtrlSum must never be
+    # trusted from input or the message becomes internally inconsistent.
+    data, nb_of_txs, ctrl_sum = _normalize_financial_fields(data)
 
-    # Check if data is not empty
-    if not data:
-        raise ValueError("No data to process - data list is empty")
+    # Prepare XML data using the registry-driven pipeline
+    prepare_started = time.time()
+    xml_data = prepare_xml_data(data, payment_initiation_message_type)
+    xml_data["nb_of_txs"] = nb_of_txs
+    if "payment_nb_of_txs" in xml_data:
+        xml_data["payment_nb_of_txs"] = nb_of_txs
+    if "ctrl_sum" in xml_data:
+        xml_data["ctrl_sum"] = ctrl_sum
+    emit_metric_event(
+        "xml_prepared",
+        message_type=payment_initiation_message_type,
+        record_count=len(data),
+        duration_ms=int((time.time() - prepare_started) * 1000),
+    )
 
-    # Prepare XML data using appropriate function
-    preparer = xml_data_preparers[payment_initiation_message_type]
-    xml_data = preparer(data)
-
-    # Create a Jinja2 environment and load template
-    template_dir = os.path.dirname(xml_template_path)
-    template_file = os.path.basename(xml_template_path)
-    # Use current directory if path has no directory component
-    loader_path = template_dir if template_dir else "."
-
-    env = Environment(loader=FileSystemLoader(loader_path), autoescape=True)
-    template = env.get_template(template_file)
+    template_source = _load_trusted_template_source(str(xml_template_path))
+    env = SandboxedEnvironment(
+        autoescape=select_autoescape(
+            enabled_extensions=("xml",),
+            default_for_string=True,
+        ),
+    )
+    template = env.from_string(template_source)
 
     # Render the template to string
+    render_started = time.time()
     xml_content = template.render(**xml_data)
+    emit_metric_event(
+        "xml_rendered",
+        message_type=payment_initiation_message_type,
+        duration_ms=int((time.time() - render_started) * 1000),
+    )
 
     # Validate the XML content against the XSD schema
+    validation_started = time.time()
     is_valid = validate_xml_string_via_xsd(xml_content, xsd_schema_path)
 
     if not is_valid:
+        emit_metric_event(
+            "validation_failed",
+            message_type=payment_initiation_message_type,
+            schema_path=str(xsd_schema_path),
+        )
         raise RuntimeError(
             f"Generated XML failed validation against {xsd_schema_path}"
         )
+
+    emit_metric_event(
+        "xsd_validation_passed",
+        message_type=payment_initiation_message_type,
+        schema_path=str(xsd_schema_path),
+        duration_ms=int((time.time() - validation_started) * 1000),
+    )
 
     return xml_content
 
@@ -375,7 +274,8 @@ def generate_xml(
     payment_initiation_message_type: str,
     xml_file_path: str,
     xsd_file_path: str,
-) -> None:
+    output_path: str | None = None,
+) -> str:
     """Generates an ISO 20022 pain.001 XML file from input data.
 
     This function writes XML to a file. For in-memory XML generation
@@ -383,48 +283,67 @@ def generate_xml(
 
     Args:
         data: List of dictionaries containing payment data
-        payment_initiation_message_type: String indicating message type
-        such as "pain.001.001.03, pain.001.001.04, pain.001.001.05,
-        pain.001.001.06, pain.001.001.07, pain.001.001.08, etc."
-        xml_file_path: Path to write generated XML file to
+        payment_initiation_message_type: Message type identifier. Any
+            supported version from "pain.001.001.03" through
+            "pain.001.001.12", or "pain.008.001.02" for direct debits.
+        xml_file_path: Path to the Jinja2 XML template file
         xsd_file_path: Path to XML schema file for validation
+        output_path: Explicit path to write the generated XML file to.
+            Parent directories are created if needed. When omitted, the
+            file is written next to the template (deprecated behavior
+            that only works when the template lives under the current
+            working directory).
 
     Returns:
-        None
+        The path the XML file was written to.
 
     Raises:
-        ValueError: If message type is invalid or data is empty.
-        RuntimeError: If XML validation fails.
+        ValueError: If message type is invalid, data is empty, or the
+            output path fails validation. RuntimeError from XSD
+            validation in generate_xml_string propagates unchanged.
     """
     # Generate XML content as string
     xml_content = generate_xml_string(
         data, payment_initiation_message_type, xml_file_path, xsd_file_path
     )
 
-    # Generate updated XML file path
-    updated_xml_file_path = generate_updated_xml_file_path(
-        xml_file_path, payment_initiation_message_type
-    )
-
-    # Validate path to prevent traversal attacks
-
-    try:
-        safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
-    except Exception as e:
-        raise ValueError(f"Path validation failed: {e}") from e
-
-    # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
-    # validate_path already enforces this, but CodeQL requires the guard
-    # at the call site for interprocedural taint tracking.
-    cwd_prefix = str(os.path.realpath(os.getcwd()))
-    if not safe_xml_path.startswith(cwd_prefix + os.sep):
-        raise ValueError(
-            f"Output path outside working directory: {safe_xml_path}"
+    if output_path is not None:
+        safe_xml_path = os.path.realpath(str(output_path))
+        os.makedirs(os.path.dirname(safe_xml_path) or ".", exist_ok=True)
+    else:
+        warnings.warn(
+            "Calling generate_xml without output_path writes next to the "
+            "template and requires it to be under the current working "
+            "directory; pass output_path explicitly instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Legacy behavior: derive the output path from the template path.
+        updated_xml_file_path = generate_updated_xml_file_path(
+            xml_file_path, payment_initiation_message_type
         )
 
-    # Write the XML content to the file (now safe after validation)
+        try:
+            safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
+        except Exception as e:
+            raise ValueError(f"Path validation failed: {e}") from e
+
+        # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
+        cwd_prefix = str(os.path.realpath(os.getcwd()))
+        if not safe_xml_path.startswith(cwd_prefix + os.sep):
+            raise ValueError(
+                f"Output path outside working directory: {safe_xml_path}"
+            )
+
     with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108
         xml_file.write(xml_content)
 
-    print(f"A new XML file has been created at `{safe_xml_path}`")
-    print(f"The XML has been validated against `{xsd_file_path}`")
+    emit_metric_event(
+        "xml_generated",
+        message_type=payment_initiation_message_type,
+        output_path=str(safe_xml_path),
+        file_size_bytes=len(xml_content.encode("utf-8")),
+    )
+
+    logger.info("XML file created at %s", safe_xml_path)
+    return safe_xml_path

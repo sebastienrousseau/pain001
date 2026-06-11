@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate-fast || true  # Continue on failure, upload results
       - uses: actions/upload-artifact@v4
         if: always()
@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate || true  # Continue on failure
       - uses: actions/upload-artifact@v4
         if: always()
@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make perf
       - uses: actions/upload-artifact@v4
         with:
@@ -81,7 +81,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make cov
       - uses: codecov/codecov-action@v3
         with:
@@ -89,10 +89,22 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  # Job 5: Heavy Lint (flake8/pylint)
-  heavy-lint:
+  # Job 5: Lint (ruff)
+  lint:
     runs-on: ubuntu-latest
-    name: 🔍 Heavy Lint (flake8/pylint)
+    name: 🔍 Lint (ruff)
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+      - uses: abatilo/actions-poetry@v2
+      - run: poetry install --no-interaction --all-extras
+      - run: poetry run make lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    name: 🔠 Typecheck And Guardrails
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -100,4 +112,15 @@ jobs:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
       - run: poetry install --no-interaction
-      - run: poetry run make lint
+      - run: >
+          poetry run mypy
+          pain001/config/manager.py
+          pain001/templates/registry.py
+          pain001/templates/guardrails.py
+          pain001/observability/__init__.py
+          pain001/async_adapter.py
+          tests/test_config_manager.py
+          tests/test_template_registry.py
+          tests/test_schema_guardrails.py
+          tests/test_async_adapters.py
+      - run: poetry run pytest -q --no-cov tests/test_schema_guardrails.py

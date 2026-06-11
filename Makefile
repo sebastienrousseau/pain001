@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -30,11 +30,11 @@ SLO_XML_GEN := 0.5
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  pr            - Fast PR gate (ruff, black, isort, mypy, pytest)"
+	@echo "  pr            - Fast PR gate (ruff, pytest)"
 	@echo "  check         - Full quality gate (lint + type + cov + sec) + SLO verification"
 	@echo "  slos          - Verify SLO compliance (lint, type, test, perf)"
-	@echo "  format        - Auto-format code (ruff, isort, black)"
-	@echo "  lint          - Run linting checks (ruff, flake8, pylint) with SLO timing"
+	@echo "  format        - Auto-format code (ruff)"
+	@echo "  lint          - Run linting checks (ruff) with SLO timing"
 	@echo "  type          - Type checking with mypy + SLO timing"
 	@echo "  test          - Run tests with timing verification"
 	@echo "  cov           - Generate coverage report (70% enforced)"
@@ -73,8 +73,9 @@ lint:
 	@echo "$(YELLOW)Running linters (SLO: < $(SLO_LINT)s)...$(NC)"
 	@time_start=$$(date +%s%N); \
 	(poetry run ruff check . && \
-	poetry run flake8 pain001 && \
-	poetry run pylint pain001 --exit-zero); \
+	poetry run ruff format --check . && \
+	poetry run interrogate pain001 && \
+	poetry run pydoclint pain001); \
 	lint_result=$$?; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \

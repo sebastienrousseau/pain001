@@ -296,6 +296,35 @@ class TestSchemaValidator(unittest.TestCase):
         errors_max = validator.validate_data(data_max)
         self.assertEqual(len(errors_max), 0)
 
+    def test_validate_data_coerces_string_values(self) -> None:
+        """CSV-style string values should validate against typed fields."""
+        validator = SchemaValidator("pain.001.001.03")
+        data = self.valid_data.copy()
+        data["nb_of_txs"] = "2"
+        data["ctrl_sum"] = "450.00"
+        data["payment_amount"] = "150.00"
+        data["batch_booking"] = "true"
+
+        errors = validator.validate_data(data)
+        self.assertEqual(len(errors), 0)
+
+    def test_validate_data_rejects_uncoercible_strings(self) -> None:
+        """Strings that cannot be coerced still fail type validation."""
+        validator = SchemaValidator("pain.001.001.03")
+        data = self.valid_data.copy()
+        data["nb_of_txs"] = "not-a-number"
+
+        errors = validator.validate_data(data)
+        self.assertGreater(len(errors), 0)
+
+    def test_validate_data_does_not_mutate_input(self) -> None:
+        """Coercion must operate on a copy, not the caller's dict."""
+        validator = SchemaValidator("pain.001.001.03")
+        data = self.valid_data.copy()
+        data["nb_of_txs"] = "2"
+        validator.validate_data(data)
+        self.assertEqual(data["nb_of_txs"], "2")
+
 
 if __name__ == "__main__":
     unittest.main()

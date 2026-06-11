@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -eu
+
+poetry run ruff check pain001 tests
+poetry run black --check pain001 tests
+poetry run mypy pain001 tests
+poetry run pytest -q --no-cov
+

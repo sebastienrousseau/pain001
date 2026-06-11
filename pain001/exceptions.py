@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,8 +33,6 @@ Example:
     ...     # Handle config issues - check setup
     ...     log.error(f"Configuration error: {e}")
 """
-
-from typing import Optional
 
 __all__ = [
     "Pain001Error",
@@ -76,6 +74,10 @@ class PaymentValidationError(Pain001Error):
     - Missing required fields (debtor name, creditor account, etc.)
     - Invalid date formats
 
+    Args:
+        message: Human-readable error message.
+        field: Optional field name that caused the validation error.
+
     Example:
         >>> try:
         ...     validate_payment_data(data)
@@ -84,13 +86,7 @@ class PaymentValidationError(Pain001Error):
         ...     return {"error": str(e), "field": e.field}
     """
 
-    def __init__(self, message: str, field: Optional[str] = None):
-        """Initialize validation error with optional field name.
-
-        Args:
-            message: Human-readable error message.
-            field: Optional field name that caused the validation error.
-        """
+    def __init__(self, message: str, field: str | None = None):
         super().__init__(message)
         self.field = field
 
@@ -163,6 +159,10 @@ class SchemaValidationError(Pain001Error):
     - Invalid XML element values
     - Namespace mismatches
 
+    Args:
+        message: Human-readable error message.
+        errors: Optional list of detailed validation errors.
+
     Example:
         >>> try:
         ...     validate_xml_against_schema(xml, xsd)
@@ -172,13 +172,7 @@ class SchemaValidationError(Pain001Error):
         ...     log.debug(f"Validation errors: {e.errors}")
     """
 
-    def __init__(self, message: str, errors: Optional[list[str]] = None):
-        """Initialize schema validation error with optional error list.
-
-        Args:
-            message: Human-readable error message.
-            errors: Optional list of detailed validation errors.
-        """
+    def __init__(self, message: str, errors: list[str] | None = None):
         super().__init__(message)
         self.errors = errors or []
 
@@ -196,6 +190,12 @@ class InvalidIBANError(PaymentValidationError):
     - Unsupported country code
     - IBAN length mismatch for country
 
+    Args:
+        message: Human-readable error message.
+        iban: The invalid IBAN value.
+        field: Optional field name (e.g., "debtor_account").
+        reason: Optional specific reason for failure.
+
     Example:
         >>> try:
         ...     validate_iban("AT68123456")  # Too short
@@ -209,17 +209,9 @@ class InvalidIBANError(PaymentValidationError):
         self,
         message: str,
         iban: str,
-        field: Optional[str] = None,
-        reason: Optional[str] = None,
+        field: str | None = None,
+        reason: str | None = None,
     ):
-        """Initialize IBAN validation error with IBAN value.
-
-        Args:
-            message: Human-readable error message.
-            iban: The invalid IBAN value.
-            field: Optional field name (e.g., "debtor_account").
-            reason: Optional specific reason for failure.
-        """
         super().__init__(message, field=field)
         self.iban = iban
         self.reason = reason
@@ -234,6 +226,12 @@ class InvalidBICError(PaymentValidationError):
     - Invalid country code in BIC
     - Invalid bank/branch code characters
 
+    Args:
+        message: Human-readable error message.
+        bic: The invalid BIC value.
+        field: Optional field name (e.g., "debtor_agent").
+        reason: Optional specific reason for failure.
+
     Example:
         >>> try:
         ...     validate_bic("INVALID123")
@@ -247,17 +245,9 @@ class InvalidBICError(PaymentValidationError):
         self,
         message: str,
         bic: str,
-        field: Optional[str] = None,
-        reason: Optional[str] = None,
+        field: str | None = None,
+        reason: str | None = None,
     ):
-        """Initialize BIC validation error with BIC value.
-
-        Args:
-            message: Human-readable error message.
-            bic: The invalid BIC value.
-            field: Optional field name (e.g., "debtor_agent").
-            reason: Optional specific reason for failure.
-        """
         super().__init__(message, field=field)
         self.bic = bic
         self.reason = reason
@@ -272,6 +262,12 @@ class MissingRequiredFieldError(PaymentValidationError):
     - Missing fields in CSV rows
     - Missing dictionary keys
 
+    Args:
+        message: Human-readable error message.
+        field: The missing field name.
+        row_number: Optional row/line number where field is missing.
+        required_fields: Optional list of all required fields.
+
     Example:
         >>> try:
         ...     validate_required_fields(data, ["debtor_name", "amount"])
@@ -285,17 +281,9 @@ class MissingRequiredFieldError(PaymentValidationError):
         self,
         message: str,
         field: str,
-        row_number: Optional[int] = None,
-        required_fields: Optional[list[str]] = None,
+        row_number: int | None = None,
+        required_fields: list[str] | None = None,
     ):
-        """Initialize missing field error with field details.
-
-        Args:
-            message: Human-readable error message.
-            field: The missing field name.
-            row_number: Optional row/line number where field is missing.
-            required_fields: Optional list of all required fields.
-        """
         super().__init__(message, field=field)
         self.row_number = row_number
         self.required_fields = required_fields or []

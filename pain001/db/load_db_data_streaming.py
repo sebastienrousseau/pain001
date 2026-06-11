@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,12 +16,15 @@
 """Memory-efficient streaming loader for SQLite database."""
 
 import os
-import sqlite3
 from collections.abc import Generator
 from typing import Any
 
-from pain001.db.load_db_data import sanitize_table_name
+from pain001.db.load_db_data import (
+    _connect_sqlite_read_only,
+    sanitize_table_name,
+)
 from pain001.exceptions import DataSourceError
+from pain001.security import validate_path
 
 
 def load_db_data_streaming(
@@ -33,17 +36,17 @@ def load_db_data_streaming(
     table into memory, making it suitable for large databases.
 
     Args:
-        data_file_path (str): The path to the SQLite database file.
-        table_name (str): The name of the table from which data will be loaded.
-        chunk_size (int): Number of rows to yield per chunk. Default is 1000.
+        data_file_path: The path to the SQLite database file.
+        table_name: The name of the table from which data will be loaded.
+        chunk_size: Number of rows to yield per chunk. Default is 1000.
 
     Yields:
-        list: A list of dictionaries containing chunk_size rows of data.
+        list[dict[str, Any]]: Up to chunk_size rows of table data.
 
     Raises:
-        FileNotFoundError: If the SQLite file does not exist.
-        sqlite3.OperationalError: If there is an issue with database operations.
-        ValueError: If the table is empty or doesn't exist.
+        FileNotFoundError: If the SQLite file does not exist or fails
+            path validation.
+        DataSourceError: If the table is empty or doesn't exist.
 
     Example:
         >>> for chunk in load_db_data_streaming('payments.db', 'pain001', chunk_size=500):
@@ -55,8 +58,19 @@ def load_db_data_streaming(
         - Enables processing of tables larger than available RAM
         - Uses cursor fetching for efficient streaming
     """
-    # Check if the SQLite file exists
-    if not os.path.exists(data_file_path):
+    try:
+        base_dir = os.getcwd()
+        safe_path = validate_path(
+            data_file_path,
+            must_exist=True,
+            base_dir=base_dir,
+        )
+    except Exception as exc:
+        raise FileNotFoundError(
+            f"SQLite file path validation failed: {data_file_path}"
+        ) from exc
+
+    if not os.path.exists(safe_path):
         raise FileNotFoundError(
             f"SQLite file '{data_file_path}' does not exist."
         )
@@ -66,7 +80,7 @@ def load_db_data_streaming(
     table_name = sanitize_table_name(table_name)
 
     # Connect to the SQLite database
-    conn = sqlite3.connect(data_file_path)
+    conn = _connect_sqlite_read_only(safe_path)
     try:
         cursor = conn.cursor()
 

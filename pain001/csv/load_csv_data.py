@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Load payment data from CSV files."""
+
 import csv
 import logging
 import os
@@ -22,23 +24,25 @@ from typing import Any
 from pain001.exceptions import DataSourceError
 from pain001.security import sanitize_for_log, validate_path  # noqa: PYI100
 
-logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     """Load CSV data from a file.
 
     Args:
-        file_path (str): The path to the CSV file.
+        file_path: The path to the CSV file.
 
     Returns:
         list: A list of dictionaries containing the CSV data.
 
     Raises:
         FileNotFoundError: If the file does not exist.
-        IOError: If there is an issue reading the file.
+        OSError: If there is an issue reading the file.
         UnicodeDecodeError: If there is an issue decoding the file's content.
-        ValueError: If the CSV file is empty.
+        DataSourceError: If the CSV file is empty.
+        Exception: If path validation fails, the underlying error is
+            logged and re-raised unchanged.
 
     Note:
         For large files, consider using load_csv_data_streaming() to reduce
@@ -57,7 +61,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         )  # nosec B108 - Returns sanitized string
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}"
         )
         raise
@@ -65,7 +69,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     # Check file existence using os.path for string path
     if not os.path.isfile(safe_path):
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(f"File not found: {sanitize_for_log(str(file_path))}")
+        logger.error(f"File not found: {sanitize_for_log(str(file_path))}")
         raise FileNotFoundError(
             f"File '{sanitize_for_log(str(file_path))}' not found."
         )
@@ -78,13 +82,13 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
                 data.append(row)
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"IOError reading file: {sanitize_for_log(str(file_path))}"
         )
         raise
     except UnicodeDecodeError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"UnicodeDecodeError decoding file: {sanitize_for_log(str(file_path))}"
         )
         raise
@@ -104,17 +108,19 @@ def load_csv_data_streaming(
     file into memory, making it suitable for large files.
 
     Args:
-        file_path (str): The path to the CSV file.
-        chunk_size (int): Number of rows to yield per chunk. Default is 1000.
+        file_path: The path to the CSV file.
+        chunk_size: Number of rows to yield per chunk. Default is 1000.
 
     Yields:
-        list: A list of dictionaries containing chunk_size rows of CSV data.
+        list[dict[str, Any]]: Up to chunk_size rows of CSV data.
 
     Raises:
         FileNotFoundError: If the file does not exist.
-        IOError: If there is an issue reading the file.
+        OSError: If there is an issue reading the file.
         UnicodeDecodeError: If there is an issue decoding the file's content.
-        ValueError: If the CSV file is empty.
+        DataSourceError: If the CSV file is empty.
+        Exception: If path validation fails, the underlying error is
+            logged and re-raised unchanged.
 
     Example:
         >>> for chunk in load_csv_data_streaming('large_file.csv', chunk_size=500):
@@ -139,7 +145,7 @@ def load_csv_data_streaming(
         )  # nosec B108
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"Path validation failed: {sanitize_for_log(str(file_path))} - {e}"
         )
         raise
@@ -160,17 +166,17 @@ def load_csv_data_streaming(
 
     except FileNotFoundError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(f"File '{sanitize_for_log(str(file_path))}' not found.")
+        logger.error(f"File '{sanitize_for_log(str(file_path))}' not found.")
         raise
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"An IOError occurred while reading the file '{sanitize_for_log(str(file_path))}'."
         )
         raise
     except UnicodeDecodeError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logging.error(
+        logger.error(
             f"A UnicodeDecodeError occurred while decoding the file '{sanitize_for_log(str(file_path))}'."
         )
         raise

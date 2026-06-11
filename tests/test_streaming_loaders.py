@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,8 @@ import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
+
+import pytest
 
 from pain001.data.loader import load_payment_data_streaming
 from pain001.db.load_db_data_streaming import load_db_data_streaming
@@ -217,6 +219,19 @@ class TestStreamingLoaders(unittest.TestCase):
             list(load_payment_data_streaming(str(csv_file)))
 
         self.assertIn("empty", str(cm.exception).lower())
+
+
+def test_load_db_data_streaming_rejects_path_outside_cwd() -> None:
+    """Streaming DB loader should apply the same path validation policy."""
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir:
+        db_file = Path(tmp_dir) / "outside.db"
+        conn = sqlite3.connect(db_file)
+        conn.execute("CREATE TABLE pain001 (id INTEGER)")
+        conn.commit()
+        conn.close()
+
+        with pytest.raises(FileNotFoundError, match="validation failed"):
+            list(load_db_data_streaming(str(db_file), "pain001", chunk_size=1))
 
     def test_streaming_empty_db_table(self):
         """Test streaming with empty database table."""

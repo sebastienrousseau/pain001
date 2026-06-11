@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 # For table names (which cannot be parameterized), we use strict allowlist validation
 # via enable_sanitize_table_name() to prevent SQL injection (CWE-89).
 
+"""Load payment data from SQLite databases."""
+
 import os
 import re
 import sqlite3
@@ -26,6 +28,11 @@ from pain001.exceptions import ConfigurationError
 from pain001.security import validate_path
 
 
+def _connect_sqlite_read_only(safe_path: str) -> sqlite3.Connection:
+    """Open an SQLite database in read-only mode."""
+    return sqlite3.connect(f"file:{safe_path}?mode=ro", uri=True)  # nosec B608
+
+
 def sanitize_table_name(table_name: str) -> str:
     """
     Validate and sanitize a table name to prevent SQL injection.
@@ -33,7 +40,7 @@ def sanitize_table_name(table_name: str) -> str:
     MUST start with a letter (SQL identifier rules).
 
     Args:
-        table_name (str): The table name to validate.
+        table_name: The table name to validate.
 
     Returns:
         str: The validated table name (unchanged if valid).
@@ -61,8 +68,8 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
     Load data from an SQLite database table into a list of dictionaries.
 
     Args:
-        data_file_path (str): The path to the SQLite database file.
-        table_name (str): The name of the table from which data will be loaded.
+        data_file_path: The path to the SQLite database file.
+        table_name: The name of the table from which data will be loaded.
 
     Returns:
         list:
@@ -73,9 +80,10 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
     Raises:
         FileNotFoundError:
-            If the SQLite file specified by data_file_path does not exist.
-        sqlite3.OperationalError:
-            If there is an issue with SQLite database operations.
+            If the SQLite file specified by data_file_path does not
+            exist or fails path validation. SQLite operational errors
+            and ConfigurationError for invalid table names propagate
+            unchanged.
 
     Example:
         data = load_db_data("my_database.db", "my_table")
@@ -85,9 +93,11 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
     try:
         # must_exist=True ensures both validation and existence check
+        base_dir = os.getcwd()
         safe_path = validate_path(
             data_file_path,
             must_exist=True,
+            base_dir=base_dir,
         )  # nosec B108 - Returns sanitized string
     except Exception as e:
         raise FileNotFoundError(
@@ -101,7 +111,7 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
         )
 
     # Connect to the SQLite database (now safe after validation)
-    conn = sqlite3.connect(str(safe_path))  # nosec B108
+    conn = _connect_sqlite_read_only(str(safe_path))
     try:
         cursor = conn.cursor()
 

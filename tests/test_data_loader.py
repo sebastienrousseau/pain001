@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -303,7 +303,9 @@ class TestDataLoader:
 
         # Compare values (ignoring potential type differences)
         assert len(data_from_csv) == len(data_from_dict)
-        for csv_row, dict_row in zip(data_from_csv, data_from_dict):
+        for csv_row, dict_row in zip(
+            data_from_csv, data_from_dict, strict=True
+        ):
             for key in csv_row.keys():
                 assert str(csv_row[key]) == str(dict_row[key])
 
@@ -316,7 +318,7 @@ class TestDataLoader:
 
         # Compare values
         assert len(data_from_db) == len(data_from_dict)
-        for db_row, dict_row in zip(data_from_db, data_from_dict):
+        for db_row, dict_row in zip(data_from_db, data_from_dict, strict=True):
             for key in db_row.keys():
                 assert str(db_row[key]) == str(dict_row[key])
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,3 +14,17 @@
 # limitations under the License.
 
 """ISO 20022 payment initiation templates for pain001."""
+
+from pain001.templates.guardrails import validate_registry
+from pain001.templates.registry import (
+    DEFAULT_TEMPLATE_REGISTRY,
+    TemplateMetadata,
+    TemplateRegistry,
+)
+
+__all__ = [
+    "DEFAULT_TEMPLATE_REGISTRY",
+    "TemplateMetadata",
+    "TemplateRegistry",
+    "validate_registry",
+]

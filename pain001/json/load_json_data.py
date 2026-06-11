@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,15 +17,12 @@
 
 # pylint: disable=duplicate-code
 import json
-import logging
 import os
 from collections.abc import Generator
 from typing import Any
 
 from pain001.exceptions import DataSourceError
 from pain001.security import validate_path
-
-logging.basicConfig(level=logging.ERROR, format="%(levelname)s: %(message)s")
 
 
 def load_json_data(file_path: str) -> list[dict[str, Any]]:
@@ -41,8 +38,8 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
 
     Raises:
         FileNotFoundError: If file doesn't exist.
-        DataSourceError: If JSON is invalid or empty.
-        json.JSONDecodeError: If JSON is malformed.
+        DataSourceError: If JSON is malformed, empty, or not an
+            object/array.
 
     Examples:
         # Array format (preferred)
@@ -116,12 +113,11 @@ def load_json_data_streaming(
         file_path: Path to JSON file.
         chunk_size: Number of records per chunk (default: 1000).
 
-    Yields:
-        Chunks of payment data dictionaries.
+    Errors from load_json_data (FileNotFoundError, DataSourceError)
+    propagate unchanged.
 
-    Raises:
-        FileNotFoundError: If file doesn't exist.
-        DataSourceError: If JSON is invalid or empty.
+    Yields:
+        list[dict[str, Any]]: Chunks of payment data dictionaries.
 
     Examples:
         >>> for chunk in load_json_data_streaming('payments.json', chunk_size=500):
@@ -149,7 +145,9 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
 
     Raises:
         FileNotFoundError: If file doesn't exist.
-        DataSourceError: If JSONL is invalid.
+        DataSourceError: If the JSONL is invalid or empty.
+        Exception: A DataSourceError raised inside the read loop is
+            re-raised unchanged via a bare ``raise``.
 
     Examples:
         >>> data = load_jsonl_data('payments.jsonl')
@@ -217,11 +215,13 @@ def load_jsonl_data_streaming(
         chunk_size: Number of records per chunk (default: 1000).
 
     Yields:
-        Chunks of payment data dictionaries.
+        list[dict[str, Any]]: Chunks of payment data dictionaries.
 
     Raises:
         FileNotFoundError: If file doesn't exist.
-        DataSourceError: If JSONL is invalid.
+        DataSourceError: If the JSONL is invalid.
+        Exception: A DataSourceError raised inside the read loop is
+            re-raised unchanged via a bare ``raise``.
 
     Examples:
         >>> for chunk in load_jsonl_data_streaming('large_payments.jsonl'):

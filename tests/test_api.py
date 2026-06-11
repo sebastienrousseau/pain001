@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,56 @@ class TestHealthEndpoint:
         assert data["status"] == "healthy"
         assert data["version"] == __version__
         assert "message" in data
+
+
+class TestApiKeyAuth:
+    """Test bearer-token auth enforced by PAIN001_API_KEY."""
+
+    def test_missing_key_rejected_when_configured(self, monkeypatch):
+        monkeypatch.setenv("PAIN001_API_KEY", "secret-key")
+        response = client.post(
+            "/api/validate",
+            json={
+                "file_path": "test.csv",
+                "data_source": "csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 401
+        assert response.headers["WWW-Authenticate"] == "Bearer"
+
+    def test_wrong_key_rejected(self, monkeypatch):
+        monkeypatch.setenv("PAIN001_API_KEY", "secret-key")
+        response = client.post(
+            "/api/validate",
+            headers={"Authorization": "Bearer wrong-key"},
+            json={
+                "file_path": "test.csv",
+                "data_source": "csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 401
+
+    def test_correct_key_accepted(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("PAIN001_API_KEY", "secret-key")
+        csv_file = tmp_path / "missing.csv"
+        response = client.post(
+            "/api/validate",
+            headers={"Authorization": "Bearer secret-key"},
+            json={
+                "file_path": str(csv_file),
+                "data_source": "csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        # Auth passes; request fails later for unrelated reasons
+        assert response.status_code != 401
+
+    def test_health_remains_open(self, monkeypatch):
+        monkeypatch.setenv("PAIN001_API_KEY", "secret-key")
+        response = client.get("/api/health")
+        assert response.status_code == 200
 
 
 class TestErrorHandling:
@@ -369,6 +419,7 @@ class TestJobCancellationEndpoint:
 
         # Verify job is cancelled
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.status == JobStatus.CANCELLED
 
 
@@ -510,12 +561,16 @@ class TestAsyncGenerationEndpoint:
         job_id = data["job_id"]
 
         # Job should fail eventually due to nonexistent file
-        # Wait a bit for async processing
         import time
 
-        time.sleep(0.5)
+        for _ in range(50):  # Wait up to 5 seconds
+            job = job_manager.get_job(job_id)
+            if job.status == JobStatus.FAILED:
+                break
+            time.sleep(0.1)
 
         job = job_manager.get_job(job_id)
+        assert job is not None
         assert job.status == JobStatus.FAILED
         assert job.error is not None
 
@@ -553,12 +608,14 @@ class TestAsyncGenerationEndpoint:
 
         for _ in range(20):  # Wait up to 2 seconds
             job = job_manager.get_job(job_id)
+            assert job is not None
             if job.status in [JobStatus.SUCCESS, JobStatus.FAILED]:
                 break
             time.sleep(0.1)
 
         # Check final status
         job = job_manager.get_job(job_id)
+        assert job is not None
         # May succeed or fail depending on schema validation
         assert job.status in [JobStatus.SUCCESS, JobStatus.FAILED]
 
@@ -584,13 +641,17 @@ class TestAsyncGenerationEndpoint:
             data = response.json()
             job_id = data["job_id"]
 
-            # Wait for async processing
+            # Job should fail due to CSV validation
             import time
 
-            time.sleep(0.5)
+            for _ in range(50):  # Wait up to 5 seconds
+                job = job_manager.get_job(job_id)
+                if job.status == JobStatus.FAILED:
+                    break
+                time.sleep(0.1)
 
-            # Job should fail due to CSV validation
             job = job_manager.get_job(job_id)
+            assert job is not None
             assert job.status == JobStatus.FAILED
             job_manager.cancel_job(job_id)
 
