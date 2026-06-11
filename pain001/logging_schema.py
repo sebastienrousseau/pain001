@@ -1,5 +1,5 @@
 # pylint: disable=too-many-lines
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -70,7 +70,9 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     __version__ = "0.0.0"
 
-# Context variable for request tracing across async operations
+# ContextVar rather than a module global or threading.local: the API
+# serves concurrent async requests, and each task must see its own
+# request id without leaking it to other in-flight requests.
 _request_id_context: ContextVar[str | None] = ContextVar(
     "request_id", default=None
 )
@@ -280,10 +282,8 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
     for key, value in data.items():
         key_lower = key.lower()
 
-        # Recursively handle nested dicts
         if isinstance(value, dict):
             redacted[key] = _redact_pii_from_dict(value)
-        # Handle lists of dicts
         elif isinstance(value, list):
             redacted[key] = [
                 (
@@ -293,21 +293,17 @@ def _redact_pii_from_dict(data: dict[str, Any]) -> dict[str, Any]:
                 )
                 for item in value
             ]
-        # Redact IBAN fields
         elif "iban" in key_lower and isinstance(value, str):
             redacted[key] = mask_sensitive_data(
                 _sanitize_value(value), visible_chars=4
             )
-        # Redact BIC fields
         elif "bic" in key_lower and isinstance(value, str):
             val = _sanitize_value(value)
             redacted[key] = (
                 f"{val[:4]}**{val[-2:]}" if len(val) > 6 else "****"
             )
-        # Redact name fields
         elif "name" in key_lower and isinstance(value, str):
             redacted[key] = "[REDACTED]"
-        # Redact account number fields
         elif "account" in key_lower and isinstance(value, str):
             redacted[key] = mask_sensitive_data(
                 _sanitize_value(value), visible_chars=4
@@ -570,6 +566,11 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
     metrics tracking for generating comprehensive summary reports.
     Use as a context manager for automatic start/end tracking.
 
+    Args:
+        logger: Logger instance to use for summary report.
+        dry_run: Whether this is a dry-run execution.
+        message_type: ISO 20022 message type (if applicable).
+
     Example:
         >>> with ExecutionSummaryTracker(logger) as tracker:
         ...     # Your execution logic here
@@ -590,13 +591,6 @@ class ExecutionSummaryTracker:  # pylint: disable=too-many-instance-attributes
         dry_run: bool = False,
         message_type: str | None = None,
     ):
-        """Initialize execution summary tracker.
-
-        Args:
-            logger: Logger instance to use for summary report.
-            dry_run: Whether this is a dry-run execution.
-            message_type: ISO 20022 message type (if applicable).
-        """
         self.logger = logger
         self.dry_run = dry_run
         self.message_type = message_type
@@ -916,6 +910,13 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
     for API observability, performance monitoring, and distributed tracing.
     Tracks detailed timing breakdowns, resource usage, and validation results.
 
+    Args:
+        logger: Logger instance for telemetry output.
+        operation: Operation being tracked (e.g., "xml_generation").
+        message_type: ISO 20022 message type (if applicable).
+        request_id: Request ID for distributed tracing
+            (auto-generated if None).
+
     Example:
         >>> metrics = ExecutionMetrics(
         ...     logger=logger,
@@ -936,14 +937,6 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         message_type: str | None = None,
         request_id: str | None = None,
     ):
-        """Initialize execution metrics tracker.
-
-        Args:
-            logger: Logger instance for telemetry output.
-            operation: Operation being tracked (e.g., "xml_generation").
-            message_type: ISO 20022 message type (if applicable).
-            request_id: Request ID for distributed tracing (auto-generated if None).
-        """
         self.logger = logger
         self.operation = operation
         self.message_type = message_type

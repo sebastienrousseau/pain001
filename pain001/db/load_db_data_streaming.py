@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -36,17 +36,17 @@ def load_db_data_streaming(
     table into memory, making it suitable for large databases.
 
     Args:
-        data_file_path (str): The path to the SQLite database file.
-        table_name (str): The name of the table from which data will be loaded.
-        chunk_size (int): Number of rows to yield per chunk. Default is 1000.
+        data_file_path: The path to the SQLite database file.
+        table_name: The name of the table from which data will be loaded.
+        chunk_size: Number of rows to yield per chunk. Default is 1000.
 
     Yields:
-        list: A list of dictionaries containing chunk_size rows of data.
+        list[dict[str, Any]]: Up to chunk_size rows of table data.
 
     Raises:
-        FileNotFoundError: If the SQLite file does not exist.
-        sqlite3.OperationalError: If there is an issue with database operations.
-        ValueError: If the table is empty or doesn't exist.
+        FileNotFoundError: If the SQLite file does not exist or fails
+            path validation.
+        DataSourceError: If the table is empty or doesn't exist.
 
     Example:
         >>> for chunk in load_db_data_streaming('payments.db', 'pain001', chunk_size=500):

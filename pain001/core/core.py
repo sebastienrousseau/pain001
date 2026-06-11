@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""End-to-end orchestration of ISO 20022 payment file generation."""
 
 import logging
 import os
@@ -49,9 +51,18 @@ def _validate_inputs(
 ) -> tuple[str, str]:
     """Validate message type and required file paths.
 
+    Args:
+        xml_message_type: ISO 20022 message type (e.g., 'pain.001.001.03').
+        xml_template_file_path: Path to the XML template file.
+        xsd_schema_file_path: Path to the XSD schema file.
+
+    Returns:
+        Tuple of (validated template path, validated schema path).
+
     Raises:
-        ValueError: If the XML message type is not supported.
-        FileNotFoundError: If required files do not exist.
+        XMLGenerationError: If the XML message type is not supported.
+        FileNotFoundError: If the template or schema file does not exist
+            or fails path validation.
     """
     context_logger = Context.get_instance().get_logger()
 
@@ -143,7 +154,6 @@ def _load_data(
     start_time: float,
 ) -> list[dict[str, Any]]:
     """Load and validate payment data from files or Python objects."""
-    # Determine data source type
     data_source_kind = _determine_data_source_type(data_file_path)
 
     log_event(
@@ -257,17 +267,18 @@ def process_files(
         The path the generated XML file was written to.
 
     Raises:
-        ValueError: If the XML message type is not supported or data is invalid.
-        FileNotFoundError: If required files do not exist.
+        XMLGenerationError: If the message type is not supported or the
+            XML file could not be written.
+        Exception: Any error raised while validating inputs, loading
+            data, or generating XML (e.g. FileNotFoundError for missing
+            files, PaymentValidationError for bad amounts) is logged and
+            re-raised unchanged.
     """
 
-    # Initialize context and timing
     context_logger = Context.get_instance().get_logger()
 
-    # Determine data source type
     data_source_kind = _determine_data_source_type(data_file_path)
 
-    # Log process start
     start_time = log_process_start(logger, xml_message_type, data_source_kind)
 
     try:

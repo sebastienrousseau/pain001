@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -91,6 +91,7 @@ class VersionMapper:
 
     @staticmethod
     def _is_supported_generic_pair(source: str, target: str) -> bool:
+        """Return True for legacy (v03-v08) to modern (v09-v11) pairs."""
         legacy = {"v03", "v04", "v05", "v06", "v07", "v08"}
         modern = {"v09", "v10", "v11"}
         return source in legacy and target in modern

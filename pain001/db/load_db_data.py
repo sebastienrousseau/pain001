@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 # CodeQL: This module uses parameterized queries where possible.
 # For table names (which cannot be parameterized), we use strict allowlist validation
 # via enable_sanitize_table_name() to prevent SQL injection (CWE-89).
+
+"""Load payment data from SQLite databases."""
 
 import os
 import re
@@ -38,7 +40,7 @@ def sanitize_table_name(table_name: str) -> str:
     MUST start with a letter (SQL identifier rules).
 
     Args:
-        table_name (str): The table name to validate.
+        table_name: The table name to validate.
 
     Returns:
         str: The validated table name (unchanged if valid).
@@ -66,8 +68,8 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
     Load data from an SQLite database table into a list of dictionaries.
 
     Args:
-        data_file_path (str): The path to the SQLite database file.
-        table_name (str): The name of the table from which data will be loaded.
+        data_file_path: The path to the SQLite database file.
+        table_name: The name of the table from which data will be loaded.
 
     Returns:
         list:
@@ -78,9 +80,10 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
     Raises:
         FileNotFoundError:
-            If the SQLite file specified by data_file_path does not exist.
-        sqlite3.OperationalError:
-            If there is an issue with SQLite database operations.
+            If the SQLite file specified by data_file_path does not
+            exist or fails path validation. SQLite operational errors
+            and ConfigurationError for invalid table names propagate
+            unchanged.
 
     Example:
         data = load_db_data("my_database.db", "my_table")

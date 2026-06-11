@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Load payment data from CSV files."""
 
 import csv
 import logging
@@ -29,16 +31,18 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
     """Load CSV data from a file.
 
     Args:
-        file_path (str): The path to the CSV file.
+        file_path: The path to the CSV file.
 
     Returns:
         list: A list of dictionaries containing the CSV data.
 
     Raises:
         FileNotFoundError: If the file does not exist.
-        IOError: If there is an issue reading the file.
+        OSError: If there is an issue reading the file.
         UnicodeDecodeError: If there is an issue decoding the file's content.
-        ValueError: If the CSV file is empty.
+        DataSourceError: If the CSV file is empty.
+        Exception: If path validation fails, the underlying error is
+            logged and re-raised unchanged.
 
     Note:
         For large files, consider using load_csv_data_streaming() to reduce
@@ -104,17 +108,19 @@ def load_csv_data_streaming(
     file into memory, making it suitable for large files.
 
     Args:
-        file_path (str): The path to the CSV file.
-        chunk_size (int): Number of rows to yield per chunk. Default is 1000.
+        file_path: The path to the CSV file.
+        chunk_size: Number of rows to yield per chunk. Default is 1000.
 
     Yields:
-        list: A list of dictionaries containing chunk_size rows of CSV data.
+        list[dict[str, Any]]: Up to chunk_size rows of CSV data.
 
     Raises:
         FileNotFoundError: If the file does not exist.
-        IOError: If there is an issue reading the file.
+        OSError: If there is an issue reading the file.
         UnicodeDecodeError: If there is an issue decoding the file's content.
-        ValueError: If the CSV file is empty.
+        DataSourceError: If the CSV file is empty.
+        Exception: If path validation fails, the underlying error is
+            logged and re-raised unchanged.
 
     Example:
         >>> for chunk in load_csv_data_streaming('large_file.csv', chunk_size=500):

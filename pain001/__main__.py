@@ -1,5 +1,7 @@
-# Other imports remain the same
 # pylint: disable=duplicate-code
+
+"""Module entry point for ``python -m pain001``."""
+
 import sys
 
 from rich.console import Console

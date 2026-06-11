@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -39,6 +39,7 @@
 # - creditor_account_IBAN (str) - creditor account IBAN
 # - remittance_information (str) - remittance information
 
+"""Validate CSV payment data against required-field rules."""
 
 import logging
 from datetime import datetime
@@ -200,7 +201,7 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
     """Validate the CSV data before processing it.
 
     Args:
-        data (list): A list of dictionaries containing the CSV data.
+        data: A list of dictionaries containing the CSV data.
 
     Returns:
         bool: True if the data is valid, False otherwise.

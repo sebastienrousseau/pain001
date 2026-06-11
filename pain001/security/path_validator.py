@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -41,6 +41,12 @@ def _resolve_within_allowed_bases(
     *already-clean* return value, keeping ``os.path.exists`` outside the
     tainted data-flow graph.
 
+    Args:
+        untrusted_path: User-provided path (potentially malicious).
+        base_dir: Optional base directory to constrain resolution. When
+            omitted, the cwd, temp directories, and the installed
+            package directory are allowed.
+
     Returns:
         Resolved absolute path string proven to be within allowed bases.
 
@@ -73,6 +79,10 @@ def _resolve_within_allowed_bases(
         package_dir = os.path.realpath(
             os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         )
+        # Temp directories are allowed for callers (and tests) that
+        # write output to tempfile-created paths; /var/tmp is listed
+        # separately because gettempdir() may resolve elsewhere
+        # (e.g. /var/folders on macOS).
         allowed_bases = [
             os.path.realpath(os.getcwd()),
             os.path.realpath(tempfile.gettempdir()),
@@ -109,9 +119,10 @@ def validate_path(
         Resolved absolute path as string (CodeQL taint-tracking compliant).
 
     Raises:
-        PathValidationError: If path contains traversal attempts.
-        SecurityError: If path escapes allowed directories.
-        FileNotFoundError: If must_exist=True and path doesn't exist.
+        FileNotFoundError: If must_exist=True and the path doesn't
+            exist. PathValidationError (traversal attempts) and
+            SecurityError (path escapes allowed directories) from the
+            underlying resolution propagate unchanged.
     """
     # Core validation — return value is taint-free per neutralModel.
     safe_path = _resolve_within_allowed_bases(untrusted_path, base_dir)

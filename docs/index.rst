@@ -44,7 +44,7 @@ Key Features
 * **📊 Multiple Data Sources** — Support for CSV files, SQLite databases, and Python data structures
 * **✅ Automatic Validation** — Built-in XSD schema validation for generated XML files
 * **🔒 Secure by Design** — Uses defusedxml to prevent XXE attacks and SQL injection protection
-* **🧪 Fully Tested** — 98.55% test coverage with 568 comprehensive tests
+* **🧪 Fully Tested** — over 1,000 tests with a 95% branch-coverage floor enforced in CI
 * **📦 Type-Safe** — Full type hints for better IDE support and mypy compatibility
 * **🚀 Production-Ready** — Used in production for SEPA and international payments
 * **💼 Enterprise Grade** — Robust error handling, comprehensive logging, and detailed reporting

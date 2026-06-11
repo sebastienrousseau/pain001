@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -74,6 +74,10 @@ class PaymentValidationError(Pain001Error):
     - Missing required fields (debtor name, creditor account, etc.)
     - Invalid date formats
 
+    Args:
+        message: Human-readable error message.
+        field: Optional field name that caused the validation error.
+
     Example:
         >>> try:
         ...     validate_payment_data(data)
@@ -83,12 +87,6 @@ class PaymentValidationError(Pain001Error):
     """
 
     def __init__(self, message: str, field: str | None = None):
-        """Initialize validation error with optional field name.
-
-        Args:
-            message: Human-readable error message.
-            field: Optional field name that caused the validation error.
-        """
         super().__init__(message)
         self.field = field
 
@@ -161,6 +159,10 @@ class SchemaValidationError(Pain001Error):
     - Invalid XML element values
     - Namespace mismatches
 
+    Args:
+        message: Human-readable error message.
+        errors: Optional list of detailed validation errors.
+
     Example:
         >>> try:
         ...     validate_xml_against_schema(xml, xsd)
@@ -171,12 +173,6 @@ class SchemaValidationError(Pain001Error):
     """
 
     def __init__(self, message: str, errors: list[str] | None = None):
-        """Initialize schema validation error with optional error list.
-
-        Args:
-            message: Human-readable error message.
-            errors: Optional list of detailed validation errors.
-        """
         super().__init__(message)
         self.errors = errors or []
 
@@ -194,6 +190,12 @@ class InvalidIBANError(PaymentValidationError):
     - Unsupported country code
     - IBAN length mismatch for country
 
+    Args:
+        message: Human-readable error message.
+        iban: The invalid IBAN value.
+        field: Optional field name (e.g., "debtor_account").
+        reason: Optional specific reason for failure.
+
     Example:
         >>> try:
         ...     validate_iban("AT68123456")  # Too short
@@ -210,14 +212,6 @@ class InvalidIBANError(PaymentValidationError):
         field: str | None = None,
         reason: str | None = None,
     ):
-        """Initialize IBAN validation error with IBAN value.
-
-        Args:
-            message: Human-readable error message.
-            iban: The invalid IBAN value.
-            field: Optional field name (e.g., "debtor_account").
-            reason: Optional specific reason for failure.
-        """
         super().__init__(message, field=field)
         self.iban = iban
         self.reason = reason
@@ -231,6 +225,12 @@ class InvalidBICError(PaymentValidationError):
     - Invalid BIC structure (ISO 9362)
     - Invalid country code in BIC
     - Invalid bank/branch code characters
+
+    Args:
+        message: Human-readable error message.
+        bic: The invalid BIC value.
+        field: Optional field name (e.g., "debtor_agent").
+        reason: Optional specific reason for failure.
 
     Example:
         >>> try:
@@ -248,14 +248,6 @@ class InvalidBICError(PaymentValidationError):
         field: str | None = None,
         reason: str | None = None,
     ):
-        """Initialize BIC validation error with BIC value.
-
-        Args:
-            message: Human-readable error message.
-            bic: The invalid BIC value.
-            field: Optional field name (e.g., "debtor_agent").
-            reason: Optional specific reason for failure.
-        """
         super().__init__(message, field=field)
         self.bic = bic
         self.reason = reason
@@ -269,6 +261,12 @@ class MissingRequiredFieldError(PaymentValidationError):
     - Empty/null values for required fields
     - Missing fields in CSV rows
     - Missing dictionary keys
+
+    Args:
+        message: Human-readable error message.
+        field: The missing field name.
+        row_number: Optional row/line number where field is missing.
+        required_fields: Optional list of all required fields.
 
     Example:
         >>> try:
@@ -286,14 +284,6 @@ class MissingRequiredFieldError(PaymentValidationError):
         row_number: int | None = None,
         required_fields: list[str] | None = None,
     ):
-        """Initialize missing field error with field details.
-
-        Args:
-            message: Human-readable error message.
-            field: The missing field name.
-            row_number: Optional row/line number where field is missing.
-            required_fields: Optional list of all required fields.
-        """
         super().__init__(message, field=field)
         self.row_number = row_number
         self.required_fields = required_fields or []

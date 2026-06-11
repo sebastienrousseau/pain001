@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -44,7 +44,15 @@ from pain001.security import validate_path
 
 
 class ValidationError:
-    """Represents a validation error."""
+    """Represents a validation error.
+
+    Args:
+        message: Human-readable error message.
+        path: JSON path to the invalid field (e.g., "$.debtor_account").
+        value: The invalid value.
+        rule: The validation rule that failed (e.g., "pattern",
+            "required").
+    """
 
     def __init__(
         self,
@@ -53,14 +61,6 @@ class ValidationError:
         value: Any,
         rule: str,
     ):
-        """Initialize a validation error.
-
-        Args:
-            message: Human-readable error message.
-            path: JSON path to the invalid field (e.g., "$.debtor_account").
-            value: The invalid value.
-            rule: The validation rule that failed (e.g., "pattern", "required").
-        """
         self.message = message
         self.path = path
         self.value = value
@@ -78,9 +78,19 @@ class ValidationError:
 class SchemaValidator:
     """Validates payment data against JSON Schema files.
 
-    Attributes:
-        schema: The loaded JSON schema dictionary.
-        schema_path: Path to the schema file.
+    The loaded schema dictionary is available as ``schema`` and the
+    resolved schema file location as ``schema_path``.
+
+    Args:
+        message_type: ISO 20022 message type (e.g., "pain.001.001.03").
+        schema_dir: Directory containing schema files. Defaults to
+            pain001/schemas/.
+
+    Raises:
+        ValueError: If the message type is not supported.
+        FileNotFoundError: If the schema file is missing or escapes the
+            schema directory.
+        json.JSONDecodeError: If the schema file is invalid JSON.
     """
 
     def __init__(
@@ -88,16 +98,6 @@ class SchemaValidator:
         message_type: str,
         schema_dir: Path | None = None,
     ):
-        """Initialize the schema validator.
-
-        Args:
-            message_type: ISO 20022 message type (e.g., "pain.001.001.03").
-            schema_dir: Directory containing schema files. Defaults to pain001/schemas/.
-
-        Raises:
-            FileNotFoundError: If schema file not found.
-            json.JSONDecodeError: If schema file is invalid JSON.
-        """
         if schema_dir is None:
             schema_dir = Path(__file__).parent.parent / "schemas"
 
@@ -144,6 +144,9 @@ class SchemaValidator:
 
         Returns:
             List of ValidationError objects. Empty list if valid.
+
+        Raises:
+            ValueError: If the loaded JSON schema itself is invalid.
         """
         errors: list[ValidationError] = []
 

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ _MESSAGE_TYPE_PATTERN = re.compile(r"pain\.\d{3}\.\d{3}\.\d{2}")
 
 
 def _extract_message_type(path: Path) -> str:
+    """Extract the pain.NNN.NNN.NN message type referenced inside a file."""
     match = _MESSAGE_TYPE_PATTERN.search(path.read_text(encoding="utf-8"))
     if not match:
         raise SchemaGuardrailError(

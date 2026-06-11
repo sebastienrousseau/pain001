@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -181,6 +181,7 @@ class ConfigManager:
         raise KeyError(f"Unknown profile '{profile_name}'")
 
     def _load_from_env(self) -> dict[str, Any]:
+        """Build a config dict from the PAIN001_* environment variables."""
         data: dict[str, Any] = {}
         for env_name, target_name in ENV_MAPPING.items():
             value = os.getenv(env_name)
@@ -192,12 +193,14 @@ class ConfigManager:
     def _apply_cli_overrides(
         self, merged: dict[str, Any], cli_args: Mapping[str, Any]
     ) -> dict[str, Any]:
+        """Overlay non-None CLI arguments onto the merged config."""
         for key in DEFAULT_CONFIG:
             if key in cli_args and cli_args[key] is not None:
                 merged[key] = cli_args[key]
         return merged
 
     def _coerce_value(self, key: str, value: Any) -> Any:
+        """Coerce string values to the boolean or integer type a key expects."""
         if key in {"streaming", "emit_metrics"}:
             if isinstance(value, bool):
                 return value
@@ -207,6 +210,7 @@ class ConfigManager:
         return value
 
     def _validate_schema(self, data: Mapping[str, Any]) -> None:
+        """Reject unknown top-level keys and invalid chunk_size or profiles."""
         unknown = set(data) - ALLOWED_TOP_LEVEL_KEYS
         if unknown:
             raise ValueError(
@@ -222,6 +226,7 @@ class ConfigManager:
     def _deep_merge(
         self, base: dict[str, Any], override: Mapping[str, Any]
     ) -> dict[str, Any]:
+        """Recursively merge override into base, skipping None values."""
         merged = dict(base)
         for key, value in override.items():
             if isinstance(merged.get(key), dict) and isinstance(value, dict):

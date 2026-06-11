@@ -89,14 +89,17 @@ Requires Python 3.10 or later.
 ## Quick start
 
 ```bash
-pain001 -t pain.001.001.03 -d payments.csv
+pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv
 ```
 
-That is the whole command. The template and XSD schema are auto-resolved
-from the bundled registry; the generated XML is validated against the
-schema and written to the current directory.
+The generated XML is validated against the XSD schema and written
+alongside the template. Grab a template and schema for any supported
+version from the
+[bundled templates](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates),
+or point `-m`/`-s` at your own.
 
-Validate without generating anything (CI pre-flight):
+Validate without generating anything (CI pre-flight) — here the
+template and schema are auto-resolved from the bundled registry:
 
 ```bash
 pain001 -t pain.001.001.03 -d payments.csv --dry-run
@@ -160,7 +163,7 @@ pain001 [OPTIONS]
   -s, --schema             XSD schema for validation (auto-resolved when omitted)
   -d, --data               Payment data file (CSV, SQLite, JSON, JSONL, Parquet)
   -c, --config             Configuration file (YAML, TOML, or INI)
-  -o, --output-dir         Output directory (default: current directory)
+  -o, --output-dir         Output directory (default: alongside the template)
       --dry-run            Validate inputs without generating XML
       --streaming          Process input in chunks, one XML file per chunk
       --chunk-size         Rows per streaming chunk (default: 1000)
@@ -224,7 +227,7 @@ uvicorn pain001.api.app:app
 | `GET` | `/api/download/{job_id}` | Download a finished file |
 | `DELETE` | `/api/jobs/{job_id}` | Cancel or clean up a job |
 
-Interactive OpenAPI docs are served at `/docs`.
+Interactive OpenAPI docs are served at `/api/docs`.
 
 </details>
 

@@ -64,6 +64,8 @@ twine = "^6.2.0"
 types-jsonschema = "^4.26.0.20260109"
 pandas = "^2.3.3"
 wheel = ">=0.46.2"
+interrogate = "^1.7.0"
+pydoclint = "^0.7.3"
 
 [tool.poetry.group.docs]
 optional = true
@@ -181,3 +183,25 @@ disable_error_code = [
 [[tool.mypy.overrides]]
 module = "xmlschema.*"
 ignore_missing_imports = true
+
+# pyarrow 24 ships py.typed but leaves parquet entry points
+# (read_table, ParquetFile, iter_batches) unannotated.
+[[tool.mypy.overrides]]
+module = "pain001.parquet.load_parquet_data"
+disallow_untyped_calls = false
+
+[tool.interrogate]
+fail-under = 100
+ignore-init-method = true
+ignore-semiprivate = false
+ignore-private = false
+ignore-magic = true
+exclude = ["setup.py", "scripts", "tests", "docs"]
+
+[tool.pydoclint]
+style = "google"
+quiet = true
+arg-type-hints-in-docstring = false
+skip-checking-short-docstrings = true
+check-return-types = false
+exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/)"

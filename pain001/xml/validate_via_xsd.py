@@ -1,3 +1,5 @@
+"""Validate XML documents against XSD schemas."""
+
 from functools import lru_cache
 from io import StringIO
 
@@ -12,7 +14,7 @@ def _get_cached_schema(xsd_file_path: str) -> xmlschema.XMLSchema:
     return xmlschema.XMLSchema(xsd_file_path)
 
 
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -33,8 +35,8 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
     Validates an XML file against an XSD schema.
 
     Args:
-        xml_file_path (str): Path to the XML file to validate.
-        xsd_file_path (str): Path to the XSD schema file.
+        xml_file_path: Path to the XML file to validate.
+        xsd_file_path: Path to the XSD schema file.
 
     Returns:
         bool: True if the XML file is valid, False otherwise.
@@ -71,8 +73,8 @@ def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
     generated in-memory without writing to disk.
 
     Args:
-        xml_content (str): XML content as a string.
-        xsd_file_path (str): Path to the XSD schema file.
+        xml_content: XML content as a string.
+        xsd_file_path: Path to the XSD schema file.
 
     Returns:
         bool: True if the XML content is valid, False otherwise.

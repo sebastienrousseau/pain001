@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,11 +52,9 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
     >>> xml_str.startswith('<?xml version=')
     True
     """
-    # Apply indentation in-place (same as write_xml_to_file)
     indent_xml(root)
 
-    # Convert to bytes with proper encoding
-    # Use short_empty_elements=True to match legacy ElementTree.write() behavior
+    # short_empty_elements matches legacy ElementTree.write() behavior.
     xml_bytes: bytes = et.tostring(
         root,
         encoding="utf-8",
@@ -64,16 +62,15 @@ def xml_to_string(root: et.Element, include_declaration: bool = True) -> str:
         short_empty_elements=True,
     )
 
-    # Decode to string
     xml_str: str = xml_bytes.decode("utf-8")
 
-    # Add XML declaration if requested (match ElementTree.write() format)
-    # Use double quotes and UTF-8 capitalization for byte-for-byte compatibility
+    # Double quotes and "UTF-8" capitalization keep the declaration
+    # byte-for-byte identical to ElementTree.write() output.
     if include_declaration and not xml_str.startswith("<?xml"):
         xml_str = '<?xml version="1.0" encoding="UTF-8"?>\n' + xml_str
 
-    # Add trailing newline to match ElementTree.write() behavior
-    # Legacy file-based writer adds newline at EOF - critical for regression tests
+    # The legacy file-based writer ends with a newline; regression tests
+    # compare output byte-for-byte.
     if not xml_str.endswith("\n"):
         xml_str += "\n"
 

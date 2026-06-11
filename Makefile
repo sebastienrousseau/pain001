@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -73,7 +73,9 @@ lint:
 	@echo "$(YELLOW)Running linters (SLO: < $(SLO_LINT)s)...$(NC)"
 	@time_start=$$(date +%s%N); \
 	(poetry run ruff check . && \
-	poetry run ruff format --check .); \
+	poetry run ruff format --check . && \
+	poetry run interrogate pain001 && \
+	poetry run pydoclint pain001); \
 	lint_result=$$?; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \

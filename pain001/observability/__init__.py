@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -67,6 +67,7 @@ def emit_metric_event(name: str, **attributes: Any) -> None:
 
 
 def _current_trace_context() -> dict[str, Any]:
+    """Return the active OpenTelemetry trace context, or {} if unavailable."""
     try:
         from opentelemetry import trace  # type: ignore[import-not-found]
     except ImportError:

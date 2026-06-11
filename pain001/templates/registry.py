@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ class TemplateRegistry:
         self._discover_templates()
 
     def _discover_templates(self) -> None:
+        """Scan the templates directory and index every metadata.yaml."""
         for metadata_path in sorted(
             self.templates_dir.glob("*/metadata.yaml")
         ):
@@ -56,6 +57,7 @@ class TemplateRegistry:
             self._registry[metadata.message_type] = metadata
 
     def _load_metadata(self, metadata_path: Path) -> TemplateMetadata:
+        """Parse one metadata.yaml into a TemplateMetadata record."""
         raw_data = (
             yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
         )

@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -37,7 +37,14 @@ TERMINAL_STATUSES = frozenset(
 
 
 class JobResult:  # pylint: disable=too-few-public-methods
-    """Represents a job result."""
+    """Represents a job result.
+
+    Args:
+        job_id: Unique job identifier.
+        status: Current job status.
+        result: Job result data.
+        error: Error message if failed.
+    """
 
     def __init__(
         self,
@@ -46,14 +53,6 @@ class JobResult:  # pylint: disable=too-few-public-methods
         result: dict[str, Any] | None = None,
         error: str | None = None,
     ):
-        """Initialize job result.
-
-        Args:
-            job_id: Unique job identifier.
-            status: Current job status.
-            result: Job result data.
-            error: Error message if failed.
-        """
         self.job_id = job_id
         self.status = status
         self.result = result
@@ -76,14 +75,13 @@ class JobResult:  # pylint: disable=too-few-public-methods
 
 
 class JobManager:
-    """Manages async job lifecycle."""
+    """Manages async job lifecycle.
+
+    Args:
+        max_jobs: Maximum number of jobs to keep in memory.
+    """
 
     def __init__(self, max_jobs: int = 1000):
-        """Initialize job manager.
-
-        Args:
-            max_jobs: Maximum number of jobs to keep in memory.
-        """
         self.jobs: dict[str, JobResult] = {}
         self.max_jobs = max_jobs
 

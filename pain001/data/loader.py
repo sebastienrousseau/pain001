@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -92,8 +92,10 @@ def load_payment_data(
         List[Dict[str, Any]]: List of payment data dictionaries
 
     Raises:
-        ValueError: If data source type is unsupported or data is invalid
-        FileNotFoundError: If file path doesn't exist
+        DataSourceError: If the data source type is unsupported.
+            Errors from the underlying loaders (e.g. FileNotFoundError
+            for missing files, PaymentValidationError for invalid rows)
+            propagate unchanged.
 
     Examples:
         # Existing file-based usage (backward compatible)
@@ -245,12 +247,13 @@ def load_payment_data_streaming(
                  Set False for testing or when data is pre-validated.
 
     Yields:
-        List[Dict[str, Any]]: Chunks of payment data dictionaries
+        list[dict[str, Any]]: Chunks of payment data dictionaries
 
     Raises:
-        ValueError: If data source type is unsupported or data is invalid
-        FileNotFoundError: If file path doesn't exist
-        DataSourceError: If data source is empty or invalid
+        DataSourceError: If the data source type is unsupported or a
+            chunk fails validation. Errors from the underlying streaming
+            loaders (e.g. FileNotFoundError for missing files) propagate
+            unchanged.
 
     Examples:
         # Streaming from large CSV file

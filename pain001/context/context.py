@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""Singleton application context that owns the shared pain001 logger."""
+
 import logging
 from typing import Optional
 
 
 class Context:
-    """A class that can be used to manage logging.
+    """A singleton that manages the shared pain001 logger.
+
+    Instantiating the class directly raises RuntimeError once the
+    singleton exists; use get_instance() instead.
 
     Methods:
         __init__(self): Initializes the class and creates a logger.
@@ -37,6 +42,10 @@ class Context:
 
         Returns:
             A Context instance.
+
+        Raises:
+            RuntimeError: If the singleton failed to initialize
+                (defensive check; unreachable in practice).
         """
         if Context.instance is None:
             Context()
@@ -46,11 +55,6 @@ class Context:
         return Context.instance
 
     def __init__(self) -> None:
-        """Initializes the class and creates a logger.
-
-        Raises:
-            RuntimeError: If the class is already initialized.
-        """
         if Context.instance is not None:
             raise RuntimeError("This class is a singleton!")
         else:

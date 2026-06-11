@@ -1,4 +1,4 @@
-# Copyright (C) 2023 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,8 @@
 #
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Click-based command-line interface for generating ISO 20022 payment files."""
 
 import contextlib
 import logging
@@ -249,19 +251,19 @@ def _generate_xml_files(
     verbose: bool,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
-    """Generate XML payment files.
+    """Generate XML payment files, exiting with code 1 on failure.
 
     Args:
-        logger: Logger instance for event recording.
+        _logger: Logger instance for event recording (unused).
         xml_message_type: ISO 20022 message type.
         xml_template_file_path: Path to XML template.
         xsd_schema_file_path: Path to XSD schema.
         data_file_path: Path to payment data.
         output_dir: Optional output directory.
+        streaming: If True, process the input in chunks and write one
+            XML file per chunk.
+        chunk_size: Rows per chunk in streaming mode.
         verbose: If True, show detailed error traceback.
-
-    Raises:
-        SystemExit: If generation fails (exit code 1).
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
@@ -381,7 +383,7 @@ def _generate_xml_files(
     "--output-dir",
     "output_dir",
     type=click.Path(file_okay=False, writable=True),
-    help="Output directory for generated XML files (default: current directory)",
+    help="Output directory for generated XML files (default: alongside the template)",
 )
 @click.option(
     "--dry-run",
@@ -470,6 +472,16 @@ def main(
         output_dir: Optional output directory for generated XML files.
         dry_run: If True, validate inputs without generating XML.
         verbose: If True, enable detailed logging output.
+        streaming: If True, process the input in chunks and write one
+            XML file per chunk.
+        chunk_size: Rows per chunk in streaming mode.
+        profile: Configuration profile or built-in preset name.
+        show_config: If True, print the resolved configuration and exit.
+        list_templates: If True, list bundled templates and exit.
+        show_template: Message type whose bundled template metadata
+            should be printed before exiting.
+        emit_metrics: If True, emit timing and lifecycle metrics to
+            stdout.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -483,7 +495,6 @@ def main(
     table.width = 80
     console.print(table)
 
-    # Step 1: Configure logging
     logger = _configure_logging(verbose)
 
     if list_templates:
@@ -494,7 +505,6 @@ def main(
         _print_template_details(show_template)
         return
 
-    # Step 2: Expand user-friendly paths
     config_manager = ConfigManager()
     resolved_config = config_manager.resolve(
         {
@@ -552,13 +562,11 @@ def main(
     if resolved_config.get("emit_metrics"):
         register_metrics_callback(_console_metrics_callback)
 
-    # Step 4: Create output directory if specified
     output_dir = resolved_config.get("output_dir")
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
         console.print(f"[cyan]ℹ Output directory: {output_dir}[/cyan]")
 
-    # Step 5: Log CLI invocation
     log_event(
         logger,
         logging.INFO,
@@ -566,7 +574,7 @@ def main(
         **{Fields.MESSAGE_TYPE: xml_message_type, "dry_run": dry_run},
     )
 
-    # Step 6: Validate message type (redundant with Click validation, kept for logging)
+    # Redundant with Click validation; kept so the failure is logged.
     if xml_message_type not in valid_xml_types:
         log_validation_event(
             logger,
@@ -582,12 +590,10 @@ def main(
         )
         sys.exit(2)
 
-    # Step 7: Validate XML template against XSD schema
     _validate_schema(
         logger, xml_template_file_path, xsd_schema_file_path, xml_message_type
     )
 
-    # Step 8: Handle dry-run mode (validation only)
     if dry_run:
         record_count = _validate_payment_data(
             logger, data_file_path, xml_message_type
@@ -608,7 +614,6 @@ def main(
         )
         return
 
-    # Step 9: Generate XML files
     _generate_xml_files(
         logger,
         xml_message_type,

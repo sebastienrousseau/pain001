@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 # implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+"""Validate SQLite payment data against required-field rules."""
 
 import logging
 from datetime import datetime
@@ -45,7 +47,7 @@ def validate_db_data(data: list[dict[str, Any]]) -> bool:
     Validate the data from a database.
 
     Args:
-        data (list of dict): The data to validate.
+        data: The rows to validate, one dictionary per row.
 
     Returns:
         bool: True if the data is valid, False otherwise.

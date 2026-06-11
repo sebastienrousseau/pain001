@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,13 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# XML generator function that creates the XML file from the CSV data
-# and the mapping dictionary between XML tags and CSV columns names and
-# writes it to a file in the same directory as the CSV file
-
 # pylint: disable=duplicate-code
 
-# Import the CSV library
+"""Generate and XSD-validate ISO 20022 XML payment messages."""
+
 import logging
 import os
 import re
@@ -42,10 +39,13 @@ from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
 
 logger = logging.getLogger(__name__)
 
+# Templates are trusted, but these directives would let one pull in
+# arbitrary files from disk, so they are rejected before rendering.
 _TEMPLATE_DIRECTIVE_PATTERN = re.compile(
     r"{%\s*(include|import|from|extends)\b", re.IGNORECASE
 )
 
+# ISO 20022 amounts carry at most two decimal places.
 _AMOUNT_EXPONENT = Decimal("0.01")
 
 
@@ -55,6 +55,13 @@ def _format_amount(value: Any, row_index: int) -> str:
     Amounts are handled with Decimal end-to-end: floats are converted via
     their shortest string representation so binary artifacts are surfaced
     (and rejected) rather than silently rounded into the payment file.
+
+    Args:
+        value: The raw amount from the input row.
+        row_index: 1-based row number, used in error messages.
+
+    Returns:
+        The amount as an exact two-decimal string (e.g. "10.00").
 
     Raises:
         PaymentValidationError: If the amount is missing, not a number,
@@ -92,6 +99,9 @@ def _normalize_financial_fields(
     data: list[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], str, str]:
     """Normalize amounts and compute batch totals from the actual rows.
+
+    Args:
+        data: Payment rows, each carrying a "payment_amount" value.
 
     Returns:
         Tuple of (rows with normalized payment_amount, nb_of_txs, ctrl_sum)
@@ -145,8 +155,14 @@ def generate_xml_string(
         str: The generated and validated XML content.
 
     Raises:
-        ValueError: If message type is invalid or data is empty.
+        ValueError: If message type is invalid, data is empty, the
+            template or schema path fails validation, or the template
+            contains disabled Jinja filesystem directives.
         RuntimeError: If XML validation fails against XSD schema.
+
+    PaymentValidationError from amount normalization (missing,
+    non-numeric, non-positive, or over-precise payment_amount values)
+    propagates unchanged.
 
     Examples:
         >>> data = [{"id": "MSG001", "date": "2026-01-15", ...}]
@@ -257,9 +273,9 @@ def generate_xml(
 
     Args:
         data: List of dictionaries containing payment data
-        payment_initiation_message_type: String indicating message type
-        such as "pain.001.001.03, pain.001.001.04, pain.001.001.05,
-        pain.001.001.06, pain.001.001.07, pain.001.001.08, etc."
+        payment_initiation_message_type: Message type identifier. Any
+            supported version from "pain.001.001.03" through
+            "pain.001.001.12", or "pain.008.001.02" for direct debits.
         xml_file_path: Path to the Jinja2 XML template file
         xsd_file_path: Path to XML schema file for validation
         output_path: Explicit path to write the generated XML file to.
@@ -272,8 +288,9 @@ def generate_xml(
         The path the XML file was written to.
 
     Raises:
-        ValueError: If message type is invalid or data is empty.
-        RuntimeError: If XML validation fails.
+        ValueError: If message type is invalid, data is empty, or the
+            output path fails validation. RuntimeError from XSD
+            validation in generate_xml_string propagates unchanged.
     """
     # Generate XML content as string
     xml_content = generate_xml_string(

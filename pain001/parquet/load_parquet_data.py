@@ -1,4 +1,4 @@
-# Copyright (C) 2023-2026 Sebastien Rousseau.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -58,7 +58,10 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
 
     Raises:
         FileNotFoundError: If file doesn't exist.
-        DataSourceError: If pyarrow is not installed or file is invalid.
+        DataSourceError: If pyarrow is not installed or the file is
+            invalid or empty.
+        Exception: A FileNotFoundError or DataSourceError raised inside
+            the read block is re-raised unchanged via a bare ``raise``.
 
     Examples:
         >>> data = load_parquet_data('payments.parquet')
@@ -115,11 +118,14 @@ def load_parquet_data_streaming(
         chunk_size: Number of records per chunk (default: 1000).
 
     Yields:
-        Chunks of payment data dictionaries.
+        list[dict[str, Any]]: Chunks of payment data dictionaries.
 
     Raises:
         FileNotFoundError: If file doesn't exist.
-        DataSourceError: If pyarrow is not installed or file is invalid.
+        DataSourceError: If pyarrow is not installed or the file is
+            invalid.
+        Exception: A FileNotFoundError or DataSourceError raised inside
+            the read block is re-raised unchanged via a bare ``raise``.
 
     Examples:
         >>> for chunk in load_parquet_data_streaming('large_payments.parquet'):
