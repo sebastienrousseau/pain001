@@ -1,0 +1,11 @@
+# Safety CLI policy — auto-detected by `safety check` (v2.x).
+security:
+  ignore-vulnerabilities:
+    51457:
+      # CVE-2022-42969 (py <=1.11.0, ReDoS) is disputed upstream and
+      # `py` is a dev-only transitive dependency of interrogate; it is
+      # never installed in production environments.
+      reason: >-
+        Disputed ReDoS in py, pulled in only by the interrogate doc
+        coverage tool (dev dependency). Not shipped to production.
+      expires: "2026-12-31"
