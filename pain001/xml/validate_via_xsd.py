@@ -1,11 +1,14 @@
 """Validate XML documents against XSD schemas."""
 
+import logging
 from functools import lru_cache
 from io import StringIO
 
 import xmlschema
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
+
+logger = logging.getLogger(__name__)
 
 
 @lru_cache(maxsize=16)
@@ -46,14 +49,14 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
     try:
         xml_tree = defused_et.parse(xml_file_path)
     except (ParseError, OSError) as e:
-        print(f"Error parsing XML file: {e}")
+        logger.error("Error parsing XML file: %s", e)
         return False
 
     # Load XSD schema into an XMLSchema object (cached).
     try:
         xsd = _get_cached_schema(xsd_file_path)
     except (xmlschema.XMLSchemaException, ParseError, OSError) as e:
-        print(f"Error loading XSD schema: {e}")
+        logger.error("Error loading XSD schema: %s", e)
         return False
 
     # Validate XML file against XSD schema.
@@ -61,7 +64,7 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
         xsd.validate(xml_tree)
         return True
     except xmlschema.XMLSchemaException as e:
-        print(f"Error validating XML: {e}")
+        logger.error("Error validating XML: %s", e)
         return False
 
 
@@ -89,14 +92,14 @@ def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
     try:
         xml_tree = defused_et.parse(StringIO(xml_content))
     except (ParseError, OSError) as e:
-        print(f"Error parsing XML string: {e}")
+        logger.error("Error parsing XML string: %s", e)
         return False
 
     # Load XSD schema into an XMLSchema object (cached).
     try:
         xsd = _get_cached_schema(xsd_file_path)
     except (xmlschema.XMLSchemaException, ParseError, OSError) as e:
-        print(f"Error loading XSD schema: {e}")
+        logger.error("Error loading XSD schema: %s", e)
         return False
 
     # Validate XML against XSD schema.
@@ -104,5 +107,5 @@ def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
         xsd.validate(xml_tree)
         return True
     except xmlschema.XMLSchemaException as e:
-        print(f"Error validating XML: {e}")
+        logger.error("Error validating XML: %s", e)
         return False
