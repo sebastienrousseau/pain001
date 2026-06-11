@@ -16,12 +16,10 @@
 
 """Click-based command-line interface for generating ISO 20022 payment files."""
 
-import contextlib
 import logging
 import os
 import sys
 import traceback
-from collections.abc import Iterator
 
 import click
 from rich import box
@@ -172,17 +170,6 @@ def _validate_payment_data(
         raise SystemExit(1) from e
 
 
-@contextlib.contextmanager
-def _working_directory(path: str) -> Iterator[None]:
-    """Context manager that temporarily changes the working directory."""
-    original = os.getcwd()
-    try:
-        os.chdir(path)
-        yield
-    finally:
-        os.chdir(original)
-
-
 def _console_metrics_callback(event: MetricEvent) -> None:
     """Render lightweight metrics to the terminal when requested."""
     console.print(
@@ -259,7 +246,8 @@ def _generate_xml_files(
         xml_template_file_path: Path to XML template.
         xsd_schema_file_path: Path to XSD schema.
         data_file_path: Path to payment data.
-        output_dir: Optional output directory.
+        output_dir: Optional output directory. Defaults to the current
+            working directory.
         streaming: If True, process the input in chunks and write one
             XML file per chunk.
         chunk_size: Rows per chunk in streaming mode.
@@ -267,45 +255,39 @@ def _generate_xml_files(
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
+    # Resolve the output location explicitly instead of chdir-ing into
+    # it: changing the working directory re-anchored relative data and
+    # template paths, and the old template-relative default broke with
+    # bundled templates living outside the working tree.
+    resolved_output_dir = (
+        os.path.realpath(output_dir) if output_dir else os.getcwd()
+    )
+
     try:
-        if output_dir:
-            with _working_directory(output_dir):
-                if streaming:
-                    process_files_streaming(
-                        xml_message_type,
-                        xml_template_file_path,
-                        xsd_schema_file_path,
-                        data_file_path,
-                        chunk_size=chunk_size,
-                    )
-                else:
-                    process_files(
-                        xml_message_type,
-                        xml_template_file_path,
-                        xsd_schema_file_path,
-                        data_file_path,
-                    )
+        if streaming:
+            process_files_streaming(
+                xml_message_type,
+                xml_template_file_path,
+                xsd_schema_file_path,
+                data_file_path,
+                chunk_size=chunk_size,
+                output_dir=resolved_output_dir,
+            )
         else:
-            if streaming:
-                process_files_streaming(
-                    xml_message_type,
-                    xml_template_file_path,
-                    xsd_schema_file_path,
-                    data_file_path,
-                    chunk_size=chunk_size,
-                )
-            else:
-                process_files(
-                    xml_message_type,
-                    xml_template_file_path,
-                    xsd_schema_file_path,
-                    data_file_path,
-                )
+            process_files(
+                xml_message_type,
+                xml_template_file_path,
+                xsd_schema_file_path,
+                data_file_path,
+                output_path=os.path.join(
+                    resolved_output_dir, f"{xml_message_type}.xml"
+                ),
+            )
 
         console.print(
             f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
             f"[cyan]Message Type:[/cyan] {xml_message_type}\n"
-            f"[cyan]Output Location:[/cyan] {output_dir or os.getcwd()}"
+            f"[cyan]Output Location:[/cyan] {resolved_output_dir}"
         )
     except Exception as e:
         console.print(
@@ -383,7 +365,7 @@ def _generate_xml_files(
     "--output-dir",
     "output_dir",
     type=click.Path(file_okay=False, writable=True),
-    help="Output directory for generated XML files (default: alongside the template)",
+    help="Output directory for generated XML files (default: current directory)",
 )
 @click.option(
     "--dry-run",

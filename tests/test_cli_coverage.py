@@ -16,10 +16,20 @@
 """Additional CLI tests for coverage."""
 
 import configparser
+import shutil
+from pathlib import Path
 
 from click.testing import CliRunner
 
+import pain001
 from pain001.cli.cli import main
+
+BUNDLED_V03_CSV = (
+    Path(pain001.__file__).parent
+    / "templates"
+    / "pain.001.001.03"
+    / "template.csv"
+)
 
 
 class TestCLIConfigFile:
@@ -252,3 +262,33 @@ class TestCLIStreamingDispatch:
         assert result.exit_code == 0
         assert mock_streaming.called
         assert (tmp_path / "out").exists()
+
+
+class TestCLIOutputLocation:
+    """Output is written to explicit paths without changing directory."""
+
+    def test_default_output_is_current_directory(self, tmp_path, monkeypatch):
+        """Without -o, XML lands in the cwd, not next to the template."""
+        shutil.copyfile(BUNDLED_V03_CSV, tmp_path / "payments.csv")
+        monkeypatch.chdir(tmp_path)
+
+        result = CliRunner().invoke(
+            main,
+            ["-t", "pain.001.001.03", "-d", "payments.csv"],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "pain.001.001.03.xml").exists()
+
+    def test_output_dir_keeps_relative_data_path(self, tmp_path, monkeypatch):
+        """-o must not re-anchor relative data paths via chdir."""
+        shutil.copyfile(BUNDLED_V03_CSV, tmp_path / "payments.csv")
+        monkeypatch.chdir(tmp_path)
+
+        result = CliRunner().invoke(
+            main,
+            ["-t", "pain.001.001.03", "-d", "payments.csv", "-o", "out"],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert (tmp_path / "out" / "pain.001.001.03.xml").exists()

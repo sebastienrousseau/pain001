@@ -17,16 +17,13 @@ def test_cli_and_library_generate_identical_xml(tmp_path: Path) -> None:
     library_dir.mkdir()
     cli_dir.mkdir()
 
-    library_output = library_dir / "template.xml"
-    cli_output = cli_dir / "template.xml"
-    library_output.write_text(
-        Path(template).read_text(encoding="utf-8"), encoding="utf-8"
+    process_files(
+        "pain.001.001.03",
+        template,
+        schema,
+        data,
+        output_path=str(library_dir / "pain.001.001.03.xml"),
     )
-    cli_output.write_text(
-        Path(template).read_text(encoding="utf-8"), encoding="utf-8"
-    )
-
-    process_files("pain.001.001.03", str(library_output), schema, data)
 
     runner = CliRunner()
     result = runner.invoke(
@@ -35,11 +32,13 @@ def test_cli_and_library_generate_identical_xml(tmp_path: Path) -> None:
             "-t",
             "pain.001.001.03",
             "-m",
-            str(cli_output),
+            template,
             "-s",
             schema,
             "-d",
             data,
+            "-o",
+            str(cli_dir),
         ],
     )
     assert result.exit_code == 0

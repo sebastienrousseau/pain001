@@ -338,13 +338,28 @@ def process_files_streaming(
     xsd_schema_file_path: str,
     data_file_path: str,
     chunk_size: int = 1000,
+    output_dir: str | None = None,
 ) -> list[str]:
-    """Generate multiple XML files from streamed input chunks."""
+    """Generate multiple XML files from streamed input chunks.
+
+    Args:
+        xml_message_type: XML message type (e.g., 'pain.001.001.03').
+        xml_template_file_path: Path to the XML template file.
+        xsd_schema_file_path: Path to the XSD schema file.
+        data_file_path: Path to the payment data file.
+        chunk_size: Rows per chunk; each chunk becomes one XML file.
+        output_dir: Directory to write chunked XML files to. When
+            omitted, files are written next to the data file.
+
+    Returns:
+        Paths of the generated chunk XML files, in chunk order.
+    """
     safe_template_path, safe_schema_path = _validate_inputs(
         xml_message_type, xml_template_file_path, xsd_schema_file_path
     )
     _register_message_namespaces(xml_message_type)
-    output_dir = os.path.dirname(os.path.realpath(data_file_path))
+    if output_dir is None:
+        output_dir = os.path.dirname(os.path.realpath(data_file_path))
 
     generated_paths: list[str] = []
     for chunk_index, payment_chunk in enumerate(

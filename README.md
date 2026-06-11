@@ -93,7 +93,8 @@ pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv
 ```
 
 The generated XML is validated against the XSD schema and written
-alongside the template. Grab a template and schema for any supported
+to the current directory (override with `-o`). Grab a template and
+schema for any supported
 version from the
 [bundled templates](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates),
 or point `-m`/`-s` at your own.
@@ -163,7 +164,7 @@ pain001 [OPTIONS]
   -s, --schema             XSD schema for validation (auto-resolved when omitted)
   -d, --data               Payment data file (CSV, SQLite, JSON, JSONL, Parquet)
   -c, --config             Configuration file (YAML, TOML, or INI)
-  -o, --output-dir         Output directory (default: alongside the template)
+  -o, --output-dir         Output directory (default: current directory)
       --dry-run            Validate inputs without generating XML
       --streaming          Process input in chunks, one XML file per chunk
       --chunk-size         Rows per streaming chunk (default: 1000)
