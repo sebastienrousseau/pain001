@@ -9,7 +9,7 @@
 import pain001
 
 project = "Pain001"
-copyright = "2024-2026, Sebastien Rousseau"
+copyright = "2023-2026, Pain001. All rights reserved."
 author = "Sebastien Rousseau"
 release = pain001.__version__
 
