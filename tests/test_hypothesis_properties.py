@@ -1,6 +1,10 @@
-from hypothesis import given, strategies as st
+from hypothesis import given
+from hypothesis import strategies as st
 
-from pain001.csv.validate_csv_data import _validate_field_type, validate_csv_data
+from pain001.csv.validate_csv_data import (
+    _validate_field_type,
+    validate_csv_data,
+)
 from pain001.validation.bic_validator import validate_bic
 from pain001.validation.iban_validator import validate_iban
 
@@ -58,5 +62,7 @@ def test_float_field_validation_never_crashes(candidate: str) -> None:
         }
     )
 )
-def test_validate_csv_data_property_on_complete_rows(row: dict[str, str]) -> None:
+def test_validate_csv_data_property_on_complete_rows(
+    row: dict[str, str],
+) -> None:
     assert validate_csv_data([row]) is True

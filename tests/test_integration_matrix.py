@@ -191,18 +191,6 @@ class TestIntegrationMatrix(unittest.TestCase):
             cls.parquet_file = None
             cls.has_parquet = False
 
-    def tearDown(self) -> None:
-        """Clean up generated XML files after each test.
-
-        Note: Individual test methods now clean up their own XML files,
-        so this is a safety net for any remaining files.
-        """
-        for version in self.all_versions:
-            version_dir = self.templates_dir / version
-            xml_file = version_dir / f"{version}.xml"
-            if xml_file.exists():
-                xml_file.unlink()
-
     # ========================================================================
     # CSV INPUT TESTS (9 versions)
     # ========================================================================

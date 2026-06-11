@@ -18,4 +18,3 @@
 from pain001.migration.version_mapper import VersionMapper
 
 __all__ = ["VersionMapper"]
-

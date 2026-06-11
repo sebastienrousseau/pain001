@@ -21,4 +21,3 @@ def test_registry_searches_by_category() -> None:
         "CustomerCreditTransferInitiation"
     )
     assert any(item.message_type == "pain.001.001.12" for item in results)
-

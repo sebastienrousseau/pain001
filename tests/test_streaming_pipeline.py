@@ -6,12 +6,10 @@ from pain001.core.core import process_files_streaming
 def test_process_files_streaming_generates_multiple_xml_outputs(
     tmp_path: Path,
 ) -> None:
-    template = (
-        Path("pain001/templates/pain.001.001.03/template.xml").resolve()
-    )
-    schema = (
-        Path("pain001/templates/pain.001.001.03/pain.001.001.03.xsd").resolve()
-    )
+    template = Path("pain001/templates/pain.001.001.03/template.xml").resolve()
+    schema = Path(
+        "pain001/templates/pain.001.001.03/pain.001.001.03.xsd"
+    ).resolve()
     data = tmp_path / "payments.csv"
     data.write_text(
         (
@@ -48,4 +46,3 @@ def test_process_files_streaming_generates_multiple_xml_outputs(
 
     assert len(outputs) == 2
     assert all(Path(path).exists() for path in outputs)
-

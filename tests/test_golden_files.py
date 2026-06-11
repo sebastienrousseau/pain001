@@ -1,36 +1,44 @@
+"""Golden-file regression tests: byte-exact XML output per message version.
+
+Regenerate fixtures after an intentional output change with:
+    poetry run python scripts/generate_golden_files.py
+"""
+
+import csv
 from pathlib import Path
 
-from pain001.csv.load_csv_data import load_csv_data
+import pytest
+
+from pain001.constants import valid_xml_types
 from pain001.xml.generate_xml import generate_xml_string
 
+TEMPLATES_DIR = Path("pain001/templates")
+GOLDEN_DIR = Path(__file__).parent / "golden"
 
-def _normalize_xml(xml_text: str) -> str:
-    return "".join(xml_text.split())
+
+def _load_template_rows(version: str) -> list[dict[str, str]]:
+    csv_path = TEMPLATES_DIR / version / "template.csv"
+    with open(csv_path, newline="", encoding="utf-8") as handle:
+        return list(csv.DictReader(handle))[:2]
 
 
-def test_golden_xml_outputs_for_supported_versions() -> None:
-    versions = [
-        "pain.001.001.03",
-        "pain.001.001.04",
-        "pain.001.001.05",
-        "pain.001.001.06",
-        "pain.001.001.07",
-        "pain.001.001.08",
-        "pain.001.001.09",
-        "pain.001.001.10",
-        "pain.001.001.11",
-        "pain.001.001.12",
-        "pain.008.001.02",
-    ]
+@pytest.mark.version_compat
+@pytest.mark.parametrize("version", valid_xml_types)
+def test_generated_xml_matches_golden(version: str) -> None:
+    """Generated XML must match the committed golden fixture byte-for-byte."""
+    base = TEMPLATES_DIR / version
+    data = _load_template_rows(version)
 
-    for version in versions:
-        base = Path("pain001/templates") / version
-        data = load_csv_data(str(base / "template.csv"))
-        generated = generate_xml_string(
-            data,
-            version,
-            str(base / "template.xml"),
-            str(base / f"{version}.xsd"),
-        )
-        expected = (base / f"{version}.xml").read_text(encoding="utf-8")
-        assert _normalize_xml(generated) == _normalize_xml(expected)
+    generated = generate_xml_string(
+        data,
+        version,
+        str(base / "template.xml"),
+        str(base / f"{version}.xsd"),
+    )
+
+    golden = (GOLDEN_DIR / f"{version}.xml").read_text(encoding="utf-8")
+    assert generated == golden, (
+        f"Output for {version} diverged from golden fixture. "
+        "If the change is intentional, regenerate via "
+        "scripts/generate_golden_files.py"
+    )

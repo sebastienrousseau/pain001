@@ -13,8 +13,8 @@
 [![Quality][quality-badge]][quality-url]
 [![Documentation][docs-badge]][docs-url]
 
-> **Latest Release: v0.0.47** - REST API, streaming loaders, security hardening, unified CLI, and XSD caching.
-> [See what's new →][release-047]
+> **Latest Release: v0.0.48** - Financial correctness (Decimal amounts, computed NbOfTxs/CtrlSum), explicit output paths, leaner dependencies, and API hardening.
+> [See what's new →][release-048]
 
 ## Overview
 
@@ -38,8 +38,11 @@ that initiates a customer payment.
   and Python data structures
 - **Automatic XSD Validation:** Validates generated XML against
   ISO 20022 schemas
-- **Comprehensive Testing:** 1,022 tests with branch coverage
-  ensuring reliability
+- **Comprehensive Testing:** Extensive test suite with enforced
+  branch-coverage floor in CI
+- **Financial Correctness:** Amounts handled as `Decimal`;
+  `NbOfTxs` and `CtrlSum` are computed from the data, never trusted
+  from input
 - **Secure by Design:** Uses `defusedxml` to prevent XXE attacks
   and implements SQL injection protection
 - **Type-Safe:** Full type hints for better IDE support and type
@@ -49,8 +52,6 @@ that initiates a customer payment.
 - **9 ISO 20022 Versions Supported:** Supports all 9 Customer Credit
   Transfer Initiation versions: pain.001.001.03 through
   pain.001.001.11
-- **Production-Ready:** Used in production environments for SEPA
-  and international payments
 
 As of today, the library is designed to be compatible with the:
 
@@ -208,14 +209,12 @@ flowchart LR
   - **Zero PII Leakage:** Logs never expose clear-text payment data—all
     sensitive information automatically redacted before logging
 - **Robust Development:** Comprehensive quality assurance with
-  - 1,022 tests with branch coverage across Python 3.9–3.12
-  - Code formatting with Black and Ruff
-  - Import sorting with isort
-  - Style checking with Flake8 (10.00/10 score)
+  - Extensive test suite with enforced branch-coverage floor across
+    Python 3.9–3.12
+  - Formatting, linting, and import sorting with Ruff
   - Static type checking with mypy (strict mode)
-  - Code quality analysis with Pylint
   - Mutation testing with mutmut for test effectiveness
-  - Performance benchmarks: ~69,604 XML ops/sec
+  - Performance benchmarks in CI
 
 ### Business Benefits
 
@@ -295,6 +294,13 @@ install Pain001 from PyPI with pip or your favourite package manager.
 
 ```sh
 python -m pip install pain001
+```
+
+Optional feature sets are published as extras:
+
+```sh
+python -m pip install 'pain001[api]'      # REST API (FastAPI + uvicorn)
+python -m pip install 'pain001[parquet]'  # Parquet data sources (pyarrow)
 ```
 
 **Step 2:** Verify the installation:
@@ -753,14 +759,17 @@ if __name__ == '__main__':
 
 ## REST API (FastAPI)
 
-Starting from v0.0.47, Pain001 provides a **production-ready REST API** for
-integration with web services and microservices architectures.
+Starting from v0.0.47, Pain001 provides a REST API for integration with
+web services and microservices architectures. Set the `PAIN001_API_KEY`
+environment variable to require bearer-token authentication on all
+endpoints (except `/api/health`); without it the API runs open, which is
+only suitable for local development.
 
 ### Starting the API Server
 
 ```sh
-# Install with FastAPI support
-pip install pain001
+# Install with FastAPI support (the "api" extra)
+pip install 'pain001[api]'
 
 # Start the development server
 python -m uvicorn pain001.api:app --reload --host 0.0.0.0 --port 8000
@@ -783,7 +792,7 @@ Response:
 ```json
 {
   "status": "healthy",
-  "version": "0.0.47",
+  "version": "0.0.48",
   "message": "Pain001 API is running"
 }
 ```
@@ -1306,6 +1315,7 @@ We would like to extend a big thank you to all the awesome contributors of
 [release-045]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.45
 [release-046]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.46
 [release-047]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.47
+[release-048]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.48
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge 'Codecov badge'

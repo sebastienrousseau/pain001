@@ -16,7 +16,6 @@
 
 import os
 import unittest
-from io import StringIO
 from unittest.mock import patch
 
 import pytest
@@ -231,18 +230,22 @@ class TestProcessFiles(unittest.TestCase):
                 self.empty_csv_file_path,
             )
 
-    @patch("sys.stdout", new_callable=StringIO)
-    def test_single_column_csv_data(self, mock_stdout) -> None:
-        with self.assertRaises(PaymentValidationError):
-            process_files(
-                self.xml_message_type,
-                self.xml_template_file_path,
-                self.xsd_schema_file_path,
-                self.single_column_csv_file_path,
+    def test_single_column_csv_data(self) -> None:
+        with self.assertLogs(
+            "pain001.csv.validate_csv_data", level="ERROR"
+        ) as logs:
+            with self.assertRaises(PaymentValidationError):
+                process_files(
+                    self.xml_message_type,
+                    self.xml_template_file_path,
+                    self.xsd_schema_file_path,
+                    self.single_column_csv_file_path,
+                )
+        self.assertTrue(
+            any(
+                "Error: Missing value(s) for column(s)" in message
+                for message in logs.output
             )
-        self.assertIn(
-            "Error: Missing value(s) for column(s)",
-            mock_stdout.getvalue(),
         )
 
     def test_invalid_csv_data(self) -> None:

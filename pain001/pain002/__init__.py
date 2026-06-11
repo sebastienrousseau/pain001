@@ -18,4 +18,3 @@
 from pain001.pain002.parser import parse_pain002_report
 
 __all__ = ["parse_pain002_report"]
-

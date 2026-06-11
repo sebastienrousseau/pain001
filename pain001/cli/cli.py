@@ -542,7 +542,12 @@ def main(
 
     if show_config:
         console.print(resolved_config)
-        console.print({"template": xml_template_file_path, "schema": xsd_schema_file_path})
+        console.print(
+            {
+                "template": xml_template_file_path,
+                "schema": xsd_schema_file_path,
+            }
+        )
         return
 
     if resolved_config.get("emit_metrics"):

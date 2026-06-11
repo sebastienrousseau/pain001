@@ -19,8 +19,12 @@ def test_cli_and_library_generate_identical_xml(tmp_path: Path) -> None:
 
     library_output = library_dir / "template.xml"
     cli_output = cli_dir / "template.xml"
-    library_output.write_text(Path(template).read_text(encoding="utf-8"), encoding="utf-8")
-    cli_output.write_text(Path(template).read_text(encoding="utf-8"), encoding="utf-8")
+    library_output.write_text(
+        Path(template).read_text(encoding="utf-8"), encoding="utf-8"
+    )
+    cli_output.write_text(
+        Path(template).read_text(encoding="utf-8"), encoding="utf-8"
+    )
 
     process_files("pain.001.001.03", str(library_output), schema, data)
 
@@ -40,7 +44,9 @@ def test_cli_and_library_generate_identical_xml(tmp_path: Path) -> None:
     )
     assert result.exit_code == 0
 
-    library_xml = (library_dir / "pain.001.001.03.xml").read_text(encoding="utf-8")
+    library_xml = (library_dir / "pain.001.001.03.xml").read_text(
+        encoding="utf-8"
+    )
     cli_xml = (cli_dir / "pain.001.001.03.xml").read_text(encoding="utf-8")
     assert "".join(library_xml.split()) == "".join(cli_xml.split())
 
@@ -73,4 +79,3 @@ def test_cli_dry_run_does_not_generate_output(tmp_path: Path) -> None:
 
     assert result.exit_code == 0
     assert list(output_dir.iterdir()) == []
-

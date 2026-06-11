@@ -867,9 +867,10 @@ def configure_json_logging(
         >>> # Docker/Kubernetes setup (console only)
         >>> logger = configure_json_logging(console_output=True)
     """
-    # Use root logger if none provided
+    # Default to the package logger — never reconfigure the host
+    # application's root logger implicitly.
     if logger is None:
-        logger = logging.getLogger()
+        logger = logging.getLogger("pain001")
 
     # Apply environment variable overrides
     env_level = os.environ.get("PAIN001_LOG_LEVEL")

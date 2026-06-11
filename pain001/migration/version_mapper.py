@@ -19,8 +19,9 @@ from __future__ import annotations
 
 import csv
 import os
+from collections.abc import Mapping
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
@@ -69,7 +70,9 @@ class VersionMapper:
             return raw
         return f"v{raw}"
 
-    def load_mapping(self, from_version: str, to_version: str) -> dict[str, Any]:
+    def load_mapping(
+        self, from_version: str, to_version: str
+    ) -> dict[str, Any]:
         """Load YAML mapping or fall back to generic legacy-to-modern mapping."""
         source = self.normalize_version(from_version)
         target = self.normalize_version(to_version)
@@ -173,9 +176,7 @@ class VersionMapper:
         return True
 
     @classmethod
-    def default_output_path(
-        cls, source_path: str, to_version: str
-    ) -> str:
+    def default_output_path(cls, source_path: str, to_version: str) -> str:
         """Build the default migrated CSV path next to the source file."""
         source = Path(source_path)
         normalized = cls.normalize_version(to_version)
@@ -234,7 +235,10 @@ class VersionMapper:
                 "charge_bearer": "SLEV",
             },
             "fallbacks": {
-                "creditor_agent_BIC": ["creditor_agent_BIC", "creditor_agent_BICFI"],
+                "creditor_agent_BIC": [
+                    "creditor_agent_BIC",
+                    "creditor_agent_BICFI",
+                ],
                 "remittance_information": [
                     "remittance_information",
                     "reference_number",
@@ -257,7 +261,9 @@ class VersionMapper:
             return load_jsonl_data(source_path)
         if ext == ".parquet":
             return load_parquet_data(source_path)
-        raise DataSourceError(f"Unsupported migration source file: {source_path}")
+        raise DataSourceError(
+            f"Unsupported migration source file: {source_path}"
+        )
 
 
 def cast_mapping(value: object) -> dict[str, Any]:

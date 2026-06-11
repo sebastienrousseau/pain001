@@ -20,7 +20,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate-fast || true  # Continue on failure, upload results
       - uses: actions/upload-artifact@v4
         if: always()
@@ -42,7 +42,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate || true  # Continue on failure
       - uses: actions/upload-artifact@v4
         if: always()
@@ -63,7 +63,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make perf
       - uses: actions/upload-artifact@v4
         with:
@@ -81,7 +81,7 @@ jobs:
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make cov
       - uses: codecov/codecov-action@v3
         with:
@@ -89,17 +89,17 @@ jobs:
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
-  # Job 5: Heavy Lint (flake8/pylint)
-  heavy-lint:
+  # Job 5: Lint (ruff)
+  lint:
     runs-on: ubuntu-latest
-    name: 🔍 Heavy Lint (flake8/pylint)
+    name: 🔍 Lint (ruff)
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
         with:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@v2
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: poetry run make lint
 
   typecheck:

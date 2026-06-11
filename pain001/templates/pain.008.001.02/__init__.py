@@ -14,4 +14,3 @@
 # limitations under the License.
 
 """Bundled pain.008.001.02 template assets."""
-

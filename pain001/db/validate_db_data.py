@@ -14,11 +14,30 @@
 # limitations under the License.
 
 import logging
+from datetime import datetime
 from typing import Any
 
-# Configure the logger
+from pain001.csv.validate_csv_data import _validate_field_type
+
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.ERROR)
+
+# Core required fields with expected types — kept in type parity with
+# the CSV validator so a row passes or fails identically regardless of
+# the data source it was loaded from.
+REQUIRED_COLUMNS: dict[str, type] = {
+    "id": int,
+    "date": datetime,
+    "nb_of_txs": int,
+    "initiator_name": str,
+    "payment_information_id": str,
+    "payment_method": str,
+    "debtor_name": str,
+    "debtor_account_IBAN": str,
+    "payment_amount": float,
+    "currency": str,
+    "creditor_name": str,
+    "creditor_account_IBAN": str,
+}
 
 
 def validate_db_data(data: list[dict[str, Any]]) -> bool:
@@ -31,28 +50,20 @@ def validate_db_data(data: list[dict[str, Any]]) -> bool:
     Returns:
         bool: True if the data is valid, False otherwise.
     """
-    # Core required fields that must be present and non-null
-    required_columns = [
-        "id",
-        "date",
-        "nb_of_txs",
-        "initiator_name",
-        "payment_information_id",
-        "payment_method",
-        "debtor_name",
-        "debtor_account_IBAN",
-        "payment_amount",
-        "currency",
-        "creditor_name",
-        "creditor_account_IBAN",
-    ]
-
     for row in data:
-        # Check only required columns
-        for column in required_columns:
+        for column, data_type in REQUIRED_COLUMNS.items():
             if column not in row or row[column] is None or row[column] == "":
                 logger.error(
                     "Error: Missing value for required column '%s' in row: %s",
+                    column,
+                    row,
+                )
+                return False
+            value = str(row[column]).strip()
+            if not _validate_field_type(value, data_type):
+                logger.error(
+                    "Error: Invalid %s value for column '%s' in row: %s",
+                    data_type.__name__,
                     column,
                     row,
                 )

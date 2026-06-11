@@ -15,6 +15,14 @@
 
 """Pain001 FastAPI REST API module."""
 
+try:
+    import fastapi  # noqa: F401
+except ImportError as _e:  # pragma: no cover
+    raise ImportError(
+        "The REST API requires the 'api' extra. "
+        "Install with: pip install pain001[api]"
+    ) from _e
+
 from pain001.api.app import app  # noqa: F401
 from pain001.api.job_manager import (  # noqa: F401
     JobManager,

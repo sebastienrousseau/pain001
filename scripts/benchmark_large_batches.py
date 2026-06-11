@@ -16,7 +16,10 @@ def main() -> None:
     schema = str((base / "pain.001.001.03.xsd").resolve())
     source_template = (base / "template.xml").read_text(encoding="utf-8")
     source_csv = (
-        (base / "template.csv").read_text(encoding="utf-8").strip().splitlines()
+        (base / "template.csv")
+        .read_text(encoding="utf-8")
+        .strip()
+        .splitlines()
     )
 
     with tempfile.TemporaryDirectory(dir=".") as tmpdir:
@@ -25,7 +28,9 @@ def main() -> None:
         template_file = tmp_path / "template.xml"
         header, *rows = source_csv
         expanded_rows = [rows[i % len(rows)] for i in range(2000)]
-        data_file.write_text("\n".join([header, *expanded_rows]) + "\n", encoding="utf-8")
+        data_file.write_text(
+            "\n".join([header, *expanded_rows]) + "\n", encoding="utf-8"
+        )
         template_file.write_text(source_template, encoding="utf-8")
 
         started = time.perf_counter()

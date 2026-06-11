@@ -16,7 +16,7 @@
 """Job management for async XML generation."""
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Optional
 
@@ -29,6 +29,11 @@ class JobStatus(str, Enum):
     SUCCESS = "success"
     FAILED = "failed"
     CANCELLED = "cancelled"
+
+
+TERMINAL_STATUSES = frozenset(
+    {JobStatus.SUCCESS, JobStatus.FAILED, JobStatus.CANCELLED}
+)
 
 
 class JobResult:  # pylint: disable=too-few-public-methods
@@ -53,8 +58,8 @@ class JobResult:  # pylint: disable=too-few-public-methods
         self.status = status
         self.result = result
         self.error = error
-        self.created_at = datetime.utcnow()
-        self.updated_at = datetime.utcnow()
+        self.created_at = datetime.now(timezone.utc)
+        self.updated_at = datetime.now(timezone.utc)
         self.progress_percent = 0
 
     def to_dict(self) -> dict[str, Any]:
@@ -88,6 +93,8 @@ class JobManager:
         Returns:
             Job ID.
         """
+        if len(self.jobs) >= self.max_jobs:
+            self.cleanup_old_jobs()
         job_id = str(uuid.uuid4())
         self.jobs[job_id] = JobResult(
             job_id=job_id,
@@ -122,12 +129,18 @@ class JobManager:
             progress: Progress percentage (0-100).
             result: Result data if completed.
             error: Error message if failed.
+
+        Terminal statuses (success/failed/cancelled) are final: a
+        late-arriving update (e.g. a worker finishing after the user
+        cancelled the job) must not resurrect or overwrite them.
         """
         if job_id in self.jobs:
             job = self.jobs[job_id]
+            if job.status in TERMINAL_STATUSES:
+                return
             job.status = status
             job.progress_percent = min(100, max(0, progress))
-            job.updated_at = datetime.utcnow()
+            job.updated_at = datetime.now(timezone.utc)
             if result:
                 job.result = result
             if error:
@@ -144,13 +157,9 @@ class JobManager:
         """
         if job_id in self.jobs:
             job = self.jobs[job_id]
-            if job.status not in [
-                JobStatus.SUCCESS,
-                JobStatus.FAILED,
-                JobStatus.CANCELLED,
-            ]:
+            if job.status not in TERMINAL_STATUSES:
                 job.status = JobStatus.CANCELLED
-                job.updated_at = datetime.utcnow()
+                job.updated_at = datetime.now(timezone.utc)
                 return True
         return False
 
@@ -163,12 +172,7 @@ class JobManager:
         completed_jobs = [
             (job_id, job)
             for job_id, job in self.jobs.items()
-            if job.status
-            in [
-                JobStatus.SUCCESS,
-                JobStatus.FAILED,
-                JobStatus.CANCELLED,
-            ]
+            if job.status in TERMINAL_STATUSES
         ]
 
         # Sort by updated_at and remove oldest

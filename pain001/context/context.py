@@ -55,19 +55,22 @@ class Context:
             raise RuntimeError("This class is a singleton!")
         else:
             Context.instance = self
-            self.name: str = ""
+            # Never use the root logger ("") — a library must not
+            # reconfigure the host application's logging.
+            self.name: str = "pain001"
             self.log_level: int = logging.INFO
             self.logger: logging.Logger = logging.getLogger(self.name)
             self.logger.setLevel(self.log_level)
-            self.logger.info("Context initialized")
+            self.logger.debug("Context initialized")
 
     def set_name(self, name: str) -> None:
         """Sets the name of the logger.
 
         Args:
-            name: The name of the logger.
+            name: The name of the logger. Empty names are coerced to
+                "pain001" so the root logger is never claimed.
         """
-        self.name = name
+        self.name = name or "pain001"
 
     def set_log_level(self, log_level: int) -> None:
         """Sets the log level of the logger.

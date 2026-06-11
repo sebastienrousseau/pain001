@@ -46,7 +46,9 @@ def validate_template_bundle(metadata: TemplateMetadata) -> None:
     """Validate one template bundle for existence and drift."""
     for required_path in [metadata.template_path, metadata.xsd_path]:
         if not required_path.exists():
-            raise SchemaGuardrailError(f"Missing required file: {required_path}")
+            raise SchemaGuardrailError(
+                f"Missing required file: {required_path}"
+            )
 
     for candidate in [
         metadata.template_path,
@@ -73,4 +75,3 @@ def validate_registry(
         validate_template_bundle(metadata)
         validated.append(metadata.message_type)
     return validated
-

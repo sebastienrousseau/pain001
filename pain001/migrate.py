@@ -23,10 +23,21 @@ from pain001.migration import VersionMapper
 
 
 @click.command()
-@click.option("--from", "from_version", required=True, help="Source version, e.g. v03")
-@click.option("--to", "to_version", required=True, help="Target version, e.g. v09")
-@click.option("--source", "source_path", required=True, type=click.Path(exists=True, dir_okay=False, readable=True))
-@click.option("--output", "output_path", type=click.Path(dir_okay=False, writable=True))
+@click.option(
+    "--from", "from_version", required=True, help="Source version, e.g. v03"
+)
+@click.option(
+    "--to", "to_version", required=True, help="Target version, e.g. v09"
+)
+@click.option(
+    "--source",
+    "source_path",
+    required=True,
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+)
+@click.option(
+    "--output", "output_path", type=click.Path(dir_okay=False, writable=True)
+)
 def main(
     from_version: str,
     to_version: str,
@@ -38,7 +49,9 @@ def main(
     migrated_rows = mapper.migrate_file(source_path, from_version, to_version)
     mapper.validate_migrated_rows(migrated_rows, to_version)
 
-    destination = output_path or mapper.default_output_path(source_path, to_version)
+    destination = output_path or mapper.default_output_path(
+        source_path, to_version
+    )
     mapper.write_csv(migrated_rows, destination)
     click.echo(destination)
 

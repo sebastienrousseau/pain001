@@ -19,7 +19,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
 
 import yaml  # type: ignore[import-untyped]
 
@@ -34,8 +33,8 @@ class TemplateMetadata:
     message_category: str
     template_path: Path
     xsd_path: Path
-    example_data_path: Optional[Path]
-    example_xml_path: Optional[Path]
+    example_data_path: Path | None
+    example_xml_path: Path | None
     supported_input_formats: list[str]
     iso_version: str
     deprecated: bool = False
@@ -57,7 +56,9 @@ class TemplateRegistry:
             self._registry[metadata.message_type] = metadata
 
     def _load_metadata(self, metadata_path: Path) -> TemplateMetadata:
-        raw_data = yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
+        raw_data = (
+            yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
+        )
         raw = dict(raw_data)
         parent = metadata_path.parent
         files = raw.get("files", {})

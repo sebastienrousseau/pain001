@@ -20,14 +20,18 @@
 # pylint: disable=duplicate-code
 
 # Import the CSV library
+import logging
 import os
 import re
 import time
-from typing import Any
+import warnings
+from decimal import Decimal, InvalidOperation
+from typing import Any, Optional
 
 from jinja2 import select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
 
+from pain001.exceptions import PaymentValidationError
 from pain001.observability import emit_metric_event
 from pain001.security import validate_path
 from pain001.xml.generate_updated_xml_file_path import (
@@ -36,9 +40,73 @@ from pain001.xml.generate_updated_xml_file_path import (
 from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
 from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
 
+logger = logging.getLogger(__name__)
+
 _TEMPLATE_DIRECTIVE_PATTERN = re.compile(
     r"{%\s*(include|import|from|extends)\b", re.IGNORECASE
 )
+
+_AMOUNT_EXPONENT = Decimal("0.01")
+
+
+def _format_amount(value: Any, row_index: int) -> str:
+    """Normalize a monetary amount to an exact two-decimal string.
+
+    Amounts are handled with Decimal end-to-end: floats are converted via
+    their shortest string representation so binary artifacts are surfaced
+    (and rejected) rather than silently rounded into the payment file.
+
+    Raises:
+        PaymentValidationError: If the amount is missing, not a number,
+            not positive, or carries more than two decimal places.
+    """
+    if value is None or (isinstance(value, str) and not value.strip()):
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount is required",
+            field="payment_amount",
+        )
+    try:
+        amount = Decimal(str(value).strip())
+    except InvalidOperation as e:
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount {value!r} is not a number",
+            field="payment_amount",
+        ) from e
+    if not amount.is_finite() or amount <= 0:
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount must be a positive amount, "
+            f"got {value!r}",
+            field="payment_amount",
+        )
+    quantized = amount.quantize(_AMOUNT_EXPONENT)
+    if amount != quantized:
+        raise PaymentValidationError(
+            f"Row {row_index}: payment_amount {value!r} has more than two "
+            "decimal places; round it explicitly before generating",
+            field="payment_amount",
+        )
+    return f"{quantized:.2f}"
+
+
+def _normalize_financial_fields(
+    data: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], str, str]:
+    """Normalize amounts and compute batch totals from the actual rows.
+
+    Returns:
+        Tuple of (rows with normalized payment_amount, nb_of_txs, ctrl_sum)
+        where nb_of_txs and ctrl_sum are computed from the data instead of
+        trusting caller-provided header fields.
+    """
+    normalized: list[dict[str, Any]] = []
+    total = Decimal("0.00")
+    for index, row in enumerate(data, start=1):
+        formatted = _format_amount(row.get("payment_amount"), index)
+        total += Decimal(formatted)
+        updated = dict(row)
+        updated["payment_amount"] = formatted
+        normalized.append(updated)
+    return normalized, str(len(normalized)), f"{total:.2f}"
 
 
 def _load_trusted_template_source(xml_template_path: str) -> str:
@@ -46,7 +114,7 @@ def _load_trusted_template_source(xml_template_path: str) -> str:
     if not str(xml_template_path).endswith(".xml"):
         raise ValueError("Template path must point to an .xml file")
 
-    with open(xml_template_path, "r", encoding="utf-8") as handle:  # nosec B108
+    with open(xml_template_path, encoding="utf-8") as handle:  # nosec B108
         template_source = handle.read()
 
     if _TEMPLATE_DIRECTIVE_PATTERN.search(template_source):
@@ -113,9 +181,19 @@ def generate_xml_string(
     except Exception as e:
         raise ValueError(f"Invalid schema path: {e}") from e
 
-    # Prepare XML data using appropriate function
+    # Normalize amounts (Decimal, 2dp) and compute batch totals from the
+    # rows themselves — header fields like NbOfTxs/CtrlSum must never be
+    # trusted from input or the message becomes internally inconsistent.
+    data, nb_of_txs, ctrl_sum = _normalize_financial_fields(data)
+
+    # Prepare XML data using the registry-driven pipeline
     prepare_started = time.time()
     xml_data = prepare_xml_data(data, payment_initiation_message_type)
+    xml_data["nb_of_txs"] = nb_of_txs
+    if "payment_nb_of_txs" in xml_data:
+        xml_data["payment_nb_of_txs"] = nb_of_txs
+    if "ctrl_sum" in xml_data:
+        xml_data["ctrl_sum"] = ctrl_sum
     emit_metric_event(
         "xml_prepared",
         message_type=payment_initiation_message_type,
@@ -170,6 +248,7 @@ def generate_xml(
     payment_initiation_message_type: str,
     xml_file_path: str,
     xsd_file_path: str,
+    output_path: Optional[str] = None,
 ) -> str:
     """Generates an ISO 20022 pain.001 XML file from input data.
 
@@ -181,11 +260,16 @@ def generate_xml(
         payment_initiation_message_type: String indicating message type
         such as "pain.001.001.03, pain.001.001.04, pain.001.001.05,
         pain.001.001.06, pain.001.001.07, pain.001.001.08, etc."
-        xml_file_path: Path to write generated XML file to
+        xml_file_path: Path to the Jinja2 XML template file
         xsd_file_path: Path to XML schema file for validation
+        output_path: Explicit path to write the generated XML file to.
+            Parent directories are created if needed. When omitted, the
+            file is written next to the template (deprecated behavior
+            that only works when the template lives under the current
+            working directory).
 
     Returns:
-        str: The generated XML file path.
+        The path the XML file was written to.
 
     Raises:
         ValueError: If message type is invalid or data is empty.
@@ -196,28 +280,34 @@ def generate_xml(
         data, payment_initiation_message_type, xml_file_path, xsd_file_path
     )
 
-    # Generate updated XML file path
-    updated_xml_file_path = generate_updated_xml_file_path(
-        xml_file_path, payment_initiation_message_type
-    )
-
-    # Validate path to prevent traversal attacks
-
-    try:
-        safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
-    except Exception as e:
-        raise ValueError(f"Path validation failed: {e}") from e
-
-    # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
-    # validate_path already enforces this, but CodeQL requires the guard
-    # at the call site for interprocedural taint tracking.
-    cwd_prefix = str(os.path.realpath(os.getcwd()))
-    if not safe_xml_path.startswith(cwd_prefix + os.sep):
-        raise ValueError(
-            f"Output path outside working directory: {safe_xml_path}"
+    if output_path is not None:
+        safe_xml_path = os.path.realpath(str(output_path))
+        os.makedirs(os.path.dirname(safe_xml_path) or ".", exist_ok=True)
+    else:
+        warnings.warn(
+            "Calling generate_xml without output_path writes next to the "
+            "template and requires it to be under the current working "
+            "directory; pass output_path explicitly instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        # Legacy behavior: derive the output path from the template path.
+        updated_xml_file_path = generate_updated_xml_file_path(
+            xml_file_path, payment_initiation_message_type
         )
 
-    # Write the XML content to the file (now safe after validation)
+        try:
+            safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
+        except Exception as e:
+            raise ValueError(f"Path validation failed: {e}") from e
+
+        # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
+        cwd_prefix = str(os.path.realpath(os.getcwd()))
+        if not safe_xml_path.startswith(cwd_prefix + os.sep):
+            raise ValueError(
+                f"Output path outside working directory: {safe_xml_path}"
+            )
+
     with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108
         xml_file.write(xml_content)
 
@@ -228,7 +318,5 @@ def generate_xml(
         file_size_bytes=len(xml_content.encode("utf-8")),
     )
 
-    print(f"A new XML file has been created at `{safe_xml_path}`")
-    print(f"The XML has been validated against `{xsd_file_path}`")
-
+    logger.info("XML file created at %s", safe_xml_path)
     return safe_xml_path

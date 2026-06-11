@@ -18,15 +18,15 @@ jobs:
         with:
           python-version: "3.9"
       - uses: abatilo/actions-poetry@v3
-      - run: poetry install --no-interaction
-      - name: Run safety check
+      - run: poetry install --no-interaction --all-extras
+      - name: Generate safety report artifact
         run: poetry run safety check --json > safety-report.json || true
       - uses: actions/upload-artifact@v4
         with:
           name: safety-report
           path: safety-report.json
-      - name: Check for high-severity issues
-        run: poetry run safety check || true
+      - name: Fail on known vulnerabilities
+        run: poetry run safety check
 
   licenses:
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
         with:
           python-version: "3.9"
       - uses: abatilo/actions-poetry@v3
-      - run: poetry install --no-interaction
+      - run: poetry install --no-interaction --all-extras
       - run: |
           pip install pip-licenses
           pip-licenses --format=json > licenses.json

@@ -15,8 +15,6 @@
 
 
 import unittest
-from io import StringIO
-from unittest.mock import patch
 
 from pain001.csv.validate_csv_data import validate_csv_data
 
@@ -224,7 +222,9 @@ class TestValidateCsvData(unittest.TestCase):
         ]
         self.assertFalse(validate_csv_data(data))
 
-    def test_validate_csv_redacts_sensitive_values_in_error_output(self) -> None:
+    def test_validate_csv_redacts_sensitive_values_in_error_output(
+        self,
+    ) -> None:
         """Validation errors should not print raw IBAN/BIC/name values."""
         data = [
             {
@@ -252,11 +252,12 @@ class TestValidateCsvData(unittest.TestCase):
                 "remittance_information": "Invoice-12345",
             }
         ]
-        fake_stdout = StringIO()
-        with patch("sys.stdout", fake_stdout):
+        with self.assertLogs(
+            "pain001.csv.validate_csv_data", level="ERROR"
+        ) as captured:
             self.assertFalse(validate_csv_data(data))
 
-        output = fake_stdout.getvalue()
+        output = "\n".join(captured.output)
         self.assertNotIn("DE75512108001245126162", output)
         self.assertNotIn("DE68210501700024690959", output)
         self.assertNotIn("BANKDEFFXXX", output)

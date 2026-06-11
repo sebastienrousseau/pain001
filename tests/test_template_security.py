@@ -57,4 +57,3 @@ def test_v12_template_bundle_exists() -> None:
     assert (base / "template.xml").exists()
     assert (base / "pain.001.001.12.xsd").exists()
     assert (base / "metadata.yaml").exists()
-

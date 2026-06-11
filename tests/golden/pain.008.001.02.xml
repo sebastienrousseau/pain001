@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.008.001.02 pain.008.001.02.xsd">
+    <CstmrDrctDbtInitn>
+        <GrpHdr>
+            <MsgId>1</MsgId>
+            <CreDtTm>2026-01-15T10:30:00</CreDtTm>
+            <NbOfTxs>2</NbOfTxs>
+            <CtrlSum>350.00</CtrlSum>
+            <InitgPty>
+                <Nm>ACME Collections</Nm>
+            </InitgPty>
+        </GrpHdr>
+        <PmtInf>
+            <PmtInfId>DD-INFO-001</PmtInfId>
+            <PmtMtd>DD</PmtMtd>
+            <BtchBookg>false</BtchBookg>
+            <NbOfTxs>2</NbOfTxs>
+            <CtrlSum>350.00</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            <ReqdColltnDt>2026-01-20</ReqdColltnDt>
+            <Cdtr>
+                <Nm>ACME Collections</Nm>
+            </Cdtr>
+            <CdtrAcct>
+                <Id>
+                    <IBAN>DE89370400440532013000</IBAN>
+                </Id>
+            </CdtrAcct>
+            <CdtrAgt>
+                <FinInstnId>
+                    <BIC>DEUTDEFFXXX</BIC>
+                </FinInstnId>
+            </CdtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
+            
+            <DrctDbtTxInf>
+                <PmtId>
+                    <EndToEndId>DD-0001</EndToEndId>
+                </PmtId>
+                <InstdAmt Ccy="EUR">150.00</InstdAmt>
+                <DrctDbtTx>
+                    <MndtRltdInf>
+                        <MndtId>MANDATE-001</MndtId>
+                        <DtOfSgntr>2025-11-15</DtOfSgntr>
+                    </MndtRltdInf>
+                </DrctDbtTx>
+                <DbtrAgt>
+                    <FinInstnId>
+                        <BIC>BANKFRPPXXX</BIC>
+                    </FinInstnId>
+                </DbtrAgt>
+                <Dbtr>
+                    <Nm>Jane Subscriber</Nm>
+                </Dbtr>
+                <DbtrAcct>
+                    <Id>
+                        <IBAN>FR1420041010050500013M02606</IBAN>
+                    </Id>
+                </DbtrAcct>
+                <RmtInf>
+                    <Ustrd>Gym membership January</Ustrd>
+                </RmtInf>
+                <SeqTp>RCUR</SeqTp>
+            </DrctDbtTxInf>
+            
+            <DrctDbtTxInf>
+                <PmtId>
+                    <EndToEndId>DD-0002</EndToEndId>
+                </PmtId>
+                <InstdAmt Ccy="EUR">200.00</InstdAmt>
+                <DrctDbtTx>
+                    <MndtRltdInf>
+                        <MndtId>MANDATE-002</MndtId>
+                        <DtOfSgntr>2025-12-01</DtOfSgntr>
+                    </MndtRltdInf>
+                </DrctDbtTx>
+                <DbtrAgt>
+                    <FinInstnId>
+                        <BIC>BANKFRPPXXX</BIC>
+                    </FinInstnId>
+                </DbtrAgt>
+                <Dbtr>
+                    <Nm>John Subscriber</Nm>
+                </Dbtr>
+                <DbtrAcct>
+                    <Id>
+                        <IBAN>FR1420041010050500013M02607</IBAN>
+                    </Id>
+                </DbtrAcct>
+                <RmtInf>
+                    <Ustrd>Consulting retainer January</Ustrd>
+                </RmtInf>
+                <SeqTp>FRST</SeqTp>
+            </DrctDbtTxInf>
+            
+        </PmtInf>
+    </CstmrDrctDbtInitn>
+</Document>

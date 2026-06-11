@@ -12,7 +12,9 @@ def test_process_files_async_wraps_sync_call() -> None:
         return_value="generated.xml",
     ) as mock_to_thread:
         result = asyncio.run(
-            process_files_async("pain.001.001.11", "template.xml", "schema.xsd", "data.csv")
+            process_files_async(
+                "pain.001.001.11", "template.xml", "schema.xsd", "data.csv"
+            )
         )
     assert result == "generated.xml"
     mock_to_thread.assert_called_once()

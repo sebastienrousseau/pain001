@@ -16,7 +16,6 @@
 """Memory-efficient streaming loader for SQLite database."""
 
 import os
-import sqlite3
 from collections.abc import Generator
 from typing import Any
 

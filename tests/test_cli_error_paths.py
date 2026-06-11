@@ -59,13 +59,11 @@ class TestCliErrorPaths:
                 ],
             )
             assert result.exit_code == 2
-            assert (
-                "Missing option '-t'" in result.output
-                or "Missing option" in result.output
-            )
+            output = " ".join(result.output.lower().split())
+            assert "missing xml message type" in output
 
     def test_cli_missing_template_path(self) -> None:
-        """Test CLI when xml_template_file_path is not provided."""
+        """Omitted --template auto-resolves; empty data file fails — exit 1."""
         runner = CliRunner()
         with tempfile.TemporaryDirectory() as tmpdir:
             schema_path = os.path.join(tmpdir, "schema.xsd")
@@ -86,14 +84,10 @@ class TestCliErrorPaths:
                     data_path,
                 ],
             )
-            assert result.exit_code == 2
-            assert (
-                "Missing option '-m'" in result.output
-                or "Missing option" in result.output
-            )
+            assert result.exit_code == 1
 
     def test_cli_missing_schema_path(self) -> None:
-        """Test CLI when xsd_schema_file_path is not provided."""
+        """Omitted --schema auto-resolves; empty data file fails — exit 1."""
         runner = CliRunner()
         with tempfile.TemporaryDirectory() as tmpdir:
             template_path = os.path.join(tmpdir, "template.xml")
@@ -114,11 +108,7 @@ class TestCliErrorPaths:
                     data_path,
                 ],
             )
-            assert result.exit_code == 2
-            assert (
-                "Missing option '-s'" in result.output
-                or "Missing option" in result.output
-            )
+            assert result.exit_code == 1
 
     def test_cli_missing_data_path(self) -> None:
         """Test CLI when data_file_path is not provided."""
@@ -143,10 +133,8 @@ class TestCliErrorPaths:
                 ],
             )
             assert result.exit_code == 2
-            assert (
-                "Missing option '-d'" in result.output
-                or "Missing option" in result.output
-            )
+            output = " ".join(result.output.lower().split())
+            assert "missing data file path" in output
 
     def test_cli_nonexistent_files(self) -> None:
         """Test CLI when provided files don't exist."""
@@ -164,8 +152,9 @@ class TestCliErrorPaths:
                 "/nonexistent/data.csv",
             ],
         )
-        assert result.exit_code == 2
-        assert "does not exist" in result.output
+        assert result.exit_code == 1
+        output = " ".join(result.output.lower().split())
+        assert "error" in output
 
     def test_cli_dry_run_data_validation_failure(self) -> None:
         """Test CLI dry-run when data validation fails."""

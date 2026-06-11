@@ -17,7 +17,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
@@ -56,7 +56,9 @@ def parse_pain002_report(
     ns = _detect_namespace(root)
     report = root.find(f".//{ns}CstmrPmtStsRpt")
     if report is None:
-        raise DataSourceError("Input XML is not a pain.002 payment status report")
+        raise DataSourceError(
+            "Input XML is not a pain.002 payment status report"
+        )
 
     statuses: list[dict[str, str]] = []
     for payment_info in report.findall(f"{ns}OrgnlPmtInfAndSts"):
@@ -84,7 +86,9 @@ def parse_pain002_report(
     return {
         "message_id": _find_text(report, ns, "GrpHdr/MsgId"),
         "creation_datetime": _find_text(report, ns, "GrpHdr/CreDtTm"),
-        "original_message_id": _find_text(report, ns, "OrgnlGrpInfAndSts/OrgnlMsgId"),
+        "original_message_id": _find_text(
+            report, ns, "OrgnlGrpInfAndSts/OrgnlMsgId"
+        ),
         "original_message_name_id": _find_text(
             report, ns, "OrgnlGrpInfAndSts/OrgnlMsgNmId"
         ),
@@ -103,7 +107,7 @@ def _detect_namespace(root: Any) -> str:
 
 def _find_text(parent: Any, ns: str, path: str) -> str:
     """Read nested text using slash-separated relative paths."""
-    current: Optional[Any] = parent
+    current: Any | None = parent
     for part in path.split("/"):
         current = current.find(f"{ns}{part}") if current is not None else None
         if current is None:

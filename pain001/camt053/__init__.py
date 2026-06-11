@@ -18,4 +18,3 @@
 from pain001.camt053.parser import parse_camt053_statement
 
 __all__ = ["parse_camt053_statement"]
-

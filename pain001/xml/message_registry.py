@@ -18,7 +18,6 @@
 from dataclasses import dataclass
 from typing import Any, Callable
 
-
 XmlDataPreparer = Callable[[list[dict[str, Any]]], dict[str, Any]]
 
 
@@ -152,9 +151,7 @@ def _prepare_xml_data_v04(data: list[dict[str, Any]]) -> dict[str, Any]:
     }
 
 
-def _prepare_xml_data_v05_to_v08(
-    data: list[dict[str, Any]]
-) -> dict[str, Any]:
+def _prepare_xml_data_v05_to_v08(data: list[dict[str, Any]]) -> dict[str, Any]:
     """Prepare XML data for pain.001.001.05-08 message types."""
     return {
         "id": data[0].get("id", ""),
@@ -232,9 +229,7 @@ def _prepare_xml_data_v05_to_v08(
     }
 
 
-def _prepare_xml_data_v09_to_v12(
-    data: list[dict[str, Any]]
-) -> dict[str, Any]:
+def _prepare_xml_data_v09_to_v12(data: list[dict[str, Any]]) -> dict[str, Any]:
     """Prepare XML data for pain.001.001.09-12 message types."""
     return {
         "id": data[0]["id"],
@@ -266,7 +261,7 @@ def _prepare_xml_data_v09_to_v12(
 
 
 def _prepare_xml_data_v08_direct_debit(
-    data: list[dict[str, Any]]
+    data: list[dict[str, Any]],
 ) -> dict[str, Any]:
     """Prepare XML data for pain.008.001.02 direct debit messages."""
     return {
@@ -349,7 +344,9 @@ MESSAGE_REGISTRY: dict[str, MessageDefinition] = {
         "pain.001.001.12", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
     "pain.008.001.02": MessageDefinition(
-        "pain.008.001.02", "direct_debit_v02", _prepare_xml_data_v08_direct_debit
+        "pain.008.001.02",
+        "direct_debit_v02",
+        _prepare_xml_data_v08_direct_debit,
     ),
 }
 

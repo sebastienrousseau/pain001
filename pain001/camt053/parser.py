@@ -17,7 +17,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
@@ -67,8 +67,12 @@ def parse_camt053_statement(
                 "status": _find_text(entry, ns, "Sts"),
                 "booking_date": _find_text(entry, ns, "BookgDt/Dt"),
                 "value_date": _find_text(entry, ns, "ValDt/Dt"),
-                "amount": (amount.text or "").strip() if amount is not None and amount.text else "",
-                "currency": amount.attrib.get("Ccy", "") if amount is not None else "",
+                "amount": (amount.text or "").strip()
+                if amount is not None and amount.text
+                else "",
+                "currency": amount.attrib.get("Ccy", "")
+                if amount is not None
+                else "",
                 "entry_reference": _find_text(entry, ns, "AcctSvcrRef"),
                 "remittance_information": _find_text(
                     entry,
@@ -80,7 +84,9 @@ def parse_camt053_statement(
 
     return {
         "statement_id": _find_text(statement, ns, "Id"),
-        "electronic_sequence_number": _find_text(statement, ns, "ElctrncSeqNb"),
+        "electronic_sequence_number": _find_text(
+            statement, ns, "ElctrncSeqNb"
+        ),
         "iban": _find_text(statement, ns, "Acct/Id/IBAN"),
         "currency": _find_text(statement, ns, "Acct/Ccy"),
         "entries": entries,
@@ -97,7 +103,7 @@ def _detect_namespace(root: Any) -> str:
 
 def _find_text(parent: Any, ns: str, path: str) -> str:
     """Read nested text using slash-separated relative paths."""
-    current: Optional[Any] = parent
+    current: Any | None = parent
     for part in path.split("/"):
         current = current.find(f"{ns}{part}") if current is not None else None
         if current is None:
