@@ -3711,6 +3711,21 @@ files = [
 ]
 
 [[package]]
+name = "wheel"
+version = "0.47.0"
+description = "Command line tool for manipulating wheel files"
+optional = false
+python-versions = ">=3.9"
+groups = ["dev"]
+files = [
+    {file = "wheel-0.47.0-py3-none-any.whl", hash = "sha256:212281cab4dff978f6cedd499cd893e1f620791ca6ff7107cf270781e587eced"},
+    {file = "wheel-0.47.0.tar.gz", hash = "sha256:cc72bd1009ba0cf63922e28f94d9d83b920aa2bb28f798a31d0691b02fa3c9b3"},
+]
+
+[package.dependencies]
+packaging = ">=24.0"
+
+[[package]]
 name = "xmlschema"
 version = "3.4.5"
 description = "An XML Schema validator and decoder"
@@ -3758,4 +3773,4 @@ parquet = ["pyarrow"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "b419e4bb643105438cea29e490d641d8be3b676e8c33008adca5064355c4085d"
+content-hash = "fa53e8c4699618ff66c5f85ac47b1f97548e200ba433fa899084a3580a7a30b2"

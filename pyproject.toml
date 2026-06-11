@@ -63,6 +63,7 @@ pip-licenses = "^4.0.0"
 twine = "^6.2.0"
 types-jsonschema = "^4.26.0.20260109"
 pandas = "^2.3.3"
+wheel = ">=0.46.2"
 
 [tool.poetry.group.docs]
 optional = true
