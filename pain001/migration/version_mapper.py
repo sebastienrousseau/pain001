@@ -91,9 +91,9 @@ class VersionMapper:
 
     @staticmethod
     def _is_supported_generic_pair(source: str, target: str) -> bool:
-        """Return True for legacy (v03-v08) to modern (v09-v11) pairs."""
+        """Return True for legacy (v03-v08) to modern (v09-v12) pairs."""
         legacy = {"v03", "v04", "v05", "v06", "v07", "v08"}
-        modern = {"v09", "v10", "v11"}
+        modern = {"v09", "v10", "v11", "v12"}
         return source in legacy and target in modern
 
     def migrate_rows(

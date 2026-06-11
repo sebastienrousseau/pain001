@@ -133,6 +133,11 @@ def test_load_mapping_generic_fallback() -> None:
     assert mapping["field_map"]["payment_id"] == "payment_id"
 
 
+def test_load_mapping_generic_fallback_supports_v12() -> None:
+    mapping = VersionMapper().load_mapping("v03", "v12")
+    assert mapping["field_map"]["payment_id"] == "payment_id"
+
+
 def test_load_mapping_unsupported_pair() -> None:
     with pytest.raises(DataSourceError, match="Unsupported migration path"):
         VersionMapper().load_mapping("v01", "v02")
