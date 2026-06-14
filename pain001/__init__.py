@@ -15,7 +15,7 @@
 
 """The Python pain001 module."""
 
-__version__ = "0.0.47"
+__version__ = "0.0.49"
 
 from pain001.__main__ import main
 from pain001.core.core import process_files

@@ -13,8 +13,8 @@
 [![Quality][quality-badge]][quality-url]
 [![Documentation][docs-badge]][docs-url]
 
-> **Latest Release: v0.0.47** - REST API, streaming loaders, security hardening, unified CLI, and XSD caching.
-> [See what's new →][release-047]
+> **Latest Release: v0.0.49** - REST API, streaming loaders, security hardening, unified CLI, and XSD caching.
+> [See what's new →][release-049]
 
 ## Overview
 
@@ -208,7 +208,7 @@ flowchart LR
   - **Zero PII Leakage:** Logs never expose clear-text payment data—all
     sensitive information automatically redacted before logging
 - **Robust Development:** Comprehensive quality assurance with
-  - 1,022 tests with branch coverage across Python 3.9–3.12
+  - 1,022 tests with branch coverage across Python 3.10–3.12
   - Code formatting with Black and Ruff
   - Import sorting with isort
   - Style checking with Flake8 (10.00/10 score)
@@ -235,7 +235,7 @@ flowchart LR
 
 **Pain001** works with macOS, Linux, and Windows and requires:
 
-- **Python 3.9.0 or higher**
+- **Python 3.10 or higher**
 - **pip** (Python package installer)
 
 ### Key Dependencies
@@ -783,7 +783,7 @@ Response:
 ```json
 {
   "status": "healthy",
-  "version": "0.0.47",
+  "version": "0.0.49",
   "message": "Pain001 API is running"
 }
 ```
@@ -1306,6 +1306,8 @@ We would like to extend a big thank you to all the awesome contributors of
 [release-045]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.45
 [release-046]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.46
 [release-047]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.47
+[release-048]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.48
+[release-049]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.49
 
 [banner]: https://kura.pro/pain001/images/banners/banner-pain001.svg 'Pain001, A Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Or SQlite Data Files.'
 [codecov-badge]: https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge 'Codecov badge'
@@ -1315,7 +1317,7 @@ We would like to extend a big thank you to all the awesome contributors of
 [licence-badge]: https://img.shields.io/pypi/l/pain001?style=for-the-badge 'Licence badge'
 [pypi-badge]: https://img.shields.io/pypi/v/pain001?style=for-the-badge 'PyPI version badge'
 [pypi-downloads-badge]: https://img.shields.io/pypi/dm/pain001.svg?style=for-the-badge 'PyPI Downloads badge'
-[python-matrix-badge]: https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue?style=for-the-badge 'Python 3.9-3.12'
+[python-matrix-badge]: https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12-blue?style=for-the-badge 'Python 3.10-3.12'
 [python-versions-badge]: https://img.shields.io/pypi/pyversions/pain001.svg?style=for-the-badge 'Python versions badge'
 [quality-badge]: https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pain001/quality.yml?branch=main&label=Quality&style=for-the-badge 'Code quality badge'
 [quality-url]: https://github.com/sebastienrousseau/pain001/actions/workflows/quality.yml

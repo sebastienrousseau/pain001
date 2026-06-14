@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.49] - 2026-06-14
+
+### Changed
+
+- **BREAKING: Dropped Python 3.9 support.** The minimum supported version is now
+  Python 3.10 (`python = "^3.10"`). Python 3.9 reached end-of-life in October
+  2025, and the security patches below are only published for Python 3.10+.
+  CI matrices, classifiers, and `python_requires` updated accordingly.
+- **Version alignment** - Bumped package version to `0.0.49` across all
+  sources of truth (`pyproject.toml`, `setup.cfg`, `pain001/constants.py`,
+  `pain001/__init__.py`) to follow the `0.0.48` release published on PyPI.
+
+### Security
+
+- Upgraded dependencies to resolve all 10 known vulnerabilities reported by the
+  dependency-governance tollgate (`safety`):
+  - `cryptography` 46.0.5 → 46.0.7 (CVE-2026-34073, CVE-2026-39892)
+  - `pyarrow` 18.1.0 → 23.0.1 (CVE-2026-25087)
+  - `pygments` 2.18.0 → 2.20.0 (CVE-2026-4539)
+  - `requests` 2.32.5 → 2.34.2 (CVE-2026-25645)
+  - `urllib3` 2.6.3 → 2.7.0 (CVE-2026-44431, CVE-2026-44432)
+  - `python-dotenv` 1.2.1 → 1.2.2 (CVE-2026-28684)
+  - `pytest` (dev) 8.x → 9.x (CVE-2025-71176)
+  - `black` (dev) 24.x → 26.x (CVE-2026-32274)
+
+### Documentation
+
+- Updated `README.md` "Latest Release" banner, REST API health-check example,
+  and release link references for `v0.0.48` and `v0.0.49`.
+
 ## [0.0.47] - 2026-01-18
 
 ### Highlights

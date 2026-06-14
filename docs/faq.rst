@@ -28,8 +28,7 @@ Yes! Pain001 has:
 
 **What Python versions are supported?**
 
-Pain001 requires Python 3.9 or higher. It's tested on:
-- Python 3.9
+Pain001 requires Python 3.10 or higher. It's tested on:
 - Python 3.10
 - Python 3.11
 - Python 3.12
