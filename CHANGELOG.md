@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.49] - 2026-06-14
+
+Maintenance release. No functional or API changes since 0.0.48; this is a
+version bump for release hygiene.
+
+### Changed
+
+- Bumped package version to `0.0.49` across `pyproject.toml`,
+  `pain001/constants.py`, and `pain001/__init__.py`.
+
+### Security
+
+- No new advisories. The dependency set remains clean: `pip-audit` reports
+  zero known vulnerabilities across all locked packages, carrying forward the
+  remediations shipped in 0.0.48.
+
 ## [0.0.48] - 2026-06-12
 
 ### Highlights
