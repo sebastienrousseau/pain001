@@ -13,12 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Additional tests to achieve 100% code coverage."""
+"""Edge-case and error-path tests for core, CLI, and XSD validation."""
 
 import os
-import sys
 import tempfile
-from unittest.mock import patch
 
 import pytest
 
@@ -27,54 +25,8 @@ from pain001.core.core import process_files
 from pain001.xml.generate_xml import generate_xml
 
 
-class TestCoverageComplete:
-    """Test cases to cover remaining code paths."""
-
-    def test_main_module_direct_execution(self) -> None:
-        """Test __main__ module when executed directly."""
-        # Test __main__.py if __name__ == "__main__"
-        with patch.object(sys, "argv", ["pain001"]):
-            with pytest.raises(SystemExit):
-                with open("pain001/__main__.py", encoding="utf-8") as f:
-                    exec(
-                        f.read(),
-                        {"__name__": "__main__"},
-                    )  # nosec B102 - executing local module for coverage check
-
-    def test_core_module_direct_execution(self) -> None:
-        """Test core.py module when executed directly with insufficient args."""
-        with patch.object(sys, "argv", ["pain001"]):
-            with pytest.raises(SystemExit) as exc_info:
-                # Import and execute the __main__ block
-
-                if len(sys.argv) < 5:
-                    sys.exit(1)
-            assert exc_info.value.code == 1
-
-    def test_cli_module_direct_execution(self) -> None:
-        """Test cli.py module when executed directly."""
-        # This covers the if __name__ == "__main__" block in cli.py
-        with patch.object(
-            sys,
-            "argv",
-            [
-                "pain001",
-                "-t",
-                "pain.001.001.03",
-                "-m",
-                "template.xml",
-                "-s",
-                "schema.xsd",
-                "-d",
-                "data.csv",
-            ],
-        ):
-            with pytest.raises((SystemExit, FileNotFoundError)):
-                with open("pain001/cli/cli.py", encoding="utf-8") as f:
-                    exec(
-                        f.read(),
-                        {"__name__": "__main__"},
-                    )  # nosec B102 - executing local CLI module for coverage check
+class TestErrorPaths:
+    """Behavioural tests for error handling and edge cases."""
 
     def test_context_logger_with_existing_handlers(self) -> None:
         """Test context logger when handlers already exist."""

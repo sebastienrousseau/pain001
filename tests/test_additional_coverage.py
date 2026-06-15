@@ -192,10 +192,10 @@ class TestXMLValidatorCoverage:
         # Use real schema
         xsd_path = "pain001/templates/pain.001.001.03/pain.001.001.03.xsd"
 
-        # Should return False or raise exception
+        # Invalid XML against a real schema must not validate: either the
+        # validator returns False, or it raises on the malformed document.
         try:
             result = validate_via_xsd(str(xml_file), xsd_path)
             assert result is False
-        except Exception as e:
-            # Exception is also acceptable for invalid XML
-            assert str(e) or True  # Ensure exception is captured
+        except Exception as exc:
+            assert str(exc)  # a non-empty error message was produced
