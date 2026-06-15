@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.50] - 2026-06-15
+
+Internal maintainability release. No functional or API changes; all public
+imports and behaviour are unchanged.
+
+### Changed
+
+- **pydantic:** Migrated the FastAPI request/response models from the
+  deprecated class-based `Config` to pydantic v2 `ConfigDict`, removing
+  `PydanticDeprecatedSince20` warnings and preparing for pydantic v3.
+- **logging:** Split the 1,064-line `pain001/logging_schema.py` god module
+  into a focused `pain001/logging_schema/` package (schema, context,
+  redaction, events, tracker, formatter, metrics). The `pain001.logging_schema`
+  import path and public API are unchanged.
+
+### Tests
+
+- Removed coverage-padding tests that inflated the coverage number with
+  line-chasing rather than behavioural assertions (deleted
+  `test_full_coverage.py`; trimmed `exec()`-based padding from the former
+  `test_coverage.py`, now `test_error_paths.py`). Genuine behavioural
+  coverage is 92%; the bare-`pytest` floor is set to an honest 90%.
+
 ## [0.0.49] - 2026-06-14
 
 Maintenance release. No functional or API changes since 0.0.48; this is a
