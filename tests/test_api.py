@@ -911,10 +911,14 @@ class TestAsyncWorkerErrorPaths:
                 message_type="pain.001.001.03",
             )
             # Loader returns rows missing required schema fields, so the
-            # SchemaValidator (not the loader) fails them.
-            with patch(
-                "pain001.api.app.load_payment_data",
-                return_value=[{"id": "1"}],
+            # SchemaValidator (not the loader) fails them. The package
+            # re-exports a FastAPI instance named 'app', which shadows the
+            # submodule, so reach the module via sys.modules.
+            import sys
+
+            app_module = sys.modules["pain001.api.app"]
+            with patch.object(
+                app_module, "load_payment_data", return_value=[{"id": "1"}]
             ):
                 asyncio.run(_process_generation_job(job_id, request))
             job = job_manager.get_job(job_id)
@@ -999,11 +1003,12 @@ class TestValidateSchemaErrors:
 
     def test_validate_reports_schema_errors(self):
         """Rows that fail schema produce formatted error entries."""
+        import sys
         from unittest.mock import patch
 
-        with patch(
-            "pain001.api.app.load_payment_data",
-            return_value=[{"id": "1"}],
+        app_module = sys.modules["pain001.api.app"]
+        with patch.object(
+            app_module, "load_payment_data", return_value=[{"id": "1"}]
         ):
             response = client.post(
                 "/api/validate",
