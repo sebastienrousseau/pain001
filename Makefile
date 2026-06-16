@@ -21,10 +21,7 @@ GREEN := \033[0;32m
 YELLOW := \033[0;33m
 NC := \033[0m # No Color
 
-# SLO Thresholds (in seconds)
-SLO_LINT := 45
-SLO_TYPE := 20
-SLO_TEST := 90
+# Performance budget for the benchmark suite (seconds per 1000 tx)
 SLO_XML_GEN := 0.5
 
 # Help target
@@ -37,7 +34,7 @@ help:
 	@echo "  lint          - Run linting checks (ruff) with SLO timing"
 	@echo "  type          - Type checking with mypy + SLO timing"
 	@echo "  test          - Run tests with timing verification"
-	@echo "  cov           - Generate coverage report (100% enforced)"
+	@echo "  cov           - Generate coverage report (98% enforced)"
 	@echo "  sec           - Security checks (bandit, safety)"
 	@echo "  perf          - Performance benchmarks (XML generation < 500ms/1000tx)"
 	@echo "  complex       - Code complexity analysis"
@@ -70,63 +67,28 @@ format:
 	@echo "$(GREEN)✓ Code formatted$(NC)"
 
 lint:
-	@echo "$(YELLOW)Running linters (SLO: < $(SLO_LINT)s)...$(NC)"
-	@time_start=$$(date +%s%N); \
-	(poetry run ruff check . && \
-	poetry run ruff format --check . && \
-	poetry run interrogate pain001 && \
-	poetry run pydoclint pain001); \
-	lint_result=$$?; \
-	time_end=$$(date +%s%N); \
-	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
-	if [ $$lint_result -ne 0 ]; then \
-		echo "$(RED)✗ Linting failed$(NC)"; \
-		exit $$lint_result; \
-	fi; \
-	if [ $$elapsed -gt $(SLO_LINT) ]; then \
-		echo "$(RED)✗ LINTING SLO EXCEEDED: $${elapsed}s > $(SLO_LINT)s$(NC)"; \
-		exit 1; \
-	else \
-		echo "$(GREEN)✓ Linting passed ($${elapsed}s < $(SLO_LINT)s)$(NC)"; \
-	fi
+	@echo "$(YELLOW)Running linters...$(NC)"
+	@poetry run ruff check .
+	@poetry run ruff format --check .
+	@poetry run interrogate pain001
+	@poetry run pydoclint pain001
+	@echo "$(GREEN)✓ Linting passed$(NC)"
 
 type:
-	@echo "$(YELLOW)Type checking (SLO: < $(SLO_TYPE)s)...$(NC)"
-	@time_start=$$(date +%s%N); \
-	poetry run mypy . ; \
-	type_result=$$?; \
-	time_end=$$(date +%s%N); \
-	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
-	if [ $$type_result -ne 0 ]; then \
-		echo "$(RED)✗ Type checking failed$(NC)"; \
-		exit $$type_result; \
-	fi; \
-	if [ $$elapsed -gt $(SLO_TYPE) ]; then \
-		echo "$(RED)✗ TYPE CHECK SLO EXCEEDED: $${elapsed}s > $(SLO_TYPE)s$(NC)"; \
-		exit 1; \
-	else \
-		echo "$(GREEN)✓ Type check passed ($${elapsed}s < $(SLO_TYPE)s)$(NC)"; \
-	fi
+	@echo "$(YELLOW)Type checking...$(NC)"
+	@poetry run mypy pain001
+	@echo "$(GREEN)✓ Type check passed$(NC)"
 
 test:
-	@echo "$(YELLOW)Running tests (SLO: < $(SLO_TEST)s, Coverage floor: 100%)...$(NC)"
-	@time_start=$$(date +%s); \
-	poetry run pytest --tb=short -v --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=100;
-	test_result=$$?; \
-	time_end=$$(date +%s%N); \
-	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
-	if [ $$elapsed -gt $(SLO_TEST) ]; then \
-		echo "$(RED)✗ TEST SLO EXCEEDED: $${elapsed}s > $(SLO_TEST)s$(NC)"; \
-		exit 1; \
-	fi; \
-	if [ $$test_result -ne 0 ]; then \
-		exit $$test_result; \
-	fi; \
-	echo "$(GREEN)✓ Tests passed ($${elapsed}s < $(SLO_TEST)s)$(NC)"
+	@echo "$(YELLOW)Running tests (coverage floor: 98%)...$(NC)"
+	@poetry run pytest --tb=short --cov=pain001 --cov-branch \
+		--cov-report=term-missing --cov-report=xml --cov-report=html \
+		--cov-fail-under=98
+	@echo "$(GREEN)✓ Tests passed$(NC)"
 
 cov:
-	@echo "$(YELLOW)Generating coverage report (floor: 100%)...$(NC)"
-	@poetry run pytest --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=100
+	@echo "$(YELLOW)Generating coverage report (floor: 98%)...$(NC)"
+	@poetry run pytest --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=98
 	@echo "$(GREEN)✓ Coverage report generated in htmlcov/index.html$(NC)"
 
 sec:

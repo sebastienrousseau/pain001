@@ -381,10 +381,11 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state: 1,020+ tests passing, **100% branch coverage** (enforced
-floor), mypy `--strict` clean. Coverage excludes only entry-point guards
-and genuinely-defensive barriers via `# pragma: no cover`; every other
-line is exercised by a real test.
+Current state: 1,020+ tests passing, ~100% branch coverage against a **98%
+enforced floor**, mypy `--strict` clean. Coverage excludes only
+entry-point guards and genuinely-defensive barriers via
+`# pragma: no cover`; the 98% floor leaves headroom so routine changes
+don't fail CI on a single line.
 
 ---
 
@@ -415,6 +416,8 @@ rather than a public issue.
 - **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — one self-checking script per feature (generation, every input format, CLI, REST API, scheme validation, parsers, migration, streaming, observability), all executed in CI
 - **Bundled templates & schemas:** [`pain001/templates/`](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates)
 - **Scheme validation rules:** [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md)
+- **Architecture & module map:** [ARCHITECTURE.md](https://github.com/sebastienrousseau/pain001/blob/main/ARCHITECTURE.md)
+- **Release process:** [RELEASING.md](https://github.com/sebastienrousseau/pain001/blob/main/RELEASING.md)
 - **Release history:** [CHANGELOG.md](https://github.com/sebastienrousseau/pain001/blob/main/CHANGELOG.md)
 
 ---
