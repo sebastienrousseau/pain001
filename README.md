@@ -536,10 +536,11 @@ rather than a public issue.
 
 Contributions are welcome — see the
 [contributing instructions](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md),
-how the project is run in [GOVERNANCE.md](GOVERNANCE.md), and the
-[architecture map](ARCHITECTURE.md). Unless you explicitly state otherwise,
-any contribution you submit is dual-licensed as below, without additional
-terms or conditions.
+how the project is run in [GOVERNANCE.md](GOVERNANCE.md), the
+[architecture map](ARCHITECTURE.md), and where the project is headed in the
+[ROADMAP.md](ROADMAP.md). Need help? See [SUPPORT.md](SUPPORT.md). Unless you
+explicitly state otherwise, any contribution you submit is dual-licensed as
+below, without additional terms or conditions.
 
 **Maintainers wanted.** Pain001 has a single maintainer today; that is the
 project's main risk. If you rely on it and can help review, triage, or
