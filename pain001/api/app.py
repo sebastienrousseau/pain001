@@ -26,10 +26,11 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, status
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pain001 import __version__
 from pain001.api.job_manager import JobStatus, job_manager
+from pain001.api.metrics import MetricsMiddleware, render_prometheus
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
@@ -788,6 +789,16 @@ async def scalar_reference() -> HTMLResponse:
     return HTMLResponse(_SCALAR_HTML)
 
 
+@app.get("/metrics", include_in_schema=False)
+async def metrics() -> PlainTextResponse:
+    """Expose Prometheus metrics (build info, gauges, request counters).
+
+    Returns:
+        The metrics document in Prometheus text exposition format.
+    """
+    return PlainTextResponse(render_prometheus(__version__))
+
+
 def _install_rate_limiting(application: FastAPI) -> None:
     """Attach the rate-limit middleware when PAIN001_RATE_LIMIT is set.
 
@@ -809,4 +820,5 @@ def _install_rate_limiting(application: FastAPI) -> None:
 # ``/api`` alias (served but hidden from the OpenAPI schema).
 app.include_router(router, prefix="/api/v1")
 app.include_router(router, prefix="/api", include_in_schema=False)
+app.add_middleware(MetricsMiddleware)
 _install_rate_limiting(app)

@@ -43,7 +43,7 @@ input file / list[dict]
 | **Templates** | `templates/` | `registry` (`TemplateMetadata`), `guardrails` (template/XSD drift checks); bundled assets under `templates/<message_type>/` |
 | **Migration** | `migration/version_mapper.py`, `migrate.py` | Map payment data between pain.001 versions via YAML mappings |
 | **Parsers** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts |
-| **API** | `api/app.py`, `api/models.py`, `api/job_manager.py`, `api/job_store.py`, `api/ratelimit.py` | FastAPI app (routes mounted under `/api/v1` with a hidden `/api` legacy alias), pydantic models, async job manager with an optional durable file store, and an in-process rate-limit middleware |
+| **API** | `api/app.py`, `api/models.py`, `api/job_manager.py`, `api/job_store.py`, `api/ratelimit.py`, `api/metrics.py` | FastAPI app (routes mounted under `/api/v1` with a hidden `/api` legacy alias), pydantic models, async job manager with an optional durable file store, an in-process rate-limit middleware, and a dependency-free Prometheus `/metrics` exporter |
 | **MCP** | `mcp/server.py` | FastMCP server (stdio) exposing generation/validation as tools, the XSD set as resources, and a guided prompt — thin adapters over the core, taking inline rows |
 | **LSP** | `lsp/diagnostics.py`, `lsp/server.py` | A dependency-free CSV diagnostic engine (IBAN/BIC/currency/charset, required columns) and a `pygls` stdio language server that feeds it to editors; VS Code client under `editors/vscode/` |
 | **Config** | `config/manager.py` | Layered configuration (CLI args, file, profiles) |

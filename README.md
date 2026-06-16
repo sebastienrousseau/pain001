@@ -320,6 +320,11 @@ remain as a backwards-compatible alias.
 `/api/redoc`, an interactive [Scalar](https://scalar.com) reference at
 `/api/reference`, and the raw OpenAPI document at `/openapi.json`.
 
+**Operability:** a liveness probe at `/api/v1/health` and Prometheus metrics
+at `/metrics` (build info, supported-type/scheme gauges, per-status job
+gauges, and HTTP request counters). See [OPERATIONS.md](OPERATIONS.md) for
+the runbook — config, scrape config, alerts, scaling, and incident playbook.
+
 **Client SDKs** — generate a typed client in any language from the OpenAPI
 document:
 
