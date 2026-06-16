@@ -16,7 +16,7 @@ python examples/01_generate_xml_file.py
 | `02_generate_xml_string.py` | In-memory `generate_xml_string` for APIs, serverless, and queues |
 | `03_cli_workflows.py` | CLI dry-run, generation, and the documented exit codes (0 and 2) |
 | `04_config_profiles.py` | Built-in configuration profiles via `ConfigManager` |
-| `05_api_job_lifecycle.py` | REST API: health, sync validation, async job submit/poll/download, `DELETE /api/jobs/{id}` (requires `pip install pain001[api]`) |
+| `05_api_job_lifecycle.py` | REST API (`/api/v1`): health, sync validation, async job submit/poll/download, `DELETE /api/v1/jobs/{id}` (requires `pip install pain001[api]`) |
 | `06_scheme_validation.py` | Scheme rulebook validation — `sepa-sct`, `sepa-sdd`, structured violations + remediation, and the ISO 20022 charset guard |
 | `07_parse_bank_responses.py` | Parsing the messages banks send back: `pain.002` status reports and `camt.053` statements |
 | `08_version_migration.py` | Mapping payment data between pain.001 versions with `VersionMapper` |

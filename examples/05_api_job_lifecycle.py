@@ -43,11 +43,11 @@ MESSAGE_TYPE = "pain.001.001.09"
 def wait_for_job(
     client: TestClient, job_id: str, timeout: float = 30.0
 ) -> dict[str, object]:
-    """Poll ``/api/status/{job_id}`` until the job reaches a final state.
+    """Poll ``/api/v1/status/{job_id}`` until the job reaches a final state.
 
     Args:
         client: API test client.
-        job_id: Identifier returned by ``/api/generate/async``.
+        job_id: Identifier returned by ``/api/v1/generate/async``.
         timeout: Maximum seconds to wait.
 
     Returns:
@@ -58,7 +58,9 @@ def wait_for_job(
     """
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
-        status: dict[str, object] = client.get(f"/api/status/{job_id}").json()
+        status: dict[str, object] = client.get(
+            f"/api/v1/status/{job_id}"
+        ).json()
         if status["status"] in {"success", "failed", "cancelled"}:
             return status
         time.sleep(0.2)
@@ -71,13 +73,13 @@ def run(client: TestClient) -> None:
     Args:
         client: API test client with a running event loop.
     """
-    health = client.get("/api/health").json()
+    health = client.get("/api/v1/health").json()
     print(
-        f"GET  /api/health          -> {health['status']} v{health['version']}"
+        f"GET  /api/v1/health          -> {health['status']} v{health['version']}"
     )
 
     response = client.post(
-        "/api/generate",
+        "/api/v1/generate",
         json={
             "data_source": "json",
             "file_path": DATA_FILE,
@@ -86,13 +88,13 @@ def run(client: TestClient) -> None:
         },
     )
     assert response.status_code == 200, response.text
-    print(f"POST /api/generate        -> {response.json()['message']}")
+    print(f"POST /api/v1/generate        -> {response.json()['message']}")
 
     # The download endpoint only serves files below the server's working
     # directory, so the output directory must live under it too.
     with tempfile.TemporaryDirectory(dir=Path.cwd()) as output_dir:
         response = client.post(
-            "/api/generate/async",
+            "/api/v1/generate/async",
             json={
                 "data_source": "json",
                 "file_path": DATA_FILE,
@@ -102,20 +104,20 @@ def run(client: TestClient) -> None:
         )
         assert response.status_code == 200, response.text
         job_id = response.json()["job_id"]
-        print(f"POST /api/generate/async  -> job {job_id}")
+        print(f"POST /api/v1/generate/async  -> job {job_id}")
 
         status = wait_for_job(client, job_id)
         assert status["status"] == "success", status
-        print(f"GET  /api/status/{{id}}     -> {status['status']}")
+        print(f"GET  /api/v1/status/{{id}}     -> {status['status']}")
 
-        download = client.get(f"/api/download/{job_id}")
+        download = client.get(f"/api/v1/download/{job_id}")
         assert download.status_code == 200, download.text
         print(
-            f"GET  /api/download/{{id}}   -> {len(download.content)} bytes of XML"
+            f"GET  /api/v1/download/{{id}}   -> {len(download.content)} bytes of XML"
         )
 
     response = client.post(
-        "/api/generate/async",
+        "/api/v1/generate/async",
         json={
             "data_source": "json",
             "file_path": DATA_FILE,
@@ -123,9 +125,9 @@ def run(client: TestClient) -> None:
         },
     )
     second_job = response.json()["job_id"]
-    response = client.delete(f"/api/jobs/{second_job}")
+    response = client.delete(f"/api/v1/jobs/{second_job}")
     assert response.status_code == 200, response.text
-    print(f"DELETE /api/jobs/{{id}}     -> {response.json()['status']}")
+    print(f"DELETE /api/v1/jobs/{{id}}     -> {response.json()['status']}")
 
 
 def main() -> None:

@@ -25,8 +25,8 @@ import tempfile
 from pathlib import Path
 from typing import Any
 
-from fastapi import Depends, FastAPI, Header, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, status
+from fastapi.responses import FileResponse, HTMLResponse
 
 from pain001 import __version__
 from pain001.api.job_manager import JobStatus, job_manager
@@ -41,6 +41,7 @@ from pain001.api.models import (
 from pain001.api.models import (
     ValidationError as ValidationErrorModel,
 )
+from pain001.api.ratelimit import RateLimitMiddleware, parse_rate_limit
 from pain001.constants import TEMPLATES_DIR
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
@@ -205,18 +206,74 @@ def _resolve_generation_paths(
     return output_file_path, xsd_file_path, xml_template_path
 
 
+# OpenAPI tag metadata — drives the grouped, described sections in the
+# interactive docs and any generated SDKs.
+TAGS_METADATA = [
+    {
+        "name": "Health",
+        "description": "Liveness and version probe for load balancers.",
+    },
+    {
+        "name": "Validation",
+        "description": (
+            "Validate payment data against the XSD schema and, optionally, "
+            "a payment-scheme rulebook — without producing a file."
+        ),
+    },
+    {
+        "name": "Generation",
+        "description": (
+            "Generate ISO 20022 XML synchronously or as a background job, "
+            "and download the result."
+        ),
+    },
+    {
+        "name": "Job Management",
+        "description": "Poll, cancel, and manage asynchronous generation jobs.",
+    },
+]
+
+API_DESCRIPTION = """\
+RESTful API for ISO 20022 **pain.001** / **pain.008** XML generation and
+validation.
+
+* **Versioned** — all endpoints are served under `/api/v1`; the unversioned
+  `/api/*` paths remain as a backwards-compatible alias.
+* **Authenticated** — set `PAIN001_API_KEY` to require a
+  `Authorization: Bearer <key>` header (open in local development).
+* **Rate limited** — set `PAIN001_RATE_LIMIT` (e.g. `100/minute`) to cap
+  requests per client.
+
+Interactive reference: [`/api/reference`](/api/reference) ·
+OpenAPI document: [`/openapi.json`](/openapi.json)
+"""
+
 # Create FastAPI application
 app = FastAPI(
     title="Pain001 REST API",
-    description="RESTful API for ISO 20022 pain.001 XML generation and validation",
+    description=API_DESCRIPTION,
     version=__version__,
     docs_url="/api/docs",
     redoc_url="/api/redoc",
+    openapi_tags=TAGS_METADATA,
+    contact={
+        "name": "Pain001",
+        "url": "https://github.com/sebastienrousseau/pain001",
+    },
+    license_info={
+        "name": "Apache-2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0",
+    },
 )
 
+# Routes are defined on a router and mounted twice: under the canonical
+# ``/api/v1`` prefix (documented) and the legacy ``/api`` prefix (hidden
+# from the schema but still served, so existing clients keep working).
+router = APIRouter()
 
-@app.get(
-    "/api/health",
+
+@router.get(
+    "/health",
     response_model=HealthResponse,
     tags=["Health"],
     summary="Health check",
@@ -234,8 +291,8 @@ async def health() -> HealthResponse:
     )
 
 
-@app.post(
-    "/api/validate",
+@router.post(
+    "/validate",
     response_model=ValidationResponse,
     tags=["Validation"],
     summary="Validate payment data",
@@ -313,8 +370,8 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         ) from e
 
 
-@app.post(
-    "/api/generate",
+@router.post(
+    "/generate",
     response_model=GenerateXMLResponse,
     tags=["Generation"],
     summary="Generate XML (synchronous)",
@@ -432,8 +489,8 @@ async def generate_xml_sync(
         ) from e
 
 
-@app.post(
-    "/api/generate/async",
+@router.post(
+    "/generate/async",
     response_model=dict,
     tags=["Generation"],
     summary="Generate XML (asynchronous)",
@@ -475,8 +532,8 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
         ) from e
 
 
-@app.get(
-    "/api/status/{job_id}",
+@router.get(
+    "/status/{job_id}",
     response_model=JobStatusResponse,
     tags=["Job Management"],
     summary="Get job status",
@@ -520,8 +577,8 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     )
 
 
-@app.delete(
-    "/api/jobs/{job_id}",
+@router.delete(
+    "/jobs/{job_id}",
     tags=["Job Management"],
     summary="Cancel job",
     dependencies=[Depends(_require_api_key)],
@@ -553,8 +610,8 @@ async def cancel_job(job_id: str) -> dict[str, str]:
     }
 
 
-@app.get(
-    "/api/download/{job_id}",
+@router.get(
+    "/download/{job_id}",
     tags=["Generation"],
     summary="Download generated XML",
     dependencies=[Depends(_require_api_key)],
@@ -701,3 +758,55 @@ async def _process_generation_job(
             progress=100,
             error="Processing failed",
         )
+
+
+_SCALAR_HTML = """\
+<!doctype html>
+<html>
+  <head>
+    <title>Pain001 REST API — Reference</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <script
+      id="api-reference"
+      data-url="/openapi.json"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+  </body>
+</html>
+"""
+
+
+@app.get("/api/reference", include_in_schema=False)
+async def scalar_reference() -> HTMLResponse:
+    """Serve an interactive Scalar API reference for the OpenAPI document.
+
+    Returns:
+        The Scalar reference UI as an HTML response.
+    """
+    return HTMLResponse(_SCALAR_HTML)
+
+
+def _install_rate_limiting(application: FastAPI) -> None:
+    """Attach the rate-limit middleware when PAIN001_RATE_LIMIT is set.
+
+    Args:
+        application: The FastAPI application to wrap.
+    """
+    spec = os.environ.get("PAIN001_RATE_LIMIT")
+    if not spec:
+        return
+    max_requests, window_seconds = parse_rate_limit(spec)
+    application.add_middleware(
+        RateLimitMiddleware,
+        max_requests=max_requests,
+        window_seconds=window_seconds,
+    )
+
+
+# Mount the routes: canonical, documented ``/api/v1`` plus the legacy
+# ``/api`` alias (served but hidden from the OpenAPI schema).
+app.include_router(router, prefix="/api/v1")
+app.include_router(router, prefix="/api", include_in_schema=False)
+_install_rate_limiting(app)

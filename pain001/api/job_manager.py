@@ -20,6 +20,8 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
+from pain001.api.job_store import JobStore, job_store_from_env
+
 
 class JobStatus(str, Enum):
     """Job status enumeration."""
@@ -62,8 +64,12 @@ class JobResult:  # pylint: disable=too-few-public-methods
         self.progress_percent = 0
 
     def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary."""
-        return {  # pragma: no cover
+        """Serialise the job to a plain dictionary.
+
+        Returns:
+            A JSON-serialisable snapshot of the job's state.
+        """
+        return {
             "job_id": self.job_id,
             "status": self.status.value,
             "result": self.result,
@@ -73,17 +79,54 @@ class JobResult:  # pylint: disable=too-few-public-methods
             "progress_percent": self.progress_percent,
         }
 
+    @classmethod
+    def from_dict(cls, snapshot: dict[str, Any]) -> "JobResult":
+        """Reconstruct a job from a persisted snapshot.
+
+        Args:
+            snapshot: A dictionary previously produced by :meth:`to_dict`.
+
+        Returns:
+            The rehydrated :class:`JobResult`.
+        """
+        job = cls(
+            job_id=snapshot["job_id"],
+            status=JobStatus(snapshot["status"]),
+            result=snapshot.get("result"),
+            error=snapshot.get("error"),
+        )
+        job.created_at = datetime.fromisoformat(snapshot["created_at"])
+        job.updated_at = datetime.fromisoformat(snapshot["updated_at"])
+        job.progress_percent = snapshot.get("progress_percent", 0)
+        return job
+
 
 class JobManager:
     """Manages async job lifecycle.
 
     Args:
         max_jobs: Maximum number of jobs to keep in memory.
+        store: Optional persistence backend. When provided, jobs are
+            write-through persisted and rehydrated from it on construction
+            so they survive a process restart.
     """
 
-    def __init__(self, max_jobs: int = 1000):
+    def __init__(self, max_jobs: int = 1000, store: JobStore | None = None):
         self.jobs: dict[str, JobResult] = {}
         self.max_jobs = max_jobs
+        self.store = store
+        if store is not None:
+            for job_id, snapshot in store.load_all().items():
+                self.jobs[job_id] = JobResult.from_dict(snapshot)
+
+    def _persist(self, job_id: str) -> None:
+        """Write a job through to the persistence backend, if configured.
+
+        Args:
+            job_id: Identifier of the job to persist.
+        """
+        if self.store is not None and job_id in self.jobs:
+            self.store.save(job_id, self.jobs[job_id].to_dict())
 
     def create_job(self) -> str:
         """Create a new job.
@@ -98,6 +141,7 @@ class JobManager:
             job_id=job_id,
             status=JobStatus.PENDING,
         )
+        self._persist(job_id)
         return job_id
 
     def get_job(self, job_id: str) -> JobResult | None:
@@ -143,6 +187,7 @@ class JobManager:
                 job.result = result
             if error:
                 job.error = error
+            self._persist(job_id)
 
     def cancel_job(self, job_id: str) -> bool:
         """Cancel a job.
@@ -158,6 +203,7 @@ class JobManager:
             if job.status not in TERMINAL_STATUSES:
                 job.status = JobStatus.CANCELLED
                 job.updated_at = datetime.now(timezone.utc)
+                self._persist(job_id)
                 return True
         return False
 
@@ -182,5 +228,6 @@ class JobManager:
                 del self.jobs[job_id]  # pragma: no cover
 
 
-# Global job manager instance
-job_manager = JobManager()
+# Global job manager instance. Persistence activates only when
+# PAIN001_JOB_STORE_DIR is set; otherwise jobs are kept in memory.
+job_manager = JobManager(store=job_store_from_env())

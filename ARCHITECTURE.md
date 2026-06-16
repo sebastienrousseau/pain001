@@ -43,7 +43,7 @@ input file / list[dict]
 | **Templates** | `templates/` | `registry` (`TemplateMetadata`), `guardrails` (template/XSD drift checks); bundled assets under `templates/<message_type>/` |
 | **Migration** | `migration/version_mapper.py`, `migrate.py` | Map payment data between pain.001 versions via YAML mappings |
 | **Parsers** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts |
-| **API** | `api/app.py`, `api/models.py`, `api/job_manager.py` | FastAPI app, pydantic request/response models, in-memory async job store |
+| **API** | `api/app.py`, `api/models.py`, `api/job_manager.py`, `api/job_store.py`, `api/ratelimit.py` | FastAPI app (routes mounted under `/api/v1` with a hidden `/api` legacy alias), pydantic models, async job manager with an optional durable file store, and an in-process rate-limit middleware |
 | **MCP** | `mcp/server.py` | FastMCP server (stdio) exposing generation/validation as tools, the XSD set as resources, and a guided prompt — thin adapters over the core, taking inline rows |
 | **Config** | `config/manager.py` | Layered configuration (CLI args, file, profiles) |
 | **Observability** | `logging_schema/` (package), `observability/` | Structured JSON logging with PII redaction; metric callbacks + OpenTelemetry trace context |

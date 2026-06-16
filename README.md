@@ -228,8 +228,8 @@ debtor/creditor IBANs (ISO 13616 / mod-97), well-formed BICs, the
 999,999,999.99 amount ceiling, ISO 20022 character-set and field-length
 limits, and (for SDD) mandate id and sequence type. Add `--explain` for
 remediation hints, or `--scheme-format json` for machine-readable output.
-The REST API accepts a `scheme` field on `/api/validate` and
-`/api/generate` too. See [SCHEMES.md](SCHEMES.md) for the full rule
+The REST API accepts a `scheme` field on `/api/v1/validate` and
+`/api/v1/generate` too. See [SCHEMES.md](SCHEMES.md) for the full rule
 catalogue. From Python:
 
 ```python
@@ -289,20 +289,42 @@ Install the `api` extra and start the server:
 
 ```bash
 pip install "pain001[api]"
-uvicorn pain001.api.app:app
+pain001 serve --host 0.0.0.0 --port 8000   # or: uvicorn pain001.api.app:app
 ```
+
+Endpoints are versioned under `/api/v1`; the unversioned `/api/*` paths
+remain as a backwards-compatible alias.
 
 | Method | Endpoint | Purpose |
 | :--- | :--- | :--- |
-| `GET` | `/api/health` | Liveness check |
-| `POST` | `/api/validate` | Validate payment data without generating |
-| `POST` | `/api/generate` | Generate a payment file synchronously |
-| `POST` | `/api/generate/async` | Queue generation as a background job |
-| `GET` | `/api/status/{job_id}` | Poll an async job |
-| `GET` | `/api/download/{job_id}` | Download a finished file |
-| `DELETE` | `/api/jobs/{job_id}` | Cancel or clean up a job |
+| `GET` | `/api/v1/health` | Liveness check |
+| `POST` | `/api/v1/validate` | Validate payment data without generating |
+| `POST` | `/api/v1/generate` | Generate a payment file synchronously |
+| `POST` | `/api/v1/generate/async` | Queue generation as a background job |
+| `GET` | `/api/v1/status/{job_id}` | Poll an async job |
+| `GET` | `/api/v1/download/{job_id}` | Download a finished file |
+| `DELETE` | `/api/v1/jobs/{job_id}` | Cancel or clean up a job |
 
-Interactive OpenAPI docs are served at `/api/docs`.
+**Operational controls** (all environment-driven, all off by default):
+
+| Variable | Effect |
+| :--- | :--- |
+| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint |
+| `PAIN001_RATE_LIMIT` | Per-client request cap, e.g. `100/minute` (in-process; use a gateway/Redis when scaled out) |
+| `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts |
+
+**Documentation surfaces:** Swagger UI at `/api/docs`, ReDoc at
+`/api/redoc`, an interactive [Scalar](https://scalar.com) reference at
+`/api/reference`, and the raw OpenAPI document at `/openapi.json`.
+
+**Client SDKs** — generate a typed client in any language from the OpenAPI
+document:
+
+```bash
+python scripts/export_openapi.py openapi.json      # dump the schema
+npx @openapitools/openapi-generator-cli generate \
+    -i openapi.json -g python -o ./pain001-client   # or -g typescript-axios, go, ...
+```
 
 </details>
 

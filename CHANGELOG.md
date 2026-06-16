@@ -50,6 +50,16 @@ are well-formed but would still be rejected by the scheme.
   and `mcp` (launch the MCP server). A bare invocation — the long-documented
   `pain001 -t … -d …` — is routed to `generate`, so existing scripts and
   one-liners keep working unchanged.
+- **REST API portal**: endpoints are now versioned under `/api/v1` (the
+  unversioned `/api/*` paths remain as a backwards-compatible alias). New
+  operational controls, all environment-driven and off by default —
+  `PAIN001_RATE_LIMIT` (in-process per-client request cap, e.g.
+  `100/minute`) and `PAIN001_JOB_STORE_DIR` (durable file-backed async job
+  store that survives restarts). Enriched OpenAPI metadata (tag
+  descriptions, contact, licence, request examples), an interactive
+  [Scalar](https://scalar.com) reference at `/api/reference`, and a
+  `scripts/export_openapi.py` helper plus documented `openapi-generator`
+  workflow for generating typed client SDKs.
 
 ### Tests
 

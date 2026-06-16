@@ -74,7 +74,19 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
         "(e.g. 'sepa-sct', 'sepa-sdd')",
     )
 
-    model_config = ConfigDict(use_enum_values=False)
+    model_config = ConfigDict(
+        use_enum_values=False,
+        json_schema_extra={
+            "examples": [
+                {
+                    "data_source": "csv",
+                    "file_path": "payments.csv",
+                    "message_type": "pain.001.001.03",
+                    "scheme": "sepa-sct",
+                }
+            ]
+        },
+    )
 
 
 class GenerateXMLRequest(BaseModel):
@@ -104,7 +116,20 @@ class GenerateXMLRequest(BaseModel):
         "(e.g. 'sepa-sct', 'sepa-sdd')",
     )
 
-    model_config = ConfigDict(use_enum_values=False)
+    model_config = ConfigDict(
+        use_enum_values=False,
+        json_schema_extra={
+            "examples": [
+                {
+                    "data_source": "csv",
+                    "file_path": "payments.csv",
+                    "message_type": "pain.001.001.03",
+                    "output_dir": ".",
+                    "validate_only": False,
+                }
+            ]
+        },
+    )
 
 
 class ValidationError(BaseModel):
