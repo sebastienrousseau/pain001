@@ -530,9 +530,15 @@ rather than a public issue.
 ## Contributing
 
 Contributions are welcome — see the
-[contributing instructions](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md).
-Unless you explicitly state otherwise, any contribution you submit is
-dual-licensed as below, without additional terms or conditions.
+[contributing instructions](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md),
+how the project is run in [GOVERNANCE.md](GOVERNANCE.md), and the
+[architecture map](ARCHITECTURE.md). Unless you explicitly state otherwise,
+any contribution you submit is dual-licensed as below, without additional
+terms or conditions.
+
+**Maintainers wanted.** Pain001 has a single maintainer today; that is the
+project's main risk. If you rely on it and can help review, triage, or
+co-maintain an area, see [becoming a maintainer](GOVERNANCE.md#becoming-a-maintainer).
 
 Thanks to all the [contributors](https://github.com/sebastienrousseau/pain001/graphs/contributors)
 who have helped build Pain001.
