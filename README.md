@@ -81,6 +81,7 @@ package — point Pain001 at your data and it resolves the rest.
 | PyPI | `pip install pain001` | Core library and CLI |
 | PyPI + REST API | `pip install "pain001[api]"` | Adds FastAPI + Uvicorn server |
 | PyPI + Parquet | `pip install "pain001[parquet]"` | Adds PyArrow for Parquet input |
+| PyPI + MCP | `pip install "pain001[mcp]"` | Adds the MCP server for LLM clients |
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
 
 Requires Python 3.10 or later.
@@ -333,6 +334,34 @@ print(output_path)  # e.g. "pain.001.001.03.xml" — validated and on disk
 
 </details>
 
+<details>
+<summary><b>MCP server (LLM clients)</b></summary>
+
+Expose Pain001 to MCP-aware LLM clients (Claude Desktop, etc.) over
+stdio. Install the `mcp` extra and run the server:
+
+```bash
+pip install "pain001[mcp]"
+pain001-mcp
+```
+
+It exposes **tools** (`generate_payment_file`, `validate_payment_data`,
+`validate_payment_scheme`, `list_supported_versions`, `inspect_template`),
+a read-only **resource** (`pain001://schema/{message_type}` for the XSD),
+and a guided **prompt** (`build_payment_batch`). Tools take inline rows
+(a `list[dict]`) and return XML as a string — no shared filesystem
+needed. Example client config:
+
+```json
+{
+  "mcpServers": {
+    "pain001": { "command": "pain001-mcp" }
+  }
+}
+```
+
+</details>
+
 ---
 
 ## When not to use Pain001
@@ -413,7 +442,7 @@ rather than a public issue.
 ## Documentation
 
 - **Guides & API reference:** [docs.pain001.com](https://docs.pain001.com)
-- **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — one self-checking script per feature (generation, every input format, CLI, REST API, scheme validation, parsers, migration, streaming, observability), all executed in CI
+- **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — one self-checking script per feature (generation, every input format, CLI, REST API, scheme validation, parsers, migration, streaming, observability, MCP), all executed in CI
 - **Bundled templates & schemas:** [`pain001/templates/`](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates)
 - **Scheme validation rules:** [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md)
 - **Architecture & module map:** [ARCHITECTURE.md](https://github.com/sebastienrousseau/pain001/blob/main/ARCHITECTURE.md)

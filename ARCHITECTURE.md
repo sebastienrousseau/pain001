@@ -36,7 +36,7 @@ input file / list[dict]
 
 | Area | Module(s) | Responsibility |
 | :--- | :--- | :--- |
-| **Entry points** | `__main__.py`, `cli/cli.py`, `api/app.py`, `core/core.py` | CLI, REST API, and the `process_files` / `process_files_streaming` library API |
+| **Entry points** | `__main__.py`, `cli/cli.py`, `api/app.py`, `mcp/server.py`, `core/core.py` | CLI, REST API, MCP server, and the `process_files` / `process_files_streaming` library API |
 | **Input** | `data/loader.py` + `csv/`, `db/`, `json/`, `parquet/` | Unified extension-dispatch loader and per-format readers (batch + streaming) |
 | **Validation** | `validation/` | `schema_validator` (XSD-field types), `iban_validator`, `bic_validator`, `charset` (ISO 20022 Latin set), `schemes` (scheme rulebooks), `service` (orchestrator) |
 | **Generation** | `xml/` | `message_registry` (per-version data prep), `generate_xml`, `create_root_element`, `validate_via_xsd`, `write_xml_to_file` |
@@ -44,6 +44,7 @@ input file / list[dict]
 | **Migration** | `migration/version_mapper.py`, `migrate.py` | Map payment data between pain.001 versions via YAML mappings |
 | **Parsers** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts |
 | **API** | `api/app.py`, `api/models.py`, `api/job_manager.py` | FastAPI app, pydantic request/response models, in-memory async job store |
+| **MCP** | `mcp/server.py` | FastMCP server (stdio) exposing generation/validation as tools, the XSD set as resources, and a guided prompt — thin adapters over the core, taking inline rows |
 | **Config** | `config/manager.py` | Layered configuration (CLI args, file, profiles) |
 | **Observability** | `logging_schema/` (package), `observability/` | Structured JSON logging with PII redaction; metric callbacks + OpenTelemetry trace context |
 | **Security** | `security/path_validator.py` | Path-traversal-safe path validation (CWE-22) |

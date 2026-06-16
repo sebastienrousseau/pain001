@@ -36,6 +36,13 @@ are well-formed but would still be rejected by the scheme.
 - **Top-level exports**: `validate_scheme`, `SchemeValidationResult`,
   `SchemeViolation`, and `sanitize_to_charset` are importable from
   `pain001`.
+- **MCP server** (`pip install "pain001[mcp]"`, run `pain001-mcp`): a
+  FastMCP stdio server exposing generation and validation to LLM clients.
+  Tools — `generate_payment_file`, `validate_payment_data`,
+  `validate_payment_scheme`, `list_supported_versions`, `inspect_template`;
+  a read-only `pain001://schema/{message_type}` resource; and a
+  `build_payment_batch` prompt. Tools take inline rows and return XML as a
+  string (no shared filesystem), so they wrap the existing core directly.
 
 ### Tests
 

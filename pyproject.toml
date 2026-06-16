@@ -20,6 +20,7 @@ include = [
 
 [tool.poetry.scripts]
 pain001 = "pain001.__main__:cli"
+pain001-mcp = "pain001.mcp.server:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -30,14 +31,16 @@ pyyaml = ">=6.0,<7.0"
 rich = ">=13.7,<15"
 xmlschema = ">=3.4.0,<4.0.0"
 jsonschema = ">=4.17,<5"
-# Optional feature sets — install with pain001[api] / pain001[parquet]
+# Optional feature sets — install with pain001[api] / pain001[parquet] / pain001[mcp]
 fastapi = {version = ">=0.95", optional = true}
 uvicorn = {version = ">=0.20", extras = ["standard"], optional = true}
 pyarrow = {version = ">=23.0.1,<25.0.0", optional = true}
+mcp = {version = ">=1.2,<2", optional = true}
 
 [tool.poetry.extras]
 api = ["fastapi", "uvicorn"]
 parquet = ["pyarrow"]
+mcp = ["mcp"]
 
 [tool.poetry.group.dev.dependencies]
 httpx = ">=0.23"
