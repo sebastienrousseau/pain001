@@ -137,10 +137,7 @@ class TestInputFormats:
 
     def test_parquet(self, tmp_path) -> None:
         """Parquet input loads when pyarrow is available."""
-        try:
-            import pandas as pd
-        except ImportError:  # pragma: no cover - parquet extra not installed
-            pytest.skip("pandas/pyarrow not installed")
+        pd = pytest.importorskip("pandas")
         _, _, csv = _assets(self.MESSAGE_TYPE)
         rows = load_csv_data(csv)
         parquet_file = tmp_path / "data.parquet"
