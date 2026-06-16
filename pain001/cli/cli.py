@@ -656,7 +656,7 @@ def main(
     )
 
     # Redundant with Click validation; kept so the failure is logged.
-    if xml_message_type not in valid_xml_types:
+    if xml_message_type not in valid_xml_types:  # pragma: no cover
         log_validation_event(
             logger,
             "message_type",

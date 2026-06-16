@@ -780,3 +780,242 @@ class TestSchemeValidation:
         assert body["success"] is False
         assert body["scheme_violations"]
         assert body["file_path"] is None
+
+
+class TestAsyncGenerationWorker:
+    """Drive the async generation worker directly for deterministic coverage."""
+
+    _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
+
+    def test_worker_success(self):
+        """A valid request drives the job to SUCCESS and writes a file."""
+        import asyncio
+        import os
+
+        from pain001.api.app import _process_generation_job
+        from pain001.api.job_manager import JobStatus, job_manager
+        from pain001.api.models import GenerateXMLRequest
+
+        job_id = job_manager.create_job()
+        request = GenerateXMLRequest(
+            data_source="csv",
+            file_path=self._BUNDLED_CSV,
+            message_type="pain.001.001.03",
+        )
+        try:
+            asyncio.run(_process_generation_job(job_id, request))
+            job = job_manager.get_job(job_id)
+            assert job is not None
+            assert job.status == JobStatus.SUCCESS
+        finally:
+            for leftover in ("pain.001.001.03.xml",):
+                if os.path.exists(leftover):
+                    os.remove(leftover)
+
+    def test_worker_file_not_found(self):
+        """A missing data file drives the job to FAILED."""
+        import asyncio
+
+        from pain001.api.app import _process_generation_job
+        from pain001.api.job_manager import JobStatus, job_manager
+        from pain001.api.models import GenerateXMLRequest
+
+        job_id = job_manager.create_job()
+        request = GenerateXMLRequest(
+            data_source="csv",
+            file_path="does_not_exist_here.csv",
+            message_type="pain.001.001.03",
+        )
+        asyncio.run(_process_generation_job(job_id, request))
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == JobStatus.FAILED
+
+
+class TestSyncGenerationSuccess:
+    """Cover the synchronous generation success path."""
+
+    _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
+
+    def test_generate_success_writes_file(self):
+        """A valid request (no scheme) generates an XML file."""
+        import os
+
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+            },
+        )
+        try:
+            assert response.status_code == 200
+            body = response.json()
+            assert body["success"] is True
+            assert body["file_path"]
+        finally:
+            if os.path.exists("pain.001.001.03.xml"):
+                os.remove("pain.001.001.03.xml")
+
+
+class TestAsyncWorkerErrorPaths:
+    """Cover the failure branches of the async generation worker."""
+
+    def test_worker_access_denied_for_outside_path(self):
+        """A path outside the allowed roots drives the job to FAILED."""
+        import asyncio
+        import os
+        import tempfile
+
+        from pain001.api.app import _process_generation_job
+        from pain001.api.job_manager import JobStatus, job_manager
+        from pain001.api.models import GenerateXMLRequest
+
+        # A real file under the system temp dir: it passes path validation
+        # (tmp is allowed) but is not under cwd, so the worker refuses it.
+        fd, path = tempfile.mkstemp(suffix=".csv")
+        os.close(fd)
+        try:
+            job_id = job_manager.create_job()
+            request = GenerateXMLRequest(
+                data_source="csv",
+                file_path=path,
+                message_type="pain.001.001.03",
+            )
+            asyncio.run(_process_generation_job(job_id, request))
+            job = job_manager.get_job(job_id)
+            assert job is not None
+            assert job.status == JobStatus.FAILED
+        finally:
+            os.remove(path)
+
+    def test_worker_schema_failure(self):
+        """Rows that load but fail schema drive the job to FAILED."""
+        import asyncio
+        import os
+        from unittest.mock import patch
+
+        from pain001.api.app import _process_generation_job
+        from pain001.api.job_manager import JobStatus, job_manager
+        from pain001.api.models import GenerateXMLRequest
+
+        bad_csv = "worker_schema_fail.csv"
+        with open(bad_csv, "w", encoding="utf-8") as handle:
+            handle.write("id\n1\n")
+        try:
+            job_id = job_manager.create_job()
+            request = GenerateXMLRequest(
+                data_source="csv",
+                file_path=bad_csv,
+                message_type="pain.001.001.03",
+            )
+            # Loader returns rows missing required schema fields, so the
+            # SchemaValidator (not the loader) fails them.
+            with patch(
+                "pain001.api.app.load_payment_data",
+                return_value=[{"id": "1"}],
+            ):
+                asyncio.run(_process_generation_job(job_id, request))
+            job = job_manager.get_job(job_id)
+            assert job is not None
+            assert job.status == JobStatus.FAILED
+        finally:
+            os.remove(bad_csv)
+
+
+class TestGenerateUnknownScheme:
+    """Generate endpoint rejects an unknown scheme with HTTP 400."""
+
+    def test_generate_unknown_scheme_returns_400(self):
+        """An unknown scheme name on /api/generate yields 400."""
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": "pain001/templates/pain.001.001.03/template.csv",
+                "message_type": "pain.001.001.03",
+                "scheme": "no-such-scheme",
+            },
+        )
+        assert response.status_code == 400
+
+
+class TestPathAndOutputDir:
+    """Path-validation error branches and the output_dir generation path."""
+
+    def test_validate_path_traversal_denied(self):
+        """A traversal path is denied (403/400)."""
+        response = client.post(
+            "/api/validate",
+            json={
+                "data_source": "csv",
+                "file_path": "../../../../etc/passwd",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code in (400, 403)
+
+    def test_validate_malformed_path(self):
+        """A path with a null byte is rejected (not a 2xx success)."""
+        response = client.post(
+            "/api/validate",
+            json={
+                "data_source": "csv",
+                "file_path": "bad\x00name.csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code >= 400
+
+    def test_generate_with_output_dir(self):
+        """Generation honours an explicit output_dir."""
+        import os
+        import tempfile
+
+        out = tempfile.mkdtemp(dir=os.getcwd())
+        try:
+            response = client.post(
+                "/api/generate",
+                json={
+                    "data_source": "csv",
+                    "file_path": (
+                        "pain001/templates/pain.001.001.03/template.csv"
+                    ),
+                    "message_type": "pain.001.001.03",
+                    "output_dir": os.path.basename(out),
+                },
+            )
+            assert response.status_code == 200
+            assert response.json()["success"] is True
+        finally:
+            import shutil
+
+            shutil.rmtree(out, ignore_errors=True)
+
+
+class TestValidateSchemaErrors:
+    """The validate endpoint formats schema errors into the response."""
+
+    def test_validate_reports_schema_errors(self):
+        """Rows that fail schema produce formatted error entries."""
+        from unittest.mock import patch
+
+        with patch(
+            "pain001.api.app.load_payment_data",
+            return_value=[{"id": "1"}],
+        ):
+            response = client.post(
+                "/api/validate",
+                json={
+                    "data_source": "csv",
+                    "file_path": (
+                        "pain001/templates/pain.001.001.03/template.csv"
+                    ),
+                    "message_type": "pain.001.001.03",
+                },
+            )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_valid"] is False
+        assert body["errors"]

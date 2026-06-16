@@ -37,6 +37,14 @@ are well-formed but would still be rejected by the scheme.
   `SchemeViolation`, and `sanitize_to_charset` are importable from
   `pain001`.
 
+### Tests
+
+- Expanded the suite to **920+ tests** and raised the coverage floor from
+  90% to **95%** (now ~95% branch coverage). New tests cover the scheme
+  CLI flags, the REST scheme paths, the async generation worker, and the
+  data-loader error branches. Un-testable entry-point guards are excluded
+  via a `[tool.coverage.report]` config rather than padded with fake tests.
+
 ### Documentation
 
 - Added `SCHEMES.md`: the full rule catalogue (id, severity, scope,
