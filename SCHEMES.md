@@ -41,6 +41,7 @@ Exit codes (CLI): `0` pass · `1` violations found · `2` unknown profile.
 | :--- | :--- | :--- |
 | `sepa-sct` | SEPA Credit Transfer | pain.001 |
 | `sepa-sdd` | SEPA Direct Debit | pain.008 |
+| `sepa-inst` | SEPA Instant Credit Transfer (SCT Inst) | pain.001 |
 
 ## Rule catalogue
 
@@ -57,6 +58,7 @@ hint (shown by `--explain`).
 | `SEPA-CHARSET` | error | both | Text fields use only the ISO 20022 Latin character set |
 | `SEPA-LEN` | error | both | Names ≤ 70 chars, remittance ≤ 140 chars |
 | `SEPA-SVCLVL` | warning | both | Service level declared as `SEPA` |
+| `SEPA-INST-AMT` | error | `sepa-inst` | Amount ≤ 100,000.00 EUR (SCT Inst per-transaction cap) |
 | `SDD-MNDT` | error | `sepa-sdd` | Mandate id present |
 | `SDD-SEQTP` | error | `sepa-sdd` | Sequence type is one of `FRST`, `RCUR`, `OOFF`, `FNAL` |
 

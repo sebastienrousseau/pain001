@@ -38,6 +38,8 @@ from pain001.validation.iban_validator import validate_iban_safe
 
 # Shared SEPA rulebook limits.
 _SEPA_MAX_AMOUNT = Decimal("999999999.99")
+# SEPA Instant Credit Transfer (SCT Inst) per-transaction ceiling.
+_SCT_INST_MAX_AMOUNT = Decimal("100000.00")
 _SEPA_NAME_MAX_LEN = 70
 _SEPA_REMITTANCE_MAX_LEN = 140
 _SEPA_TEXT_FIELDS = (
@@ -59,6 +61,8 @@ REMEDIATIONS: dict[str, str] = {
     "entirely (SEPA is IBAN-only since 2016).",
     "SEPA-AMT": "Use a positive amount with at most 2 decimal places, "
     "not exceeding 999,999,999.99 EUR.",
+    "SEPA-INST-AMT": "SEPA Instant caps a single transfer at 100,000.00 "
+    "EUR; split larger amounts or use a standard SCT.",
     "SEPA-CHARSET": "Limit text to the ISO 20022 Latin set; use "
     "sanitize_to_charset() to transliterate accents and symbols.",
     "SEPA-LEN": "Shorten the field to its scheme maximum (70 for names, "
@@ -256,14 +260,21 @@ def _check_service_level(
 
 
 def _check_amount(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
+    row: dict[str, Any],
+    index: int,
+    result: SchemeValidationResult,
+    max_amount: Decimal = _SEPA_MAX_AMOUNT,
+    cap_rule: str = "SEPA-AMT",
 ) -> None:
-    """Enforce a positive amount within the SEPA ceiling.
+    """Enforce a positive amount within a scheme's per-transaction ceiling.
 
     Args:
         row: The payment row.
         index: Zero-based row index.
         result: The result accumulator to append violations to.
+        max_amount: The inclusive per-transaction ceiling for this scheme.
+        cap_rule: Rule id raised when the amount exceeds ``max_amount``
+            (lets stricter schemes, e.g. SCT Inst, flag their own cap).
     """
     raw = row.get("payment_amount")
     amount: Decimal | None
@@ -281,13 +292,23 @@ def _check_amount(
             )
         )
         return
-    if amount <= 0 or amount > _SEPA_MAX_AMOUNT:
+    if amount <= 0:
         result.violations.append(
             SchemeViolation(
                 rule="SEPA-AMT",
+                message=f"payment_amount must be > 0 (got {amount})",
+                index=index,
+                field="payment_amount",
+            )
+        )
+        return
+    if amount > max_amount:
+        result.violations.append(
+            SchemeViolation(
+                rule=cap_rule,
                 message=(
-                    "payment_amount must be > 0 and "
-                    f"<= {_SEPA_MAX_AMOUNT} EUR (got {amount})"
+                    f"payment_amount must be <= {max_amount} EUR "
+                    f"(got {amount})"
                 ),
                 index=index,
                 field="payment_amount",
@@ -483,10 +504,48 @@ class SepaDirectDebitProfile(ValidationProfile):
         return result
 
 
+class SepaInstantCreditTransferProfile(ValidationProfile):
+    """SEPA Instant Credit Transfer (SCT Inst) rulebook checks.
+
+    Identical to SEPA SCT but enforces the instant scheme's stricter
+    per-transaction ceiling of 100,000.00 EUR (rule ``SEPA-INST-AMT``).
+    """
+
+    name = "sepa-inst"
+
+    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
+        """Validate payment rows against the SEPA SCT Inst rulebook.
+
+        Args:
+            data: Loaded payment rows (the normalised internal form).
+
+        Returns:
+            A :class:`SchemeValidationResult` listing every violation.
+        """
+        result = SchemeValidationResult(profile=self.name)
+        for index, row in enumerate(data):
+            _check_currency(row, index, result)
+            _check_ibans(row, index, result)
+            _check_bic(row, index, result)
+            _check_service_level(row, index, result)
+            _check_amount(
+                row,
+                index,
+                result,
+                max_amount=_SCT_INST_MAX_AMOUNT,
+                cap_rule="SEPA-INST-AMT",
+            )
+            _check_text_fields(row, index, result)
+        return result
+
+
 #: Registry of available scheme profiles, keyed by their ``name``.
 PROFILES: dict[str, ValidationProfile] = {
     SepaCreditTransferProfile.name: SepaCreditTransferProfile(),
     SepaDirectDebitProfile.name: SepaDirectDebitProfile(),
+    SepaInstantCreditTransferProfile.name: (
+        SepaInstantCreditTransferProfile()
+    ),
 }
 
 

@@ -223,11 +223,13 @@ per-row violations:
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 ```
 
-Two profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001) and
-`sepa-sdd` (SEPA Direct Debit, pain.008) — checking EUR currency, valid
-debtor/creditor IBANs (ISO 13616 / mod-97), well-formed BICs, the
-999,999,999.99 amount ceiling, ISO 20022 character-set and field-length
-limits, and (for SDD) mandate id and sequence type. Add `--explain` for
+Three profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
+`sepa-sdd` (SEPA Direct Debit, pain.008), and `sepa-inst` (SEPA Instant
+Credit Transfer, pain.001) — checking EUR currency, valid debtor/creditor
+IBANs (ISO 13616 / mod-97), well-formed BICs, the amount ceiling (the
+100,000 EUR instant cap for `sepa-inst`), ISO 20022 character-set and
+field-length limits, and (for SDD) mandate id and sequence type. Add
+`--explain` for
 remediation hints, or `--scheme-format json` for machine-readable output.
 The REST API accepts a `scheme` field on `/api/v1/validate` and
 `/api/v1/generate` too. See [SCHEMES.md](SCHEMES.md) for the full rule

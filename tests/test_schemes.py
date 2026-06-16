@@ -22,6 +22,7 @@ from pain001.validation.schemes import (
     SchemeValidationResult,
     SepaCreditTransferProfile,
     SepaDirectDebitProfile,
+    SepaInstantCreditTransferProfile,
     remediation_for,
     validate_scheme,
 )
@@ -234,3 +235,51 @@ class TestProfileRegistry:
         from pain001 import validate_scheme as top_level
 
         assert top_level([_valid_row()]).is_valid
+
+
+class TestSepaInstantCreditTransferProfile:
+    """Rule-by-rule tests for the SEPA SCT Inst profile."""
+
+    def test_registered(self) -> None:
+        """The instant profile is registered under 'sepa-inst'."""
+        assert isinstance(
+            PROFILES["sepa-inst"], SepaInstantCreditTransferProfile
+        )
+
+    def test_compliant_row_passes(self) -> None:
+        """A small EUR transfer passes the instant rulebook."""
+        result = validate_scheme([_valid_row()], profile="sepa-inst")
+        assert result.is_valid
+        assert result.profile == "sepa-inst"
+
+    def test_amount_over_instant_cap_flagged(self) -> None:
+        """An amount above 100,000 EUR raises SEPA-INST-AMT."""
+        row = _valid_row() | {"payment_amount": "150000.00"}
+        result = validate_scheme([row], profile="sepa-inst")
+        assert not result.is_valid
+        assert any(v.rule == "SEPA-INST-AMT" for v in result.violations)
+
+    def test_instant_cap_is_stricter_than_sct(self) -> None:
+        """The same amount passes SCT but fails SCT Inst."""
+        row = _valid_row() | {"payment_amount": "150000.00"}
+        assert validate_scheme([row], profile="sepa-sct").is_valid
+        assert not validate_scheme([row], profile="sepa-inst").is_valid
+
+    def test_at_cap_boundary_passes(self) -> None:
+        """Exactly 100,000 EUR is within the instant ceiling."""
+        row = _valid_row() | {"payment_amount": "100000.00"}
+        assert validate_scheme([row], profile="sepa-inst").is_valid
+
+    def test_zero_amount_still_uses_base_rule(self) -> None:
+        """A non-positive amount raises SEPA-AMT, not the cap rule."""
+        row = _valid_row() | {"payment_amount": "0"}
+        rules = {
+            v.rule
+            for v in validate_scheme([row], profile="sepa-inst").violations
+        }
+        assert "SEPA-AMT" in rules
+        assert "SEPA-INST-AMT" not in rules
+
+    def test_instant_cap_remediation(self) -> None:
+        """The instant-cap rule has a remediation hint."""
+        assert "100,000" in remediation_for("SEPA-INST-AMT")

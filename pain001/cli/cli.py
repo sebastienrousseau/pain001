@@ -505,7 +505,7 @@ def _generate_xml_files(
     default=None,
     help=(
         "Validate rows against a payment-scheme rulebook "
-        "(e.g. sepa-sct, sepa-sdd) on top of XSD validation."
+        "(e.g. sepa-sct, sepa-sdd, sepa-inst) on top of XSD validation."
     ),
 )
 @click.option(
