@@ -26,7 +26,17 @@ imports and behaviour are unchanged.
   line-chasing rather than behavioural assertions (deleted
   `test_full_coverage.py`; trimmed `exec()`-based padding from the former
   `test_coverage.py`, now `test_error_paths.py`). Genuine behavioural
-  coverage is 92%; the bare-`pytest` floor is set to an honest 90%.
+  coverage is 92%; the coverage floor is reconciled to an honest 90%
+  across `pyproject.toml` and the `Makefile`.
+
+### Documentation
+
+- Corrected two inaccurate claims in `README.md`: SQLite input reads from a
+  user-specified table (not a fixed `pain001` table), and the programmatic
+  `main()` entry point requires a template/schema (only the CLI auto-resolves
+  the bundled pair). Refreshed the test/coverage stats, replaced the Python
+  API example with a fully self-contained runnable `generate_xml_string`
+  snippet, and added a Documentation section.
 
 ## [0.0.49] - 2026-06-14
 

@@ -37,7 +37,7 @@ help:
 	@echo "  lint          - Run linting checks (ruff) with SLO timing"
 	@echo "  type          - Type checking with mypy + SLO timing"
 	@echo "  test          - Run tests with timing verification"
-	@echo "  cov           - Generate coverage report (70% enforced)"
+	@echo "  cov           - Generate coverage report (90% enforced)"
 	@echo "  sec           - Security checks (bandit, safety)"
 	@echo "  perf          - Performance benchmarks (XML generation < 500ms/1000tx)"
 	@echo "  complex       - Code complexity analysis"
@@ -109,9 +109,9 @@ type:
 	fi
 
 test:
-	@echo "$(YELLOW)Running tests (SLO: < $(SLO_TEST)s, Coverage floor: 70%)...$(NC)"
+	@echo "$(YELLOW)Running tests (SLO: < $(SLO_TEST)s, Coverage floor: 90%)...$(NC)"
 	@time_start=$$(date +%s); \
-	poetry run pytest --tb=short -v --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=70;
+	poetry run pytest --tb=short -v --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=90;
 	test_result=$$?; \
 	time_end=$$(date +%s%N); \
 	elapsed=$$(( ($$time_end - $$time_start) / 1000000000 )); \
@@ -125,8 +125,8 @@ test:
 	echo "$(GREEN)✓ Tests passed ($${elapsed}s < $(SLO_TEST)s)$(NC)"
 
 cov:
-	@echo "$(YELLOW)Generating coverage report (floor: 70%)...$(NC)"
-	@poetry run pytest --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=70
+	@echo "$(YELLOW)Generating coverage report (floor: 90%)...$(NC)"
+	@poetry run pytest --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=90
 	@echo "$(GREEN)✓ Coverage report generated in htmlcov/index.html$(NC)"
 
 sec:
