@@ -5,18 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.51] - 2026-06-16
+## [1.0.0] - 2026-06-16
 
-Feature release: scheme-aware validation. pain001 now validates payments
-against payment-scheme rulebooks, not just the XSD — catching files that
-are well-formed but would still be rejected by the scheme.
+First stable release. Pain001 commits to [Semantic Versioning](https://semver.org)
+from this point on. This milestone makes scheme-aware validation the flagship
+capability and rounds out the developer surface with a unified CLI command
+suite, a versioned REST API portal, an MCP server, and an LSP server — on a
+core with strict typing, 100% documented public API, and an enforced
+coverage floor. See [GOVERNANCE.md](GOVERNANCE.md) for how the project is run.
 
 ### Added
 
 - **Scheme rulebook validation** (`pain001.validation.validate_scheme`): a
-  pluggable `ValidationProfile` framework with two profiles —
-  `sepa-sct` (SEPA Credit Transfer, pain.001) and `sepa-sdd` (SEPA Direct
-  Debit, pain.008). They enforce EUR currency, valid debtor/creditor IBANs
+  pluggable `ValidationProfile` framework with three profiles —
+  `sepa-sct` (SEPA Credit Transfer, pain.001), `sepa-sdd` (SEPA Direct
+  Debit, pain.008), and `sepa-inst` (SEPA Instant Credit Transfer, pain.001,
+  with the 100,000.00 EUR per-transaction cap). They enforce EUR currency,
+  valid debtor/creditor IBANs
   (ISO 13616 / mod-97), well-formed BICs, the SEPA amount ceiling
   (999,999,999.99), ISO 20022 character-set and field-length limits, and —
   for SDD — mandate id and sequence type. Results are structured, per-row
@@ -67,6 +72,23 @@ are well-formed but would still be rejected by the scheme.
   [Scalar](https://scalar.com) reference at `/api/reference`, and a
   `scripts/export_openapi.py` helper plus documented `openapi-generator`
   workflow for generating typed client SDKs.
+- **Project governance**: `GOVERNANCE.md` (roles, decision making, release
+  authority, and an explicit path to becoming a maintainer), `MAINTAINERS.md`
+  with an open co-maintainer slot, and a Contributor Covenant
+  `CODE-OF-CONDUCT.md` — reducing single-maintainer (bus-factor) risk.
+
+### Changed
+
+- **Semantic Versioning commitment.** With 1.0.0, the public API
+  (`pain001` top-level exports, the CLI, the REST `/api/v1` surface, and the
+  library functions) follows SemVer; breaking changes will bump the major.
+
+### Fixed
+
+- Corrected every bundled sample's IBANs and BICs to pass mod-97 / format
+  validation (the shipped templates, examples, fixtures, SQLite DBs, and
+  golden XML had invalid checksums and placeholder values). The bundled
+  `pain.001.001.03` sample is now fully SEPA-SCT compliant.
 
 ### Tests
 
@@ -84,6 +106,9 @@ are well-formed but would still be rejected by the scheme.
   across all 11 message types, every input format, the library/CLI/REST
   surfaces, scheme validation, the pain.002/camt.053 parsers, version
   migration, and observability hooks.
+- Added `tests/test_sample_data_valid.py`: lints every bundled sample CSV
+  through the library's own validators so invalid IBAN/BIC/currency data
+  can never silently ship again.
 
 ### Documentation
 
@@ -95,8 +120,11 @@ are well-formed but would still be rejected by the scheme.
   executed in CI, so the documented feature surface cannot silently rot.
 - Added `ARCHITECTURE.md` (module map + design decisions and extension
   points), `RELEASING.md` (what merits a release + the cut/publish
-  process), and `.github/CODEOWNERS` — lowering the project's onboarding
-  and bus-factor risk.
+  process), `GOVERNANCE.md`/`MAINTAINERS.md`, and `.github/CODEOWNERS` —
+  lowering the project's onboarding and bus-factor risk.
+- Grew `examples/` to 13 self-checking scripts (added the MCP tools and the
+  LSP diagnostic engine), each executed in CI so the feature surface cannot
+  silently rot.
 - Simplified the `Makefile` `lint`/`type`/`test` targets: dropped the
   build-failing SLO timers (which could fail CI on slow runners for no
   functional reason) and pointed `make type` at the package.
