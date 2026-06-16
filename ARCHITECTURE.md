@@ -45,6 +45,7 @@ input file / list[dict]
 | **Parsers** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts |
 | **API** | `api/app.py`, `api/models.py`, `api/job_manager.py`, `api/job_store.py`, `api/ratelimit.py` | FastAPI app (routes mounted under `/api/v1` with a hidden `/api` legacy alias), pydantic models, async job manager with an optional durable file store, and an in-process rate-limit middleware |
 | **MCP** | `mcp/server.py` | FastMCP server (stdio) exposing generation/validation as tools, the XSD set as resources, and a guided prompt — thin adapters over the core, taking inline rows |
+| **LSP** | `lsp/diagnostics.py`, `lsp/server.py` | A dependency-free CSV diagnostic engine (IBAN/BIC/currency/charset, required columns) and a `pygls` stdio language server that feeds it to editors; VS Code client under `editors/vscode/` |
 | **Config** | `config/manager.py` | Layered configuration (CLI args, file, profiles) |
 | **Observability** | `logging_schema/` (package), `observability/` | Structured JSON logging with PII redaction; metric callbacks + OpenTelemetry trace context |
 | **Security** | `security/path_validator.py` | Path-traversal-safe path validation (CWE-22) |
@@ -81,6 +82,7 @@ input file / list[dict]
 ## Where to look first
 
 - Runnable, per-feature examples: [`examples/`](examples/).
+- Editor extension client: [`editors/vscode/`](editors/vscode/).
 - Scheme rule catalogue: [`SCHEMES.md`](SCHEMES.md).
 - Release process: [`RELEASING.md`](RELEASING.md).
 - Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md).

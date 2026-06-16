@@ -50,6 +50,13 @@ are well-formed but would still be rejected by the scheme.
   and `mcp` (launch the MCP server). A bare invocation — the long-documented
   `pain001 -t … -d …` — is routed to `generate`, so existing scripts and
   one-liners keep working unchanged.
+- **LSP server** (`pip install "pain001[lsp]"`, run `pain001-lsp`): a
+  `pygls` stdio language server giving editors live diagnostics on payment
+  CSVs — invalid IBAN/BIC/currency cells, characters outside the ISO 20022
+  Latin set, and missing required columns — reusing the same validators as
+  the generator. The diagnostic engine (`pain001.lsp.diagnostics_for_csv`)
+  is dependency-free and reusable on its own; a thin VS Code client ships
+  under `editors/vscode/`.
 - **REST API portal**: endpoints are now versioned under `/api/v1` (the
   unversioned `/api/*` paths remain as a backwards-compatible alias). New
   operational controls, all environment-driven and off by default —

@@ -24,6 +24,7 @@ python examples/01_generate_xml_file.py
 | `10_input_formats.py` | Loading the same data from CSV, SQLite, JSON, and JSON Lines |
 | `11_observability_metrics.py` | Metric callbacks (`register_metrics_callback`) for Prometheus/OpenTelemetry/log forwarding |
 | `12_mcp_tools.py` | The MCP server's tools called directly (run the server with `pain001-mcp`; requires `pip install pain001[mcp]`) |
+| `13_lsp_diagnostics.py` | The LSP diagnostic engine linting a CSV for bad IBAN/BIC/currency/charset and missing columns (editor server: `pain001-lsp`, `pip install pain001[lsp]`) |
 
 Together these scripts exercise generation (all message types), every
 input format, the CLI, the REST API, scheme validation, the parsers,

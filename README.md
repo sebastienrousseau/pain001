@@ -82,6 +82,7 @@ package — point Pain001 at your data and it resolves the rest.
 | PyPI + REST API | `pip install "pain001[api]"` | Adds FastAPI + Uvicorn server |
 | PyPI + Parquet | `pip install "pain001[parquet]"` | Adds PyArrow for Parquet input |
 | PyPI + MCP | `pip install "pain001[mcp]"` | Adds the MCP server for LLM clients |
+| PyPI + LSP | `pip install "pain001[lsp]"` | Adds the `pain001-lsp` language server for editor diagnostics |
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
 
 Requires Python 3.10 or later.
@@ -405,6 +406,32 @@ needed. Example client config:
     "pain001": { "command": "pain001-mcp" }
   }
 }
+```
+
+</details>
+
+<details>
+<summary><b>Editor diagnostics (LSP)</b></summary>
+
+Get live, in-editor feedback on payment CSVs — invalid IBAN/BIC/currency
+cells, characters outside the ISO 20022 Latin set, and missing required
+columns — from a Language Server that reuses the same validators as the
+generator:
+
+```bash
+pip install "pain001[lsp]"
+pain001-lsp        # stdio language server, point your editor at this
+```
+
+A thin VS Code client lives in [`editors/vscode/`](editors/vscode/). The
+diagnostic engine is dependency-free and reusable on its own (e.g. in a
+pre-commit hook):
+
+```python
+from pain001.lsp import diagnostics_for_csv
+
+for d in diagnostics_for_csv(open("payments.csv").read()):
+    print(f"line {d.line + 1}: {d.code} — {d.message}")
 ```
 
 </details>
