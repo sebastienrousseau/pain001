@@ -31,6 +31,10 @@ are well-formed but would still be rejected by the scheme.
   `SchemeViolation`, and `sanitize_to_charset` are importable from
   `pain001`.
 
+### Dependencies
+
+- Bumped `starlette` 1.2.1 → 1.3.1 (supersedes Dependabot #167).
+
 ## [0.0.50] - 2026-06-15
 
 Internal maintainability release. No functional or API changes; all public
