@@ -42,11 +42,12 @@ scanners) before merge — this is enforced in CI, not by trust.
 
 ## Releases
 
-Releases follow [`RELEASING.md`](RELEASING.md) and
-[Semantic Versioning](https://semver.org). Only maintainers publish to PyPI.
-The release authority (PyPI/Trusted Publisher and tag-signing keys) currently
-rests with the lead maintainer; expanding it to a second maintainer is a
-standing goal (see below).
+Releases follow [`RELEASING.md`](RELEASING.md). The project uses a
+monotonic pre-1.0 version line (`0.0.x`, advancing to `0.1.0` only after
+`0.0.999`); the lead maintainer decides when to increment. Only maintainers
+publish to PyPI. The release authority (PyPI/Trusted Publisher and
+tag-signing keys) currently rests with the lead maintainer; expanding it to
+a second maintainer is a standing goal (see below).
 
 ## Becoming a maintainer
 

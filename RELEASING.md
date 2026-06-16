@@ -5,21 +5,23 @@
 This document defines **what merits a release** and **how to cut one**, so
 versions are deliberate rather than ad-hoc.
 
+## Versioning scheme
+
+Pain001 uses a **monotonic pre-1.0 version line**: the patch position of
+`0.0.x` advances one step at a time (`0.0.51` → `0.0.52` → …). The line
+rolls to `0.1.0` only after `0.0.999`, and `1.0.0` is deliberately a long
+way off. The same step is used regardless of whether a release contains a
+fix or a feature — the *number* does not signal the kind of change; the
+`CHANGELOG.md` does. **The maintainer decides when to increment.**
+
 ## What merits a release
 
-Cut a new version only when there is user-visible change to ship:
-
-- **PATCH** (`0.0.X`) — bug fixes, security/dependency patches, internal
-  refactors that change no public behaviour, or documentation that ships
-  in the package.
-- **MINOR** (`0.X.0`) — new features, new message types or input formats,
-  new public API, or new CLI/REST surface (backward compatible).
-- **MAJOR** (`X.0.0`) — any backward-incompatible change to the public API,
-  CLI flags, REST contract, or the minimum Python version.
+Cut a new version only when there is user-visible change to ship — bug
+fixes, security/dependency patches, new features, new message types or
+input formats, new public API, or documentation that ships in the package.
 
 **Do not** cut a release that contains only a version-number bump with no
-functional, security, or documentation change. (Pre-`0.1.0`, MINOR-type
-changes are released as PATCH bumps; this is intentional during `0.0.x`.)
+functional, security, or documentation change.
 
 ## Pre-flight checklist
 

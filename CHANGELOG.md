@@ -5,14 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.0.0] - 2026-06-16
+## [0.0.51] - 2026-06-16
 
-First stable release. Pain001 commits to [Semantic Versioning](https://semver.org)
-from this point on. This milestone makes scheme-aware validation the flagship
-capability and rounds out the developer surface with a unified CLI command
-suite, a versioned REST API portal, an MCP server, and an LSP server — on a
-core with strict typing, 100% documented public API, and an enforced
-coverage floor. See [GOVERNANCE.md](GOVERNANCE.md) for how the project is run.
+Feature release. Scheme-aware validation is the flagship capability, rounded
+out by a unified CLI command suite, a versioned REST API portal, an MCP
+server, and an LSP server — on a core with strict typing, a 100% documented
+public API, and an enforced coverage floor. See [GOVERNANCE.md](GOVERNANCE.md)
+for how the project is run.
 
 ### Added
 
@@ -76,12 +75,6 @@ coverage floor. See [GOVERNANCE.md](GOVERNANCE.md) for how the project is run.
   authority, and an explicit path to becoming a maintainer), `MAINTAINERS.md`
   with an open co-maintainer slot, and a Contributor Covenant
   `CODE-OF-CONDUCT.md` — reducing single-maintainer (bus-factor) risk.
-
-### Changed
-
-- **Semantic Versioning commitment.** With 1.0.0, the public API
-  (`pain001` top-level exports, the CLI, the REST `/api/v1` surface, and the
-  library functions) follows SemVer; breaking changes will bump the major.
 
 ### Fixed
 
