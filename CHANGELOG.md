@@ -39,11 +39,16 @@ are well-formed but would still be rejected by the scheme.
 
 ### Tests
 
-- Expanded the suite to **920+ tests** and raised the coverage floor from
+- Expanded the suite to **970+ tests** and raised the coverage floor from
   90% to **95%** (now ~95% branch coverage). New tests cover the scheme
   CLI flags, the REST scheme paths, the async generation worker, and the
   data-loader error branches. Un-testable entry-point guards are excluded
   via a `[tool.coverage.report]` config rather than padded with fake tests.
+- Added `tests/test_regression_suite.py`: a feature-matrix regression
+  suite with one end-to-end guard per documented feature — generation
+  across all 11 message types, every input format, the library/CLI/REST
+  surfaces, scheme validation, the pain.002/camt.053 parsers, version
+  migration, and observability hooks.
 
 ### Documentation
 
