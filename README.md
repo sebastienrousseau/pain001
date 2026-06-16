@@ -111,6 +111,28 @@ pain001 -t pain.001.001.03 -d payments.csv --dry-run
 Exit codes: `0` success, `1` validation or processing error, `2` invalid
 arguments.
 
+### One binary, a whole workflow
+
+`pain001` is a command suite. A bare invocation (or `pain001 generate …`)
+still produces XML exactly as before — every flag above is unchanged — and
+the sibling subcommands cover the rest of the lifecycle:
+
+| Command | Purpose |
+| :--- | :--- |
+| `pain001 generate …` | Generate payment XML (default; accepts bare flags for backwards compatibility) |
+| `pain001 validate -t … -d …` | Validate data without generating XML — a named `--dry-run` for CI pre-flight |
+| `pain001 versions [--json]` | List the supported ISO 20022 message types |
+| `pain001 inspect <type> [--json]` | Show a bundled template's schema, category, and accepted formats |
+| `pain001 init <type> [-o file]` | Scaffold a starter CSV from the bundled example |
+| `pain001 serve [--host --port]` | Launch the REST API (requires `pain001[api]`) |
+| `pain001 mcp` | Launch the MCP server over stdio (requires `pain001[mcp]`) |
+
+```bash
+pain001 init pain.001.001.03 -o my-payments.csv   # scaffold
+pain001 validate -t pain.001.001.03 -d my-payments.csv   # pre-flight
+pain001 generate -t pain.001.001.03 -d my-payments.csv   # ship it
+```
+
 ---
 
 ## Supported messages
@@ -158,8 +180,11 @@ of source.
 <details>
 <summary><b>CLI reference</b></summary>
 
+These are the options of the `generate` command (the default), so they
+apply equally to `pain001 …` and `pain001 generate …`:
+
 ```text
-pain001 [OPTIONS]
+pain001 [generate] [OPTIONS]
 
   -t, --xml-message-type   ISO 20022 message type (e.g. pain.001.001.03)
   -m, --template           Jinja2 XML template (auto-resolved when omitted)

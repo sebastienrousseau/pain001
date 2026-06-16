@@ -43,6 +43,13 @@ are well-formed but would still be rejected by the scheme.
   a read-only `pain001://schema/{message_type}` resource; and a
   `build_payment_batch` prompt. Tools take inline rows and return XML as a
   string (no shared filesystem), so they wrap the existing core directly.
+- **CLI command suite**: `pain001` is now a command group. Alongside the
+  default `generate`, the binary gains `validate` (a named `--dry-run` for
+  CI pre-flight), `versions` (`--json`), `inspect <type>` (`--json`),
+  `init <type>` (scaffold a starter CSV), `serve` (launch the REST API),
+  and `mcp` (launch the MCP server). A bare invocation — the long-documented
+  `pain001 -t … -d …` — is routed to `generate`, so existing scripts and
+  one-liners keep working unchanged.
 
 ### Tests
 

@@ -6,7 +6,7 @@ import sys
 
 from rich.console import Console
 
-from pain001.cli.cli import main as cli
+from pain001.cli.cli import cli
 from pain001.core.core import process_files
 from pain001.validation import ValidationConfig, ValidationService
 

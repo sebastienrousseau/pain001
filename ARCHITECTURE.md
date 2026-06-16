@@ -36,7 +36,7 @@ input file / list[dict]
 
 | Area | Module(s) | Responsibility |
 | :--- | :--- | :--- |
-| **Entry points** | `__main__.py`, `cli/cli.py`, `api/app.py`, `mcp/server.py`, `core/core.py` | CLI, REST API, MCP server, and the `process_files` / `process_files_streaming` library API |
+| **Entry points** | `__main__.py`, `cli/cli.py`, `api/app.py`, `mcp/server.py`, `core/core.py` | CLI command group (`generate`/`validate`/`versions`/`inspect`/`init`/`serve`/`mcp`, with bare flags routed to `generate`), REST API, MCP server, and the `process_files` / `process_files_streaming` library API |
 | **Input** | `data/loader.py` + `csv/`, `db/`, `json/`, `parquet/` | Unified extension-dispatch loader and per-format readers (batch + streaming) |
 | **Validation** | `validation/` | `schema_validator` (XSD-field types), `iban_validator`, `bic_validator`, `charset` (ISO 20022 Latin set), `schemes` (scheme rulebooks), `service` (orchestrator) |
 | **Generation** | `xml/` | `message_registry` (per-version data prep), `generate_xml`, `create_root_element`, `validate_via_xsd`, `write_xml_to_file` |

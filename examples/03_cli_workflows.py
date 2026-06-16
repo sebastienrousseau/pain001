@@ -13,11 +13,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Drive the ``pain001`` CLI end to end and check its exit codes.
+"""Drive the ``pain001`` CLI suite end to end and check its exit codes.
 
-Demonstrates the documented contract:
+Demonstrates the documented contract across the subcommand suite:
 
-* ``0`` — success (dry-run validation and XML generation)
+* ``versions`` / ``inspect`` — introspection (exit ``0``)
+* ``init`` — scaffold a starter CSV (exit ``0``)
+* ``validate`` — CI pre-flight, a named ``--dry-run`` (exit ``0``)
+* ``generate`` — XML generation, also reachable via bare flags (exit ``0``)
 * ``2`` — invalid arguments (unknown message type)
 
 The working files are copied into a temporary directory first, so the
@@ -82,11 +85,35 @@ def main() -> None:
             "payments.csv",
         ]
 
+        # Introspection: list supported types and inspect one template.
+        result = run_cli(["versions", "--json"], cwd=workdir)
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert MESSAGE_TYPE in result.stdout
+        print("versions --json    -> exit 0 (supported message types)")
+
+        result = run_cli(["inspect", MESSAGE_TYPE], cwd=workdir)
+        assert result.returncode == 0, result.stdout + result.stderr
+        print("inspect            -> exit 0 (template metadata)")
+
+        # Scaffold a starter CSV, then validate and generate from it.
+        result = run_cli(
+            ["init", MESSAGE_TYPE, "-o", "starter.csv"], cwd=workdir
+        )
+        assert result.returncode == 0, result.stdout + result.stderr
+        assert (workdir / "starter.csv").exists()
+        print("init               -> exit 0 (starter.csv scaffolded)")
+
+        # validate == a named --dry-run (CI pre-flight).
+        result = run_cli(["validate", *common], cwd=workdir)
+        assert result.returncode == 0, result.stdout + result.stderr
+        print("validate           -> exit 0 (pre-flight, no XML)")
+
+        # Bare flags still route to generate (backwards compatibility).
         result = run_cli([*common, "--dry-run"], cwd=workdir)
         assert result.returncode == 0, result.stdout + result.stderr
-        print("dry-run            -> exit 0 (validation only, no XML)")
+        print("bare --dry-run     -> exit 0 (legacy routing -> generate)")
 
-        result = run_cli(common, cwd=workdir)
+        result = run_cli(["generate", *common], cwd=workdir)
         assert result.returncode == 0, result.stdout + result.stderr
         output_file = workdir / f"{MESSAGE_TYPE}.xml"
         assert output_file.exists(), "expected XML next to the template"
