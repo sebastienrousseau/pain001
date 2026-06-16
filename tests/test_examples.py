@@ -32,7 +32,7 @@ EXAMPLES = sorted((REPO_ROOT / "examples").glob("[0-9]*.py"))
 
 def test_examples_discovered() -> None:
     """The glob must find the example scripts (guards against renames)."""
-    assert len(EXAMPLES) >= 5
+    assert len(EXAMPLES) >= 11
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda p: p.name)

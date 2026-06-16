@@ -57,6 +57,10 @@ are well-formed but would still be rejected by the scheme.
 
 - Added `SCHEMES.md`: the full rule catalogue (id, severity, scope,
   remediation) and a guide to adding new profiles.
+- Expanded `examples/` to one self-checking script per feature (now 11):
+  added scheme validation, pain.002/camt.053 parsing, version migration,
+  streaming, input formats, and observability examples. Every example is
+  executed in CI, so the documented feature surface cannot silently rot.
 
 ### Dependencies
 
