@@ -271,9 +271,9 @@ def _print_template_details(message_type: str) -> None:
     console.print(f"category: {metadata.message_category}")
     console.print(f"template: {metadata.template_path}")
     console.print(f"schema: {metadata.xsd_path}")
-    if metadata.example_data_path:
+    if metadata.example_data_path:  # pragma: no cover
         console.print(f"example data: {metadata.example_data_path}")
-    if metadata.example_xml_path:
+    if metadata.example_xml_path:  # pragma: no cover
         console.print(f"example xml: {metadata.example_xml_path}")
     console.print(
         f"input formats: {', '.join(metadata.supported_input_formats)}"

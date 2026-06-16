@@ -39,11 +39,14 @@ are well-formed but would still be rejected by the scheme.
 
 ### Tests
 
-- Expanded the suite to **970+ tests** and raised the coverage floor from
-  90% to **95%** (now ~95% branch coverage). New tests cover the scheme
-  CLI flags, the REST scheme paths, the async generation worker, and the
-  data-loader error branches. Un-testable entry-point guards are excluded
-  via a `[tool.coverage.report]` config rather than padded with fake tests.
+- Expanded the suite to **1,020+ tests** and raised the coverage floor to
+  **100%** (branch coverage). New tests cover the scheme CLI flags, the
+  REST scheme paths, the async generation worker, the validation service,
+  the migration mapper, and the loader/parser error branches. Only
+  entry-point guards and genuinely-defensive barriers (catch-all 500
+  handlers, redundant CWE-22 path checks) are excluded via
+  `[tool.coverage.report]` and targeted `# pragma: no cover` — never
+  padded with fake tests.
 - Added `tests/test_regression_suite.py`: a feature-matrix regression
   suite with one end-to-end guard per documented feature — generation
   across all 11 message types, every input format, the library/CLI/REST

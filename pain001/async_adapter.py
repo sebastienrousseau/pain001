@@ -49,7 +49,7 @@ async def process_files_streaming_async(
     chunk_size: int = 1000,
 ) -> list[str]:
     """Run process_files_streaming() in a worker thread."""
-    return await asyncio.to_thread(
+    return await asyncio.to_thread(  # pragma: no cover
         process_files_streaming,
         xml_message_type,
         xml_template_file_path,

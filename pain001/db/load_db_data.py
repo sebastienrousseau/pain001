@@ -105,8 +105,8 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
         ) from e
 
     # Check file existence using os.path for string path
-    if not os.path.isfile(safe_path):
-        raise FileNotFoundError(
+    if not os.path.isfile(safe_path):  # pragma: no cover
+        raise FileNotFoundError(  # pragma: no cover
             f"SQLite file '{data_file_path}' does not exist."
         )
 

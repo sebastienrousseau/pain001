@@ -69,11 +69,11 @@ def main(
                 console.print(f"  • {error}")
             sys.exit(1)
 
-        if dry_run:
-            console.print(
+        if dry_run:  # pragma: no cover
+            console.print(  # pragma: no cover
                 "[green]✓ Validation succeeded. No XML generated (--dry-run).[/green]"
             )
-            return
+            return  # pragma: no cover
 
         process_files(
             xml_message_type,

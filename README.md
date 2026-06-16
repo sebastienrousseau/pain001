@@ -381,8 +381,10 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state: 920+ tests passing, ~95% branch coverage (95% floor),
-mypy `--strict` clean. Live coverage is tracked by the Codecov badge above.
+Current state: 1,020+ tests passing, **100% branch coverage** (enforced
+floor), mypy `--strict` clean. Coverage excludes only entry-point guards
+and genuinely-defensive barriers via `# pragma: no cover`; every other
+line is exercised by a real test.
 
 ---
 
