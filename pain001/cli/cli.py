@@ -16,6 +16,7 @@
 
 """Click-based command-line interface for generating ISO 20022 payment files."""
 
+import json
 import logging
 import os
 import sys
@@ -119,28 +120,56 @@ def _validate_schema(
         raise SystemExit(1) from e
 
 
-def _run_scheme_check(data: list[dict[str, Any]], scheme: str) -> None:
+def _run_scheme_check(
+    data: list[dict[str, Any]],
+    scheme: str,
+    explain: bool = False,
+    output_format: str = "text",
+) -> None:
     """Validate loaded rows against a payment-scheme rulebook.
 
     Args:
         data: Loaded payment rows (the normalised internal form).
         scheme: Scheme profile name (e.g. ``'sepa-sct'``).
+        explain: If True, print a remediation hint under each violation.
+        output_format: ``'text'`` for human output or ``'json'`` for a
+            machine-readable result object.
 
     Raises:
         SystemExit: 2 if the scheme name is unknown, 1 if rows violate it.
     """
-    console.print(f"[cyan]→ Validating against scheme '{scheme}'...[/cyan]")
     try:
         result = validate_scheme(data, scheme)
     except ValueError as exc:
-        console.print(f"[bold red]✗ {exc}[/bold red]", style="red")
+        if output_format == "json":
+            print(json.dumps({"error": str(exc)}))
+        else:
+            console.print(f"[bold red]✗ {exc}[/bold red]", style="red")
         raise SystemExit(2) from exc
+
+    if output_format == "json":
+        print(
+            json.dumps(
+                {
+                    "profile": result.profile,
+                    "is_valid": result.is_valid,
+                    "violations": [v.as_dict() for v in result.violations],
+                }
+            )
+        )
+        if not result.is_valid:
+            raise SystemExit(1)
+        return
+
+    console.print(f"[cyan]→ Validating against scheme '{scheme}'...[/cyan]")
     for violation in result.violations:
         colour = "red" if violation.severity == "error" else "yellow"
         console.print(
             f"[{colour}]  row {violation.index} [{violation.rule}] "
             f"{violation.field or ''}: {violation.message}[/{colour}]"
         )
+        if explain and violation.remediation:
+            console.print(f"[dim]    fix: {violation.remediation}[/dim]")
     if result.is_valid:
         console.print(f"[bold green]✓ Scheme '{scheme}' passed[/bold green]")
     else:
@@ -156,6 +185,8 @@ def _validate_payment_data(
     data_file_path: str,
     xml_message_type: str,
     scheme: str | None = None,
+    explain: bool = False,
+    scheme_format: str = "text",
 ) -> int:
     """Validate payment data and return record count.
 
@@ -164,6 +195,8 @@ def _validate_payment_data(
         data_file_path: Path to payment data file.
         xml_message_type: ISO 20022 message type.
         scheme: Optional payment-scheme rulebook to validate against.
+        explain: If True, print remediation hints for scheme violations.
+        scheme_format: Output format for scheme results ('text' or 'json').
 
     Returns:
         Number of valid payment records.
@@ -183,7 +216,7 @@ def _validate_payment_data(
             f"({record_count} payment records)"
         )
         if scheme:
-            _run_scheme_check(data, scheme)
+            _run_scheme_check(data, scheme, explain, scheme_format)
         return record_count
     except (FileNotFoundError, ValueError, Exception) as e:
         log_validation_event(
@@ -469,8 +502,20 @@ def _generate_xml_files(
     default=None,
     help=(
         "Validate rows against a payment-scheme rulebook "
-        "(e.g. sepa-sct) on top of XSD validation."
+        "(e.g. sepa-sct, sepa-sdd) on top of XSD validation."
     ),
+)
+@click.option(
+    "--explain",
+    is_flag=True,
+    default=False,
+    help="With --scheme, print a remediation hint for each violation.",
+)
+@click.option(
+    "--scheme-format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format for --scheme results (text or json).",
 )
 def main(
     xml_message_type: str | None,
@@ -489,6 +534,8 @@ def main(
     show_template: str | None,
     emit_metrics: bool,
     scheme: str | None,
+    explain: bool,
+    scheme_format: str,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -512,8 +559,10 @@ def main(
             should be printed before exiting.
         emit_metrics: If True, emit timing and lifecycle metrics to
             stdout.
-        scheme: Optional payment-scheme rulebook (e.g. 'sepa-sct') to
-            validate rows against, in addition to XSD validation.
+        scheme: Optional payment-scheme rulebook (e.g. 'sepa-sct',
+            'sepa-sdd') to validate rows against, in addition to XSD.
+        explain: If True, print a remediation hint per scheme violation.
+        scheme_format: Output format for scheme results ('text' or 'json').
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -628,7 +677,12 @@ def main(
 
     if dry_run:
         record_count = _validate_payment_data(
-            logger, data_file_path, xml_message_type, scheme=scheme
+            logger,
+            data_file_path,
+            xml_message_type,
+            scheme=scheme,
+            explain=explain,
+            scheme_format=scheme_format,
         )
         log_event(
             logger,
@@ -648,7 +702,12 @@ def main(
 
     if scheme:
         _validate_payment_data(
-            logger, data_file_path, xml_message_type, scheme=scheme
+            logger,
+            data_file_path,
+            xml_message_type,
+            scheme=scheme,
+            explain=explain,
+            scheme_format=scheme_format,
         )
 
     _generate_xml_files(

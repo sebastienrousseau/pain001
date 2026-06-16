@@ -38,10 +38,13 @@ from pain001.validation.iban_validator import (
 )
 from pain001.validation.schemes import (
     PROFILES,
+    REMEDIATIONS,
     SchemeValidationResult,
     SchemeViolation,
     SepaCreditTransferProfile,
+    SepaDirectDebitProfile,
     ValidationProfile,
+    remediation_for,
     validate_scheme,
 )
 from pain001.validation.service import (
@@ -75,7 +78,10 @@ __all__ = [
     "validate_scheme",
     "ValidationProfile",
     "SepaCreditTransferProfile",
+    "SepaDirectDebitProfile",
     "SchemeValidationResult",
     "SchemeViolation",
     "PROFILES",
+    "REMEDIATIONS",
+    "remediation_for",
 ]

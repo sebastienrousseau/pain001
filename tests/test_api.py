@@ -727,3 +727,56 @@ class TestOpenAPIDocumentation:
         response = client.get("/api/redoc")
         assert response.status_code == 200
         assert b"redoc" in response.content.lower()
+
+
+class TestSchemeValidation:
+    """Test scheme-rulebook validation via the REST API."""
+
+    _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
+
+    def test_validate_with_scheme_reports_violations(self):
+        """POST /api/validate with a scheme returns scheme_violations."""
+        response = client.post(
+            "/api/validate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+                "scheme": "sepa-sct",
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["is_valid"] is False
+        assert body["scheme_violations"]
+        assert "rule" in body["scheme_violations"][0]
+
+    def test_validate_unknown_scheme_returns_400(self):
+        """An unknown scheme name yields HTTP 400."""
+        response = client.post(
+            "/api/validate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+                "scheme": "does-not-exist",
+            },
+        )
+        assert response.status_code == 400
+
+    def test_generate_blocked_by_scheme_failure(self):
+        """Generation is refused when scheme validation fails."""
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+                "scheme": "sepa-sct",
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is False
+        assert body["scheme_violations"]
+        assert body["file_path"] is None

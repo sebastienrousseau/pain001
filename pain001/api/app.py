@@ -23,6 +23,7 @@ import os
 import secrets
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from fastapi import Depends, FastAPI, Header, HTTPException, status
 from fastapi.responses import FileResponse
@@ -48,6 +49,7 @@ from pain001.security.path_validator import (
     SecurityError,
     validate_path,
 )
+from pain001.validation import validate_scheme
 from pain001.validation.schema_validator import SchemaValidator
 from pain001.xml.generate_xml import generate_xml
 
@@ -257,11 +259,25 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         # Format errors
         error_models = _format_validation_errors(errors)
 
+        scheme_violations: list[dict[str, Any]] = []
+        is_valid = len(errors) == 0
+        if request.scheme:
+            try:
+                scheme_result = validate_scheme(data, request.scheme)
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(exc),
+                ) from exc
+            scheme_violations = [v.as_dict() for v in scheme_result.violations]
+            is_valid = is_valid and scheme_result.is_valid
+
         return ValidationResponse(
-            is_valid=len(errors) == 0,
+            is_valid=is_valid,
             total_rows=total,
             valid_rows=valid,
             errors=error_models,
+            scheme_violations=scheme_violations,
         )
 
     except HTTPException:
@@ -328,6 +344,25 @@ async def generate_xml_sync(
                 file_path=None,
                 validation_errors=error_models,
             )
+
+        # Scheme rulebook validation (when requested)
+        if request.scheme:
+            try:
+                scheme_result = validate_scheme(data, request.scheme)
+            except ValueError as exc:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=str(exc),
+                ) from exc
+            if not scheme_result.is_valid:
+                return GenerateXMLResponse(
+                    success=False,
+                    message=(f"Scheme '{request.scheme}' validation failed"),
+                    file_path=None,
+                    scheme_violations=[
+                        v.as_dict() for v in scheme_result.violations
+                    ],
+                )
 
         # Validate-only mode
         if request.validate_only:

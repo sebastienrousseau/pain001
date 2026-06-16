@@ -23,7 +23,8 @@ text inside the ISO 20022 character set — none of which the XSD enforces.
 This module adds that layer. A :class:`ValidationProfile` inspects the
 loaded payment rows and returns structured :class:`SchemeViolation`
 objects, so callers get machine-readable, row-addressable diagnostics
-instead of an opaque pass/fail.
+instead of an opaque pass/fail. Each rule id maps to a remediation hint
+in :data:`REMEDIATIONS`.
 """
 
 from abc import ABC, abstractmethod
@@ -35,7 +36,7 @@ from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.charset import find_invalid_characters
 from pain001.validation.iban_validator import validate_iban_safe
 
-# SEPA Credit Transfer rulebook limits.
+# Shared SEPA rulebook limits.
 _SEPA_MAX_AMOUNT = Decimal("999999999.99")
 _SEPA_NAME_MAX_LEN = 70
 _SEPA_REMITTANCE_MAX_LEN = 140
@@ -45,6 +46,40 @@ _SEPA_TEXT_FIELDS = (
     "creditor_name",
     "remittance_information",
 )
+_SDD_SEQUENCE_TYPES = frozenset({"FRST", "RCUR", "OOFF", "FNAL"})
+
+#: Remediation hint for each rule id, surfaced by the CLI ``--explain`` flag.
+REMEDIATIONS: dict[str, str] = {
+    "SEPA-CCY": "Set payment_currency to 'EUR'; SEPA clears euro only.",
+    "SEPA-DBTR-IBAN": "Provide a valid debtor IBAN (correct length and "
+    "mod-97 check digits for the country).",
+    "SEPA-CDTR-IBAN": "Provide a valid creditor IBAN (correct length and "
+    "mod-97 check digits for the country).",
+    "SEPA-BIC": "Supply a valid 8- or 11-character BIC, or omit it "
+    "entirely (SEPA is IBAN-only since 2016).",
+    "SEPA-AMT": "Use a positive amount with at most 2 decimal places, "
+    "not exceeding 999,999,999.99 EUR.",
+    "SEPA-CHARSET": "Limit text to the ISO 20022 Latin set; use "
+    "sanitize_to_charset() to transliterate accents and symbols.",
+    "SEPA-LEN": "Shorten the field to its scheme maximum (70 for names, "
+    "140 for remittance information).",
+    "SEPA-SVCLVL": "Set service_level_code to 'SEPA' for a SEPA payment.",
+    "SDD-MNDT": "Provide mandate_id; a SEPA Direct Debit requires the "
+    "mandate reference agreed with the debtor.",
+    "SDD-SEQTP": "Set sequence_type to one of FRST, RCUR, OOFF, or FNAL.",
+}
+
+
+def remediation_for(rule: str) -> str:
+    """Return the remediation hint for a rule id.
+
+    Args:
+        rule: The rule identifier (e.g. ``"SEPA-CCY"``).
+
+    Returns:
+        The remediation hint, or an empty string if the rule is unknown.
+    """
+    return REMEDIATIONS.get(rule, "")
 
 
 @dataclass(frozen=True)
@@ -64,6 +99,31 @@ class SchemeViolation:
     index: int
     field: str | None = None
     severity: str = "error"
+
+    @property
+    def remediation(self) -> str:
+        """Return the remediation hint for this violation's rule.
+
+        Returns:
+            The remediation hint, or an empty string if none is defined.
+        """
+        return remediation_for(self.rule)
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serialisable representation of the violation.
+
+        Returns:
+            A dict with the rule, message, index, field, severity, and
+            remediation hint.
+        """
+        return {
+            "rule": self.rule,
+            "message": self.message,
+            "index": self.index,
+            "field": self.field,
+            "severity": self.severity,
+            "remediation": self.remediation,
+        }
 
 
 @dataclass
@@ -95,6 +155,251 @@ class SchemeValidationResult:
             The value of :attr:`is_valid`.
         """
         return self.is_valid
+
+
+def _check_currency(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require the payment currency to be EUR.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    currency = str(row.get("payment_currency", "")).upper()
+    if currency != "EUR":
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-CCY",
+                message=(
+                    f"SEPA requires EUR currency (got {currency or 'empty'})"
+                ),
+                index=index,
+                field="payment_currency",
+            )
+        )
+
+
+def _check_ibans(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require valid debtor and creditor IBANs.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    for field_name, rule in (
+        ("debtor_account_IBAN", "SEPA-DBTR-IBAN"),
+        ("creditor_account_IBAN", "SEPA-CDTR-IBAN"),
+    ):
+        iban = str(row.get(field_name, "")).strip()
+        if not iban or not validate_iban_safe(iban):
+            result.violations.append(
+                SchemeViolation(
+                    rule=rule,
+                    message=(
+                        f"{field_name} must be a valid IBAN "
+                        "(ISO 13616 / mod-97)"
+                    ),
+                    index=index,
+                    field=field_name,
+                )
+            )
+
+
+def _check_bic(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Validate the creditor agent BIC when one is supplied.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    bic = str(row.get("creditor_agent_BIC", "")).strip()
+    if bic and not validate_bic_safe(bic):
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-BIC",
+                message=f"creditor_agent_BIC '{bic}' is not a valid BIC",
+                index=index,
+                field="creditor_agent_BIC",
+            )
+        )
+
+
+def _check_service_level(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Warn when the service level is not declared as SEPA.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    svc = str(row.get("service_level_code", "SEPA")).upper()
+    if svc != "SEPA":
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-SVCLVL",
+                message=(f"service_level_code should be 'SEPA' (got {svc})"),
+                index=index,
+                field="service_level_code",
+                severity="warning",
+            )
+        )
+
+
+def _check_amount(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Enforce a positive amount within the SEPA ceiling.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    raw = row.get("payment_amount")
+    amount: Decimal | None
+    try:
+        amount = Decimal(str(raw))
+    except (InvalidOperation, ValueError, TypeError):
+        amount = None
+    if amount is None or not amount.is_finite():
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-AMT",
+                message=f"payment_amount '{raw}' is not a valid amount",
+                index=index,
+                field="payment_amount",
+            )
+        )
+        return
+    if amount <= 0 or amount > _SEPA_MAX_AMOUNT:
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-AMT",
+                message=(
+                    "payment_amount must be > 0 and "
+                    f"<= {_SEPA_MAX_AMOUNT} EUR (got {amount})"
+                ),
+                index=index,
+                field="payment_amount",
+            )
+        )
+        return
+    exponent = amount.as_tuple().exponent
+    if isinstance(exponent, int) and exponent < -2:
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-AMT",
+                message=(
+                    "payment_amount must have at most 2 decimal places "
+                    f"(got {amount})"
+                ),
+                index=index,
+                field="payment_amount",
+            )
+        )
+
+
+def _check_text_fields(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Enforce ISO 20022 charset and length on text fields.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    for field_name in _SEPA_TEXT_FIELDS:
+        value = str(row.get(field_name, ""))
+        if not value:
+            continue
+        invalid = find_invalid_characters(value)
+        if invalid:
+            result.violations.append(
+                SchemeViolation(
+                    rule="SEPA-CHARSET",
+                    message=(
+                        f"{field_name} contains characters outside the "
+                        f"ISO 20022 set: {' '.join(invalid)}"
+                    ),
+                    index=index,
+                    field=field_name,
+                )
+            )
+        max_len = (
+            _SEPA_REMITTANCE_MAX_LEN
+            if field_name == "remittance_information"
+            else _SEPA_NAME_MAX_LEN
+        )
+        if len(value) > max_len:
+            result.violations.append(
+                SchemeViolation(
+                    rule="SEPA-LEN",
+                    message=(
+                        f"{field_name} exceeds {max_len} characters "
+                        f"(got {len(value)})"
+                    ),
+                    index=index,
+                    field=field_name,
+                )
+            )
+
+
+def _check_mandate(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require a mandate id for a direct debit.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    if not str(row.get("mandate_id", "")).strip():
+        result.violations.append(
+            SchemeViolation(
+                rule="SDD-MNDT",
+                message="mandate_id is required for a SEPA Direct Debit",
+                index=index,
+                field="mandate_id",
+            )
+        )
+
+
+def _check_sequence_type(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require a valid direct-debit sequence type.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    seq = str(row.get("sequence_type", "")).upper()
+    if seq not in _SDD_SEQUENCE_TYPES:
+        result.violations.append(
+            SchemeViolation(
+                rule="SDD-SEQTP",
+                message=(
+                    "sequence_type must be one of "
+                    f"{', '.join(sorted(_SDD_SEQUENCE_TYPES))} (got "
+                    f"{seq or 'empty'})"
+                ),
+                index=index,
+                field="sequence_type",
+            )
+        )
 
 
 class ValidationProfile(ABC):
@@ -137,220 +442,51 @@ class SepaCreditTransferProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            self._check_currency(row, index, result)
-            self._check_ibans(row, index, result)
-            self._check_bic(row, index, result)
-            self._check_service_level(row, index, result)
-            self._check_amount(row, index, result)
-            self._check_text_fields(row, index, result)
+            _check_currency(row, index, result)
+            _check_ibans(row, index, result)
+            _check_bic(row, index, result)
+            _check_service_level(row, index, result)
+            _check_amount(row, index, result)
+            _check_text_fields(row, index, result)
         return result
 
-    @staticmethod
-    def _check_currency(
-        row: dict[str, Any], index: int, result: SchemeValidationResult
-    ) -> None:
-        """Require the payment currency to be EUR.
+
+class SepaDirectDebitProfile(ValidationProfile):
+    """SEPA Direct Debit (SDD) rulebook checks.
+
+    Adds the direct-debit-specific constraints — a mandate reference and a
+    valid sequence type — on top of the shared SEPA rules (EUR currency,
+    IBANs, BIC, amount ceiling, charset, and length).
+    """
+
+    name = "sepa-sdd"
+
+    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
+        """Validate payment rows against the SEPA SDD rulebook.
 
         Args:
-            row: The payment row.
-            index: Zero-based row index.
-            result: The result accumulator to append violations to.
+            data: Loaded payment rows (the normalised internal form).
+
+        Returns:
+            A :class:`SchemeValidationResult` listing every violation.
         """
-        currency = str(row.get("payment_currency", "")).upper()
-        if currency != "EUR":
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-CCY",
-                    message=(
-                        "SEPA Credit Transfer requires EUR currency "
-                        f"(got {currency or 'empty'})"
-                    ),
-                    index=index,
-                    field="payment_currency",
-                )
-            )
-
-    @staticmethod
-    def _check_ibans(
-        row: dict[str, Any], index: int, result: SchemeValidationResult
-    ) -> None:
-        """Require valid debtor and creditor IBANs.
-
-        Args:
-            row: The payment row.
-            index: Zero-based row index.
-            result: The result accumulator to append violations to.
-        """
-        for field_name, rule in (
-            ("debtor_account_IBAN", "SEPA-DBTR-IBAN"),
-            ("creditor_account_IBAN", "SEPA-CDTR-IBAN"),
-        ):
-            iban = str(row.get(field_name, "")).strip()
-            if not iban or not validate_iban_safe(iban):
-                result.violations.append(
-                    SchemeViolation(
-                        rule=rule,
-                        message=(
-                            f"{field_name} must be a valid IBAN "
-                            "(ISO 13616 / mod-97)"
-                        ),
-                        index=index,
-                        field=field_name,
-                    )
-                )
-
-    @staticmethod
-    def _check_bic(
-        row: dict[str, Any], index: int, result: SchemeValidationResult
-    ) -> None:
-        """Validate the creditor agent BIC when one is supplied.
-
-        Args:
-            row: The payment row.
-            index: Zero-based row index.
-            result: The result accumulator to append violations to.
-        """
-        bic = str(row.get("creditor_agent_BIC", "")).strip()
-        if bic and not validate_bic_safe(bic):
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-BIC",
-                    message=f"creditor_agent_BIC '{bic}' is not a valid BIC",
-                    index=index,
-                    field="creditor_agent_BIC",
-                )
-            )
-
-    @staticmethod
-    def _check_service_level(
-        row: dict[str, Any], index: int, result: SchemeValidationResult
-    ) -> None:
-        """Warn when the service level is not declared as SEPA.
-
-        Args:
-            row: The payment row.
-            index: Zero-based row index.
-            result: The result accumulator to append violations to.
-        """
-        svc = str(row.get("service_level_code", "SEPA")).upper()
-        if svc != "SEPA":
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-SVCLVL",
-                    message=(
-                        "service_level_code should be 'SEPA' for an SCT "
-                        f"(got {svc})"
-                    ),
-                    index=index,
-                    field="service_level_code",
-                    severity="warning",
-                )
-            )
-
-    @staticmethod
-    def _check_amount(
-        row: dict[str, Any], index: int, result: SchemeValidationResult
-    ) -> None:
-        """Enforce a positive amount within the SEPA ceiling.
-
-        Args:
-            row: The payment row.
-            index: Zero-based row index.
-            result: The result accumulator to append violations to.
-        """
-        raw = row.get("payment_amount")
-        amount: Decimal | None
-        try:
-            amount = Decimal(str(raw))
-        except (InvalidOperation, ValueError, TypeError):
-            amount = None
-        if amount is None or not amount.is_finite():
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-AMT",
-                    message=f"payment_amount '{raw}' is not a valid amount",
-                    index=index,
-                    field="payment_amount",
-                )
-            )
-            return
-        if amount <= 0 or amount > _SEPA_MAX_AMOUNT:
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-AMT",
-                    message=(
-                        "payment_amount must be > 0 and "
-                        f"<= {_SEPA_MAX_AMOUNT} EUR (got {amount})"
-                    ),
-                    index=index,
-                    field="payment_amount",
-                )
-            )
-            return
-        exponent = amount.as_tuple().exponent
-        if isinstance(exponent, int) and exponent < -2:
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-AMT",
-                    message=(
-                        "payment_amount must have at most 2 decimal places "
-                        f"(got {amount})"
-                    ),
-                    index=index,
-                    field="payment_amount",
-                )
-            )
-
-    @staticmethod
-    def _check_text_fields(
-        row: dict[str, Any], index: int, result: SchemeValidationResult
-    ) -> None:
-        """Enforce ISO 20022 charset and length on text fields.
-
-        Args:
-            row: The payment row.
-            index: Zero-based row index.
-            result: The result accumulator to append violations to.
-        """
-        for field_name in _SEPA_TEXT_FIELDS:
-            value = str(row.get(field_name, ""))
-            if not value:
-                continue
-            invalid = find_invalid_characters(value)
-            if invalid:
-                result.violations.append(
-                    SchemeViolation(
-                        rule="SEPA-CHARSET",
-                        message=(
-                            f"{field_name} contains characters outside the "
-                            f"ISO 20022 set: {' '.join(invalid)}"
-                        ),
-                        index=index,
-                        field=field_name,
-                    )
-                )
-            max_len = (
-                _SEPA_REMITTANCE_MAX_LEN
-                if field_name == "remittance_information"
-                else _SEPA_NAME_MAX_LEN
-            )
-            if len(value) > max_len:
-                result.violations.append(
-                    SchemeViolation(
-                        rule="SEPA-LEN",
-                        message=(
-                            f"{field_name} exceeds {max_len} characters "
-                            f"(got {len(value)})"
-                        ),
-                        index=index,
-                        field=field_name,
-                    )
-                )
+        result = SchemeValidationResult(profile=self.name)
+        for index, row in enumerate(data):
+            _check_currency(row, index, result)
+            _check_ibans(row, index, result)
+            _check_bic(row, index, result)
+            _check_service_level(row, index, result)
+            _check_amount(row, index, result)
+            _check_text_fields(row, index, result)
+            _check_mandate(row, index, result)
+            _check_sequence_type(row, index, result)
+        return result
 
 
 #: Registry of available scheme profiles, keyed by their ``name``.
 PROFILES: dict[str, ValidationProfile] = {
     SepaCreditTransferProfile.name: SepaCreditTransferProfile(),
+    SepaDirectDebitProfile.name: SepaDirectDebitProfile(),
 }
 
 

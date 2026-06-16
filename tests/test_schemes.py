@@ -21,8 +21,18 @@ from pain001.validation.schemes import (
     PROFILES,
     SchemeValidationResult,
     SepaCreditTransferProfile,
+    SepaDirectDebitProfile,
+    remediation_for,
     validate_scheme,
 )
+
+
+def _valid_sdd_row() -> dict[str, object]:
+    """Return a payment row that is fully SEPA SDD compliant."""
+    return _valid_row() | {
+        "mandate_id": "MNDT-0001",
+        "sequence_type": "RCUR",
+    }
 
 
 def _valid_row() -> dict[str, object]:
@@ -136,13 +146,77 @@ class TestSepaCreditTransferProfile:
         assert ccy.index == 1
 
 
+class TestSepaDirectDebitProfile:
+    """Tests for the SEPA SDD profile (shared rules + SDD specifics)."""
+
+    def test_valid_sdd_row_passes(self) -> None:
+        """A compliant direct-debit row produces no violations."""
+        result = validate_scheme([_valid_sdd_row()], profile="sepa-sdd")
+        assert result.is_valid
+        assert result.violations == []
+
+    def test_missing_mandate_flagged(self) -> None:
+        """A missing mandate id raises SDD-MNDT."""
+        row = _valid_sdd_row() | {"mandate_id": ""}
+        assert any(
+            v.rule == "SDD-MNDT"
+            for v in validate_scheme([row], profile="sepa-sdd").violations
+        )
+
+    def test_invalid_sequence_type_flagged(self) -> None:
+        """An unknown sequence type raises SDD-SEQTP."""
+        row = _valid_sdd_row() | {"sequence_type": "WEEKLY"}
+        assert any(
+            v.rule == "SDD-SEQTP"
+            for v in validate_scheme([row], profile="sepa-sdd").violations
+        )
+
+    def test_shared_sepa_rules_apply(self) -> None:
+        """Shared SEPA rules (e.g. currency) also fire for SDD."""
+        row = _valid_sdd_row() | {"payment_currency": "USD"}
+        assert any(
+            v.rule == "SEPA-CCY"
+            for v in validate_scheme([row], profile="sepa-sdd").violations
+        )
+
+
+class TestRemediations:
+    """Tests for the remediation catalogue."""
+
+    def test_violation_exposes_remediation(self) -> None:
+        """Each violation carries a non-empty remediation hint."""
+        row = _valid_row() | {"payment_currency": "USD"}
+        violation = validate_scheme([row]).violations[0]
+        assert violation.rule == "SEPA-CCY"
+        assert "EUR" in violation.remediation
+
+    def test_remediation_for_known_and_unknown(self) -> None:
+        """remediation_for returns text for known, '' for unknown rules."""
+        assert remediation_for("SDD-MNDT")
+        assert remediation_for("NO-SUCH-RULE") == ""
+
+    def test_violation_as_dict_is_json_ready(self) -> None:
+        """as_dict exposes all fields including the remediation."""
+        row = _valid_row() | {"payment_currency": "USD"}
+        payload = validate_scheme([row]).violations[0].as_dict()
+        assert payload["rule"] == "SEPA-CCY"
+        assert set(payload) == {
+            "rule",
+            "message",
+            "index",
+            "field",
+            "severity",
+            "remediation",
+        }
+
+
 class TestProfileRegistry:
     """Tests for the profile registry and convenience function."""
 
-    def test_registry_contains_sepa_sct(self) -> None:
-        """The SEPA SCT profile is registered under its name."""
-        assert "sepa-sct" in PROFILES
+    def test_registry_contains_both_profiles(self) -> None:
+        """Both SEPA profiles are registered under their names."""
         assert isinstance(PROFILES["sepa-sct"], SepaCreditTransferProfile)
+        assert isinstance(PROFILES["sepa-sdd"], SepaDirectDebitProfile)
 
     def test_unknown_profile_raises(self) -> None:
         """Requesting an unknown profile raises ValueError."""

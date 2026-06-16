@@ -68,6 +68,11 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
         default=None,
         description="Table name for SQLite sources",
     )
+    scheme: str | None = Field(
+        default=None,
+        description="Payment-scheme rulebook to validate against "
+        "(e.g. 'sepa-sct', 'sepa-sdd')",
+    )
 
     model_config = ConfigDict(use_enum_values=False)
 
@@ -93,6 +98,11 @@ class GenerateXMLRequest(BaseModel):
         default=None,
         description="Table name for SQLite sources",
     )
+    scheme: str | None = Field(
+        default=None,
+        description="Payment-scheme rulebook to enforce before generating "
+        "(e.g. 'sepa-sct', 'sepa-sdd')",
+    )
 
     model_config = ConfigDict(use_enum_values=False)
 
@@ -115,6 +125,10 @@ class ValidationResponse(BaseModel):
     errors: list[ValidationError] = Field(
         default_factory=list,
         description="List of validation errors",
+    )
+    scheme_violations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Scheme-rulebook violations (when a scheme is given)",
     )
 
     @field_validator("invalid_rows", mode="after")
@@ -148,6 +162,10 @@ class GenerateXMLResponse(BaseModel):
     validation_errors: list[ValidationError] = Field(
         default_factory=list,
         description="Validation errors if validation failed",
+    )
+    scheme_violations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Scheme-rulebook violations if scheme validation failed",
     )
 
 

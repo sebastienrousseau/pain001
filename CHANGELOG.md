@@ -14,22 +14,33 @@ are well-formed but would still be rejected by the scheme.
 ### Added
 
 - **Scheme rulebook validation** (`pain001.validation.validate_scheme`): a
-  pluggable `ValidationProfile` framework with a first profile,
-  `sepa-sct` (SEPA Credit Transfer). It enforces EUR currency, valid
-  debtor/creditor IBANs (ISO 13616 / mod-97), well-formed BICs, the
-  SEPA amount ceiling (999,999,999.99), and ISO 20022 character-set and
-  field-length limits. Results are structured, per-row `SchemeViolation`
-  objects with stable rule ids and `error`/`warning` severities.
+  pluggable `ValidationProfile` framework with two profiles —
+  `sepa-sct` (SEPA Credit Transfer, pain.001) and `sepa-sdd` (SEPA Direct
+  Debit, pain.008). They enforce EUR currency, valid debtor/creditor IBANs
+  (ISO 13616 / mod-97), well-formed BICs, the SEPA amount ceiling
+  (999,999,999.99), ISO 20022 character-set and field-length limits, and —
+  for SDD — mandate id and sequence type. Results are structured, per-row
+  `SchemeViolation` objects with stable rule ids, `error`/`warning`
+  severities, and remediation hints.
 - **ISO 20022 character-set guard** (`pain001.validation`):
   `is_valid_charset`, `find_invalid_characters`, and `sanitize_to_charset`
   (transliterates accented Latin and replaces unsupported characters) —
   the restricted Latin set is a leading real-world rejection cause.
-- **CLI `--scheme` flag**: `pain001 ... --scheme sepa-sct` runs the
-  rulebook on top of XSD validation in both dry-run and generation,
-  printing per-row violations and failing with exit code 1.
+- **CLI**: `--scheme sepa-sct|sepa-sdd` runs the rulebook on top of XSD
+  validation in both dry-run and generation (exit `1` on violation, `2` on
+  unknown profile); `--explain` prints a remediation hint per violation;
+  `--scheme-format json` emits a machine-readable result for CI.
+- **REST API**: `POST /api/validate` and `/api/generate` accept an optional
+  `scheme` field and return `scheme_violations`; generation is refused when
+  scheme validation fails.
 - **Top-level exports**: `validate_scheme`, `SchemeValidationResult`,
   `SchemeViolation`, and `sanitize_to_charset` are importable from
   `pain001`.
+
+### Documentation
+
+- Added `SCHEMES.md`: the full rule catalogue (id, severity, scope,
+  remediation) and a guide to adding new profiles.
 
 ### Dependencies
 

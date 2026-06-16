@@ -174,7 +174,10 @@ pain001 [OPTIONS]
       --list-templates     List bundled templates and exit
       --show-template      Show metadata for one bundled template and exit
       --emit-metrics       Emit timing and lifecycle metrics to stdout
-      --scheme             Validate rows against a scheme rulebook (sepa-sct)
+      --scheme             Validate rows against a scheme rulebook
+                           (sepa-sct, sepa-sdd)
+      --explain            With --scheme, print a remediation hint per finding
+      --scheme-format      Scheme output format: text (default) or json
   -v, --verbose            Detailed logging output
   -h, --help               Show help and exit
 ```
@@ -193,10 +196,15 @@ per-row violations:
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 ```
 
-The `sepa-sct` profile (SEPA Credit Transfer) checks EUR currency, valid
+Two profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001) and
+`sepa-sdd` (SEPA Direct Debit, pain.008) — checking EUR currency, valid
 debtor/creditor IBANs (ISO 13616 / mod-97), well-formed BICs, the
-999,999,999.99 amount ceiling, and ISO 20022 character-set and
-field-length limits. From Python:
+999,999,999.99 amount ceiling, ISO 20022 character-set and field-length
+limits, and (for SDD) mandate id and sequence type. Add `--explain` for
+remediation hints, or `--scheme-format json` for machine-readable output.
+The REST API accepts a `scheme` field on `/api/validate` and
+`/api/generate` too. See [SCHEMES.md](SCHEMES.md) for the full rule
+catalogue. From Python:
 
 ```python
 from pain001 import validate_scheme
@@ -404,6 +412,7 @@ rather than a public issue.
 - **Guides & API reference:** [docs.pain001.com](https://docs.pain001.com)
 - **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — self-checking scripts executed in CI
 - **Bundled templates & schemas:** [`pain001/templates/`](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates)
+- **Scheme validation rules:** [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md)
 - **Release history:** [CHANGELOG.md](https://github.com/sebastienrousseau/pain001/blob/main/CHANGELOG.md)
 
 ---
