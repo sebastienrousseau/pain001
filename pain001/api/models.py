@@ -20,7 +20,13 @@
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, ValidationInfo, field_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+)
 
 
 class DataSourceType(str, Enum):
@@ -63,10 +69,7 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
         description="Table name for SQLite sources",
     )
 
-    class Config:
-        """Pydantic config."""
-
-        use_enum_values = False
+    model_config = ConfigDict(use_enum_values=False)
 
 
 class GenerateXMLRequest(BaseModel):
@@ -91,10 +94,7 @@ class GenerateXMLRequest(BaseModel):
         description="Table name for SQLite sources",
     )
 
-    class Config:
-        """Pydantic config."""
-
-        use_enum_values = False
+    model_config = ConfigDict(use_enum_values=False)
 
 
 class ValidationError(BaseModel):
@@ -168,10 +168,7 @@ class JobStatusResponse(BaseModel):
         default=0, description="Progress percentage (0-100)"
     )
 
-    class Config:
-        """Pydantic config."""
-
-        use_enum_values = True
+    model_config = ConfigDict(use_enum_values=True)
 
 
 class HealthResponse(BaseModel):

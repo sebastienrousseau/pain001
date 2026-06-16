@@ -22,7 +22,7 @@ from pathlib import Path
 BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 
 # Shared metadata
-VERSION = "0.0.49"
+VERSION = "0.0.50"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 TEMPLATES_DIR = BASE_DIR / "templates"
 

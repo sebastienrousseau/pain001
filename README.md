@@ -45,6 +45,7 @@
 
 - [Development](#development) — gates, make targets, CI matrix
 - [Security](#security) — hardening posture and reporting
+- [Documentation](#documentation) — guides, API reference, examples
 - [Contributing](#contributing) — how to get changes in
 - [License](#license) — dual Apache-2.0 / MIT
 
@@ -140,7 +141,7 @@ Related tooling included in the package:
 | Format | Extension | Notes |
 | :--- | :--- | :--- |
 | CSV | `.csv` | Header row maps columns to template fields |
-| SQLite | `.db`, `.sqlite` | Reads from a `pain001` table |
+| SQLite | `.db`, `.sqlite` | Reads from a named table you specify (set the table via `--config`) |
 | JSON | `.json` | Array of payment objects |
 | JSON Lines | `.jsonl` | One payment object per line |
 | Parquet | `.parquet` | Requires the `parquet` extra |
@@ -233,26 +234,54 @@ Interactive OpenAPI docs are served at `/api/docs`.
 </details>
 
 <details>
-<summary><b>Python API</b></summary>
+<summary><b>Python API — generate in memory (serverless)</b></summary>
+
+For Lambdas, APIs, and queues, `generate_xml_string` returns the validated
+XML as a string instead of writing to disk. This snippet is fully
+self-contained — it uses the template, schema, and sample data that ship
+*inside* the package, so it runs as-is with no external files:
+
+```python
+from pain001 import generate_xml_string
+from pain001.constants import TEMPLATES_DIR
+from pain001.csv.load_csv_data import load_csv_data
+
+message_type = "pain.001.001.03"
+bundled = TEMPLATES_DIR / message_type  # templates ship inside the package
+
+# Load the bundled sample dataset; swap in your own list[dict] of rows
+payments = load_csv_data(str(bundled / "template.csv"))
+
+xml = generate_xml_string(
+    payments,
+    message_type,
+    str(bundled / "template.xml"),
+    str(bundled / f"{message_type}.xsd"),
+)
+
+# `xml` is validated ISO 20022 XML, ready to return from a handler
+print(xml[:38])  # -> <?xml version="1.0" encoding="UTF-8"?>
+```
+
+</details>
+
+<details>
+<summary><b>Python API — generate to a file</b></summary>
+
+`process_files` loads your data, renders the template, validates against
+the XSD, and writes the file — returning the path it wrote:
 
 ```python
 from pain001.core.core import process_files
 
-process_files(
+output_path = process_files(
     xml_message_type="pain.001.001.03",
     xml_template_file_path="template.xml",
     xsd_schema_file_path="schema.xsd",
-    data_file_path="payments.csv",
+    data_file_path="payments.csv",  # path, or a list[dict] of payment rows
 )
-```
 
-Or via the programmatic entry point, which also auto-resolves bundled
-templates and schemas:
-
-```python
-from pain001.__main__ import main
-
-main("pain.001.001.03", "template.xml", "schema.xsd", "payments.csv")
+print(output_path)  # e.g. "pain.001.001.03.xml" — validated and on disk
 ```
 
 </details>
@@ -286,7 +315,7 @@ the build fails if any regress.
 | :--- | :--- |
 | `make lint` | Ruff lint + format check |
 | `make type` | mypy in `--strict` mode |
-| `make test` | pytest — 1,000+ tests, 95% branch-coverage floor |
+| `make test` | Full pytest suite with branch-coverage gate |
 | `make sec` | Bandit + Safety dependency audit |
 | `make perf` | pytest-benchmark performance suite |
 | `make mutate` | Mutation testing via mutmut |
@@ -305,8 +334,8 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state: 1,001 tests passing, 97.7% branch coverage, mypy strict
-clean across 58 source files.
+Current state: 848 tests passing, ~92% branch coverage (90% floor),
+mypy `--strict` clean. Live coverage is tracked by the Codecov badge above.
 
 ---
 
@@ -331,6 +360,15 @@ rather than a public issue.
 
 ---
 
+## Documentation
+
+- **Guides & API reference:** [docs.pain001.com](https://docs.pain001.com)
+- **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — self-checking scripts executed in CI
+- **Bundled templates & schemas:** [`pain001/templates/`](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates)
+- **Release history:** [CHANGELOG.md](https://github.com/sebastienrousseau/pain001/blob/main/CHANGELOG.md)
+
+---
+
 ## Contributing
 
 Contributions are welcome — see the
@@ -350,7 +388,8 @@ Licensed under either of
 - Apache License, Version 2.0 ([LICENSE-APACHE](https://opensource.org/license/apache-2-0/))
 - MIT license ([LICENSE-MIT](http://opensource.org/licenses/MIT))
 
-at your option.
+at your option. See [CHANGELOG.md](https://github.com/sebastienrousseau/pain001/blob/main/CHANGELOG.md)
+for release history.
 
 ---
 
