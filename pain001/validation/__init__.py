@@ -24,11 +24,25 @@ from pain001.validation.bic_validator import (
     validate_bic_format,
     validate_bic_safe,
 )
+from pain001.validation.charset import (
+    ISO20022_ALLOWED_CHARACTERS,
+    find_invalid_characters,
+    is_valid_charset,
+    sanitize_to_charset,
+)
 from pain001.validation.iban_validator import (
     validate_iban,
     validate_iban_checksum,
     validate_iban_format,
     validate_iban_safe,
+)
+from pain001.validation.schemes import (
+    PROFILES,
+    SchemeValidationResult,
+    SchemeViolation,
+    SepaCreditTransferProfile,
+    ValidationProfile,
+    validate_scheme,
 )
 from pain001.validation.service import (
     ValidationConfig,
@@ -52,4 +66,16 @@ __all__ = [
     "validate_bic",
     "validate_bic_format",
     "validate_bic_safe",
+    # ISO 20022 character set
+    "ISO20022_ALLOWED_CHARACTERS",
+    "find_invalid_characters",
+    "is_valid_charset",
+    "sanitize_to_charset",
+    # Scheme rulebook validation
+    "validate_scheme",
+    "ValidationProfile",
+    "SepaCreditTransferProfile",
+    "SchemeValidationResult",
+    "SchemeViolation",
+    "PROFILES",
 ]

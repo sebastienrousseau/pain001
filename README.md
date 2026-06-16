@@ -174,9 +174,48 @@ pain001 [OPTIONS]
       --list-templates     List bundled templates and exit
       --show-template      Show metadata for one bundled template and exit
       --emit-metrics       Emit timing and lifecycle metrics to stdout
+      --scheme             Validate rows against a scheme rulebook (sepa-sct)
   -v, --verbose            Detailed logging output
   -h, --help               Show help and exit
 ```
+
+</details>
+
+<details>
+<summary><b>Scheme-aware validation (SEPA)</b></summary>
+
+XSD validation proves a file is *well-formed*; it does not prove the
+payment obeys the rules of the scheme it will clear through. `--scheme`
+layers a rulebook on top of XSD validation and reports structured,
+per-row violations:
+
+```bash
+pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
+```
+
+The `sepa-sct` profile (SEPA Credit Transfer) checks EUR currency, valid
+debtor/creditor IBANs (ISO 13616 / mod-97), well-formed BICs, the
+999,999,999.99 amount ceiling, and ISO 20022 character-set and
+field-length limits. From Python:
+
+```python
+from pain001 import validate_scheme
+
+rows = [{
+    "payment_currency": "USD",                       # not EUR -> SEPA-CCY
+    "debtor_account_IBAN": "DE89370400440532013000",
+    "creditor_account_IBAN": "FR1420041010050500013M02606",
+    "payment_amount": "100.00",
+}]
+
+result = validate_scheme(rows, profile="sepa-sct")
+print(result.is_valid)             # False
+for v in result.violations:
+    print(v.rule, v.field, v.message)  # SEPA-CCY payment_currency ...
+```
+
+Need to clean spreadsheet text first? `sanitize_to_charset` transliterates
+to the ISO 20022 set (`Café` → `Cafe`).
 
 </details>
 

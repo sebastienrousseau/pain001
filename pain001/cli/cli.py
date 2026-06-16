@@ -20,6 +20,7 @@ import logging
 import os
 import sys
 import traceback
+from typing import Any
 
 import click
 from rich import box
@@ -53,6 +54,7 @@ from pain001.observability import (
     register_metrics_callback,
 )
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
+from pain001.validation import validate_scheme
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
@@ -117,10 +119,43 @@ def _validate_schema(
         raise SystemExit(1) from e
 
 
+def _run_scheme_check(data: list[dict[str, Any]], scheme: str) -> None:
+    """Validate loaded rows against a payment-scheme rulebook.
+
+    Args:
+        data: Loaded payment rows (the normalised internal form).
+        scheme: Scheme profile name (e.g. ``'sepa-sct'``).
+
+    Raises:
+        SystemExit: 2 if the scheme name is unknown, 1 if rows violate it.
+    """
+    console.print(f"[cyan]→ Validating against scheme '{scheme}'...[/cyan]")
+    try:
+        result = validate_scheme(data, scheme)
+    except ValueError as exc:
+        console.print(f"[bold red]✗ {exc}[/bold red]", style="red")
+        raise SystemExit(2) from exc
+    for violation in result.violations:
+        colour = "red" if violation.severity == "error" else "yellow"
+        console.print(
+            f"[{colour}]  row {violation.index} [{violation.rule}] "
+            f"{violation.field or ''}: {violation.message}[/{colour}]"
+        )
+    if result.is_valid:
+        console.print(f"[bold green]✓ Scheme '{scheme}' passed[/bold green]")
+    else:
+        console.print(
+            f"[bold red]✗ Scheme '{scheme}' validation failed[/bold red]",
+            style="red",
+        )
+        raise SystemExit(1)
+
+
 def _validate_payment_data(
     logger: logging.Logger,
     data_file_path: str,
     xml_message_type: str,
+    scheme: str | None = None,
 ) -> int:
     """Validate payment data and return record count.
 
@@ -128,6 +163,7 @@ def _validate_payment_data(
         logger: Logger instance for event recording.
         data_file_path: Path to payment data file.
         xml_message_type: ISO 20022 message type.
+        scheme: Optional payment-scheme rulebook to validate against.
 
     Returns:
         Number of valid payment records.
@@ -146,6 +182,8 @@ def _validate_payment_data(
             f"[bold green]✓ Data validation passed[/bold green] "
             f"({record_count} payment records)"
         )
+        if scheme:
+            _run_scheme_check(data, scheme)
         return record_count
     except (FileNotFoundError, ValueError, Exception) as e:
         log_validation_event(
@@ -425,6 +463,15 @@ def _generate_xml_files(
     default=False,
     help="Emit lightweight timing and lifecycle metrics to stdout.",
 )
+@click.option(
+    "--scheme",
+    type=str,
+    default=None,
+    help=(
+        "Validate rows against a payment-scheme rulebook "
+        "(e.g. sepa-sct) on top of XSD validation."
+    ),
+)
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -441,6 +488,7 @@ def main(
     list_templates: bool,
     show_template: str | None,
     emit_metrics: bool,
+    scheme: str | None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -464,6 +512,8 @@ def main(
             should be printed before exiting.
         emit_metrics: If True, emit timing and lifecycle metrics to
             stdout.
+        scheme: Optional payment-scheme rulebook (e.g. 'sepa-sct') to
+            validate rows against, in addition to XSD validation.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -578,7 +628,7 @@ def main(
 
     if dry_run:
         record_count = _validate_payment_data(
-            logger, data_file_path, xml_message_type
+            logger, data_file_path, xml_message_type, scheme=scheme
         )
         log_event(
             logger,
@@ -595,6 +645,11 @@ def main(
             "[dim](--dry-run: no XML generated)[/dim]"
         )
         return
+
+    if scheme:
+        _validate_payment_data(
+            logger, data_file_path, xml_message_type, scheme=scheme
+        )
 
     _generate_xml_files(
         logger,

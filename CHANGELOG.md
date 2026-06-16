@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.51] - 2026-06-16
+
+Feature release: scheme-aware validation. pain001 now validates payments
+against payment-scheme rulebooks, not just the XSD — catching files that
+are well-formed but would still be rejected by the scheme.
+
+### Added
+
+- **Scheme rulebook validation** (`pain001.validation.validate_scheme`): a
+  pluggable `ValidationProfile` framework with a first profile,
+  `sepa-sct` (SEPA Credit Transfer). It enforces EUR currency, valid
+  debtor/creditor IBANs (ISO 13616 / mod-97), well-formed BICs, the
+  SEPA amount ceiling (999,999,999.99), and ISO 20022 character-set and
+  field-length limits. Results are structured, per-row `SchemeViolation`
+  objects with stable rule ids and `error`/`warning` severities.
+- **ISO 20022 character-set guard** (`pain001.validation`):
+  `is_valid_charset`, `find_invalid_characters`, and `sanitize_to_charset`
+  (transliterates accented Latin and replaces unsupported characters) —
+  the restricted Latin set is a leading real-world rejection cause.
+- **CLI `--scheme` flag**: `pain001 ... --scheme sepa-sct` runs the
+  rulebook on top of XSD validation in both dry-run and generation,
+  printing per-row violations and failing with exit code 1.
+- **Top-level exports**: `validate_scheme`, `SchemeValidationResult`,
+  `SchemeViolation`, and `sanitize_to_charset` are importable from
+  `pain001`.
+
 ## [0.0.50] - 2026-06-15
 
 Internal maintainability release. No functional or API changes; all public

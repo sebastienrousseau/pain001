@@ -17,7 +17,7 @@
 
 import logging
 
-__version__ = "0.0.50"
+__version__ = "0.0.51"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
@@ -45,6 +45,12 @@ from pain001.templates import (
     TemplateRegistry,
     validate_registry,
 )
+from pain001.validation import (
+    SchemeValidationResult,
+    SchemeViolation,
+    sanitize_to_charset,
+    validate_scheme,
+)
 from pain001.xml.generate_xml import generate_xml_string
 
 __all__ = [
@@ -64,6 +70,10 @@ __all__ = [
     "register_metrics_callback",
     "clear_metrics_callbacks",
     "validate_all_async",
+    "validate_scheme",
+    "SchemeValidationResult",
+    "SchemeViolation",
+    "sanitize_to_charset",
     "PaymentValidationError",
     "DataSourceError",
     "__version__",
