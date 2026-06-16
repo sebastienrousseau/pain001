@@ -37,7 +37,7 @@
             <DbtrAcct>
                 <Id>
                     <Othr>
-                        <Id>GB123456789</Id>
+                        <Id>GB82WEST12345698765432</Id>
                     </Othr>
                 </Id>
             </DbtrAcct>
@@ -57,7 +57,7 @@
                 <ChrgBr>SLEV</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BICFI>BANKEU2L</BICFI>
+                        <BICFI>BANKFRPP</BICFI>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
@@ -72,7 +72,7 @@
                 <CdtrAcct>
                     <Id>
                         <Othr>
-                            <Id>FR123456789</Id>
+                            <Id>FR1420041010050500013M02606</Id>
                         </Othr>
                     </Id>
                 </CdtrAcct>

@@ -733,6 +733,9 @@ class TestSchemeValidation:
     """Test scheme-rulebook validation via the REST API."""
 
     _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
+    # The bundled sample is SEPA-compliant; this fixture is XSD-valid but
+    # deliberately breaks SEPA SCT (non-EUR currency) to exercise violations.
+    _VIOLATING_CSV = "tests/data/sepa_violating.csv"
 
     def test_validate_with_scheme_reports_violations(self):
         """POST /api/validate with a scheme returns scheme_violations."""
@@ -740,7 +743,7 @@ class TestSchemeValidation:
             "/api/validate",
             json={
                 "data_source": "csv",
-                "file_path": self._BUNDLED_CSV,
+                "file_path": self._VIOLATING_CSV,
                 "message_type": "pain.001.001.03",
                 "scheme": "sepa-sct",
             },
@@ -770,7 +773,7 @@ class TestSchemeValidation:
             "/api/generate",
             json={
                 "data_source": "csv",
-                "file_path": self._BUNDLED_CSV,
+                "file_path": self._VIOLATING_CSV,
                 "message_type": "pain.001.001.03",
                 "scheme": "sepa-sct",
             },

@@ -91,7 +91,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -106,14 +106,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertTrue(validate_csv_data(data))
@@ -140,7 +140,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -155,14 +155,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertFalse(validate_csv_data(data))
@@ -195,7 +195,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -210,14 +210,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertFalse(validate_csv_data(data))
@@ -237,7 +237,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "batch_booking": "true",
                 "requested_execution_date": "2023-03-12",
                 "debtor_name": "Acme Corp",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "charge_bearer": "SLEV",
@@ -248,7 +248,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "service_level_code": "SEPA",
                 "creditor_agent_BIC": "SPUEDE2UXXX",
                 "creditor_name": "",  # force error
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "remittance_information": "Invoice-12345",
             }
         ]
@@ -258,8 +258,8 @@ class TestValidateCsvData(unittest.TestCase):
             self.assertFalse(validate_csv_data(data))
 
         output = "\n".join(captured.output)
-        self.assertNotIn("DE75512108001245126162", output)
-        self.assertNotIn("DE68210501700024690959", output)
+        self.assertNotIn("DE07512108001245126162", output)
+        self.assertNotIn("DE36210501700024690959", output)
         self.assertNotIn("BANKDEFFXXX", output)
         self.assertNotIn("John Doe", output)
         self.assertIn("[REDACTED]", output)
@@ -287,7 +287,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -302,14 +302,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertFalse(validate_csv_data(data))
@@ -337,7 +337,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -352,14 +352,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertTrue(validate_csv_data(data))
@@ -387,7 +387,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -402,14 +402,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertFalse(validate_csv_data(data))
@@ -437,7 +437,7 @@ class TestValidateCsvData(unittest.TestCase):
                 "debtor_postal_code": "67890",
                 "debtor_town_name": "Acme Town",
                 "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE75512108001245126162",
+                "debtor_account_IBAN": "DE07512108001245126162",
                 "debtor_agent_BIC": "BANKDEFFXXX",
                 "charge_bearer": "SLEV",
                 "payment_id": "PaymentID6789",
@@ -452,14 +452,14 @@ class TestValidateCsvData(unittest.TestCase):
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Global Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "Invoice-98765",
                 "reference_date": "2023-03-09",
                 "service_level_code": "SEPA",
                 "forwarding_agent_BIC": "SPUEDE2UXXX",
                 "remittance_information": "Invoice-12345",
-                "charge_account_IBAN": "CHARGE-IBAN-12345",
+                "charge_account_IBAN": "DE77100000000000000000",
             }
         ]
         self.assertFalse(validate_csv_data(data))

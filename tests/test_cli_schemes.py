@@ -38,6 +38,15 @@ _SEPA_VALID_ROW = {
     "remittance_information": "Invoice 12345",
 }
 
+# A row that passes XSD but breaks SEPA SCT: a non-EUR currency and an
+# IBAN with a bad mod-97 checksum. The tests inject this explicitly rather
+# than relying on the bundled sample being non-compliant (it is compliant).
+_SEPA_VIOLATING_ROW = {
+    **_SEPA_VALID_ROW,
+    "payment_currency": "USD",
+    "debtor_account_IBAN": "DE00INVALIDIBAN0000000",
+}
+
 
 def _base_args() -> list[str]:
     """Return CLI args pointing at the bundled pain.001.001.03 assets."""
@@ -62,34 +71,52 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_text_reports_violations(self) -> None:
         """--scheme prints per-row violations and exits 1."""
-        result = self.runner.invoke(
-            main, [*_base_args(), "--scheme", "sepa-sct", "--dry-run"]
-        )
+        with patch(
+            "pain001.cli.cli.load_payment_data",
+            return_value=[dict(_SEPA_VIOLATING_ROW)],
+        ):
+            result = self.runner.invoke(
+                main, [*_base_args(), "--scheme", "sepa-sct", "--dry-run"]
+            )
         assert result.exit_code == 1
         assert "SEPA-" in result.output
 
     def test_scheme_explain_prints_remediation(self) -> None:
         """--explain adds a remediation hint under each violation."""
-        result = self.runner.invoke(
-            main,
-            [*_base_args(), "--scheme", "sepa-sct", "--explain", "--dry-run"],
-        )
+        with patch(
+            "pain001.cli.cli.load_payment_data",
+            return_value=[dict(_SEPA_VIOLATING_ROW)],
+        ):
+            result = self.runner.invoke(
+                main,
+                [
+                    *_base_args(),
+                    "--scheme",
+                    "sepa-sct",
+                    "--explain",
+                    "--dry-run",
+                ],
+            )
         assert result.exit_code == 1
         assert "fix:" in result.output
 
     def test_scheme_json_output(self) -> None:
         """--scheme-format json emits a parseable result object."""
-        result = self.runner.invoke(
-            main,
-            [
-                *_base_args(),
-                "--scheme",
-                "sepa-sct",
-                "--scheme-format",
-                "json",
-                "--dry-run",
-            ],
-        )
+        with patch(
+            "pain001.cli.cli.load_payment_data",
+            return_value=[dict(_SEPA_VIOLATING_ROW)],
+        ):
+            result = self.runner.invoke(
+                main,
+                [
+                    *_base_args(),
+                    "--scheme",
+                    "sepa-sct",
+                    "--scheme-format",
+                    "json",
+                    "--dry-run",
+                ],
+            )
         assert result.exit_code == 1
         payload = next(
             json.loads(line)
@@ -125,9 +152,13 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_gates_generation(self) -> None:
         """Without --dry-run, a scheme failure blocks generation."""
-        result = self.runner.invoke(
-            main, [*_base_args(), "--scheme", "sepa-sct"]
-        )
+        with patch(
+            "pain001.cli.cli.load_payment_data",
+            return_value=[dict(_SEPA_VIOLATING_ROW)],
+        ):
+            result = self.runner.invoke(
+                main, [*_base_args(), "--scheme", "sepa-sct"]
+            )
         assert result.exit_code == 1
         assert "validation failed" in result.output.lower()
 
