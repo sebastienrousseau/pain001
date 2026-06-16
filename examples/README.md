@@ -27,9 +27,9 @@ python examples/01_generate_xml_file.py
 | `13_lsp_diagnostics.py` | The LSP diagnostic engine linting a CSV for bad IBAN/BIC/currency/charset and missing columns (editor server: `pain001-lsp`, `pip install pain001[lsp]`) |
 
 Together these scripts exercise generation (all message types), every
-input format, the CLI, the REST API, scheme validation, the parsers,
-version migration, streaming, and observability — i.e. the full public
-feature surface.
+input format, the CLI suite, the REST API, scheme validation, the parsers,
+version migration, streaming, observability, the MCP tools, and the LSP
+diagnostic engine — i.e. the full public feature surface.
 
 Sample inputs live in `data/`: `payments.csv` (a copy of the bundled
 `pain001/templates/pain.001.001.03/template.csv`, used by the CLI and
