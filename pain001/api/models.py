@@ -51,6 +51,8 @@ class MessageType(str, Enum):
     PAIN_001_09 = "pain.001.001.09"
     PAIN_001_10 = "pain.001.001.10"
     PAIN_001_11 = "pain.001.001.11"
+    PAIN_001_12 = "pain.001.001.12"
+    PAIN_008_02 = "pain.008.001.02"
 
 
 class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods

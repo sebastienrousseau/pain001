@@ -35,6 +35,32 @@ from pain001.api.ratelimit import (  # noqa: E402
 client = TestClient(app)
 
 
+class TestMessageTypeParity:
+    """The API's MessageType enum must cover every supported message type."""
+
+    def test_enum_matches_constants(self) -> None:
+        """No message type the library supports is missing from the API."""
+        from pain001.api.models import MessageType
+        from pain001.constants import valid_xml_types
+
+        assert {m.value for m in MessageType} == set(valid_xml_types)
+
+    def test_api_can_target_pain008_and_v12(self) -> None:
+        """The two formerly-missing types are now accepted by the API."""
+        from pain001.api.models import MessageType
+
+        assert MessageType("pain.008.001.02")
+        assert MessageType("pain.001.001.12")
+
+    def test_every_type_has_a_usable_field_schema(self) -> None:
+        """SchemaValidator constructs for every supported message type."""
+        from pain001.constants import valid_xml_types
+        from pain001.validation.schema_validator import SchemaValidator
+
+        for message_type in valid_xml_types:
+            assert SchemaValidator(message_type) is not None
+
+
 class TestVersioning:
     """`/api/v1` is canonical; `/api` remains a hidden legacy alias."""
 
