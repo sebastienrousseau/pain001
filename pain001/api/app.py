@@ -170,9 +170,26 @@ def _resolve_generation_paths(
 
     Returns:
         Tuple of (output_file_path, xsd_file_path, xml_template_path).
+
+    Raises:
+        HTTPException: If output_dir resolves outside the allowed directory.
     """
     if request.output_dir:
         output_dir = str(_validate_safe_path(request.output_dir))
+        # CodeQL CWE-22 barrier: guard the same variable used as the sink,
+        # so the path-traversal check is visible to the taint tracker.
+        cwd_prefix = str(Path.cwd().resolve())
+        tmp_prefix = str(Path(tempfile.gettempdir()).resolve())
+        if not (  # pragma: no cover - defensive barrier
+            output_dir == cwd_prefix
+            or output_dir.startswith(cwd_prefix + os.sep)
+            or output_dir == tmp_prefix
+            or output_dir.startswith(tmp_prefix + os.sep)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied: output_dir outside allowed directory",
+            )
     else:
         output_dir = str(Path.cwd())
     os.makedirs(output_dir, exist_ok=True)
