@@ -103,6 +103,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: ❯ Verify Tag Matches Package Version
+        run: |
+          TAG_VERSION=${GITHUB_REF#refs/tags/v}
+          PKG_VERSION=$(grep -E "^version = " pyproject.toml | grep -oE "[0-9]+\.[0-9]+\.[0-9]+")
+          echo "Tag: $TAG_VERSION | Package: $PKG_VERSION"
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "❌ Tag v$TAG_VERSION does not match package version $PKG_VERSION"
+            exit 1
+          fi
+          echo "✅ Tag matches package version."
+
       - name: ❯ Extract Release Notes
         id: release_notes
         run: |
@@ -111,8 +122,8 @@ jobs:
           if [ -f "$NOTE_PATH" ]; then
             echo "path=$NOTE_PATH" >> $GITHUB_OUTPUT
           else
-            echo "⚠️ Note missing, using fallback"
-            echo "path=README.md" >> $GITHUB_OUTPUT
+            echo "❌ Release notes missing: $NOTE_PATH"
+            exit 1
           fi
 
       - name: ❯ Install Poetry

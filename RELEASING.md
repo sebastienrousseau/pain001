@@ -50,9 +50,11 @@ A release is ready only when **all** of the following hold on `main`:
    git push origin vX.Y.Z
    ```
 
-4. The tag triggers the `publish` job in `ci.yml`, which builds, runs
-   `twine check`, creates the GitHub release from `releases/vX.Y.Z.md`,
-   and publishes to PyPI via trusted publishing.
+4. The tag triggers the `publish` job in `ci.yml`, which **fails fast** if
+   the tag does not match the package version or the `releases/vX.Y.Z.md`
+   note is missing, then builds, runs `twine check`, creates the GitHub
+   release from the note, and publishes to PyPI via OIDC trusted publishing
+   (no long-lived token).
 
 ## After releasing
 
