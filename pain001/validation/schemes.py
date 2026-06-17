@@ -63,6 +63,9 @@ REMEDIATIONS: dict[str, str] = {
     "not exceeding 999,999,999.99 EUR.",
     "SEPA-INST-AMT": "SEPA Instant caps a single transfer at 100,000.00 "
     "EUR; split larger amounts or use a standard SCT.",
+    "XB-CCY": "Provide a 3-letter ISO 4217 currency code (any currency).",
+    "XB-BIC": "Cross-border transfers require a valid creditor agent BIC "
+    "for routing.",
     "SEPA-CHARSET": "Limit text to the ISO 20022 Latin set; use "
     "sanitize_to_charset() to transliterate accents and symbols.",
     "SEPA-LEN": "Shorten the field to its scheme maximum (70 for names, "
@@ -230,6 +233,56 @@ def _check_bic(
             SchemeViolation(
                 rule="SEPA-BIC",
                 message=f"creditor_agent_BIC '{bic}' is not a valid BIC",
+                index=index,
+                field="creditor_agent_BIC",
+            )
+        )
+
+
+def _check_currency_iso(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require a well-formed ISO 4217 currency (any currency, not just EUR).
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    currency = str(row.get("payment_currency", "")).strip()
+    if not (len(currency) == 3 and currency.isalpha()):
+        result.violations.append(
+            SchemeViolation(
+                rule="XB-CCY",
+                message=(
+                    "payment_currency must be a 3-letter ISO 4217 code "
+                    f"(got {currency or 'empty'})"
+                ),
+                index=index,
+                field="payment_currency",
+            )
+        )
+
+
+def _check_bic_required(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require a valid creditor agent BIC (mandatory for cross-border).
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    bic = str(row.get("creditor_agent_BIC", "")).strip()
+    if not bic or not validate_bic_safe(bic):
+        result.violations.append(
+            SchemeViolation(
+                rule="XB-BIC",
+                message=(
+                    "creditor_agent_BIC is required and must be a valid BIC "
+                    "for a cross-border transfer"
+                ),
                 index=index,
                 field="creditor_agent_BIC",
             )
@@ -539,12 +592,47 @@ class SepaInstantCreditTransferProfile(ValidationProfile):
         return result
 
 
+class CrossBorderCreditTransferProfile(ValidationProfile):
+    """Generic cross-border credit transfer checks (beyond SEPA).
+
+    A pragmatic, multi-currency rulebook for international credit transfers:
+    valid debtor/creditor IBANs, a well-formed ISO 4217 currency (any
+    currency, not only EUR), a **mandatory** creditor agent BIC (cross-border
+    routing needs it), a positive amount within the ISO ceiling, and ISO
+    20022 charset/length limits. It is intentionally generic rather than a
+    full CBPR+ implementation.
+    """
+
+    name = "xborder-ct"
+
+    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
+        """Validate payment rows against the cross-border rulebook.
+
+        Args:
+            data: Loaded payment rows (the normalised internal form).
+
+        Returns:
+            A :class:`SchemeValidationResult` listing every violation.
+        """
+        result = SchemeValidationResult(profile=self.name)
+        for index, row in enumerate(data):
+            _check_currency_iso(row, index, result)
+            _check_ibans(row, index, result)
+            _check_bic_required(row, index, result)
+            _check_amount(row, index, result)
+            _check_text_fields(row, index, result)
+        return result
+
+
 #: Registry of available scheme profiles, keyed by their ``name``.
 PROFILES: dict[str, ValidationProfile] = {
     SepaCreditTransferProfile.name: SepaCreditTransferProfile(),
     SepaDirectDebitProfile.name: SepaDirectDebitProfile(),
     SepaInstantCreditTransferProfile.name: (
         SepaInstantCreditTransferProfile()
+    ),
+    CrossBorderCreditTransferProfile.name: (
+        CrossBorderCreditTransferProfile()
     ),
 }
 

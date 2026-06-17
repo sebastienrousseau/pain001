@@ -64,7 +64,7 @@ class TestRenderPrometheus:
         body = render_prometheus("9.9.9")
         assert 'pain001_build_info{version="9.9.9"} 1' in body
         assert "pain001_supported_message_types 11" in body
-        assert "pain001_scheme_profiles 3" in body
+        assert "pain001_scheme_profiles 4" in body
         assert 'pain001_jobs{status="success"}' in body
         assert body.endswith("\n")
 

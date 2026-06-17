@@ -19,6 +19,7 @@ import pytest
 
 from pain001.validation.schemes import (
     PROFILES,
+    CrossBorderCreditTransferProfile,
     SchemeValidationResult,
     SepaCreditTransferProfile,
     SepaDirectDebitProfile,
@@ -283,3 +284,48 @@ class TestSepaInstantCreditTransferProfile:
     def test_instant_cap_remediation(self) -> None:
         """The instant-cap rule has a remediation hint."""
         assert "100,000" in remediation_for("SEPA-INST-AMT")
+
+
+class TestCrossBorderCreditTransferProfile:
+    """Rule-by-rule tests for the cross-border (non-SEPA) profile."""
+
+    def test_registered(self) -> None:
+        """The cross-border profile is registered under 'xborder-ct'."""
+        assert isinstance(
+            PROFILES["xborder-ct"], CrossBorderCreditTransferProfile
+        )
+
+    def test_non_eur_currency_passes(self) -> None:
+        """A valid non-EUR currency is accepted (unlike SEPA)."""
+        row = _valid_row() | {"payment_currency": "USD"}
+        result = validate_scheme([row], profile="xborder-ct")
+        assert result.is_valid, [v.rule for v in result.violations]
+
+    def test_empty_currency_flagged(self) -> None:
+        """A missing/blank currency raises XB-CCY."""
+        row = _valid_row() | {"payment_currency": ""}
+        result = validate_scheme([row], profile="xborder-ct")
+        assert any(v.rule == "XB-CCY" for v in result.violations)
+
+    def test_bic_is_mandatory(self) -> None:
+        """An absent BIC raises XB-BIC (BIC is required cross-border)."""
+        row = _valid_row() | {"creditor_agent_BIC": ""}
+        result = validate_scheme([row], profile="xborder-ct")
+        assert any(v.rule == "XB-BIC" for v in result.violations)
+
+    def test_invalid_bic_flagged(self) -> None:
+        """A malformed BIC raises XB-BIC."""
+        row = _valid_row() | {"creditor_agent_BIC": "BADBIC"}
+        result = validate_scheme([row], profile="xborder-ct")
+        assert any(v.rule == "XB-BIC" for v in result.violations)
+
+    def test_invalid_iban_still_flagged(self) -> None:
+        """IBAN validity is enforced cross-border too."""
+        row = _valid_row() | {"creditor_account_IBAN": "NOTANIBAN"}
+        result = validate_scheme([row], profile="xborder-ct")
+        assert any(v.rule == "SEPA-CDTR-IBAN" for v in result.violations)
+
+    def test_remediations_present(self) -> None:
+        """The cross-border rules carry remediation hints."""
+        assert remediation_for("XB-BIC")
+        assert remediation_for("XB-CCY")

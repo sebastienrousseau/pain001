@@ -39,6 +39,7 @@ from pain001.validation.iban_validator import (
 from pain001.validation.schemes import (
     PROFILES,
     REMEDIATIONS,
+    CrossBorderCreditTransferProfile,
     SchemeValidationResult,
     SchemeViolation,
     SepaCreditTransferProfile,
@@ -81,6 +82,7 @@ __all__ = [
     "SepaCreditTransferProfile",
     "SepaDirectDebitProfile",
     "SepaInstantCreditTransferProfile",
+    "CrossBorderCreditTransferProfile",
     "SchemeValidationResult",
     "SchemeViolation",
     "PROFILES",
