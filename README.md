@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/sebastienrousseau-pain001-badge.png)](https://mseep.ai/app/sebastienrousseau-pain001)
+
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
 
 <p align="center">
