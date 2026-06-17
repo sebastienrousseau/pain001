@@ -42,7 +42,7 @@ input file / list[dict]
 | **Generation** | `xml/` | `message_registry` (per-version data prep), `generate_xml`, `create_root_element`, `validate_via_xsd`, `write_xml_to_file` |
 | **Templates** | `templates/` | `registry` (`TemplateMetadata`), `guardrails` (template/XSD drift checks); bundled assets under `templates/<message_type>/` |
 | **Migration** | `migration/version_mapper.py`, `migrate.py` | Map payment data between pain.001 versions via YAML mappings |
-| **Parsers** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts |
+| **Parsers / builders** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts; `pain002/generator.py` also *builds* pain.002 reports (round-trips with the parser) |
 | **API** | `api/app.py`, `api/models.py`, `api/job_manager.py`, `api/job_store.py`, `api/ratelimit.py`, `api/metrics.py` | FastAPI app (routes mounted under `/api/v1` with a hidden `/api` legacy alias), pydantic models, async job manager with an optional durable file store, an in-process rate-limit middleware, and a dependency-free Prometheus `/metrics` exporter |
 | **MCP** | `mcp/server.py` | FastMCP server (stdio) exposing generation/validation as tools, the XSD set as resources, and a guided prompt — thin adapters over the core, taking inline rows |
 | **LSP** | `lsp/diagnostics.py`, `lsp/server.py` | A dependency-free CSV diagnostic engine (IBAN/BIC/currency/charset, required columns) and a `pygls` stdio language server that feeds it to editors; VS Code client under `editors/vscode/` |

@@ -71,6 +71,14 @@ for how the project is run.
   [Scalar](https://scalar.com) reference at `/api/reference`, and a
   `scripts/export_openapi.py` helper plus documented `openapi-generator`
   workflow for generating typed client SDKs.
+- **Bank-response generation** — `pain001.build_pain002_report` (payment
+  status reports) and `pain001.build_camt053_statement` (account statements)
+  build the messages a bank sends back, from structured data with validated
+  ISO 20022 status/indicator codes. They complement the existing parsers and
+  round-trip with them — useful for simulating bank responses in tests.
+- **Prometheus metrics**: the REST API exposes `GET /metrics` (build info,
+  supported-type/scheme gauges, async-job gauges, HTTP request counters)
+  with no extra dependency; see the new `OPERATIONS.md` runbook.
 - **Project governance**: `GOVERNANCE.md` (roles, decision making, release
   authority, and an explicit path to becoming a maintainer), `MAINTAINERS.md`
   with an open co-maintainer slot, and a Contributor Covenant

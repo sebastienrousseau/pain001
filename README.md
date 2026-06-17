@@ -155,7 +155,9 @@ Related tooling included in the package:
 
 - **Version migration** — map payment data between pain.001 versions
   (`python -m pain001.migrate`).
-- **pain.002 parser** — read payment status reports your bank sends back.
+- **pain.002 parser + builder** — read the payment status reports your bank
+  sends back, and `build_pain002_report(...)` to generate one (e.g. to
+  simulate a bank in tests); the two round-trip.
 - **camt.053 parser** — read end-of-day bank statements.
 
 ---

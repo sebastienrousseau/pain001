@@ -30,7 +30,10 @@ from pain001.async_adapter import (
     process_files_streaming_async,
     validate_all_async,
 )
-from pain001.camt053 import parse_camt053_statement
+from pain001.camt053 import (
+    build_camt053_statement,
+    parse_camt053_statement,
+)
 from pain001.config import ConfigManager
 from pain001.core.core import process_files
 from pain001.exceptions import DataSourceError, PaymentValidationError
@@ -39,7 +42,7 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
-from pain001.pain002 import parse_pain002_report
+from pain001.pain002 import build_pain002_report, parse_pain002_report
 from pain001.templates import (
     DEFAULT_TEMPLATE_REGISTRY,
     TemplateRegistry,
@@ -61,7 +64,9 @@ __all__ = [
     "generate_xml_string",
     "generate_xml_string_async",
     "parse_pain002_report",
+    "build_pain002_report",
     "parse_camt053_statement",
+    "build_camt053_statement",
     "ConfigManager",
     "TemplateRegistry",
     "DEFAULT_TEMPLATE_REGISTRY",
