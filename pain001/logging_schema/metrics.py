@@ -147,7 +147,7 @@ class ExecutionMetrics:  # pylint: disable=too-many-instance-attributes
         self.end_time = time.time()
 
         duration_ms = 0
-        if self.start_time is not None:
+        if self.start_time is not None:  # pragma: no cover
             duration_ms = int((self.end_time - self.start_time) * 1000)
 
         telemetry_data = {

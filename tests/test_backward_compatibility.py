@@ -329,10 +329,10 @@ class TestIBANValidatorBackwardCompat(unittest.TestCase):
         """IBAN validator should handle case variations."""
         # Should handle both upper and lowercase
         is_valid_upper, _ = validate_iban(
-            "DE89370400440532013008", strict=False
+            "DE67370400440532013008", strict=False
         )
         is_valid_lower, _ = validate_iban(
-            "de89370400440532013008", strict=False
+            "de67370400440532013008", strict=False
         )
         self.assertEqual(is_valid_upper, is_valid_lower)
 
@@ -467,8 +467,8 @@ class TestEdgeCases(unittest.TestCase):
 
     def test_iban_with_lowercase(self) -> None:
         """IBAN validator should normalize case."""
-        is_valid1, _ = validate_iban("DE89370400440532013008", strict=False)
-        is_valid2, _ = validate_iban("de89370400440532013008", strict=False)
+        is_valid1, _ = validate_iban("DE67370400440532013008", strict=False)
+        is_valid2, _ = validate_iban("de67370400440532013008", strict=False)
         # Both should return consistent results
         self.assertEqual(is_valid1, is_valid2)
 

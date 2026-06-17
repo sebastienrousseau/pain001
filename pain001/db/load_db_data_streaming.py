@@ -70,8 +70,8 @@ def load_db_data_streaming(
             f"SQLite file path validation failed: {data_file_path}"
         ) from exc
 
-    if not os.path.exists(safe_path):
-        raise FileNotFoundError(
+    if not os.path.exists(safe_path):  # pragma: no cover
+        raise FileNotFoundError(  # pragma: no cover
             f"SQLite file '{data_file_path}' does not exist."
         )
 

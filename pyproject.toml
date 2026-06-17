@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.50"
+version = "0.0.51"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -20,6 +20,8 @@ include = [
 
 [tool.poetry.scripts]
 pain001 = "pain001.__main__:cli"
+pain001-mcp = "pain001.mcp.server:main"
+pain001-lsp = "pain001.lsp.server:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
@@ -30,14 +32,19 @@ pyyaml = ">=6.0,<7.0"
 rich = ">=13.7,<15"
 xmlschema = ">=3.4.0,<4.0.0"
 jsonschema = ">=4.17,<5"
-# Optional feature sets — install with pain001[api] / pain001[parquet]
+# Optional feature sets — install with
+# pain001[api] / pain001[parquet] / pain001[mcp] / pain001[lsp]
 fastapi = {version = ">=0.95", optional = true}
 uvicorn = {version = ">=0.20", extras = ["standard"], optional = true}
 pyarrow = {version = ">=23.0.1,<25.0.0", optional = true}
+mcp = {version = ">=1.23,<2", optional = true}
+pygls = {version = ">=1.3,<2", optional = true}
 
 [tool.poetry.extras]
 api = ["fastapi", "uvicorn"]
 parquet = ["pyarrow"]
+mcp = ["mcp"]
+lsp = ["pygls"]
 
 [tool.poetry.group.dev.dependencies]
 httpx = ">=0.23"
@@ -88,7 +95,7 @@ python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
 
-# Coverage enforcement (90% floor of genuine behavioural coverage,
+# Coverage enforcement (98% floor of genuine behavioural coverage,
 # fail-fast on regression)
 addopts = [
     "--cov=pain001",
@@ -96,7 +103,7 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=xml",
     "--cov-report=html",
-    "--cov-fail-under=90",
+    "--cov-fail-under=98",
     "--tb=short",
     "-ra",
     "--strict-markers",
@@ -119,6 +126,22 @@ timeout = 5
 # Parallel execution (xdist)
 # Uncomment to enable: -n auto
 # Note: Coverage aggregation works with xdist via .coveragerc
+
+[tool.coverage.run]
+branch = true
+source = ["pain001"]
+
+[tool.coverage.report]
+# Exclude lines that are not meaningfully unit-testable, so the coverage
+# figure reflects real behavioural coverage rather than entry-point glue.
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "@(abc\\.)?abstractmethod",
+    "\\.\\.\\.",
+]
 
 [tool.ruff]
 line-length = 79

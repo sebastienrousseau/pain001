@@ -1,122 +1,69 @@
-# pain001 Product Roadmap & Backlog
+# Pain001 Roadmap
 
 ## Mission
-Deliver a robust, high-performance ISO 20022 payment library with:
-- Full pain.001 format support (v03–v12+)
-- Streaming/batch processing for large datasets
-- REST API for enterprise integration
-- CLI for user-friendly interactions
 
-## Context & Background
-pain001 is a mature Python library for automating ISO 20022-compliant payment files from CSV/SQLite data. Current state:
-- **v0.0.43**: Released with PyPI authentication fix
-- **Coverage**: 98.57%, 341 passing tests, Pylint 10.00/10
-- **Supported formats**: pain.001.001.03–11
+A robust, secure, high-performance ISO 20022 payment library with a small,
+well-tested core and first-class developer surfaces (library, CLI, REST,
+MCP, LSP).
 
-## Strategic Goals
+## Where we are (v0.0.51)
 
-### v0.0.44–0.0.46 (Q1 2026)
-**Focus**: Core capability expansion + UX improvements
-- #104 Add pain.001.001.12 (CustomerCreditTransferInitiationV12)
-- #78 End-to-end streaming pipeline with chunked reads/writes
-- #105 Make CLI interface more intuitive
-- #106 Expose API endpoints for pain001 operations
-- #107 Preset profiles for banks/regions (SEPA)
-- #103 Lightweight metrics hooks
-- #102 Structured logging normalization
-- #100 Schema evolution guardrails
-- #95 Performance playbook for large files
+- **Generation:** pain.001.001.03–12 and pain.008.001.02, registry-driven,
+  `Decimal` end-to-end, mandatory XSD validation (XXE-safe).
+- **Validation:** scheme rulebooks (`sepa-sct`, `sepa-sdd`, `sepa-inst`),
+  IBAN/BIC/charset validators, structured per-row violations + remediation.
+- **Parsers:** pain.002 status reports and camt.053 statements.
+- **Inputs:** CSV, SQLite, JSON, JSON Lines, Parquet; streaming for large
+  batches; version migration between pain.001 versions.
+- **Surfaces:** CLI command suite; REST `/api/v1` (auth, rate limiting,
+  durable jobs, OpenAPI/Scalar, Prometheus `/metrics`); MCP server; LSP
+  server with editor diagnostics.
+- **Quality:** ~1,150 tests, **100%** coverage (98% enforced floor),
+  `mypy --strict`, 100% docstrings, ruff/pydoclint/bandit, CodeQL/Snyk/
+  pip-audit clean.
 
-**Impact**: Enterprise-ready streaming, new format support, programmatic access.
+Most of the prior roadmap (v12 support, streaming, CLI/REST, SEPA profiles,
+metrics hooks, registry refactor, golden-file + mutation testing) has
+**shipped**. The focus now shifts from breadth of *surfaces* to depth of
+*domain* and project sustainability.
 
-### v0.0.47–0.0.48 (Q2 2026)
-**Focus**: Architecture hardening + performance optimization
-- #76 Refactor XML message prep into registry-driven pipeline
-- #77 Introduce typed payment models with required-field validation
-- #80 Split process_files into focused helpers
-- #81 Add CLI dry-run/validate-only mode with structured errors
-- #79 Cache Jinja2 templates and XSD schemas per run
-- #87 Lazy/streaming CSV and DB loaders
-- #88 Measure and optimize large-batch XML generation
-- #82 CLI/Library parity tests
-- #83 Harden template loading and sandbox Jinja2
-- #84 Strengthen XSD validation error reporting and cache
+## Backlog (candidate, unordered)
 
-**Impact**: Cleaner codebase, better performance, reduced maintenance burden.
+### Domain depth
+- Generate (not just parse) **pain.002** status reports and **camt.053**
+  statements — completing the message round-trip for testing/simulation.
+- More scheme profiles: SEPA SDD **B2B**, and a cross-border/CBPR+-style
+  rulebook (non-EUR, BIC-mandatory).
+- Additional message types as demand warrants.
 
-### v0.0.49+ (Q3 2026+)
-**Focus**: Testing coverage + observability + advanced features
-- #90 Golden-file tests for each pain.001 version
-- #92 Mutation testing coverage review
-- #91 Property-based tests on payment rows
-- #94 Troubleshooting guide for schema/template/data errors
-- #93 Add validate-only and streaming usage docs
-- #98 Release workflow hardening follow-up
-- #86 File path safety audit
-- #85 Input sanitization for CSV/DB ingestion
-- #96 Automated issue templates for features/bugs
-- #97 Add lint/type/test pre-push hook (optional)
-- #89 Optional async-ready adapters (exploratory)
-- #108 Batch job runner with progress reporting
-- #109 Validation-only web hook / callback support
-- #110 Packaging: publish official Docker image
+### Operability & distribution
+- Official **Docker image** and a published OpenAPI client SDK.
+- Optional shared-store (Redis) backends for the job store and rate limiter
+  to support multi-replica deployments.
 
-**Impact**: Production-grade reliability, deployment options, enterprise readiness.
+### Project sustainability
+- **Recruit a second maintainer** with independent release authority
+  (see [GOVERNANCE.md](GOVERNANCE.md)) — the single highest-impact item.
+- Keep `examples/`, `SCHEMES.md`, and `OPERATIONS.md` in lockstep with code
+  (already enforced for examples in CI).
 
-## Developer Onboarding
+## How to contribute
 
-### Getting Started
-1. **Read the docs**: [README.md](README.md) for project overview
-2. **Set up environment**: Follow [CONTRIBUTING.md](CONTRIBUTING.md)
-3. **Run quality gates**: `make format && make lint && make type && make test` (mandatory pre-commit)
+1. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [ARCHITECTURE.md](ARCHITECTURE.md).
+2. Run the quality gate locally: `make lint && make type && make test`.
+3. Good first areas: a new scheme profile ([SCHEMES.md](SCHEMES.md)), an
+   input loader, or docs. Open an issue or discussion to claim one.
 
-### Picking an Issue
-- Look for labels: `priority/p0` (critical), `priority/p1` (high), `good first issue`
-- Check the milestone: v0.0.44–0.0.46 is the current focus
-- Review the issue description for acceptance criteria and technical notes
+## Key metrics (current)
 
-### Pull Request Workflow
-1. Fork the repo
-2. Create a feature branch: `git checkout -b feature/issue-NNN`
-3. Make changes and run the quality gate
-4. Push and open a PR (link to the issue)
-5. Code review + CI checks
-6. Merge once approved
-
-## Key Metrics
-- **Test Coverage**: 98.57% (target: ≥95%)
-- **Code Quality**: Pylint 10.00/10 (0 warnings)
-- **Build Status**: All checks pass (ruff, flake8, mypy, pytest)
-- **Release Cadence**: ~2 weeks
-- **Total Backlog**: 43 open issues across 3 milestones
-
-## Commands & Workflows
-
-### Local Quality Gate (Required Before Commit)
-```bash
-make format    # Black, isort, ruff
-make lint      # Pylint, flake8, ruff
-make type      # MyPy
-make test      # Pytest with coverage
-```
-
-### Documentation
-```bash
-make docs      # Build Sphinx docs locally
-```
-
-### Performance Testing
-```bash
-make perf      # Run benchmarks
-make mutate    # Run mutation testing
-```
-
-## Contact & Questions
-- **Issues**: Use GitHub Issues for bugs/features
-- **Discussions**: GitHub Discussions for questions
-- **Contributing**: See [CONTRIBUTING.md](CONTRIBUTING.md)
+| Metric | Value |
+| :--- | :--- |
+| Tests | ~1,150 passing |
+| Coverage | 100% (98% enforced floor) |
+| Type checking | `mypy --strict`, clean |
+| Docstrings | 100% (interrogate) |
+| Security scans | CodeQL, Snyk, bandit, pip-audit — clean |
 
 ---
 
-*Last updated: 2026-01-11*
-*Roadmap valid through v0.0.49+*
+*Roadmap is indicative, not a commitment; the maintainer prioritises.*

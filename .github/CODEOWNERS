@@ -1,0 +1,16 @@
+# Code ownership for review routing.
+# See https://docs.github.com/articles/about-code-owners
+#
+# Pain001 currently has a single maintainer. Co-maintainers are welcome —
+# ARCHITECTURE.md is the onboarding map; open a discussion or PR if you'd
+# like to help maintain an area below.
+
+# Default owner for everything.
+*                       @sebastienrousseau
+
+# Suggested per-area ownership (add co-maintainers here as they join):
+/pain001/xml/           @sebastienrousseau
+/pain001/validation/    @sebastienrousseau
+/pain001/api/           @sebastienrousseau
+/pain001/cli/           @sebastienrousseau
+/.github/               @sebastienrousseau

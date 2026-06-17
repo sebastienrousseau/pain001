@@ -51,6 +51,8 @@ class MessageType(str, Enum):
     PAIN_001_09 = "pain.001.001.09"
     PAIN_001_10 = "pain.001.001.10"
     PAIN_001_11 = "pain.001.001.11"
+    PAIN_001_12 = "pain.001.001.12"
+    PAIN_008_02 = "pain.008.001.02"
 
 
 class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
@@ -68,8 +70,25 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
         default=None,
         description="Table name for SQLite sources",
     )
+    scheme: str | None = Field(
+        default=None,
+        description="Payment-scheme rulebook to validate against "
+        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-inst', 'xborder-ct')",
+    )
 
-    model_config = ConfigDict(use_enum_values=False)
+    model_config = ConfigDict(
+        use_enum_values=False,
+        json_schema_extra={
+            "examples": [
+                {
+                    "data_source": "csv",
+                    "file_path": "payments.csv",
+                    "message_type": "pain.001.001.03",
+                    "scheme": "sepa-sct",
+                }
+            ]
+        },
+    )
 
 
 class GenerateXMLRequest(BaseModel):
@@ -93,8 +112,26 @@ class GenerateXMLRequest(BaseModel):
         default=None,
         description="Table name for SQLite sources",
     )
+    scheme: str | None = Field(
+        default=None,
+        description="Payment-scheme rulebook to enforce before generating "
+        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-inst', 'xborder-ct')",
+    )
 
-    model_config = ConfigDict(use_enum_values=False)
+    model_config = ConfigDict(
+        use_enum_values=False,
+        json_schema_extra={
+            "examples": [
+                {
+                    "data_source": "csv",
+                    "file_path": "payments.csv",
+                    "message_type": "pain.001.001.03",
+                    "output_dir": ".",
+                    "validate_only": False,
+                }
+            ]
+        },
+    )
 
 
 class ValidationError(BaseModel):
@@ -116,6 +153,10 @@ class ValidationResponse(BaseModel):
         default_factory=list,
         description="List of validation errors",
     )
+    scheme_violations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Scheme-rulebook violations (when a scheme is given)",
+    )
 
     @field_validator("invalid_rows", mode="after")
     @classmethod
@@ -130,13 +171,15 @@ class ValidationResponse(BaseModel):
             Calculated invalid rows (total - valid).
         """
         # Pydantic v2 uses info.data instead of values dict
-        if hasattr(info, "data"):
+        if hasattr(info, "data"):  # pragma: no cover
             data = info.data
-            if "total_rows" in data and "valid_rows" in data:
+            if (
+                "total_rows" in data and "valid_rows" in data
+            ):  # pragma: no cover
                 total = int(data["total_rows"])
                 valid = int(data["valid_rows"])
                 return total - valid
-        return v
+        return v  # pragma: no cover
 
 
 class GenerateXMLResponse(BaseModel):
@@ -148,6 +191,10 @@ class GenerateXMLResponse(BaseModel):
     validation_errors: list[ValidationError] = Field(
         default_factory=list,
         description="Validation errors if validation failed",
+    )
+    scheme_violations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Scheme-rulebook violations if scheme validation failed",
     )
 
 

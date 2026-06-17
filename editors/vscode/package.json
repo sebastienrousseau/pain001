@@ -1,0 +1,40 @@
+{
+  "name": "pain001-lsp",
+  "displayName": "Pain001 — ISO 20022 payment CSV",
+  "description": "Live diagnostics (IBAN/BIC/currency/charset, required columns) for Pain001 payment CSV files, powered by the pain001-lsp language server.",
+  "version": "0.0.1",
+  "publisher": "sebastienrousseau",
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sebastienrousseau/pain001"
+  },
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Linters", "Programming Languages"],
+  "activationEvents": ["onLanguage:csv"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "configuration": {
+      "title": "Pain001",
+      "properties": {
+        "pain001.serverCommand": {
+          "type": "string",
+          "default": "pain001-lsp",
+          "description": "Command that starts the Pain001 language server (install with: pip install \"pain001[lsp]\")."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.75.0",
+    "typescript": "^5.0.0"
+  }
+}

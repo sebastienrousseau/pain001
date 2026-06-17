@@ -5,6 +5,135 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.51] - 2026-06-16
+
+Feature release. Scheme-aware validation is the flagship capability, rounded
+out by a unified CLI command suite, a versioned REST API portal, an MCP
+server, and an LSP server — on a core with strict typing, a 100% documented
+public API, and an enforced coverage floor. See [GOVERNANCE.md](GOVERNANCE.md)
+for how the project is run.
+
+### Added
+
+- **Scheme rulebook validation** (`pain001.validation.validate_scheme`): a
+  pluggable `ValidationProfile` framework with three profiles —
+  `sepa-sct` (SEPA Credit Transfer, pain.001), `sepa-sdd` (SEPA Direct
+  Debit, pain.008), and `sepa-inst` (SEPA Instant Credit Transfer, pain.001,
+  with the 100,000.00 EUR per-transaction cap). They enforce EUR currency,
+  valid debtor/creditor IBANs
+  (ISO 13616 / mod-97), well-formed BICs, the SEPA amount ceiling
+  (999,999,999.99), ISO 20022 character-set and field-length limits, and —
+  for SDD — mandate id and sequence type. Results are structured, per-row
+  `SchemeViolation` objects with stable rule ids, `error`/`warning`
+  severities, and remediation hints.
+- **ISO 20022 character-set guard** (`pain001.validation`):
+  `is_valid_charset`, `find_invalid_characters`, and `sanitize_to_charset`
+  (transliterates accented Latin and replaces unsupported characters) —
+  the restricted Latin set is a leading real-world rejection cause.
+- **CLI**: `--scheme sepa-sct|sepa-sdd` runs the rulebook on top of XSD
+  validation in both dry-run and generation (exit `1` on violation, `2` on
+  unknown profile); `--explain` prints a remediation hint per violation;
+  `--scheme-format json` emits a machine-readable result for CI.
+- **REST API**: `POST /api/validate` and `/api/generate` accept an optional
+  `scheme` field and return `scheme_violations`; generation is refused when
+  scheme validation fails.
+- **Top-level exports**: `validate_scheme`, `SchemeValidationResult`,
+  `SchemeViolation`, and `sanitize_to_charset` are importable from
+  `pain001`.
+- **MCP server** (`pip install "pain001[mcp]"`, run `pain001-mcp`): a
+  FastMCP stdio server exposing generation and validation to LLM clients.
+  Tools — `generate_payment_file`, `validate_payment_data`,
+  `validate_payment_scheme`, `list_supported_versions`, `inspect_template`;
+  a read-only `pain001://schema/{message_type}` resource; and a
+  `build_payment_batch` prompt. Tools take inline rows and return XML as a
+  string (no shared filesystem), so they wrap the existing core directly.
+- **CLI command suite**: `pain001` is now a command group. Alongside the
+  default `generate`, the binary gains `validate` (a named `--dry-run` for
+  CI pre-flight), `versions` (`--json`), `inspect <type>` (`--json`),
+  `init <type>` (scaffold a starter CSV), `serve` (launch the REST API),
+  and `mcp` (launch the MCP server). A bare invocation — the long-documented
+  `pain001 -t … -d …` — is routed to `generate`, so existing scripts and
+  one-liners keep working unchanged.
+- **LSP server** (`pip install "pain001[lsp]"`, run `pain001-lsp`): a
+  `pygls` stdio language server giving editors live diagnostics on payment
+  CSVs — invalid IBAN/BIC/currency cells, characters outside the ISO 20022
+  Latin set, and missing required columns — reusing the same validators as
+  the generator. The diagnostic engine (`pain001.lsp.diagnostics_for_csv`)
+  is dependency-free and reusable on its own; a thin VS Code client ships
+  under `editors/vscode/`.
+- **REST API portal**: endpoints are now versioned under `/api/v1` (the
+  unversioned `/api/*` paths remain as a backwards-compatible alias). New
+  operational controls, all environment-driven and off by default —
+  `PAIN001_RATE_LIMIT` (in-process per-client request cap, e.g.
+  `100/minute`) and `PAIN001_JOB_STORE_DIR` (durable file-backed async job
+  store that survives restarts). Enriched OpenAPI metadata (tag
+  descriptions, contact, licence, request examples), an interactive
+  [Scalar](https://scalar.com) reference at `/api/reference`, and a
+  `scripts/export_openapi.py` helper plus documented `openapi-generator`
+  workflow for generating typed client SDKs.
+- **Bank-response generation** — `pain001.build_pain002_report` (payment
+  status reports) and `pain001.build_camt053_statement` (account statements)
+  build the messages a bank sends back, from structured data with validated
+  ISO 20022 status/indicator codes. They complement the existing parsers and
+  round-trip with them — useful for simulating bank responses in tests.
+- **Prometheus metrics**: the REST API exposes `GET /metrics` (build info,
+  supported-type/scheme gauges, async-job gauges, HTTP request counters)
+  with no extra dependency; see the new `OPERATIONS.md` runbook.
+- **Project governance**: `GOVERNANCE.md` (roles, decision making, release
+  authority, and an explicit path to becoming a maintainer), `MAINTAINERS.md`
+  with an open co-maintainer slot, and a Contributor Covenant
+  `CODE-OF-CONDUCT.md` — reducing single-maintainer (bus-factor) risk.
+
+### Fixed
+
+- Corrected every bundled sample's IBANs and BICs to pass mod-97 / format
+  validation (the shipped templates, examples, fixtures, SQLite DBs, and
+  golden XML had invalid checksums and placeholder values). The bundled
+  `pain.001.001.03` sample is now fully SEPA-SCT compliant.
+
+### Tests
+
+- Expanded the suite to **1,020+ tests** and set the coverage floor to
+  **98%** (branch coverage; actual ~100%). New tests cover the scheme CLI
+  flags, the REST scheme paths, the async generation worker, the
+  validation service, the migration mapper, and the loader/parser error
+  branches. Only entry-point guards and genuinely-defensive barriers
+  (catch-all 500 handlers, redundant CWE-22 path checks) are excluded via
+  `[tool.coverage.report]` and targeted `# pragma: no cover` — never
+  padded with fake tests. The 98% floor leaves headroom over the ~100%
+  actual so routine changes don't fail CI on a single line.
+- Added `tests/test_regression_suite.py`: a feature-matrix regression
+  suite with one end-to-end guard per documented feature — generation
+  across all 11 message types, every input format, the library/CLI/REST
+  surfaces, scheme validation, the pain.002/camt.053 parsers, version
+  migration, and observability hooks.
+- Added `tests/test_sample_data_valid.py`: lints every bundled sample CSV
+  through the library's own validators so invalid IBAN/BIC/currency data
+  can never silently ship again.
+
+### Documentation
+
+- Added `SCHEMES.md`: the full rule catalogue (id, severity, scope,
+  remediation) and a guide to adding new profiles.
+- Expanded `examples/` to one self-checking script per feature (now 11):
+  added scheme validation, pain.002/camt.053 parsing, version migration,
+  streaming, input formats, and observability examples. Every example is
+  executed in CI, so the documented feature surface cannot silently rot.
+- Added `ARCHITECTURE.md` (module map + design decisions and extension
+  points), `RELEASING.md` (what merits a release + the cut/publish
+  process), `GOVERNANCE.md`/`MAINTAINERS.md`, and `.github/CODEOWNERS` —
+  lowering the project's onboarding and bus-factor risk.
+- Grew `examples/` to 13 self-checking scripts (added the MCP tools and the
+  LSP diagnostic engine), each executed in CI so the feature surface cannot
+  silently rot.
+- Simplified the `Makefile` `lint`/`type`/`test` targets: dropped the
+  build-failing SLO timers (which could fail CI on slow runners for no
+  functional reason) and pointed `make type` at the package.
+
+### Dependencies
+
+- Bumped `starlette` 1.2.1 → 1.3.1 (supersedes Dependabot #167).
+
 ## [0.0.50] - 2026-06-15
 
 Internal maintainability release. No functional or API changes; all public

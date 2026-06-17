@@ -67,7 +67,7 @@ class TestDataLoader:
                 "creditor_postal_code": "11223",
                 "creditor_town_name": "Creditor Town",
                 "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE68210501700024690959",
+                "creditor_account_IBAN": "DE36210501700024690959",
                 "purpose_code": "OTHR",
                 "reference_number": "INV-2026-001",
                 "reference_date": "2026-01-08T10:00:00.000Z",

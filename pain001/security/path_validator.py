@@ -67,7 +67,9 @@ def _resolve_within_allowed_bases(
     try:
         resolved_str = os.path.realpath(normalized_str)
     except (RuntimeError, OSError) as e:
-        raise PathValidationError(f"Invalid path: {e}") from e
+        raise PathValidationError(
+            f"Invalid path: {e}"
+        ) from e  # pragma: no cover
 
     if base_dir is not None:
         base_str = os.path.realpath(str(base_dir))

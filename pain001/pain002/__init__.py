@@ -13,8 +13,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Pain.002 payment status report parsing utilities."""
+"""Pain.002 payment status report parsing and generation utilities."""
 
+from pain001.pain002.generator import (
+    VALID_STATUS_CODES,
+    build_pain002_report,
+)
 from pain001.pain002.parser import parse_pain002_report
 
-__all__ = ["parse_pain002_report"]
+__all__ = [
+    "parse_pain002_report",
+    "build_pain002_report",
+    "VALID_STATUS_CODES",
+]

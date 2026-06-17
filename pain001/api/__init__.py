@@ -29,6 +29,15 @@ from pain001.api.job_manager import (  # noqa: F401
     JobStatus,
     job_manager,
 )
+from pain001.api.job_store import (  # noqa: F401
+    FileJobStore,
+    JobStore,
+    job_store_from_env,
+)
+from pain001.api.metrics import (  # noqa: F401
+    MetricsMiddleware,
+    render_prometheus,
+)
 from pain001.api.models import (
     DataSourceType,
     GenerateXMLRequest,
@@ -40,12 +49,23 @@ from pain001.api.models import (
     ValidationRequest,
     ValidationResponse,
 )
+from pain001.api.ratelimit import (  # noqa: F401
+    RateLimitMiddleware,
+    parse_rate_limit,
+)
 
 __all__ = [
     "app",
     "JobManager",
     "JobStatus",
     "job_manager",
+    "FileJobStore",
+    "JobStore",
+    "job_store_from_env",
+    "RateLimitMiddleware",
+    "parse_rate_limit",
+    "MetricsMiddleware",
+    "render_prometheus",
     "DataSourceType",
     "GenerateXMLRequest",
     "GenerateXMLResponse",

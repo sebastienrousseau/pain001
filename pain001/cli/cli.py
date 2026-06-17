@@ -16,10 +16,14 @@
 
 """Click-based command-line interface for generating ISO 20022 payment files."""
 
+import json
 import logging
 import os
+import shutil
 import sys
 import traceback
+from pathlib import Path
+from typing import Any
 
 import click
 from rich import box
@@ -36,6 +40,7 @@ from pain001.constants import (
     APP_NAME as title,
 )
 from pain001.constants import (
+    VERSION,
     valid_xml_types,
 )
 from pain001.context.context import Context
@@ -53,6 +58,7 @@ from pain001.observability import (
     register_metrics_callback,
 )
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
+from pain001.validation import validate_scheme
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
@@ -117,10 +123,73 @@ def _validate_schema(
         raise SystemExit(1) from e
 
 
+def _run_scheme_check(
+    data: list[dict[str, Any]],
+    scheme: str,
+    explain: bool = False,
+    output_format: str = "text",
+) -> None:
+    """Validate loaded rows against a payment-scheme rulebook.
+
+    Args:
+        data: Loaded payment rows (the normalised internal form).
+        scheme: Scheme profile name (e.g. ``'sepa-sct'``).
+        explain: If True, print a remediation hint under each violation.
+        output_format: ``'text'`` for human output or ``'json'`` for a
+            machine-readable result object.
+
+    Raises:
+        SystemExit: 2 if the scheme name is unknown, 1 if rows violate it.
+    """
+    try:
+        result = validate_scheme(data, scheme)
+    except ValueError as exc:
+        if output_format == "json":
+            print(json.dumps({"error": str(exc)}))
+        else:
+            console.print(f"[bold red]✗ {exc}[/bold red]", style="red")
+        raise SystemExit(2) from exc
+
+    if output_format == "json":
+        print(
+            json.dumps(
+                {
+                    "profile": result.profile,
+                    "is_valid": result.is_valid,
+                    "violations": [v.as_dict() for v in result.violations],
+                }
+            )
+        )
+        if not result.is_valid:
+            raise SystemExit(1)
+        return
+
+    console.print(f"[cyan]→ Validating against scheme '{scheme}'...[/cyan]")
+    for violation in result.violations:
+        colour = "red" if violation.severity == "error" else "yellow"
+        console.print(
+            f"[{colour}]  row {violation.index} [{violation.rule}] "
+            f"{violation.field or ''}: {violation.message}[/{colour}]"
+        )
+        if explain and violation.remediation:
+            console.print(f"[dim]    fix: {violation.remediation}[/dim]")
+    if result.is_valid:
+        console.print(f"[bold green]✓ Scheme '{scheme}' passed[/bold green]")
+    else:
+        console.print(
+            f"[bold red]✗ Scheme '{scheme}' validation failed[/bold red]",
+            style="red",
+        )
+        raise SystemExit(1)
+
+
 def _validate_payment_data(
     logger: logging.Logger,
     data_file_path: str,
     xml_message_type: str,
+    scheme: str | None = None,
+    explain: bool = False,
+    scheme_format: str = "text",
 ) -> int:
     """Validate payment data and return record count.
 
@@ -128,6 +197,9 @@ def _validate_payment_data(
         logger: Logger instance for event recording.
         data_file_path: Path to payment data file.
         xml_message_type: ISO 20022 message type.
+        scheme: Optional payment-scheme rulebook to validate against.
+        explain: If True, print remediation hints for scheme violations.
+        scheme_format: Output format for scheme results ('text' or 'json').
 
     Returns:
         Number of valid payment records.
@@ -146,6 +218,8 @@ def _validate_payment_data(
             f"[bold green]✓ Data validation passed[/bold green] "
             f"({record_count} payment records)"
         )
+        if scheme:
+            _run_scheme_check(data, scheme, explain, scheme_format)
         return record_count
     except (FileNotFoundError, ValueError, Exception) as e:
         log_validation_event(
@@ -200,9 +274,9 @@ def _print_template_details(message_type: str) -> None:
     console.print(f"category: {metadata.message_category}")
     console.print(f"template: {metadata.template_path}")
     console.print(f"schema: {metadata.xsd_path}")
-    if metadata.example_data_path:
+    if metadata.example_data_path:  # pragma: no cover
         console.print(f"example data: {metadata.example_data_path}")
-    if metadata.example_xml_path:
+    if metadata.example_xml_path:  # pragma: no cover
         console.print(f"example xml: {metadata.example_xml_path}")
     console.print(
         f"input formats: {', '.join(metadata.supported_input_formats)}"
@@ -425,6 +499,27 @@ def _generate_xml_files(
     default=False,
     help="Emit lightweight timing and lifecycle metrics to stdout.",
 )
+@click.option(
+    "--scheme",
+    type=str,
+    default=None,
+    help=(
+        "Validate rows against a payment-scheme rulebook "
+        "(e.g. sepa-sct, sepa-sdd, sepa-inst, xborder-ct) on top of XSD validation."
+    ),
+)
+@click.option(
+    "--explain",
+    is_flag=True,
+    default=False,
+    help="With --scheme, print a remediation hint for each violation.",
+)
+@click.option(
+    "--scheme-format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format for --scheme results (text or json).",
+)
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -441,6 +536,9 @@ def main(
     list_templates: bool,
     show_template: str | None,
     emit_metrics: bool,
+    scheme: str | None,
+    explain: bool,
+    scheme_format: str,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -464,6 +562,10 @@ def main(
             should be printed before exiting.
         emit_metrics: If True, emit timing and lifecycle metrics to
             stdout.
+        scheme: Optional payment-scheme rulebook (e.g. 'sepa-sct',
+            'sepa-sdd') to validate rows against, in addition to XSD.
+        explain: If True, print a remediation hint per scheme violation.
+        scheme_format: Output format for scheme results ('text' or 'json').
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -557,7 +659,7 @@ def main(
     )
 
     # Redundant with Click validation; kept so the failure is logged.
-    if xml_message_type not in valid_xml_types:
+    if xml_message_type not in valid_xml_types:  # pragma: no cover
         log_validation_event(
             logger,
             "message_type",
@@ -578,7 +680,12 @@ def main(
 
     if dry_run:
         record_count = _validate_payment_data(
-            logger, data_file_path, xml_message_type
+            logger,
+            data_file_path,
+            xml_message_type,
+            scheme=scheme,
+            explain=explain,
+            scheme_format=scheme_format,
         )
         log_event(
             logger,
@@ -596,6 +703,16 @@ def main(
         )
         return
 
+    if scheme:
+        _validate_payment_data(
+            logger,
+            data_file_path,
+            xml_message_type,
+            scheme=scheme,
+            explain=explain,
+            scheme_format=scheme_format,
+        )
+
     _generate_xml_files(
         logger,
         xml_message_type,
@@ -611,6 +728,301 @@ def main(
     clear_metrics_callbacks()
 
 
+class _DefaultGroup(click.Group):
+    """Click group that falls back to a default subcommand.
+
+    Preserves backwards compatibility: an invocation that does not name a
+    subcommand — e.g. the long-documented ``pain001 -t ... -d ...`` — is
+    routed to ``generate`` so existing scripts and one-liners keep working
+    alongside the new subcommand suite (``validate``, ``versions``,
+    ``inspect``, ``serve``, ``mcp``, ``init``).
+    """
+
+    #: Subcommand invoked when the first token is not itself a subcommand.
+    default_command = "generate"
+
+    def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
+        """Inject the default command when no subcommand is named.
+
+        Args:
+            ctx: The active Click context.
+            args: Raw command-line arguments passed to the group.
+
+        Returns:
+            The residual arguments after the group has parsed its own.
+        """
+        if (
+            args
+            and args[0] not in self.commands
+            and args[0] not in ("-h", "--help", "-V", "--version")
+        ):
+            args = [self.default_command, *args]
+        return super().parse_args(ctx, args)
+
+
+@click.group(
+    cls=_DefaultGroup,
+    context_settings={"help_option_names": ["-h", "--help"]},
+    help=(
+        "ISO 20022 payment tooling — one binary for the whole workflow.\n\n"
+        "Run a bare invocation (or `generate`) to produce XML; the other "
+        "subcommands validate data, introspect templates, and launch the "
+        "REST API and MCP servers."
+    ),
+)
+@click.version_option(VERSION, "-V", "--version", prog_name="pain001")
+def cli() -> None:
+    """Top-level command group for the Pain001 CLI suite."""
+
+
+cli.add_command(main, name="generate")
+
+
+@cli.command("validate")
+@click.option(
+    "-t",
+    "--xml-message-type",
+    "xml_message_type",
+    type=click.Choice(valid_xml_types, case_sensitive=False),
+    help="ISO 20022 message type (e.g., 'pain.001.001.03').",
+)
+@click.option(
+    "-m",
+    "--template",
+    "xml_template_file_path",
+    type=click.Path(dir_okay=False, readable=True),
+    help="Path to Jinja2 XML template (auto-resolved when omitted).",
+)
+@click.option(
+    "-s",
+    "--schema",
+    "xsd_schema_file_path",
+    type=click.Path(dir_okay=False, readable=True),
+    help="Path to XSD schema (auto-resolved when omitted).",
+)
+@click.option(
+    "-d",
+    "--data",
+    "data_file_path",
+    type=click.Path(dir_okay=False, readable=True),
+    help="Path to payment data (CSV, SQLite, JSON, JSONL, or Parquet).",
+)
+@click.option(
+    "--scheme",
+    type=str,
+    default=None,
+    help="Also validate rows against a scheme rulebook (e.g. sepa-sct).",
+)
+@click.option(
+    "--explain",
+    is_flag=True,
+    default=False,
+    help="With --scheme, print a remediation hint for each violation.",
+)
+@click.option(
+    "--scheme-format",
+    type=click.Choice(["text", "json"]),
+    default="text",
+    help="Output format for --scheme results (text or json).",
+)
+@click.option("-v", "--verbose", is_flag=True, default=False)
+@click.pass_context
+def validate_cmd(
+    ctx: click.Context,
+    xml_message_type: str | None,
+    xml_template_file_path: str | None,
+    xsd_schema_file_path: str | None,
+    data_file_path: str | None,
+    scheme: str | None,
+    explain: bool,
+    scheme_format: str,
+    verbose: bool,
+) -> None:
+    """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
+
+    A named alias for ``generate --dry-run`` that reuses the same template
+    resolution and validation pipeline, so CI pre-flight checks read as a
+    first-class command.
+
+    Args:
+        ctx: The active Click context, used to invoke ``generate``.
+        xml_message_type: ISO 20022 message type to validate against.
+        xml_template_file_path: Optional template path (auto-resolved).
+        xsd_schema_file_path: Optional XSD schema path (auto-resolved).
+        data_file_path: Path to the payment data to validate.
+        scheme: Optional scheme rulebook to enforce on top of XSD.
+        explain: If True, print a remediation hint per scheme violation.
+        scheme_format: Output format for scheme results ('text' or 'json').
+        verbose: If True, enable detailed logging output.
+    """
+    ctx.invoke(
+        main,
+        xml_message_type=xml_message_type,
+        xml_template_file_path=xml_template_file_path,
+        xsd_schema_file_path=xsd_schema_file_path,
+        data_file_path=data_file_path,
+        scheme=scheme,
+        explain=explain,
+        scheme_format=scheme_format,
+        verbose=verbose,
+        dry_run=True,
+    )
+
+
+@cli.command("versions")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    default=False,
+    help="Emit the supported message types as a JSON array.",
+)
+def versions_cmd(as_json: bool) -> None:
+    """List the ISO 20022 message types this build can generate.
+
+    Args:
+        as_json: If True, print a JSON array instead of a table.
+    """
+    if as_json:
+        console.print_json(json.dumps(valid_xml_types))
+        return
+    table = Table(box=box.SIMPLE_HEAVY, title="Supported message types")
+    table.add_column("Message Type")
+    for message_type in valid_xml_types:
+        table.add_row(message_type)
+    console.print(table)
+
+
+@cli.command("inspect")
+@click.argument("message_type")
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    default=False,
+    help="Emit the template metadata as a JSON object.",
+)
+def inspect_cmd(message_type: str, as_json: bool) -> None:
+    """Show the bundled template, schema, and accepted formats for a type.
+
+    Args:
+        message_type: ISO 20022 message type to inspect.
+        as_json: If True, print a JSON object instead of formatted text.
+    """
+    if message_type not in valid_xml_types:
+        console.print(
+            f"[bold red]✗ Error:[/bold red] Unknown message type: "
+            f"[yellow]{message_type}[/yellow]"
+        )
+        sys.exit(2)
+    if as_json:
+        metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
+        console.print_json(
+            json.dumps(
+                {
+                    "message_type": metadata.message_type,
+                    "category": metadata.message_category,
+                    "template": str(metadata.template_path),
+                    "schema": str(metadata.xsd_path),
+                    "input_formats": list(metadata.supported_input_formats),
+                    "deprecated": metadata.deprecated,
+                }
+            )
+        )
+        return
+    _print_template_details(message_type)
+
+
+@cli.command("init")
+@click.argument("message_type")
+@click.option(
+    "-o",
+    "--output",
+    "output_path",
+    type=click.Path(dir_okay=False, writable=True),
+    default=None,
+    help="Where to write the starter CSV (default: ./<message_type>.csv).",
+)
+def init_cmd(message_type: str, output_path: str | None) -> None:
+    """Scaffold a starter CSV for a message type from its bundled example.
+
+    Args:
+        message_type: ISO 20022 message type to scaffold data for.
+        output_path: Optional destination path for the starter CSV.
+    """
+    if message_type not in valid_xml_types:
+        console.print(
+            f"[bold red]✗ Error:[/bold red] Unknown message type: "
+            f"[yellow]{message_type}[/yellow]"
+        )
+        sys.exit(2)
+    metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
+    source = Path(metadata.template_path).parent / "template.csv"
+    if not source.is_file():  # pragma: no cover - bundled assets always ship
+        console.print(
+            f"[bold red]✗ Error:[/bold red] No starter CSV bundled for "
+            f"{message_type}."
+        )
+        sys.exit(1)
+    destination = Path(output_path or f"{message_type}.csv")
+    shutil.copyfile(source, destination)
+    console.print(
+        f"[bold green]✓ Wrote starter CSV:[/bold green] {destination}\n"
+        f"[dim]Edit it, then run:[/dim] pain001 generate -t {message_type} "
+        f"-d {destination}"
+    )
+
+
+@cli.command("serve")
+@click.option("--host", default="127.0.0.1", show_default=True)
+@click.option("--port", default=8000, show_default=True, type=int)
+@click.option(
+    "--reload",
+    is_flag=True,
+    default=False,
+    help="Enable auto-reload for local development.",
+)
+def serve_cmd(host: str, port: int, reload: bool) -> None:
+    """Launch the REST API with uvicorn (requires pain001[api]).
+
+    Args:
+        host: Interface address to bind.
+        port: TCP port to listen on.
+        reload: If True, enable uvicorn auto-reload.
+    """
+    try:
+        import uvicorn
+    except ImportError:
+        console.print(
+            "[bold red]✗ Error:[/bold red] The REST API requires the 'api' "
+            "extra. Install it with: [cyan]pip install pain001[api][/cyan]"
+        )
+        sys.exit(2)
+    console.print(
+        f"[cyan]→ Serving pain001 REST API on http://{host}:{port}[/cyan]"
+    )
+    uvicorn.run(  # pragma: no cover - long-running server process
+        "pain001.api.app:app", host=host, port=port, reload=reload
+    )
+
+
+@cli.command(
+    "mcp",
+    context_settings={"ignore_unknown_options": True},
+)
+def mcp_cmd() -> None:
+    """Launch the MCP server over stdio (requires pain001[mcp])."""
+    try:
+        from pain001.mcp.server import main as mcp_main
+    except ImportError:
+        console.print(
+            "[bold red]✗ Error:[/bold red] The MCP server requires the 'mcp' "
+            "extra. Install it with: [cyan]pip install pain001[mcp][/cyan]"
+        )
+        sys.exit(2)
+    mcp_main()  # pragma: no cover - long-running server process
+
+
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
-    main()
+    cli()

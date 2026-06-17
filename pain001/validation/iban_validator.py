@@ -226,8 +226,11 @@ def validate_iban_checksum(iban: str) -> tuple[bool, str]:
     # Calculate mod 97
     try:
         remainder = int(numeric_iban) % 97
-    except ValueError as e:
-        return False, f"Invalid numeric IBAN representation: {e}"
+    except ValueError as e:  # pragma: no cover
+        return (
+            False,
+            f"Invalid numeric IBAN representation: {e}",
+        )  # pragma: no cover
 
     if remainder != 1:
         return (

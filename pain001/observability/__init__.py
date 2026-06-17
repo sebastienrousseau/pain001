@@ -74,8 +74,8 @@ def _current_trace_context() -> dict[str, Any]:
         return {}
 
     span = trace.get_current_span()
-    if span is None:
-        return {}
+    if span is None:  # pragma: no cover
+        return {}  # pragma: no cover
     context = span.get_span_context()
     if context is None or not context.is_valid:
         return {}

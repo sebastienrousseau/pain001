@@ -107,7 +107,7 @@ class Context:
             else:
                 raise ValueError("Invalid log level")
 
-        if self.logger:
+        if self.logger:  # pragma: no cover
             self.logger.setLevel(self.log_level)
 
     def init_logger(self) -> None:

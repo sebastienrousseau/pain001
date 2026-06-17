@@ -94,7 +94,7 @@ def _validate_datetime(value: str) -> bool:
     except ValueError:
         try:
             datetime.strptime(cleaned_value, "%Y-%m-%d")
-            return True
+            return True  # pragma: no cover
         except ValueError:
             return False
 

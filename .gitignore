@@ -159,3 +159,7 @@ tests/data/valid_data_unique.csv
 tests/data/valid_data_unique.db
 tmp_env/
 pain001/tmp/
+
+# Test-output XML/CSV written to cwd by the suite
+/pain.0*.xml
+/migrated*.csv

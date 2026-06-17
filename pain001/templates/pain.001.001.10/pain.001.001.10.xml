@@ -21,7 +21,7 @@
 			</Dbtr>
 			<DbtrAcct>
 				<Id>
-					<IBAN>DE75512108001245126162</IBAN>
+					<IBAN>DE07512108001245126162</IBAN>
 				</Id>
 			</DbtrAcct>
 			<DbtrAgt>
@@ -47,7 +47,7 @@
 			</Cdtr>
 			<CdtrAcct>
 				<Id>
-					<IBAN>DE68210501700024690959</IBAN>
+					<IBAN>DE36210501700024690959</IBAN>
 				</Id>
 			</CdtrAcct>
 			
@@ -78,7 +78,7 @@
 			</Cdtr>
 			<CdtrAcct>
 				<Id>
-					<IBAN>DE89370400440532013008</IBAN>
+					<IBAN>DE67370400440532013008</IBAN>
 				</Id>
 			</CdtrAcct>
 			
@@ -109,7 +109,7 @@
 			</Cdtr>
 			<CdtrAcct>
 				<Id>
-					<IBAN>DE44500105175407123457</IBAN>
+					<IBAN>DE82500105175407123457</IBAN>
 				</Id>
 			</CdtrAcct>
 			
@@ -140,7 +140,7 @@
 			</Cdtr>
 			<CdtrAcct>
 				<Id>
-					<IBAN>DE53500105176502098765</IBAN>
+					<IBAN>DE43500105176502098765</IBAN>
 				</Id>
 			</CdtrAcct>
 			
@@ -171,7 +171,7 @@
 			</Cdtr>
 			<CdtrAcct>
 				<Id>
-					<IBAN>DE18500105175001478962</IBAN>
+					<IBAN>DE12500105175001478962</IBAN>
 				</Id>
 			</CdtrAcct>
 			
