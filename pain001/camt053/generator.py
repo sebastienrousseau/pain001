@@ -22,7 +22,7 @@ through the parser.
 """
 
 from typing import Any
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ET  # nosec B405 - generation only
 
 #: Recognised credit/debit indicators and entry statuses (ISO 20022).
 VALID_CDT_DBT = frozenset({"CRDT", "DBIT"})

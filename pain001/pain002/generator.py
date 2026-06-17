@@ -24,7 +24,7 @@ cleanly back through the parser.
 
 from datetime import datetime, timezone
 from typing import Any
-from xml.etree import ElementTree as ET
+from xml.etree import ElementTree as ET  # nosec B405 - generation only
 
 #: Status codes defined by ISO 20022 for group/payment/transaction status.
 VALID_STATUS_CODES = frozenset(
