@@ -176,27 +176,36 @@ def _resolve_generation_paths(
     Raises:
         HTTPException: If output_dir resolves outside the allowed directory.
     """
+    # CodeQL CWE-22 barrier: switch the user-supplied output_dir to a
+    # fresh, fully resolved ``Path`` and gate it through
+    # ``Path.is_relative_to`` (which CodeQL recognises as a path-traversal
+    # sanitiser) before any filesystem use. From here on we only operate
+    # on ``safe_output_dir`` -- a value CodeQL treats as sanitised.
+    cwd = Path.cwd().resolve()
+    tmp = Path(tempfile.gettempdir()).resolve()
     if request.output_dir:
-        output_dir = str(_validate_safe_path(request.output_dir))
-        # CodeQL CWE-22 barrier: guard the same variable used as the sink,
-        # so the path-traversal check is visible to the taint tracker.
-        cwd_prefix = str(Path.cwd().resolve())
-        tmp_prefix = str(Path(tempfile.gettempdir()).resolve())
-        if not (  # pragma: no cover - defensive barrier
-            output_dir == cwd_prefix
-            or output_dir.startswith(cwd_prefix + os.sep)
-            or output_dir == tmp_prefix
-            or output_dir.startswith(tmp_prefix + os.sep)
-        ):
+        candidate = Path(
+            str(_validate_safe_path(request.output_dir))
+        ).resolve()
+        if not (
+            candidate == cwd
+            or candidate.is_relative_to(cwd)
+            or candidate == tmp
+            or candidate.is_relative_to(tmp)
+        ):  # pragma: no cover - defensive barrier
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Access denied: output_dir outside allowed directory",
             )
+        safe_output_dir = candidate
     else:
-        output_dir = str(Path.cwd())
-    os.makedirs(output_dir, exist_ok=True)
-    output_file_path = os.path.join(
-        output_dir, f"{request.message_type.value}.xml"
+        safe_output_dir = cwd
+    safe_output_dir.mkdir(parents=True, exist_ok=True)
+    # ``request.message_type`` is a pydantic Enum, so ``.value`` is
+    # constrained to the known message-type strings. Use Path joining so
+    # CodeQL sees a single resolved path rooted under ``safe_output_dir``.
+    output_file_path = str(
+        safe_output_dir / f"{request.message_type.value}.xml"
     )
 
     # Bundled package data, resolved package-relative so the API works

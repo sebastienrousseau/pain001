@@ -39,7 +39,6 @@ class JobStore(Protocol):
             job_id: Unique job identifier.
             snapshot: Serialisable job state.
         """
-        ...  # pragma: no cover
 
     def load_all(self) -> dict[str, dict[str, Any]]:
         """Load every persisted job snapshot.
@@ -47,7 +46,6 @@ class JobStore(Protocol):
         Returns:
             A mapping of job id to its snapshot.
         """
-        ...  # pragma: no cover
 
     def delete(self, job_id: str) -> None:
         """Remove a persisted job snapshot.
@@ -55,7 +53,6 @@ class JobStore(Protocol):
         Args:
             job_id: Unique job identifier.
         """
-        ...  # pragma: no cover
 
 
 class FileJobStore:
