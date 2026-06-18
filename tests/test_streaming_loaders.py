@@ -220,19 +220,6 @@ class TestStreamingLoaders(unittest.TestCase):
 
         self.assertIn("empty", str(cm.exception).lower())
 
-
-def test_load_db_data_streaming_rejects_path_outside_cwd() -> None:
-    """Streaming DB loader should apply the same path validation policy."""
-    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir:
-        db_file = Path(tmp_dir) / "outside.db"
-        conn = sqlite3.connect(db_file)
-        conn.execute("CREATE TABLE pain001 (id INTEGER)")
-        conn.commit()
-        conn.close()
-
-        with pytest.raises(FileNotFoundError, match="validation failed"):
-            list(load_db_data_streaming(str(db_file), "pain001", chunk_size=1))
-
     def test_streaming_empty_db_table(self):
         """Test streaming with empty database table."""
         db_file = Path(self.test_dir) / "empty.db"
@@ -339,6 +326,19 @@ def test_load_db_data_streaming_rejects_path_outside_cwd() -> None:
         # Should have 1 chunk with all rows
         self.assertEqual(len(chunks), 1)
         self.assertGreater(len(chunks[0]), 0)
+
+
+def test_load_db_data_streaming_rejects_path_outside_cwd() -> None:
+    """Streaming DB loader should apply the same path validation policy."""
+    with tempfile.TemporaryDirectory(dir="/tmp") as tmp_dir:
+        db_file = Path(tmp_dir) / "outside.db"
+        conn = sqlite3.connect(db_file)
+        conn.execute("CREATE TABLE pain001 (id INTEGER)")
+        conn.commit()
+        conn.close()
+
+        with pytest.raises(FileNotFoundError, match="validation failed"):
+            list(load_db_data_streaming(str(db_file), "pain001", chunk_size=1))
 
 
 if __name__ == "__main__":

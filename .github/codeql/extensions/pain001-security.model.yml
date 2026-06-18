@@ -4,6 +4,15 @@ extensions:
   # that the resolved path stays within an explicit allowlist of base
   # directories and raises SecurityError / PathValidationError otherwise,
   # making it a sanitizer barrier for CWE-22 (path traversal).
+  #
+  # Also covers the api/app.py barrier helpers introduced in v0.0.52:
+  #
+  # * ``_gate_output_dir`` returns a path inside a fixed allow-list of
+  #   safe roots (cwd, tempdir), enforced via
+  #   ``os.path.realpath`` + ``os.path.commonpath``.
+  # * ``_sanitise_message_type`` re-validates the message type against
+  #   ``pain001.constants.valid_xml_types`` even though pydantic already
+  #   constrains it at the model boundary.
   - addsTo:
       pack: codeql/python-all
       extensible: neutralModel
@@ -13,3 +22,5 @@ extensions:
       - ["pain001.security.path_validator", "Member[_resolve_within_allowed_bases]", "summary"]
       - ["pain001.security", "Member[validate_path]", "summary"]
       - ["pain001.api.app", "Member[_validate_safe_path]", "summary"]
+      - ["pain001.api.app", "Member[_gate_output_dir]", "summary"]
+      - ["pain001.api.app", "Member[_sanitise_message_type]", "summary"]
