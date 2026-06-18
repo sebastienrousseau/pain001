@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.52] - 2026-06-18
+
+Companion-packages release. The MCP and LSP servers added in 0.0.51 remain
+in-tree (so `pip install "pain001[mcp]"` and `pip install "pain001[lsp]"`
+keep working), and ship alongside two new **standalone** sibling packages
+so users who want only the agent or editor surface can install just that
+piece without pulling in the full core. Versioning is now aligned across
+the three packages: `pain001`, `pain001-mcp`, and `pain001-lsp` all release
+under matching numbers.
+
+### Added
+
+- **Standalone companion packages**, both at matching version `0.0.52`:
+  - [`pain001-mcp`](https://github.com/sebastienrousseau/pain001-mcp) - a
+    Model Context Protocol server exposing the pain001 public API as
+    eleven agent tools (schema discovery, validation, generation, async
+    + file-driven generation, supported-format discovery, camt.053 and
+    pain.002 parsing). Built on FastMCP; ships a multi-stage Dockerfile.
+  - [`pain001-lsp`](https://github.com/sebastienrousseau/pain001-lsp) - a
+    pygls-based Language Server with diagnostics, completion, hover, and
+    a multi-record "add missing required fields" code action for
+    payment-data JSON files. Supports both startup and live
+    (`workspace/didChangeConfiguration`) message-type overrides.
+- README **MCP Server** and **Language Server (LSP)** sections covering
+  both the in-tree and standalone install paths.
+
+### Changed
+
+- The in-tree console scripts are renamed to `pain001-mcp-builtin` and
+  `pain001-lsp-builtin` so the canonical command names (`pain001-mcp`,
+  `pain001-lsp`) belong to the standalone packages when both are
+  installed. The Python import paths (`pain001.mcp.server`,
+  `pain001.lsp.server`, `pain001.lsp.diagnostics`) are unchanged.
+- Version bumped from `0.0.51` to `0.0.52` to land alongside the initial
+  release of the two companion packages.
+
 ## [0.0.51] - 2026-06-16
 
 Feature release. Scheme-aware validation is the flagship capability, rounded

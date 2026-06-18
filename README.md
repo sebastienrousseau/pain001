@@ -41,6 +41,11 @@
 - [Usage](#usage) — CLI, dry-run, streaming, REST API, Python API
 - [When not to use Pain001](#when-not-to-use-pain001) — honest boundaries
 
+**Companion packages**
+
+- [MCP Server](#mcp-server) — `pain001-mcp` for AI agents and assistants
+- [Language Server (LSP)](#language-server-lsp) — `pain001-lsp` for editors
+
 **Operational**
 
 - [Development](#development) — gates, make targets, CI matrix
@@ -444,6 +449,63 @@ for d in diagnostics_for_csv(open("payments.csv").read()):
 ```
 
 </details>
+
+---
+
+## MCP Server
+
+A [Model Context Protocol](https://modelcontextprotocol.io) server lets
+AI agents and assistants generate and validate ISO 20022 payment messages
+as first-class tools. Pain001 ships **two interchangeable install paths**:
+
+- **In-tree** (`pip install "pain001[mcp]"`, run `pain001-mcp-builtin`):
+  the original server in `pain001.mcp.server`. Tools include
+  `list_supported_versions`, `inspect_template`, `generate_payment_file`,
+  `validate_payment_data`, `validate_payment_scheme`, plus a
+  `pain001://schema/{message_type}` resource and a `build_payment_batch`
+  prompt.
+- **Standalone** (`pip install pain001-mcp`, run `pain001-mcp`): the
+  [`pain001-mcp`](https://github.com/sebastienrousseau/pain001-mcp)
+  companion package. Eleven tools covering the in-tree set plus
+  `validate_records`, `validate_identifier` (IBAN/BIC), `generate_message`,
+  `generate_message_async`, `generate_message_from_file`,
+  `list_supported_formats`, `parse_camt053`, `parse_pain002`.
+
+Register either with any MCP client (e.g. Claude Desktop) by adding to
+its config:
+
+```json
+{
+  "mcpServers": {
+    "pain001": { "command": "pain001-mcp" }
+  }
+}
+```
+
+(Use `pain001-mcp-builtin` for the in-tree variant.)
+
+---
+
+## Language Server (LSP)
+
+A [pygls](https://github.com/openlawlibrary/pygls)-based Language Server
+brings real-time help to editors. As with the MCP server, pain001 ships
+two install paths:
+
+- **In-tree** (`pip install "pain001[lsp]"`, run `pain001-lsp-builtin`):
+  diagnostics for **payment CSV files** (invalid IBAN/BIC/currency cells,
+  characters outside the ISO 20022 Latin set, missing required columns).
+  The diagnostic engine (`pain001.lsp.diagnostics_for_csv`) is reusable
+  outside the LSP.
+- **Standalone** (`pip install pain001-lsp`, run `pain001-lsp`): the
+  [`pain001-lsp`](https://github.com/sebastienrousseau/pain001-lsp)
+  companion package. Diagnostics, completion, hover, and a multi-record
+  "add missing required fields" code action for **payment-data JSON
+  files**. Supports both startup (`initializationOptions.messageType`)
+  and live (`workspace/didChangeConfiguration`) message-type overrides.
+
+Point your editor's LSP client at the `pain001-lsp` (standalone) or
+`pain001-lsp-builtin` (in-tree) command for the appropriate file type.
 
 ---
 

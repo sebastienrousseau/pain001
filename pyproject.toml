@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.51"
+version = "0.0.52"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -20,8 +20,14 @@ include = [
 
 [tool.poetry.scripts]
 pain001 = "pain001.__main__:cli"
-pain001-mcp = "pain001.mcp.server:main"
-pain001-lsp = "pain001.lsp.server:main"
+# In-tree MCP/LSP entry points are renamed to ``*-builtin`` so the
+# standalone companion packages ``pain001-mcp`` and ``pain001-lsp``
+# (see https://github.com/sebastienrousseau/pain001-mcp and
+# https://github.com/sebastienrousseau/pain001-lsp) own the canonical
+# command names. Either set works in isolation; installing both leaves
+# the canonical names pointing at the standalone packages.
+pain001-mcp-builtin = "pain001.mcp.server:main"
+pain001-lsp-builtin = "pain001.lsp.server:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
