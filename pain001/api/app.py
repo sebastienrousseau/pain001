@@ -43,7 +43,7 @@ from pain001.api.models import (
     ValidationError as ValidationErrorModel,
 )
 from pain001.api.ratelimit import RateLimitMiddleware, parse_rate_limit
-from pain001.constants import TEMPLATES_DIR
+from pain001.constants import TEMPLATES_DIR, valid_xml_types
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
 from pain001.security.path_validator import (
@@ -162,56 +162,104 @@ def _format_validation_errors(
     return error_models
 
 
+def _gate_output_dir(user_dir: str | None) -> Path:
+    """Validate ``user_dir`` against a fixed allow-list of safe roots.
+
+    Uses the canonical ``os.path.realpath`` + ``os.path.commonpath``
+    sanitiser pattern that the CodeQL Python ``py/path-injection`` query
+    recognises. The candidate is canonicalised first, then the common
+    prefix against each allowed root is verified to *equal* that root
+    (anything else would be traversal).
+
+    Args:
+        user_dir: Optional output directory supplied by the API caller.
+
+    Returns:
+        Resolved ``Path`` inside one of the allowed roots.
+
+    Raises:
+        HTTPException: ``403`` when the requested directory escapes
+            both allowed roots.
+    """
+    cwd = os.path.realpath(str(Path.cwd()))
+    tmp = os.path.realpath(tempfile.gettempdir())
+    if user_dir is None:
+        return Path(cwd)
+    # First-line validator (string-level path guards).
+    _validate_safe_path(user_dir)
+    # CodeQL CWE-22 barrier: canonicalise then compare common prefixes
+    # against each allowed root. Both calls are recognised sanitisers.
+    candidate = os.path.realpath(user_dir)
+    for base in (cwd, tmp):
+        try:
+            common = os.path.commonpath([candidate, base])
+        except ValueError:  # pragma: no cover - different drives on Windows
+            continue
+        if common == base:
+            return Path(candidate)
+    raise HTTPException(  # pragma: no cover - defensive barrier
+        status_code=status.HTTP_403_FORBIDDEN,
+        detail="Access denied: output_dir outside allowed directory",
+    )
+
+
+def _sanitise_message_type(message_type: str) -> str:
+    """Re-validate ``message_type`` against the fixed allow-list.
+
+    Pydantic already constrains ``message_type`` at deserialisation
+    time, but CodeQL doesn't track the enum. An explicit set-membership
+    check is a barrier the taint tracker recognises, so values that
+    flow into ``str.format`` / path joining downstream are sanitised.
+
+    Args:
+        message_type: The string value of the request's message_type enum.
+
+    Returns:
+        The same string, guaranteed to be in
+        :data:`pain001.constants.valid_xml_types`.
+
+    Raises:
+        HTTPException: ``400`` if the value is not in the allow-list.
+    """
+    allowed = frozenset(valid_xml_types)
+    if message_type not in allowed:
+        raise HTTPException(  # pragma: no cover - pydantic enforces this
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid message type",
+        )
+    return message_type
+
+
 def _resolve_generation_paths(
     request: GenerateXMLRequest,
 ) -> tuple[str, str, str]:
     """Resolve the output file path and bundled template/schema paths.
+
+    Delegates the security barriers to :func:`_gate_output_dir` and
+    :func:`_sanitise_message_type`; those helpers raise the relevant
+    :class:`HTTPException`\\ s.
 
     Args:
         request: Generation request with message type and optional output dir.
 
     Returns:
         Tuple of (output_file_path, xsd_file_path, xml_template_path).
-
-    Raises:
-        HTTPException: If output_dir resolves outside the allowed directory.
     """
-    # CodeQL CWE-22 barrier: switch the user-supplied output_dir to a
-    # fresh, fully resolved ``Path`` and gate it through
-    # ``Path.is_relative_to`` (which CodeQL recognises as a path-traversal
-    # sanitiser) before any filesystem use. From here on we only operate
-    # on ``safe_output_dir`` -- a value CodeQL treats as sanitised.
-    cwd = Path.cwd().resolve()
-    tmp = Path(tempfile.gettempdir()).resolve()
-    if request.output_dir:
-        candidate = Path(
-            str(_validate_safe_path(request.output_dir))
-        ).resolve()
-        if not (
-            candidate == cwd
-            or candidate.is_relative_to(cwd)
-            or candidate == tmp
-            or candidate.is_relative_to(tmp)
-        ):  # pragma: no cover - defensive barrier
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied: output_dir outside allowed directory",
-            )
-        safe_output_dir = candidate
-    else:
-        safe_output_dir = cwd
+    safe_output_dir = _gate_output_dir(request.output_dir)
     safe_output_dir.mkdir(parents=True, exist_ok=True)
-    # ``request.message_type`` is a pydantic Enum, so ``.value`` is
-    # constrained to the known message-type strings. Use Path joining so
-    # CodeQL sees a single resolved path rooted under ``safe_output_dir``.
-    output_file_path = str(
-        safe_output_dir / f"{request.message_type.value}.xml"
-    )
+    # ``request.message_type`` is a pydantic Enum, but CodeQL doesn't
+    # track that the enum is constrained at deserialisation time. Run
+    # the value through an explicit allow-list barrier *and* through
+    # ``os.path.basename`` (a path-injection sanitiser recognised by
+    # the CodeQL Python query) so the join below is doubly sanitised.
+    _sanitise_message_type(request.message_type.value)
+    safe_message_type = os.path.basename(request.message_type.value)
+    output_file_path = str(safe_output_dir / f"{safe_message_type}.xml")
 
     # Bundled package data, resolved package-relative so the API works
     # regardless of the server's working directory.
-    template_base = TEMPLATES_DIR / request.message_type.value
-    xsd_file_path = str(template_base / f"{request.message_type.value}.xsd")
+    template_base = TEMPLATES_DIR / safe_message_type
+    xsd_file_path = str(template_base / f"{safe_message_type}.xsd")
     xml_template_path = str(template_base / "template.xml")
     return output_file_path, xsd_file_path, xml_template_path
 
