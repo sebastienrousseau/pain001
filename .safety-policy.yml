@@ -1,4 +1,6 @@
-# Safety CLI policy — auto-detected by `safety check` (v2.x).
+# Safety CLI policy - auto-detected by `safety scan` (v3+).
+# Migrated from `safety check` (v2.x deprecated) in v0.0.53; the
+# legacy file shape is still honoured by v3.
 security:
   ignore-vulnerabilities:
     51457:

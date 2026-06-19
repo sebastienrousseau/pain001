@@ -49,6 +49,7 @@ _SEPA_TEXT_FIELDS = (
     "remittance_information",
 )
 _SDD_SEQUENCE_TYPES = frozenset({"FRST", "RCUR", "OOFF", "FNAL"})
+_B2B_SEQUENCE_TYPES = frozenset({"FRST", "RCUR"})
 
 #: Remediation hint for each rule id, surfaced by the CLI ``--explain`` flag.
 REMEDIATIONS: dict[str, str] = {
@@ -74,6 +75,14 @@ REMEDIATIONS: dict[str, str] = {
     "SDD-MNDT": "Provide mandate_id; a SEPA Direct Debit requires the "
     "mandate reference agreed with the debtor.",
     "SDD-SEQTP": "Set sequence_type to one of FRST, RCUR, OOFF, or FNAL.",
+    "B2B-SEQTP": (
+        "SEPA B2B accepts only FRST or RCUR sequence types "
+        "(OOFF and FNAL are CORE-only)."
+    ),
+    "B2B-CDTR-ID": (
+        "Provide creditor_id; the SEPA B2B rulebook requires the "
+        "Creditor Identifier (CI) issued in the creditor's country."
+    ),
 }
 
 
@@ -476,6 +485,62 @@ def _check_sequence_type(
         )
 
 
+def _check_b2b_sequence_type(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require a B2B-allowed sequence type (FRST or RCUR only).
+
+    The SEPA Business-to-Business Direct Debit rulebook deliberately
+    omits ``OOFF`` and ``FNAL`` (which exist in CORE) because B2B
+    mandates are always part of a recurring relationship under a
+    mandate the debtor has actively countersigned through their bank.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    seq = str(row.get("sequence_type", "")).upper()
+    if seq not in _B2B_SEQUENCE_TYPES:
+        result.violations.append(
+            SchemeViolation(
+                rule="B2B-SEQTP",
+                message=(
+                    "sequence_type must be one of "
+                    f"{', '.join(sorted(_B2B_SEQUENCE_TYPES))} for "
+                    f"SEPA B2B (got {seq or 'empty'})"
+                ),
+                index=index,
+                field="sequence_type",
+            )
+        )
+
+
+def _check_creditor_identifier(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require the SEPA Creditor Identifier (CI) for a B2B collection.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    if not str(row.get("creditor_id", "")).strip():
+        result.violations.append(
+            SchemeViolation(
+                rule="B2B-CDTR-ID",
+                message=(
+                    "creditor_id is required for a SEPA B2B Direct "
+                    "Debit; provide the Creditor Identifier issued in "
+                    "the creditor's country"
+                ),
+                index=index,
+                field="creditor_id",
+            )
+        )
+
+
 class ValidationProfile(ABC):
     """Base class for a payment-scheme rulebook validator."""
 
@@ -557,6 +622,42 @@ class SepaDirectDebitProfile(ValidationProfile):
         return result
 
 
+class SepaB2BDirectDebitProfile(ValidationProfile):
+    """SEPA Business-to-Business Direct Debit (B2B) rulebook checks.
+
+    Adds the B2B-specific constraints - a creditor identifier and the
+    stricter B2B sequence-type set (FRST / RCUR only) - on top of the
+    shared SDD rules (mandate id, EUR, IBANs, BIC, amount ceiling,
+    charset, length). Use this profile when collecting from corporate
+    debtors under a B2B mandate; the consumer CORE rules
+    (``sepa-sdd``) are too permissive for B2B.
+    """
+
+    name = "sepa-b2b"
+
+    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
+        """Validate payment rows against the SEPA B2B SDD rulebook.
+
+        Args:
+            data: Loaded payment rows (the normalised internal form).
+
+        Returns:
+            A :class:`SchemeValidationResult` listing every violation.
+        """
+        result = SchemeValidationResult(profile=self.name)
+        for index, row in enumerate(data):
+            _check_currency(row, index, result)
+            _check_ibans(row, index, result)
+            _check_bic(row, index, result)
+            _check_service_level(row, index, result)
+            _check_amount(row, index, result)
+            _check_text_fields(row, index, result)
+            _check_mandate(row, index, result)
+            _check_b2b_sequence_type(row, index, result)
+            _check_creditor_identifier(row, index, result)
+        return result
+
+
 class SepaInstantCreditTransferProfile(ValidationProfile):
     """SEPA Instant Credit Transfer (SCT Inst) rulebook checks.
 
@@ -628,6 +729,7 @@ class CrossBorderCreditTransferProfile(ValidationProfile):
 PROFILES: dict[str, ValidationProfile] = {
     SepaCreditTransferProfile.name: SepaCreditTransferProfile(),
     SepaDirectDebitProfile.name: SepaDirectDebitProfile(),
+    SepaB2BDirectDebitProfile.name: SepaB2BDirectDebitProfile(),
     SepaInstantCreditTransferProfile.name: (
         SepaInstantCreditTransferProfile()
     ),

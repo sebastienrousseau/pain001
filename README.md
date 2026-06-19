@@ -21,7 +21,7 @@
   <a href="https://pypi.org/project/pain001/"><img src="https://img.shields.io/pypi/dm/pain001.svg?style=for-the-badge" alt="PyPI downloads" /></a>
   <a href="https://github.com/sebastienrousseau/pain001/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pain001/ci.yml?branch=main&label=Tests&style=for-the-badge" alt="Tests" /></a>
   <a href="https://codecov.io/github/sebastienrousseau/pain001?branch=main"><img src="https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge" alt="Coverage" /></a>
-  <a href="#license"><img src="https://img.shields.io/pypi/l/pain001?style=for-the-badge" alt="Licence" /></a>
+  <a href="#license"><img src="https://img.shields.io/pypi/l/pain001?style=for-the-badge" alt="License" /></a>
 </p>
 
 ---
@@ -31,23 +31,19 @@
 **Getting started**
 
 - [What is Pain001?](#what-is-pain001) — the problem it solves and how
-- [Install](#install) — PyPI, extras, and source builds
+- [Install](#install) — PyPI, extras, Docker, source
 - [Quick start](#quick-start) — one command from CSV to validated XML
 
 **Library reference**
 
 - [Supported messages](#supported-messages) — every bundled ISO 20022 message type
 - [Input formats](#input-formats) — CSV, SQLite, JSON, JSONL, Parquet
-- [Usage](#usage) — CLI, dry-run, streaming, REST API, Python API
-- [When not to use Pain001](#when-not-to-use-pain001) — honest boundaries
-
-**Companion packages**
-
-- [MCP Server](#mcp-server) — `pain001-mcp` for AI agents and assistants
-- [Language Server (LSP)](#language-server-lsp) — `pain001-lsp` for editors
+- [Usage](#usage) — CLI, scheme validation, dry-run, streaming, REST API, Python API
+- [Companion packages](#companion-packages) — MCP server, Language Server
 
 **Operational**
 
+- [When not to use Pain001](#when-not-to-use-pain001) — honest boundaries
 - [Development](#development) — gates, make targets, CI matrix
 - [Security](#security) — hardening posture and reporting
 - [Documentation](#documentation) — guides, API reference, examples
@@ -73,6 +69,7 @@ It handles the parts that are easy to get wrong:
 | Template drift | Bundled template/XSD pairs are guard-railed; mismatches fail loudly |
 | XML attacks | All XML parsing goes through `defusedxml` — XXE and entity expansion are blocked |
 | Large batches | Streaming mode chunks input and emits one file per chunk |
+| Scheme rules | `--scheme sepa-sct\|sepa-sdd\|sepa-inst\|sepa-b2b\|xborder-ct` layers per-rulebook checks on top of XSD |
 
 Templates and schemas for every supported message type ship inside the
 package — point Pain001 at your data and it resolves the rest.
@@ -86,32 +83,58 @@ package — point Pain001 at your data and it resolves the rest.
 | PyPI | `pip install pain001` | Core library and CLI |
 | PyPI + REST API | `pip install "pain001[api]"` | Adds FastAPI + Uvicorn server |
 | PyPI + Parquet | `pip install "pain001[parquet]"` | Adds PyArrow for Parquet input |
-| PyPI + MCP | `pip install "pain001[mcp]"` | Adds the MCP server for LLM clients |
-| PyPI + LSP | `pip install "pain001[lsp]"` | Adds the `pain001-lsp` language server for editor diagnostics |
+| PyPI + Redis | `pip install "pain001[redis]"` | Distributed job store + rate limiter |
+| PyPI + MCP | `pip install "pain001[mcp]"` | In-tree MCP server for LLM clients |
+| PyPI + LSP | `pip install "pain001[lsp]"` | In-tree language server for CSV diagnostics |
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
+| Docker (GHCR) | `docker pull ghcr.io/sebastienrousseau/pain001:latest` | Multi-arch (linux/amd64, linux/arm64); CLI + `api` extra preinstalled |
 
 Requires Python 3.10 or later.
+
+### Docker
+
+The image ships the CLI and the `api` extra so the REST surface works
+out of the box:
+
+```bash
+# CLI: generate a payment file
+docker run --rm -v "$PWD:/data" -w /data \
+  ghcr.io/sebastienrousseau/pain001:latest \
+  generate -t pain.001.001.03 -d payments.csv -o out.xml
+
+# REST API: launch the server
+docker run --rm -p 8000:8000 \
+  ghcr.io/sebastienrousseau/pain001:latest \
+  serve --host 0.0.0.0 --port 8000
+```
+
+The image runs as a non-root `pain001` user; bind-mount the directory
+you want the CLI to read or write.
 
 ---
 
 ## Quick start
 
+`-t` (message type) and `-d` (data file) are the only required flags —
+the template and XSD auto-resolve from the bundled registry:
+
 ```bash
-pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv
+pain001 -t pain.001.001.03 -d payments.csv
+# -> writes pain.001.001.03.xml in the current directory (override with -o)
 ```
 
-The generated XML is validated against the XSD schema and written
-to the current directory (override with `-o`). Grab a template and
-schema for any supported
-version from the
-[bundled templates](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates),
-or point `-m`/`-s` at your own.
+Override the template or schema only when you need a customised one:
+
+```bash
+pain001 -t pain.001.001.03 -m my-template.xml -s my-schema.xsd -d payments.csv
+```
 
 Validate without generating anything (CI pre-flight) — here the
 template and schema are auto-resolved from the bundled registry:
 
 ```bash
 pain001 -t pain.001.001.03 -d payments.csv --dry-run
+# -> exit 0 if the data would generate a valid file, 1 otherwise
 ```
 
 Exit codes: `0` success, `1` validation or processing error, `2` invalid
@@ -131,12 +154,12 @@ the sibling subcommands cover the rest of the lifecycle:
 | `pain001 inspect <type> [--json]` | Show a bundled template's schema, category, and accepted formats |
 | `pain001 init <type> [-o file]` | Scaffold a starter CSV from the bundled example |
 | `pain001 serve [--host --port]` | Launch the REST API (requires `pain001[api]`) |
-| `pain001 mcp` | Launch the MCP server over stdio (requires `pain001[mcp]`) |
+| `pain001 mcp` | Launch the in-tree MCP server over stdio (requires `pain001[mcp]`) |
 
 ```bash
-pain001 init pain.001.001.03 -o my-payments.csv   # scaffold
-pain001 validate -t pain.001.001.03 -d my-payments.csv   # pre-flight
-pain001 generate -t pain.001.001.03 -d my-payments.csv   # ship it
+pain001 init pain.001.001.03 -o my-payments.csv         # scaffold a starter CSV
+pain001 validate -t pain.001.001.03 -d my-payments.csv  # pre-flight in CI
+pain001 generate -t pain.001.001.03 -d my-payments.csv  # ship it
 ```
 
 ---
@@ -152,14 +175,14 @@ Each bundled message type ships with a Jinja2 template, the official XSD
 schema, and registry metadata. List them from the CLI:
 
 ```bash
-pain001 --list-templates
-pain001 --show-template pain.001.001.12
+pain001 versions                 # supported message types
+pain001 inspect pain.001.001.12  # template + schema + accepted formats
 ```
 
 Related tooling included in the package:
 
-- **Version migration** — map payment data between pain.001 versions
-  (`python -m pain001.migrate`).
+- **Version migration** — map payment data between pain.001 versions via
+  `pain001.migration.VersionMapper().migrate_rows(rows, from_v, to_v)`.
 - **pain.002 parser + builder** — read the payment status reports your bank
   sends back, and `build_pain002_report(...)` to generate one (e.g. to
   simulate a bank in tests); the two round-trip.
@@ -205,11 +228,9 @@ pain001 [generate] [OPTIONS]
       --chunk-size         Rows per streaming chunk (default: 1000)
       --profile            Configuration profile or built-in preset
       --show-config        Print the resolved configuration and exit
-      --list-templates     List bundled templates and exit
-      --show-template      Show metadata for one bundled template and exit
       --emit-metrics       Emit timing and lifecycle metrics to stdout
       --scheme             Validate rows against a scheme rulebook
-                           (sepa-sct, sepa-sdd)
+                           (sepa-sct, sepa-sdd, sepa-inst, sepa-b2b, xborder-ct)
       --explain            With --scheme, print a remediation hint per finding
       --scheme-format      Scheme output format: text (default) or json
   -v, --verbose            Detailed logging output
@@ -219,7 +240,7 @@ pain001 [generate] [OPTIONS]
 </details>
 
 <details>
-<summary><b>Scheme-aware validation (SEPA)</b></summary>
+<summary><b>Scheme-aware validation (SEPA + cross-border)</b></summary>
 
 XSD validation proves a file is *well-formed*; it does not prove the
 payment obeys the rules of the scheme it will clear through. `--scheme`
@@ -230,17 +251,18 @@ per-row violations:
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 ```
 
-Four profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
-`sepa-sdd` (SEPA Direct Debit, pain.008), `sepa-inst` (SEPA Instant Credit
-Transfer, pain.001), and `xborder-ct` (generic cross-border, multi-currency,
-BIC-mandatory) — checking currency, valid debtor/creditor IBANs (ISO 13616 /
-mod-97), BICs, the amount ceiling (the 100,000 EUR instant cap for
-`sepa-inst`), ISO 20022 character-set and field-length limits, and (for SDD)
-mandate id and sequence type. Add `--explain` for
-remediation hints, or `--scheme-format json` for machine-readable output.
-The REST API accepts a `scheme` field on `/api/v1/validate` and
-`/api/v1/generate` too. See [SCHEMES.md](SCHEMES.md) for the full rule
-catalogue. From Python:
+Five profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
+`sepa-sdd` (SEPA Direct Debit, pain.008), `sepa-inst` (SEPA Instant
+Credit Transfer, pain.001), `sepa-b2b` (SEPA Business-to-Business Direct
+Debit, FRST/RCUR-only + mandatory creditor identifier), and `xborder-ct`
+(generic cross-border, multi-currency, BIC-mandatory). Each profile
+checks currency, valid debtor/creditor IBANs (ISO 13616 / mod-97), BICs,
+the amount ceiling (100,000 EUR instant cap for `sepa-inst`), ISO 20022
+character-set and field-length limits, and (for SDD/B2B) mandate id and
+sequence type. Add `--explain` for remediation hints, or
+`--scheme-format json` for machine-readable output. The REST API accepts
+a `scheme` field on `/api/v1/validate` and `/api/v1/generate` too. See
+[SCHEMES.md](SCHEMES.md) for the full rule catalogue. From Python:
 
 ```python
 from pain001 import validate_scheme
@@ -253,9 +275,10 @@ rows = [{
 }]
 
 result = validate_scheme(rows, profile="sepa-sct")
-print(result.is_valid)             # False
+print(result.is_valid)             # -> False
 for v in result.violations:
-    print(v.rule, v.field, v.message)  # SEPA-CCY payment_currency ...
+    print(v.rule, v.field, v.message)
+    # -> SEPA-CCY payment_currency Currency must be EUR for sepa-sct
 ```
 
 Need to clean spreadsheet text first? `sanitize_to_charset` transliterates
@@ -320,20 +343,26 @@ remain as a backwards-compatible alias.
 | Variable | Effect |
 | :--- | :--- |
 | `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint |
-| `PAIN001_RATE_LIMIT` | Per-client request cap, e.g. `100/minute` (in-process; use a gateway/Redis when scaled out) |
+| `PAIN001_RATE_LIMIT` | Per-client cap (e.g. `100/minute`); pair with `PAIN001_RATE_LIMIT_BACKEND=redis` for cross-replica enforcement |
+| `PAIN001_RATE_LIMIT_BACKEND` | `memory` (default, in-process) or `redis` |
+| `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the distributed limiter (falls back to `PAIN001_JOB_STORE_URL` if unset) |
 | `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts |
+| `PAIN001_JOB_STORE_URL` | Redis URL for a fully distributed job store (use instead of `_DIR`) |
 
 **Documentation surfaces:** Swagger UI at `/api/docs`, ReDoc at
 `/api/redoc`, an interactive [Scalar](https://scalar.com) reference at
-`/api/reference`, and the raw OpenAPI document at `/openapi.json`.
+`/api/reference`, and the raw OpenAPI document at `/openapi.json`. The
+same reference is hosted publicly:
+<https://sebastienrousseau.github.io/pain001/api-reference.html>.
 
-**Operability:** a liveness probe at `/api/v1/health` and Prometheus metrics
+**Operability:** liveness probe at `/api/v1/health` and Prometheus metrics
 at `/metrics` (build info, supported-type/scheme gauges, per-status job
-gauges, and HTTP request counters). See [OPERATIONS.md](OPERATIONS.md) for
-the runbook — config, scrape config, alerts, scaling, and incident playbook.
+gauges, and HTTP request counters). See [OPERATIONS.md](OPERATIONS.md)
+for the runbook — config, scrape config, alerts, scaling, and incident
+playbook.
 
-**Client SDKs** — generate a typed client in any language from the OpenAPI
-document:
+**Client SDKs** — generate a typed client in any language from the
+OpenAPI document:
 
 ```bash
 python scripts/export_openapi.py openapi.json      # dump the schema
@@ -346,10 +375,10 @@ npx @openapitools/openapi-generator-cli generate \
 <details>
 <summary><b>Python API — generate in memory (serverless)</b></summary>
 
-For Lambdas, APIs, and queues, `generate_xml_string` returns the validated
-XML as a string instead of writing to disk. This snippet is fully
-self-contained — it uses the template, schema, and sample data that ship
-*inside* the package, so it runs as-is with no external files:
+For Lambdas, APIs, and queues, `generate_xml_string` returns the
+validated XML as a string instead of writing to disk. This snippet is
+fully self-contained — it uses the template, schema, and sample data
+that ship *inside* the package, so it runs as-is with no external files:
 
 ```python
 from pain001 import generate_xml_string
@@ -359,7 +388,7 @@ from pain001.csv.load_csv_data import load_csv_data
 message_type = "pain.001.001.03"
 bundled = TEMPLATES_DIR / message_type  # templates ship inside the package
 
-# Load the bundled sample dataset; swap in your own list[dict] of rows
+# Load the bundled sample dataset; swap in your own list[dict] of rows.
 payments = load_csv_data(str(bundled / "template.csv"))
 
 xml = generate_xml_string(
@@ -369,7 +398,7 @@ xml = generate_xml_string(
     str(bundled / f"{message_type}.xsd"),
 )
 
-# `xml` is validated ISO 20022 XML, ready to return from a handler
+# `xml` is validated ISO 20022 XML, ready to return from a handler.
 print(xml[:38])  # -> <?xml version="1.0" encoding="UTF-8"?>
 ```
 
@@ -391,88 +420,43 @@ output_path = process_files(
     data_file_path="payments.csv",  # path, or a list[dict] of payment rows
 )
 
-print(output_path)  # e.g. "pain.001.001.03.xml" — validated and on disk
-```
-
-</details>
-
-<details>
-<summary><b>MCP server (LLM clients)</b></summary>
-
-Expose Pain001 to MCP-aware LLM clients (Claude Desktop, etc.) over
-stdio. Install the `mcp` extra and run the server:
-
-```bash
-pip install "pain001[mcp]"
-pain001-mcp
-```
-
-It exposes **tools** (`generate_payment_file`, `validate_payment_data`,
-`validate_payment_scheme`, `list_supported_versions`, `inspect_template`),
-a read-only **resource** (`pain001://schema/{message_type}` for the XSD),
-and a guided **prompt** (`build_payment_batch`). Tools take inline rows
-(a `list[dict]`) and return XML as a string — no shared filesystem
-needed. Example client config:
-
-```json
-{
-  "mcpServers": {
-    "pain001": { "command": "pain001-mcp" }
-  }
-}
-```
-
-</details>
-
-<details>
-<summary><b>Editor diagnostics (LSP)</b></summary>
-
-Get live, in-editor feedback on payment CSVs — invalid IBAN/BIC/currency
-cells, characters outside the ISO 20022 Latin set, and missing required
-columns — from a Language Server that reuses the same validators as the
-generator:
-
-```bash
-pip install "pain001[lsp]"
-pain001-lsp        # stdio language server, point your editor at this
-```
-
-A thin VS Code client lives in [`editors/vscode/`](editors/vscode/). The
-diagnostic engine is dependency-free and reusable on its own (e.g. in a
-pre-commit hook):
-
-```python
-from pain001.lsp import diagnostics_for_csv
-
-for d in diagnostics_for_csv(open("payments.csv").read()):
-    print(f"line {d.line + 1}: {d.code} — {d.message}")
+print(output_path)  # -> "pain.001.001.03.xml" — validated and on disk
 ```
 
 </details>
 
 ---
 
-## MCP Server
+## Companion packages
+
+Pain001 ships **two interchangeable install paths** for both its MCP and
+LSP integrations: an *in-tree* implementation that comes with `pain001`
+itself (smaller feature set, no extra package), and a *standalone* PyPI
+package (richer surface, independently versioned).
+
+### MCP server
 
 A [Model Context Protocol](https://modelcontextprotocol.io) server lets
-AI agents and assistants generate and validate ISO 20022 payment messages
-as first-class tools. Pain001 ships **two interchangeable install paths**:
+AI agents call Pain001 as first-class tools.
 
-- **In-tree** (`pip install "pain001[mcp]"`, run `pain001-mcp-builtin`):
-  the original server in `pain001.mcp.server`. Tools include
-  `list_supported_versions`, `inspect_template`, `generate_payment_file`,
-  `validate_payment_data`, `validate_payment_scheme`, plus a
+- **In-tree** (`pip install "pain001[mcp]"`, run `pain001 mcp` or
+  `pain001-mcp-builtin`): the original server in `pain001.mcp.server`.
+  Tools include `list_supported_versions`, `inspect_template`,
+  `generate_payment_file`, `validate_payment_data`, plus a
   `pain001://schema/{message_type}` resource and a `build_payment_batch`
   prompt.
 - **Standalone** (`pip install pain001-mcp`, run `pain001-mcp`): the
   [`pain001-mcp`](https://github.com/sebastienrousseau/pain001-mcp)
-  companion package. Eleven tools covering the in-tree set plus
-  `validate_records`, `validate_identifier` (IBAN/BIC), `generate_message`,
-  `generate_message_async`, `generate_message_from_file`,
-  `list_supported_formats`, `parse_camt053`, `parse_pain002`.
+  companion package — **sixteen tools** including everything in-tree
+  plus `validate_records`, `validate_identifier` (IBAN/BIC),
+  `generate_message`, `generate_message_async`,
+  `generate_message_from_file`, `list_supported_formats`,
+  `parse_camt053`, `parse_pain002`, `migrate_records` (cross-version
+  pain.001 mapping), `validate_xml_against_schema` (in-memory XSD
+  validation), and `sanitize_to_iso20022_charset` (ISO 20022 Latin
+  transliteration).
 
-Register either with any MCP client (e.g. Claude Desktop) by adding to
-its config:
+Register either with any MCP client (e.g. Claude Desktop):
 
 ```json
 {
@@ -484,25 +468,23 @@ its config:
 
 (Use `pain001-mcp-builtin` for the in-tree variant.)
 
----
-
-## Language Server (LSP)
+### Language Server (LSP)
 
 A [pygls](https://github.com/openlawlibrary/pygls)-based Language Server
-brings real-time help to editors. As with the MCP server, pain001 ships
-two install paths:
+brings real-time help to editors.
 
 - **In-tree** (`pip install "pain001[lsp]"`, run `pain001-lsp-builtin`):
   diagnostics for **payment CSV files** (invalid IBAN/BIC/currency cells,
   characters outside the ISO 20022 Latin set, missing required columns).
-  The diagnostic engine (`pain001.lsp.diagnostics_for_csv`) is reusable
-  outside the LSP.
 - **Standalone** (`pip install pain001-lsp`, run `pain001-lsp`): the
   [`pain001-lsp`](https://github.com/sebastienrousseau/pain001-lsp)
-  companion package. Diagnostics, completion, hover, and a multi-record
-  "add missing required fields" code action for **payment-data JSON
-  files**. Supports both startup (`initializationOptions.messageType`)
-  and live (`workspace/didChangeConfiguration`) message-type overrides.
+  companion package — **six features** for **payment-data JSON files**:
+  diagnostics, completion, hover, a multi-record "add missing required
+  fields" code action, two-space JSON formatting
+  (`textDocument/formatting`), and a record-outline pane
+  (`textDocument/documentSymbol`). Supports startup
+  (`initializationOptions.messageType`) and live
+  (`workspace/didChangeConfiguration`) message-type overrides.
 
 Point your editor's LSP client at the `pain001-lsp` (standalone) or
 `pain001-lsp-builtin` (in-tree) command for the appropriate file type.
@@ -514,10 +496,11 @@ Point your editor's LSP client at the `pain001-lsp` (standalone) or
 - **You need message types beyond pain.001 / pain.008 generation.** The
   camt.053 and pain.002 modules are parsers, not generators; other ISO
   20022 families (camt.052, pacs.*) are out of scope.
-- **You need bank connectivity.** Pain001 produces and validates files; it
-  does not transmit them. Pair it with your EBICS/SFTP/API channel.
-- **Your data model is wildly non-tabular.** The loaders expect row-shaped
-  payment records. Deeply nested custom structures need flattening first.
+- **You need bank connectivity.** Pain001 produces and validates files;
+  it does not transmit them. Pair it with your EBICS/SFTP/API channel.
+- **Your data model is wildly non-tabular.** The loaders expect
+  row-shaped payment records. Deeply nested custom structures need
+  flattening first.
 
 ---
 
@@ -534,10 +517,10 @@ the build fails if any regress.
 
 | Target | What it runs |
 | :--- | :--- |
-| `make lint` | Ruff lint + format check |
+| `make lint` | Ruff lint + format check + interrogate + pydoclint |
 | `make type` | mypy in `--strict` mode |
 | `make test` | Full pytest suite with branch-coverage gate |
-| `make sec` | Bandit + Safety dependency audit |
+| `make sec` | Bandit + pip-audit dependency audit |
 | `make perf` | pytest-benchmark performance suite |
 | `make mutate` | Mutation testing via mutmut |
 | `make check` | lint + coverage + security in one pass |
@@ -549,17 +532,19 @@ CI workflows:
 | :--- | :--- |
 | `ci.yml` | Test matrix on Python 3.10 / 3.11 / 3.12 |
 | `quality.yml` | Lint, types, complexity |
-| `security.yml` | Bandit, Safety, dependency review |
+| `security.yml` | Bandit + pip-audit + dependency review |
 | `codeql.yml` | Static analysis |
+| `docker.yml` | Multi-arch GHCR image build + smoke test |
+| `sdk.yml` | OpenAPI SDK generation + drift guard |
 | `nightly.yml` | Extended nightly suite |
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state: 1,020+ tests passing, ~100% branch coverage against a **98%
-enforced floor**, mypy `--strict` clean. Coverage excludes only
+Current state (v0.0.53): **1,264 tests passing**, **100% line + branch
+coverage** against a **100% enforced floor**, mypy `--strict` clean,
+100% docstring coverage (interrogate). Coverage excludes only
 entry-point guards and genuinely-defensive barriers via
-`# pragma: no cover`; the 98% floor leaves headroom so routine changes
-don't fail CI on a single line.
+`# pragma: no cover`; everything else is exercised.
 
 ---
 
@@ -567,16 +552,16 @@ don't fail CI on a single line.
 
 Pain001 treats payment data as hostile until proven otherwise:
 
-- **XML parsing** is routed through `defusedxml`; XXE, billion-laughs, and
-  external entity resolution are rejected.
+- **XML parsing** is routed through `defusedxml`; XXE, billion-laughs,
+  and external entity resolution are rejected.
 - **Path handling** goes through a path validator that blocks traversal
   outside permitted directories.
 - **Schema validation** is mandatory — output that does not validate
   against the official XSD is never written as a success.
-- **Amounts** are `Decimal` throughout; control sums are recomputed, not
-  echoed from input.
-- **Dependencies** are pinned via `poetry.lock` and audited by Safety,
-  Bandit, and CodeQL in CI.
+- **Amounts** are `Decimal` throughout; control sums are recomputed,
+  not echoed from input.
+- **Dependencies** are pinned via `poetry.lock` and audited by
+  `pip-audit`, Bandit, and CodeQL in CI.
 
 To report a vulnerability, please use
 [GitHub private vulnerability reporting](https://github.com/sebastienrousseau/pain001/security)
@@ -601,14 +586,15 @@ rather than a public issue.
 Contributions are welcome — see the
 [contributing instructions](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md),
 how the project is run in [GOVERNANCE.md](GOVERNANCE.md), the
-[architecture map](ARCHITECTURE.md), and where the project is headed in the
-[ROADMAP.md](ROADMAP.md). Need help? See [SUPPORT.md](SUPPORT.md). Unless you
-explicitly state otherwise, any contribution you submit is dual-licensed as
-below, without additional terms or conditions.
+[architecture map](ARCHITECTURE.md), and where the project is headed in
+the [ROADMAP.md](ROADMAP.md). Need help? See [SUPPORT.md](SUPPORT.md).
+Unless you explicitly state otherwise, any contribution you submit is
+dual-licensed as below, without additional terms or conditions.
 
-**Maintainers wanted.** Pain001 has a single maintainer today; that is the
-project's main risk. If you rely on it and can help review, triage, or
-co-maintain an area, see [becoming a maintainer](GOVERNANCE.md#becoming-a-maintainer).
+**Maintainers wanted.** Pain001 has a single maintainer today; that is
+the project's main risk. If you rely on it and can help review, triage,
+or co-maintain an area, see
+[becoming a maintainer](GOVERNANCE.md#becoming-a-maintainer).
 
 Thanks to all the [contributors](https://github.com/sebastienrousseau/pain001/graphs/contributors)
 who have helped build Pain001.
@@ -622,7 +608,8 @@ Licensed under either of
 - Apache License, Version 2.0 ([LICENSE-APACHE](https://opensource.org/license/apache-2-0/))
 - MIT license ([LICENSE-MIT](http://opensource.org/licenses/MIT))
 
-at your option. See [CHANGELOG.md](https://github.com/sebastienrousseau/pain001/blob/main/CHANGELOG.md)
+at your option. See
+[CHANGELOG.md](https://github.com/sebastienrousseau/pain001/blob/main/CHANGELOG.md)
 for release history.
 
 ---

@@ -191,7 +191,7 @@ poetry run black --check .       # Formatting
 poetry run mypy .                # Type checking
 poetry run pytest --cov=pain001  # Tests + Coverage (≥95% floor)
 poetry run bandit -r pain001     # Security scan
-poetry run safety check          # Dependency vulnerabilities
+poetry run pip-audit          # Dependency vulnerabilities
 ```
 
 **Exit Code:** MUST be 0 for all commands. No exceptions.
@@ -354,7 +354,7 @@ def mask_iban(iban: str) -> str:
 
 **PROHIBITED** to add new packages to `pyproject.toml` without:
 1. Explicit user sign-off
-2. Security impact statement (run `poetry run safety check`)
+2. Security impact statement (run `poetry run pip-audit`)
 3. Justification (why existing tools can't solve the problem)
 
 ---

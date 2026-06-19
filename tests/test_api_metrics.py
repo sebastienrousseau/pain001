@@ -64,7 +64,11 @@ class TestRenderPrometheus:
         body = render_prometheus("9.9.9")
         assert 'pain001_build_info{version="9.9.9"} 1' in body
         assert "pain001_supported_message_types 11" in body
-        assert "pain001_scheme_profiles 4" in body
+        # v0.0.53 added the sepa-b2b profile (issue #173); the count
+        # now reflects PROFILES rather than a hard-coded number.
+        from pain001.validation.schemes import PROFILES
+
+        assert f"pain001_scheme_profiles {len(PROFILES)}" in body
         assert 'pain001_jobs{status="success"}' in body
         assert body.endswith("\n")
 
