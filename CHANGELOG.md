@@ -5,6 +5,169 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.53] - 2026-06-20
+
+Security + observability + scheme-validation release. Closes every open
+issue and every open code-scanning alert at the time of the release; the
+public API surface is unchanged, so v0.0.52 callers upgrade
+transparently. v0.0.53 also moves the project to a **100 % enforced
+coverage floor** (line + branch + docstrings) so regressions can no
+longer slip past CI.
+
+### Added
+
+- **SEPA Business-to-Business Direct Debit scheme profile** (issue #173):
+  `SepaB2BDirectDebitProfile` in `pain001.validation.schemes` enforces
+  the two rules the consumer SDD profile doesn't - only `FRST` or `RCUR`
+  sequence types (no `OOFF` / `FNAL`) via rule `B2B-SEQTP`, and a
+  mandatory creditor identifier via `B2B-CDTR-ID`. The CLI accepts
+  `--scheme sepa-b2b`; the REST API accepts `scheme: "sepa-b2b"` on
+  `/api/v1/validate` and `/api/v1/generate`. The `PROFILES` registry now
+  advertises five profiles; the `pain001_scheme_profiles` Prometheus
+  gauge reflects the new count.
+- **Redis-backed durable job store** (issue #171):
+  `pain001.api.job_store.RedisJobStore` implements the existing
+  `JobStore` Protocol with cursor-paginated SCAN so multi-replica
+  deployments share async-job state and survive restarts. Selected via
+  `PAIN001_JOB_STORE_URL=redis://...`; in-process consumers swap
+  backends without code changes.
+- **Redis-backed distributed rate limiter** (issue #172):
+  `pain001.api.ratelimit.RedisFixedWindowBackend` plus the
+  `RateLimiterBackend` Protocol and the env-driven `backend_from_env`
+  factory. Same `PAIN001_RATE_LIMIT` spec is parsed by both backends;
+  the per-client cap is now enforced across replicas behind a load
+  balancer (in-process limiters only protected one worker).
+  Configured via `PAIN001_RATE_LIMIT_BACKEND=redis` plus
+  `PAIN001_RATE_LIMIT_REDIS_URL=...` (falls back to
+  `PAIN001_JOB_STORE_URL` if unset). A new `pain001[redis]` extra
+  pulls in `redis >= 5`; `fakeredis` is in the dev group.
+- **Official multi-arch Docker image** (issue #169) at
+  `ghcr.io/sebastienrousseau/pain001` - Python 3.12-slim multi-stage
+  build, non-root `pain001` user, `[api]` extra preinstalled, published
+  for `linux/amd64` and `linux/arm64` on every push and tag with
+  provenance attestations and a registry-side smoke test. New
+  `docker.yml` workflow + `Dockerfile` + `.dockerignore`.
+- **Typed OpenAPI client SDK pipeline** (issue #170): `sdk.yml`
+  workflow runs `openapi-generator-cli` against the live API spec, builds
+  the Python client, smoke-tests it, and fails CI when
+  `scripts/export_openapi.py` drifts from the live spec. The drift
+  guard is the safety net that keeps generated clients honest as the
+  API evolves.
+- **Hosted interactive Scalar API reference** (issue #174):
+  `docs.yml` now exports `openapi.json` and bundles
+  `docs/_static/api-reference.html` (a Scalar embed) into the Sphinx
+  site at <https://sebastienrousseau.github.io/pain001/api-reference.html>.
+  The runtime REST API still serves the same reference at
+  `/api/reference`.
+- **`examples/14_redis_distributed.py`** - runnable, self-checking
+  walkthrough of the Redis job store + cross-replica rate limiter via
+  `fakeredis`.
+- **`examples/06_scheme_validation.py`** rewritten to cover every
+  bundled profile (`sepa-sct`, `sepa-sdd`, `sepa-inst`, `sepa-b2b`,
+  `xborder-ct`) plus a `PROFILES` registry check; previously only the
+  first two were exercised.
+
+### Changed
+
+- **Coverage floor raised from 98 % to 100 %.** `make test` / `make cov`
+  / the CI suite all run with `--cov-fail-under=100`; the suite carries
+  **1,265 tests** and exercises every statement and branch of
+  `pain001/`. Defensive guards that are genuinely unreachable carry an
+  inline `# pragma: no cover` with the reason.
+- **Security gate migrated from `safety` to `pip-audit`** (issue #175).
+  `safety scan` v3 requires an interactive auth prompt that hangs CI;
+  the issue text explicitly permits an equivalent scanner, and
+  `pip-audit` covers the same OSV/PyPI advisory feed with no auth. The
+  `make sec` target, `security.yml` workflow, and the `tollgate-deps`
+  enterprise gate all use `pip-audit` now; the `.safety-policy.yml`
+  file is retained as a documentation artifact of the migration.
+- **Plugin & companion-package README sections** refreshed: the
+  standalone `pain001-mcp` companion now ships **sixteen** tools (was
+  eleven), and `pain001-lsp` now ships **six** features (was four -
+  `textDocument/formatting` + `textDocument/documentSymbol` are new in
+  the matching sibling-package release). README badges, install table,
+  CLI subcommands, REST env-var table, and the "Current state" line
+  are all aligned with the v0.0.53 surface.
+- **`tests/test_docker_smoke.py`** skips its live `docker build`
+  fixture when `GITHUB_ACTIONS=true`; the dedicated `docker.yml`
+  workflow already exercises the image end-to-end on every push, and
+  building it twice on the shared runner was the slowest + flakiest
+  step in `make check`.
+
+### Fixed
+
+- **CodeQL alert #176** (`py/path-injection`, high severity) in
+  `pain001/api/app.py:249`. `_sanitise_message_type` was called only
+  for its side effect; the sanitised return value is now used to build
+  the downstream `Path` join so the static-analysis sanitiser barrier
+  is recognised.
+- **CodeQL `py/incomplete-url-substring-sanitization`** in
+  `tests/test_docker_smoke.py:105`. The bare `"ghcr.io" in text`
+  workflow-content check is anchored to `"REGISTRY: ghcr.io"` so the
+  query no longer flags it as a URL-host check.
+- **`py/import-and-import-from`** in `tests/test_sepa_b2b_profile.py`.
+  `pain001` is now imported once at module level instead of once via
+  `from pain001 import ...` and once via `import pain001` inside a
+  function.
+- **`pydantic-settings 2.14.1 -> 2.14.2`** (GHSA-4xgf-cpjx-pc3j). A
+  fresh advisory dropped against the transitive dep between branch
+  cut and CI's nightly `pip-audit` pass; re-locking pulled in the
+  patch.
+
+### Security
+
+- **`pip-audit` runs in CI on every push and PR** (replaces `safety
+  scan`). The same scanner is wired into `make sec` and into the
+  enterprise `tollgate-deps` gate so local developers get the same
+  signal CI does.
+- **Bandit + CodeQL** both pass with zero open alerts at release time.
+- **Plaintext secret handling**: no change. Plaintext payment data and
+  GPG-decrypted bytes still flow through the existing path-validator
+  + `defusedxml` barriers.
+
+### Documentation
+
+- `README.md` "Current state" line, install table, CLI surface table,
+  REST API env-var table, and the entire companion-packages section
+  refreshed to reflect every v0.0.53-NEW surface.
+- `examples/README.md` advertises the new `14_redis_distributed.py`
+  script and the expanded scheme-profile coverage.
+- `tests/test_examples.py` discovery floor raised to 14 so a silently-
+  deleted example fails CI loudly.
+
+### Quality gates (all enforced on every commit)
+
+| Gate | v0.0.52 | v0.0.53 |
+| :--- | :--- | :--- |
+| Tests | 1,181 | **1,265** |
+| Line + branch coverage | 99.85 % (98 % floor) | **100 % (100 % floor)** |
+| Docstring coverage (interrogate) | 100 % | 100 % |
+| Runnable examples | 13 | **14** |
+| Open CodeQL alerts | 1 (high) | **0** |
+| Open security advisories on lockfile | (varies) | **0** |
+| mypy `--strict` | clean | clean |
+| ruff + pydoclint + black | clean | clean |
+
+### Migration notes
+
+There are no breaking changes. v0.0.52 callers upgrade transparently.
+New optional features are opt-in via extras:
+
+```bash
+pip install "pain001[redis]"   # distributed job store + rate limiter
+docker pull ghcr.io/sebastienrousseau/pain001:0.0.53
+```
+
+To enable the new scheme profile:
+
+```bash
+pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-b2b
+```
+
+### Issues closed
+
+#169, #170, #171, #172, #173, #174, #175 plus CodeQL alert #176.
+
 ## [0.0.52] - 2026-06-18
 
 Companion-packages release. The MCP and LSP servers added in 0.0.51 remain
