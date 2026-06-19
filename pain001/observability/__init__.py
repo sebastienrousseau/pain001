@@ -12,7 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Metrics and tracing hooks for production integrations."""
+"""Observability surface for pain001: metric events + OpenTelemetry tracing.
+
+Two complementary mechanisms:
+
+* :func:`emit_metric_event` and the ``register_metrics_callback`` /
+  ``clear_metrics_callbacks`` / ``has_metrics_callbacks`` helpers
+  implement the in-process metric-event fan-out the generator core
+  has used since v0.0.40. Callbacks see :class:`MetricEvent`
+  instances enriched with any active OpenTelemetry trace context.
+* :func:`traced`, :func:`init_otel`, :func:`set_span_attributes`,
+  :func:`is_enabled`, and :func:`reset_for_tests` (re-exported from
+  :mod:`pain001.observability.otel`) implement opt-in OpenTelemetry
+  distributed tracing. Off by default; flipped on with
+  ``OTEL_ENABLED=true`` and ``pip install "pain001[otel]"``.
+
+The two surfaces compose: when OTel is enabled, every
+``emit_metric_event`` call attaches the active span's
+``(trace_id, span_id, is_remote)`` to the event so the downstream
+metrics backend can correlate metrics back to traces.
+"""
 
 from __future__ import annotations
 
@@ -20,6 +39,16 @@ import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
+
+from pain001.observability.otel import (
+    OTEL_ENABLED_ENV,
+    PAIN001_SERVICE_NAME,
+    init_otel,
+    is_enabled,
+    reset_for_tests,
+    set_span_attributes,
+    traced,
+)
 
 
 @dataclass(frozen=True)
@@ -87,9 +116,18 @@ def _current_trace_context() -> dict[str, Any]:
 
 
 __all__ = [
+    # Metric-event API (v0.0.40+).
     "MetricEvent",
     "clear_metrics_callbacks",
     "emit_metric_event",
     "has_metrics_callbacks",
     "register_metrics_callback",
+    # OpenTelemetry tracing API (v0.0.54+).
+    "OTEL_ENABLED_ENV",
+    "PAIN001_SERVICE_NAME",
+    "init_otel",
+    "is_enabled",
+    "reset_for_tests",
+    "set_span_attributes",
+    "traced",
 ]
