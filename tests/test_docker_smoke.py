@@ -134,6 +134,11 @@ def built_image() -> str:
     """Build the image once per test session and return its tag."""
     if not _docker_available() or os.environ.get("PAIN001_SKIP_DOCKER_SMOKE"):
         pytest.skip("docker not available")
+    # docker.yml already exercises the multi-arch image end-to-end on
+    # every push; running `docker build` here as well doubles CI time
+    # and is flaky on the shared runner.
+    if os.environ.get("GITHUB_ACTIONS") == "true":
+        pytest.skip("docker.yml workflow already exercises the image")
     tag = "pain001-smoke:test"
     subprocess.run(
         ["docker", "build", "-t", tag, str(ROOT)],
