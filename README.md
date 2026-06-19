@@ -489,10 +489,13 @@ as first-class tools. Pain001 ships **two interchangeable install paths**:
   prompt.
 - **Standalone** (`pip install pain001-mcp`, run `pain001-mcp`): the
   [`pain001-mcp`](https://github.com/sebastienrousseau/pain001-mcp)
-  companion package. Eleven tools covering the in-tree set plus
+  companion package. Sixteen tools covering the in-tree set plus
   `validate_records`, `validate_identifier` (IBAN/BIC), `generate_message`,
   `generate_message_async`, `generate_message_from_file`,
-  `list_supported_formats`, `parse_camt053`, `parse_pain002`.
+  `list_supported_formats`, `parse_camt053`, `parse_pain002`,
+  `migrate_records` (cross-version pain.001 mapping),
+  `validate_xml_against_schema` (in-memory XSD validation), and
+  `sanitize_to_iso20022_charset` (ISO 20022 Latin transliteration).
 
 Register either with any MCP client (e.g. Claude Desktop) by adding to
 its config:
@@ -522,10 +525,12 @@ two install paths:
   outside the LSP.
 - **Standalone** (`pip install pain001-lsp`, run `pain001-lsp`): the
   [`pain001-lsp`](https://github.com/sebastienrousseau/pain001-lsp)
-  companion package. Diagnostics, completion, hover, and a multi-record
-  "add missing required fields" code action for **payment-data JSON
-  files**. Supports both startup (`initializationOptions.messageType`)
-  and live (`workspace/didChangeConfiguration`) message-type overrides.
+  companion package. Diagnostics, completion, hover, a multi-record
+  "add missing required fields" code action, two-space JSON formatting
+  (`textDocument/formatting`), and a record-outline pane
+  (`textDocument/documentSymbol`) for **payment-data JSON files**.
+  Supports both startup (`initializationOptions.messageType`) and
+  live (`workspace/didChangeConfiguration`) message-type overrides.
 
 Point your editor's LSP client at the `pain001-lsp` (standalone) or
 `pain001-lsp-builtin` (in-tree) command for the appropriate file type.
