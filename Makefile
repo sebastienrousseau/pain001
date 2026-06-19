@@ -94,7 +94,7 @@ cov:
 sec:
 	@echo "$(YELLOW)Running security checks...$(NC)"
 	@poetry run bandit -q -r pain001
-	@poetry run safety check
+	@poetry run safety scan --output screen
 	@echo "$(GREEN)✓ Security checks passed$(NC)"
 
 perf:
@@ -137,7 +137,7 @@ tollgate-deps:
 	@echo "Checking for new/modified dependencies in pyproject.toml..."
 	@poetry show --latest > /dev/null && echo "$(GREEN)✓ All dependencies checked$(NC)" || (echo "$(RED)✗ Dependency check failed$(NC)" && exit 1)
 	@echo "Running security scans on dependencies..."
-	@poetry run safety check --bare && echo "$(GREEN)✓ No known vulnerabilities$(NC)" || (echo "$(RED)✗ Vulnerabilities found$(NC)" && exit 1)
+	@poetry run safety scan --short-report && echo "$(GREEN)✓ No known vulnerabilities$(NC)" || (echo "$(RED)✗ Vulnerabilities found$(NC)" && exit 1)
 	@echo "$(GREEN)✓ Dependency Governance tollgate PASSED$(NC)"
 
 tollgate-xsd:

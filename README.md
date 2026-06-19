@@ -89,8 +89,29 @@ package — point Pain001 at your data and it resolves the rest.
 | PyPI + MCP | `pip install "pain001[mcp]"` | Adds the MCP server for LLM clients |
 | PyPI + LSP | `pip install "pain001[lsp]"` | Adds the `pain001-lsp` language server for editor diagnostics |
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
+| Docker (GHCR) | `docker pull ghcr.io/sebastienrousseau/pain001:latest` | Multi-arch (linux/amd64, linux/arm64); CLI + `api` extra preinstalled |
 
 Requires Python 3.10 or later.
+
+### Docker
+
+The image ships the CLI and the `api` extra so the REST surface works
+out of the box:
+
+```bash
+# CLI: generate a payment file
+docker run --rm -v "$PWD:/data" -w /data \
+  ghcr.io/sebastienrousseau/pain001:latest \
+  generate -t pain.001.001.03 -d payments.csv -o out.xml
+
+# REST API: launch the server
+docker run --rm -p 8000:8000 \
+  ghcr.io/sebastienrousseau/pain001:latest \
+  serve --host 0.0.0.0 --port 8000
+```
+
+The image runs as a non-root `pain001` user; bind-mount the directory
+you want the CLI to read or write.
 
 ---
 

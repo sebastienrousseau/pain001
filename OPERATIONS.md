@@ -15,6 +15,23 @@ pain001 serve --host 0.0.0.0 --port 8000      # dev
 uvicorn pain001.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
+### Container image (GHCR)
+
+```bash
+# Pull a tagged release (or :latest from main).
+docker pull ghcr.io/sebastienrousseau/pain001:0.0.53
+
+# Run the REST API.
+docker run --rm -p 8000:8000 \
+  -e PAIN001_API_KEY=$(openssl rand -hex 32) \
+  ghcr.io/sebastienrousseau/pain001:0.0.53 \
+  serve --host 0.0.0.0 --port 8000
+```
+
+The image is multi-arch (`linux/amd64`, `linux/arm64`), runs as a
+non-root `pain001` user, declares a HEALTHCHECK, and ships the `[api]`
+extra preinstalled. Every release pushes a matching tag to GHCR.
+
 ## Configuration
 
 All operational controls are environment variables; all are **off by

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.52"
+version = "0.0.53"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -60,7 +60,7 @@ pytest-benchmark = "^5.2.0"
 pytest-xdist = "^3.0.0"
 mypy = "^1.11.0"
 bandit = "^1.7.0"
-safety = "^2.3.0"
+safety = ">=3.2,<4.0"
 ruff = "^0.15.0"
 types-defusedxml = "^0.7.0"
 diff-cover = "^8.0.0"

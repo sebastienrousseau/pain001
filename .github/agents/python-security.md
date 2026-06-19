@@ -185,7 +185,7 @@ poetry run bandit -r pain001 tests -ll
 
 **Step 2: Safety dependency scanning**
 ```bash
-poetry run safety check
+poetry run safety scan
 
 # Checks for CVEs in poetry.lock
 # Expected: "No vulnerabilities found"
@@ -194,7 +194,7 @@ poetry run safety check
 # 1. Note package name and CVE ID
 # 2. Run: poetry update <package>  (attempt patch/minor update)
 # 3. If no patch available: Remove package or implement workaround
-# 4. Re-run safety check
+# 4. Re-run safety scan
 ```
 
 **Step 3: Verify XXE protection (defusedxml enforcement)**
@@ -257,7 +257,7 @@ Before committing ANY changes:
 - [ ] **defusedxml used**: `grep -r "from defusedxml import ElementTree" pain001/` (> 0)
 - [ ] **Input validation**: All user-facing functions validate inputs
 - [ ] **Error sanitization**: No stack traces or sensitive info in error messages
-- [ ] **Dependency security**: `poetry run safety check` returns 0 vulns
+- [ ] **Dependency security**: `poetry run safety scan` returns 0 vulns
 - [ ] **Code scanning**: `poetry run bandit -r pain001 tests -ll` returns 0 findings
 - [ ] **Full security gate**: `poetry run make sec` passes (exit code 0)
 ```

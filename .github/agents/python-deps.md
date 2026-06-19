@@ -21,7 +21,7 @@ Keep the dependency tree **minimal, current, and secure**. Every dependency is a
 1. **STOP**: Do NOT add dependency without explicit approval from maintainer
 2. **Justify**: Document in PR description why stdlib/existing deps cannot solve the problem
 3. **Evaluate**: Run all checks below; include results in PR
-4. **Security Scan**: Run `poetry run bandit -r /path/to/package/ -ll` and `poetry run safety check --bare`
+4. **Security Scan**: Run `poetry run bandit -r /path/to/package/ -ll` and `poetry run safety scan --short-report`
 5. **Review**: Get explicit approval before merging
 
 - **Necessity**: Can this be solved with stdlib or existing deps? (Prefer yes)
@@ -39,7 +39,7 @@ Keep the dependency tree **minimal, current, and secure**. Every dependency is a
   - GPL? Requires `LICENSES.txt` update; may restrict distribution
   - Proprietary? Rare; requires legal review
 - **Security**: Run `safety` on it first; check advisories
-  - Command: `poetry run safety check --json | grep <package_name>`
+  - Command: `poetry run safety scan --output json | grep <package_name>`
   - Any CVEs? Document and plan mitigation
 - **Popularity**: High download count and GitHub stars indicate battle-tested code
   - Check PyPI download statistics (>1M/month = battle-tested)
@@ -85,7 +85,7 @@ Keep the dependency tree **minimal, current, and secure**. Every dependency is a
 **Security**:
 ```bash
 poetry add cryptography==41.0.0 --dry-run
-poetry run safety check --json | grep cryptography
+poetry run safety scan --output json | grep cryptography
 # Result: No CVEs found ✓
 ```
 
@@ -268,7 +268,7 @@ git diff origin/main pyproject.toml | grep "^+.*=" | head -20
 for package in $(git diff origin/main pyproject.toml | grep "^+.*=" | cut -d'=' -f1 | sed 's/^+//'); do
     echo "Scanning: $package"
     poetry run bandit -r /path/to/venv/lib/python3.*/site-packages/$package -ll
-    poetry run safety check --json | grep "$package" || echo "No vulnerabilities"
+    poetry run safety scan --output json | grep "$package" || echo "No vulnerabilities"
 done
 ```
 

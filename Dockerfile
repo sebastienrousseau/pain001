@@ -1,19 +1,58 @@
-# Multi-stage build for minimal image size
-FROM python:3.9-slim as builder
+# syntax=docker/dockerfile:1.6
+# Multi-stage build for a minimal pain001 image.
+#
+# The image ships the CLI (`pain001`) and, via the `api` extra, the
+# FastAPI REST surface (`pain001 serve --host 0.0.0.0`). Multi-arch:
+# linux/amd64 and linux/arm64.
+
+FROM python:3.12-slim AS builder
 
 WORKDIR /build
-RUN pip install --no-cache-dir poetry
-COPY pyproject.toml poetry.lock* ./
-RUN poetry config virtualenvs.in-project true && \
-    poetry install --no-interaction --no-dev
 
-FROM python:3.9-slim
+ENV PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
 
-WORKDIR /app
-COPY --from=builder /build/.venv /app/.venv
-ENV PATH=/app/.venv/bin:$PATH
-COPY pain001 /app/pain001
+# pyproject.toml carries ``readme = "README.md"``, so README.md must be
+# present at build-time for ``pip install .`` to resolve the package
+# metadata.
+COPY pyproject.toml README.md ./
+COPY pain001 ./pain001
 
-ENTRYPOINT ["python", "-m", "pain001"]
+# Self-contained virtualenv; install the package plus the `api`
+# extra so `pain001 serve` works out of the box.
+RUN python -m venv /opt/venv \
+    && /opt/venv/bin/pip install --upgrade pip \
+    && /opt/venv/bin/pip install ".[api]"
+
+
+FROM python:3.12-slim
+
+LABEL org.opencontainers.image.title="pain001" \
+      org.opencontainers.image.description="Generate and validate ISO 20022 payment files (pain.001 / pain.008) from CSV, SQLite, JSON, or Parquet." \
+      org.opencontainers.image.source="https://github.com/sebastienrousseau/pain001" \
+      org.opencontainers.image.url="https://pain001.com" \
+      org.opencontainers.image.licenses="Apache-2.0"
+
+# Non-root user.
+RUN groupadd --system pain001 \
+    && useradd --system --gid pain001 --home /home/pain001 pain001 \
+    && mkdir -p /home/pain001 \
+    && chown -R pain001:pain001 /home/pain001
+
+COPY --from=builder /opt/venv /opt/venv
+ENV PATH=/opt/venv/bin:$PATH \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+USER pain001
+WORKDIR /home/pain001
+
+# A non-zero exit here means an import / dependency mismatch; the
+# container orchestrator can pick it up before traffic arrives.
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import pain001; print('healthy')" || exit 1
+    CMD python -c "import pain001" || exit 1
+
+# Default to the CLI; ``docker run pain001 serve --host 0.0.0.0``
+# brings up the REST API.
+ENTRYPOINT ["pain001"]
+CMD ["--help"]

@@ -248,12 +248,13 @@ def _resolve_generation_paths(
     safe_output_dir = _gate_output_dir(request.output_dir)
     safe_output_dir.mkdir(parents=True, exist_ok=True)
     # ``request.message_type`` is a pydantic Enum, but CodeQL doesn't
-    # track that the enum is constrained at deserialisation time. Run
-    # the value through an explicit allow-list barrier *and* through
-    # ``os.path.basename`` (a path-injection sanitiser recognised by
-    # the CodeQL Python query) so the join below is doubly sanitised.
-    _sanitise_message_type(request.message_type.value)
-    safe_message_type = os.path.basename(request.message_type.value)
+    # track that the enum is constrained at deserialisation time.
+    # ``_sanitise_message_type`` is marked as a neutral summary in
+    # ``.github/codeql/extensions/pain001-security.model.yml`` so the
+    # taint tracker treats its return value as sanitised; we *use*
+    # that return value (not the original ``request.message_type.value``)
+    # in every downstream path expression.
+    safe_message_type = _sanitise_message_type(request.message_type.value)
     output_file_path = str(safe_output_dir / f"{safe_message_type}.xml")
 
     # Bundled package data, resolved package-relative so the API works
