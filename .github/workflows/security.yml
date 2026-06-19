@@ -26,7 +26,10 @@ jobs:
           name: vulnerability-report
           path: pip-audit-report.json
       - name: Fail on known vulnerabilities
-        run: poetry run pip-audit --strict --progress-spinner off
+        # pip-audit can't resolve pain001's own dev version against
+        # PyPI between commits and the release tag's publish step;
+        # the post-publish nightly run audits the released artefact.
+        run: poetry run pip-audit --progress-spinner off
 
   licenses:
     runs-on: ubuntu-latest
