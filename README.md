@@ -347,6 +347,8 @@ remain as a backwards-compatible alias.
 **Documentation surfaces:** Swagger UI at `/api/docs`, ReDoc at
 `/api/redoc`, an interactive [Scalar](https://scalar.com) reference at
 `/api/reference`, and the raw OpenAPI document at `/openapi.json`.
+The same reference is also hosted on the public docs site:
+<https://sebastienrousseau.github.io/pain001/api-reference.html>.
 
 **Operability:** a liveness probe at `/api/v1/health` and Prometheus metrics
 at `/metrics` (build info, supported-type/scheme gauges, per-status job

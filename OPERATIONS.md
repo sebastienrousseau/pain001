@@ -32,6 +32,18 @@ The image is multi-arch (`linux/amd64`, `linux/arm64`), runs as a
 non-root `pain001` user, declares a HEALTHCHECK, and ships the `[api]`
 extra preinstalled. Every release pushes a matching tag to GHCR.
 
+## Interactive API reference
+
+The OpenAPI schema is hosted as an interactive
+[Scalar](https://scalar.com) page on the docs site:
+
+- **<https://sebastienrousseau.github.io/pain001/api-reference.html>**
+
+The same page is reachable on a running server at `/api/reference`,
+and the raw OpenAPI document is at `/openapi.json`. The hosted page
+is refreshed by the `docs.yml` workflow on every push to `main`, so
+the schema never drifts from the released version.
+
 ## Configuration
 
 All operational controls are environment variables; all are **off by
