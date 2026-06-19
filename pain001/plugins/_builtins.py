@@ -58,9 +58,7 @@ def _make_meta(name: str, description: str) -> PluginMeta:
 class _CsvLoader:
     """Built-in CSV loader wrapping :mod:`pain001.csv.load_csv_data`."""
 
-    meta = _make_meta(
-        "csv", "Read flat-record payment data from CSV files."
-    )
+    meta = _make_meta("csv", "Read flat-record payment data from CSV files.")
     extensions = (".csv",)
 
     def load(self, path: str) -> LoaderResult:
@@ -120,7 +118,9 @@ class _JsonlLoader:
 
     def load(self, path: str) -> LoaderResult:
         """Load the entire JSONL stream into a single :class:`LoaderResult`."""
-        from pain001.json.load_json_data import load_jsonl_data  # noqa: PLC0415
+        from pain001.json.load_json_data import (
+            load_jsonl_data,  # noqa: PLC0415
+        )
 
         rows = load_jsonl_data(path)
         return LoaderResult(rows=rows, source_hint=path)
@@ -209,7 +209,7 @@ _BUILTIN_LOADERS = (
 )
 
 
-def register_all(reg: "PluginRegistry") -> None:  # noqa: F821 - forward ref
+def register_all(reg: PluginRegistry) -> None:  # noqa: F821 - forward ref
     """Register every built-in plugin with ``reg``.
 
     Called by the registry on first lookup so plugin discovery happens

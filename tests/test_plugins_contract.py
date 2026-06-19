@@ -13,9 +13,6 @@ accidental drift can't sneak through.
 
 from __future__ import annotations
 
-import os
-from typing import Any
-
 import pytest
 
 from pain001.plugins import (
@@ -111,10 +108,12 @@ def test_protocols_reject_objects_missing_required_attribute() -> None:
 # ---------------------------------------------------------------------------
 def test_validator_finding_is_immutable() -> None:
     """Findings are frozen dataclasses so they can be cached and hashed."""
+    from dataclasses import FrozenInstanceError
+
     finding = ValidatorFinding(
         row_index=0, field="x", rule="R", severity="error", message="."
     )
-    with pytest.raises(Exception):  # frozen dataclass -> FrozenInstanceError
+    with pytest.raises(FrozenInstanceError):
         finding.row_index = 1  # type: ignore[misc]
 
 
@@ -180,9 +179,7 @@ def test_register_with_newer_api_major_raises(fresh_registry):
         fresh_registry.register_loader(bad)
 
 
-def test_register_with_newer_api_minor_warns_but_loads(
-    fresh_registry, caplog
-):
+def test_register_with_newer_api_minor_warns_but_loads(fresh_registry, caplog):
     """A higher-minor plugin loads with a warning, not a failure."""
     caplog.set_level("WARNING", logger="pain001.plugins.registry")
     ahead = _OkLoader()
@@ -249,7 +246,9 @@ def test_list_plugins_filter_by_kind(fresh_registry):
 # ---------------------------------------------------------------------------
 def test_global_registry_has_builtins() -> None:
     """The five built-in loaders are discoverable on the singleton."""
-    names = {info.meta.name for info in global_registry.list_plugins(kind="loader")}
+    names = {
+        info.meta.name for info in global_registry.list_plugins(kind="loader")
+    }
     # The .gpg loader (issue #3) will join later; for v0.0.54 we ship five.
     assert {"csv", "json", "jsonl", "sqlite", "parquet"}.issubset(names)
 

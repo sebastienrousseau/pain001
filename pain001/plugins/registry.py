@@ -95,7 +95,9 @@ class PluginRegistry:
     # ---------------------------------------------------------------
     # Public lookup API
     # ---------------------------------------------------------------
-    def get_loader_for_extension(self, extension: str) -> AbstractLoader | None:
+    def get_loader_for_extension(
+        self, extension: str
+    ) -> AbstractLoader | None:
         """Return the loader registered for ``extension`` (with leading dot).
 
         Args:
@@ -297,12 +299,18 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
 
 
 def _iter_entry_points(group: str) -> Iterable[metadata.EntryPoint]:
-    """Yield entry points for ``group``; tolerate older metadata APIs."""
+    """Yield entry points for ``group``; tolerate older metadata APIs.
+
+    Python 3.10+ exposes ``EntryPoints.select(...)``; older APIs return
+    a ``dict[str, list[EntryPoint]]``. We support both so a plugin
+    rollout can't be blocked by an upstream `importlib.metadata`
+    shape change.
+    """
     eps = metadata.entry_points()
     select = getattr(eps, "select", None)
     if callable(select):
         return select(group=group)
-    return eps.get(group, [])  # type: ignore[attr-defined]
+    return eps.get(group, [])  # type: ignore[attr-defined]  # pragma: no cover - legacy
 
 
 def _stamp_source(plugin: Any, entry: metadata.EntryPoint) -> None:
