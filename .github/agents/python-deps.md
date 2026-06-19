@@ -21,7 +21,7 @@ Keep the dependency tree **minimal, current, and secure**. Every dependency is a
 1. **STOP**: Do NOT add dependency without explicit approval from maintainer
 2. **Justify**: Document in PR description why stdlib/existing deps cannot solve the problem
 3. **Evaluate**: Run all checks below; include results in PR
-4. **Security Scan**: Run `poetry run bandit -r /path/to/package/ -ll` and `poetry run safety scan --short-report`
+4. **Security Scan**: Run `poetry run bandit -r /path/to/package/ -ll` and `poetry run pip-audit --strict`
 5. **Review**: Get explicit approval before merging
 
 - **Necessity**: Can this be solved with stdlib or existing deps? (Prefer yes)
@@ -39,7 +39,7 @@ Keep the dependency tree **minimal, current, and secure**. Every dependency is a
   - GPL? Requires `LICENSES.txt` update; may restrict distribution
   - Proprietary? Rare; requires legal review
 - **Security**: Run `safety` on it first; check advisories
-  - Command: `poetry run safety scan --output json | grep <package_name>`
+  - Command: `poetry run pip-audit --format json | grep <package_name>`
   - Any CVEs? Document and plan mitigation
 - **Popularity**: High download count and GitHub stars indicate battle-tested code
   - Check PyPI download statistics (>1M/month = battle-tested)
@@ -85,7 +85,7 @@ Keep the dependency tree **minimal, current, and secure**. Every dependency is a
 **Security**:
 ```bash
 poetry add cryptography==41.0.0 --dry-run
-poetry run safety scan --output json | grep cryptography
+poetry run pip-audit --format json | grep cryptography
 # Result: No CVEs found ✓
 ```
 
@@ -246,7 +246,7 @@ poetry run make tollgate-deps
 # What it does:
 # 1. Check if new packages added to pyproject.toml
 # 2. If YES: Verify each new package has security justification
-# 3. Run bandit/safety scans on new packages
+# 3. Run bandit/pip-audits on new packages
 # 4. Verify transitive dependency tree hasn't bloated
 # 5. Ensure poetry.lock is in sync
 # 6. Report: Detailed findings and blockers
@@ -268,7 +268,7 @@ git diff origin/main pyproject.toml | grep "^+.*=" | head -20
 for package in $(git diff origin/main pyproject.toml | grep "^+.*=" | cut -d'=' -f1 | sed 's/^+//'); do
     echo "Scanning: $package"
     poetry run bandit -r /path/to/venv/lib/python3.*/site-packages/$package -ll
-    poetry run safety scan --output json | grep "$package" || echo "No vulnerabilities"
+    poetry run pip-audit --format json | grep "$package" || echo "No vulnerabilities"
 done
 ```
 
@@ -344,7 +344,7 @@ poetry run make sec
 ### Success Criteria
 ✓ Tollgate passes (exit code 0)
 ✓ All new dependencies justified in PR description
-✓ All new packages pass bandit + safety scans (0 vulnerabilities)
+✓ All new packages pass bandit + pip-audits (0 vulnerabilities)
 ✓ Transitive dependency increase ≤ 5 per new package
 ✓ poetry.lock reflects pyproject.toml
 ✓ Full `make sec` scan reports 0 vulnerabilities

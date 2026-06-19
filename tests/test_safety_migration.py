@@ -3,11 +3,17 @@
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 
-"""Regression tests guarding the Safety CLI migration (issue #175).
+"""Regression tests guarding the dependency-vulnerability gate migration (issue #175).
 
-``safety check`` was deprecated upstream and removed in safety 3.x.
-v0.0.53 migrates the dependency gate to ``safety scan``. These tests
-pin the new state in place so a careless revert can't sneak back.
+``safety check`` was deprecated in safety 2.x and removed in 3.x.
+Safety 3 also gates ``safety scan`` behind an interactive login
+prompt that hangs CI. v0.0.53 migrates the gate to ``pip-audit`` -
+an actively-maintained, MIT-licensed equivalent with no auth and
+already in use across the sibling packages (issue #175 explicitly
+accepts ``or an equivalent supported scanner``).
+
+These tests pin the new state in place so a careless revert can't
+sneak back.
 """
 
 from __future__ import annotations
@@ -34,83 +40,92 @@ TRACKED_GATE_FILES = [
 
 
 @pytest.mark.parametrize("path", TRACKED_GATE_FILES, ids=lambda p: p.name)
-def test_no_safety_check_in_tracked_gate_files(path: Path) -> None:
-    """Active gate commands must use ``safety scan``, not ``safety check``.
+def test_no_deprecated_safety_invocations(path: Path) -> None:
+    """Active gate commands must not invoke the deprecated tooling.
 
-    Criterion 6 of issue #175: a docs regression check asserts no
-    remaining ``safety check`` references in tracked files.
+    Criterion 6 of issue #175: no remaining ``safety check`` (v2,
+    deprecated) or ``safety scan`` (v3, hangs in non-interactive CI)
+    references in tracked files.
     """
     if not path.is_file():
         pytest.skip(f"{path} not present in this checkout")
     text = path.read_text(encoding="utf-8")
     assert "safety check" not in text, (
         f"{path.relative_to(ROOT)} still references deprecated "
-        f"'safety check'; use 'safety scan'."
+        f"'safety check'; use 'pip-audit'."
+    )
+    assert "safety scan" not in text, (
+        f"{path.relative_to(ROOT)} references 'safety scan' which "
+        f"prompts for login in CI; use 'pip-audit' instead."
     )
 
 
-def test_safety_pin_supports_scan_command() -> None:
-    """The ``safety`` dev dep pin must be a version exposing ``scan``.
+def test_pip_audit_pin_present() -> None:
+    """The ``pip-audit`` dev pin replaces ``safety``.
 
-    Criterion 2 of issue #175: the safety dev-dependency pin is raised
-    to a version supporting ``scan``. ``safety scan`` was introduced in
-    3.x; anything below that ships only ``check``.
+    Criterion 2 of issue #175: the dependency-scanner pin is raised
+    to a version that supports non-interactive CI scanning.
     """
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    match = re.search(r'^safety\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
-    assert match, "safety pin missing from pyproject.toml"
+    match = re.search(
+        r'^pip-audit\s*=\s*"([^"]+)"', pyproject, re.MULTILINE
+    )
+    assert match, "pip-audit pin missing from pyproject.toml"
     pin = match.group(1)
-    # Accept either ">=3.x,<Y" or "^3.x" style. Reject anything starting
-    # at ^2 or <3.
     assert (
-        ">=3" in pin or "^3" in pin or ">=4" in pin or "^4" in pin
-    ), f"safety pin {pin!r} does not require 3.x+"
+        ">=2" in pin or "^2" in pin or ">=3" in pin or "^3" in pin
+    ), f"pip-audit pin {pin!r} does not require 2.x+"
+    # Make sure the old safety pin is gone.
+    assert not re.search(r'^safety\s*=', pyproject, re.MULTILINE), (
+        "Replace `safety` with `pip-audit` in pyproject.toml"
+    )
 
 
-def test_makefile_sec_invokes_safety_scan() -> None:
-    """The Makefile ``sec`` target must run ``safety scan``.
+def test_makefile_sec_invokes_pip_audit() -> None:
+    """The Makefile ``sec`` target must run ``pip-audit``.
 
     Criterion 1 of issue #175.
     """
     makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
-    # Find the ``sec:`` recipe body.
     match = re.search(
         r"^sec:.*?(?=^\S|\Z)", makefile, re.MULTILINE | re.DOTALL
     )
     assert match, "Makefile has no ``sec`` target"
     body = match.group(0)
-    assert "safety scan" in body, (
-        "Makefile sec target must invoke safety scan"
+    assert "pip-audit" in body, (
+        "Makefile sec target must invoke pip-audit"
     )
 
 
-def test_security_workflow_uses_safety_scan() -> None:
-    """The ``Security`` workflow must invoke ``safety scan``.
+def test_security_workflow_uses_pip_audit() -> None:
+    """The ``Security`` workflow must invoke ``pip-audit``.
 
-    Criterion 1 and 5 of issue #175: CI runs ``safety scan`` and the
-    JSON report becomes an upload artifact.
+    Criteria 1 and 5 of issue #175: CI runs the scanner and saves a
+    JSON report as an upload artifact.
     """
     workflow = (
         ROOT / ".github" / "workflows" / "security.yml"
     ).read_text(encoding="utf-8")
-    assert "safety scan" in workflow
-    # JSON output artifact is preserved.
-    assert "safety-report.json" in workflow
-    # And it actually gates the build (the second ``safety scan`` line
-    # that does NOT swallow exit code via ``|| true``).
+    assert "pip-audit" in workflow
+    # Machine-readable artifact preserved.
+    assert "pip-audit-report.json" in workflow
+    # And one ``pip-audit`` line that actually gates the build
+    # (does not swallow exit code via ``|| true``).
     has_gating_line = any(
-        "safety scan" in line and "|| true" not in line
+        "pip-audit" in line and "|| true" not in line
         for line in workflow.splitlines()
     )
     assert has_gating_line, (
-        "Security workflow has no failing-on-vuln safety scan step"
+        "Security workflow has no failing-on-vuln pip-audit step"
     )
 
 
-def test_safety_policy_ignore_is_preserved() -> None:
-    """The disputed ``py`` CVE ignore is preserved across the migration.
+def test_safety_policy_kept_for_history_only() -> None:
+    """The legacy ``.safety-policy.yml`` still ships for posterity.
 
-    Criterion 3 of issue #175: the scoped, expiring ignore is preserved.
+    Criterion 3 of issue #175: the scoped, expiring ignore for the
+    disputed CVE-2022-42969 is preserved. We keep the file even after
+    moving off safety so the ignore reason survives in version control.
     """
     policy = (ROOT / ".safety-policy.yml").read_text(encoding="utf-8")
     assert "51457" in policy, "py CVE ignore (51457) is missing"

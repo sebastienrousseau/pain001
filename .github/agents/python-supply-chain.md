@@ -69,7 +69,7 @@ poetry run pip-licenses --format=markdown --with-urls \
 ### 3. CVE Scanning (MANDATORY Before Commit)
 ```bash
 # Scan for known vulnerabilities
-poetry run safety scan --output json
+poetry run pip-audit --format json
 
 # Alternative: use pip-audit
 poetry run pip-audit --desc --fix-dryrun
@@ -303,7 +303,7 @@ jobs:
       - uses: actions/checkout@v4
       
       - name: CVE Scan
-        run: poetry run safety scan --output json
+        run: poetry run pip-audit --format json
       
       - name: License Check
         run: poetry run pip-licenses --fail-on="GPL;AGPL"

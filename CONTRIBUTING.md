@@ -257,7 +257,7 @@ TOTAL              42   384    2   98.645%
 ### Gate 4: Security Scanning
 ```bash
 poetry run bandit -r pain001 tests  # Security issues
-poetry run safety scan              # Dependency vulnerabilities
+poetry run pip-audit --strict       # Dependency vulnerabilities
 ```
 
 **Expected Output:**
@@ -319,7 +319,7 @@ poetry run make check
 # ✓ mypy . (types)
 # ✓ pytest --cov (coverage >= 95%)
 # ✓ bandit -r (security)
-# ✓ safety scan (dependencies)
+# ✓ pip-audit (dependencies)
 #
 # Result: Exit code 0 ✓
 ```

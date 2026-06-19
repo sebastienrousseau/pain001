@@ -19,14 +19,14 @@ jobs:
           python-version: "3.10"
       - uses: abatilo/actions-poetry@v3
       - run: poetry install --no-interaction --all-extras
-      - name: Generate safety scan JSON report artifact
-        run: poetry run safety scan --output json --save-as json safety-report.json || true
+      - name: Generate pip-audit JSON report artifact
+        run: poetry run pip-audit --format json --output pip-audit-report.json || true
       - uses: actions/upload-artifact@v4
         with:
-          name: safety-report
-          path: safety-report.json
+          name: vulnerability-report
+          path: pip-audit-report.json
       - name: Fail on known vulnerabilities
-        run: poetry run safety scan --output screen
+        run: poetry run pip-audit --strict --progress-spinner off
 
   licenses:
     runs-on: ubuntu-latest
