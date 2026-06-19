@@ -28,7 +28,6 @@ from pain001.validation.schemes import (
     remediation_for,
 )
 
-
 # A compliant B2B row used as the baseline for the per-rule negative
 # tests below. Each negative test takes a copy of this and tweaks one
 # field, so the assertion focuses on a single rule id.

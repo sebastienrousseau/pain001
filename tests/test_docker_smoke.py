@@ -17,7 +17,6 @@ careless edit cannot bypass the smoke gate.
 
 from __future__ import annotations
 
-import json
 import os
 import re
 import shutil
