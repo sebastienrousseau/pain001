@@ -48,23 +48,23 @@ from typing import Any, Protocol, runtime_checkable
 class PluginMeta:
     """Descriptive metadata every plugin must expose.
 
-    Stored on the plugin class as the ``meta`` attribute, surfaced by
-    ``pain001 plugins list`` so an operator can audit what the
-    running interpreter has loaded.
+    Stored on the plugin class as the ``meta`` attribute, surfaced
+    by ``pain001 plugins list`` so an operator can audit what the
+    running interpreter has loaded. Field semantics:
 
-    Attributes:
-        name: Stable, kebab-case identifier (``"csv"``, ``"sepa-sct"``,
-            ``"xml"``). Must be unique within its plugin group; a
-            third-party plugin with the same name as a built-in wins.
-        version: SemVer string of the package shipping the plugin
-            (``importlib.metadata.version(...)``).
-        api_version: ``(major, minor)`` of the pain001 plugin contract
-            the plugin targets. Defaults to ``(0, 54)``.
-        description: One-line human-readable summary; shown by the
-            CLI. Keep under 80 characters.
-        source: ``"built-in"`` for plugins shipped inside pain001;
-            ``"<dist-name>=<version>"`` for third-party plugins.
-            Auto-filled by the registry; plugins must not set it.
+    * ``name`` - stable, kebab-case identifier (``"csv"``,
+      ``"sepa-sct"``). Must be unique within its plugin group; a
+      third-party plugin with the same name as a built-in wins.
+    * ``version`` - SemVer string of the package shipping the
+      plugin (``importlib.metadata.version(...)``).
+    * ``description`` - one-line human-readable summary; shown by
+      the CLI. Keep under 80 characters.
+    * ``api_version`` - ``(major, minor)`` of the pain001 plugin
+      contract the plugin targets. Defaults to the current value.
+    * ``source`` - ``"built-in"`` for plugins shipped inside
+      pain001; ``"<dist-name>==<version>"`` for third-party
+      plugins. Auto-filled by the registry; plugins must not set
+      it.
     """
 
     name: str
@@ -80,11 +80,9 @@ class PluginInfo:
 
     A flattened view of the meta + plugin kind, used by the CLI and
     JSON-RPC inspection tools rather than the live plugin object.
-
-    Attributes:
-        kind: One of ``"loader"``, ``"validator"``, ``"scheme"``,
-            ``"writer"``.
-        meta: The plugin's declared :class:`PluginMeta`.
+    ``kind`` is one of ``"loader"``, ``"validator"``, ``"scheme"``,
+    ``"writer"``; ``meta`` is the plugin's declared
+    :class:`PluginMeta`.
     """
 
     kind: str
@@ -98,13 +96,11 @@ class PluginInfo:
 class LoaderResult:
     """The two pieces a loader yields on success.
 
-    Attributes:
-        rows: Parsed flat records, one per payment, ready for
-            downstream validation and rendering.
-        source_hint: Diagnostic string (typically the original file
-            path or ``"<inline>"``) that pain001 attaches to
-            validation findings so the user can locate the offending
-            row in the source.
+    ``rows`` carries the parsed flat records, one per payment,
+    ready for downstream validation and rendering.
+    ``source_hint`` is a diagnostic string (typically the original
+    file path or ``"<inline>"``) that pain001 attaches to validation
+    findings so the user can locate the offending row in the source.
     """
 
     rows: list[dict[str, Any]]
@@ -115,19 +111,11 @@ class LoaderResult:
 class AbstractLoader(Protocol):
     """A reader that turns a file path into ``list[dict]`` payment rows.
 
-    Loaders register against one or more file extensions; the registry
-    dispatches by suffix at parse time. To support pipelines that
-    never touch disk (encrypted streams, S3 objects), a loader may
-    also accept an in-memory bytes buffer via :meth:`load_bytes`.
-    The default implementation raises ``NotImplementedError``; the
-    registry catches it and falls back to writing a temp file when a
-    caller passes raw bytes to an extension that lacks bytes
-    support.
-
-    Attributes:
-        meta: Required :class:`PluginMeta`.
-        extensions: Tuple of file extensions (with leading dot, lower
-            case) this loader handles. ``(".xlsx", ".xlsm")`` etc.
+    Loaders register against one or more file extensions; the
+    registry dispatches by suffix at parse time. Required attributes:
+    ``meta`` (a :class:`PluginMeta`) and ``extensions`` (a tuple of
+    file extensions with leading dot, lower-case, that this loader
+    handles - ``(".xlsx", ".xlsm")`` etc.).
     """
 
     meta: PluginMeta
@@ -148,19 +136,19 @@ class AbstractLoader(Protocol):
     def load_streaming(
         self, path: str, chunk_size: int
     ) -> Iterable[LoaderResult]:
-        """Yield :class:`LoaderResult` chunks of at most ``chunk_size`` rows.
+        """Return an iterable of :class:`LoaderResult` chunks.
 
         Required for ``--streaming`` mode. Loaders that cannot stream
-        (e.g. small inline JSON) may yield a single result holding
-        every row.
+        (e.g. small inline JSON) may return a single-element
+        iterable holding every row.
 
         Args:
             path: Absolute or relative filesystem path.
-            chunk_size: Maximum rows per yielded result.
+            chunk_size: Maximum rows per chunk.
 
-        Yields:
-            :class:`LoaderResult` instances. The caller treats each as
-            a self-contained sub-batch.
+        Returns:
+            An iterable of :class:`LoaderResult` instances. The
+            caller treats each as a self-contained sub-batch.
         """
         ...
 
@@ -172,16 +160,13 @@ class AbstractLoader(Protocol):
 class ValidatorFinding:
     """A single row-level validation failure.
 
-    Attributes:
-        row_index: Zero-based index in the input batch where the
-            failure occurred.
-        field: Field name on the row (e.g. ``"debtor_account_IBAN"``).
-            ``None`` for row-level findings (e.g. "this row's totals
-            don't reconcile").
-        rule: Stable, kebab-case identifier of the rule that failed
-            (e.g. ``"IBAN-CHECKSUM"``, ``"SCHEMA-MISSING-FIELD"``).
-        severity: One of ``"error"``, ``"warning"``, ``"info"``.
-        message: Human-readable explanation. End with a period.
+    Field semantics: ``row_index`` is the zero-based index in the
+    input batch where the failure occurred; ``field`` is the field
+    name on the row (``"debtor_account_IBAN"``) or ``None`` for
+    row-level findings; ``rule`` is the stable kebab-case identifier
+    of the rule that failed (``"IBAN-CHECKSUM"``); ``severity`` is
+    one of ``"error"``, ``"warning"``, ``"info"``; ``message`` is a
+    human-readable explanation ending in a period.
     """
 
     row_index: int
@@ -195,10 +180,9 @@ class ValidatorFinding:
 class ValidatorResult:
     """Outcome of one validator running against one batch.
 
-    Attributes:
-        is_valid: ``True`` only when ``findings`` contains zero
-            error-severity entries. Warnings do not invalidate.
-        findings: All findings produced by the validator.
+    ``is_valid`` is ``True`` only when ``findings`` contains zero
+    error-severity entries (warnings do not invalidate).
+    ``findings`` is the full list produced by the validator.
     """
 
     is_valid: bool
@@ -209,8 +193,7 @@ class ValidatorResult:
 class AbstractValidator(Protocol):
     """An intra-record validator (one row at a time, no batch context).
 
-    Attributes:
-        meta: Required :class:`PluginMeta`.
+    Required attribute: ``meta`` (a :class:`PluginMeta`).
     """
 
     meta: PluginMeta
@@ -242,23 +225,15 @@ class AbstractValidator(Protocol):
 class SchemeFinding:
     """A single scheme-rulebook violation.
 
-    Same shape as :class:`ValidatorFinding` plus a ``related_rows``
-    list so cross-record findings (duplicate detection, batch totals)
-    can point at every contributing row.
-
-    Attributes:
-        row_index: Zero-based primary row index. Cross-record findings
-            point at one canonical row and list the rest in
-            ``related_rows``.
-        field: Field on the row, or ``None`` for batch-level findings.
-        rule: Stable, kebab-case rule id (e.g. ``"SEPA-CCY"``,
-            ``"DUP-CREDITOR-DATE"``).
-        severity: ``"error"``, ``"warning"``, or ``"info"``.
-        message: Human-readable explanation. End with a period.
-        related_rows: Zero-based indices of other rows the rule
-            relates to (for cross-record findings).
-        remediation: Optional one-line remediation hint surfaced by
-            ``--explain``.
+    Same shape as :class:`ValidatorFinding` plus ``related_rows``
+    (zero-based indices of other rows the rule relates to, for
+    cross-record findings) and an optional ``remediation`` hint
+    surfaced by ``--explain``. ``row_index`` is the zero-based
+    primary row index; ``field`` is a row field or ``None`` for
+    batch-level findings; ``rule`` is a stable kebab-case rule id
+    (``"SEPA-CCY"``, ``"DUP-CREDITOR-DATE"``); ``severity`` is one
+    of ``"error"`` / ``"warning"`` / ``"info"``; ``message`` ends
+    in a period.
     """
 
     row_index: int
@@ -274,10 +249,9 @@ class SchemeFinding:
 class SchemeResult:
     """Outcome of one scheme running against one batch.
 
-    Attributes:
-        is_valid: ``True`` only when ``findings`` has zero
-            error-severity entries.
-        findings: All findings produced by the scheme.
+    ``is_valid`` is ``True`` only when ``findings`` has zero
+    error-severity entries; ``findings`` is the list produced by
+    the scheme.
     """
 
     is_valid: bool
@@ -291,9 +265,7 @@ class AbstractScheme(Protocol):
     Use this when a rule needs cross-record context (duplicate
     detection, batch totals, BIC reachability against a reference
     list). For row-by-row checks, prefer :class:`AbstractValidator`.
-
-    Attributes:
-        meta: Required :class:`PluginMeta`.
+    Required attribute: ``meta`` (a :class:`PluginMeta`).
     """
 
     meta: PluginMeta
@@ -329,10 +301,7 @@ class AbstractWriter(Protocol):
     Default writer writes to a filesystem path; future writers may
     upload to SFTP, push to S3, base64-wrap into a JSON envelope,
     etc. The pivot from "what to render" to "where it goes" lives
-    here.
-
-    Attributes:
-        meta: Required :class:`PluginMeta`.
+    here. Required attribute: ``meta`` (a :class:`PluginMeta`).
     """
 
     meta: PluginMeta

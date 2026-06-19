@@ -83,7 +83,6 @@ class PluginRegistry:
     """
 
     def __init__(self, api_version: tuple[int, int]) -> None:
-        """Initialise an empty registry parameterised by the host's API version."""
         self._api_version = api_version
         self._loaders: dict[str, AbstractLoader] = {}
         self._validators: dict[str, AbstractValidator] = {}
