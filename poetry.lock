@@ -2980,6 +2980,19 @@ files = [
 cli = ["click (>=5.0)"]
 
 [[package]]
+name = "python-gnupg"
+version = "0.5.6"
+description = "A wrapper for the Gnu Privacy Guard (GPG or GnuPG)"
+optional = true
+python-versions = "*"
+groups = ["main"]
+markers = "extra == \"gpg\""
+files = [
+    {file = "python_gnupg-0.5.6-py2.py3-none-any.whl", hash = "sha256:b5050a55663d8ab9fcc8d97556d229af337a87a3ebebd7054cbd8b7e2043394a"},
+    {file = "python_gnupg-0.5.6.tar.gz", hash = "sha256:5743e96212d38923fc19083812dc127907e44dbd3bcf0db4d657e291d3c21eac"},
+]
+
+[[package]]
 name = "python-multipart"
 version = "0.0.32"
 description = "A streaming multipart parser for Python"
@@ -4358,6 +4371,7 @@ type = ["pytest-mypy"]
 
 [extras]
 api = ["fastapi", "uvicorn"]
+gpg = ["python-gnupg"]
 lsp = ["pygls"]
 mcp = ["mcp"]
 parquet = ["pyarrow"]
@@ -4366,4 +4380,4 @@ redis = ["redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "149cf08639deb6acf77c616f46088ea654027fbd3a5ad843561bf7e73baee4f9"
+content-hash = "86d5832f585b5463d3322ee7001d6916b8c4b3dfef3b2855ea91f87ebe6d581c"
