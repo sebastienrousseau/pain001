@@ -142,9 +142,15 @@ def test_sqlite_loader_load_streaming(sqlite_file):
 
 def test_parquet_loader_load_calls_underlying_function():
     """ParquetLoader.load delegates to pain001.parquet.load_parquet_data."""
-    with patch(
-        "pain001.parquet.load_parquet_data.load_parquet_data",
-        return_value=[{"id": "A"}],
+    # The pain001.parquet __init__ re-exports the function under the
+    # same name as the submodule, shadowing it on the package
+    # namespace. importlib.import_module always returns the module
+    # object itself, sidestepping the attribute-lookup ambiguity.
+    from importlib import import_module
+
+    parquet_module = import_module("pain001.parquet.load_parquet_data")
+    with patch.object(
+        parquet_module, "load_parquet_data", return_value=[{"id": "A"}]
     ) as stub:
         res = _ParquetLoader().load("/tmp/fake.parquet")
     stub.assert_called_once_with("/tmp/fake.parquet")
@@ -153,8 +159,12 @@ def test_parquet_loader_load_calls_underlying_function():
 
 def test_parquet_loader_streaming_calls_underlying_function():
     """ParquetLoader.load_streaming delegates to ...load_parquet_data_streaming."""
-    with patch(
-        "pain001.parquet.load_parquet_data.load_parquet_data_streaming",
+    from importlib import import_module
+
+    parquet_module = import_module("pain001.parquet.load_parquet_data")
+    with patch.object(
+        parquet_module,
+        "load_parquet_data_streaming",
         return_value=iter([[{"id": "A"}], [{"id": "B"}]]),
     ) as stub:
         chunks = list(

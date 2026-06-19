@@ -200,7 +200,14 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
 
     # Plugin path: an external loader registered for this extension.
     plugin_loader = plugin_registry.get_loader_for_extension(ext)
-    assert plugin_loader is not None  # guarded by the early check above
+    if plugin_loader is None:  # pragma: no cover - guarded by early check
+        # Belt-and-braces: the early extension check above already
+        # confirmed a plugin claims this ext, so this is unreachable
+        # unless the registry mutated between the two calls.
+        raise DataSourceError(
+            f"Unsupported file type: {file_path}. "
+            f"Install a plugin that registers the {ext!r} extension."
+        )
     result = plugin_loader.load(safe_path)
     return result.rows
 
