@@ -133,6 +133,7 @@ class RedisJobStore:
 
     Raises:
         ImportError: If the ``redis`` package is not installed.
+        ValueError: If neither a ``url`` nor a ``client`` is supplied.
     """
 
     def __init__(

@@ -46,6 +46,11 @@ class RateLimiterBackend(Protocol):
 
         Args:
             key: Per-client bucket key (e.g. client IP).
+
+        Returns:
+            ``True`` when the hit fits within the current window's cap;
+            ``False`` when the window is full and the request should be
+            rejected with HTTP 429.
         """
 
 
@@ -103,6 +108,7 @@ class RedisFixedWindowBackend:
 
     Raises:
         ImportError: If the ``redis`` package is not installed.
+        ValueError: If neither a ``url`` nor a ``client`` is supplied.
     """
 
     def __init__(
