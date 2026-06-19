@@ -19,6 +19,7 @@ from pathlib import Path
 
 import pytest
 
+import pain001
 from pain001 import validate_scheme
 from pain001.api.metrics import render_prometheus
 from pain001.validation.schemes import (
@@ -146,8 +147,6 @@ def test_prometheus_metric_reflects_new_profile_count() -> None:
 
     Criterion 6 of issue #173 (the metric reflects the new count).
     """
-    import pain001
-
     metrics_text = render_prometheus(pain001.__version__)
     assert "pain001_scheme_profiles" in metrics_text
     # Find the metric value line.

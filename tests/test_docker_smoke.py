@@ -102,7 +102,10 @@ def test_workflow_publishes_multi_arch() -> None:
     text = WORKFLOW.read_text(encoding="utf-8")
     assert "linux/amd64" in text
     assert "linux/arm64" in text
-    assert "ghcr.io" in text
+    # Anchored env declaration rather than a bare substring so static
+    # analysers (CodeQL py/incomplete-url-substring-sanitization) can
+    # see this is a workflow content check, not a URL host check.
+    assert "REGISTRY: ghcr.io" in text
 
 
 def test_workflow_tags_from_semver_and_latest() -> None:
