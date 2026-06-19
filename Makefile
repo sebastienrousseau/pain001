@@ -34,7 +34,7 @@ help:
 	@echo "  lint          - Run linting checks (ruff) with SLO timing"
 	@echo "  type          - Type checking with mypy + SLO timing"
 	@echo "  test          - Run tests with timing verification"
-	@echo "  cov           - Generate coverage report (98% enforced)"
+	@echo "  cov           - Generate coverage report (100% enforced)"
 	@echo "  sec           - Security checks (bandit, safety)"
 	@echo "  perf          - Performance benchmarks (XML generation < 500ms/1000tx)"
 	@echo "  complex       - Code complexity analysis"
@@ -80,15 +80,15 @@ type:
 	@echo "$(GREEN)✓ Type check passed$(NC)"
 
 test:
-	@echo "$(YELLOW)Running tests (coverage floor: 98%)...$(NC)"
+	@echo "$(YELLOW)Running tests (coverage floor: 100%)...$(NC)"
 	@poetry run pytest --tb=short --cov=pain001 --cov-branch \
 		--cov-report=term-missing --cov-report=xml --cov-report=html \
-		--cov-fail-under=98
+		--cov-fail-under=100
 	@echo "$(GREEN)✓ Tests passed$(NC)"
 
 cov:
-	@echo "$(YELLOW)Generating coverage report (floor: 98%)...$(NC)"
-	@poetry run pytest --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=98
+	@echo "$(YELLOW)Generating coverage report (floor: 100%)...$(NC)"
+	@poetry run pytest --cov=pain001 --cov-branch --cov-report=term-missing --cov-report=xml --cov-report=html --cov-fail-under=100
 	@echo "$(GREEN)✓ Coverage report generated in htmlcov/index.html$(NC)"
 
 sec:

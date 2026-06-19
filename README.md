@@ -540,12 +540,11 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state (v0.0.53): **1,259 tests passing**, 99.85% line + branch
-coverage against a **98% enforced floor**, mypy `--strict` clean, 100%
-docstring coverage (interrogate). Coverage excludes only entry-point
-guards and genuinely-defensive barriers via `# pragma: no cover`; the
-98% floor leaves headroom so routine changes don't fail CI on a single
-line.
+Current state (v0.0.53): **1,264 tests passing**, **100% line + branch
+coverage** against a **100% enforced floor**, mypy `--strict` clean,
+100% docstring coverage (interrogate). Coverage excludes only
+entry-point guards and genuinely-defensive barriers via
+`# pragma: no cover`; everything else is exercised.
 
 ---
 
