@@ -347,8 +347,16 @@ def test_load_entry_point_plugins_skips_broken_plugin(caplog):
         def load(self):
             raise RuntimeError("broken plugin")
 
-    with patch(
-        "pain001.plugins.registry._iter_entry_points",
+    # `pain001.plugins.__init__` re-exports `registry` (the singleton),
+    # shadowing the `pain001.plugins.registry` submodule on the
+    # package namespace. importlib.import_module always returns the
+    # module object itself.
+    from importlib import import_module
+
+    registry_mod = import_module("pain001.plugins.registry")
+    with patch.object(
+        registry_mod,
+        "_iter_entry_points",
         side_effect=lambda group: (
             [_BoomEntry()] if group == "pain001.loaders" else []
         ),
@@ -377,8 +385,12 @@ def test_load_entry_point_plugins_registers_a_working_plugin():
         def load(self):
             return _V
 
-    with patch(
-        "pain001.plugins.registry._iter_entry_points",
+    from importlib import import_module
+
+    registry_mod = import_module("pain001.plugins.registry")
+    with patch.object(
+        registry_mod,
+        "_iter_entry_points",
         side_effect=lambda group: (
             [_GoodEntry()] if group == "pain001.validators" else []
         ),

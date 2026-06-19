@@ -216,8 +216,18 @@ def register_all(reg: PluginRegistry) -> None:  # noqa: F821 - forward ref
     lazily. Adding a new built-in loader / scheme / writer means
     extending this function (and adding its adapter class above).
 
+    The GPG loader is registered conditionally - only when the
+    ``pain001[gpg]`` extra is installed - via
+    :func:`pain001.plugins.builtins_gpg.maybe_register`.
+
     Args:
         reg: The process-level :class:`PluginRegistry` to populate.
     """
     for cls in _BUILTIN_LOADERS:
         reg.register_loader(cls())
+    # Opt-in built-ins (gated on optional extras).
+    from pain001.plugins.builtins_gpg import (  # noqa: PLC0415
+        maybe_register as maybe_register_gpg,
+    )
+
+    maybe_register_gpg(reg)
