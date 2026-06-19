@@ -200,6 +200,7 @@ def backend_from_env(
         f"expected 'memory' or 'redis'"
     )
 
+
 _WINDOW_SECONDS = {
     "second": 1.0,
     "minute": 60.0,

@@ -121,9 +121,7 @@ def test_job_store_from_env_returns_none_when_unset(monkeypatch):
 
 def test_job_store_from_env_rejects_unknown_scheme(monkeypatch):
     """An unsupported scheme raises a documented ``ValueError``."""
-    monkeypatch.setenv(
-        "PAIN001_JOB_STORE_URL", "memcached://localhost:11211"
-    )
+    monkeypatch.setenv("PAIN001_JOB_STORE_URL", "memcached://localhost:11211")
     with pytest.raises(ValueError, match="Unsupported"):
         job_store_from_env()
 
@@ -149,9 +147,9 @@ def test_two_managers_on_same_job_id_keep_terminal_state(fake_redis_client):
     # Trying to advance the cancelled job from B should not resurrect it.
     manager_b.update_status(job_id, JobStatus.PROCESSING)
     manager_c = JobManager(store=RedisJobStore(client=fake_redis_client))
-    assert (
-        manager_c.get_job(job_id).status == JobStatus.CANCELLED
-    ), "cancelled jobs must stay terminal across managers"
+    assert manager_c.get_job(job_id).status == JobStatus.CANCELLED, (
+        "cancelled jobs must stay terminal across managers"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -171,12 +169,8 @@ def test_redis_store_requires_redis_package(monkeypatch):
 
 def test_redis_namespace_isolation(fake_redis_client):
     """Two stores with different namespaces don't see each other's jobs."""
-    store_a = RedisJobStore(
-        client=fake_redis_client, namespace="env-a:jobs"
-    )
-    store_b = RedisJobStore(
-        client=fake_redis_client, namespace="env-b:jobs"
-    )
+    store_a = RedisJobStore(client=fake_redis_client, namespace="env-a:jobs")
+    store_b = RedisJobStore(client=fake_redis_client, namespace="env-b:jobs")
     store_a.save("job-1", {"id": "job-1", "status": "running"})
     store_b.save("job-2", {"id": "job-2", "status": "running"})
     a_jobs = store_a.load_all()

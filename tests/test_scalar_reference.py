@@ -21,9 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 DOCS_WORKFLOW = ROOT / ".github" / "workflows" / "docs.yml"
 STATIC_HTML = ROOT / "docs" / "_static" / "api-reference.html"
 EXPORT_SCRIPT = ROOT / "scripts" / "export_openapi.py"
-PUBLIC_URL = (
-    "https://sebastienrousseau.github.io/pain001/api-reference.html"
-)
+PUBLIC_URL = "https://sebastienrousseau.github.io/pain001/api-reference.html"
 
 
 def test_export_openapi_script_present() -> None:
@@ -47,9 +45,9 @@ def test_export_openapi_writes_valid_openapi_3() -> None:
     from pain001.api.app import app
 
     schema = app.openapi()
-    assert (
-        schema.get("openapi", "").startswith("3.")
-    ), "exported schema must be OpenAPI 3.x"
+    assert schema.get("openapi", "").startswith("3."), (
+        "exported schema must be OpenAPI 3.x"
+    )
     info = schema.get("info", {})
     assert info.get("title"), "info.title is required"
     assert info.get("version"), "info.version is required"
@@ -138,9 +136,7 @@ def test_openapi_includes_every_request_response_model() -> None:
     sys.path.insert(0, str(ROOT))
     from pain001.api.app import app
 
-    schemas = (
-        app.openapi().get("components", {}).get("schemas", {})
-    )
+    schemas = app.openapi().get("components", {}).get("schemas", {})
     must_be_present = {
         "GenerateXMLRequest",
         "GenerateXMLResponse",

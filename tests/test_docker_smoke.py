@@ -74,9 +74,9 @@ def test_dockerfile_installs_api_extra() -> None:
     Acceptance criterion 3 of issue #169.
     """
     text = DOCKERFILE.read_text(encoding="utf-8")
-    assert (
-        '".[api]"' in text or "'.[api]'" in text or "[api]" in text
-    ), "Dockerfile must install the api extra"
+    assert '".[api]"' in text or "'.[api]'" in text or "[api]" in text, (
+        "Dockerfile must install the api extra"
+    )
 
 
 def test_dockerfile_runs_as_non_root() -> None:
@@ -132,9 +132,7 @@ def test_workflow_smoke_test_step_present() -> None:
 @pytest.fixture(scope="module")
 def built_image() -> str:
     """Build the image once per test session and return its tag."""
-    if not _docker_available() or os.environ.get(
-        "PAIN001_SKIP_DOCKER_SMOKE"
-    ):
+    if not _docker_available() or os.environ.get("PAIN001_SKIP_DOCKER_SMOKE"):
         pytest.skip("docker not available")
     tag = "pain001-smoke:test"
     subprocess.run(

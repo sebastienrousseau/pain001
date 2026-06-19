@@ -150,11 +150,11 @@ def test_exporter_meta_schema_compliance() -> None:
                 "patch",
             }:
                 continue
-            assert op.get(
-                "responses"
-            ), f"{method.upper()} {path} has no responses"
+            assert op.get("responses"), (
+                f"{method.upper()} {path} has no responses"
+            )
             for code, resp in op["responses"].items():
-                assert re.match(
-                    r"^[1-5][0-9X]{2}$|default", code
-                ), f"{method.upper()} {path} -> bad status code {code!r}"
+                assert re.match(r"^[1-5][0-9X]{2}$|default", code), (
+                    f"{method.upper()} {path} -> bad status code {code!r}"
+                )
                 assert "description" in resp

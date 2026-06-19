@@ -67,16 +67,14 @@ def test_pip_audit_pin_present() -> None:
     to a version that supports non-interactive CI scanning.
     """
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    match = re.search(
-        r'^pip-audit\s*=\s*"([^"]+)"', pyproject, re.MULTILINE
-    )
+    match = re.search(r'^pip-audit\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
     assert match, "pip-audit pin missing from pyproject.toml"
     pin = match.group(1)
-    assert (
-        ">=2" in pin or "^2" in pin or ">=3" in pin or "^3" in pin
-    ), f"pip-audit pin {pin!r} does not require 2.x+"
+    assert ">=2" in pin or "^2" in pin or ">=3" in pin or "^3" in pin, (
+        f"pip-audit pin {pin!r} does not require 2.x+"
+    )
     # Make sure the old safety pin is gone.
-    assert not re.search(r'^safety\s*=', pyproject, re.MULTILINE), (
+    assert not re.search(r"^safety\s*=", pyproject, re.MULTILINE), (
         "Replace `safety` with `pip-audit` in pyproject.toml"
     )
 
@@ -92,9 +90,7 @@ def test_makefile_sec_invokes_pip_audit() -> None:
     )
     assert match, "Makefile has no ``sec`` target"
     body = match.group(0)
-    assert "pip-audit" in body, (
-        "Makefile sec target must invoke pip-audit"
-    )
+    assert "pip-audit" in body, "Makefile sec target must invoke pip-audit"
 
 
 def test_security_workflow_uses_pip_audit() -> None:
@@ -103,9 +99,9 @@ def test_security_workflow_uses_pip_audit() -> None:
     Criteria 1 and 5 of issue #175: CI runs the scanner and saves a
     JSON report as an upload artifact.
     """
-    workflow = (
-        ROOT / ".github" / "workflows" / "security.yml"
-    ).read_text(encoding="utf-8")
+    workflow = (ROOT / ".github" / "workflows" / "security.yml").read_text(
+        encoding="utf-8"
+    )
     assert "pip-audit" in workflow
     # Machine-readable artifact preserved.
     assert "pip-audit-report.json" in workflow

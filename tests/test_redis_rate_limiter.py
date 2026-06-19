@@ -158,9 +158,7 @@ def test_backend_from_env_falls_back_to_job_store_url(monkeypatch):
     """Without REDIS_URL, the job-store URL is reused so one env is enough."""
     monkeypatch.setenv("PAIN001_RATE_LIMIT_BACKEND", "redis")
     monkeypatch.delenv("PAIN001_RATE_LIMIT_REDIS_URL", raising=False)
-    monkeypatch.setenv(
-        "PAIN001_JOB_STORE_URL", "redis://localhost:6379/0"
-    )
+    monkeypatch.setenv("PAIN001_JOB_STORE_URL", "redis://localhost:6379/0")
     backend = backend_from_env(max_requests=10, window_seconds=60.0)
     assert isinstance(backend, RedisFixedWindowBackend)
 
