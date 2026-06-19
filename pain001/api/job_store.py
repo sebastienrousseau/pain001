@@ -113,13 +113,132 @@ class FileJobStore:
         self._path(job_id).unlink(missing_ok=True)
 
 
-def job_store_from_env() -> FileJobStore | None:
-    """Build a :class:`FileJobStore` when ``PAIN001_JOB_STORE_DIR`` is set.
+class RedisJobStore:
+    """A :class:`JobStore` that persists each job under a Redis hash key.
+
+    Multiple API replicas behind a load balancer share one Redis, so a
+    job submitted on replica A can be polled on replica B and survives
+    rolling restarts on either side. Job snapshots are serialised to
+    JSON and stored at ``<namespace>:<job_id>``; ``load_all`` enumerates
+    every key under the namespace via ``SCAN`` (cursor-paginated, so it
+    is safe on a large keyspace).
+
+    Args:
+        url: Redis connection URL (``redis://host:port/db``).
+        namespace: Optional key prefix; defaults to ``pain001:jobs``.
+            Use a per-environment value to isolate dev / staging / prod
+            in the same instance.
+        client: Optional pre-built ``redis.Redis`` instance; takes
+            precedence over ``url`` (useful for tests with ``fakeredis``).
+
+    Raises:
+        ImportError: If the ``redis`` package is not installed.
+    """
+
+    def __init__(
+        self,
+        url: str | None = None,
+        namespace: str = "pain001:jobs",
+        client: Any = None,
+    ) -> None:
+        try:
+            import redis  # noqa: PLC0415 - lazy so the extra is optional
+        except ImportError as exc:  # pragma: no cover - import-guard
+            raise ImportError(
+                "The pain001[redis] extra is required for "
+                "RedisJobStore; install pain001[redis] to enable it."
+            ) from exc
+        if client is not None:
+            self._client = client
+        else:
+            if not url:
+                raise ValueError(
+                    "RedisJobStore requires a url or a client instance"
+                )
+            self._client = redis.Redis.from_url(url, decode_responses=True)
+        self._namespace = namespace.rstrip(":")
+
+    def _key(self, job_id: str) -> str:
+        """Return the namespaced Redis key for a job id."""
+        return f"{self._namespace}:{job_id}"
+
+    def save(self, job_id: str, snapshot: dict[str, Any]) -> None:
+        """Persist a single job snapshot.
+
+        Args:
+            job_id: Unique job identifier.
+            snapshot: Serialisable job state.
+        """
+        self._client.set(self._key(job_id), json.dumps(snapshot))
+
+    def load_all(self) -> dict[str, dict[str, Any]]:
+        """Load every persisted job snapshot.
+
+        Returns:
+            A mapping of job id to its snapshot.
+        """
+        jobs: dict[str, dict[str, Any]] = {}
+        cursor = 0
+        prefix = f"{self._namespace}:"
+        while True:
+            cursor, keys = self._client.scan(
+                cursor=cursor, match=f"{prefix}*", count=100
+            )
+            for key in keys:
+                key_str = (
+                    key.decode("utf-8") if isinstance(key, bytes) else key
+                )
+                raw = self._client.get(key_str)
+                if raw is None:
+                    continue
+                if isinstance(raw, bytes):
+                    raw = raw.decode("utf-8")
+                try:
+                    jobs[key_str[len(prefix) :]] = json.loads(raw)
+                except json.JSONDecodeError:  # pragma: no cover - defensive
+                    continue
+            if cursor == 0:
+                break
+        return jobs
+
+    def delete(self, job_id: str) -> None:
+        """Remove a persisted job snapshot.
+
+        Args:
+            job_id: Unique job identifier.
+        """
+        self._client.delete(self._key(job_id))
+
+
+def job_store_from_env() -> JobStore | None:
+    """Build a job store from environment configuration.
+
+    Selection order:
+
+    * ``PAIN001_JOB_STORE_URL=redis://...`` -> :class:`RedisJobStore`
+      (multi-replica durable, requires the ``pain001[redis]`` extra).
+    * ``PAIN001_JOB_STORE_DIR=/path`` -> :class:`FileJobStore`
+      (single-replica durable, no extra dependency).
+    * Neither set -> ``None`` (the :class:`JobManager` stays in-memory).
 
     Returns:
-        A :class:`FileJobStore` rooted at the configured directory, or
-        ``None`` when persistence is not enabled.
+        A configured store, or ``None`` when persistence is not enabled.
+
+    Raises:
+        ValueError: If ``PAIN001_JOB_STORE_URL`` has an unrecognised
+            scheme.
     """
+    url = os.environ.get("PAIN001_JOB_STORE_URL", "").strip()
+    if url:
+        if url.startswith(("redis://", "rediss://")):
+            namespace = os.environ.get(
+                "PAIN001_JOB_STORE_NAMESPACE", "pain001:jobs"
+            )
+            return RedisJobStore(url=url, namespace=namespace)
+        raise ValueError(
+            f"Unsupported PAIN001_JOB_STORE_URL scheme: {url!r}; "
+            f"expected redis:// or rediss://"
+        )
     directory = os.environ.get("PAIN001_JOB_STORE_DIR")
     if not directory:
         return None

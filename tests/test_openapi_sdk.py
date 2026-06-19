@@ -25,8 +25,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
-
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "sdk.yml"
 EXPORT_SCRIPT = ROOT / "scripts" / "export_openapi.py"
