@@ -40,7 +40,8 @@ Exit codes (CLI): `0` pass · `1` violations found · `2` unknown profile.
 | Profile | Scheme | Message types |
 | :--- | :--- | :--- |
 | `sepa-sct` | SEPA Credit Transfer | pain.001 |
-| `sepa-sdd` | SEPA Direct Debit | pain.008 |
+| `sepa-sdd` | SEPA Direct Debit (CORE / consumer) | pain.008 |
+| `sepa-b2b` | SEPA Direct Debit (Business-to-Business) | pain.008 |
 | `sepa-inst` | SEPA Instant Credit Transfer (SCT Inst) | pain.001 |
 | `xborder-ct` | Cross-border credit transfer (generic, multi-currency) | pain.001 |
 
@@ -62,8 +63,10 @@ hint (shown by `--explain`).
 | `SEPA-INST-AMT` | error | `sepa-inst` | Amount ≤ 100,000.00 EUR (SCT Inst per-transaction cap) |
 | `XB-CCY` | error | `xborder-ct` | Currency is a valid 3-letter ISO 4217 code (any currency) |
 | `XB-BIC` | error | `xborder-ct` | Creditor agent BIC present and valid (mandatory cross-border) |
-| `SDD-MNDT` | error | `sepa-sdd` | Mandate id present |
+| `SDD-MNDT` | error | `sepa-sdd`, `sepa-b2b` | Mandate id present |
 | `SDD-SEQTP` | error | `sepa-sdd` | Sequence type is one of `FRST`, `RCUR`, `OOFF`, `FNAL` |
+| `B2B-SEQTP` | error | `sepa-b2b` | Sequence type is one of `FRST`, `RCUR` (B2B excludes `OOFF` and `FNAL`) |
+| `B2B-CDTR-ID` | error | `sepa-b2b` | Creditor Identifier (`creditor_id`) present |
 
 ## Adding a profile
 

@@ -73,7 +73,7 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
     scheme: str | None = Field(
         default=None,
         description="Payment-scheme rulebook to validate against "
-        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-inst', 'xborder-ct')",
+        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct')",
     )
 
     model_config = ConfigDict(
@@ -115,7 +115,7 @@ class GenerateXMLRequest(BaseModel):
     scheme: str | None = Field(
         default=None,
         description="Payment-scheme rulebook to enforce before generating "
-        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-inst', 'xborder-ct')",
+        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct')",
     )
 
     model_config = ConfigDict(
