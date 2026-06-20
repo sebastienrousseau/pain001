@@ -139,11 +139,29 @@ jobs:
           poetry build
           poetry run twine check dist/*
 
+      - name: ❯ Generate SBOM (CycloneDX + SPDX)
+        # Enterprise vulnerability-management tools (Snyk, Black Duck,
+        # Trivy) ingest SBOMs as a procurement checkbox. Attaching them
+        # to each release means consumers can audit transitive deps
+        # without re-resolving the lockfile.
+        run: |
+          mkdir -p sbom
+          pip install --quiet cyclonedx-bom pip-licenses
+          # CycloneDX (JSON + XML) - the industry default.
+          cyclonedx-py environment --output-file sbom/pain001-${GITHUB_REF_NAME#v}.cdx.json
+          cyclonedx-py environment --output-format xml --output-file sbom/pain001-${GITHUB_REF_NAME#v}.cdx.xml
+          # SPDX manifest of installed packages with licences.
+          pip-licenses --format=json --with-license-file --no-license-path \
+            --output-file=sbom/pain001-${GITHUB_REF_NAME#v}.spdx-licenses.json
+          ls -la sbom/
+
       - name: ❯ Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           body_path: ${{ steps.release_notes.outputs.path }}
-          files: dist/*
+          files: |
+            dist/*
+            sbom/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
