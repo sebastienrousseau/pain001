@@ -21,37 +21,47 @@ fit.
 **Target:** <https://github.com/punkpeye/awesome-mcp-servers>
 **Section:** "Finance & Fintech" (or "Other" if not present)
 
-### Suggested entry
+### Suggested entry (matches the section's existing emoji + bold-lead-in convention)
+
+Insert **at the end of the `### 💰 Finance & Fintech` section**, on
+the line just before `### 🎮 Gaming`:
 
 ```markdown
-- [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) — 16 MCP tools for generating and validating ISO 20022 pain.001 / pain.008 / camt.053 / pain.002 payment messages. Includes IBAN/BIC validation, cross-version pain.001 migration, in-memory XSD validation, and ISO 20022 Latin charset sanitisation. Python (FastMCP), Apache-2.0.
+- [sebastienrousseau/pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) 🐍 🏠 - **ISO 20022 payment-file generation + validation** (`pain.001` Customer Credit Transfer, `pain.008` Direct Debit, `camt.053` statements, `pain.002` status reports). 16 tools across schema discovery, IBAN/BIC validation, XSD validation, cross-version pain.001 migration, ISO 20022 charset sanitisation, and SEPA SCT/SDD/INST/B2B + cross-border rulebook checks. Built on the [`pain001`](https://github.com/sebastienrousseau/pain001) library (100% line + branch coverage, Apache-2.0). Install `pip install pain001-mcp`, run `pain001-mcp`.
 ```
 
-### Submit it
+> **Status:** the assistant already ran `gh repo fork
+> punkpeye/awesome-mcp-servers` during the v0.0.53 push; the fork is
+> live on your account and a local checkout is at
+> `/tmp/awesome-mcp-servers`. The README edit is also in place
+> locally (verify with `cd /tmp/awesome-mcp-servers && git diff
+> README.md`). All that's left is the push + PR — the classifier
+> blocks the assistant from doing this on third-party repos.
+
+### Push + open the PR
 
 ```bash
-cd /tmp && rm -rf awesome-mcp-servers
-gh repo fork punkpeye/awesome-mcp-servers --clone --remote
-cd awesome-mcp-servers
+cd /tmp/awesome-mcp-servers
+
+# Sanity-check the edit landed (if blank, re-apply by editing
+# README.md manually using the markdown block above).
+git diff README.md | head -5
+
 git checkout -b add-pain001-mcp
-
-# Manually edit README.md - find the Finance/Fintech section and
-# insert the entry alphabetically. The list is alphabetical within
-# section; pain001-mcp lives between "p" entries.
-$EDITOR README.md
-
 git add README.md
 git commit -S -m "Add pain001-mcp (ISO 20022 payment messages)"
 git push origin add-pain001-mcp
-gh pr create --title "Add pain001-mcp (ISO 20022 payment messages)" \
+
+gh pr create --repo punkpeye/awesome-mcp-servers \
+  --title "Add pain001-mcp (ISO 20022 payment messages)" \
   --body "$(cat <<'EOF'
 Adds [`pain001-mcp`](https://github.com/sebastienrousseau/pain001-mcp), an MCP server exposing the [`pain001`](https://github.com/sebastienrousseau/pain001) ISO 20022 payment library as 16 first-class agent tools.
 
-**Why include:** ISO 20022 is the global payments messaging standard (every SEPA, FedNow, and CBPR+ payment rides on it); there's no MCP server for it on this list today. The package is Apache-2.0, has 100% line + branch coverage, ships sigstore-attested wheels, and follows the alphabetical convention of nearby entries.
+**Why include:** ISO 20022 is the global payments messaging standard (every SEPA, FedNow, and CBPR+ payment rides on it); there's no MCP server for it on this list today. The package is Apache-2.0, has 100% line + branch coverage, ships sigstore-attested wheels via OIDC trusted publishing, and follows the entry style used by nearby Finance & Fintech entries (org/repo URL, language + hosting emojis, bold lead-in, concrete tool count).
 
-**Tool surface:** schema discovery, validation (records + IBAN/BIC + XML against XSD), generation (sync + async + from CSV), bank-reply parsing (camt.053 + pain.002), cross-version pain.001 migration, ISO 20022 charset sanitisation.
+**Tool surface:** schema discovery, record + identifier (IBAN/BIC) validation, XML-against-XSD validation, generation (sync + async + from CSV), bank-reply parsing (camt.053 + pain.002), cross-version pain.001 migration, ISO 20022 charset sanitisation, and SEPA SCT/SDD/INST/B2B + cross-border rulebook checks.
 
-Verified the entry style + alphabetical ordering against the existing Finance section.
+**Verified before submission:** entry style + emoji convention match the section; pain001-mcp 0.0.53 is on PyPI and was published via PyPI Trusted Publishing (OIDC).
 EOF
 )"
 ```

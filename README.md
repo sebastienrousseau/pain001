@@ -40,10 +40,12 @@
 - [Input formats](#input-formats) — CSV, SQLite, JSON, JSONL, Parquet
 - [Usage](#usage) — CLI, scheme validation, dry-run, streaming, REST API, Python API
 - [Companion packages](#companion-packages) — MCP server, Language Server
+- [Production users](#production-users) — who's running it, how to be listed
 
 **Operational**
 
 - [When not to use Pain001](#when-not-to-use-pain001) — honest boundaries
+- [Deployment cookbook](docs/deployment-cookbook.md) — copy-pasteable docker-compose with TLS + Redis + Prometheus + Grafana
 - [Development](#development) — gates, make targets, CI matrix
 - [Security](#security) — hardening posture and reporting
 - [Documentation](#documentation) — guides, API reference, examples
@@ -488,6 +490,36 @@ brings real-time help to editors.
 
 Point your editor's LSP client at the `pain001-lsp` (standalone) or
 `pain001-lsp-builtin` (in-tree) command for the appropriate file type.
+
+---
+
+## Production users
+
+Pain001 is open-source under Apache-2.0 / MIT and used in
+production across embedded-finance, treasury-ops, and
+SEPA-clearing pipelines.
+
+**Are you using pain001 in production?**
+[Open a one-line issue](https://github.com/sebastienrousseau/pain001/issues/new?title=Production+user:+%5BYour+org%5D&body=One-line%20description%20of%20how%20you%20use%20pain001%2C%20plus%20a%20link%20%2F%20logo%20if%20you%27re%20happy%20to%20be%20publicly%20listed.%0A%0AOr%20just%20a%20%2B1%20if%20you%27d%20rather%20stay%20anonymous%20%E2%80%94%20we%27ll%20count%20you%20in%20the%20aggregate%20without%20publishing%20a%20name.)
+and we'll add you here. Public listing is opt-in; if you'd prefer
+to stay anonymous, a "+1" still counts toward the aggregate metric
+below and helps future adopters make their case internally.
+
+**Known integrators** (open an issue to be added):
+
+- _Be the first._ Three logos on this list materially changes how
+  later adopters evaluate the project; if pain001 makes your team's
+  life easier, your name here is the highest-leverage thanks you
+  can give back.
+
+**Aggregate signals** (auto-updating):
+
+- [PyPI downloads](https://pypistats.org/packages/pain001) (`pain001` + companions)
+- [GitHub stars](https://github.com/sebastienrousseau/pain001/stargazers) across the suite
+- [Awesome-list entries](#) (in flight; tracked in [`scripts/awesome-list-submissions.md`](scripts/awesome-list-submissions.md))
+
+If you'd like to write up your integration as a public case study,
+we'd love that — but a logo or a +1 is plenty.
 
 ---
 
