@@ -112,7 +112,7 @@ addopts = [
     "--cov-report=term-missing:skip-covered",
     "--cov-report=xml",
     "--cov-report=html",
-    "--cov-fail-under=98",
+    "--cov-fail-under=100",
     "--tb=short",
     "-ra",
     "--strict-markers",
