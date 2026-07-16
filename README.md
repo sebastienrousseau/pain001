@@ -38,7 +38,7 @@
 
 - [Supported messages](#supported-messages) — every bundled ISO 20022 message type
 - [Input formats](#input-formats) — CSV, SQLite, JSON, JSONL, Parquet
-- [Usage](#usage) — CLI, scheme validation, dry-run, streaming, REST API, Python API
+- [Usage](#usage) — CLI, scheme validation, dry-run, streaming, input normalization, REST API, Python API
 - [Companion packages](#companion-packages) — MCP server, Language Server
 - [Production users](#production-users) — who's running it, how to be listed
 
@@ -70,6 +70,7 @@ It handles the parts that are easy to get wrong:
 | Control totals | `NbOfTxs` and `CtrlSum` are computed from the data, never trusted from input |
 | Template drift | Bundled template/XSD pairs are guard-railed; mismatches fail loudly |
 | XML attacks | All XML parsing goes through `defusedxml` — XXE and entity expansion are blocked |
+| Agent-shaped input | Field aliases (`amount`, `currency`, `execution_date`, lower-case IBAN/BIC keys), date/boolean coercion, and computed totals let naturally-written records validate first try |
 | Large batches | Streaming mode chunks input and emits one file per chunk |
 | Scheme rules | `--scheme sepa-sct\|sepa-sdd\|sepa-inst\|sepa-b2b\|xborder-ct` layers per-rulebook checks on top of XSD |
 
@@ -314,6 +315,68 @@ and `CtrlSum`:
 ```bash
 pain001 -t pain.001.001.03 -d payments.csv --streaming --chunk-size 500
 ```
+
+</details>
+
+<details>
+<summary><b>Input normalization — records the way agents write them</b></summary>
+
+The generate path accepts payment records the way people (and LLM
+agents) naturally write them, and normalizes everything into the
+canonical pain.001 shape before rendering:
+
+- **Field aliases** — `amount` / `instructed_amount` map to
+  `payment_amount`, `currency` and `payment_currency` mirror each
+  other, `execution_date` maps to `requested_execution_date`, and
+  lower-case identifier keys (`debtor_account_iban`,
+  `creditor_agent_bic`, …) are canonicalized to their upper-case
+  spellings. An alias never overwrites an explicitly-provided
+  canonical value.
+- **Boolean coercion** — Python/JSON booleans and `"True"`/`"FALSE"`
+  strings render in XSD form (`"true"`/`"false"`).
+- **Date coercion** — each temporal field is coerced to the lexical
+  form its XSD type requires: a bare `date` of `2026-07-18` becomes
+  `2026-07-18T00:00:00` (xs:dateTime), while a full datetime in
+  `requested_execution_date` or `reference_date` is truncated to its
+  date part (xs:date).
+- **Computed totals** — `nb_of_txs` and `ctrl_sum` are always computed
+  from the rows themselves (caller-supplied values are overwritten),
+  so the header totals never have to be provided by hand.
+- **All-at-once field errors** — missing required fields raise a
+  single `PaymentValidationError` that lists every missing header
+  field and every missing per-transaction field with its row number,
+  so one retry fixes everything instead of one `KeyError` per attempt.
+- **XSD errors with element paths** — when generated XML fails schema
+  validation, the error reports every violation as element path plus
+  reason (capped at 20) instead of an opaque pass/fail.
+- **Conditional `SplmtryData`** — the pain.001.001.09–12 templates
+  emit a `SplmtryData` block only when a record provides
+  `supplementary_data`; nothing is emitted by default.
+
+The same normalization is available standalone:
+
+```python
+from pain001 import canonicalize_payment_record, normalize_payment_records
+
+rows = normalize_payment_records([{
+    "id": "MSG-1", "date": "2026-07-18",
+    "initiator_name": "ACME Corp",
+    "payment_id": "PMT-1", "execution_date": "2026-07-21",
+    "debtor_name": "ACME Corp",
+    "debtor_account_iban": "DE89370400440532013000",
+    "debtor_agent_bic": "DEUTDEFF",
+    "amount": 1234.5, "currency": "EUR",
+    "creditor_name": "Supplier GmbH",
+    "creditor_account_iban": "FR1420041010050500013M02606",
+    "creditor_agent_bic": "BNPAFRPP",
+}])
+# rows[0]["payment_amount"] -> "1234.50"; nb_of_txs / ctrl_sum are set.
+```
+
+`normalize_payment_records` reformats values (amounts, dates,
+booleans) and computes the totals; `canonicalize_payment_record` only
+maps alias keys to canonical names, preserving value types — use it
+when records must still pass JSON-Schema validation with typed values.
 
 </details>
 
@@ -572,7 +635,7 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state (v0.0.53): **1,264 tests passing**, **100% line + branch
+Current state (v0.0.54): **1,309 tests passing**, **100% line + branch
 coverage** against a **100% enforced floor**, mypy `--strict` clean,
 100% docstring coverage (interrogate). Coverage excludes only
 entry-point guards and genuinely-defensive barriers via
