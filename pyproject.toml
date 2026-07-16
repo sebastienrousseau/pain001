@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.53"
+version = "0.0.54"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -31,7 +31,7 @@ pain001-lsp-builtin = "pain001.lsp.server:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-click = ">=8.1,<9"
+click = ">=8.3.3,<9"
 defusedxml = ">=0.7.1,<1"
 jinja2 = ">=3.1.6,<4"
 pyyaml = ">=6.0,<7.0"

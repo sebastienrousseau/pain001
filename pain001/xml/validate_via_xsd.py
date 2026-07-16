@@ -68,6 +68,40 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
         return False
 
 
+def collect_xsd_validation_errors(
+    xml_content: str, xsd_file_path: str, max_errors: int = 20
+) -> list[str]:
+    """Collect every XSD validation error for an XML string, human-readably.
+
+    Unlike :func:`validate_xml_string_via_xsd` (a boolean gate), this
+    returns one concise message per violation - element path plus reason -
+    so callers can report everything that is wrong in a single pass.
+
+    Args:
+        xml_content: XML content as a string.
+        xsd_file_path: Path to the XSD schema file.
+        max_errors: Cap on the number of collected messages.
+
+    Returns:
+        A list of error messages; empty when the document is valid.
+    """
+    try:
+        xml_tree = defused_et.parse(StringIO(xml_content))
+    except (ParseError, OSError) as e:
+        return [f"XML parse error: {e}"]
+    try:
+        xsd = _get_cached_schema(xsd_file_path)
+    except (xmlschema.XMLSchemaException, ParseError, OSError) as e:
+        return [f"XSD schema load error: {e}"]
+    messages: list[str] = []
+    for error in xsd.iter_errors(xml_tree):
+        reason = error.reason or str(error)
+        messages.append(f"{error.path or '/'}: {reason}")
+        if len(messages) >= max_errors:
+            break
+    return messages
+
+
 def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
     """
     Validates an XML string against an XSD schema.

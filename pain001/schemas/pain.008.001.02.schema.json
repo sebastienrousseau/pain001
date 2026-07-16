@@ -7,8 +7,6 @@
   "required": [
     "id",
     "date",
-    "nb_of_txs",
-    "ctrl_sum",
     "initiator_name",
     "payment_information_id",
     "payment_method",
@@ -40,18 +38,18 @@
     "date": {
       "type": "string",
       "format": "date",
-      "description": "Date of the payment initiation"
+      "description": "Date/time of the payment initiation. Accepts 'YYYY-MM-DD' (rendered as midnight) or a full ISO datetime 'YYYY-MM-DDTHH:MM:SS'."
     },
     "nb_of_txs": {
       "type": "integer",
       "minimum": 1,
-      "description": "Number of transactions"
+      "description": "Number of transactions. Computed automatically from the record count; you may omit it."
     },
     "ctrl_sum": {
       "type": "number",
       "minimum": 0.01,
       "maximum": 999999999.99,
-      "description": "Total control sum"
+      "description": "Total control sum. Computed automatically from the payment amounts; you may omit it."
     },
     "initiator_name": {
       "type": "string",
@@ -76,7 +74,7 @@
     },
     "batch_booking": {
       "type": "boolean",
-      "description": "Batch booking"
+      "description": "Batch booking indicator; JSON true/false (string 'true'/'false' also accepted)."
     },
     "service_level_code": {
       "type": "string",
@@ -89,7 +87,7 @@
     "requested_execution_date": {
       "type": "string",
       "format": "date",
-      "description": "Execution date"
+      "description": "Requested execution date, 'YYYY-MM-DD' (a full datetime is truncated to its date part)."
     },
     "debtor_name": {
       "type": "string",
@@ -135,12 +133,12 @@
       "type": "number",
       "minimum": 0.01,
       "maximum": 999999999.99,
-      "description": "Amount"
+      "description": "Payment amount, max two decimals (the key 'amount' is accepted as an alias)."
     },
     "currency": {
       "type": "string",
       "pattern": "^[A-Z]{3}$",
-      "description": "Currency code"
+      "description": "ISO 4217 currency code, 3 uppercase letters (the key 'payment_currency' is accepted as an alias)."
     },
     "creditor_agent_BIC": {
       "type": "string",

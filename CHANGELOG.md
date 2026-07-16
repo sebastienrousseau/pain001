@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.54] - 2026-07-16
+
+LLM-ergonomic generate path. Driven by a real agent transcript in which
+Claude Code, connected through the iso20022-mcp gateway, needed 5+
+retries to produce a schema-valid pain.001.001.09: natural inputs
+(`amount`, `currency`, a bare `YYYY-MM-DD` date, a JSON boolean, no
+`nb_of_txs`) each failed one at a time, and the primary bug - the v09
+data preparer reading only `payment_currency` and silently rendering
+`Ccy=""` - surfaced only as an opaque XSD failure.
+
+### Added
+
+- **`normalize_payment_records()`** (exported from `pain001`): the
+  canonical input-normalization step the generators now apply
+  internally - field aliases (`amount` -> `payment_amount`,
+  `currency` <-> `payment_currency`, `execution_date` ->
+  `requested_execution_date`, lower-case `*_iban` / `*_bic` key
+  spellings), two-decimal amount formatting, XSD boolean rendering
+  (including `"True"` / `"FALSE"` strings), temporal coercion (bare
+  `date` -> `T00:00:00`; datetime `requested_execution_date` truncated
+  to its date part), and computed `nb_of_txs` / `ctrl_sum`.
+- **`canonicalize_payment_record()`** (exported from `pain001`): the
+  key-mapping half of the above, preserving value types for
+  JSON-Schema validation.
+- **`collect_xsd_validation_errors()`** in
+  `pain001.xml.validate_via_xsd`: returns every XSD violation (element
+  path + reason) for an XML string instead of a bare boolean.
+
+### Fixed
+
+- **Silent `Ccy=""`**: the v03/v05-v08/v09-v12 preparers accept
+  `currency` as well as `payment_currency`; a missing currency is now
+  reported by name instead of rendering an empty attribute that only
+  fails XSD validation later.
+- **One-KeyError-per-retry**: the v03 and v09-v12 preparers validate
+  required fields up front and raise a single `PaymentValidationError`
+  listing *all* missing header and per-row fields at once.
+- **Opaque XSD failures**: `generate_xml_string` now includes the
+  collected per-element violations in the `RuntimeError` it raises.
+- **Unconditional `SplmtryData`**: the v09-v12 templates emitted a
+  hardcoded empty `<SplmtryData><Envlp><WC/></Envlp></SplmtryData>`
+  block that some bank gateways reject; it is now emitted only when a
+  record provides `supplementary_data`.
+- **Ergonomic defaults**: `payment_method` (`TRF`), `charge_bearer`
+  (`SLEV`) and v03 `batch_booking` (`false`) default sensibly;
+  `nb_of_txs` / `ctrl_sum` are computed and no longer listed as
+  required by the bundled JSON Schemas. IBAN/BIC validation is
+  unchanged.
+
 ## [0.0.53] - 2026-06-20
 
 Security + observability + scheme-validation release. Closes every open
