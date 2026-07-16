@@ -55,11 +55,7 @@
 				<Ustrd>Payment for Invoice-98765</Ustrd>
 			</RmtInf>
 			
-			<SplmtryData>
-				<Envlp>
-					<WC />
-				</Envlp>
-			</SplmtryData>
+			
 	</CdtTrfTxInf>
 			 <CdtTrfTxInf>
 			<PmtId>
@@ -86,11 +82,7 @@
 				<Ustrd>Payment for Invoice-12345</Ustrd>
 			</RmtInf>
 			
-			<SplmtryData>
-				<Envlp>
-					<WC />
-				</Envlp>
-			</SplmtryData>
+			
 	</CdtTrfTxInf>
 			 </PmtInf>
 </CstmrCdtTrfInitn>

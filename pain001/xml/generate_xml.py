@@ -35,7 +35,10 @@ from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
 )
 from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
-from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
+from pain001.xml.validate_via_xsd import (
+    collect_xsd_validation_errors,
+    validate_xml_string_via_xsd,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +50,104 @@ _TEMPLATE_DIRECTIVE_PATTERN = re.compile(
 
 # ISO 20022 amounts carry at most two decimal places.
 _AMOUNT_EXPONENT = Decimal("0.01")
+
+# Common caller-side field aliases -> canonical field names. LLM agents and
+# ad-hoc integrations naturally say "amount"/"currency"; the schemas and
+# templates use payment_amount / payment_currency (the JSON Schemas document
+# "currency", the templates read "payment_currency" - both are canonical
+# spellings of the same value, so the pair is mirrored bidirectionally).
+_FIELD_ALIASES: dict[str, str] = {
+    "amount": "payment_amount",
+    "instructed_amount": "payment_amount",
+    "payment_currency": "currency",
+    "currency": "payment_currency",
+    "execution_date": "requested_execution_date",
+}
+
+# Keys whose canonical spelling carries an upper-case identifier suffix;
+# callers frequently produce the all-lower-case form.
+_IDENTIFIER_KEYS: dict[str, str] = {
+    "debtor_account_iban": "debtor_account_IBAN",
+    "creditor_account_iban": "creditor_account_IBAN",
+    "debtor_agent_bic": "debtor_agent_BIC",
+    "creditor_agent_bic": "creditor_agent_BIC",
+    "forwarding_agent_bic": "forwarding_agent_BIC",
+    "charge_agent_bicfi": "charge_agent_BICFI",
+    "creditor_agent_bicfi": "creditor_agent_BICFI",
+    "debtor_agent_account_iban": "debtor_agent_account_IBAN",
+    "charge_account_iban": "charge_account_IBAN",
+}
+
+_DATE_ONLY_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+_DATETIME_SPACE_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$")
+_DATETIME_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]")
+
+# Fields rendered into xs:dateTime XML content (e.g. GrpHdr/CreDtTm): a bare
+# date is coerced to midnight so "2026-07-18" does not fail XSD validation.
+_DATETIME_FIELDS = ("date",)
+# Fields rendered into xs:date XML content (e.g. ReqdExctnDt/Dt): a full
+# datetime is truncated to its date part.
+_DATE_FIELDS = ("requested_execution_date", "reference_date")
+# Fields rendered into xs:boolean XML content.
+_BOOLEAN_FIELDS = ("batch_booking",)
+
+
+def _canonicalize_keys(row: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of ``row`` with alias keys mapped to canonical names.
+
+    An alias never overwrites an explicitly-provided canonical key with a
+    non-empty value.
+
+    Args:
+        row: The raw input row.
+
+    Returns:
+        A new dict whose keys are the canonical field names.
+    """
+    updated: dict[str, Any] = dict(row)
+    for key, value in row.items():
+        canonical = _IDENTIFIER_KEYS.get(key.lower())
+        if canonical is None:
+            canonical = _FIELD_ALIASES.get(key)
+        if canonical is None or canonical == key:
+            continue
+        existing = updated.get(canonical)
+        if existing is None or str(existing).strip() == "":
+            updated[canonical] = value
+    return updated
+
+
+def _coerce_temporal_and_boolean(row: dict[str, Any]) -> dict[str, Any]:
+    """Coerce date/datetime/boolean values into their XSD lexical forms.
+
+    Args:
+        row: A canonical-key row (mutated in place and returned).
+
+    Returns:
+        The same row with temporal and boolean fields in XSD form.
+    """
+    for key in _DATETIME_FIELDS:
+        value = row.get(key)
+        if isinstance(value, str):
+            text = value.strip()
+            if _DATE_ONLY_RE.match(text):
+                row[key] = f"{text}T00:00:00"
+            elif _DATETIME_SPACE_RE.match(text):
+                row[key] = text.replace(" ", "T", 1)
+    for key in _DATE_FIELDS:
+        value = row.get(key)
+        if isinstance(value, str):
+            text = value.strip()
+            if _DATETIME_RE.match(text):
+                row[key] = text[:10]
+    for key in _BOOLEAN_FIELDS:
+        value = row.get(key)
+        if isinstance(value, str) and value.strip().lower() in (
+            "true",
+            "false",
+        ):
+            row[key] = value.strip().lower()
+    return row
 
 
 def _format_amount(value: Any, row_index: int) -> str:
@@ -112,7 +213,8 @@ def _normalize_financial_fields(
     normalized: list[dict[str, Any]] = []
     total = Decimal("0.00")
     for index, row in enumerate(data, start=1):
-        formatted = _format_amount(row.get("payment_amount"), index)
+        updated = _canonicalize_keys(row)
+        formatted = _format_amount(updated.get("payment_amount"), index)
         total += Decimal(formatted)
         # XSD xs:boolean only accepts "true"/"false"; Python bools from
         # typed sources (JSON, SQLite) would otherwise render as "True".
@@ -122,11 +224,70 @@ def _normalize_financial_fields(
                 if isinstance(value, bool)
                 else value
             )
-            for key, value in row.items()
+            for key, value in updated.items()
         }
+        updated = _coerce_temporal_and_boolean(updated)
         updated["payment_amount"] = formatted
         normalized.append(updated)
+    for updated in normalized:
+        # Batch totals are always computed from the rows; caller-supplied
+        # values are overwritten so the message stays internally consistent
+        # and the header fields never have to be provided by hand. Kept as
+        # int/float so the rows also satisfy the JSON Schemas' types.
+        updated["nb_of_txs"] = len(normalized)
+        updated["ctrl_sum"] = float(total)
     return normalized, str(len(normalized)), f"{total:.2f}"
+
+
+def canonicalize_payment_record(row: dict[str, Any]) -> dict[str, Any]:
+    """Map a record's alias keys to canonical field names, preserving values.
+
+    The key-mapping half of :func:`normalize_payment_records`: ``amount``
+    becomes ``payment_amount``, ``currency`` and ``payment_currency``
+    mirror each other, and lower-case ``*_iban`` / ``*_bic`` spellings are
+    canonicalized - without reformatting any value. Use this before
+    JSON-Schema validation, where typed values (numbers, booleans) must
+    keep their types.
+
+    Args:
+        row: The raw input record.
+
+    Returns:
+        A new dict with canonical keys; the input is not mutated.
+    """
+    return _canonicalize_keys(row)
+
+
+def normalize_payment_records(
+    data: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Normalize caller records into the canonical pain.001 input shape.
+
+    Applies the same ergonomics the generators use internally, so records
+    can also be pre-normalized before JSON-Schema validation:
+
+    * field aliases (``amount`` -> ``payment_amount``, ``currency`` <->
+      ``payment_currency``, lower-case IBAN/BIC key spellings, ...);
+    * amounts formatted as exact two-decimal strings;
+    * Python/JSON booleans (and ``"True"``/``"FALSE"`` strings) rendered
+      in XSD form (``"true"``/``"false"``);
+    * bare dates coerced to the XSD lexical form each field requires
+      (``date`` -> ``YYYY-MM-DDT00:00:00``, ``requested_execution_date``
+      truncated to ``YYYY-MM-DD``);
+    * ``nb_of_txs`` and ``ctrl_sum`` computed from the rows themselves.
+
+    Args:
+        data: The raw payment rows.
+
+    Returns:
+        A new list of normalized rows; the input is not mutated.
+
+    A ``PaymentValidationError`` from amount normalization (missing,
+    non-numeric, non-positive, or over-precise payment amounts)
+    propagates unchanged.
+    """
+    normalized, _, _ = _normalize_financial_fields(data)
+    return normalized
 
 
 def _load_trusted_template_source(xml_template_path: str) -> str:
@@ -257,8 +418,14 @@ def generate_xml_string(
             message_type=payment_initiation_message_type,
             schema_path=str(xsd_schema_path),
         )
+        # Report every violation at once (element path + reason) so a
+        # caller can fix all inputs in a single retry instead of probing
+        # one opaque failure per attempt.
+        reasons = collect_xsd_validation_errors(xml_content, xsd_schema_path)
+        detail = "; ".join(reasons) if reasons else "unknown reason"
         raise RuntimeError(
-            f"Generated XML failed validation against {xsd_schema_path}"
+            f"Generated XML failed validation against "
+            f"{xsd_schema_path}: {detail}"
         )
 
     emit_metric_event(

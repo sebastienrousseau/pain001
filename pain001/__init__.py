@@ -17,7 +17,7 @@
 
 import logging
 
-__version__ = "0.0.53"
+__version__ = "0.0.54"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
@@ -54,15 +54,21 @@ from pain001.validation import (
     sanitize_to_charset,
     validate_scheme,
 )
-from pain001.xml.generate_xml import generate_xml_string
+from pain001.xml.generate_xml import (
+    canonicalize_payment_record,
+    generate_xml_string,
+    normalize_payment_records,
+)
 
 __all__ = [
     "main",
     "process_files",
     "process_files_async",
     "process_files_streaming_async",
+    "canonicalize_payment_record",
     "generate_xml_string",
     "generate_xml_string_async",
+    "normalize_payment_records",
     "parse_pain002_report",
     "build_pain002_report",
     "parse_camt053_statement",

@@ -55,11 +55,12 @@
 				<Ustrd>{{tx.remittance_information}}</Ustrd>
 			</RmtInf>
 			{% endif %}
-			<SplmtryData>
+			{% if tx.supplementary_data %}<SplmtryData>
 				<Envlp>
-					<WC />
+					<WC>{{tx.supplementary_data}}</WC>
 				</Envlp>
 			</SplmtryData>
+			{% endif %}
 	</CdtTrfTxInf>
 			{% endfor %} </PmtInf>
 </CstmrCdtTrfInitn>
