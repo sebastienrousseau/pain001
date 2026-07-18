@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.55] - 2026-07-18
+
+Security hardening for the async job API and a dependency bump. Closes the
+outstanding CodeQL path-injection findings on the job store and the API
+output-directory sink, and clears the `mcp` Dependabot advisory.
+
+### Security
+
+- **Job id path-traversal hardening (`pain001/api/job_store.py`, CWE-22):**
+  every identifier that becomes part of a filesystem path or Redis key is now
+  validated against a strict safe-token pattern
+  (`[A-Za-z0-9][A-Za-z0-9_-]{0,127}`) before use — rejecting path separators,
+  `..`, and leading dots. `FileJobStore._path` additionally enforces a
+  canonical `os.path.realpath` + `os.path.commonpath` + `startswith`
+  containment barrier so a resolved job file can never escape the store
+  directory, and `RedisJobStore._key` validates the id before namespacing it.
+- **API output-directory sink (`pain001/api/app.py`):** `_gate_output_dir`
+  now applies the `startswith` containment barrier on the canonicalised
+  candidate it returns, so the downstream `mkdir` sink clears the CodeQL
+  `py/path-injection` query natively rather than relying on the neutral model.
+
+### Changed
+
+- **`mcp` dependency raised to `>=1.28.1,<2`** (was `>=1.23,<2`) to clear the
+  Dependabot advisory affecting `mcp < 1.28.1`; `poetry.lock` now resolves
+  `mcp` 1.28.1.
+
+### Fixed
+
+- **`tests/test_sepa_b2b_profile.py`:** collapsed the duplicate
+  `import pain001` / `from pain001 import validate_scheme` pair into a single
+  `from pain001 import __version__, validate_scheme`, resolving the
+  `py/import-and-import-from` note.
+
 ## [0.0.54] - 2026-07-16
 
 LLM-ergonomic generate path. Driven by a real agent transcript in which
