@@ -198,3 +198,28 @@ def test_redis_url_or_client_required():
     """Constructor rejects calls without either ``url`` or ``client``."""
     with pytest.raises(ValueError, match="url or a client"):
         RedisJobStore()
+
+
+@pytest.mark.parametrize(
+    "bad_id",
+    ["../../etc/passwd", "a:b", "a/b", ".hidden", "", "with space"],
+)
+def test_redis_key_rejects_unsafe_ids(fake_redis_client, bad_id):
+    """Unsafe job ids are rejected before a Redis key is built."""
+    store = RedisJobStore(client=fake_redis_client)
+    with pytest.raises(ValueError, match="Unsafe job id"):
+        store.save(bad_id, {"job_id": bad_id})
+    with pytest.raises(ValueError, match="Unsafe job id"):
+        store.delete(bad_id)
+
+
+@pytest.mark.parametrize(
+    "good_id",
+    ["abc", "abc-123", "job_42", "550e8400-e29b-41d4-a716-446655440000"],
+)
+def test_redis_key_accepts_valid_ids(fake_redis_client, good_id):
+    """Valid ids namespace cleanly and round-trip through the store."""
+    store = RedisJobStore(client=fake_redis_client, namespace="ns:jobs")
+    assert store._key(good_id) == f"ns:jobs:{good_id}"
+    store.save(good_id, {"job_id": good_id, "status": "pending"})
+    assert store.load_all()[good_id]["status"] == "pending"

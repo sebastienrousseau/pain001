@@ -195,7 +195,15 @@ def _gate_output_dir(user_dir: str | None) -> Path:
             common = os.path.commonpath([candidate, base])
         except ValueError:  # pragma: no cover - different drives on Windows
             continue
-        if common == base:
+        # ``commonpath`` equality plus an explicit ``startswith`` on the
+        # canonicalised candidate are both barriers the CodeQL
+        # py/path-injection query recognises. Requiring them together — on
+        # the very value returned and later passed to ``mkdir`` — lets the
+        # taint tracker clear the sink natively, without relying on the
+        # neutral model in pain001-security.model.yml.
+        if common == base and (
+            candidate == base or candidate.startswith(base + os.sep)
+        ):
             return Path(candidate)
     raise HTTPException(  # pragma: no cover - defensive barrier
         status_code=status.HTTP_403_FORBIDDEN,

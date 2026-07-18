@@ -24,8 +24,37 @@ job submitted before a deploy can still be polled afterwards.
 
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
+
+# A job id becomes part of a filesystem path (``FileJobStore``) and a Redis
+# key (``RedisJobStore``). Both are security-sensitive sinks: a value such
+# as ``../../etc/passwd`` would let a caller escape the store directory
+# (CWE-22, path traversal). Constrain ids to a conservative safe token —
+# no path separators, no ``..``, no leading dot — before they are ever used
+# to build a path or key.
+_SAFE_JOB_ID = re.compile(r"[A-Za-z0-9][A-Za-z0-9_-]{0,127}")
+
+
+def _validate_job_id(job_id: str) -> str:
+    """Return ``job_id`` unchanged iff it is a safe identifier token.
+
+    Args:
+        job_id: Candidate job identifier, possibly attacker-controlled
+            (it originates from an API route parameter).
+
+    Returns:
+        The validated identifier.
+
+    Raises:
+        ValueError: If ``job_id`` is not a safe token (contains a path
+            separator, ``..``, a leading dot, or any other disallowed
+            character).
+    """
+    if not isinstance(job_id, str) or _SAFE_JOB_ID.fullmatch(job_id) is None:
+        raise ValueError(f"Unsafe job id: {job_id!r}")
+    return job_id
 
 
 @runtime_checkable
@@ -70,13 +99,35 @@ class FileJobStore:
     def _path(self, job_id: str) -> Path:
         """Return the on-disk path for a job id.
 
+        ``job_id`` is validated as a safe token first, then the resolved
+        candidate is asserted to stay within ``self.directory`` using the
+        canonical ``os.path.realpath`` + ``os.path.commonpath`` containment
+        pattern that the CodeQL ``py/path-injection`` query recognises.
+
         Args:
             job_id: Unique job identifier.
 
         Returns:
             The JSON file path for the job.
+
+        Raises:
+            ValueError: If ``job_id`` is not a safe token or the resolved
+                path would escape ``self.directory``.
         """
-        return self.directory / f"{job_id}.json"
+        safe_id = _validate_job_id(job_id)
+        base = os.path.realpath(str(self.directory))
+        candidate = os.path.realpath(os.path.join(base, f"{safe_id}.json"))
+        # Defence-in-depth CWE-22 barrier. ``_validate_job_id`` already
+        # rejects separators and ``..``, so this can only trip if ``base``
+        # itself is adversarial; it is the realpath+commonpath+startswith
+        # sanitiser the CodeQL taint tracker links to the write sinks.
+        if os.path.commonpath(
+            [candidate, base]
+        ) != base or not candidate.startswith(
+            base + os.sep
+        ):  # pragma: no cover - _validate_job_id makes this unreachable
+            raise ValueError(f"Refusing unsafe job id path: {job_id!r}")
+        return Path(candidate)
 
     def save(self, job_id: str, snapshot: dict[str, Any]) -> None:
         """Atomically persist a job snapshot as JSON.
@@ -160,8 +211,20 @@ class RedisJobStore:
         self._namespace = namespace.rstrip(":")
 
     def _key(self, job_id: str) -> str:
-        """Return the namespaced Redis key for a job id."""
-        return f"{self._namespace}:{job_id}"
+        """Return the namespaced Redis key for a job id.
+
+        The id is validated as a safe token first (via
+        :func:`_validate_job_id`, which raises ``ValueError`` on an unsafe
+        token) so it cannot inject namespace separators or otherwise escape
+        its key space.
+
+        Args:
+            job_id: Unique job identifier.
+
+        Returns:
+            The namespaced Redis key.
+        """
+        return f"{self._namespace}:{_validate_job_id(job_id)}"
 
     def save(self, job_id: str, snapshot: dict[str, Any]) -> None:
         """Persist a single job snapshot.

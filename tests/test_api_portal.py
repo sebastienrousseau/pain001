@@ -13,6 +13,8 @@
 
 """Tests for the REST API portal: versioning, rate limiting, persistence."""
 
+from pathlib import Path
+
 import pytest
 
 pytest.importorskip("fastapi")
@@ -219,6 +221,52 @@ class TestFileJobStore:
         assert "x" not in store.load_all()
         # Deleting a missing job is a no-op.
         store.delete("missing")
+
+    @pytest.mark.parametrize(
+        "bad_id",
+        [
+            "../../etc/passwd",
+            "../secret",
+            "a/b",
+            "a\\b",
+            ".hidden",
+            "",
+            "foo/../bar",
+            "with space",
+            "sub/../../escape",
+        ],
+    )
+    def test_path_rejects_traversal_and_separators(
+        self, tmp_path, bad_id
+    ) -> None:
+        """Unsafe job ids are rejected before a path is ever built."""
+        store = FileJobStore(tmp_path)
+        with pytest.raises(ValueError, match="Unsafe job id"):
+            store.save(bad_id, {"job_id": bad_id})
+        with pytest.raises(ValueError, match="Unsafe job id"):
+            store.delete(bad_id)
+
+    @pytest.mark.parametrize(
+        "good_id",
+        [
+            "abc",
+            "abc-123",
+            "job_42",
+            "550e8400-e29b-41d4-a716-446655440000",
+            "A",
+        ],
+    )
+    def test_path_accepts_valid_ids_and_stays_contained(
+        self, tmp_path, good_id
+    ) -> None:
+        """Valid ids round-trip and their file stays inside the store dir."""
+        store = FileJobStore(tmp_path)
+        resolved = store._path(good_id)
+        base = Path(tmp_path).resolve()
+        assert resolved.parent == base
+        assert resolved.name == f"{good_id}.json"
+        store.save(good_id, {"job_id": good_id, "status": "pending"})
+        assert store.load_all()[good_id]["status"] == "pending"
 
     def test_from_env_unset(self, monkeypatch) -> None:
         """No store is built when the env var is unset."""
