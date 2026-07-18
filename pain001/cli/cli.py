@@ -1023,6 +1023,130 @@ def mcp_cmd() -> None:
     mcp_main()  # pragma: no cover - long-running server process
 
 
+@cli.group("plugins")
+def plugins_group() -> None:
+    """Inspect the plugin substrate (loaders, validators, schemes, writers)."""
+
+
+@plugins_group.command("list")
+@click.option(
+    "--kind",
+    type=click.Choice(["loader", "validator", "scheme", "writer"]),
+    default=None,
+    help="Filter to one plugin kind.",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    default=False,
+    help="Emit the plugin list as a JSON array.",
+)
+def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
+    """List every registered plugin (built-in + entry-point discovered).
+
+    Args:
+        kind: Optional kind filter (loader / validator / scheme / writer).
+        as_json: If True, print a JSON array instead of a table.
+    """
+    from pain001.plugins.registry import registry as plugin_registry
+
+    infos = plugin_registry.list_plugins(kind=kind)
+    if as_json:
+        console.print_json(
+            json.dumps(
+                [
+                    {
+                        "kind": info.kind,
+                        "name": info.meta.name,
+                        "version": info.meta.version,
+                        "api_version": list(info.meta.api_version),
+                        "description": info.meta.description,
+                        "source": info.meta.source,
+                    }
+                    for info in infos
+                ]
+            )
+        )
+        return
+    table = Table(box=box.SIMPLE_HEAVY, title="Registered plugins")
+    table.add_column("Kind")
+    table.add_column("Name")
+    table.add_column("Source")
+    table.add_column("Description")
+    for info in infos:
+        table.add_row(
+            info.kind,
+            info.meta.name,
+            info.meta.source,
+            info.meta.description,
+        )
+    console.print(table)
+
+
+@plugins_group.command("show")
+@click.argument("name")
+@click.option(
+    "--kind",
+    type=click.Choice(["loader", "validator", "scheme", "writer"]),
+    default=None,
+    help="Narrow the search to one kind when the same name exists across kinds.",
+)
+def plugins_show_cmd(name: str, kind: str | None) -> None:
+    """Print the metadata for a single plugin by name.
+
+    Args:
+        name: Plugin's declared name (e.g. ``csv``, ``sepa-sct``).
+        kind: Optional kind filter to disambiguate.
+    """
+    from pain001.plugins.registry import registry as plugin_registry
+
+    matches = [
+        info
+        for info in plugin_registry.list_plugins(kind=kind)
+        if info.meta.name == name
+    ]
+    if not matches:
+        console.print(
+            f"[bold red]✗ Error:[/bold red] No plugin named "
+            f"[yellow]{name}[/yellow]"
+            + (f" of kind [yellow]{kind}[/yellow]" if kind else "")
+            + "."
+        )
+        sys.exit(1)
+    for info in matches:
+        console.print(
+            f"[bold cyan]{info.kind}[/bold cyan] "
+            f"[bold]{info.meta.name}[/bold] "
+            f"[dim]v{info.meta.version}[/dim]\n"
+            f"  source:      {info.meta.source}\n"
+            f"  api version: "
+            f"{info.meta.api_version[0]}.{info.meta.api_version[1]}\n"
+            f"  description: {info.meta.description}"
+        )
+
+
+@plugins_group.command("disable")
+def plugins_disable_cmd() -> None:
+    """Show how to disable plugins via ``PAIN001_DISABLE_PLUGINS``.
+
+    Documentation-only command: the environment variable is the
+    canonical disable mechanism because it persists for the lifetime
+    of a process and survives CLI flag bypass.
+    """
+    console.print(
+        "[bold]Disable plugins via the [cyan]PAIN001_DISABLE_PLUGINS[/cyan] "
+        "environment variable.[/bold]\n\n"
+        "  [dim]# disable a single plugin[/dim]\n"
+        "  PAIN001_DISABLE_PLUGINS=parquet pain001 plugins list\n\n"
+        "  [dim]# disable several (comma-separated, whitespace ignored)[/dim]\n"
+        "  PAIN001_DISABLE_PLUGINS='parquet,sqlite' pain001 plugins list\n\n"
+        "The disabled set is read once per process at registry init; "
+        "exporting the variable in your shell profile makes the override "
+        "persistent across runs."
+    )
+
+
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
     cli()
