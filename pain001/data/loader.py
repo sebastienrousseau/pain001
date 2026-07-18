@@ -142,19 +142,34 @@ def load_payment_data(
 
 def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     """
-    Load data from file (CSV, SQLite, JSON, or Parquet).
+    Load data from file (CSV, SQLite, JSON, Parquet, or a plugin-registered format).
 
-    This preserves the existing behaviour for backward compatibility.
-    and adds support for JSON and Parquet formats.
+    Extensions in the built-in dispatch table (`.csv`, `.db`,
+    `.json`, `.jsonl`, `.parquet`) keep their existing post-load
+    validator. Anything else falls through to the v0.0.54 plugin
+    registry so an installed third-party loader
+    (`pain001-loader-xlsx`, `pain001-loader-gpg`, ...) handles the
+    file. Plugin-handled formats own their own validation.
     """
     import os
 
-    # First, check if file extension is supported (for better error messages)
-    supported_extensions = [".csv", ".db", ".json", ".jsonl", ".parquet"]
-    if not any(file_path.endswith(ext) for ext in supported_extensions):
+    from pain001.plugins.registry import registry as plugin_registry
+
+    # Early extension check (fast-fail before path validation). The
+    # supported set is the union of the built-in dispatch table and any
+    # extension a plugin has registered for - so installing
+    # `pain001-loader-xlsx` makes `.xlsx` immediately accepted here.
+    ext = os.path.splitext(file_path)[1]
+    builtin_extensions = set(_get_file_loaders().keys())
+    plugin_handles_ext = (
+        plugin_registry.get_loader_for_extension(ext) is not None
+    )
+    if ext not in builtin_extensions and not plugin_handles_ext:
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
-            f"Expected .csv, .db, .json, .jsonl, or .parquet file."
+            f"Expected .csv, .db, .json, .jsonl, or .parquet file, or "
+            f"install a plugin that registers the {ext!r} extension "
+            f"(see `pain001 plugins list`)."
         )
 
     # CodeQL: Prevent path traversal by anchoring to current working directory
@@ -172,22 +187,29 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
             f"Data file validation failed: {file_path}\nError: {e}"
         ) from e
 
-    # Use safe_path for all subsequent operations
-    ext = os.path.splitext(safe_path)[1]
+    # Built-in dispatch path (unchanged behaviour - validator runs post-load).
     entry = _get_file_loaders().get(ext)
-    if entry is None:  # pragma: no cover
-        raise DataSourceError(  # pragma: no cover
-            f"Unsupported file type: {file_path}. "
-            f"Expected .csv, .db, .json, .jsonl, or .parquet file."
-        )
+    if entry is not None:
+        loader_fn, validator_fn, format_name = entry
+        data = cast(list[dict[str, Any]], loader_fn(safe_path))
+        if not validator_fn(data):
+            raise PaymentValidationError(
+                f"{format_name} data validation failed for {file_path}"
+            )
+        return data
 
-    loader_fn, validator_fn, format_name = entry
-    data = cast(list[dict[str, Any]], loader_fn(safe_path))
-    if not validator_fn(data):
-        raise PaymentValidationError(
-            f"{format_name} data validation failed for {file_path}"
+    # Plugin path: an external loader registered for this extension.
+    plugin_loader = plugin_registry.get_loader_for_extension(ext)
+    if plugin_loader is None:  # pragma: no cover - guarded by early check
+        # Belt-and-braces: the early extension check above already
+        # confirmed a plugin claims this ext, so this is unreachable
+        # unless the registry mutated between the two calls.
+        raise DataSourceError(
+            f"Unsupported file type: {file_path}. "
+            f"Install a plugin that registers the {ext!r} extension."
         )
-    return data
+    result = plugin_loader.load(safe_path)
+    return result.rows
 
 
 def _load_from_list(data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:

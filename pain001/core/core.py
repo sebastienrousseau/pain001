@@ -36,7 +36,11 @@ from pain001.logging_schema import (
     log_process_start,
     log_process_success,
 )
-from pain001.observability import emit_metric_event
+from pain001.observability import (
+    emit_metric_event,
+    set_span_attributes,
+    traced,
+)
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
 # Library code: no handlers, no level overrides — the host
@@ -244,6 +248,7 @@ def _generate_and_log(
     return written_path, int((time.time() - gen_start) * 1000)
 
 
+@traced("pain001.generate")
 def process_files(
     xml_message_type: str,
     xml_template_file_path: str,
@@ -286,6 +291,15 @@ def process_files(
             xml_message_type, xml_template_file_path, xsd_schema_file_path
         )
         payment_data = _load_data(data_file_path, start_time)
+        # Stamp the active OTel span (a no-op when OTEL_ENABLED is
+        # unset) so operators can pivot traces by message type +
+        # row count.
+        set_span_attributes(
+            **{
+                "pain001.message_type": xml_message_type,
+                "pain001.row_count": len(payment_data),
+            }
+        )
         _register_message_namespaces(xml_message_type)
         written_path, gen_duration = _generate_and_log(
             payment_data,

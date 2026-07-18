@@ -5,6 +5,56 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.56] - 2026-07-18
+
+Ships the plugin substrate, a GPG-encrypted-input loader, and an
+OpenTelemetry observability surface **on top of** the 0.0.55 path-injection
+hardening. This is the first release to publish `pain001.plugins` to PyPI:
+the feature work that had been developed in parallel with the 0.0.55 security
+release is merged forward here with the job-store containment guarantees fully
+preserved.
+
+### Added
+
+- **Plugin substrate (`pain001.plugins`):** a formal, versioned plugin
+  contract (`contracts.py` — `AbstractLoader` / `AbstractValidator` /
+  `AbstractScheme` / `AbstractWriter` Protocols), a process-level
+  `PluginRegistry` (`registry.py`) that discovers built-ins eagerly and
+  third-party plugins via `importlib.metadata` entry points, the built-in
+  loader adapters (`_builtins.py`), and a single-source contract API version
+  (`_version.py`). Exposed on PyPI for the first time.
+- **GPG-encrypted-input loader (`pain001[gpg]` extra):** `builtins_gpg.py`
+  registers an opt-in loader (`kind=loader`, `name=gpg`) that decrypts
+  `.gpg` / `.asc` inputs in memory via `python-gnupg` and dispatches to the
+  inner-extension loader (`batch.csv.gpg` → gpg → csv). Decrypted bytes still
+  flow through the existing path-validator and schema guards.
+- **OpenTelemetry observability surface (`pain001[otel]` extra):** opt-in
+  distributed tracing (`traced`, `init_otel`, `set_span_attributes`,
+  re-exported from `pain001.observability.otel`), off by default and enabled
+  with `OTEL_ENABLED=true`. Metric events attach the active span's
+  `(trace_id, span_id, is_remote)` so metrics correlate back to traces.
+
+### Security
+
+- **Retains all 0.0.55 path-injection hardening.** The merge preserves
+  `pain001/api/job_store.py` in full: the module-level `_validate_job_id`
+  safe-token gate (`[A-Za-z0-9][A-Za-z0-9_-]{0,127}`), the
+  `FileJobStore._path` `realpath` + `commonpath` + `startswith` containment
+  barrier, and `RedisJobStore._key` validating the id before namespacing it.
+  The `pain001/api/app.py` `_gate_output_dir` containment and the
+  `mcp>=1.28.1` bump are carried forward unchanged.
+
+### Changed
+
+- **New optional extras `gpg` and `otel`** added to `pyproject.toml`
+  (`python-gnupg`, `opentelemetry-api` / `-sdk` / `-exporter-otlp-proto-http`).
+  `poetry.lock` regenerated cleanly (`mcp` resolves 1.28.1,
+  `pydantic-settings` at 2.14.2).
+- **mypy `--strict` type-correctness on the plugin surface:** built-in
+  loaders annotate `extensions: tuple[str, ...]` to satisfy the
+  `AbstractLoader` Protocol invariantly, and `gnupg` / `opentelemetry` are
+  registered as untyped third-party imports.
+
 ## [0.0.55] - 2026-07-18
 
 Security hardening for the async job API and a dependency bump. Closes the
