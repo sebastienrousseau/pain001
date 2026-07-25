@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pain001"
-version = "0.0.56"
+version = "0.0.57"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 license = "Apache-2.0"
@@ -11,6 +11,7 @@ packages = [
     { include = "pain001" },
 ]
 include = [
+    "pain001/py.typed",
     "pain001/schemas/*",
     "pain001/templates/**/*",
     "pain001/config/*.yaml",
