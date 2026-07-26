@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.57] - 2026-07-25
+
+A small **type-distribution and test-hardening** release. No runtime
+behaviour change; no public API change.
+
+### Added
+
+- **PEP 561 `py.typed` marker.** The package has been `mypy --strict`
+  clean internally for several releases, but shipped no `py.typed`
+  marker — so downstream consumers received none of the annotations.
+  The marker is now present and included in both the wheel and the sdist
+  (verified: `pain001/py.typed` is packaged in the built wheel). Type
+  checkers now see `pain001` as a typed dependency.
+- **Regression tests for the marker** (`test_typing_and_validator_properties.py`):
+  fail before release if `py.typed` is ever dropped from the tree or the
+  packaging include list.
+- **Property test: in-memory and on-disk XSD validators agree.** A
+  Hypothesis test pins `validate_xml_string_via_xsd` (the serverless /
+  in-memory path) and `validate_via_xsd` (the on-disk path) to the same
+  verdict across valid and invalid documents, so a deployment-shape
+  divergence cannot let a document pass one gate and fail the other.
+
+### Changed
+
+- Version synced to `0.0.57` across `pyproject.toml`, `constants.py`,
+  `__init__.py` and the GPG plugin's advertised version.
+
 ## [0.0.56] - 2026-07-18
 
 Ships the plugin substrate, a GPG-encrypted-input loader, and an

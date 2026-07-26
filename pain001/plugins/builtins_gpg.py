@@ -172,7 +172,7 @@ class _GpgDecryptingLoader:
 
     meta = PluginMeta(
         name="gpg",
-        version="0.0.56",  # synced with the pain001 build that ships it
+        version="0.0.57",  # synced with the pain001 build that ships it
         description=(
             "Decrypt .gpg / .asc files in memory then dispatch to the "
             "inner-extension loader (pain001[gpg])."
