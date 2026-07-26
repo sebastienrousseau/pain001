@@ -1,0 +1,58 @@
+# SLSA Build Level 3 provenance for every published release.
+#
+# When ci.yml publishes a release (dist wheels/sdist + SBOM attached),
+# this workflow hashes the release assets and calls the SLSA generic
+# generator, which signs a provenance attestation on isolated
+# infrastructure and uploads `*.intoto.jsonl` back to the same release.
+#
+# Consumers verify with slsa-verifier:
+#   slsa-verifier verify-artifact pain001-<v>.whl \
+#     --provenance-path multiple.intoto.jsonl \
+#     --source-uri github.com/sebastienrousseau/pain001
+#
+# NOTE: the reusable generator MUST be referenced by tag, not SHA —
+# slsa-verifier validates the generator's own provenance against its
+# release tag. This is the documented exception to SHA pinning.
+
+name: SLSA provenance
+
+on:
+  release:
+    types: [published]
+
+permissions: read-all
+
+jobs:
+  hashes:
+    name: Hash release assets
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      hashes: ${{ steps.hash.outputs.hashes }}
+    steps:
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.event.release.tag_name }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir assets
+          ls -la assets
+
+      - name: Compute base64-encoded subject hashes
+        id: hash
+        run: |
+          cd assets
+          echo "hashes=$(sha256sum -- * | base64 -w0)" >> "$GITHUB_OUTPUT"
+
+  provenance:
+    name: Generate signed provenance
+    needs: hashes
+    permissions:
+      actions: read   # read the workflow path
+      id-token: write # sign via Sigstore OIDC
+      contents: write # upload the attestation to the release
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.hashes.outputs.hashes }}
+      upload-assets: true
