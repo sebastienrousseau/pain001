@@ -8,6 +8,9 @@ on:
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
 
+permissions:
+  contents: read
+
 jobs:
   # Job 1: Mutation Testing (Fast on PR/Push, Full on Schedule)
   mutation-fast:
@@ -15,14 +18,14 @@ jobs:
     name: 🧬 Mutation Testing (Fast)
     if: github.event_name != 'schedule'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4
         with:
           python-version: "3.12"
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@a5643c67b5fcc9ac5eddb395c7f61b1b66d86034 # v2
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate-fast || true  # Continue on failure, upload results
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: mutation-fast-results
@@ -37,14 +40,14 @@ jobs:
     name: 🧬 Mutation Testing (Full - Weekly)
     if: github.event_name == 'schedule'
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4
         with:
           python-version: "3.12"
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@a5643c67b5fcc9ac5eddb395c7f61b1b66d86034 # v2
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate || true  # Continue on failure
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: mutation-full-results
@@ -58,14 +61,14 @@ jobs:
     runs-on: ubuntu-latest
     name: ⚡ Performance Benchmarks
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4
         with:
           python-version: "3.12"
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@a5643c67b5fcc9ac5eddb395c7f61b1b66d86034 # v2
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make perf
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: benchmarks
           path: |
@@ -76,14 +79,14 @@ jobs:
     runs-on: ubuntu-latest
     name: 📊 Coverage Report
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4
         with:
           python-version: "3.12"
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@a5643c67b5fcc9ac5eddb395c7f61b1b66d86034 # v2
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make cov
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457 # v3
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
@@ -94,11 +97,11 @@ jobs:
     runs-on: ubuntu-latest
     name: 🔍 Lint (ruff)
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4
         with:
           python-version: "3.12"
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@a5643c67b5fcc9ac5eddb395c7f61b1b66d86034 # v2
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make lint
 
@@ -106,11 +109,11 @@ jobs:
     runs-on: ubuntu-latest
     name: 🔠 Typecheck And Guardrails
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@7f4fc3e22c37d6ff65e88745f38bd3157c663f7c # v4
         with:
           python-version: "3.12"
-      - uses: abatilo/actions-poetry@v2
+      - uses: abatilo/actions-poetry@a5643c67b5fcc9ac5eddb395c7f61b1b66d86034 # v2
       - run: poetry install --no-interaction
       - run: >
           poetry run mypy

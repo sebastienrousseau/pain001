@@ -8,20 +8,23 @@ on:
   schedule:
     - cron: "0 2 * * *"  # Daily 02:00 UTC
 
+permissions:
+  contents: read
+
 jobs:
   vulnerability-scan:
     runs-on: ubuntu-latest
     name: Vulnerability Scan
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.10"
-      - uses: abatilo/actions-poetry@v3
+      - uses: abatilo/actions-poetry@fd0e6716a0de25ef6ade151b8b53190b0376acfd # v3
       - run: poetry install --no-interaction --all-extras
       - name: Generate pip-audit JSON report artifact
         run: poetry run pip-audit --format json --output pip-audit-report.json || true
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: vulnerability-report
           path: pip-audit-report.json
@@ -35,17 +38,17 @@ jobs:
     runs-on: ubuntu-latest
     name: License Compliance
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.10"
-      - uses: abatilo/actions-poetry@v3
+      - uses: abatilo/actions-poetry@fd0e6716a0de25ef6ade151b8b53190b0376acfd # v3
       - run: poetry install --no-interaction --all-extras
       - run: |
           pip install pip-licenses
           pip-licenses --format=json > licenses.json
           pip-licenses --format=markdown > LICENSES_REPORT.md
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: licenses
           path: |

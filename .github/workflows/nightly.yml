@@ -5,18 +5,21 @@ on:
     - cron: "0 6 * * 1"  # Monday 06:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   heavy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: "3.10"
-      - uses: abatilo/actions-poetry@v3
+      - uses: abatilo/actions-poetry@fd0e6716a0de25ef6ade151b8b53190b0376acfd # v3
       - run: poetry install --no-interaction --all-extras
       - run: make check
-      - uses: codecov/codecov-action@v3
+      - uses: codecov/codecov-action@ab904c41d6ece82784817410c45d8b8c02684457 # v3
         with:
           files: ./coverage.xml
           flags: unittests
