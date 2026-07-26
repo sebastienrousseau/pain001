@@ -106,7 +106,9 @@ TODO text eol=lf
 # Exclude files from exporting
 .gitattributes export-ignore
 .gitignore export-ignore
-.github export-ignore
+# .github intentionally NOT export-ignored: OpenSSF Scorecard reads the
+# repo tarball, and excluding .github made Token-Permissions and
+# Dangerous-Workflow report 'no workflows found' (score -1).
 .vscode export-ignore
 tests export-ignore
 htmlcov export-ignore
