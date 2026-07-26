@@ -27,3 +27,22 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
           verbose: true
+
+  fuzz:
+    # Coverage-guided fuzzing of the raw-input validators (IBAN, BIC,
+    # charset sanitisation) via the Atheris harness in fuzz/. Atheris
+    # builds cleanly on the Linux runners; two minutes nightly is enough
+    # to keep the never-raises contract honest.
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.12"
+      - name: Run atheris harness
+        run: |
+          pip install --quiet atheris .
+          python fuzz/fuzz_validation.py -max_total_time=120

@@ -5,7 +5,7 @@
 # FastAPI REST surface (`pain001 serve --host 0.0.0.0`). Multi-arch:
 # linux/amd64 and linux/arm64.
 
-FROM python:3.12-slim AS builder
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder
 
 WORKDIR /build
 
@@ -25,7 +25,7 @@ RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install ".[api]"
 
 
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de
 
 LABEL org.opencontainers.image.title="pain001" \
       org.opencontainers.image.description="Generate and validate ISO 20022 payment files (pain.001 / pain.008) from CSV, SQLite, JSON, or Parquet." \
