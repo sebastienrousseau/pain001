@@ -512,7 +512,7 @@ AI agents call Pain001 as first-class tools.
   prompt.
 - **Standalone** (`pip install pain001-mcp`, run `pain001-mcp`): the
   [`pain001-mcp`](https://github.com/sebastienrousseau/pain001-mcp)
-  companion package — **sixteen tools** including everything in-tree
+  companion package — **seventeen tools** including everything in-tree
   plus `validate_records`, `validate_identifier` (IBAN/BIC),
   `generate_message`, `generate_message_async`,
   `generate_message_from_file`, `list_supported_formats`,
