@@ -50,10 +50,21 @@ jobs:
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir assets
           ls -la assets
 
+      # Exclude any existing attestation. `gh release download` with no
+      # pattern fetches every asset, so re-attesting a release that
+      # already has provenance would list multiple.intoto.jsonl as a
+      # subject and then overwrite that exact file, leaving an
+      # attestation whose own subject digest matches nothing on the
+      # release. Dropping it first also makes a re-run idempotent: the
+      # subject set is the release's real artefacts either way.
       - name: Compute base64-encoded subject hashes
         id: hash
         run: |
+          set -euo pipefail
           cd assets
+          rm -f -- *.intoto.jsonl
+          ls -la
+          test -n "$(ls -A)" || { echo "no assets to attest"; exit 1; }
           echo "hashes=$(sha256sum -- * | base64 -w0)" >> "$GITHUB_OUTPUT"
 
   provenance:
