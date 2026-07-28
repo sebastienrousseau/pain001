@@ -17,6 +17,18 @@
 #     --provenance-path multiple.intoto.jsonl \
 #     --source-uri github.com/sebastienrousseau/pain001
 #
+# TRADE-OFF, measured on the v0.0.58 backfill: provenance produced here
+# records configSource as the ref this workflow was dispatched from —
+# normally refs/heads/main — not the release tag. The command above
+# passes, but the stricter `--source-tag vX.Y.Z` fails with
+# "invalid ref". Dispatching with --ref <tag> would fix that only if
+# the tag already contains this version of the file, which a backfill
+# by definition cannot rely on.
+#
+# So prefer the in-pipeline job: ci.yml's `provenance` runs on the tag
+# push, so its attestation binds to refs/tags/vX.Y.Z and (since 993eb97)
+# covers every release asset. Use this workflow when that did not run.
+#
 # NOTE: the reusable generator MUST be referenced by tag, not SHA —
 # slsa-verifier validates the generator's own provenance against its
 # release tag. This is the documented exception to SHA pinning.
