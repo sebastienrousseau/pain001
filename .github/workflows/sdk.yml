@@ -72,8 +72,8 @@ jobs:
 
       - name: Build the generated client
         run: |
-          cd pain001-client
           pip install --require-hashes -r .github/requirements/build-test.txt
+          cd pain001-client
           # Some generated clients depend on pydantic / urllib3 / etc.
           pip install -e .
           python -c "import pain001_client; print('client', pain001_client.__name__, 'OK')"
