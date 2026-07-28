@@ -63,7 +63,7 @@ class TestRenderPrometheus:
         """Build info and the live gauges are present."""
         body = render_prometheus("9.9.9")
         assert 'pain001_build_info{version="9.9.9"} 1' in body
-        assert "pain001_supported_message_types 11" in body
+        assert "pain001_supported_message_types 12" in body
         # v0.0.53 added the sepa-b2b profile (issue #173); the count
         # now reflects PROFILES rather than a hard-coded number.
         from pain001.validation.schemes import PROFILES

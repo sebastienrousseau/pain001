@@ -11,6 +11,7 @@ Every check maps to a numbered item in RELEASING.md. Checks that need the
 network or a full test run are skipped unless --full is passed, so the
 common case stays fast enough to actually get used.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -28,7 +29,9 @@ problems: list[str] = []
 
 
 def check(label: str, ok: bool, detail: str = "") -> bool:
-    print(f"  {OK if ok else FAIL} {label}" + (f" — {detail}" if detail else ""))
+    print(
+        f"  {OK if ok else FAIL} {label}" + (f" — {detail}" if detail else "")
+    )
     if not ok:
         problems.append(label)
     return ok
@@ -50,18 +53,28 @@ def versions() -> dict[str, str | None]:
 
     return {
         "pyproject.toml": grab("pyproject.toml", r'^version = "([^"]+)"'),
-        "pain001/__init__.py": grab("pain001/__init__.py", r'^__version__ = "([^"]+)"'),
-        "pain001/constants.py": grab("pain001/constants.py", r'^VERSION = "([^"]+)"'),
+        "pain001/__init__.py": grab(
+            "pain001/__init__.py", r'^__version__ = "([^"]+)"'
+        ),
+        "pain001/constants.py": grab(
+            "pain001/constants.py", r'^VERSION = "([^"]+)"'
+        ),
     }
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("version", nargs="?", help="expected version, e.g. 0.0.58")
-    ap.add_argument("--tag", action="store_true",
-                    help="create the signed tag if every check passes")
-    ap.add_argument("--full", action="store_true",
-                    help="also run the test suite, build and pip-audit (slow)")
+    ap.add_argument(
+        "--tag",
+        action="store_true",
+        help="create the signed tag if every check passes",
+    )
+    ap.add_argument(
+        "--full",
+        action="store_true",
+        help="also run the test suite, build and pip-audit (slow)",
+    )
     args = ap.parse_args()
 
     print("Pre-flight checks (RELEASING.md):\n")
@@ -69,16 +82,29 @@ def main() -> int:
     # 6. version identical in the three files
     vs = versions()
     unique = set(vs.values())
-    check("version is identical in all three files (item 6)",
-          len(unique) == 1 and None not in unique,
-          ", ".join(f"{k}={v}" for k, v in vs.items()) if len(unique) != 1 else str(next(iter(unique))))
-    version = args.version or (next(iter(unique)) if len(unique) == 1 else None)
+    check(
+        "version is identical in all three files (item 6)",
+        len(unique) == 1 and None not in unique,
+        ", ".join(f"{k}={v}" for k, v in vs.items())
+        if len(unique) != 1
+        else str(next(iter(unique))),
+    )
+    version = args.version or (
+        next(iter(unique)) if len(unique) == 1 else None
+    )
     if not version:
         print("\nCannot determine the version; fix the mismatch first.")
         return 1
-    if args.version and len(unique) == 1 and args.version != next(iter(unique)):
-        check(f"version matches the requested {args.version}", False,
-              f"files say {next(iter(unique))}")
+    if (
+        args.version
+        and len(unique) == 1
+        and args.version != next(iter(unique))
+    ):
+        check(
+            f"version matches the requested {args.version}",
+            False,
+            f"files say {next(iter(unique))}",
+        )
     print(f"\n  release candidate: v{version}\n")
 
     # 7. releases/vX.Y.Z.md exists and is non-trivial — the gate that
@@ -87,22 +113,34 @@ def main() -> int:
     body = note.read_text(encoding="utf-8") if note.exists() else ""
     check(f"releases/v{version}.md exists (item 7)", note.exists())
     if note.exists():
-        check("release note is substantive", len(body.split()) >= 80,
-              f"{len(body.split())} words")
+        check(
+            "release note is substantive",
+            len(body.split()) >= 80,
+            f"{len(body.split())} words",
+        )
         check("release note names the right tag", f"v{version}" in body)
 
     # 5. CHANGELOG has a dated section for this version
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
-    m = re.search(r"^## \[%s\] - (\d{4}-\d{2}-\d{2})" % re.escape(version),
-                  changelog, re.M)
-    check(f"CHANGELOG.md has a dated [{version}] section (item 5)", bool(m),
-          m.group(1) if m else "missing or undated")
+    m = re.search(
+        rf"^## \[{re.escape(version)}\] - (\d{{4}}-\d{{2}}-\d{{2}})",
+        changelog,
+        re.M,
+    )
+    check(
+        f"CHANGELOG.md has a dated [{version}] section (item 5)",
+        bool(m),
+        m.group(1) if m else "missing or undated",
+    )
 
     # clean tree and correct branch — cutting from a dirty tree is how
     # unreviewed changes end up inside a signed tag
     dirty = run("git", "status", "--porcelain").stdout.strip()
-    check("working tree is clean", not dirty,
-          f"{len(dirty.splitlines())} modified path(s)" if dirty else "")
+    check(
+        "working tree is clean",
+        not dirty,
+        f"{len(dirty.splitlines())} modified path(s)" if dirty else "",
+    )
     branch = run("git", "rev-parse", "--abbrev-ref", "HEAD").stdout.strip()
     check("on main", branch == "main", branch)
     local = run("git", "rev-parse", "HEAD").stdout.strip()
@@ -112,8 +150,9 @@ def main() -> int:
     # tag must not already exist (locally or remotely)
     existing = run("git", "tag", "-l", f"v{version}").stdout.strip()
     check(f"tag v{version} does not exist locally", not existing)
-    remote_tag = run("git", "ls-remote", "--tags", "origin",
-                     f"refs/tags/v{version}").stdout.strip()
+    remote_tag = run(
+        "git", "ls-remote", "--tags", "origin", f"refs/tags/v{version}"
+    ).stdout.strip()
     check(f"tag v{version} does not exist on origin", not remote_tag)
 
     # signing configured — the workflow expects signed tags
@@ -123,16 +162,25 @@ def main() -> int:
     if args.full:
         print("\n  running slow checks…")
         r = run("poetry", "run", "pytest", "-q")
-        check("test suite passes", r.returncode == 0,
-              (r.stdout.strip().splitlines() or ["no output"])[-1])
+        check(
+            "test suite passes",
+            r.returncode == 0,
+            (r.stdout.strip().splitlines() or ["no output"])[-1],
+        )
         r = run("poetry", "build")
         check("package builds", r.returncode == 0)
-        r = run("poetry", "run", "pip-audit", "-r", "requirements.txt",
-                "--no-deps")
-        check("pip-audit clean", r.returncode == 0,
-              (r.stdout.strip().splitlines() or [""])[-1])
+        r = run(
+            "poetry", "run", "pip-audit", "-r", "requirements.txt", "--no-deps"
+        )
+        check(
+            "pip-audit clean",
+            r.returncode == 0,
+            (r.stdout.strip().splitlines() or [""])[-1],
+        )
     else:
-        skip("test suite / build / pip-audit (items 1-4)", "pass --full to run")
+        skip(
+            "test suite / build / pip-audit (items 1-4)", "pass --full to run"
+        )
 
     print()
     if problems:

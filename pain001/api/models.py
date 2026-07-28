@@ -52,6 +52,7 @@ class MessageType(str, Enum):
     PAIN_001_10 = "pain.001.001.10"
     PAIN_001_11 = "pain.001.001.11"
     PAIN_001_12 = "pain.001.001.12"
+    PAIN_001_13 = "pain.001.001.13"
     PAIN_008_02 = "pain.008.001.02"
 
 

@@ -480,6 +480,12 @@ MESSAGE_REGISTRY: dict[str, MessageDefinition] = {
     "pain.001.001.12": MessageDefinition(
         "pain.001.001.12", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
+    # V13 (ISO, 19 Mar 2026) is additive over V12: it introduces the
+    # optional UnqTxIdr (UETR) and DbtCdtRptgInd elements and removes
+    # nothing, so the V09-V12 preparation strategy applies unchanged.
+    "pain.001.001.13": MessageDefinition(
+        "pain.001.001.13", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
+    ),
     "pain.008.001.02": MessageDefinition(
         "pain.008.001.02",
         "direct_debit_v02",

@@ -78,7 +78,7 @@ class TestGenerationMatrix:
     def test_all_message_types_are_present(self) -> None:
         """The matrix covers all ten pain.001 versions plus pain.008."""
         assert "pain.008.001.02" in ALL_MESSAGE_TYPES
-        assert len([m for m in ALL_MESSAGE_TYPES if "pain.001" in m]) == 10
+        assert len([m for m in ALL_MESSAGE_TYPES if "pain.001" in m]) == 11
 
     @pytest.mark.parametrize("message_type", ALL_MESSAGE_TYPES)
     def test_generate_string_is_valid_xml(self, message_type: str) -> None:

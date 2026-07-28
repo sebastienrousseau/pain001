@@ -38,6 +38,7 @@ valid_xml_types = [
     "pain.001.001.10",  # Customer Credit Transfer Initiation V10
     "pain.001.001.11",  # Customer Credit Transfer Initiation V11
     "pain.001.001.12",  # Customer Credit Transfer Initiation V12
+    "pain.001.001.13",  # Customer Credit Transfer Initiation V13
     "pain.008.001.02",  # Customer Direct Debit Initiation V02
 ]
 

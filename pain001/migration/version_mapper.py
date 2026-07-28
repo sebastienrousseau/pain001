@@ -89,12 +89,31 @@ class VersionMapper:
             f"Unsupported migration path: {from_version} -> {to_version}"
         )
 
-    @staticmethod
-    def _is_supported_generic_pair(source: str, target: str) -> bool:
-        """Return True for legacy (v03-v08) to modern (v09-v12) pairs."""
-        legacy = {"v03", "v04", "v05", "v06", "v07", "v08"}
-        modern = {"v09", "v10", "v11", "v12"}
-        return source in legacy and target in modern
+    #: pain.001 generations. Legacy (v03-v08) uses the pre-2019 model;
+    #: modern (v09+) shares one field shape, so v13's additive elements
+    #: (UnqTxIdr, DbtCdtRptgInd) do not change the row mapping.
+    _LEGACY_VERSIONS = frozenset({"v03", "v04", "v05", "v06", "v07", "v08"})
+    _MODERN_VERSIONS = frozenset({"v09", "v10", "v11", "v12", "v13"})
+
+    @classmethod
+    def _is_supported_generic_pair(cls, source: str, target: str) -> bool:
+        """Return True for pairs the generic field mapping can express.
+
+        Legacy to modern was the original case. Modern to modern is also
+        supported: those versions share a field shape, so the mapping is
+        an identity over the known fields. Without it, documented paths
+        such as v09 to v12 (or v09 to v13) raised DataSourceError even
+        though nothing about the rows needed to change.
+        """
+        known = cls._LEGACY_VERSIONS | cls._MODERN_VERSIONS
+        if source not in known or target not in known:
+            return False
+        # Modern to legacy is deliberately unsupported: the older model
+        # cannot carry structured-address or UETR data, so a silent
+        # downgrade would lose information without saying so.
+        return not (
+            source in cls._MODERN_VERSIONS and target in cls._LEGACY_VERSIONS
+        )
 
     def migrate_rows(
         self,
