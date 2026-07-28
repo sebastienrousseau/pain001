@@ -38,15 +38,27 @@ A release is ready only when **all** of the following hold on `main`:
    and `pain001/constants.py` (enforced by the `version-sync` CI check).
 7. A `releases/vX.Y.Z.md` note exists (used as the GitHub release body).
 
+The checklist above is **executable** — do not eyeball it:
+
+```bash
+make release-check           # items 5, 6, 7 + tree/branch/tag/signing state
+make release-check FULL=1    # additionally runs tests, build and pip-audit
+```
+
+Item 7 is the one that bites: the publish job enforces it too, but only
+*after* a tag has been pushed, and a rejected tag then has to be deleted
+locally and on the remote before you can retry.
+
 ## Cutting the release
 
 1. Bump the version in the three files above and add the `CHANGELOG.md`
    section and `releases/vX.Y.Z.md` note in a single PR.
 2. Merge the PR to `main` once CI is green.
-3. Push a signed tag:
+3. Pre-flight, then tag:
 
    ```bash
-   git tag -s vX.Y.Z -m "Pain001 vX.Y.Z" <merge-commit>
+   make release-check FULL=1
+   python3 scripts/preflight_release.py --tag   # re-checks, then signs the tag
    git push origin vX.Y.Z
    ```
 

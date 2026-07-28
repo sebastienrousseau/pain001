@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: format lint type test cov sec pr check perf slos clean help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
+.PHONY: release-check format lint type test cov sec pr check perf slos clean help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
 
 # Color output
 RED := \033[0;31m
@@ -36,6 +36,7 @@ help:
 	@echo "  test          - Run tests with timing verification"
 	@echo "  cov           - Generate coverage report (100% enforced)"
 	@echo "  sec           - Security checks (bandit, safety)"
+	@echo "  release-check - Pre-flight the RELEASING.md checklist before tagging"
 	@echo "  perf          - Performance benchmarks (XML generation < 500ms/1000tx)"
 	@echo "  complex       - Code complexity analysis"
 	@echo "  mutate        - Mutation testing"
@@ -179,6 +180,14 @@ tollgate-envparity:
 	@echo "Verifying path safety patterns..."
 	@echo "  $(GREEN)✓$(NC) Cross-platform checks completed"
 	@echo "$(GREEN)✓ Environmental Parity tollgate PASSED$(NC)"
+
+# Executable form of the RELEASING.md pre-flight checklist. Run this
+# before tagging: the publish job enforces the same rules, but only
+# after a tag has been pushed (and a bad tag has to be deleted).
+#   make release-check              quick
+#   make release-check FULL=1       plus tests, build and pip-audit
+release-check:
+	@python3 scripts/preflight_release.py $(if $(FULL),--full,)
 
 tollgates: tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity
 	@echo "$(GREEN)✓ All 4 Advanced Production Tollgates PASSED$(NC)"
