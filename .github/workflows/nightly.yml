@@ -44,5 +44,6 @@ jobs:
           python-version: "3.12"
       - name: Run atheris harness
         run: |
-          pip install --quiet atheris .
+          pip install --quiet --require-hashes -r .github/requirements/fuzz.txt
+          pip install --quiet --no-deps .
           python fuzz/fuzz_validation.py -max_total_time=120

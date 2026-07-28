@@ -21,7 +21,6 @@ COPY pain001 ./pain001
 # Self-contained virtualenv; install the package plus the `api`
 # extra so `pain001 serve` works out of the box.
 RUN python -m venv /opt/venv \
-    && /opt/venv/bin/pip install --upgrade pip \
     && /opt/venv/bin/pip install ".[api]"
 
 

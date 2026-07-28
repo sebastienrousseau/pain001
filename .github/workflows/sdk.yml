@@ -35,9 +35,8 @@ jobs:
 
       - name: Install pain001 (with api extra) + build tooling
         run: |
-          python -m pip install --upgrade pip
           pip install --use-pep517 ".[api]"
-          pip install build pytest
+          pip install --require-hashes -r .github/requirements/build-test.txt
 
       - name: Set up Node.js (for openapi-generator-cli)
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -74,7 +73,7 @@ jobs:
       - name: Build the generated client
         run: |
           cd pain001-client
-          python -m pip install --upgrade pip build
+          pip install --require-hashes -r .github/requirements/build-test.txt
           # Some generated clients depend on pydantic / urllib3 / etc.
           pip install -e .
           python -c "import pain001_client; print('client', pain001_client.__name__, 'OK')"
