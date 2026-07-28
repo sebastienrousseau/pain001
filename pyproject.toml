@@ -13,6 +13,7 @@ packages = [
 include = [
     "pain001/py.typed",
     "pain001/schemas/*",
+    "pain001/pain002/schemas/*.xsd",
     "pain001/templates/**/*",
     "pain001/config/*.yaml",
     "pain001/migration/mappings/*.yaml",

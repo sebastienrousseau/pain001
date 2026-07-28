@@ -17,6 +17,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from defusedxml import ElementTree as defused_et
@@ -26,11 +27,54 @@ from pain001.exceptions import DataSourceError, SchemaValidationError
 from pain001.security import validate_path
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
+#: Bundled ISO schemas for validating a bank's pain.002 response.
+#: The parser itself is namespace-agnostic, so a bank may send any
+#: version; only these can be validated without supplying a path.
+SCHEMA_DIR = Path(__file__).resolve().parent / "schemas"
+
+
+def bundled_schema_versions() -> list[str]:
+    """Return the pain.002 versions this package can validate."""
+    return sorted(p.stem for p in SCHEMA_DIR.glob("pain.002.001.*.xsd"))
+
+
+def schema_for_namespace(namespace: str) -> Path | None:
+    """Map a document namespace to a bundled schema, if one exists.
+
+    ``namespace`` is the ElementTree form, ``{urn:...:pain.002.001.14}``.
+    """
+    version = namespace.strip("{}").rsplit(":", maxsplit=1)[-1]
+    candidate = SCHEMA_DIR / f"{version}.xsd"
+    return candidate if candidate.is_file() else None
+
 
 def parse_pain002_report(
-    xml_file_path: str, xsd_file_path: str | None = None
+    xml_file_path: str,
+    xsd_file_path: str | None = None,
+    validate: bool = False,
 ) -> dict[str, object]:
-    """Parse a pain.002 payment status report into structured data."""
+    """Parse a pain.002 payment status report into structured data.
+
+    Args:
+        xml_file_path: The bank's pain.002 response.
+        xsd_file_path: Explicit schema to validate against. Takes
+            precedence over ``validate``.
+        validate: Validate against the bundled schema matching the
+            document's own namespace. Raises if no bundled schema covers
+            that version rather than parsing unvalidated — a silent skip
+            would report success while checking nothing. Call
+            :func:`bundled_schema_versions` to see what is covered.
+
+    Returns:
+        The parsed report: message and original-message identifiers,
+        creation timestamp, group status, and a ``payment_statuses``
+        list of per-transaction status and reason codes.
+
+    Raises:
+        DataSourceError: The path is invalid or the XML is malformed.
+        SchemaValidationError: The document failed validation, or
+            ``validate`` was requested for an unbundled version.
+    """
     try:
         safe_xml_path = validate_path(xml_file_path, must_exist=True)
     except Exception as exc:
@@ -45,6 +89,8 @@ def parse_pain002_report(
             raise SchemaValidationError(
                 f"pain.002 XML failed validation against {safe_xsd_path}"
             )
+    elif validate:
+        _validate_against_bundled_schema(safe_xml_path)
 
     try:
         root = defused_et.parse(safe_xml_path).getroot()
@@ -97,6 +143,35 @@ def parse_pain002_report(
         "group_status": _find_text(report, ns, "OrgnlGrpInfAndSts/GrpSts"),
         "payment_statuses": statuses,
     }
+
+
+def _validate_against_bundled_schema(xml_path: str) -> None:
+    """Validate against the bundled schema for the document's version.
+
+    Fails loudly when the version is not bundled. The alternative —
+    skipping quietly — is how software ends up reporting a successful
+    validation it never performed.
+    """
+    try:
+        root = defused_et.parse(xml_path).getroot()
+    except ParseError as exc:
+        raise DataSourceError(f"Invalid pain.002 XML: {exc}") from exc
+    namespace = _detect_namespace(root)
+    schema = schema_for_namespace(namespace)
+    if schema is None:
+        version = (
+            namespace.strip("{}").rsplit(":", maxsplit=1)[-1] or "unknown"
+        )
+        raise SchemaValidationError(
+            f"No bundled schema for {version}. Bundled versions are "
+            f"{', '.join(bundled_schema_versions())}. Pass xsd_file_path "
+            f"with the schema your bank uses, or omit validate to parse "
+            f"without schema validation."
+        )
+    if not validate_via_xsd(xml_path, str(schema)):
+        raise SchemaValidationError(
+            f"pain.002 XML failed validation against {schema.name}"
+        )
 
 
 def _detect_namespace(root: Any) -> str:
