@@ -34,7 +34,10 @@ MIN_REAL_SCHEMA_BYTES = 10_000
 #: validation while performing none. Marked strict, so the moment a real
 #: schema is dropped in the test passes unexpectedly and CI fails until
 #: the entry is removed from here.
-KNOWN_PLACEHOLDER_SCHEMAS = {"pain.001.001.12"}
+# Empty: every shipped schema is now an ISO publication. The
+# machinery stays so a placeholder can never be reintroduced
+# silently — add a version here only with a dated reason.
+KNOWN_PLACEHOLDER_SCHEMAS: set[str] = set()
 
 
 def _schema_paths() -> list[Path]:
