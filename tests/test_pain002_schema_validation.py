@@ -34,8 +34,12 @@ def _unbundled_document(tmp_path: Path) -> Path:
     path the moment that version gets bundled, which has already
     happened twice.
     """
-    bundled = {v.rsplit(".", maxsplit=1)[-1] for v in bundled_schema_versions()}
-    version = next(f"{n:02d}" for n in range(1, 100) if f"{n:02d}" not in bundled)
+    bundled = {
+        v.rsplit(".", maxsplit=1)[-1] for v in bundled_schema_versions()
+    }
+    version = next(
+        f"{n:02d}" for n in range(1, 100) if f"{n:02d}" not in bundled
+    )
     doc = tmp_path / f"pain002_v{version}.xml"
     doc.write_text(
         '<?xml version="1.0" encoding="UTF-8"?>\n'
