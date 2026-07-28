@@ -160,11 +160,25 @@ jobs:
             --output-file=sbom/pain001-${GITHUB_REF_NAME#v}.spdx-licenses.json
           ls -la sbom/
 
-      - name: ❯ Hash distributables for provenance
+      # Every file attached to the release must be hashed here, not just
+      # dist/. v0.0.57 attested all five assets; v0.0.58 attested only
+      # the wheel and sdist, because this step hashed dist/ alone and
+      # the SBOMs are written to sbom/ — they shipped unattested.
+      # Hashing is done from inside each directory so the subject names
+      # are bare filenames matching the release asset names; running
+      # sha256sum over "dist/* sbom/*" would embed the directory in the
+      # subject name and no verifier would match it.
+      - name: ❯ Hash release assets for provenance
         id: dist_hashes
+        # Subshells, not { } groups: a brace group runs in the current
+        # shell, so the first cd would persist and the second would look
+        # for dist/sbom, fail, and silently emit the dist-only list —
+        # exactly the bug being fixed here. set -e makes that loud.
         run: |
-          cd dist
-          echo "hashes=$(sha256sum -- * | base64 -w0)" >> "$GITHUB_OUTPUT"
+          set -euo pipefail
+          hashes=$( (cd dist && sha256sum -- *) ; (cd sbom && sha256sum -- *) )
+          echo "$hashes"
+          echo "hashes=$(printf '%s\n' "$hashes" | base64 -w0)" >> "$GITHUB_OUTPUT"
 
       - name: ❯ Create GitHub Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
