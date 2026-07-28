@@ -44,7 +44,7 @@ def test_one_input(data: bytes) -> None:
     cleaned = sanitize_to_charset(text)
     if sanitize_to_charset(cleaned) != cleaned:
         raise AssertionError(
-            "sanitize_to_charset is not idempotent for: %r" % text
+            f"sanitize_to_charset is not idempotent for: {text!r}"
         )
 
 
