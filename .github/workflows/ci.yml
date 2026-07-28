@@ -103,6 +103,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    outputs:
+      hashes: ${{ steps.dist_hashes.outputs.hashes }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -158,6 +160,12 @@ jobs:
             --output-file=sbom/pain001-${GITHUB_REF_NAME#v}.spdx-licenses.json
           ls -la sbom/
 
+      - name: ❯ Hash distributables for provenance
+        id: dist_hashes
+        run: |
+          cd dist
+          echo "hashes=$(sha256sum -- * | base64 -w0)" >> "$GITHUB_OUTPUT"
+
       - name: ❯ Create GitHub Release
         uses: softprops/action-gh-release@de2c0eb89ae2a093876385947365aca7b0e5f844 # v1
         with:
@@ -170,3 +178,25 @@ jobs:
 
       - name: ❯ Publish to PyPI
         uses: pypa/gh-action-pypi-publish@ba38be9e461d3875417946c167d0b5f3d385a247 # release/v1
+
+  # 5. SIGNED PROVENANCE (Only on Tags)
+  #
+  # This must live in the same workflow as the publish job: a release
+  # created by a workflow using GITHUB_TOKEN does not trigger further
+  # workflow runs, so a standalone `on: release: published` workflow can
+  # never fire for our own pipeline.
+  #
+  # NOTE: the reusable generator MUST be referenced by tag, not SHA —
+  # slsa-verifier validates the generator's own provenance against its
+  # release tag. This is the documented exception to SHA pinning.
+  provenance:
+    needs: publish
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      actions: read   # read the workflow path
+      id-token: write # sign via Sigstore OIDC
+      contents: write # upload the attestation to the release
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    with:
+      base64-subjects: ${{ needs.publish.outputs.hashes }}
+      upload-assets: true

@@ -1,9 +1,16 @@
-# SLSA Build Level 3 provenance for every published release.
+# SLSA Build Level 3 provenance — MANUAL / BACKFILL path only.
 #
-# When ci.yml publishes a release (dist wheels/sdist + SBOM attached),
-# this workflow hashes the release assets and calls the SLSA generic
-# generator, which signs a provenance attestation on isolated
-# infrastructure and uploads `*.intoto.jsonl` back to the same release.
+# The normal path is the `provenance` job inside ci.yml, which runs
+# straight after the publish job. This workflow exists to attest a
+# release that was created outside that pipeline (or to backfill an
+# older one) and is therefore dispatch-only: a release created by a
+# workflow using GITHUB_TOKEN never emits a `release: published` event,
+# so an automatic trigger here would silently never fire — which is
+# exactly how v0.0.57 shipped without provenance on the first attempt.
+#
+# It hashes the assets of the named release and calls the SLSA generic
+# generator, which signs an attestation on isolated infrastructure and
+# uploads `*.intoto.jsonl` back to that release.
 #
 # Consumers verify with slsa-verifier:
 #   slsa-verifier verify-artifact pain001-<v>.whl \
@@ -17,8 +24,12 @@
 name: SLSA provenance
 
 on:
-  release:
-    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attest, e.g. v0.0.57"
+        required: true
+        type: string
 
 permissions: read-all
 
@@ -34,7 +45,7 @@ jobs:
       - name: Download release assets
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ github.event.release.tag_name }}
+          TAG: ${{ inputs.tag }}
         run: |
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir assets
           ls -la assets
@@ -55,4 +66,5 @@ jobs:
     uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
     with:
       base64-subjects: ${{ needs.hashes.outputs.hashes }}
+      upload-tag-name: ${{ inputs.tag }}
       upload-assets: true
