@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- pain.002.001.14 is a real ISO version this package does NOT
+     bundle. Used to prove validate=True refuses rather than silently
+     parsing unvalidated when it has no schema for the version. -->
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.14">
+  <CstmrPmtStsRpt>
+    <GrpHdr>
+      <MsgId>STAT-V14-001</MsgId>
+      <CreDtTm>2026-07-28T10:15:00</CreDtTm>
+    </GrpHdr>
+    <OrgnlGrpInfAndSts>
+      <OrgnlMsgId>MSG-001</OrgnlMsgId>
+      <OrgnlMsgNmId>pain.001.001.09</OrgnlMsgNmId>
+      <GrpSts>PART</GrpSts>
+    </OrgnlGrpInfAndSts>
+    <OrgnlPmtInfAndSts>
+      <OrgnlPmtInfId>PAY-INFO-001</OrgnlPmtInfId>
+      <PmtInfSts>PART</PmtInfSts>
+      <TxInfAndSts>
+        <OrgnlEndToEndId>PaymentID6789</OrgnlEndToEndId>
+        <TxSts>RJCT</TxSts>
+        <StsRsnInf>
+          <Rsn>
+            <Cd>AC04</Cd>
+          </Rsn>
+        </StsRsnInf>
+      </TxInfAndSts>
+    </OrgnlPmtInfAndSts>
+  </CstmrPmtStsRpt>
+</Document>
