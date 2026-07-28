@@ -24,7 +24,30 @@ from pain001.pain002.parser import (
 FIXTURES = Path(__file__).resolve().parent.parent / "pain001" / "test_fixtures"
 V15 = FIXTURES / "pain002_v15_sample.xml"
 V03 = FIXTURES / "pain002_sample.xml"
-V14_UNBUNDLED = FIXTURES / "pain002_v14_unbundled.xml"
+
+
+def _unbundled_document(tmp_path: Path) -> Path:
+    """Write a pain.002 document in a version this package does not ship.
+
+    Derived from the bundled set rather than hard-coded: pinning a
+    specific version means the test silently stops covering the refusal
+    path the moment that version gets bundled, which has already
+    happened twice.
+    """
+    bundled = {v.rsplit(".", maxsplit=1)[-1] for v in bundled_schema_versions()}
+    version = next(f"{n:02d}" for n in range(1, 100) if f"{n:02d}" not in bundled)
+    doc = tmp_path / f"pain002_v{version}.xml"
+    doc.write_text(
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        f'<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.002.001.{version}">'
+        "<CstmrPmtStsRpt><GrpHdr><MsgId>UNBUNDLED-001</MsgId>"
+        "<CreDtTm>2026-07-28T10:15:00</CreDtTm></GrpHdr>"
+        "<OrgnlGrpInfAndSts><OrgnlMsgId>MSG-001</OrgnlMsgId>"
+        "<OrgnlMsgNmId>pain.001.001.09</OrgnlMsgNmId></OrgnlGrpInfAndSts>"
+        "</CstmrPmtStsRpt></Document>\n",
+        encoding="utf-8",
+    )
+    return doc
 
 
 def test_bundled_versions_are_discoverable() -> None:
@@ -50,15 +73,16 @@ def test_validate_true_accepts_a_valid_document() -> None:
     assert report["payment_statuses"][0]["transaction_status"] == "RJCT"
 
 
-def test_validate_true_refuses_an_unbundled_version() -> None:
-    """pain.002.001.14 is a real ISO version this package does not ship.
+def test_validate_true_refuses_an_unbundled_version(tmp_path: Path) -> None:
+    """The refusal is the point.
 
-    The refusal is the point: a bank may answer in any version, and
-    parsing unvalidated while reporting success would be worse than
-    saying plainly that the check could not be performed.
+    A bank may answer in any version; parsing unvalidated while
+    reporting success would be worse than saying plainly that the check
+    could not be performed.
     """
+    doc = _unbundled_document(tmp_path)
     with pytest.raises(SchemaValidationError) as exc:
-        parse_pain002_report(str(V14_UNBUNDLED), validate=True)
+        parse_pain002_report(str(doc), validate=True)
     message = str(exc.value)
     assert "No bundled schema" in message
     # the error must tell the caller what to do next
@@ -66,10 +90,12 @@ def test_validate_true_refuses_an_unbundled_version() -> None:
     assert bundled_schema_versions()[0] in message
 
 
-def test_unbundled_version_still_parses_without_validation() -> None:
+def test_unbundled_version_still_parses_without_validation(
+    tmp_path: Path,
+) -> None:
     """Refusing to validate must not mean refusing to parse."""
-    report = parse_pain002_report(str(V14_UNBUNDLED))
-    assert report["message_id"] == "STAT-V14-001"
+    report = parse_pain002_report(str(_unbundled_document(tmp_path)))
+    assert report["message_id"] == "UNBUNDLED-001"
 
 
 def test_sepa_v03_responses_can_now_be_validated() -> None:
