@@ -22,6 +22,7 @@
   <a href="https://github.com/sebastienrousseau/pain001/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pain001/ci.yml?branch=main&label=Tests&style=for-the-badge" alt="Tests" /></a>
   <a href="https://codecov.io/github/sebastienrousseau/pain001?branch=main"><img src="https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge" alt="Coverage" /></a>
   <a href="#license"><img src="https://img.shields.io/pypi/l/pain001?style=for-the-badge" alt="License" /></a>
+  <a href="https://www.bestpractices.dev/projects/13858"><img src="https://img.shields.io/cii/level/13858?style=for-the-badge&label=OpenSSF" alt="OpenSSF Best Practices" /></a>
 </p>
 
 ---
