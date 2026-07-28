@@ -145,7 +145,20 @@ def main() -> int:
     check("on main", branch == "main", branch)
     local = run("git", "rev-parse", "HEAD").stdout.strip()
     remote = run("git", "rev-parse", "origin/main").stdout.strip()
-    check("HEAD matches origin/main", local == remote and bool(local))
+    ahead = run(
+        "git", "rev-list", "--count", "origin/main..HEAD"
+    ).stdout.strip()
+    check(
+        "HEAD matches origin/main",
+        local == remote and bool(local),
+        # Naming the fix matters: RELEASING.md has you merge to main
+        # before pre-flight, but running the checks on an unpushed
+        # release commit is an easy order to fall into, and a bare
+        # failure here reads like something is wrong with the release.
+        f"{ahead} unpushed commit(s) — push them before tagging"
+        if ahead and ahead != "0"
+        else "",
+    )
 
     # tag must not already exist (locally or remotely)
     existing = run("git", "tag", "-l", f"v{version}").stdout.strip()
