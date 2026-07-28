@@ -5,10 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.57] - 2026-07-25
+## [0.0.57] - 2026-07-28
 
-A small **type-distribution and test-hardening** release. No runtime
-behaviour change; no public API change.
+A **type-distribution, supply-chain and test-hardening** release. No
+runtime behaviour change; no public API change.
+
+### Security
+
+- **Dependency vulnerabilities cleared.** `requirements.txt` had drifted
+  from `poetry.lock` and pinned `click==8.1.7` (PYSEC-2026-2132) and
+  `jsonschema==4.17.3`; both are resynced to the locked `8.4.2` /
+  `4.26.0`. The transitive `soupsieve` is bumped `2.8.1 -> 2.9.1`
+  (GHSA-2wc2-fm75-p42x, GHSA-836r-79rf-4m37). `pip-audit` reports no
+  known vulnerabilities for the locked set.
+- **CI installs are hash-pinned.** New pip-compile-generated
+  `.github/requirements/{fuzz,sbom,build-test,docs}.txt` are installed
+  with `--require-hashes`, `requirements.txt` now carries hashes, the
+  unpinned `pip install --upgrade pip` steps are gone (workflows and
+  `Dockerfile`), and `pipx install poetry` is pinned to `2.4.1`.
+- **Signed release provenance.** This is the first release to trigger
+  `slsa.yml`, which attaches a Sigstore-signed SLSA Build L3 provenance
+  attestation (`*.intoto.jsonl`) to the release assets. Verify with
+  `slsa-verifier verify-artifact <artifact> --provenance-path
+  multiple.intoto.jsonl --source-uri github.com/sebastienrousseau/pain001`.
+- OpenSSF Scorecard improved from 5.4 to 7.5 across these changes
+  (Vulnerabilities 10/10, Pinned-Dependencies 8/10).
 
 ### Added
 
@@ -31,6 +52,10 @@ behaviour change; no public API change.
 
 - Version synced to `0.0.57` across `pyproject.toml`, `constants.py`,
   `__init__.py` and the GPG plugin's advertised version.
+- Docs and security workflows standardised on Python 3.12 so the
+  hash-pinned requirement sets resolve consistently.
+- `fuzz/fuzz_validation.py` uses an f-string in its assertion message
+  (ruff UP031), which had been failing the lint gate.
 
 ## [0.0.56] - 2026-07-18
 
