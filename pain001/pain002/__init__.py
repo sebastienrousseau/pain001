@@ -19,10 +19,16 @@ from pain001.pain002.generator import (
     VALID_STATUS_CODES,
     build_pain002_report,
 )
-from pain001.pain002.parser import parse_pain002_report
+from pain001.pain002.parser import (
+    bundled_schema_versions,
+    parse_pain002_report,
+    schema_for_namespace,
+)
 
 __all__ = [
     "parse_pain002_report",
+    "bundled_schema_versions",
+    "schema_for_namespace",
     "build_pain002_report",
     "VALID_STATUS_CODES",
 ]
