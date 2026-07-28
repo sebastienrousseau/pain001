@@ -22,6 +22,7 @@
                 <SvcLvl>
                     <Cd>{{service_level_code}}</Cd>
                 </SvcLvl>
+                <SeqTp>{{sequence_type}}</SeqTp>
             </PmtTpInf>
             <ReqdColltnDt>{{requested_execution_date}}</ReqdColltnDt>
             <Cdtr>
@@ -66,7 +67,6 @@
                 <RmtInf>
                     <Ustrd>{{tx.remittance_information}}</Ustrd>
                 </RmtInf>
-                <SeqTp>{{tx.sequence_type}}</SeqTp>
             </DrctDbtTxInf>
             {% endfor %}
         </PmtInf>

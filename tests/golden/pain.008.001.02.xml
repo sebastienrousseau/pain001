@@ -22,6 +22,7 @@
                 <SvcLvl>
                     <Cd>SEPA</Cd>
                 </SvcLvl>
+                <SeqTp>RCUR</SeqTp>
             </PmtTpInf>
             <ReqdColltnDt>2026-01-20</ReqdColltnDt>
             <Cdtr>
@@ -66,7 +67,6 @@
                 <RmtInf>
                     <Ustrd>Gym membership January</Ustrd>
                 </RmtInf>
-                <SeqTp>RCUR</SeqTp>
             </DrctDbtTxInf>
             
             <DrctDbtTxInf>
@@ -96,7 +96,6 @@
                 <RmtInf>
                     <Ustrd>Consulting retainer January</Ustrd>
                 </RmtInf>
-                <SeqTp>FRST</SeqTp>
             </DrctDbtTxInf>
             
         </PmtInf>

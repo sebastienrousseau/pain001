@@ -411,6 +411,11 @@ def _prepare_xml_data_v08_direct_debit(
         "payment_method": data[0].get("payment_method", "DD"),
         "batch_booking": str(data[0].get("batch_booking", "false")).lower(),
         "service_level_code": data[0].get("service_level_code", "SEPA"),
+        # SeqTp lives in PmtTpInf. ISO allows PmtTpInf at either the
+        # payment-information or the transaction level, but not a bare
+        # <SeqTp> inside DrctDbtTxInf, which is what this template
+        # emitted until the real pain.008.001.02 schema rejected it.
+        "sequence_type": data[0].get("sequence_type", "RCUR"),
         "requested_execution_date": data[0].get(
             "requested_execution_date", ""
         ),
