@@ -35,8 +35,10 @@ jobs:
 
       - name: Install pain001 (with api extra) + build tooling
         run: |
-          pip install --use-pep517 ".[api]"
+          pip install --require-hashes -r .github/requirements/api.txt
           pip install --require-hashes -r .github/requirements/build-test.txt
+          # --no-deps: api extra deps come from the pinned file above.
+          pip install --no-deps --use-pep517 ".[api]"
 
       - name: Set up Node.js (for openapi-generator-cli)
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4

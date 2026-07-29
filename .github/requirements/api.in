@@ -1,0 +1,10 @@
+# Runtime dependencies of the `api` optional extra (pain001[api]).
+#
+# requirements.txt is hash-pinned but covers only the base install, so
+# `pip install ".[api]"` resolved fastapi and uvicorn unpinned — in CI
+# and, more importantly, into the published Docker image. Compile with:
+#
+#   cd .github/requirements
+#   pip-compile --generate-hashes --strip-extras --output-file=api.txt api.in
+fastapi
+uvicorn
