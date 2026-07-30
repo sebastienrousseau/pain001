@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] — 0.0.60
+
+A **licensing correctness and governance** release. No runtime behaviour
+change and no public API change so far. Add entries here as work lands.
+
+### Fixed
+
+- **The published licence did not match the claimed one.** LICENSE,
+  LICENSE-APACHE, LICENSE-MIT and the website all said dual
+  Apache-2.0 OR MIT, but PyPI published `Apache-2.0`, `pyproject.toml`
+  declared a single licence, all 167 source headers said Apache alone,
+  and 27 files had no header. Now `SPDX-License-Identifier:
+  Apache-2.0 OR MIT` in all 194 Python files, and the wheel carries
+  `License-Expression: Apache-2.0 OR MIT` with all three licence files.
+  Declared via PEP 639, not the legacy `license = "..."` string, which
+  Poetry maps to `License :: Other/Proprietary License` for a compound
+  expression. The corrected metadata only reaches PyPI on release, so
+  0.0.59 and earlier still advertise Apache-2.0 only.
+
+### Added
+
+- **Developer Certificate of Origin required.** Every commit needs a
+  `Signed-off-by` trailer, enforced by `.github/workflows/dco.yml`;
+  see `DCO.txt` and `CONTRIBUTING.md`.
+- **Security assurance case** at `docs/assurance-case.md` — threat
+  model, trust boundaries, secure-design principles applied, and
+  countered implementation weaknesses, each with checkable evidence.
+
 ## [0.0.59] - 2026-07-30
 
 A **supply-chain** release. No runtime behaviour change and no public
