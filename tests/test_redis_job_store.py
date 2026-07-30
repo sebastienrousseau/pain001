@@ -1,7 +1,8 @@
 # Copyright (C) 2023-2026 Pain001. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
+# Licensed under either of the Apache License, Version 2.0 or the MIT
+# License, at your option. See LICENSE-APACHE and LICENSE-MIT.
 
 """Tests for the Redis-backed job store (issue #171).
 
