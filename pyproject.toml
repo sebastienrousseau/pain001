@@ -1,9 +1,35 @@
-[tool.poetry]
+# PEP 639 licence expression. Poetry maps a legacy `license = "..."`
+# string to a single classifier and falls back to
+# "License :: Other/Proprietary License" for a compound expression —
+# actively misleading on an open-source project. Declaring it here
+# emits `License-Expression: Apache-2.0 OR MIT` with no classifier.
+[project]
 name = "pain001"
+license = "Apache-2.0 OR MIT"
+license-files = ["LICENSE", "LICENSE-APACHE", "LICENSE-MIT"]
+# Everything else still comes from [tool.poetry] below; declaring it
+# dynamic keeps Poetry authoritative for those fields.
+dynamic = [
+    # [tool.poetry].version stays the single source of truth, so
+    # scripts/preflight_release.py and the version-sync CI check keep
+    # matching exactly one `version = "..."` line.
+    "version",
+    "dependencies",
+    "optional-dependencies",
+    "requires-python",
+    "readme",
+    "description",
+    "authors",
+    "keywords",
+    "classifiers",
+    "urls",
+    "scripts",
+]
+
+[tool.poetry]
 version = "0.0.59"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
-license = "Apache-2.0"
 readme = "README.md"
 repository = "https://github.com/sebastienrousseau/pain001"
 homepage = "https://pain001.com"

@@ -16,6 +16,10 @@ ENV PIP_NO_CACHE_DIR=1 \
 # present at build-time for ``pip install .`` to resolve the package
 # metadata.
 COPY pyproject.toml README.md ./
+# pyproject declares `license-files`, so these must exist in the build
+# context or poetry-core fails metadata generation with
+# "No files found for license file glob pattern 'LICENSE'".
+COPY LICENSE LICENSE-APACHE LICENSE-MIT ./
 COPY pain001 ./pain001
 COPY requirements.txt ./
 COPY .github/requirements/api.txt ./api-requirements.txt
