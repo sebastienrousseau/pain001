@@ -370,6 +370,44 @@ poetry run make check
 
 ---
 
+## ✍️ Developer Certificate of Origin (MANDATORY)
+
+Every commit must carry a `Signed-off-by` trailer. This is the
+[Developer Certificate of Origin](DCO.txt) — your assertion that you
+wrote the contribution, or otherwise have the right to submit it under
+this project's licence. It is a legal statement, not a formality.
+
+Add it automatically:
+
+```bash
+git commit -s -m "your message"
+```
+
+which appends:
+
+```
+Signed-off-by: Your Name <your.email@example.com>
+```
+
+The name and email must be real and must match your commit author
+identity. Configure them once:
+
+```bash
+git config user.name "Your Name"
+git config user.email "your.email@example.com"
+```
+
+Forgot on a branch you have already written? Fix every commit at once:
+
+```bash
+git rebase --signoff main
+git push --force-with-lease
+```
+
+CI enforces this on every pull request (`.github/workflows/dco.yml`);
+a commit without a sign-off fails the check and names the commit.
+Merge commits are exempt, since they carry their parents' trailers.
+
 ## 📤 Commit Message Format (MANDATORY)
 
 ```

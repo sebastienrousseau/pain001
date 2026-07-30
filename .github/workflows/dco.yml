@@ -1,0 +1,55 @@
+# Developer Certificate of Origin check.
+#
+# Every commit in a pull request must carry a `Signed-off-by:` trailer,
+# which is the contributor asserting they have the right to submit the
+# work under this project's licence (see DCO.txt). Add one with:
+#
+#     git commit -s
+#
+# To fix a branch that is missing them:
+#
+#     git rebase --signoff main && git push --force-with-lease
+name: 📝 DCO
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  dco:
+    name: Signed-off-by on every commit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          # Need the PR's commits, not just the merge result.
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Check every commit for a Signed-off-by trailer
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          missing=0
+          # Merge commits carry the trailers of their parents, not their
+          # own, so they are exempt — checking them would fail every
+          # branch that merged main.
+          for sha in $(git rev-list --no-merges "$BASE..$HEAD"); do
+            if ! git log -1 --format='%B' "$sha" | grep -qiE '^Signed-off-by: .+ <.+@.+>'; then
+              echo "::error::missing Signed-off-by: $sha $(git log -1 --format='%s' "$sha")"
+              missing=$((missing + 1))
+            fi
+          done
+          if [ "$missing" -gt 0 ]; then
+            echo
+            echo "$missing commit(s) lack a Signed-off-by trailer."
+            echo "Sign your commits with 'git commit -s', or fix an existing"
+            echo "branch with: git rebase --signoff <base> && git push --force-with-lease"
+            echo "See DCO.txt for what you are certifying."
+            exit 1
+          fi
+          echo "All commits carry a Signed-off-by trailer."
