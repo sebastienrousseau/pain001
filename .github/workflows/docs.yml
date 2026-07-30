@@ -34,7 +34,10 @@ jobs:
         run: |
           pip install --require-hashes -r requirements.txt
           pip install --require-hashes -r .github/requirements/docs.txt
-          pip install --use-pep517 ".[api]"
+          pip install --require-hashes -r .github/requirements/api.txt
+          # --no-deps: the api extra's deps come from the pinned file
+          # above, so pip never resolves fastapi/uvicorn unpinned.
+          pip install --no-deps --use-pep517 ".[api]"
 
       - name: ❯ Export OpenAPI schema for the Scalar reference 📜
         run: |

@@ -8,6 +8,11 @@ on:
       - ".dockerignore"
       - "pain001/**"
       - "pyproject.toml"
+      # The image now installs from these hash-pinned files, so a change
+      # to either must rebuild it; otherwise the published image keeps
+      # the previously resolved dependency set.
+      - "requirements.txt"
+      - ".github/requirements/api.txt"
       - ".github/workflows/docker.yml"
     tags:
       - "v*.*.*"
@@ -17,6 +22,11 @@ on:
       - ".dockerignore"
       - "pain001/**"
       - "pyproject.toml"
+      # The image now installs from these hash-pinned files, so a change
+      # to either must rebuild it; otherwise the published image keeps
+      # the previously resolved dependency set.
+      - "requirements.txt"
+      - ".github/requirements/api.txt"
       - ".github/workflows/docker.yml"
   workflow_dispatch:
 
