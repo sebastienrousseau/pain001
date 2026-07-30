@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.59] - 2026-07-30
+
+A **supply-chain** release. No runtime behaviour change and no public
+API change; what changes is what can be proven about the artefacts.
+
+### Fixed
+
+- **The Docker image installed `fastapi` and `uvicorn` unpinned.**
+  `requirements.txt` is hash-pinned but covers only the base install, so
+  `pip install ".[api]"` resolved the web stack from PyPI at image build
+  time. New hash-pinned `.github/requirements/api.txt` (13 pins, 144
+  hashes) supplies them; the package is then installed with `--no-deps`
+  so pip never resolves a third-party version. Same change in the docs
+  and SDK workflows.
+- **Release provenance attested 2 of 5 artefacts.** The SLSA job hashed
+  only `dist/`, while the CycloneDX and SPDX SBOMs are written to
+  `sbom/`. All five assets are covered now, and this is the first
+  release where the fix actually runs — v0.0.58's SBOMs were attested
+  only by a manual backfill, which cannot carry the tag binding.
+- **The backfill workflow attested its own attestation**, listing
+  `multiple.intoto.jsonl` as a subject and then overwriting it.
+  `*.intoto.jsonl` is excluded before hashing; re-runs are idempotent.
+- **`preflight_release.py`** reported `HEAD matches origin/main` with no
+  explanation when run on an unpushed release commit; it now names the
+  unpushed commit count and the fix.
+
 ## [0.0.58] - 2026-07-29
 
 A **correctness** release. Two bundled schemas were hand-authored
