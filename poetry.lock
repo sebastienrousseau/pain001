@@ -1706,13 +1706,14 @@ files = [
 
 [[package]]
 name = "memory-profiler"
-version = "0.60.0"
+version = "0.61.0"
 description = "A module for monitoring memory usage of a python program"
 optional = false
-python-versions = ">=3.4"
+python-versions = ">=3.5"
 groups = ["dev"]
 files = [
-    {file = "memory_profiler-0.60.0.tar.gz", hash = "sha256:6a12869511d6cebcb29b71ba26985675a58e16e06b3c523b49f67c5497a33d1c"},
+    {file = "memory_profiler-0.61.0-py3-none-any.whl", hash = "sha256:400348e61031e3942ad4d4109d18753b2fb08c2f6fb8290671c5513a34182d84"},
+    {file = "memory_profiler-0.61.0.tar.gz", hash = "sha256:4e5b73d7864a1d1292fb76a03e82a3e78ef934d06828a698d9dada76da2067b0"},
 ]
 
 [package.dependencies]
@@ -4531,4 +4532,4 @@ redis = ["redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "7eaf422f7343e73c7bb3f47239321c9e176f33ec9aae9671db812dbb8b0615dd"
+content-hash = "674cecc5ebb4a146621e21fffe285e146b12e27bcb79dbaa41dd76989f1828c1"
