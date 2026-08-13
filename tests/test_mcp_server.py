@@ -95,6 +95,6 @@ class TestMcpTools:
         assert "generate_payment_file" in prompt
 
     def test_server_registered(self) -> None:
-        """The FastMCP instance exists and is runnable."""
+        """The MCPServer instance exists and is runnable."""
         assert server.mcp.name == "pain001"
         assert hasattr(server.mcp, "run")
