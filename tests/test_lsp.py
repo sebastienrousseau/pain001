@@ -143,8 +143,8 @@ class TestServerWiring:
 
         ls = SimpleNamespace(
             workspace=SimpleNamespace(get_text_document=lambda uri: document),
-            publish_diagnostics=lambda uri, diags: captured.update(
-                uri=uri, diags=diags
+            text_document_publish_diagnostics=lambda params: captured.update(
+                uri=params.uri, diags=list(params.diagnostics)
             ),
         )
         _publish(ls, "file:///payments.csv")
@@ -162,8 +162,8 @@ class TestServerWiring:
         captured: dict[str, object] = {}
         ls = SimpleNamespace(
             workspace=SimpleNamespace(get_text_document=lambda uri: document),
-            publish_diagnostics=lambda uri, diags: captured.update(
-                diags=diags
+            text_document_publish_diagnostics=lambda params: captured.update(
+                diags=list(params.diagnostics)
             ),
         )
         _publish(ls, "file:///clean.csv")

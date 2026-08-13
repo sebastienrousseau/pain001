@@ -20,7 +20,7 @@ as they type. Run it with ``pain001-lsp`` after ``pip install "pain001[lsp]"``.
 """
 
 from lsprotocol import types as lsp
-from pygls.server import LanguageServer
+from pygls.lsp.server import LanguageServer
 
 from pain001 import __version__
 from pain001.lsp.diagnostics import Diagnostic, diagnostics_for_csv
@@ -64,7 +64,9 @@ def _publish(ls: LanguageServer, uri: str) -> None:
     diagnostics = [
         _to_lsp_diagnostic(d) for d in diagnostics_for_csv(document.source)
     ]
-    ls.publish_diagnostics(uri, diagnostics)
+    ls.text_document_publish_diagnostics(
+        lsp.PublishDiagnosticsParams(uri=uri, diagnostics=diagnostics)
+    )
 
 
 @server.feature(lsp.TEXT_DOCUMENT_DID_OPEN)

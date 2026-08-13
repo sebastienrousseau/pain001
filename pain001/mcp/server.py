@@ -28,13 +28,13 @@ import csv
 import io
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from pain001 import generate_xml_string, validate_scheme
 from pain001.constants import TEMPLATES_DIR, valid_xml_types
 from pain001.validation.schema_validator import SchemaValidator
 
-mcp = FastMCP("pain001")
+mcp = MCPServer("pain001")
 
 
 def _require_message_type(message_type: str) -> None:
