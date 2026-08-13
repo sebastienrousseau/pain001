@@ -92,7 +92,7 @@ otel = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp-p
 [tool.poetry.group.dev.dependencies]
 httpx = ">=0.23"
 fakeredis = ">=2.20,<3"
-pytest = "^9.0.3"
+pytest = "^9.1.1"
 pytest-cov = "^7.0.0"
 pytest-benchmark = "^5.2.0"
 pytest-xdist = "^3.0.0"
