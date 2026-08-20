@@ -123,7 +123,7 @@ optional = true
 
 [tool.poetry.group.docs.dependencies]
 sphinx = "^7.0.0"
-pydata-sphinx-theme = "^0.15.0"
+pydata-sphinx-theme = "^0.17.1"
 sphinx-autodoc-typehints = "^1.0.0"
 sphinx-design = "^0.6.0"
 myst-parser = "^2.0.0"
