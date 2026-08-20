@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+
+- **The suite runs on a single version line.** `pain001.suite` used to
+  split members in two: wrappers in lockstep with the core, loaders
+  versioned independently on the grounds that they implement the
+  published plugin contract rather than the core's internals.
+
+  That is a defensible design and it is not the one this project uses.
+  One number now describes the whole suite — `pain001`, `pain001-mcp`,
+  `pain001-lsp`, `pain001-loader-xlsx`, `pain001-loader-mt101` — so
+  there is never a compatibility table to consult. Versions advance in
+  `0.0.1` steps along the `0.0.x` line; `0.1.0` follows `0.0.999`.
+
+  `SuiteMember.lockstep` is gone, and `lockstep_members()` and
+  `plugin_members()` are replaced by a single `members()`. The absence
+  of a second accessor is the policy. `PAIN001_API_VERSION` still exists
+  and the registry still enforces it at load time — it is a safety net,
+  not the versioning rule.
+
+  `scripts/check_suite_consistency.py` now holds every member to the
+  same rule and reports `pain001-loader-xlsx` (0.0.54) and
+  `pain001-loader-mt101` (0.0.2) as drift, which they are under this
+  policy. The README's "independently versioned" claim is corrected.
+
 ## [0.0.60] - 2026-08-20
 
 A **licensing correctness, plugin-surface and governance** release.

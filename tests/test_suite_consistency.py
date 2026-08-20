@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from pain001.suite import CORE, SUITE, lockstep_members, plugin_members
+from pain001.suite import CORE, SUITE, members
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
@@ -34,20 +34,25 @@ from check_suite_consistency import (  # noqa: E402
 class TestPolicy:
     """What the suite declares about itself."""
 
-    def test_core_is_a_lockstep_member(self) -> None:
-        """The core sets the number the others match."""
-        assert SUITE[CORE].lockstep is True
+    def test_core_is_the_first_member(self) -> None:
+        """The core sets the number every other member matches."""
+        assert members()[0].distribution == CORE
 
-    def test_every_member_is_split_into_exactly_one_group(self) -> None:
-        """A member is lockstep or a plugin, never both or neither."""
-        assert len(lockstep_members()) + len(plugin_members()) == len(SUITE)
+    def test_members_covers_the_whole_suite(self) -> None:
+        """There is no subset to pick: every member is lockstep."""
+        assert len(members()) == len(SUITE)
 
-    def test_wrappers_are_lockstep_and_loaders_are_not(self) -> None:
-        """The distinction is the whole point of the module."""
-        lockstep = {m.distribution for m in lockstep_members()}
-        plugins = {m.distribution for m in plugin_members()}
-        assert {"pain001-mcp", "pain001-lsp"} <= lockstep
-        assert {"pain001-loader-xlsx", "pain001-loader-mt101"} <= plugins
+    def test_the_loaders_are_members_like_any_other(self) -> None:
+        """The loaders are not a separate versioning tier.
+
+        An earlier revision split the suite in two and versioned the
+        loaders independently. This asserts the split is gone, because
+        its absence is the policy.
+        """
+        names = {m.distribution for m in members()}
+        assert {"pain001-mcp", "pain001-lsp"} <= names
+        assert {"pain001-loader-xlsx", "pain001-loader-mt101"} <= names
+        assert not hasattr(SUITE[CORE], "lockstep")
 
     def test_membership_table_is_read_only(self) -> None:
         """Reference data a check trusts must not be reshapable."""
@@ -140,15 +145,21 @@ class TestAudit:
     def test_a_consistent_suite_reports_no_problems(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """Lockstep matched, floors reachable."""
+        """Every member on the core's number, floors reachable.
+
+        The loaders carry 0.0.60 here like everything else. Under the
+        previous two-tier policy this fixture had them at 0.1.0 and
+        0.0.2 and still expected no problems, which is exactly the state
+        the suite now refuses.
+        """
         _stub(
             monkeypatch,
             {
                 "pain001": _member("0.0.60"),
                 "pain001-mcp": _member("0.0.60", "0.0.55"),
                 "pain001-lsp": _member("0.0.60", "0.0.55"),
-                "pain001-loader-xlsx": _member("0.1.0", "0.0.56"),
-                "pain001-loader-mt101": _member("0.0.2", "0.0.55"),
+                "pain001-loader-xlsx": _member("0.0.60", "0.0.56"),
+                "pain001-loader-mt101": _member("0.0.60", "0.0.55"),
             },
         )
 
@@ -157,7 +168,7 @@ class TestAudit:
         assert problems == []
         assert report["core"] == "0.0.60"
 
-    def test_a_lockstep_member_left_behind_is_reported(
+    def test_a_member_left_behind_is_reported(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
         """The drift that actually happened: lsp stuck at 0.0.54."""
@@ -174,14 +185,15 @@ class TestAudit:
 
         assert any("pain001-lsp is 0.0.54" in p for p in problems)
 
-    def test_an_independently_versioned_plugin_is_not_drift(
+    def test_a_loader_behind_the_core_is_drift(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """mt101 at 0.0.2 needing pain001>=0.0.55 is correct.
+        """A loader is held to the same rule as a wrapper.
 
-        An earlier version of this check compared a plugin's own version
-        against the core floor and flagged this. It was measuring the
-        wrong thing.
+        This test previously asserted the opposite — that mt101 at 0.0.2
+        requiring pain001>=0.0.55 was correct independent versioning. The
+        suite now runs on a single version line, so the same input is
+        drift and must be reported.
         """
         _stub(
             monkeypatch,
@@ -193,7 +205,7 @@ class TestAudit:
 
         problems, _ = audit()
 
-        assert problems == []
+        assert any("pain001-loader-mt101 is 0.0.2" in p for p in problems)
 
     def test_an_unreachable_floor_is_reported(
         self, monkeypatch: pytest.MonkeyPatch
