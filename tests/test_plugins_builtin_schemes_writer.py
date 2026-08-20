@@ -29,6 +29,7 @@ from pain001.plugins import (
     AbstractWriter,
     registry,
 )
+from pain001.plugins._builtins import _as_sentence
 
 #: Every profile bundled in :mod:`pain001.validation.schemes`.
 BUNDLED_SCHEMES = (
@@ -211,3 +212,33 @@ def test_plugins_list_shows_the_full_bundled_set() -> None:
         for info in listed
         if info.meta.name in set(BUNDLED_SCHEMES) | {"xml-file"}
     )
+
+
+class TestSentenceNormalisation:
+    """`SchemeFinding` requires a terminated message; legacy rules omit it.
+
+    Consumers concatenate the message with the remediation hint, so an
+    unterminated string runs into the sentence that follows it.
+    """
+
+    @pytest.mark.parametrize(
+        ("raw", "expected"),
+        [
+            # The real shape: rulebook messages end without punctuation.
+            (
+                "SEPA requires EUR currency (got USD)",
+                "SEPA requires EUR currency (got USD).",
+            ),
+            ("Already terminated.", "Already terminated."),
+            ("Shouty!", "Shouty!"),
+            ("Really?", "Really?"),
+            ("trailing space ", "trailing space."),
+            ("", ""),
+            ("   ", ""),
+        ],
+    )
+    def test_messages_are_terminated_exactly_once(
+        self, raw: str, expected: str
+    ) -> None:
+        """Adding a period to an already-terminated message would double it."""
+        assert _as_sentence(raw) == expected
