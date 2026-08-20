@@ -4,6 +4,13 @@ __pycache__/
 dist/
 build/
 .pytest_cache/
+# conftest.py redirects TMPDIR and pytest's basetemp into <package>/tmp so
+# the suite never writes outside the tree. That directory is gitignored but
+# was still entering the build context, and the wheel build fails on it:
+#   ValueError: '.../pain001/tmp/pytest/...' is not in the subpath of '/build'
+# So `docker build` failed on any machine where the tests had been run,
+# while CI passed on a fresh checkout.
+pain001/tmp/
 .mypy_cache/
 htmlcov/
 coverage.xml
