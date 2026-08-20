@@ -41,6 +41,19 @@ change and no public API change so far. Add entries here as work lands.
   conflict with the rest; resolving the lock once avoids the rebase
   churn. Documentation dependencies only — no runtime effect.
 
+- **Unhandled formats name the package that handles them** (#180).
+  `.xlsx` is not an unsupported format — it is a format whose loader
+  lives in a companion package. The error said "install a plugin that
+  registers the '.xlsx' extension", which leaves the user to work out
+  *which* plugin, the one thing they do not know. It now reads:
+
+      No loader registered for .xlsx; install pain001-loader-xlsx
+
+  `pain001.plugins.companions` is the single place mapping an extension
+  to its pip target, matched case-insensitively because Windows exports
+  produce `.XLSX`. Extensions nobody claims keep the generic message
+  pointing at `pain001 plugins list`.
+
 - **The bundled scheme profiles and XML writer are now plugins** (#179).
   `pain001 plugins list` promised "the bundled csv, sqlite, json, jsonl,
   parquet loaders, the five scheme profiles, and the default xml writer,
