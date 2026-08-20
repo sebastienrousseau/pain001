@@ -24,6 +24,23 @@ change and no public API change so far. Add entries here as work lands.
   expression. The corrected metadata only reaches PyPI on release, so
   0.0.59 and earlier still advertise Apache-2.0 only.
 
+### Changed
+
+- **Development dependencies consolidated.** Four Dependabot pull
+  requests (#224, #226, #227, #228) taken together rather than one at a
+  time:
+
+  | Package | From | To |
+  |---|---|---|
+  | `pip-licenses` | ^4.0.0 | ^5.5.5 |
+  | `sphinx-autodoc-typehints` | ^1.0.0 | ^2.3.0 |
+  | `types-setuptools` | ^65.0.0 | ^84.0.0 |
+  | `pydata-sphinx-theme` | ^0.15.0 | ^0.17.1 |
+
+  All four touch `poetry.lock`, so merging them individually made each
+  conflict with the rest; resolving the lock once avoids the rebase
+  churn. Documentation dependencies only — no runtime effect.
+
 ### Added
 
 - **Developer Certificate of Origin required.** Every commit needs a
