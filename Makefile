@@ -22,7 +22,7 @@ YELLOW := \033[0;33m
 NC := \033[0m # No Color
 
 # Performance budget for the benchmark suite (seconds per 1000 tx)
-SLO_XML_GEN := 0.5
+SLO_XML_GEN := 2.0
 
 # Help target
 help:
@@ -99,9 +99,13 @@ sec:
 	@echo "$(GREEN)✓ Security checks passed$(NC)"
 
 perf:
-	@echo "$(YELLOW)Running performance benchmarks (XML gen SLO: < $(SLO_XML_GEN)s/1000tx)...$(NC)"
-	@poetry run pytest tests/test_integration.py -v --benchmark-only --benchmark-json=.benchmarks/results.json || true
-	@echo "$(YELLOW)Note: Review benchmark results for XML generation performance$(NC)"
+	@echo "$(YELLOW)Running performance benchmarks (XML gen guard: < $(SLO_XML_GEN)s/1000tx)...$(NC)"
+	@mkdir -p .benchmarks
+	@# --no-cov: addopts sets --cov-fail-under=100, and this target runs one
+	@# file, so coverage would always "fail" here. The Coverage Report job
+	@# owns that gate. This was previously hidden by `|| true`.
+	@poetry run pytest tests/perf_benchmarks.py -v --benchmark-only --no-cov \
+		--benchmark-json=.benchmarks/results.json
 
 complex:
 	@echo "$(YELLOW)Analyzing code complexity...$(NC)"

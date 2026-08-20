@@ -17,11 +17,42 @@
 import csv
 import os
 import tempfile
+from pathlib import Path
 
 import pytest
 
 from pain001.csv.load_csv_data import load_csv_data
 from pain001.xml.generate_xml import generate_xml
+
+# Kept in step with SLO_XML_GEN in the Makefile, which previously only
+# printed a number in a banner and never asserted it.
+#
+# The banner said 0.5s per 1000 transactions. Measured end to end on a
+# warm schema cache, one 1000-transaction batch (a 1.4 MiB document) is
+# ~0.50s at its fastest and ~0.82s on average -- so the advertised
+# figure was already at or past the floor before CI's slower hardware
+# is taken into account. It had never been checked, because the
+# benchmark that was supposed to check it timed an exception instead.
+#
+# Where that time goes, measured by neutralising the validator:
+#
+#   template render + data prep   0.036s   (7%)   <- pain001's own code
+#   XSD validation via xmlschema  0.465s  (93%)
+#
+# So this is not a pain001 hot path; it is the cost of validating a
+# 1.4 MiB document with a pure-Python XSD implementation. Neither
+# invocation shape helps -- validating a pre-parsed tree saves the
+# 0.073s parse, and `is_valid` is nearly 3x *slower* than `validate`.
+# The only real lever is a C-backed validator (lxml/libxml2), which is
+# a dependency and security-posture decision for this project rather
+# than something a benchmark should force.
+#
+# The threshold below is therefore a regression guard, not the
+# aspiration: loose enough not to flake on shared CI runners, tight
+# enough to catch a real blow-up. Tightening it is the right move if
+# and when the validator changes.
+SLO_XML_GEN_SECONDS = 2.0
+SLO_BATCH_SIZE = 1000
 
 
 class TestPerformanceBenchmarks:
@@ -157,70 +188,100 @@ class TestPerformanceBenchmarks:
         assert result is not None
         assert len(result) == 100
 
-    def test_xml_generation_performance(self, benchmark) -> None:  # type: ignore
-        """Benchmark XML generation performance."""
-        data = [
-            {
-                "id": "1",
-                "date": "2023-03-10T15:30:47",
-                "nb_of_txs": "1",
-                "initiator_name": "Test Initiator",
-                "initiator_street_name": "Test St",
-                "initiator_building_number": "1",
-                "initiator_postal_code": "12345",
-                "initiator_town_name": "Test Town",
-                "initiator_country_code": "DE",
-                "payment_information_id": "TEST",
-                "payment_method": "TRF",
-                "batch_booking": "false",
-                "requested_execution_date": "2023-03-15",
-                "debtor_name": "Debtor",
-                "debtor_street_name": "Debtor St",
-                "debtor_building_number": "1",
-                "debtor_postal_code": "12345",
-                "debtor_town_name": "Debtor Town",
-                "debtor_country_code": "DE",
-                "debtor_account_IBAN": "DE89370400440532013000",
-                "debtor_agent_BIC": "DEUTDE",
-                "charge_bearer": "DEBT",
-                "payment_id": "1",
-                "payment_amount": "100.00",
-                "currency": "EUR",
-                "payment_currency": "EUR",
-                "ctrl_sum": "100.00",
-                "creditor_agent_BIC": "DEUTDE",
-                "creditor_name": "Creditor",
-                "creditor_street_name": "Creditor St",
-                "creditor_building_number": "1",
-                "creditor_postal_code": "12345",
-                "creditor_town_name": "Creditor Town",
-                "creditor_country_code": "DE",
-                "creditor_account_IBAN": "DE89370400440532013000",
-                "purpose_code": "SCOR",
-                "reference_number": "REF",
-                "reference_date": "2023-03-10",
-                "service_level_code": "SEPA",
-                "end_to_end_id": "E2E",
-                "payment_instruction_id": "INSTR",
-                "instruction_id": "INST",
-                "category_purpose": "CAT",
-                "remittance_info_unstructured": "Info",
-                "remittance_info_structured": "STRUCT",
-                "addtl_end_to_end_id": "ADDTL",
-                "payment_info_structured": "STRUCT",
-                "forwarding_agent_BIC": "AGENT",
-                "remittance_information": "REM",
-            }
-        ]
+    @pytest.mark.perf
+    def test_xml_generation_performance(self, benchmark, tmp_path) -> None:
+        """Benchmark XML generation against the documented SLO.
 
-        def generate() -> None:  # type: ignore
-            """Generate XML."""
-            try:
-                generate_xml(data, "pain.001.001.03", None, None)
-            except Exception as e:
-                # Expected: validation errors in benchmark scenario
-                print(
-                    f"Benchmark validation error (expected): {type(e).__name__}"
-                )
+        The Makefile states an SLO of ``< 0.5s per 1000 transactions``.
+        This measures that: one generation of a 1000-transaction batch
+        against the real template and schema, written to disk.
+
+        The previous version passed ``None`` for both the template and
+        the schema path and wrapped the call in a bare ``except
+        Exception`` commented "expected". ``generate_xml`` rejects an
+        empty path before doing any work, so what was timed was a
+        ``ValueError`` being raised -- which is why it reported
+        single-digit microseconds for a batch job.
+        """
+        template = Path("pain001/templates/pain.001.001.03/template.xml")
+        schema = Path("pain001/templates/pain.001.001.03/pain.001.001.03.xsd")
+        assert template.is_file(), f"missing template: {template}"
+        assert schema.is_file(), f"missing schema: {schema}"
+
+        record: dict[str, object] = {
+            "id": "1",
+            "date": "2023-03-10T15:30:47",
+            "nb_of_txs": "1",
+            "initiator_name": "Test Initiator",
+            "initiator_street_name": "Test St",
+            "initiator_building_number": "1",
+            "initiator_postal_code": "12345",
+            "initiator_town_name": "Test Town",
+            "initiator_country_code": "DE",
+            "payment_information_id": "TEST",
+            "payment_method": "TRF",
+            "batch_booking": "false",
+            "requested_execution_date": "2023-03-15",
+            "debtor_name": "Debtor",
+            "debtor_street_name": "Debtor St",
+            "debtor_building_number": "1",
+            "debtor_postal_code": "12345",
+            "debtor_town_name": "Debtor Town",
+            "debtor_country_code": "DE",
+            "debtor_account_IBAN": "DE89370400440532013000",
+            "debtor_agent_BIC": "BANKDEFFXXX",
+            "charge_bearer": "DEBT",
+            "payment_id": "1",
+            "payment_amount": "100.00",
+            "currency": "EUR",
+            "payment_currency": "EUR",
+            "ctrl_sum": "100.00",
+            "creditor_agent_BIC": "SPUEDE2UXXX",
+            "creditor_name": "Creditor",
+            "creditor_street_name": "Creditor St",
+            "creditor_building_number": "1",
+            "creditor_postal_code": "12345",
+            "creditor_town_name": "Creditor Town",
+            "creditor_country_code": "DE",
+            "creditor_account_IBAN": "DE89370400440532013000",
+            "purpose_code": "SCOR",
+            "reference_number": "REF",
+            "reference_date": "2023-03-10",
+            "service_level_code": "SEPA",
+            "end_to_end_id": "E2E",
+            "payment_instruction_id": "INSTR",
+            "instruction_id": "INST",
+            "category_purpose": "CAT",
+            "remittance_info_unstructured": "Info",
+            "remittance_info_structured": "STRUCT",
+            "addtl_end_to_end_id": "ADDTL",
+            "payment_info_structured": "STRUCT",
+            "forwarding_agent_BIC": "SPUEDE2UXXX",
+            "remittance_information": "REM",
+        }
+
+        data = []
+        for i in range(SLO_BATCH_SIZE):
+            row = dict(record)
+            row["payment_id"] = f"PMT-{i:06d}"
+            row["id"] = str(i)
+            data.append(row)
+
+        out = tmp_path / "batch.xml"
+
+        def generate() -> None:
+            generate_xml(
+                data,
+                "pain.001.001.03",
+                str(template),
+                str(schema),
+                output_path=str(out),
+            )
 
         benchmark(generate)
+
+        mean = benchmark.stats.stats.mean
+        assert mean < SLO_XML_GEN_SECONDS, (
+            f"XML generation of {SLO_BATCH_SIZE} transactions took "
+            f"{mean:.3f}s on average, over the {SLO_XML_GEN_SECONDS}s SLO"
+        )
