@@ -10,9 +10,9 @@ policy in :mod:`pain001.suite`?
 
 Two failures it catches, both of which have already happened:
 
-* A **lockstep member left behind.** `pain001-lsp` sat at 0.0.54 while
-  the core reached 0.0.59. Nothing broke, so nothing said anything.
-* A **plugin claiming a release it predates.** `pain001-loader-xlsx`
+* A **member left behind.** `pain001-lsp` sat at 0.0.54 while the core
+  reached 0.0.59. Nothing broke, so nothing said anything.
+* A **member claiming a release it predates.** `pain001-loader-xlsx`
   was published as 0.0.54 while requiring `pain001>=0.0.56`, so its own
   number described a suite version older than the core it demands.
 
@@ -157,24 +157,18 @@ def audit() -> tuple[list[str], dict[str, Any]]:
         floor = core_floor(info.get("requires_dist"))
         report["members"][member.distribution] = {
             "published": version,
-            "lockstep": member.lockstep,
             "core_floor": floor,
         }
 
-        if member.lockstep and version != core_version:
+        if version != core_version:
             problems.append(
-                f"{member.distribution} is {version}, but lockstep members "
-                f"must match the core ({core_version}). Release it, or "
-                f"move it out of lockstep in pain001/suite.py."
+                f"{member.distribution} is {version}, but every suite "
+                f"member must match the core ({core_version}). Release it."
             )
 
-        # A plugin's own version is deliberately *not* compared to the
-        # core's. Plugins number independently, so `0.0.2` requiring
-        # `pain001>=0.0.55` is correct, not drift — an earlier version
-        # of this check flagged exactly that and was wrong.
-        #
-        # What does matter is that the floor is reachable: a plugin
-        # requiring a core that was never published is uninstallable.
+        # The floor must also be reachable. A member requiring a core
+        # that was never published is uninstallable no matter how well
+        # its own version matches.
         if floor and _as_tuple(floor) > _as_tuple(core_version):
             problems.append(
                 f"{member.distribution} requires {CORE}>={floor}, but the "
@@ -211,10 +205,9 @@ def main(argv: list[str] | None = None) -> int:
     print(f"core: {CORE} {report['core']}")
     for name, data in sorted(report["members"].items()):
         published = data.get("published") or "unpublished"
-        kind = "lockstep" if data.get("lockstep") else "plugin"
         floor = data.get("core_floor")
-        suffix = f", needs {CORE}>={floor}" if floor else ""
-        print(f"  {name:<24} {published:<10} ({kind}{suffix})")
+        suffix = f"  (needs {CORE}>={floor})" if floor else ""
+        print(f"  {name:<24} {published:<10}{suffix}")
 
     if problems:
         print("\nSuite is inconsistent:", file=sys.stderr)

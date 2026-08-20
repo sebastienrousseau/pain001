@@ -498,7 +498,14 @@ print(output_path)  # -> "pain.001.001.03.xml" — validated and on disk
 Pain001 ships **two interchangeable install paths** for both its MCP and
 LSP integrations: an *in-tree* implementation that comes with `pain001`
 itself (smaller feature set, no extra package), and a *standalone* PyPI
-package (richer surface, independently versioned).
+package (richer surface).
+
+Every package in the suite — `pain001`, `pain001-mcp`, `pain001-lsp`,
+`pain001-loader-xlsx`, `pain001-loader-mt101` — ships the **same version
+number**. If the core is at `0.0.60` then so is everything else, so
+there is never a compatibility table to consult. Versions advance in
+`0.0.1` steps along the `0.0.x` line; `0.1.0` follows `0.0.999`. See
+`pain001.suite`, which a daily job checks against PyPI.
 
 ### MCP server
 

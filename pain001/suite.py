@@ -12,40 +12,41 @@
 # implied. See the applicable Licence for the specific language
 # governing permissions and limitations.
 
-"""What the pain001 suite is, and which parts move together.
+"""What the pain001 suite is, and how its versions move.
 
 Users install more than one package — `pain001`, `pain001-mcp`,
 `pain001-lsp`, a loader or two — and the failure they hit is a version
 they cannot reason about: is `pain001-loader-xlsx==0.0.54` supposed to
 work with `pain001==0.0.60`?
 
-Two different answers are correct, for two different kinds of package,
-and writing them down here is the point of this module.
+The suite answers that with a single rule: **every member ships the same
+version as the core.** One number describes the whole suite. If the core
+is at ``0.0.60`` then so is every wrapper and every loader, and a user
+reading two different numbers is reading a mistake rather than a
+deliberate difference they need to understand.
 
-**Lockstep members** (`pain001-mcp`, `pain001-lsp`) ship the same
-version as the core. They wrap the core's own surface, so a core
-release is a release for them; a user reading two different numbers is
-reading a mistake.
+Versions advance in ``0.0.1`` steps and stay on the ``0.0.x`` line;
+``0.1.0`` follows ``0.0.999``, not ``0.0.60``. A member that jumps off
+that line is not signalling independence, it is breaking the one
+property this module exists to guarantee.
 
-**Plugins** (`pain001-loader-xlsx`, `pain001-loader-mt101`) version
-independently. They implement the published plugin contract, not the
-core's internals, and a loader bugfix should not wait for a core
-release. What binds them is not a matching version number but the
-contract generation in :data:`~pain001.plugins.PAIN001_API_VERSION`,
-which the registry enforces at load time — a plugin ahead of the host
-raises rather than misbehaving.
+An earlier revision of this module split the suite in two, versioning
+the loaders independently on the grounds that they implement the
+published plugin contract rather than the core's internals, so a loader
+fix need not wait for a core release. That is a defensible design and it
+is not the one this project uses: the cost of a user having to know
+which packages track the core and which do not outweighs the cost of an
+occasional no-change release. The contract generation in
+:data:`~pain001.plugins.PAIN001_API_VERSION` still exists and the
+registry still enforces it at load time — it is a safety net, not the
+versioning policy.
 
 Two rules follow, and both are checked by
 ``scripts/check_suite_consistency.py``:
 
-1. A lockstep member's published version must equal the core's.
-2. Any member's declared ``pain001`` floor must be a version that
+1. Every member's published version must equal the core's.
+2. Every member's declared ``pain001`` floor must be a version that
    actually exists, or the combination is uninstallable.
-
-A plugin's own version is deliberately not compared against the core's.
-``pain001-loader-mt101`` is at ``0.0.2`` and requires
-``pain001>=0.0.55``; that is correct independent versioning, not drift,
-and a check that flags it is measuring the wrong thing.
 """
 
 from __future__ import annotations
@@ -60,13 +61,11 @@ class SuiteMember(NamedTuple):
     Attributes:
         distribution: The name on PyPI.
         repository: The GitHub repository, ``owner/name``.
-        lockstep: Whether its version must equal the core's.
         summary: One line, for the README table and error messages.
     """
 
     distribution: str
     repository: str
-    lockstep: bool
     summary: str
 
 
@@ -84,31 +83,26 @@ SUITE: Final[MappingProxyType[str, SuiteMember]] = MappingProxyType(
             SuiteMember(
                 distribution="pain001",
                 repository="sebastienrousseau/pain001",
-                lockstep=True,
                 summary="Core library and CLI.",
             ),
             SuiteMember(
                 distribution="pain001-mcp",
                 repository="sebastienrousseau/pain001-mcp",
-                lockstep=True,
                 summary="Model Context Protocol server.",
             ),
             SuiteMember(
                 distribution="pain001-lsp",
                 repository="sebastienrousseau/pain001-lsp",
-                lockstep=True,
                 summary="Language server for payment data files.",
             ),
             SuiteMember(
                 distribution="pain001-loader-xlsx",
                 repository="sebastienrousseau/pain001-loader-xlsx",
-                lockstep=False,
                 summary="Excel (.xlsx/.xlsm) loader plugin.",
             ),
             SuiteMember(
                 distribution="pain001-loader-mt101",
                 repository="sebastienrousseau/pain001-loader-mt101",
-                lockstep=False,
                 summary="SWIFT MT101 loader plugin.",
             ),
         )
@@ -116,27 +110,17 @@ SUITE: Final[MappingProxyType[str, SuiteMember]] = MappingProxyType(
 )
 
 
-def lockstep_members() -> tuple[SuiteMember, ...]:
-    """Return the members whose version must equal the core's.
+def members() -> tuple[SuiteMember, ...]:
+    """Return every member of the suite, core first.
+
+    Every member is lockstep, so there is no second accessor to pick a
+    subset — the absence of one is the policy.
 
     Returns:
-        The lockstep members, core first.
+        All suite members, core first.
 
     Example:
-        >>> [m.distribution for m in lockstep_members()][0]
+        >>> [m.distribution for m in members()][0]
         'pain001'
     """
-    return tuple(m for m in SUITE.values() if m.lockstep)
-
-
-def plugin_members() -> tuple[SuiteMember, ...]:
-    """Return the members that version independently.
-
-    Returns:
-        The plugin members.
-
-    Example:
-        >>> all(not m.lockstep for m in plugin_members())
-        True
-    """
-    return tuple(m for m in SUITE.values() if not m.lockstep)
+    return tuple(SUITE.values())
