@@ -164,6 +164,17 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
         plugin_registry.get_loader_for_extension(ext) is not None
     )
     if ext not in builtin_extensions and not plugin_handles_ext:
+        from pain001.plugins.companions import install_hint
+
+        hint = install_hint(ext)
+        if hint:
+            # A first-party package handles this format. Naming it is
+            # the difference between an error the user can act on and
+            # one that sends them to the issue tracker.
+            raise DataSourceError(
+                f"No loader registered for {ext}; install {hint} "
+                f"(file: {file_path})."
+            )
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
             f"Expected .csv, .db, .json, .jsonl, or .parquet file, or "

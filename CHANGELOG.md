@@ -24,6 +24,75 @@ change and no public API change so far. Add entries here as work lands.
   expression. The corrected metadata only reaches PyPI on release, so
   0.0.59 and earlier still advertise Apache-2.0 only.
 
+### Changed
+
+- **Development dependencies consolidated.** Four Dependabot pull
+  requests (#224, #226, #227, #228) taken together rather than one at a
+  time:
+
+  | Package | From | To |
+  |---|---|---|
+  | `pip-licenses` | ^4.0.0 | ^5.5.5 |
+  | `sphinx-autodoc-typehints` | ^1.0.0 | ^2.3.0 |
+  | `types-setuptools` | ^65.0.0 | ^84.0.0 |
+  | `pydata-sphinx-theme` | ^0.15.0 | ^0.17.1 |
+
+  All four touch `poetry.lock`, so merging them individually made each
+  conflict with the rest; resolving the lock once avoids the rebase
+  churn. Documentation dependencies only — no runtime effect.
+
+- **The suite's versioning policy is written down and checked.**
+  `pain001`, `pain001-mcp`, `pain001-lsp`, `pain001-loader-xlsx` and
+  `pain001-loader-mt101` did not agree on what their version numbers
+  meant. The wrappers are meant to move with the core and had drifted
+  (`pain001-lsp` at 0.0.54 against a 0.0.59 core); the loaders version
+  independently, which is correct but was nowhere stated, so the drift
+  and the design looked identical from outside.
+
+  `pain001.suite` states which members move with the core and which do
+  not. `scripts/check_suite_consistency.py` reads PyPI and fails when a
+  lockstep member is behind, or when any member declares a `pain001`
+  floor that was never published — a combination nobody can install. A
+  daily workflow runs it and keeps one issue open rather than emailing
+  a red cron.
+
+  A plugin's own version is deliberately not compared against the
+  core's: `pain001-loader-mt101` at 0.0.2 requiring `pain001>=0.0.55`
+  is correct independent versioning, and an earlier draft of this check
+  flagged it, which was measuring the wrong thing.
+
+- **Unhandled formats name the package that handles them** (#180).
+  `.xlsx` is not an unsupported format — it is a format whose loader
+  lives in a companion package. The error said "install a plugin that
+  registers the '.xlsx' extension", which leaves the user to work out
+  *which* plugin, the one thing they do not know. It now reads:
+
+      No loader registered for .xlsx; install pain001-loader-xlsx
+
+  `pain001.plugins.companions` is the single place mapping an extension
+  to its pip target, matched case-insensitively because Windows exports
+  produce `.XLSX`. Extensions nobody claims keep the generic message
+  pointing at `pain001 plugins list`.
+
+- **The bundled scheme profiles and XML writer are now plugins** (#179).
+  `pain001 plugins list` promised "the bundled csv, sqlite, json, jsonl,
+  parquet loaders, the five scheme profiles, and the default xml writer,
+  all marked `source=built-in`" and listed only the five loaders:
+  `register_scheme` and `register_writer` existed and were wired for
+  external entry-point plugins, but nothing registered the built-ins
+  through them.
+
+  The five profiles in `pain001.validation.schemes` now reach the
+  registry through an adapter, and the filesystem sink is a real
+  `xml-file` writer. Both exercise the same contract an external plugin
+  must satisfy, which is the point of the built-ins.
+
+  Adapting the profiles surfaced a contract mismatch: `SchemeFinding`
+  requires a message ending in a period, and the legacy violations are
+  phrased without one (`"SEPA requires EUR currency (got USD)"`). The
+  adapter terminates them, so `--explain` and the LSP bridge no longer
+  run a message into the remediation hint that follows it.
+
 ### Added
 
 - **Developer Certificate of Origin required.** Every commit needs a
