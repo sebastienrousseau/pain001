@@ -208,14 +208,13 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, indent=2, sort_keys=True))
         return 1 if problems else 0
 
-    if True:
-        print(f"core: {CORE} {report['core']}")
-        for name, data in sorted(report["members"].items()):
-            published = data.get("published") or "unpublished"
-            kind = "lockstep" if data.get("lockstep") else "plugin"
-            floor = data.get("core_floor")
-            suffix = f", needs {CORE}>={floor}" if floor else ""
-            print(f"  {name:<24} {published:<10} ({kind}{suffix})")
+    print(f"core: {CORE} {report['core']}")
+    for name, data in sorted(report["members"].items()):
+        published = data.get("published") or "unpublished"
+        kind = "lockstep" if data.get("lockstep") else "plugin"
+        floor = data.get("core_floor")
+        suffix = f", needs {CORE}>={floor}" if floor else ""
+        print(f"  {name:<24} {published:<10} ({kind}{suffix})")
 
     if problems:
         print("\nSuite is inconsistent:", file=sys.stderr)
