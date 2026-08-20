@@ -5,10 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] — 0.0.60
+## [0.0.60] - 2026-08-20
 
-A **licensing correctness and governance** release. No runtime behaviour
-change and no public API change so far. Add entries here as work lands.
+A **licensing correctness, plugin-surface and governance** release.
+
+The licence metadata published to PyPI is corrected, the bundled scheme
+profiles and XML writer become real plugins, unhandled formats name the
+package that handles them, and the suite's versioning policy is written
+down and checked by a daily job.
 
 ### Fixed
 
@@ -101,6 +105,27 @@ change and no public API change so far. Add entries here as work lands.
 - **Security assurance case** at `docs/assurance-case.md` — threat
   model, trust boundaries, secure-design principles applied, and
   countered implementation weaknesses, each with checkable evidence.
+
+### Fixed (tooling)
+
+- **The performance benchmark job measured an exception, not XML**
+  (#233). `make perf` pointed at `tests/test_integration.py`, which
+  contains no `benchmark` fixtures — all of them are in
+  `tests/perf_benchmarks.py` — so the run collected nothing, and
+  `|| true` discarded the resulting error. The benchmark itself called
+  `generate_xml(..., None, None)` inside a bare `except Exception`
+  marked "expected"; empty paths are rejected before any work happens,
+  so the reported "3.5us" was 12,177 `ValueError`s. The `SLO_XML_GEN`
+  figure was printed in a banner and never asserted.
+
+  The target now runs the right file without swallowing failures, and
+  the benchmark generates a real 1000-transaction batch against the
+  shipped template and schema. Enabling it immediately caught invalid
+  fixture BICs that had never been exercised. Measured, XSD validation
+  via `xmlschema` is 93% of the cost and pain001's own rendering 7%, so
+  the advertised 0.5s/1000tx did not hold (CI measures 0.65-0.88s); the
+  guard is now a documented 2.0s regression check rather than an
+  unverified aspiration. No runtime code changed.
 
 ## [0.0.59] - 2026-07-30
 
