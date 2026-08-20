@@ -41,6 +41,26 @@ change and no public API change so far. Add entries here as work lands.
   conflict with the rest; resolving the lock once avoids the rebase
   churn. Documentation dependencies only — no runtime effect.
 
+- **The suite's versioning policy is written down and checked.**
+  `pain001`, `pain001-mcp`, `pain001-lsp`, `pain001-loader-xlsx` and
+  `pain001-loader-mt101` did not agree on what their version numbers
+  meant. The wrappers are meant to move with the core and had drifted
+  (`pain001-lsp` at 0.0.54 against a 0.0.59 core); the loaders version
+  independently, which is correct but was nowhere stated, so the drift
+  and the design looked identical from outside.
+
+  `pain001.suite` states which members move with the core and which do
+  not. `scripts/check_suite_consistency.py` reads PyPI and fails when a
+  lockstep member is behind, or when any member declares a `pain001`
+  floor that was never published — a combination nobody can install. A
+  daily workflow runs it and keeps one issue open rather than emailing
+  a red cron.
+
+  A plugin's own version is deliberately not compared against the
+  core's: `pain001-loader-mt101` at 0.0.2 requiring `pain001>=0.0.55`
+  is correct independent versioning, and an earlier draft of this check
+  flagged it, which was measuring the wrong thing.
+
 - **Unhandled formats name the package that handles them** (#180).
   `.xlsx` is not an unsupported format — it is a format whose loader
   lives in a companion package. The error said "install a plugin that
