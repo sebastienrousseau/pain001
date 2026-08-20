@@ -264,9 +264,9 @@ provide a `pain001 plugins migrate <plugin>` helper.
 
 ## Built-in plugins
 
-The five loaders shipped with pain001 itself:
+### Loaders
 
-| Name | Extensions | Source |
+| Name | Extensions | Wraps |
 | :--- | :--- | :--- |
 | `csv` | `.csv` | `pain001.csv.load_csv_data` |
 | `json` | `.json` | `pain001.json.load_json_data` |
@@ -274,7 +274,42 @@ The five loaders shipped with pain001 itself:
 | `sqlite` | `.db`, `.sqlite` | `pain001.db.load_db_data` (reads from a `pain001` table) |
 | `parquet` | `.parquet` | `pain001.parquet.load_parquet_data` (requires `pain001[parquet]`) |
 
-All five carry `meta.source = "built-in"`. They live in
+A sixth, `gpg`, registers only when `pain001[gpg]` is installed; it
+decrypts and delegates to whichever loader matches the inner extension
+(`batch.csv.gpg` → `csv`).
+
+### Schemes
+
+| Name | Rulebook |
+| :--- | :--- |
+| `sepa-sct` | SEPA Credit Transfer (EUR, IBAN, charset limits) |
+| `sepa-sdd` | SEPA Direct Debit (mandate id, sequence type) |
+| `sepa-b2b` | SEPA B2B Direct Debit (B2B sequence types) |
+| `sepa-inst` | SEPA Instant Credit Transfer (amount ceiling) |
+| `xborder-ct` | Cross-border Credit Transfer (any ISO currency) |
+
+These wrap the profiles in `pain001.validation.schemes`, which predate
+the contract: they take `data` positionally and return
+`SchemeValidationResult`. The adapter maps `index` → `row_index`,
+attaches the remediation hint for the rule, and terminates the message,
+because `SchemeFinding` requires a sentence and the legacy strings are
+phrased without one.
+
+`message_type` is accepted for contract conformance and is not used by
+these five — a bundled profile is selected by name, not by message
+type. An external scheme is free to branch on it.
+
+### Writers
+
+| Name | Destination |
+| :--- | :--- |
+| `xml-file` | A filesystem path. Creates missing parents; returns the resolved absolute path. |
+
+The writer holds the XML bytes verbatim. Canonical form is the
+generator's decision, so a writer that re-parsed or re-serialised could
+silently change what a bank receives.
+
+Everything above carries `meta.source = "built-in"`. They live in
 `pain001/plugins/_builtins.py` and exercise the *same* contract any
 external plugin uses, so a regression in the contract is caught
 against the built-ins before it can hurt downstream packages.

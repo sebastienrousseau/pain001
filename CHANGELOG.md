@@ -41,6 +41,25 @@ change and no public API change so far. Add entries here as work lands.
   conflict with the rest; resolving the lock once avoids the rebase
   churn. Documentation dependencies only — no runtime effect.
 
+- **The bundled scheme profiles and XML writer are now plugins** (#179).
+  `pain001 plugins list` promised "the bundled csv, sqlite, json, jsonl,
+  parquet loaders, the five scheme profiles, and the default xml writer,
+  all marked `source=built-in`" and listed only the five loaders:
+  `register_scheme` and `register_writer` existed and were wired for
+  external entry-point plugins, but nothing registered the built-ins
+  through them.
+
+  The five profiles in `pain001.validation.schemes` now reach the
+  registry through an adapter, and the filesystem sink is a real
+  `xml-file` writer. Both exercise the same contract an external plugin
+  must satisfy, which is the point of the built-ins.
+
+  Adapting the profiles surfaced a contract mismatch: `SchemeFinding`
+  requires a message ending in a period, and the legacy violations are
+  phrased without one (`"SEPA requires EUR currency (got USD)"`). The
+  adapter terminates them, so `--explain` and the LSP bridge no longer
+  run a message into the remediation hint that follows it.
+
 ### Added
 
 - **Developer Certificate of Origin required.** Every commit needs a

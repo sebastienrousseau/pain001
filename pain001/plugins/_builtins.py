@@ -30,10 +30,16 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from importlib import metadata
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from pain001.plugins._version import PAIN001_API_VERSION
-from pain001.plugins.contracts import LoaderResult, PluginMeta
+from pain001.plugins.contracts import (
+    LoaderResult,
+    PluginMeta,
+    SchemeFinding,
+    SchemeResult,
+)
 
 if TYPE_CHECKING:
     from pain001.plugins.registry import PluginRegistry
@@ -203,6 +209,129 @@ class _ParquetLoader:
             yield LoaderResult(rows=chunk, source_hint=path)
 
 
+# ---------------------------------------------------------------------------
+# Scheme adapters (whole-batch rulebooks)
+# ---------------------------------------------------------------------------
+#: Human-readable blurbs for the five bundled scheme profiles, keyed by
+#: profile name. Kept beside the adapter rather than in
+#: :mod:`pain001.validation.schemes` so the legacy module stays free of
+#: plugin concerns.
+_SCHEME_DESCRIPTIONS: dict[str, str] = {
+    "sepa-sct": "SEPA Credit Transfer rulebook (EUR, IBAN, charset limits).",
+    "sepa-sdd": "SEPA Direct Debit rulebook (mandate id, sequence type).",
+    "sepa-b2b": "SEPA B2B Direct Debit rulebook (B2B sequence types).",
+    "sepa-inst": "SEPA Instant Credit Transfer rulebook (amount ceiling).",
+    "xborder-ct": "Cross-border Credit Transfer rulebook (any ISO currency).",
+}
+
+
+def _as_sentence(message: str) -> str:
+    """Return ``message`` terminated, as :class:`SchemeFinding` requires.
+
+    The bundled profiles predate the contract and phrase violations
+    without a full stop (``"SEPA requires EUR currency (got USD)"``).
+    The contract says findings end in a period, and consumers — the
+    ``--explain`` renderer, the LSP diagnostic bridge — concatenate
+    them with remediation hints, so an unterminated message runs into
+    the next sentence.
+
+    Normalising here rather than editing the rulebook keeps the legacy
+    strings stable for callers that still read them directly, and puts
+    the fix at the one point where legacy shape becomes contract shape.
+    """
+    stripped = message.rstrip()
+    if not stripped or stripped[-1] in ".!?":
+        return stripped
+    return f"{stripped}."
+
+
+class _ProfileScheme:
+    """Adapt a legacy :class:`ValidationProfile` to :class:`AbstractScheme`.
+
+    The five bundled profiles in :mod:`pain001.validation.schemes`
+    predate the plugin contract: they take ``data`` positionally, know
+    nothing about ``message_type``, and return a
+    :class:`SchemeValidationResult` of :class:`SchemeViolation`. This
+    wraps one profile so it presents the same surface an external
+    scheme plugin must implement.
+
+    The profile instance is bound once at construction; ``validate``
+    does no import work, no dict lookups against the profile registry,
+    and allocates exactly one list.
+
+    Args:
+        profile: A legacy ``ValidationProfile`` with ``name`` and
+            ``validate(data)``.
+        description: Blurb shown by ``pain001 plugins list``.
+    """
+
+    __slots__ = ("_profile", "meta")
+
+    def __init__(self, profile: Any, description: str) -> None:
+        self._profile = profile
+        self.meta = _make_meta(profile.name, description)
+
+    def validate(
+        self,
+        rows: list[dict[str, Any]],
+        *,
+        message_type: str,
+    ) -> SchemeResult:
+        """Run the wrapped profile and translate its violations.
+
+        ``message_type`` is accepted for contract conformance and
+        deliberately unused: the bundled profiles are selected by name
+        and apply the same rules to every message type they support.
+        """
+        del message_type  # Contract parameter; profiles are name-selected.
+        from pain001.validation.schemes import (  # noqa: PLC0415
+            remediation_for,
+        )
+
+        legacy = self._profile.validate(rows)
+        findings = [
+            SchemeFinding(
+                row_index=v.index,
+                field=v.field,
+                rule=v.rule,
+                severity=v.severity,
+                message=_as_sentence(v.message),
+                remediation=remediation_for(v.rule) or None,
+            )
+            for v in legacy.violations
+        ]
+        return SchemeResult(is_valid=legacy.is_valid, findings=findings)
+
+
+# ---------------------------------------------------------------------------
+# Writer adapter (where the rendered XML goes)
+# ---------------------------------------------------------------------------
+class _XmlFileWriter:
+    """Built-in writer that puts the rendered XML on the filesystem.
+
+    ``destination`` is a filesystem path. The bytes are written exactly
+    as handed over — the contract forbids re-parsing or re-serialising,
+    because canonical form is the generator's decision, not the
+    writer's.
+    """
+
+    __slots__ = ()
+
+    meta = _make_meta(
+        "xml-file",
+        "Write the rendered ISO 20022 XML to a filesystem path.",
+    )
+
+    def write(self, xml: str, destination: str) -> str:
+        """Write ``xml`` verbatim to ``destination``; return its real path."""
+        target = Path(destination)
+        parent = target.parent
+        if parent and not parent.exists():
+            parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(xml, encoding="utf-8")
+        return str(target.resolve())
+
+
 _BUILTIN_LOADERS = (
     _CsvLoader,
     _JsonLoader,
@@ -228,6 +357,19 @@ def register_all(reg: PluginRegistry) -> None:
     """
     for cls in _BUILTIN_LOADERS:
         reg.register_loader(cls())
+
+    # Scheme profiles. Imported here rather than at module scope so the
+    # rulebook module (and its Decimal/regex tables) is only paid for by
+    # processes that actually look a plugin up.
+    from pain001.validation.schemes import PROFILES  # noqa: PLC0415
+
+    for name, profile in PROFILES.items():
+        reg.register_scheme(
+            _ProfileScheme(profile, _SCHEME_DESCRIPTIONS.get(name, ""))
+        )
+
+    reg.register_writer(_XmlFileWriter())
+
     # Opt-in built-ins (gated on optional extras).
     from pain001.plugins.builtins_gpg import (  # noqa: PLC0415
         maybe_register as maybe_register_gpg,
