@@ -2653,22 +2653,22 @@ test = ["pip-audit[cov]", "pretend", "pytest"]
 
 [[package]]
 name = "pip-licenses"
-version = "4.5.1"
+version = "5.5.5"
 description = "Dump the software license list of Python packages installed with pip."
 optional = false
-python-versions = "~=3.8"
+python-versions = ">=3.9"
 groups = ["dev"]
 files = [
-    {file = "pip-licenses-4.5.1.tar.gz", hash = "sha256:fad5f56fbaa56b8e414434e36c32394a9412ff10ddf2cef92b51951bdf193869"},
-    {file = "pip_licenses-4.5.1-py3-none-any.whl", hash = "sha256:7c982bc6837f47d32d4016b43d9174c0ce723b450710a2111a3ebbb910f152b7"},
+    {file = "pip_licenses-5.5.5-py3-none-any.whl", hash = "sha256:f4c4c6d9e6a03612cf59f29f19dc8ab54904d82e055b8e191498f2279a224e14"},
+    {file = "pip_licenses-5.5.5.tar.gz", hash = "sha256:60750c006adf7a0910347b726e8ee9fee3bc8d2e7c8307a5c4ec0776c8e2a276"},
 ]
 
 [package.dependencies]
-prettytable = ">=2.3.0"
-tomli = ">=2"
+prettytable = ">=3.12.0"
+tomli = {version = ">=2", markers = "python_version < \"3.11\""}
 
 [package.extras]
-test = ["docutils", "mypy", "pytest-cov", "pytest-pycodestyle", "pytest-runner", "tomli-w"]
+dev = ["docutils (>=0.19)", "mypy", "pip-tools", "pypandoc", "pytest-cov", "pytest-runner", "ruff", "tomli-w", "virtualenv (>=21.1.0)", "wheel"]
 
 [[package]]
 name = "pip-requirements-parser"
@@ -4734,4 +4734,4 @@ redis = ["redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "bab0a1c05d68c4adce4dc83130b98294e59fb1fb11df860ab87fb5078bdf735a"
+content-hash = "74138b2bbfd9a8ac8a48b7dcf2767122cc4bae90fa55339fca60ea0f3a935797"
