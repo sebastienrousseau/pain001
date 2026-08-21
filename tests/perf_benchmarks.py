@@ -27,31 +27,31 @@ from pain001.xml.generate_xml import generate_xml
 # Kept in step with SLO_XML_GEN in the Makefile, which previously only
 # printed a number in a banner and never asserted it.
 #
-# The banner said 0.5s per 1000 transactions. Measured end to end on a
-# warm schema cache, one 1000-transaction batch (a 1.4 MiB document) is
-# ~0.50s at its fastest and ~0.82s on average -- so the advertised
-# figure was already at or past the floor before CI's slower hardware
-# is taken into account. It had never been checked, because the
-# benchmark that was supposed to check it timed an exception instead.
+# History worth keeping, because the number moved twice for opposite
+# reasons. The banner originally said 0.5s per 1000 transactions and had
+# never been checked, because the benchmark meant to check it was timing
+# an exception. Once it measured real work, a 1000-transaction batch (a
+# 1.4 MiB document) came out at ~0.50s at best and ~0.82s on average, so
+# the advertised figure did not hold and the guard was set to a
+# deliberately loose 2.0s.
 #
-# Where that time goes, measured by neutralising the validator:
+# It holds comfortably now. XSD validation was 93% of the cost, and with
+# libxml2 doing the validating it is 39%:
 #
-#   template render + data prep   0.036s   (7%)   <- pain001's own code
-#   XSD validation via xmlschema  0.465s  (93%)
+#   generate_xml_string, 1000 transactions   0.501s -> 0.082s  (6.1x)
+#   of which XSD validation                  0.465s -> 0.032s
 #
-# So this is not a pain001 hot path; it is the cost of validating a
-# 1.4 MiB document with a pure-Python XSD implementation. Neither
-# invocation shape helps -- validating a pre-parsed tree saves the
-# 0.073s parse, and `is_valid` is nearly 3x *slower* than `validate`.
-# The only real lever is a C-backed validator (lxml/libxml2), which is
-# a dependency and security-posture decision for this project rather
-# than something a benchmark should force.
+# So the threshold comes down from 2.0s to 0.5s — which is, as it
+# happens, the figure the banner claimed all along, now measured rather
+# than asserted. It keeps roughly 5x headroom over the ~0.10s the
+# benchmark reports here, which is the margin a shared runner needs; CI
+# measured 0.65-0.88s before this change and should now sit far below it.
 #
-# The threshold below is therefore a regression guard, not the
-# aspiration: loose enough not to flake on shared CI runners, tight
-# enough to catch a real blow-up. Tightening it is the right move if
-# and when the validator changes.
-SLO_XML_GEN_SECONDS = 2.0
+# Note this guard is only meaningful where lxml is installed. The suite
+# installs it, and pain001[fast] declares it; without it the pure-Python
+# validator is still correct, just slower, and this threshold would be
+# the thing that notices.
+SLO_XML_GEN_SECONDS = 0.5
 SLO_BATCH_SIZE = 1000
 
 

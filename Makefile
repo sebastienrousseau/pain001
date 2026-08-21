@@ -22,7 +22,7 @@ YELLOW := \033[0;33m
 NC := \033[0m # No Color
 
 # Performance budget for the benchmark suite (seconds per 1000 tx)
-SLO_XML_GEN := 2.0
+SLO_XML_GEN := 0.5
 
 # Help target
 help:

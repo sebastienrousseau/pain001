@@ -7,6 +7,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Performance
+
+- **XSD validation via libxml2 when `lxml` is installed.** Validation
+  was 93% of the cost of generating a document — template rendering and
+  data preparation account for 0.036s of a 1000-transaction batch, and
+  validation for 0.465s.
+
+  | | before | after |
+  |---|---|---|
+  | `generate_xml_string`, 1000 tx | 0.501s | **0.082s** (6.1x) |
+  | of which XSD validation | 0.465s | 0.032s |
+  | validation alone, 1.4 MiB doc | 729ms | **15.7ms** (46x) |
+
+  `lxml` is optional and auto-detected (`pip install pain001[fast]`);
+  without it the pure-Python validator is used exactly as before.
+
+  It can only shortcut an *accept*. A rejection falls through to
+  `xmlschema`, which has the final say and supplies the error messages,
+  so installing or removing `lxml` cannot turn a rejected document into
+  an accepted one. Verdicts were compared across 121 documents (one
+  valid, 120 invalid in nine different ways) with no disagreement. The
+  lxml parser is hardened by hand — entity resolution, DTD loading and
+  network access all off — because `defusedxml` does not cover lxml.
+
+- **CSV diagnostics no longer quadratic in column count.**
+  `pain001.lsp.diagnostics` computed each cell's character span by
+  splitting the whole line and summing the lengths of every preceding
+  cell, once per cell — ~200 length operations per 20-column row instead
+  of ~20, and 525,000 generator iterations for a 500-row document. It
+  was also computed eagerly, before knowing whether there was anything
+  to report, so a clean document paid the full cost to produce no
+  diagnostics.
+
+  | rows | before | after |
+  |---|---|---|
+  | 500 | 43.4ms | **7.6ms** (5.7x) |
+  | 2000 | 102.0ms | **32.1ms** (3.2x) |
+
+  Spans are unchanged, verified against the old implementation across
+  411 lines at every column index with zero mismatches. Scaling is now
+  linear (4.23x for 4x the rows) where it used to be dominated by the
+  per-row quadratic.
+
+- **The XML generation guard is 0.5s again**, down from the 2.0s it was
+  loosened to when the benchmark first started measuring real work. That
+  was the figure originally advertised and never met; it now holds with
+  roughly 5x headroom.
+
 ### Changed
 
 - **The suite runs on a single version line.** `pain001.suite` used to
