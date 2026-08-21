@@ -5,6 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.62] - 2026-08-21
+
+Suite-wide follow-through on two things 0.0.61 left explicitly
+unfinished. No change in the core itself yet; the work so far is in the
+satellites, and they release together with this version.
+
+### Performance
+
+- **The bundled JSON Schema is now cached in both wrappers.**
+  `pain001-lsp` and `pain001-mcp` each re-read and re-parsed it on every
+  call. In the LSP that is a disk read and a JSON parse per keystroke,
+  behind completion, hover and the missing-field check:
+
+  | call | before | after |
+  |---|---|---|
+  | `completion_items` | 0.0805ms | **0.0029ms** (28x) |
+  | `hover_text` | 0.0794ms | **0.0002ms** (478x) |
+  | `missing_required_fields` | 0.0816ms | **0.0004ms** (196x) |
+  | `get_required_fields` (mcp) | 0.0788ms | **0.0002ms** (475x) |
+  | `get_input_schema` (mcp) | 0.0736ms | **0.0001ms** (888x) |
+
+  None of this is user-visible — 0.08ms is imperceptible — so it is
+  waste removed rather than latency fixed. The mcp half also corrects a
+  judgement from 0.0.61, where I measured the schema load against
+  `generate_message` (0.2% of it) and concluded caching was not worth
+  it. That compared it to the wrong tool: the read-only tools do
+  essentially nothing else.
+
+### Added
+
+- **Benchmarks for the paths the 0.0.61 set missed**: LSP completion and
+  hover, MCP's read-only discovery tools, XLSX streaming throughput and
+  per-cell value normalisation, and MT101's block-4 wire format and
+  field-dense transactions.
+
+  Where the numbers are now sub-microsecond, the guard is a property
+  rather than a threshold — a wall-clock bound loose enough for shared
+  CI would not notice a cache being deleted, so the tests assert the
+  schema is not re-read across repeated calls instead.
+
+### Changed
+
+- **`pain001-lsp` now installs from its `poetry.lock` in CI.** 0.0.61
+  added `poetry check --lock` there after finding the lock silently
+  stale, but nothing installed from it — so the gate proved the lock
+  matched `pyproject.toml` and nothing about whether the pinned set
+  worked. A `locked` job now runs the suite against exactly what the
+  lock pins, alongside the existing jobs that install against the live
+  range.
+
+- **`pain001-loader-mt101` enforces `ruff format`**, which
+  `pain001-loader-xlsx` already did. Four files had drifted.
+
 ## [0.0.61] - 2026-08-20
 
 A **performance** release. Two hot paths that were quietly quadratic or
