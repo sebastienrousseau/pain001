@@ -133,6 +133,17 @@ def main() -> int:
         m.group(1) if m else "missing or undated",
     )
 
+    # poetry.lock must match pyproject.toml. The publish job installs
+    # with poetry, so a stale lock fails the release — but only after the
+    # tag is pushed and public. Editing pyproject and re-locking are one
+    # action; this is the check that says so before it matters.
+    lock_ok = run("poetry", "check", "--lock").returncode == 0
+    check(
+        "poetry.lock matches pyproject.toml",
+        lock_ok,
+        "" if lock_ok else "run `poetry lock` and commit the result",
+    )
+
     # clean tree and correct branch — cutting from a dirty tree is how
     # unreviewed changes end up inside a signed tag
     dirty = run("git", "status", "--porcelain").stdout.strip()

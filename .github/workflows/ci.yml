@@ -17,6 +17,28 @@ permissions:
   contents: read
 
 jobs:
+  # 0. LOCKFILE (Fastest Fail - a stale lock breaks every later job)
+  #
+  # Every poetry job here already dies on a stale lock, but it dies
+  # inside an install log with a dozen jobs red at once and nothing
+  # saying which of them is the cause. This says it in one line, in
+  # seconds, before anything else runs.
+  lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
+      - name: ❯ Verify poetry.lock Is Current
+        run: |
+          if ! poetry check --lock; then
+            echo "::error::poetry.lock is stale. Run 'poetry lock' and commit the result."
+            exit 1
+          fi
+          echo "✅ poetry.lock matches pyproject.toml."
+
   # 1. VERSION SYNC (Fastest Fail - 0s Setup)
   version-sync:
     runs-on: ubuntu-latest
