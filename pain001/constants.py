@@ -21,7 +21,7 @@ from pathlib import Path
 BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 
 # Shared metadata
-VERSION = "0.0.60"
+VERSION = "0.0.61"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
