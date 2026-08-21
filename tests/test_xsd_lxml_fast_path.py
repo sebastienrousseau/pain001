@@ -54,6 +54,59 @@ MINIMAL_INVALID = (
 
 NOT_XML = "this is not xml at all <<<"
 
+
+def _generate_valid_document() -> str:
+    """Produce a schema-valid pain.001.001.03 document."""
+    from pain001.xml.generate_xml import generate_xml_string
+
+    record = {
+        "id": "1",
+        "date": "2023-03-10T15:30:47",
+        "nb_of_txs": "1",
+        "initiator_name": "Initiator",
+        "initiator_street_name": "Street",
+        "initiator_building_number": "1",
+        "initiator_postal_code": "12345",
+        "initiator_town_name": "Town",
+        "initiator_country_code": "DE",
+        "payment_information_id": "PMT-INFO",
+        "payment_method": "TRF",
+        "batch_booking": "false",
+        "requested_execution_date": "2023-03-15",
+        "debtor_name": "Debtor",
+        "debtor_street_name": "Street",
+        "debtor_building_number": "1",
+        "debtor_postal_code": "12345",
+        "debtor_town_name": "Town",
+        "debtor_country_code": "DE",
+        "debtor_account_IBAN": "DE07512108001245126162",
+        "debtor_agent_BIC": "BANKDEFFXXX",
+        "charge_bearer": "DEBT",
+        "payment_id": "PMT-000001",
+        "payment_amount": "100.00",
+        "currency": "EUR",
+        "payment_currency": "EUR",
+        "ctrl_sum": "100.00",
+        "creditor_agent_BIC": "SPUEDE2UXXX",
+        "creditor_name": "Creditor",
+        "creditor_street_name": "Street",
+        "creditor_building_number": "1",
+        "creditor_postal_code": "12345",
+        "creditor_town_name": "Town",
+        "creditor_country_code": "DE",
+        "creditor_account_IBAN": "DE36210501700024690959",
+        "remittance_information": "INVOICE 1",
+        "purpose_code": "SCOR",
+        "reference_number": "REF",
+        "reference_date": "2023-03-10",
+    }
+    return generate_xml_string(
+        [record],
+        "pain.001.001.03",
+        "pain001/templates/pain.001.001.03/template.xml",
+        SCHEMA,
+    )
+
 lxml_installed = pytest.mark.skipif(
     not module._LXML_AVAILABLE, reason="lxml is not installed"
 )
@@ -69,6 +122,23 @@ class TestFallbackBehaviour:
         monkeypatch.setattr(module, "_LXML_AVAILABLE", False)
 
         assert validate_xml_string_via_xsd(MINIMAL_INVALID, SCHEMA) is False
+
+    def test_a_valid_document_is_accepted_without_the_fast_path(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The fallback must still *accept*, not just reject.
+
+        With lxml installed a valid document is accepted by the gate and
+        never reaches xmlschema, so this is the only thing that
+        exercises the pure-Python accept — the path every user without
+        lxml takes for every document they generate.
+        """
+        valid = _generate_valid_document()
+
+        monkeypatch.setattr(module, "_LXML_AVAILABLE", False)
+        assert validate_xml_string_via_xsd(valid, SCHEMA) is True
+
+        monkeypatch.setattr(module, "_LXML_AVAILABLE", module._LXML_AVAILABLE)
 
     def test_an_lxml_rejection_is_not_final(
         self, monkeypatch: pytest.MonkeyPatch
