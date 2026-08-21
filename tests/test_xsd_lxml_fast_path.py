@@ -107,6 +107,7 @@ def _generate_valid_document() -> str:
         SCHEMA,
     )
 
+
 lxml_installed = pytest.mark.skipif(
     not module._LXML_AVAILABLE, reason="lxml is not installed"
 )
