@@ -904,18 +904,18 @@ testing = ["hatch", "pre-commit", "pytest", "tox"]
 
 [[package]]
 name = "fakeredis"
-version = "2.36.2"
+version = "2.37.1"
 description = "Python implementation of redis API, can be used for testing purposes."
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "fakeredis-2.36.2-py3-none-any.whl", hash = "sha256:84cbb9c74ca8946c0d2499daadf3a5d0bfe3cfbac71e3398316d1a1eab3421c4"},
-    {file = "fakeredis-2.36.2.tar.gz", hash = "sha256:c37a0b307fae3f27ec7c19e59519e57b8c52782e00303df9075361b5ba441be6"},
+    {file = "fakeredis-2.37.1-py3-none-any.whl", hash = "sha256:f15c41be151c1e9206416dece764369a4dedb6b1341df3734c3c2c000e405508"},
+    {file = "fakeredis-2.37.1.tar.gz", hash = "sha256:9045851b0a9fe56312696aadc82435141aa43a193cab462d372c8fb583a7c087"},
 ]
 
 [package.dependencies]
-redis = {version = ">=4.3", markers = "python_version > \"3.8\""}
+redis = ">=4.3"
 sortedcontainers = ">=2"
 typing-extensions = {version = ">=4.7", markers = "python_version < \"3.11\""}
 
@@ -925,7 +925,7 @@ cf = ["pyprobables (>=0.6)"]
 json = ["jsonpath-ng (>=1.6)"]
 lua = ["lupa (>=2.1)"]
 probabilistic = ["pyprobables (>=0.6)"]
-valkey = ["valkey (>=6) ; python_version >= \"3.8\""]
+valkey = ["valkey (>=6)"]
 vectorset = ["jsonpath-ng (>=1.6) ; python_version >= \"3.11\"", "numpy (>=2.4.0) ; python_version >= \"3.11\""]
 
 [[package]]
@@ -4905,4 +4905,4 @@ redis = ["redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "a102824e2ff216871261db0d383c11b8d4bb0db9d940a1b9c5f0bc6bd5981153"
+content-hash = "a3d4772317bc652045f50619dc9c17f48210ac1ca421a0eb848238b32c94e116"
