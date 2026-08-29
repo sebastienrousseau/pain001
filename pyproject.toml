@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.62"
+version = "0.0.65"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -197,7 +197,9 @@ exclude_lines = [
 [tool.ruff]
 line-length = 79
 target-version = "py310"
-extend-exclude = [".github/*.md", "*.md", "docs/**/*.md", "releases/**/*.md", "tmp_env", ".venv", ".eggs"]
+# tests/test_suite_conformance.py carries a sha256 of its own bytes, so
+# any reformatter rewriting it invalidates the check it exists to make.
+extend-exclude = [".github/*.md", "*.md", "docs/**/*.md", "releases/**/*.md", "tmp_env", ".venv", ".eggs", "tests/test_suite_conformance.py"]
 
 [tool.ruff.lint]
 select = [
@@ -214,6 +216,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# A standalone benchmark has to put the repository on sys.path
+# before importing the package it measures, so its imports cannot
+# come first.
+"benches/*.py" = ["E402"]
 "__init__.py" = ["F401", "E402"]  # re-exports after NullHandler setup
 
 [tool.ruff.format]
