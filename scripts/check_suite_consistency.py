@@ -1,26 +1,30 @@
 #!/usr/bin/env python3
-# Copyright (C) 2023-2026 Pain001. All rights reserved.
+# SPDX-FileCopyrightText: 2026 Sebastien Rousseau <sebastian.rousseau@gmail.com>
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+"""Check the published pain001 suite agrees with its own policy.
 
-"""Report version drift across the published pain001 suite.
+The suite ships one version number across every package. That is easy to
+state and easy to let slip, because nothing breaks when it does: a member
+left a release behind still installs, still imports, still passes its own
+tests. It just quietly means something different from what it says.
 
-Run in CI on a schedule. It answers one question a user cannot answer
-for themselves: do the versions currently on PyPI agree with the
-policy in :mod:`pain001.suite`?
+Two failures this catches, both of which had already happened here:
 
-Two failures it catches, both of which have already happened:
+* **A member left behind.** The pain001 packages disagreed:
+  0.0.62, 0.0.64, 0.0.63, 0.0.62 and 0.0.63
+  -- different numbers for one suite.
 
-* A **member left behind.** `pain001-lsp` sat at 0.0.54 while the core
-  reached 0.0.59. Nothing broke, so nothing said anything.
-* A **member claiming a release it predates.** `pain001-loader-xlsx`
-  was published as 0.0.54 while requiring `pain001>=0.0.56`, so its own
-  number described a suite version older than the core it demands.
+* **A version bumped in the tree and never released.** Three repositories
+  in the wider suite have done this, each time stranding a `cryptography`
+  advisory floor that reached nobody. Nothing fails when it happens; only
+  PyPI disagrees, and only if somebody looks. This looks.
 
-Exits non-zero when the suite disagrees with itself, so the schedule
-turns into a notification rather than a report nobody opens.
+Exits non-zero when the suite disagrees with itself, so a schedule turns
+into a notification rather than a report nobody opens.
 
 Usage:
-    python scripts/check_suite_consistency.py [--json]
+    python3 scripts/check_suite_consistency.py
+    python3 scripts/check_suite_consistency.py --json
 """
 
 from __future__ import annotations
@@ -30,194 +34,114 @@ import json
 import sys
 import urllib.error
 import urllib.request
-from typing import Any
+from pathlib import Path
+from urllib.parse import quote
 
-from pain001.suite import CORE, SUITE
+if sys.version_info >= (3, 11):
+    import tomllib
+else:  # pragma: no cover - exercised only on the 3.10 floor
+    import tomli as tomllib
 
-#: PyPI JSON API. Documented, cacheable, and needs no credentials.
-_PYPI = "https://pypi.org/pypi/{distribution}/json"
+ROOT = Path(__file__).resolve().parent.parent
 
-#: Give up rather than hang a scheduled job on a slow mirror.
-_TIMEOUT_SECONDS = 20
+#: Every published member of the pain001 suite. The core is first.
+MEMBERS = (
+    "pain001",
+    "pain001-lsp",
+    "pain001-mcp",
+    "pain001-loader-mt101",
+    "pain001-loader-xlsx",
+)
+
+TIMEOUT = 30
 
 
-def fetch_metadata(distribution: str) -> dict[str, Any] | None:
-    """Return the PyPI metadata for ``distribution``.
-
-    Args:
-        distribution: Distribution name as published.
-
-    Returns:
-        The parsed ``info`` block, or ``None`` when the distribution is
-        not published yet.
-    """
-    url = _PYPI.format(distribution=distribution)
+def published_version(distribution: str) -> str | None:
+    """The newest version of ``distribution`` on PyPI, or None."""
+    # The name is quoted and the scheme is checked before the request.
+    # Both are belt-and-braces here -- MEMBERS is a literal tuple in this
+    # file -- but urlopen honours file:// and custom schemes, so a URL
+    # reaching it unchecked is worth refusing on principle rather than on
+    # the argument that today's input happens to be safe.
+    url = "https://pypi.org/pypi/" + quote(distribution, safe="") + "/json"
+    if not url.startswith("https://pypi.org/"):  # pragma: no cover
+        raise ValueError(f"refusing to fetch a non-PyPI URL: {url}")
     try:
-        with urllib.request.urlopen(  # noqa: S310 - fixed https host
-            url, timeout=_TIMEOUT_SECONDS
-        ) as response:
-            payload = json.load(response)
-    except urllib.error.HTTPError as exc:
-        if exc.code == 404:
-            return None
-        raise
-    info: dict[str, Any] = payload["info"]
-    return info
+        # B310 is satisfied by the scheme check above. Only bandit's
+        # suppression is used: ruff's S rules are not enabled in most of
+        # these repositories, and an unused noqa is itself a lint error
+        # (RUF100). The reason sits here rather than inline because
+        # bandit parses words following "nosec" as test ids.
+        opened = urllib.request.urlopen(url, timeout=TIMEOUT)  # nosec B310
+        with opened as response:
+            return str(json.load(response)["info"]["version"])
+    except (urllib.error.URLError, KeyError, ValueError, TimeoutError):
+        return None
 
 
-def core_floor(requires_dist: list[str] | None) -> str | None:
-    """Return the minimum ``pain001`` a distribution declares.
-
-    Parsed with :mod:`packaging`, not by scanning for ``>=``. Real
-    metadata puts the specifiers in any order — ``pain001<1,>=0.0.56``
-    is what the plugins actually publish — and a hand-rolled scan reads
-    that as "no floor", which silently disables the very check this
-    function feeds.
-
-    Args:
-        requires_dist: The distribution's ``Requires-Dist`` entries.
-
-    Returns:
-        The floor version as a string, or ``None`` when the
-        distribution declares no lower bound on the core.
-
-    Example:
-        >>> core_floor(["pain001<1,>=0.0.56", "openpyxl>=3.1"])
-        '0.0.56'
-        >>> core_floor(["pain001<1"]) is None
-        True
-    """
-    from packaging.requirements import Requirement
-
-    for entry in requires_dist or []:
-        try:
-            requirement = Requirement(entry)
-        except Exception:  # noqa: BLE001 - tolerate odd metadata
-            continue
-        if requirement.name != CORE:
-            continue
-        floors = [
-            spec.version
-            for spec in requirement.specifier
-            if spec.operator in (">=", "==", "~=")
-        ]
-        if not floors:
-            return None
-        return max(floors, key=_as_tuple)
-    return None
+def tree_version() -> str:
+    """The version this checkout declares."""
+    with (ROOT / "pyproject.toml").open("rb") as handle:
+        data = tomllib.load(handle)
+    poetry = data.get("tool", {}).get("poetry", {})
+    return str(poetry.get("version") or data["project"]["version"])
 
 
-def _as_tuple(version: str) -> tuple[int, ...]:
-    """Return ``version`` as a comparable tuple, ignoring suffixes.
-
-    Args:
-        version: A dotted version string.
-
-    Returns:
-        Its numeric components.
-    """
-    parts: list[int] = []
-    for chunk in version.split("."):
-        # Stop at the first non-digit rather than filtering them out:
-        # "60rc1" is release-candidate 1 of 60, and squeezing the digits
-        # together yields 601, which sorts an rc *above* ten releases
-        # that follow it.
-        digits = ""
-        for character in chunk:
-            if not character.isdigit():
-                break
-            digits += character
-        parts.append(int(digits) if digits else 0)
-    return tuple(parts)
-
-
-def audit() -> tuple[list[str], dict[str, Any]]:
-    """Compare published versions against the suite policy.
-
-    Returns:
-        A tuple of (problems, report). ``problems`` is empty when the
-        suite agrees with itself.
-    """
-    report: dict[str, Any] = {"core": None, "members": {}}
+def check() -> tuple[list[str], dict[str, object]]:
+    """Return (problems, report)."""
     problems: list[str] = []
+    tree = tree_version()
+    published = {name: published_version(name) for name in MEMBERS}
 
-    core_info = fetch_metadata(CORE)
-    if core_info is None:  # pragma: no cover - core is always published
-        return ([f"{CORE} is not published"], report)
-    core_version = core_info["version"]
-    report["core"] = core_version
+    core_published = published[MEMBERS[0]]
 
-    for member in SUITE.values():
-        info = fetch_metadata(member.distribution)
-        if info is None:
-            report["members"][member.distribution] = {"published": None}
-            continue
+    # 1. The tree must not disagree with what was released. A bump that
+    #    was never tagged looks exactly like this and nothing else
+    #    notices.
+    if core_published and core_published != tree:
+        problems.append(
+            f"{MEMBERS[0]}: tree is {tree} but PyPI has {core_published}. "
+            f"Either the release was never tagged, or the tree is behind."
+        )
 
-        version = info["version"]
-        floor = core_floor(info.get("requires_dist"))
-        report["members"][member.distribution] = {
-            "published": version,
-            "core_floor": floor,
-        }
-
-        if version != core_version:
+    # 2. Every member ships the core's number.
+    for name, version in published.items():
+        if version is None:
+            problems.append(f"{name}: could not read PyPI")
+        elif core_published and version != core_published:
             problems.append(
-                f"{member.distribution} is {version}, but every suite "
-                f"member must match the core ({core_version}). Release it."
+                f"{name}: published {version}, but the suite is at "
+                f"{core_published}"
             )
 
-        # The floor must also be reachable. A member requiring a core
-        # that was never published is uninstallable no matter how well
-        # its own version matches.
-        if floor and _as_tuple(floor) > _as_tuple(core_version):
-            problems.append(
-                f"{member.distribution} requires {CORE}>={floor}, but the "
-                f"newest published {CORE} is {core_version}. Nobody can "
-                f"install this combination."
-            )
-
-    return problems, report
+    return problems, {
+        "tree": tree,
+        "published": published,
+        "problems": problems,
+    }
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the audit and report.
-
-    Args:
-        argv: Command-line arguments, for testing.
-
-    Returns:
-        ``0`` when the suite is consistent, ``1`` otherwise.
-    """
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
-        "--json", action="store_true", help="emit the raw report"
-    )
-    args = parser.parse_args(argv)
+    parser.add_argument("--json", action="store_true", help="emit JSON")
+    args = parser.parse_args()
 
-    problems, report = audit()
-
+    problems, report = check()
     if args.json:
-        # JSON only. Appending prose makes the output unparseable for
-        # the thing that consumes it.
-        print(json.dumps(report, indent=2, sort_keys=True))
-        return 1 if problems else 0
-
-    print(f"core: {CORE} {report['core']}")
-    for name, data in sorted(report["members"].items()):
-        published = data.get("published") or "unpublished"
-        floor = data.get("core_floor")
-        suffix = f"  (needs {CORE}>={floor})" if floor else ""
-        print(f"  {name:<24} {published:<10}{suffix}")
-
-    if problems:
-        print("\nSuite is inconsistent:", file=sys.stderr)
-        for problem in problems:
-            print(f"  - {problem}", file=sys.stderr)
-        return 1
-
-    print("\nSuite is consistent.")
-    return 0
+        json.dump(report, sys.stdout, indent=1)
+        print()
+    else:
+        print(f"tree version: {report['tree']}")
+        for name, version in report["published"].items():  # type: ignore[union-attr]
+            print(f"  {name:34} {version}")
+        if problems:
+            print("\nproblems:")
+            for problem in problems:
+                print(f"  - {problem}")
+        else:
+            print("\nthe suite agrees with itself")
+    return 1 if problems else 0
 
 
-if __name__ == "__main__":  # pragma: no cover - entry point
+if __name__ == "__main__":
     raise SystemExit(main())

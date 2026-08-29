@@ -1,15 +1,16 @@
-name: 🔗 Suite consistency
+name: Suite Consistency
 
-# Version drift between the suite packages is invisible until a user
-# hits it: nothing fails, the numbers just stop agreeing. This asks
-# PyPI once a day whether they still do.
+# The suite ships one version number across every package, and nothing
+# breaks when that slips: a member left behind still installs, still
+# imports, still passes its own tests. The only way to notice is to go and
+# look. This does the looking.
 #
-# Scheduled rather than per-PR because the answer depends on what is
-# published, not on what is in this branch — a PR here cannot cause
-# drift, and a release elsewhere can.
+# It also catches the version bumped in the tree and never released, which
+# has happened three times in this suite and each time stranded a security
+# floor that reached nobody.
 on:
   schedule:
-    - cron: "17 6 * * *"
+    - cron: "59 6 * * *"
   workflow_dispatch:
 
 permissions:
@@ -20,52 +21,18 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
+  consistency:
     name: Published versions agree
     runs-on: ubuntu-latest
-    timeout-minutes: 10
-    permissions:
-      contents: read
-      issues: write
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Install
-        run: |
-          python -m pip install --upgrade pip
-          python -m pip install -e .
-
-      - name: Check the suite
-        id: check
-        run: |
-          set +e
-          python scripts/check_suite_consistency.py | tee report.txt
-          echo "status=$?" >> "$GITHUB_OUTPUT"
-          set -e
-
-      # An emailed red cron is a red cron nobody reads. A single open
-      # issue, updated rather than duplicated, is something with an
-      # owner.
-      - name: Raise or update the drift issue
-        if: steps.check.outputs.status != '0'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          title="Suite version drift"
-          body="$(cat report.txt)"
-          existing="$(gh issue list --state open --search "$title in:title" \
-            --json number --jq '.[0].number')"
-          if [ -n "$existing" ]; then
-            gh issue comment "$existing" --body "$body"
-          else
-            gh issue create --title "$title" --body "$body" \
-              --label dependencies
-          fi
-
-      - name: Fail if the suite disagrees
-        if: steps.check.outputs.status != '0'
-        run: exit 1
+      # Queries pypi.org and exits non-zero when the suite disagrees with
+      # itself, so a schedule becomes a notification rather than a report
+      # nobody opens.
+      - name: Check suite consistency
+        run: python3 scripts/check_suite_consistency.py
