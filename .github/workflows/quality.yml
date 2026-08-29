@@ -105,6 +105,13 @@ jobs:
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make lint
 
+      # Not a timing gate -- wall-clock and memory are not comparable
+      # between runners. This proves the benchmark still runs against the
+      # current API rather than rotting into a file that reads as
+      # verified and is not.
+      - name: Run the benchmark
+        run: poetry run python benches/bench_generate.py --quick
+
   typecheck:
     runs-on: ubuntu-latest
     name: 🔠 Typecheck And Guardrails

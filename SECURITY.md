@@ -11,8 +11,8 @@ While the project is pre-`1.0`, that means **the latest released
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.53` (latest) | Current | ✅ Yes |
-| `0.0.52` | Prior | ✅ Yes (best effort, until v0.0.54 ships) |
+| `0.0.65` (latest) | Current | ✅ Yes |
+| `0.0.53` | Prior | ✅ Yes (best effort, until v0.0.54 ships) |
 | `≤ 0.0.51` | Old | ❌ No — upgrade |
 
 Pre-1.0 deprecation runway: at least 6 weeks between announcing

@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.65] - 2026-08-29
+
+Aligns the `pain001` suite on one version number, and adds the benchmark
+this repository was missing.
+
+### Added
+
+- `benches/bench_generate.py` measures what separates `process_files`
+  from `process_files_streaming`, which is peak memory rather than speed.
+  From 200 to 4,000 payments the eager peak grew **18.8×** (3.97 MB to
+  74.77 MB) while the streaming peak grew **2.6×** and then stopped —
+  it is bounded by the chunk size, not the batch. At 4,000 payments
+  streaming uses **7.1× less** memory for the same wall-clock.
+
+  A payment batch's size is not chosen by whoever runs the job: a
+  month-end supplier run is as large as the business was that month, and
+  an exporter sized from a test fixture meets that difference in
+  production.
+
+### Changed
+
+- Version aligned to `0.0.65` across all five `pain001` packages, which
+  had drifted to `0.0.62`, `0.0.64`, `0.0.63`, `0.0.62` and `0.0.63`.
+- `SECURITY.md`'s supported-version table follows the bump.
+
+### Fixed
+
+- The changelog documented `0.0.45` twice — once as an empty stub — and
+  `0.0.46` twice, as two separate entries carrying different real
+  content. The stub is removed and the two `0.0.46` entries are merged
+  under one heading, so no release note was lost. The conformance gate
+  now checks this.
+
+### Removed
+
+- `scripts/benchmark_large_batches.py`, superseded by
+  `benches/bench_generate.py`. It measured the same two calls at a single
+  fixed size of 2,000 rows and reported only wall-clock, which cannot
+  show that one memory curve is flat and the other is not — the entire
+  finding.
+
 ## [0.0.62] - 2026-08-21
 
 Suite-wide follow-through on two things 0.0.61 left explicitly
@@ -1152,8 +1193,6 @@ version bump for release hygiene.
   - Pydantic v2 - Request/response validation and serialization
   - All dependencies compatible with Python 3.9+
 
-## [0.0.46] - 2026-01-14
-
 ### Added
 
 - **Granular Exception Hierarchy** - Domain-specific exceptions for better error handling (Resolves #123):
@@ -1237,10 +1276,6 @@ version bump for release hygiene.
 - Trinity version sync: 0.0.46 across `__init__.py`, `pyproject.toml`, `setup.cfg`
 - All README examples verified working (8 CLI commands, 6 Python API examples)
 - Fresh venv installation tested and confirmed functional
-
----
-
-## [0.0.45] - 2026-01-13
 
 ---
 
