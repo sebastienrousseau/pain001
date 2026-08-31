@@ -825,14 +825,14 @@ toml = ["tomli (>=1.2.1)"]
 
 [[package]]
 name = "docstring-parser-fork"
-version = "0.0.14"
+version = "0.0.16"
 description = "Parse Python docstrings in reST, Google and Numpydoc format"
 optional = false
 python-versions = ">=3.8"
 groups = ["dev"]
 files = [
-    {file = "docstring_parser_fork-0.0.14-py3-none-any.whl", hash = "sha256:4c544f234ef2cc2749a3df32b70c437d77888b1099143a1ad5454452c574b9af"},
-    {file = "docstring_parser_fork-0.0.14.tar.gz", hash = "sha256:a2743a63d8d36c09650594f7b4ab5b2758fee8629dcf794d1b221b23179baa5c"},
+    {file = "docstring_parser_fork-0.0.16-py3-none-any.whl", hash = "sha256:c024c97af582d6acf85a14f0b332b3a2ab08626648d251c25e47191f33064386"},
+    {file = "docstring_parser_fork-0.0.16.tar.gz", hash = "sha256:9ecf861ceab8b87d1297a71001c15a1956ad02e87434ee6473643a5988094f7c"},
 ]
 
 [package.extras]
@@ -3417,19 +3417,19 @@ test = ["pytest", "pytest-cov", "pytest-playwright", "pytest-regressions", "sphi
 
 [[package]]
 name = "pydoclint"
-version = "0.7.6"
+version = "0.9.1"
 description = "A Python docstring linter that checks arguments, returns, yields, and raises sections"
 optional = false
 python-versions = ">=3.10"
 groups = ["dev"]
 files = [
-    {file = "pydoclint-0.7.6-py3-none-any.whl", hash = "sha256:22d71c97373b6abecee42d6d1c412db2f5524d1a5e58004cddc9285cb90c631c"},
-    {file = "pydoclint-0.7.6.tar.gz", hash = "sha256:9007396524e530ee88ff63f329aa272dced08f7ec9408bd5f63a96e9ecfa8bf8"},
+    {file = "pydoclint-0.9.1-py3-none-any.whl", hash = "sha256:685b4a1c3c852045e4523b61d9c3f789672dfab3a454fe51a9e346c9e21dfcdb"},
+    {file = "pydoclint-0.9.1.tar.gz", hash = "sha256:eb699ecf95124b8d0b881d55cd53cccaa567172005d1223ec91a0259b51a5650"},
 ]
 
 [package.dependencies]
 click = ">=8.1.0"
-docstring_parser_fork = ">=0.0.12"
+docstring_parser_fork = "0.0.16"
 tomli = {version = ">=2.0.1", markers = "python_version < \"3.11\""}
 
 [package.extras]
@@ -5206,4 +5206,4 @@ redis = ["redis"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.10"
-content-hash = "261b07cc3626db61cf0a81cbced62ca06e49c781fe954da64c126a1e40a01907"
+content-hash = "ec550a3f7b137f20235763d239cdb6a45df1f52d5932a52e127a85a8de5f984e"
