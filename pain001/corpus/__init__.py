@@ -17,7 +17,8 @@
 This package grows over the 0.0.67 to 0.0.69 releases. Today it holds
 the schema inventory and coverage yardstick, the scenario loader and
 the version-aware builder with its identifier factories, the shipped
-market files under ``data/market`` and, under ``rules``, the vendored
+market files under ``data/market``, the generated coverage sets under
+``data/coverage`` and, under ``rules``, the vendored
 ISO external code sets; the MDR rules, overlays and the coverage sets
 follow in their own workstreams.
 """
@@ -29,6 +30,7 @@ from pain001.corpus.builder import (
     build,
     build_all,
 )
+from pain001.corpus.coverage_sets import CoverageSet, build_coverage_set
 from pain001.corpus.inventory import (
     ChoiceEntry,
     CoverageReport,
@@ -53,12 +55,14 @@ __all__ = [
     "BuildResult",
     "ChoiceEntry",
     "CoverageReport",
+    "CoverageSet",
     "ElementEntry",
     "Inventory",
     "Scenario",
     "ScenarioError",
     "build",
     "build_all",
+    "build_coverage_set",
     "build_inventory",
     "coverage",
     "inventory_for",

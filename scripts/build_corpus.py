@@ -12,14 +12,21 @@
 # implied. See the applicable Licence for the specific language
 # governing permissions and limitations.
 
-"""Build the shipped corpus from the scenarios (ADR-0003, 3 and 6).
+"""Build the shipped corpus (ADR-0003, decisions 2, 3 and 6).
 
-Every scenario under ``scenarios/`` renders to
-``pain001/corpus/data/market/<country>/<family>/<id>.<version>.xml``
-with a ``.provenance.yaml`` sidecar beside it carrying the scenario's
-sources, confidence and evidence, the builder's fit report and the
-file's SHA-256. Output is deterministic, so a rebuild on a clean tree
-changes nothing and ``--check`` proves it.
+Two trees come out, both deterministic, so a rebuild on a clean tree
+changes nothing and ``--check`` proves it:
+
+* the market corpus: every scenario under ``scenarios/`` renders to
+  ``pain001/corpus/data/market/<country>/<family>/<id>.<version>.xml``
+  with a ``.provenance.yaml`` sidecar beside it carrying the scenario's
+  sources, confidence and evidence, the builder's fit report and the
+  file's SHA-256;
+* the coverage corpus: every bundled edition gets
+  ``pain001/corpus/data/coverage/<version>/set-NN.xml`` generated from
+  its schema inventory until every element path and choice branch is
+  hit, plus ``coverage.json`` with the report ``make corpus-coverage``
+  re-checks.
 
 The wheel budget from the plan, 400 KB compressed for everything under
 ``pain001/corpus/data``, is enforced here: the build fails when the
@@ -34,17 +41,23 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import yaml  # type: ignore[import-untyped]
 
+from pain001.constants import valid_xml_types
 from pain001.corpus.builder import BuildResult, build
+from pain001.corpus.coverage_sets import build_coverage_set
+from pain001.corpus.inventory import CoverageReport
 from pain001.corpus.registry import SCENARIOS_DIR, Scenario, load_scenarios
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = REPO_ROOT / "pain001" / "corpus" / "data"
 MARKET_ROOT = DATA_ROOT / "market"
+COVERAGE_ROOT = DATA_ROOT / "coverage"
 #: Compressed-size budget for everything under pain001/corpus/data.
 BUDGET_BYTES = 400_000
 
@@ -86,6 +99,39 @@ def provenance_for(scenario: Scenario, result: BuildResult) -> str:
     return yaml.safe_dump(record, sort_keys=False, allow_unicode=True)
 
 
+def slim_report(report: CoverageReport, count: int) -> dict[str, Any]:
+    """The coverage verdict without the hit lists, which the gate recomputes.
+
+    Args:
+        report: The set's coverage report.
+        count: How many files the set has.
+
+    Returns:
+        A JSON-ready dict: sources, counts, percentages, completeness,
+        and the missing, exempt and unknown lists.
+    """
+    return {
+        "message_type": report.message_type,
+        "sources": [f"set-{n:02d}.xml" for n in range(1, count + 1)],
+        "paths": {
+            "declared": len(report.hit_paths) + len(report.missing_paths),
+            "hit": len(report.hit_paths),
+            "percent": round(report.path_percent, 2),
+        },
+        "branches": {
+            "declared": len(report.hit_branches)
+            + len(report.missing_branches),
+            "hit": len(report.hit_branches),
+            "percent": round(report.branch_percent, 2),
+        },
+        "complete": report.complete,
+        "missing_paths": list(report.missing_paths),
+        "missing_branches": list(report.missing_branches),
+        "exempt": list(report.exempt),
+        "unknown": list(report.unknown),
+    }
+
+
 def compressed_size(root: Path) -> int:
     """Sum of per-file gzip sizes under ``root``, the budget's measure."""
     total = 0
@@ -110,6 +156,15 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--scenarios", type=Path, default=SCENARIOS_DIR)
     parser.add_argument(
         "--market-root", type=Path, default=MARKET_ROOT, help=argparse.SUPPRESS
+    )
+    parser.add_argument(
+        "--coverage-root",
+        type=Path,
+        default=COVERAGE_ROOT,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--skip-coverage", action="store_true", help=argparse.SUPPRESS
     )
     parser.add_argument(
         "--data-root", type=Path, default=DATA_ROOT, help=argparse.SUPPRESS
@@ -148,11 +203,39 @@ def main(argv: list[str] | None = None) -> int:
                     path.parent.mkdir(parents=True, exist_ok=True)
                     path.write_text(text, encoding="utf-8")
                     print(f"wrote       {_rel(path)} ({len(text)} bytes)")
-    for path in (
-        sorted(args.market_root.rglob("*"))
-        if args.market_root.exists()
-        else []
-    ):
+    if not args.skip_coverage:
+        for version in valid_xml_types:
+            coverage_set = build_coverage_set(version)
+            set_dir = args.coverage_root / version
+            wanted = {
+                set_dir / f"set-{n:02d}.xml": text
+                for n, text in enumerate(coverage_set.files, start=1)
+            }
+            report = slim_report(coverage_set.report, len(coverage_set.files))
+            wanted[set_dir / "coverage.json"] = (
+                json.dumps(report, indent=2) + "\n"
+            )
+            expected.update(wanted)
+            for path, text in wanted.items():
+                current = (
+                    path.read_text(encoding="utf-8") if path.exists() else None
+                )
+                if current == text:
+                    continue
+                stale += 1
+                if args.check:
+                    print(f"STALE       {_rel(path)}")
+                else:
+                    path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(text, encoding="utf-8")
+                    print(f"wrote       {_rel(path)} ({len(text)} bytes)")
+    roots = [args.market_root]
+    if not args.skip_coverage:
+        roots.append(args.coverage_root)
+    present = sorted(
+        p for root in roots if root.exists() for p in root.rglob("*")
+    )
+    for path in present:
         if path.is_file() and path not in expected:
             stale += 1
             if args.check:
@@ -167,7 +250,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     size = compressed_size(args.data_root) if args.data_root.exists() else 0
     print(
-        f"{len(scenarios)} scenario(s), {len(expected) // 2} file(s); "
+        f"{len(scenarios)} scenario(s), {len(expected)} file(s); "
         f"data tree {size:,} bytes compressed of {args.budget:,} budget"
     )
     if size > args.budget:

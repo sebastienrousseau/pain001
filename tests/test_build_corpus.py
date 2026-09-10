@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -50,6 +51,7 @@ def _sandbox(tmp_path: Path) -> tuple[Path, Path, list[str]]:
         str(market),
         "--data-root",
         str(data),
+        "--skip-coverage",
     ]
     return scenarios, market, argv
 
@@ -63,7 +65,7 @@ def test_build_writes_then_check_passes_then_detects_drift(
     assert "STALE" in capsys.readouterr().out
     assert build_corpus.main(argv) == 0
     out = capsys.readouterr().out
-    assert out.count("wrote") == 14 and "3 scenario(s), 7 file(s)" in out
+    assert out.count("wrote") == 14 and "3 scenario(s), 14 file(s)" in out
     assert build_corpus.main(argv + ["--check"]) == 0
     assert (
         build_corpus.main(argv) == 0
@@ -92,7 +94,9 @@ def test_budget_breach_and_missing_scenarios(
     assert "exceeds the compressed-size budget" in capsys.readouterr().out
     empty = tmp_path / "none"
     empty.mkdir()
-    assert build_corpus.main(["--scenarios", str(empty)]) == 1
+    assert (
+        build_corpus.main(["--scenarios", str(empty), "--skip-coverage"]) == 1
+    )
     assert "no scenarios" in capsys.readouterr().out
 
 
@@ -104,3 +108,28 @@ def test_compressed_size_and_relative_paths(tmp_path: Path) -> None:
         build_corpus._rel(Path("/nonexistent/a.txt")) == "/nonexistent/a.txt"
     )
     assert build_corpus._rel(build_corpus.REPO_ROOT / "x") == "x"
+
+
+def test_coverage_sets_are_written_beside_the_market_files(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    """Without --skip-coverage every edition's set and report are written."""
+    scenarios, market, argv = _sandbox(tmp_path)
+    argv = [a for a in argv if a != "--skip-coverage"] + [
+        "--coverage-root",
+        str(tmp_path / "data" / "coverage"),
+    ]
+    assert build_corpus.main(argv) == 0
+    out = capsys.readouterr().out
+    assert out.count("coverage.json") == 13 and "79 file(s)" in out
+    report = json.loads(
+        (
+            tmp_path
+            / "data"
+            / "coverage"
+            / "pain.001.001.03"
+            / "coverage.json"
+        ).read_text()
+    )
+    assert report["complete"] and report["paths"]["declared"] == 954
+    assert build_corpus.main(argv + ["--check"]) == 0

@@ -94,6 +94,23 @@ Entries are added as work lands.
   one in the tests. Identifier generation no longer uses a
   pseudo-random generator: digits come from a SHA-256 counter stream,
   equally deterministic and free of bandit's B311.
+- **Schema coverage corpus** (ADR-0003 decision 2, workstream 3).
+  `pain001.corpus.coverage_sets` generates, from each edition's
+  inventory, the set of files that proves what the XSD can express:
+  every leaf gets a value derived from its facets (an enumeration's
+  first member, a verified sample per pattern, minimum-length text,
+  `1.00` for amounts, fixed dates), the first file carries every
+  element taking every first choice branch, and each following file
+  carries only the subtrees that still hold an unhit path or branch,
+  steering nested choices under branches already taken. Every file
+  must pass the edition's XSD. The thirteen sets ship under
+  `pain001/corpus/data/coverage/<version>/` (four files each, 77 KB
+  compressed in total) with a `coverage.json` verdict, are rebuilt by
+  `make corpus-build`, and `make corpus-coverage` now runs strict: a
+  missing or incomplete set fails `make check`. Every set is at 100 %
+  of element paths and choice branches. These files are the schema
+  yardstick, not bank-ready payments; the MDR cross-element rules
+  arrive with workstream 4.
 - **ISO external code sets, vendored.** Edition 2Q2026 v3 (163 sets,
   3,314 codes) ships verbatim under `pain001/corpus/data/external_codes/`
   with a loader (`pain001.corpus.rules.external_codes`: `codes`,

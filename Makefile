@@ -42,7 +42,7 @@ help:
 	@echo "  mutate        - Mutation testing"
 	@echo "  docs          - Build documentation"
 	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors
-	@echo "  corpus-build  - Render scenarios/ into pain001/corpus/data/market (deterministic)"
+	@echo "  corpus-build  - Render scenarios/ and the coverage sets into pain001/corpus/data (deterministic)"
 	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)""
 	@echo ""
 	@echo "Advanced Tollgates (Enterprise Production):"
@@ -214,7 +214,7 @@ corpus-build:
 # --- Corpus coverage gate (ADR-0003) ---
 corpus-coverage:
 	@echo "$(YELLOW)Measuring coverage sets against the schema inventories...$(NC)"
-	@poetry run python scripts/corpus_coverage.py
+	@poetry run python scripts/corpus_coverage.py --strict
 	@echo "$(GREEN)✓ Corpus coverage gate passed$(NC)"
 
 # --- SLO verification (recommended before commit) ---

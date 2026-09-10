@@ -1,0 +1,24 @@
+{
+  "message_type": "pain.008.001.02",
+  "sources": [
+    "set-01.xml",
+    "set-02.xml",
+    "set-03.xml",
+    "set-04.xml"
+  ],
+  "paths": {
+    "declared": 1052,
+    "hit": 1052,
+    "percent": 100.0
+  },
+  "branches": {
+    "declared": 164,
+    "hit": 164,
+    "percent": 100.0
+  },
+  "complete": true,
+  "missing_paths": [],
+  "missing_branches": [],
+  "exempt": [],
+  "unknown": []
+}
