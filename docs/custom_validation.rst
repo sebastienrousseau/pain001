@@ -228,7 +228,7 @@ if errors:
 
 ### Backward Compatibility
 
-The original `validate_csv_data()` function still works but is now powered by schemas internally.
+The original `validate_csv_data()` function still works and, since 0.0.67, reads its required columns from the same schemas through `pain001.validation.required_columns()`. Pass the message type (`validate_csv_data(rows, "pain.001.001.09")`) to get that version's list; with no message type every column all bundled schemas describe is required, which is the historical 22-column contract.
 
 ## Performance Notes
 

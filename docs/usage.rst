@@ -178,7 +178,8 @@ Data Validation
 Pain001 automatically validates all data:
 
 **CSV Validation**
-- Checks required columns are present
+- Checks required columns are present (the target version's list from
+  the bundled JSON schema, or the 22 columns every version shares)
 - Validates data types (strings, numbers, dates)
 - Verifies IBAN/BIC formats
 - Checks business rules (e.g., amounts > 0)

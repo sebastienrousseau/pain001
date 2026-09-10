@@ -30,6 +30,27 @@ Entries are added as work lands.
 
 ### Changed
 
+- **One required-column contract, read from the bundled JSON schemas.**
+  Four hand-typed lists used to say which columns a payment row must
+  carry and disagreed: a 22-column dict in the CSV validator, a
+  12-column dict in the SQLite validator, a 7-column set in the editor
+  diagnostics and the per-version `required` lists in
+  `pain001/schemas/*.schema.json`. The schemas are the source now.
+  `pain001.validation.required_columns(message_type)` returns that
+  schema's required columns typed from its properties; with no message
+  type it returns every column all bundled schemas describe, which is
+  exactly the 22-column contract the validators always enforced, in
+  the same order. `validate_csv_data` and `validate_db_data` take an
+  optional `message_type` and both read the contract; the LSP's
+  `missing-column` diagnostic now reports the schema's list for the
+  file's message type (15 columns for pain.001.001.03, 13 for .09 and
+  later, 21 for pain.008.001.02) instead of a 7-column minimum. Two
+  consequences for existing data: `id` is validated as text, as the
+  XSD's Max35Text `MsgId` and the schemas always said, so `MSG001` is
+  now accepted where the old dict demanded an integer; and a sparse
+  CSV that the editor used to pass now gets the same missing-column
+  errors the validators would raise. The bundled `template.csv` files
+  satisfy every version's list, which a test now pins.
 - **`scripts/generate_xml_examples.py`** and
   **`scripts/regenerate_template_dbs.py`** walk the template registry
   instead of a hard-coded version list, so pain.008.001.02 and any

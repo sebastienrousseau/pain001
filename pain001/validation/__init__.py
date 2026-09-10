@@ -18,6 +18,7 @@ This module provides centralized validation services for payment data,
 templates, schemas, and data sources.
 """
 
+from pain001.schemas.required_columns import required_columns
 from pain001.validation.bic_validator import (
     validate_bic,
     validate_bic_format,
@@ -89,4 +90,6 @@ __all__ = [
     "PROFILES",
     "REMEDIATIONS",
     "remediation_for",
+    # Required-column contract
+    "required_columns",
 ]
