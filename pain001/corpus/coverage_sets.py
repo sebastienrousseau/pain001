@@ -31,10 +31,16 @@ derived from the :class:`~pain001.corpus.inventory.Inventory`:
   :func:`~pain001.corpus.inventory.coverage` report is complete;
 * every file must pass the edition's XSD before it is kept.
 
-Later files are therefore small, and an edition needs as many files
-as its widest choice has branches: three or four. The cross-element
-MDR rules (WS4) are not applied here; the sets are the schema
-yardstick, not bank-ready payments.
+Later files are therefore small, and an edition needs a handful of
+files: one per recipe plus one per extra choice branch.
+
+The MDR cross-element rules (:mod:`pain001.corpus.rules.mdr`) shape
+the set too, so every file is a payment the report would accept:
+blocks allowed on PmtInf or on the transaction but not both are
+steered like choice branches; the cheque path has its own recipes
+(delivered to the creditor agent, or not), transfers never carry a
+cheque instruction; intermediary agents and charges accounts pull in
+their prerequisites; a mandate's amendment flag follows its details.
 """
 
 from __future__ import annotations
@@ -52,6 +58,7 @@ from pain001.corpus.inventory import (
     coverage,
     inventory_for,
 )
+from pain001.corpus.rules.mdr import evaluate_mdr
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.xml.validate_via_xsd import collect_xsd_validation_errors
 
@@ -83,6 +90,108 @@ PRIMITIVE_SAMPLES: dict[str, str] = {
 }
 #: The element written into an ``xs:any`` slot.
 ANY_CONTENT = {"Data": "x"}
+
+
+@dataclass(frozen=True)
+class Recipe:
+    """How one file of a set is shaped to satisfy the MDR rules.
+
+    Paths are relative to ``PmtInf`` (``CdtTrfTxInf/ChqInstr``).
+
+    Attributes:
+        name: Short label.
+        pins: Values that override the facet sample at a path.
+        forbid: Paths never emitted.
+        require: Paths always emitted, even in a sparse file.
+    """
+
+    name: str
+    pins: dict[str, str]
+    forbid: frozenset[str] = frozenset()
+    require: frozenset[str] = frozenset()
+
+
+#: Blocks allowed on PmtInf or on the transaction, never both.
+EXCLUSIVE: dict[str, tuple[tuple[str, str], ...]] = {
+    "pain.001": (
+        ("PmtTpInf", "CdtTrfTxInf/PmtTpInf"),
+        ("ChrgBr", "CdtTrfTxInf/ChrgBr"),
+        ("UltmtDbtr", "CdtTrfTxInf/UltmtDbtr"),
+        ("InstrForDbtrAgt", "CdtTrfTxInf/InstrForDbtrAgt"),
+    ),
+    "pain.008": (
+        ("PmtTpInf", "DrctDbtTxInf/PmtTpInf"),
+        ("ChrgBr", "DrctDbtTxInf/ChrgBr"),
+        ("UltmtCdtr", "DrctDbtTxInf/UltmtCdtr"),
+        ("CdtrSchmeId", "DrctDbtTxInf/DrctDbtTx/CdtrSchmeId"),
+    ),
+}
+#: An element that, when emitted, needs its sibling emitted too.
+PREREQUISITES: dict[str, str] = {
+    "IntrmyAgt1Acct": "IntrmyAgt1",
+    "IntrmyAgt2Acct": "IntrmyAgt2",
+    "IntrmyAgt3Acct": "IntrmyAgt3",
+    "IntrmyAgt2": "IntrmyAgt1",
+    "IntrmyAgt3": "IntrmyAgt2",
+    "ChrgsAcctAgt": "ChrgsAcct",
+}
+RECIPES: dict[str, tuple[Recipe, ...]] = {
+    "pain.001": (
+        Recipe(
+            "transfer",
+            {"PmtMtd": "TRF", "CdtTrfTxInf/InstrForCdtrAgt/Cd": "PHOB"},
+            forbid=frozenset({"CdtTrfTxInf/ChqInstr"}),
+            require=frozenset({"CdtTrfTxInf/CdtrAcct"}),
+        ),
+        Recipe(
+            "cheque-to-agent",
+            {
+                "PmtMtd": "CHK",
+                "CdtTrfTxInf/ChqInstr/ChqTp": "DRFT",
+                "CdtTrfTxInf/ChqInstr/DlvryMtd/Cd": "MLFA",
+                "CdtTrfTxInf/InstrForCdtrAgt/Cd": "CHQB",
+            },
+            forbid=frozenset(
+                {
+                    "CdtTrfTxInf/CdtrAcct",
+                    "CdtTrfTxInf/ChqInstr/DlvryMtd/Prtry",
+                }
+            ),
+            require=frozenset(
+                {
+                    "CdtTrfTxInf/ChqInstr",
+                    "CdtTrfTxInf/ChqInstr/DlvryMtd",
+                    "CdtTrfTxInf/CdtrAgt",
+                    "CdtTrfTxInf/Cdtr",
+                }
+            ),
+        ),
+        Recipe(
+            "cheque-no-agent",
+            {
+                "PmtMtd": "CHK",
+                "CdtTrfTxInf/ChqInstr/ChqTp": "DRFT",
+                "CdtTrfTxInf/InstrForCdtrAgt/Cd": "CHQB",
+            },
+            forbid=frozenset(
+                {
+                    "CdtTrfTxInf/CdtrAcct",
+                    "CdtTrfTxInf/CdtrAgt",
+                    "CdtTrfTxInf/CdtrAgtAcct",
+                    "CdtTrfTxInf/ChqInstr/DlvryMtd/Cd",
+                }
+            ),
+            require=frozenset(
+                {
+                    "CdtTrfTxInf/ChqInstr",
+                    "CdtTrfTxInf/ChqInstr/DlvryMtd",
+                    "CdtTrfTxInf/Cdtr",
+                }
+            ),
+        ),
+    ),
+    "pain.008": (Recipe("collection", {"PmtMtd": "DD"}),),
+}
 
 
 class CoverageBuildError(ValueError):
@@ -132,6 +241,10 @@ class _Planner:
 
     def __init__(self, inventory: Inventory) -> None:
         self.inventory = inventory
+        self.pmtinf = inventory.elements[1].path + "/PmtInf"
+        self.recipe = Recipe("plain", {})
+        self.sides: dict[int, int] = {}
+        self.message = inventory.message_type[:8]
         self.children: dict[str, list[ElementEntry]] = {}
         self.attributes: dict[str, list[ElementEntry]] = {}
         self.entries: dict[str, ElementEntry] = {}
@@ -158,6 +271,21 @@ class _Planner:
                 for ancestor in _ancestors(choice.path) | {choice.path}:
                     self.descendants.setdefault(ancestor, set()).add(branch_id)
 
+    def _rel(self, path: str) -> str:
+        """``path`` relative to PmtInf, or the empty string above it."""
+        prefix = self.pmtinf + "/"
+        return path[len(prefix) :] if path.startswith(prefix) else ""
+
+    def _forbidden(self, path: str) -> bool:
+        """True when the recipe or the chosen exclusive side bans ``path``."""
+        rel = self._rel(path)
+        if rel in self.recipe.forbid:
+            return True
+        for index, pair in enumerate(EXCLUSIVE.get(self.message, ())):
+            if rel == pair[1 - self.sides.get(index, 0)]:
+                return True
+        return False
+
     def emit(
         self,
         path: str,
@@ -176,37 +304,92 @@ class _Planner:
         """
         tree: Tree = {}
         for attribute in self.attributes.get(path, []):
-            tree[f"@{attribute.path.rsplit('/@', 1)[1]}"] = sample_value(
-                attribute
-            )
+            name = attribute.path.rsplit("/@", 1)[1]
+            tree[f"@{name}"] = sample_value(attribute)
         entry = self.entries[path]
         if entry.kind == "simple":
-            tree["$"] = sample_value(entry)
+            tree["$"] = self.recipe.pins.get(
+                self._rel(path), sample_value(entry)
+            )
             return tree
         if path in self.any_slots:
             tree.update(ANY_CONTENT)
+        wanted: list[str] = []
         for child in self.children.get(path, []):
             name = child.path.rsplit("/", 1)[1]
+            if self._forbidden(child.path):
+                continue
             if not self._chosen(path, name, picks):
                 continue
-            if unhit is not None and child.min_occurs == 0:
-                if (
-                    not (
-                        self.descendants.get(child.path, set()) | {child.path}
-                    )
-                    & unhit
-                ):
-                    continue
-            tree[name] = self.emit(child.path, picks, unhit)
+            below = self.descendants.get(child.path, set()) | {child.path}
+            if (
+                unhit is not None
+                and child.min_occurs == 0
+                and self._rel(child.path) not in self.recipe.require
+                and not below & unhit
+            ):
+                continue
+            wanted.append(name)
+        for name in list(wanted):
+            needed = PREREQUISITES.get(name)
+            if (
+                needed
+                and needed not in wanted
+                and f"{path}/{needed}" in self.entries
+                and not self._forbidden(f"{path}/{needed}")
+            ):
+                wanted.append(needed)
+        for child in self.children.get(path, []):
+            name = child.path.rsplit("/", 1)[1]
+            if name in wanted:
+                tree[name] = self.emit(child.path, picks, unhit)
+        if path.endswith("/MndtRltdInf") and "AmdmntInd" in tree:
+            flag = "true" if "AmdmntInfDtls" in tree else "false"
+            tree["AmdmntInd"] = {"$": flag}
         return tree
 
+    def pick_sides(self, unhit: set[str] | None) -> dict[int, int]:
+        """For every exclusive pair, the side that still leads somewhere unhit.
+
+        Args:
+            unhit: Items still to cover, or ``None`` for the first file.
+
+        Returns:
+            Side index (0 for PmtInf, 1 for the transaction) per pair.
+        """
+        sides: dict[int, int] = {}
+        for index, pair in enumerate(EXCLUSIVE.get(self.message, ())):
+            sides[index] = 0
+            if unhit is None:
+                continue
+            for side, rel in enumerate(pair):
+                full = f"{self.pmtinf}/{rel}"
+                if (self.descendants.get(full, set()) | {full}) & unhit:
+                    sides[index] = side
+                    break
+        return sides
+
     def _chosen(self, path: str, name: str, picks: dict[str, int]) -> bool:
-        """True unless a choice at ``path`` mentions ``name`` in another branch."""
+        """True unless a choice at ``path`` mentions ``name`` in another branch.
+
+        A picked branch whose elements the recipe forbids is replaced by
+        the first branch that has an allowed element, so a choice never
+        renders empty.
+        """
         for index, choice in enumerate(self.choices.get(path, [])):
             members = [n for branch in choice.branches for n in branch]
             if name not in members:
                 continue
             picked = choice.branches[picks.get(f"{path}#{index}", 0)]
+            if all(self._forbidden(f"{path}/{n}") for n in picked):
+                picked = next(
+                    (
+                        b
+                        for b in choice.branches
+                        if not all(self._forbidden(f"{path}/{n}") for n in b)
+                    ),
+                    picked,
+                )
             if name not in picked:
                 return False
         return True
@@ -257,7 +440,7 @@ def _ancestors(path: str) -> set[str]:
     return found
 
 
-def build_coverage_set(version: str, max_files: int = 12) -> CoverageSet:
+def build_coverage_set(version: str, max_files: int = 16) -> CoverageSet:
     """Generate the coverage set of a bundled edition.
 
     Args:
@@ -282,31 +465,43 @@ def build_coverage_set(version: str, max_files: int = 12) -> CoverageSet:
     all_items = inventory.paths() | {
         b for c in inventory.choices for b in c.branch_ids()
     }
-    while len(files) < max_files:
-        unhit = (
-            None if not files else set(all_items - hit_paths - hit_branches)
-        )
-        picks = planner.pick_branches(unhit)
-        tree = planner.emit(root_path, picks, unhit)
-        xml = _serialise(root_name, tree, inventory.namespace)
-        errors = collect_xsd_validation_errors(xml, xsd, max_errors=5)
-        if errors:
-            raise CoverageBuildError(
-                f"{version} set file {len(files) + 1} is not schema-valid: "
-                + " | ".join(errors)
+    for recipe in RECIPES[planner.message]:
+        planner.recipe = recipe
+        while len(files) < max_files:
+            unhit = (
+                None
+                if not files
+                else set(all_items - hit_paths - hit_branches)
             )
-        report = coverage(inventory, [*files, xml])
-        new_hits = (set(report.hit_paths) - hit_paths) | (
-            set(report.hit_branches) - hit_branches
-        )
-        if not new_hits:
-            break
-        files.append(xml)
-        hit_paths, hit_branches = (
-            set(report.hit_paths),
-            set(report.hit_branches),
-        )
-        if report.complete:
+            planner.sides = planner.pick_sides(unhit)
+            picks = planner.pick_branches(unhit)
+            tree = planner.emit(root_path, picks, unhit)
+            xml = _serialise(root_name, tree, inventory.namespace)
+            errors = collect_xsd_validation_errors(xml, xsd, max_errors=5)
+            if errors:
+                raise CoverageBuildError(
+                    f"{version} set file {len(files) + 1} ({recipe.name}) is "
+                    "not schema-valid: " + " | ".join(errors)
+                )
+            broken = evaluate_mdr(xml)
+            if broken:
+                raise CoverageBuildError(
+                    f"{version} set file {len(files) + 1} ({recipe.name}) "
+                    "breaks "
+                    + "; ".join(f"{f.rule_id} at {f.path}" for f in broken[:5])
+                )
+            report = coverage(inventory, [*files, xml])
+            new_hits = (set(report.hit_paths) - hit_paths) | (
+                set(report.hit_branches) - hit_branches
+            )
+            if not new_hits:
+                break
+            files.append(xml)
+            hit_paths = set(report.hit_paths)
+            hit_branches = set(report.hit_branches)
+            if report.complete:
+                break
+        if len(files) >= max_files or coverage(inventory, files).complete:
             break
     return CoverageSet(version, tuple(files), coverage(inventory, files))
 

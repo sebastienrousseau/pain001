@@ -308,18 +308,8 @@
         <PmtId>
           <EndToEndId>T</EndToEndId>
         </PmtId>
-        <PmtTpInf>
-          <SvcLvl>
-            <Prtry>T</Prtry>
-          </SvcLvl>
-          <LclInstrm>
-            <Prtry>T</Prtry>
-          </LclInstrm>
-          <CtgyPurp>
-            <Prtry>T</Prtry>
-          </CtgyPurp>
-        </PmtTpInf>
         <InstdAmt Ccy="EUR">1.00</InstdAmt>
+        <ChrgBr>DEBT</ChrgBr>
         <DrctDbtTx>
           <MndtRltdInf>
             <AmdmntInfDtls>
@@ -531,63 +521,7 @@
               <Prtry>T</Prtry>
             </Rsn>
           </MndtRltdInf>
-          <CdtrSchmeId>
-            <PstlAdr>
-              <AdrTp>
-                <Prtry>
-                  <Id>ABCD</Id>
-                  <Issr>T</Issr>
-                  <SchmeNm>T</SchmeNm>
-                </Prtry>
-              </AdrTp>
-            </PstlAdr>
-            <Id>
-              <PrvtId>
-                <DtAndPlcOfBirth>
-                  <BirthDt>2026-01-02</BirthDt>
-                  <PrvcOfBirth>T</PrvcOfBirth>
-                  <CityOfBirth>T</CityOfBirth>
-                  <CtryOfBirth>DE</CtryOfBirth>
-                </DtAndPlcOfBirth>
-                <Othr>
-                  <Id>T</Id>
-                  <SchmeNm>
-                    <Cd>T</Cd>
-                  </SchmeNm>
-                  <Issr>T</Issr>
-                </Othr>
-              </PrvtId>
-            </Id>
-          </CdtrSchmeId>
         </DrctDbtTx>
-        <UltmtCdtr>
-          <PstlAdr>
-            <AdrTp>
-              <Prtry>
-                <Id>ABCD</Id>
-                <Issr>T</Issr>
-                <SchmeNm>T</SchmeNm>
-              </Prtry>
-            </AdrTp>
-          </PstlAdr>
-          <Id>
-            <PrvtId>
-              <DtAndPlcOfBirth>
-                <BirthDt>2026-01-02</BirthDt>
-                <PrvcOfBirth>T</PrvcOfBirth>
-                <CityOfBirth>T</CityOfBirth>
-                <CtryOfBirth>DE</CtryOfBirth>
-              </DtAndPlcOfBirth>
-              <Othr>
-                <Id>T</Id>
-                <SchmeNm>
-                  <Cd>T</Cd>
-                </SchmeNm>
-                <Issr>T</Issr>
-              </Othr>
-            </PrvtId>
-          </Id>
-        </UltmtCdtr>
         <DbtrAgt>
           <FinInstnId>
             <ClrSysMmbId>

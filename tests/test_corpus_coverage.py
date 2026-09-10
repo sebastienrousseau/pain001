@@ -124,20 +124,56 @@ def test_committed_set_is_complete_valid_and_fresh(version: str) -> None:
 
 
 def test_first_file_is_full_and_later_files_shrink() -> None:
-    """File one carries everything; the rest only what is still unhit."""
+    """File one carries everything the transfer recipe allows; the rest less."""
     generated = cov.build_coverage_set("pain.001.001.09")
     sizes = [len(f) for f in generated.files]
-    assert len(sizes) == 4 and sizes == sorted(sizes, reverse=True)
+    assert 8 <= len(sizes) <= 16
+    assert sizes[0] == max(sizes) and sizes[1] < sizes[0]
     first = generated.files[0]
     assert "<Data>x</Data>" in first  # the xs:any slot is filled
+    assert "<PmtMtd>TRF</PmtMtd>" in first and "<ChqInstr>" not in first
     assert "<OrgId>" in first and "<PrvtId>" not in first
-    assert "<PrvtId>" in generated.files[1]
+    assert "<PrvtId>" in "".join(generated.files[1:])
     # the nested branch under the second branch of an outer choice is reached
     joined = "".join(generated.files)
     assert re.search(r"<PrvtId>.*?<SchmeNm>\s*<Prtry>", joined, re.S)
     assert (
-        coverage(inventory_for("pain.001.001.09"), [first]).path_percent > 70
+        coverage(inventory_for("pain.001.001.09"), [first]).path_percent > 60
     )
+
+
+def test_sets_follow_the_mdr_recipes() -> None:
+    """Placement is exclusive, the cheque path is its own file, all MDR-clean."""
+    from pain001.corpus.rules.mdr import evaluate_mdr
+
+    generated = cov.build_coverage_set("pain.001.001.09")
+    for text in generated.files:
+        assert evaluate_mdr(text) == []
+    cheque_files = [f for f in generated.files if "<PmtMtd>CHK</PmtMtd>" in f]
+    assert len(cheque_files) >= 2
+    assert all(
+        "<ChqInstr>" in f and "<CdtrAcct>" not in f for f in cheque_files
+    )
+    assert any("<Cd>MLFA</Cd>" in f and "<CdtrAgt>" in f for f in cheque_files)
+    assert any(
+        "<DlvryMtd>" in f
+        and "<Prtry>" in f.split("<DlvryMtd>")[1][:60]
+        and "<CdtrAgt>" not in f
+        for f in cheque_files
+    )
+    first = generated.files[0]
+    pmtinf_level = first.split("<CdtTrfTxInf>")[0]
+    assert "<PmtTpInf>" in pmtinf_level and "<ChrgBr>" in pmtinf_level
+    assert "<PmtTpInf>" not in first.split("<CdtTrfTxInf>")[1]
+    debit = cov.build_coverage_set("pain.008.001.08")
+    for text in debit.files:
+        assert evaluate_mdr(text) == []
+    assert any("<AmdmntInfDtls>" in f for f in debit.files)
+    for f in debit.files:  # when the flag is present it follows the details
+        if "<AmdmntInd>" in f:
+            assert ("<AmdmntInd>true</AmdmntInd>" in f) == (
+                "<AmdmntInfDtls>" in f
+            )
 
 
 def test_file_cap_stops_early_and_reports_incomplete() -> None:
@@ -181,7 +217,9 @@ def test_generation_stops_when_a_file_adds_nothing(
     """If branch picking cannot progress, the loop ends instead of spinning."""
     monkeypatch.setattr(cov._Planner, "pick_branches", lambda self, unhit: {})
     stalled = cov.build_coverage_set("pain.001.001.03", max_files=6)
-    assert len(stalled.files) == 1 and not stalled.report.complete
+    # recipes and exclusive sides still add a few files; branches never do
+    assert 1 <= len(stalled.files) <= 6
+    assert not stalled.report.complete
 
 
 def test_planner_with_two_choices_at_one_path(tmp_path: Path) -> None:
@@ -211,3 +249,16 @@ def test_planner_with_two_choices_at_one_path(tmp_path: Path) -> None:
         "/Document", picks, {"/Document -> B", "/Document/D"}
     )
     assert list(second) == ["B", "D"]
+
+
+def test_mdr_breach_in_a_generated_file_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A recipe that produced an MDR-invalid file is a build error."""
+    from pain001.corpus.rules.mdr import MdrFinding
+
+    monkeypatch.setattr(
+        cov, "evaluate_mdr", lambda xml: [MdrFinding("X", "/Document", "boom")]
+    )
+    with pytest.raises(cov.CoverageBuildError, match="breaks X at /Document"):
+        cov.build_coverage_set("pain.001.001.03")

@@ -131,7 +131,7 @@
     </GrpHdr>
     <PmtInf>
       <PmtInfId>T</PmtInfId>
-      <PmtMtd>CHK</PmtMtd>
+      <PmtMtd>TRF</PmtMtd>
       <BtchBookg>true</BtchBookg>
       <NbOfTxs>1</NbOfTxs>
       <CtrlSum>1.00</CtrlSum>
@@ -445,18 +445,6 @@
           <EndToEndId>T</EndToEndId>
           <UETR>c10f2393-6d2a-456b-8d41-d976a10e55ea</UETR>
         </PmtId>
-        <PmtTpInf>
-          <InstrPrty>HIGH</InstrPrty>
-          <SvcLvl>
-            <Cd>T</Cd>
-          </SvcLvl>
-          <LclInstrm>
-            <Cd>T</Cd>
-          </LclInstrm>
-          <CtgyPurp>
-            <Cd>T</Cd>
-          </CtgyPurp>
-        </PmtTpInf>
         <Amt>
           <InstdAmt Ccy="EUR">1.00</InstdAmt>
         </Amt>
@@ -466,121 +454,6 @@
           <RateTp>SPOT</RateTp>
           <CtrctId>T</CtrctId>
         </XchgRateInf>
-        <ChrgBr>DEBT</ChrgBr>
-        <ChqInstr>
-          <ChqTp>CCHQ</ChqTp>
-          <ChqNb>T</ChqNb>
-          <ChqFr>
-            <Nm>T</Nm>
-            <Adr>
-              <AdrTp>
-                <Cd>ADDR</Cd>
-              </AdrTp>
-              <Dept>T</Dept>
-              <SubDept>T</SubDept>
-              <StrtNm>T</StrtNm>
-              <BldgNb>T</BldgNb>
-              <BldgNm>T</BldgNm>
-              <Flr>T</Flr>
-              <PstBx>T</PstBx>
-              <Room>T</Room>
-              <PstCd>T</PstCd>
-              <TwnNm>T</TwnNm>
-              <TwnLctnNm>T</TwnLctnNm>
-              <DstrctNm>T</DstrctNm>
-              <CtrySubDvsn>T</CtrySubDvsn>
-              <Ctry>DE</Ctry>
-              <AdrLine>T</AdrLine>
-            </Adr>
-          </ChqFr>
-          <DlvryMtd>
-            <Cd>MLDB</Cd>
-          </DlvryMtd>
-          <DlvrTo>
-            <Nm>T</Nm>
-            <Adr>
-              <AdrTp>
-                <Cd>ADDR</Cd>
-              </AdrTp>
-              <Dept>T</Dept>
-              <SubDept>T</SubDept>
-              <StrtNm>T</StrtNm>
-              <BldgNb>T</BldgNb>
-              <BldgNm>T</BldgNm>
-              <Flr>T</Flr>
-              <PstBx>T</PstBx>
-              <Room>T</Room>
-              <PstCd>T</PstCd>
-              <TwnNm>T</TwnNm>
-              <TwnLctnNm>T</TwnLctnNm>
-              <DstrctNm>T</DstrctNm>
-              <CtrySubDvsn>T</CtrySubDvsn>
-              <Ctry>DE</Ctry>
-              <AdrLine>T</AdrLine>
-            </Adr>
-          </DlvrTo>
-          <InstrPrty>HIGH</InstrPrty>
-          <ChqMtrtyDt>2026-01-02</ChqMtrtyDt>
-          <FrmsCd>T</FrmsCd>
-          <MemoFld>T</MemoFld>
-          <RgnlClrZone>T</RgnlClrZone>
-          <PrtLctn>T</PrtLctn>
-          <Sgntr>T</Sgntr>
-        </ChqInstr>
-        <UltmtDbtr>
-          <Nm>T</Nm>
-          <PstlAdr>
-            <AdrTp>
-              <Cd>ADDR</Cd>
-            </AdrTp>
-            <Dept>T</Dept>
-            <SubDept>T</SubDept>
-            <StrtNm>T</StrtNm>
-            <BldgNb>T</BldgNb>
-            <BldgNm>T</BldgNm>
-            <Flr>T</Flr>
-            <PstBx>T</PstBx>
-            <Room>T</Room>
-            <PstCd>T</PstCd>
-            <TwnNm>T</TwnNm>
-            <TwnLctnNm>T</TwnLctnNm>
-            <DstrctNm>T</DstrctNm>
-            <CtrySubDvsn>T</CtrySubDvsn>
-            <Ctry>DE</Ctry>
-            <AdrLine>T</AdrLine>
-          </PstlAdr>
-          <Id>
-            <OrgId>
-              <AnyBIC>BANKDEFFXXX</AnyBIC>
-              <LEI>000000K1PEBE35ILCW94</LEI>
-              <Othr>
-                <Id>T</Id>
-                <SchmeNm>
-                  <Cd>T</Cd>
-                </SchmeNm>
-                <Issr>T</Issr>
-              </Othr>
-            </OrgId>
-          </Id>
-          <CtryOfRes>DE</CtryOfRes>
-          <CtctDtls>
-            <NmPrfx>DOCT</NmPrfx>
-            <Nm>T</Nm>
-            <PhneNb>+49-3012345678</PhneNb>
-            <MobNb>+49-3012345678</MobNb>
-            <FaxNb>+49-3012345678</FaxNb>
-            <EmailAdr>T</EmailAdr>
-            <EmailPurp>T</EmailPurp>
-            <JobTitl>T</JobTitl>
-            <Rspnsblty>T</Rspnsblty>
-            <Dept>T</Dept>
-            <Othr>
-              <ChanlTp>T</ChanlTp>
-              <Id>T</Id>
-            </Othr>
-            <PrefrdMtd>LETT</PrefrdMtd>
-          </CtctDtls>
-        </UltmtDbtr>
         <IntrmyAgt1>
           <FinInstnId>
             <BICFI>BANKDEFFXXX</BICFI>
@@ -1030,10 +903,9 @@
           </CtctDtls>
         </UltmtCdtr>
         <InstrForCdtrAgt>
-          <Cd>CHQB</Cd>
+          <Cd>PHOB</Cd>
           <InstrInf>T</InstrInf>
         </InstrForCdtrAgt>
-        <InstrForDbtrAgt>T</InstrForDbtrAgt>
         <Purp>
           <Cd>T</Cd>
         </Purp>

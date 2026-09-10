@@ -95,6 +95,19 @@
         <PmtId>
           <EndToEndId>T</EndToEndId>
         </PmtId>
+        <PmtTpInf>
+          <InstrPrty>HIGH</InstrPrty>
+          <SvcLvl>
+            <Cd>T</Cd>
+          </SvcLvl>
+          <LclInstrm>
+            <Cd>T</Cd>
+          </LclInstrm>
+          <SeqTp>FRST</SeqTp>
+          <CtgyPurp>
+            <Cd>T</Cd>
+          </CtgyPurp>
+        </PmtTpInf>
         <InstdAmt Ccy="EUR">1.00</InstdAmt>
         <DrctDbtTx>
           <MndtRltdInf>
@@ -167,31 +180,7 @@
               </PtInTm>
             </Frqcy>
           </MndtRltdInf>
-          <CdtrSchmeId>
-            <Id>
-              <OrgId>
-                <Othr>
-                  <Id>T</Id>
-                  <SchmeNm>
-                    <Prtry>T</Prtry>
-                  </SchmeNm>
-                </Othr>
-              </OrgId>
-            </Id>
-          </CdtrSchmeId>
         </DrctDbtTx>
-        <UltmtCdtr>
-          <Id>
-            <OrgId>
-              <Othr>
-                <Id>T</Id>
-                <SchmeNm>
-                  <Prtry>T</Prtry>
-                </SchmeNm>
-              </Othr>
-            </OrgId>
-          </Id>
-        </UltmtCdtr>
         <DbtrAgt>
           <FinInstnId/>
         </DbtrAgt>

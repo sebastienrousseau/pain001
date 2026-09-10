@@ -20,7 +20,7 @@
     </GrpHdr>
     <PmtInf>
       <PmtInfId>T</PmtInfId>
-      <PmtMtd>CHK</PmtMtd>
+      <PmtMtd>TRF</PmtMtd>
       <ReqdExctnDt>
         <Dt>2026-01-02</Dt>
       </ReqdExctnDt>
@@ -60,21 +60,20 @@
         <PmtId>
           <EndToEndId>T</EndToEndId>
         </PmtId>
+        <PmtTpInf>
+          <SvcLvl>
+            <Prtry>T</Prtry>
+          </SvcLvl>
+          <LclInstrm>
+            <Prtry>T</Prtry>
+          </LclInstrm>
+          <CtgyPurp>
+            <Prtry>T</Prtry>
+          </CtgyPurp>
+        </PmtTpInf>
         <Amt>
           <InstdAmt Ccy="EUR">1.00</InstdAmt>
         </Amt>
-        <UltmtDbtr>
-          <Id>
-            <PrvtId>
-              <Othr>
-                <Id>T</Id>
-                <SchmeNm>
-                  <Prtry>T</Prtry>
-                </SchmeNm>
-              </Othr>
-            </PrvtId>
-          </Id>
-        </UltmtDbtr>
         <Cdtr>
           <Id>
             <PrvtId>
@@ -87,6 +86,11 @@
             </PrvtId>
           </Id>
         </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE89370400440532013000</IBAN>
+          </Id>
+        </CdtrAcct>
         <UltmtCdtr>
           <Id>
             <PrvtId>

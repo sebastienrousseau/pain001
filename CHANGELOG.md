@@ -111,6 +111,28 @@ Entries are added as work lands.
   of element paths and choice branches. These files are the schema
   yardstick, not bank-ready payments; the MDR cross-element rules
   arrive with workstream 4.
+- **MDR cross-element rules** (ADR-0003 workstream 4, first part).
+  `pain001.corpus.rules.mdr` carries every constraint the ISO Message
+  Definition Report (Payments Initiation, maintenance 2020-2021) defines
+  for the two initiation messages, quoted from the report: twenty
+  enforced for pain.001 (payment-type, charge-bearer, ultimate-debtor
+  and debtor-agent-instruction placement; the seven cheque rules; the
+  creditor-agent instruction; charges account and its agent; the five
+  intermediary-agent orderings; identification-or-proxy) and nine for
+  pain.008 (placement, amendment indicator true and false, creditor
+  scheme identification, charges). `evaluate_mdr(xml)` returns the
+  findings; each rule has a test that fails without it. The guidance
+  `SupplementaryDataRule` is listed, not enforced.
+- **Coverage sets shaped by the MDR rules.** The generator now works
+  from recipes (transfer; cheque delivered to the creditor agent;
+  cheque without agent), steers blocks that may sit on `PmtInf` or on
+  the transaction but not both like choice branches, pulls in the
+  prerequisites of intermediary agents and charges accounts, and
+  derives a mandate's amendment flag from its details. Every set stays
+  at 100 % of paths and branches and is MDR-clean; sets grew to eight
+  to eleven files (119 KB compressed for all thirteen, 230 KB for the
+  whole data tree). `make corpus-coverage` now also runs the MDR rules
+  over every coverage-set and market file, the L1 gate of the plan.
 - **ISO external code sets, vendored.** Edition 2Q2026 v3 (163 sets,
   3,314 codes) ships verbatim under `pain001/corpus/data/external_codes/`
   with a loader (`pain001.corpus.rules.external_codes`: `codes`,

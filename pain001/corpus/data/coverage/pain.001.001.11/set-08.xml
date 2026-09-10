@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.11">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>T</MsgId>
+      <CreDtTm>2026-01-02T09:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <InitgPty/>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>T</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <ReqdExctnDt>
+        <Dt>2026-01-02</Dt>
+      </ReqdExctnDt>
+      <Dbtr/>
+      <DbtrAcct/>
+      <DbtrAgt>
+        <FinInstnId/>
+      </DbtrAgt>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>T</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">1.00</InstdAmt>
+        </Amt>
+        <UltmtDbtr>
+          <Id>
+            <PrvtId>
+              <Othr>
+                <Id>T</Id>
+                <SchmeNm>
+                  <Prtry>T</Prtry>
+                </SchmeNm>
+              </Othr>
+            </PrvtId>
+          </Id>
+        </UltmtDbtr>
+        <CdtrAcct/>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

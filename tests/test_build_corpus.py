@@ -121,7 +121,7 @@ def test_coverage_sets_are_written_beside_the_market_files(
     ]
     assert build_corpus.main(argv) == 0
     out = capsys.readouterr().out
-    assert out.count("coverage.json") == 13 and "79 file(s)" in out
+    assert out.count("coverage.json") == 13 and "158 file(s)" in out
     report = json.loads(
         (
             tmp_path

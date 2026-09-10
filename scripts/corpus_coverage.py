@@ -16,7 +16,8 @@
 
 For every bundled message type, measure its coverage set,
 ``pain001/corpus/data/coverage/<type>/*.xml``, against the schema
-inventory. A version with no set yet is reported against its bundled
+inventory, and check every set file and every market file against
+the MDR cross-element rules (the L1 gate). A version with no set yet is reported against its bundled
 example for information and does not fail the gate. A version with a
 set that leaves a non-exempt path or choice branch unused fails it:
 that is the ADR-0003 acceptance rule, 100 % with a named exemption
@@ -40,6 +41,7 @@ import sys
 from pathlib import Path
 
 from pain001.corpus import CoverageReport, coverage, inventory_for
+from pain001.corpus.rules.mdr import evaluate_mdr
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -82,6 +84,20 @@ def measure(
     example = meta.example_xml_path
     sources = [example] if example is not None and example.exists() else []
     return coverage(inventory_for(message_type), sources), False
+
+
+def _mdr_check(files: list[Path]) -> int:
+    """Print MDR findings for ``files``; return how many files fail."""
+    failing = 0
+    for path in files:
+        findings = evaluate_mdr(path.read_text(encoding="utf-8"))
+        if findings:
+            failing += 1
+            print(
+                f"    MDR {path.name}: "
+                + "; ".join(f"{f.rule_id} at {f.path}" for f in findings[:3])
+            )
+    return failing
 
 
 def write_inventories(out_dir: Path) -> int:
@@ -142,6 +158,13 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"    missing path   {path}")
             for branch in report.missing_branches[:10]:
                 print(f"    missing branch {branch}")
+        if real:
+            failures += _mdr_check(
+                sorted((args.coverage_root / meta.message_type).glob("*.xml"))
+            )
+    market_root = args.coverage_root.parent / "market"
+    if market_root.is_dir():
+        failures += _mdr_check(sorted(market_root.rglob("*.xml")))
     if args.json is not None:
         args.json.write_text(json.dumps(reports, indent=2), encoding="utf-8")
     if failures:

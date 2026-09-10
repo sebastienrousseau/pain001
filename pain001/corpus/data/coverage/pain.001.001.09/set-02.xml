@@ -75,7 +75,7 @@
     </GrpHdr>
     <PmtInf>
       <PmtInfId>T</PmtInfId>
-      <PmtMtd>CHK</PmtMtd>
+      <PmtMtd>TRF</PmtMtd>
       <PmtTpInf>
         <SvcLvl>
           <Prtry>T</Prtry>
@@ -282,80 +282,13 @@
         <PmtId>
           <EndToEndId>T</EndToEndId>
         </PmtId>
-        <PmtTpInf>
-          <SvcLvl>
-            <Prtry>T</Prtry>
-          </SvcLvl>
-          <LclInstrm>
-            <Prtry>T</Prtry>
-          </LclInstrm>
-          <CtgyPurp>
-            <Prtry>T</Prtry>
-          </CtgyPurp>
-        </PmtTpInf>
         <Amt>
           <EqvtAmt>
             <Amt Ccy="EUR">1.00</Amt>
             <CcyOfTrf>EUR</CcyOfTrf>
           </EqvtAmt>
         </Amt>
-        <ChqInstr>
-          <ChqFr>
-            <Nm>T</Nm>
-            <Adr>
-              <AdrTp>
-                <Prtry>
-                  <Id>ABCD</Id>
-                  <Issr>T</Issr>
-                  <SchmeNm>T</SchmeNm>
-                </Prtry>
-              </AdrTp>
-            </Adr>
-          </ChqFr>
-          <DlvryMtd>
-            <Prtry>T</Prtry>
-          </DlvryMtd>
-          <DlvrTo>
-            <Nm>T</Nm>
-            <Adr>
-              <AdrTp>
-                <Prtry>
-                  <Id>ABCD</Id>
-                  <Issr>T</Issr>
-                  <SchmeNm>T</SchmeNm>
-                </Prtry>
-              </AdrTp>
-            </Adr>
-          </DlvrTo>
-        </ChqInstr>
-        <UltmtDbtr>
-          <PstlAdr>
-            <AdrTp>
-              <Prtry>
-                <Id>ABCD</Id>
-                <Issr>T</Issr>
-                <SchmeNm>T</SchmeNm>
-              </Prtry>
-            </AdrTp>
-          </PstlAdr>
-          <Id>
-            <PrvtId>
-              <DtAndPlcOfBirth>
-                <BirthDt>2026-01-02</BirthDt>
-                <PrvcOfBirth>T</PrvcOfBirth>
-                <CityOfBirth>T</CityOfBirth>
-                <CtryOfBirth>DE</CtryOfBirth>
-              </DtAndPlcOfBirth>
-              <Othr>
-                <Id>T</Id>
-                <SchmeNm>
-                  <Cd>T</Cd>
-                </SchmeNm>
-                <Issr>T</Issr>
-              </Othr>
-            </PrvtId>
-          </Id>
-        </UltmtDbtr>
+        <ChrgBr>DEBT</ChrgBr>
         <IntrmyAgt1>
           <FinInstnId>
             <ClrSysMmbId>
@@ -656,6 +589,7 @@
             </PrvtId>
           </Id>
         </UltmtCdtr>
+        <InstrForDbtrAgt>T</InstrForDbtrAgt>
         <Purp>
           <Prtry>T</Prtry>
         </Purp>
