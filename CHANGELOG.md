@@ -13,6 +13,35 @@ the ground cleared, the schema inventory and coverage engine, the
 scenario builder, and a schema coverage corpus for every bundled XSD.
 Entries are added as work lands.
 
+### Fixed
+
+- **Bundled examples regenerated and pinned.** Every
+  `pain001/templates/<type>/<type>.xml` is now exactly the rendering of
+  that bundle's `template.csv` through its template. The old files had
+  drifted: nine of the twelve declared a `NbOfTxs` that did not match
+  the transactions they carried (`.03` said 2 and held 4, `.04` to
+  `.08` said 2 or 3 and held 1, `.09` to `.11` said 2 and held 5),
+  `.03` and `.04` printed amounts without minor units, `.09` to `.13`
+  carried a hand-edited `SplmtryData/Envlp/WC` block the template
+  cannot emit, and the pain.008 example placed `SeqTp` where the
+  template does not. `tests/test_bundled_examples.py` asserts
+  the byte-exact rendering, XSD validity and the CSV/SQLite mirror for
+  every registered type, so the drift cannot recur.
+
+### Changed
+
+- **`scripts/generate_xml_examples.py`** and
+  **`scripts/regenerate_template_dbs.py`** walk the template registry
+  instead of a hard-coded version list, so pain.008.001.02 and any
+  bundle added later are covered without editing the scripts. Both
+  take `--check`, which writes nothing and exits 1 on drift; `make
+  xml-examples` regenerates the examples and the SQLite mirrors.
+
+### Removed
+
+- `scripts/generate_missing_examples.py`, which hard-coded
+  pain.001.001.03 to .11 and duplicated `generate_xml_examples.py`.
+
 ## [0.0.66] - 2026-09-10
 
 Closes the four roadmap issues that were already mostly shipped and

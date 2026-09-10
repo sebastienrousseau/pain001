@@ -50,14 +50,12 @@
 					<IBAN>DE36210501700024690959</IBAN>
 				</Id>
 			</CdtrAcct>
+			
 			<RmtInf>
 				<Ustrd>Payment for Invoice-98765</Ustrd>
 			</RmtInf>
-			<SplmtryData>
-				<Envlp>
-					<WC />
-				</Envlp>
-			</SplmtryData>
+			
+			
 	</CdtTrfTxInf>
 			 <CdtTrfTxInf>
 			<PmtId>
@@ -79,16 +77,13 @@
 					<IBAN>DE67370400440532013008</IBAN>
 				</Id>
 			</CdtrAcct>
+			
 			<RmtInf>
 				<Ustrd>Payment for Invoice-12345</Ustrd>
 			</RmtInf>
-			<SplmtryData>
-				<Envlp>
-					<WC />
-				</Envlp>
-			</SplmtryData>
+			
+			
 	</CdtTrfTxInf>
 			 </PmtInf>
 </CstmrCdtTrfInitn>
 </Document>
-

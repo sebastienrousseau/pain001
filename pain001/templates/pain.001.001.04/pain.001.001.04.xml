@@ -5,7 +5,7 @@
         <GrpHdr>
             <MsgId>1</MsgId>
             <CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
-            <NbOfTxs>2</NbOfTxs>
+            <NbOfTxs>1</NbOfTxs>
             <InitgPty>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
@@ -51,7 +51,7 @@
                 </PmtId>
                 <Amt>
                     <InstdAmt Ccy="EUR">
-                        300
+                        300.00
                     </InstdAmt>
                 </Amt>
                 <ChrgBr>SHAR</ChrgBr>

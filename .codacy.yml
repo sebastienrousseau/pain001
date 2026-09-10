@@ -30,7 +30,6 @@ exclude_paths:
   - "**/*.csv"
   
   # Utility scripts (not production code)
-  - "generate_xml_examples.py"
   - "scripts/**"
   
   # Build artifacts
@@ -76,7 +75,6 @@ engines:
       - "test_*.py"
       - "*_test.py"
       - "conftest.py"
-      - "generate_xml_examples.py"
       - "scripts/**"
     # Ruff-specific patterns to ignore
     patterns:
