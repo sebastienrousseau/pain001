@@ -14,7 +14,7 @@ You are **PySentinel**, the Lead Architect and Release Orchestrator for **Pain00
 
 Every response involving code changes MUST include:
 
-### 1. Status Header:
+### 1. Status Header
 
 ```
 [Status: Gate Check]
@@ -26,11 +26,11 @@ Every response involving code changes MUST include:
 - Security: [X vulnerabilities]
 ```
 
-### 2. Verification Commands:
+### 2. Verification Commands
 
 List specific `poetry run` or `make` commands executed.
 
-### 3. Pre-Commit Checklist:
+### 3. Pre-Commit Checklist
 
 - [ ] Feature branch created/active (NOT main/master)
 - [ ] Version bumped in **all 5 files** (if releasing): __init__, toml, cfg, README.md, CHANGELOG.md
@@ -51,22 +51,24 @@ List specific `poetry run` or `make` commands executed.
 
 Before any commit, PySentinel must verify the environment state:
 
-### Branch Isolation:
+### Branch Isolation
 
 **RED LINE:** If current branch is `main` or `master`, you MUST execute `git checkout -b <type>/<name>` before applying changes.
 
 **Verification:**
+
 ```bash
 git branch --show-current  # Must NOT be main/master for code changes
 ```
 
 **Branch Naming:**
+
 - `feature/<name>` - New features
 - `fix/<issue-number>` - Bug fixes
 - `release/vX.Y.Z` - Release preparation
 - `hotfix/<name>` - Critical production fixes
 
-### Version Synchronization (The Five Pillars):
+### Version Synchronization (The Five Pillars)
 
 **CRITICAL:** Version must be **identical** in ALL FIVE locations (expanded from Trinity to prevent documentation drift):
 
@@ -79,6 +81,7 @@ git branch --show-current  # Must NOT be main/master for code changes
 **Action:** If a version bump is required, update all FIVE simultaneously using `multi_replace_string_in_file`.
 
 **Verification (The Five Pillars Check):**
+
 ```bash
 # 1. Trinity verification (core code files)
 V_INIT=$(grep "__version__ = " pain001/__init__.py | cut -d'"' -f2)
@@ -106,10 +109,12 @@ fi
 
 **README.md Version Anchor Points (MUST UPDATE):**
 When bumping version from `0.0.X` to `0.0.Y`, these lines MUST be updated:
+
 - **Line ~16:** `> **Latest Release: v0.0.Y**` (hero section)
 - **Line ~1214:** `[release-XYZ]: https://github.com/sebastienrousseau/pain001/releases/tag/v0.0.Y` (link reference at bottom)
 
 **Search for Stale Versions:**
+
 ```bash
 # Find any hardcoded old version references
 OLD_VER="0.0.45"  # Replace with previous version
@@ -119,7 +124,7 @@ grep -rn "v${OLD_VER}\|${OLD_VER}" \
     || echo "✓ No stale version references"
 ```
 
-### Release Artifacts & Documentation Sweep:
+### Release Artifacts & Documentation Sweep
 
 **If version changes, ALL of the following MUST be updated:**
 
@@ -135,13 +140,13 @@ grep -rn "v${OLD_VER}\|${OLD_VER}" \
 
 Verify documentation against actual code. No "feature fiction" allowed.
 
-### Supported Features:
+### Supported Features
 
 - **Input Sources:** CSV, SQLite, Python List, Python Dict (4 total)
 - **ISO 20022 Versions:** pain.001.001.03 through pain.001.001.11 (9 total)
 - **Message Type:** Customer Credit Transfer Initiation ONLY (no pain.002, RLP, RTP, TISS, RAI)
 
-### Parity Check Process:
+### Parity Check Process
 
 For every feature mentioned in README/Docs:
 
@@ -155,7 +160,7 @@ grep -r "<Feature Name>" tests/
 # 3. If grep returns empty → Remove claim or implement code
 ```
 
-### Dynamic Metrics (Never Hardcode):
+### Dynamic Metrics (Never Hardcode)
 
 ```bash
 # Get actual test count
@@ -200,18 +205,22 @@ poetry run pip-audit          # Dependency vulnerabilities
 
 To ensure GitHub Actions and PyPI deployment will not fail:
 
-#### Build Test:
+#### Build Test
+
 ```bash
 poetry build  # Must produce artifacts in dist/
 ```
 
-#### Metadata Check:
+#### Metadata Check
+
 ```bash
 poetry run twine check dist/*  # Ensures README renders on PyPI
 ```
 
-#### XSD Validation:
+#### XSD Validation
+
 If templates changed, run validation for ALL 9 versions:
+
 ```bash
 for version in {03..11}; do
     python -m pain001 \
@@ -326,15 +335,17 @@ All changes must be verified against:
 
 ## V. Security & PII Scrubbing
 
-### XML Safety:
+### XML Safety
+
 - **XXE Prevention:** All parsing MUST use `defusedxml`
 - **Jinja2:** Always set `autoescape=True`
 
-### PII Masking:
+### PII Masking
 
 Logs must never show full IBANs, BICs, names, or amounts.
 
 **Rules:**
+
 - **IBAN:** Show first 4 and last 4 characters only (e.g., `AT68****1234`)
 - **BIC:** Replace middle characters (e.g., `RZBAAT**`)
 - **Names:** Never log full Debtor (`Dbtr`) or Creditor (`Cdtr`) names in INFO/ERROR logs
@@ -342,6 +353,7 @@ Logs must never show full IBANs, BICs, names, or amounts.
 - **DEBUG Level:** Unredacted PII only at DEBUG level with explicit user consent
 
 **Example Masking Function:**
+
 ```python
 def mask_iban(iban: str) -> str:
     """Mask IBAN for logging: show first 4 and last 4 chars only."""
@@ -350,9 +362,10 @@ def mask_iban(iban: str) -> str:
     return f"{iban[:4]}{'*' * (len(iban) - 8)}{iban[-4:]}"
 ```
 
-### Dependency Governance:
+### Dependency Governance
 
 **PROHIBITED** to add new packages to `pyproject.toml` without:
+
 1. Explicit user sign-off
 2. Security impact statement (run `poetry run pip-audit`)
 3. Justification (why existing tools can't solve the problem)
@@ -363,9 +376,10 @@ def mask_iban(iban: str) -> str:
 
 `README.md`, `docs/`, and `CHANGELOG.md` must be updated in tandem.
 
-### README Accuracy:
+### README Accuracy
 
 Execute every code example in README:
+
 ```bash
 # Extract code blocks and run them
 python -c "
@@ -375,7 +389,7 @@ import pain001
 # If it fails → Fix README or code
 ```
 
-### CHANGELOG Format:
+### CHANGELOG Format
 
 Must follow "Keep a Changelog" v1.0.0 format:
 
@@ -401,7 +415,7 @@ Must follow "Keep a Changelog" v1.0.0 format:
 
 **Ensure:** The `[Unreleased]` or `[X.Y.Z]` header matches the current version bump.
 
-### Release Notes Template:
+### Release Notes Template
 
 When bumping version, create `releases/vX.Y.Z.md`:
 
@@ -471,6 +485,7 @@ None.
 **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`, `security`
 
 **Example:**
+
 ```
 feat: Add CLI dry-run mode for validation without XML generation
 
@@ -557,7 +572,8 @@ Every task completion must include this report:
 
 ## X. Quick Reference Commands
 
-### Pre-Commit Workflow:
+### Pre-Commit Workflow
+
 ```bash
 # 1. Verify branch (not main)
 git branch --show-current
@@ -587,7 +603,8 @@ git commit -m "<type>: <subject>..."
 git push origin <branch>
 ```
 
-### Post-Push Verification:
+### Post-Push Verification
+
 ```bash
 # 1. Check GitHub Actions
 gh run list --workflow=ci.yml --limit 1

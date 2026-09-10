@@ -36,6 +36,13 @@ operator can pivot on:
 * ``pain001.row_count`` - number of payment rows in the batch.
 * ``pain001.scheme`` - active scheme profile (``sepa-sct`` etc.).
 * ``pain001.format`` - input format (``csv``, ``json``, ...).
+* ``http.route`` - the canonical route of a REST handler span.
+
+Span names: ``pain001.generate`` (one batch, ``process_files``),
+``pain001.generate.streaming``, ``pain001.render`` (template to
+string), ``pain001.validate`` (XSD), ``pain001.validate.scheme``
+(rulebooks), ``pain001.write`` (render + validate + file write), and
+``pain001.api.*`` for each REST handler.
 
 Configuration via the OpenTelemetry SDK's own env vars
 (``OTEL_EXPORTER_OTLP_ENDPOINT``, ``OTEL_SERVICE_NAME``, ...) so the
@@ -47,6 +54,7 @@ that.
 from __future__ import annotations
 
 import functools
+import inspect
 import logging
 import os
 import threading
@@ -172,7 +180,9 @@ def reset_for_tests() -> None:
     _init_attempted = False
 
 
-def traced(span_name: str) -> Callable[[F], F]:
+def traced(
+    span_name: str, attributes: dict[str, Any] | None = None
+) -> Callable[[F], F]:
     """Decorate a function so each call becomes an OTel span when enabled.
 
     The decorator is *always* applied; the per-call decision is made
@@ -180,13 +190,17 @@ def traced(span_name: str) -> Callable[[F], F]:
     tracing is off, the wrapper is a single ``if`` plus the original
     call - effectively free.
 
-    The wrapped function may set additional span attributes via the
-    ``_otel_span`` kwarg the wrapper injects; tests should not rely
-    on that injection.
+    Coroutine functions (the FastAPI handlers) get an ``async``
+    wrapper so the span stays open across ``await`` and the function
+    is still recognised as a coroutine by the framework. Call sites
+    enrich the span with :func:`set_span_attributes`.
 
     Args:
         span_name: Stable, kebab-cased span name
             (``"pain001.generate"``, ``"pain001.validate"``).
+        attributes: Static attributes stamped on every span the
+            decorator opens, such as ``{"http.route": "/api/v1/validate"}``
+            for a REST handler.
 
     Returns:
         A decorator producing a function that creates a span on
@@ -196,6 +210,20 @@ def traced(span_name: str) -> Callable[[F], F]:
 
     def decorator(fn: F) -> F:
         """Wrap ``fn`` so calls open a span (when enabled)."""
+        if inspect.iscoroutinefunction(fn):
+
+            @functools.wraps(fn)
+            async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
+                """Open a span if enabled, then await ``fn``."""
+                tracer = init_otel()  # cheap after first call
+                if tracer is None:
+                    return await fn(*args, **kwargs)
+                with tracer.start_as_current_span(
+                    span_name, attributes=attributes
+                ):
+                    return await fn(*args, **kwargs)
+
+            return async_wrapper  # type: ignore[return-value]
 
         @functools.wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
@@ -206,7 +234,9 @@ def traced(span_name: str) -> Callable[[F], F]:
             # The SDK's context manager auto-records the exception
             # and flips status to ERROR when an exception escapes,
             # so we can let the `raise` propagate naturally.
-            with tracer.start_as_current_span(span_name):
+            with tracer.start_as_current_span(
+                span_name, attributes=attributes
+            ):
                 return fn(*args, **kwargs)
 
         return wrapper  # type: ignore[return-value]

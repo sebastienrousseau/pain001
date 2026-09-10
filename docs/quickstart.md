@@ -138,9 +138,11 @@ Output:
 ✓ Scheme 'sepa-sct' passed
 ```
 
-Five scheme profiles ship today (v0.0.53): `sepa-sct`, `sepa-sdd`,
-`sepa-inst`, `sepa-b2b`, `xborder-ct`. Use the one that matches the
-clearing system your bank will route this through.
+Six scheme profiles ship today: `sepa-sct`, `sepa-sdd`, `sepa-inst`,
+`sepa-b2b`, `xborder-ct`, and the cross-record `anti-duplicate`. Use the
+one that matches the clearing system your bank will route this through,
+and add `anti-duplicate` (comma-separated: `--scheme sepa-sct,anti-duplicate`)
+to catch a payment keyed in twice before it reaches the bank.
 
 ## Step 5: Generate the XML
 

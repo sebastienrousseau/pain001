@@ -15,6 +15,7 @@ Pain001 uses **PySentinel**, an automated quality guardian that enforces:
 - **Determinism**: Idempotent processing, no global mutable state
 
 **Red Lines (Absolute Prohibitions):**
+
 - ❌ No commits without running `poetry run make check`
 - ❌ No code without type hints
 - ❌ No pulling with `pip` (Poetry-only)
@@ -28,12 +29,14 @@ If you see a quality gate fail, STOP. Fix the issue locally. Only then commit.
 ## 📋 Development Environment Setup
 
 ### Prerequisites
+
 - **Python 3.9+** (tested on 3.9, 3.10, 3.11, 3.12)
 - **Poetry** (dependency manager; required, not pip)
 - **Git** (version control)
 - **Linux/macOS/Windows** (cross-platform support verified)
 
 ### Step 1: Fork & Clone
+
 ```bash
 # Fork on GitHub, then clone your fork
 git clone https://github.com/<your-username>/pain001.git
@@ -44,6 +47,7 @@ git remote add upstream https://github.com/sebastienrousseau/pain001.git
 ```
 
 ### Step 2: Install Dependencies with Poetry
+
 ```bash
 # Install Poetry (if not already installed)
 curl -sSL https://install.python-poetry.org | python3 -
@@ -56,6 +60,7 @@ poetry run python -c "import pain001; print(f'Pain001 version: {pain001.__versio
 ```
 
 **Why Poetry?**
+
 - Dependency lock files ensure reproducible builds
 - Separates dev, test, and runtime dependencies
 - Manages virtual environments automatically
@@ -64,6 +69,7 @@ poetry run python -c "import pain001; print(f'Pain001 version: {pain001.__versio
 ### Step 3: Understand the Codebase
 
 **Key Directories:**
+
 ```
 pain001/
   ├── core/        # Orchestration: process_files(), workflow
@@ -81,6 +87,7 @@ tests/
 ```
 
 **Key Concepts:**
+
 1. **Input Sources** (all 4 must work with your changes):
    - CSV files: `.csv` format
    - SQLite databases: `.db` files
@@ -93,6 +100,7 @@ tests/
    - No support for pain.002, pain.008, RLP, RTP, RAI, TISS
 
 3. **Data Pipeline:**
+
    ```
    CSV/SQLite/Python → Loader → Validator → Transformer →
    XML Generator → Jinja2 Renderer → XSD Validator → File Write
@@ -114,6 +122,7 @@ tests/
 ## 🔧 Making Code Changes
 
 ### Step 1: Create a Feature Branch
+
 ```bash
 # Sync with upstream
 git fetch upstream
@@ -128,6 +137,7 @@ git checkout -b refactor/loader-architecture
 ### Step 2: Write Code with Full Type Hints
 
 **Required Pattern:**
+
 ```python
 def load_payment_data(
     data_source: str | list[dict[str, Any]] | dict[str, Any]
@@ -159,6 +169,7 @@ def load_payment_data(
 ```
 
 **Type Hints Checklist:**
+
 - [ ] All function parameters have type hints
 - [ ] Return type is specified (never `-> None` unless truly no return)
 - [ ] No `Any` without `# type: ignore[specific-code]` comment
@@ -168,6 +179,7 @@ def load_payment_data(
 ### Step 3: Write Tests Simultaneously
 
 **Test Requirements:**
+
 - Every new function needs a test
 - Every error path needs a test (e.g., FileNotFoundError, ValueError)
 - Every input source (CSV, SQLite, list, dict) needs a test
@@ -175,6 +187,7 @@ def load_payment_data(
 - Tests must achieve **100% branch coverage** of new code
 
 **Test Pattern:**
+
 ```python
 def test_load_payment_data_from_csv() -> None:
     """Test loading payment data from CSV file."""
@@ -212,6 +225,7 @@ def test_load_payment_data_invalid_file() -> None:
 ## 🛡️ Quality Gates: The PySentinel Zero-Trust Model
 
 ### Gate 1: Formatting & Linting
+
 ```bash
 poetry run ruff check pain001 tests       # Linting
 poetry run black --check pain001 tests    # Code formatting
@@ -219,54 +233,64 @@ poetry run isort --check pain001 tests    # Import sorting
 ```
 
 **Common Issues & Fixes:**
+
 - **isort errors**: Run `poetry run isort pain001 tests`
 - **black errors**: Run `poetry run black pain001 tests`
 - **ruff errors**: Run `poetry run ruff check --fix pain001 tests`
 
 ### Gate 2: Type Safety
+
 ```bash
 poetry run mypy .  # Must exit code 0
 ```
 
 **Expected Output:**
+
 ```
 Success: no issues found in 42 source files
 ```
 
 **Common Issues:**
+
 - Missing type hints: Add `-> Type` to function signatures
 - Type mismatches: Adjust types or fix logic
 - Use `# type: ignore[specific-code]` only with explicit error codes
 
 ### Gate 3: Test Coverage (95% Floor, 100% for New Code)
+
 ```bash
 poetry run pytest --cov=pain001 --cov-report=term
 ```
 
 **Expected Output:**
+
 ```
 TOTAL              42   384    2   98.645%
 ```
 
 **If Coverage < 95%:**
+
 - Identify uncovered lines: `poetry run pytest --cov=pain001 --cov-report=html`
 - Open `htmlcov/index.html` in browser
 - Add tests for uncovered paths
 - Re-run: `poetry run pytest --cov=pain001 --cov-report=term`
 
 ### Gate 4: Security Scanning
+
 ```bash
 poetry run bandit -r pain001 tests  # Security issues
 poetry run pip-audit --strict       # Dependency vulnerabilities
 ```
 
 **Expected Output:**
+
 ```
 No issues identified in 42 Python files
 No vulnerabilities found
 ```
 
 **Common Issues:**
+
 - Hardcoded secrets: Use `os.getenv("SECRET")`
 - Unsafe XML parsing: Use `defusedxml` not `xml.etree`
 - Insecure file paths: Use `pathlib` or `os.path.expanduser()`
@@ -274,32 +298,41 @@ No vulnerabilities found
 ### Gate 5: Advanced Tollgates (Enterprise Production)
 
 **Run all 4 tollgates:**
+
 ```bash
 poetry run make tollgates
 ```
 
 #### Tollgate 1: Dependency Governance
+
 ```bash
 poetry run make tollgate-deps
 ```
+
 Ensures: No new packages without security review.
 
 #### Tollgate 2: XSD Semantic Anchor
+
 ```bash
 poetry run make tollgate-xsd
 ```
+
 Ensures: Generated XML is ISO 20022 compliant (validates against actual XSD schemas).
 
 #### Tollgate 3: Idempotency
+
 ```bash
 poetry run make tollgate-idempotency
 ```
+
 Ensures: Running `process_files()` twice with identical input produces byte-for-byte identical output.
 
 #### Tollgate 4: Environmental Parity
+
 ```bash
 poetry run make tollgate-envparity
 ```
+
 Ensures: Code works on Linux, macOS, and Windows (no hardcoded paths, uses `pathlib`).
 
 ---
@@ -325,6 +358,7 @@ poetry run make check
 ```
 
 **If ANY gate fails (exit code ≠ 0):**
+
 1. **STOP**. Do not commit.
 2. Read error messages carefully.
 3. Fix issues:
@@ -336,6 +370,7 @@ poetry run make check
 5. Once all gates pass (exit code 0), proceed to commit.
 
 **Why this matters:**
+
 - Quality gates catch bugs before they reach production
 - Coverage ensures reliability (95% minimum = enterprise grade)
 - Type safety prevents runtime errors
@@ -349,21 +384,25 @@ poetry run make check
 **For EVERY commit, update relevant documentation:**
 
 ### 1. README.md
+
 - Add feature to "Features" list if applicable
 - Update code examples if API changes
 - Include new input source or version support
 
 ### 2. CHANGELOG.md
+
 - Add entry under "## [Unreleased]"
 - Format: `### Added | Fixed | Changed | Deprecated | Removed | Security`
 - Link issues: `[#123](https://github.com/sebastienrousseau/pain001/issues/123)`
 
 ### 3. Code Docstrings
+
 - Every function needs a docstring with Args, Returns, Raises
 - Explain WHY, not just WHAT
 - Include examples for complex functions
 
 ### 4. Release Notes (For Version Bumps Only)
+
 - Create `releases/vX.Y.Z.md`
 - Include: Features, bug fixes, breaking changes, migration guide
 - 100-150 lines target
@@ -421,6 +460,7 @@ Merge commits are exempt, since they carry their parents' trailers.
 **Types:** `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `security`, `perf`
 
 **Example:**
+
 ```
 fix: Handle missing required fields in CSV validation
 
@@ -439,6 +479,7 @@ Tests: 385/385 passing
 ## 🔄 Pull Request Workflow
 
 ### Step 1: Commit Locally
+
 ```bash
 # Stage changes
 git add pain001/module.py tests/test_module.py docs/
@@ -463,6 +504,7 @@ Resolves #456"
 ```
 
 ### Step 2: Push to GitHub
+
 ```bash
 # Push to your fork
 git push origin feature/issue-NNN
@@ -471,6 +513,7 @@ git push origin feature/issue-NNN
 ```
 
 ### Step 3: Open PR with Complete Description
+
 ```
 Title: Fix: Handle missing required fields in CSV validation
 
@@ -497,12 +540,14 @@ Closes #456
 ```
 
 ### Step 4: Code Review & CI/CD
+
 - GitHub Actions runs quality gate automatically
 - Codacy analyzes code quality (must be Grade A or B)
 - Maintainers review for architectural alignment
 - Address feedback, push fixes to same branch
 
 ### Step 5: Merge
+
 - Once all checks pass and maintainers approve
 - Merge via "Squash and merge" or "Create a merge commit"
 - Delete feature branch
@@ -512,6 +557,7 @@ Closes #456
 ## ❓ Common Issues & Solutions
 
 ### Issue 1: `poetry: command not found`
+
 ```bash
 # Install Poetry
 curl -sSL https://install.python-poetry.org | python3 -
@@ -522,6 +568,7 @@ poetry --version
 ```
 
 ### Issue 2: Import sorting conflicts (isort vs black)
+
 ```bash
 # Make sure pyproject.toml has isort/black config:
 [tool.isort]
@@ -537,6 +584,7 @@ poetry run black .
 ```
 
 ### Issue 3: Type errors on valid code
+
 ```python
 # If mypy is overly strict, use specific ignore:
 result = func()  # type: ignore[assignment]
@@ -548,6 +596,7 @@ result = func()  # type: ignore
 ```
 
 ### Issue 4: Tests fail locally but pass in CI
+
 ```bash
 # Ensure you're using same Python version as CI
 poetry env info  # Check Python version
@@ -558,6 +607,7 @@ poetry install
 ```
 
 ### Issue 5: Can't run make commands
+
 ```bash
 # Ensure Makefile is readable
 chmod +x Makefile
@@ -570,6 +620,7 @@ make <target>
 ```
 
 ### Issue 6: XSD validation fails
+
 ```bash
 # Check that template file path is correct
 ls -la pain001/templates/pain.001.001.03/
@@ -659,7 +710,7 @@ Before pushing your PR, verify ALL items:
 
 ---
 
-## 🎉 Thank You!
+## 🎉 Thank You
 
 Your contributions make Pain001 better. We're grateful for your time and effort in helping us maintain enterprise-grade payment processing standards.
 

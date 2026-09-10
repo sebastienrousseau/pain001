@@ -35,8 +35,15 @@ for the REST API and Redis backends):
 * ``PAIN001_GPG_HOMEDIR`` - GPG homedir (default: ``~/.gnupg``).
 * ``PAIN001_GPG_PASSPHRASE_ENV`` - name of the env var that holds
   the private-key passphrase, if the key is passphrase-protected.
+* ``PAIN001_GPG_KEYFILE`` - optional private-key file imported into
+  the homedir before decrypting (the CLI ``--decrypt-key`` flag sets
+  this). Use it when the key lives in a secret store rather than a
+  keyring, e.g. in CI.
 * ``PAIN001_GPG_KEY_ID`` - optional specific key id to decrypt with;
   when unset, any matching key in the keyring is tried.
+
+The CLI exposes the two most common knobs as flags: ``--decrypt-key
+<keyfile>`` and ``--decrypt-passphrase-env <VAR>``.
 """
 
 from __future__ import annotations
@@ -126,6 +133,34 @@ def _inner_extension(path: str) -> str:
     return ""
 
 
+def _import_keyfile(gpg: Any, keyfile: str) -> None:
+    """Import the private key at ``keyfile`` into ``gpg``'s homedir.
+
+    Args:
+        gpg: A ``gnupg.GPG`` instance bound to the target homedir.
+        keyfile: Path to an armoured or binary private-key export.
+
+    Raises:
+        GpgDecryptError: When the file cannot be read or gpg imports
+            nothing from it. The message names the path but never the
+            key material.
+    """
+    try:
+        key_material = Path(keyfile).read_bytes()
+    except OSError as exc:
+        raise GpgDecryptError(
+            f"GPG key file could not be read: {keyfile}"
+        ) from exc
+    result = gpg.import_keys(key_material)
+    imported = int(getattr(result, "count", 0) or 0)
+    if imported < 1:
+        raise GpgDecryptError(
+            f"GPG key file imported no keys: {keyfile}. Export the "
+            "private key with `gpg --export-secret-keys --armor <id>`."
+        )
+    logger.debug("imported %d key(s) from PAIN001_GPG_KEYFILE", imported)
+
+
 def _decrypt_to_bytes(ciphertext: bytes) -> bytes:
     """Decrypt ``ciphertext`` to plaintext bytes via ``python-gnupg``.
 
@@ -144,6 +179,9 @@ def _decrypt_to_bytes(ciphertext: bytes) -> bytes:
     gnupg = _gpg_module()
     homedir = os.environ.get("PAIN001_GPG_HOMEDIR") or None
     gpg = gnupg.GPG(gnupghome=homedir) if homedir else gnupg.GPG()
+    keyfile = os.environ.get("PAIN001_GPG_KEYFILE")
+    if keyfile:
+        _import_keyfile(gpg, keyfile)
     passphrase_env = os.environ.get("PAIN001_GPG_PASSPHRASE_ENV")
     passphrase = os.environ.get(passphrase_env) if passphrase_env else None
     result = gpg.decrypt(ciphertext, passphrase=passphrase)
@@ -154,8 +192,9 @@ def _decrypt_to_bytes(ciphertext: bytes) -> bytes:
         status = getattr(result, "status", "decryption failed")
         raise GpgDecryptError(
             f"GPG decryption failed: {status}. Check "
-            "PAIN001_GPG_HOMEDIR, PAIN001_GPG_PASSPHRASE_ENV, and that "
-            "the matching secret key is available in the keyring."
+            "PAIN001_GPG_HOMEDIR, PAIN001_GPG_PASSPHRASE_ENV / "
+            "--decrypt-passphrase-env, PAIN001_GPG_KEYFILE / --decrypt-key, "
+            "and that the matching secret key is available in the keyring."
         )
     return bytes(result.data)
 

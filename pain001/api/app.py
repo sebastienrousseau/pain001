@@ -19,15 +19,18 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
-import secrets
 import tempfile
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
-from fastapi import APIRouter, Depends, FastAPI, Header, HTTPException, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
 from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pain001 import __version__
+from pain001.api.auth import require_api_key as _require_api_key
+from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import JobStatus, job_manager
 from pain001.api.metrics import MetricsMiddleware, render_prometheus
 from pain001.api.models import (
@@ -42,9 +45,11 @@ from pain001.api.models import (
     ValidationError as ValidationErrorModel,
 )
 from pain001.api.ratelimit import RateLimitMiddleware, parse_rate_limit
-from pain001.constants import TEMPLATES_DIR, valid_xml_types
+from pain001.api.ui import ui_router
+from pain001.constants import TEMPLATES_DIR
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
+from pain001.observability.otel import init_otel, traced
 from pain001.security.path_validator import (
     PathValidationError,
     SecurityError,
@@ -60,28 +65,6 @@ logger = logging.getLogger(__name__)
 # references to tasks, so without this set a running job could be
 # garbage-collected mid-flight.
 _background_tasks: set[asyncio.Task[None]] = set()
-
-
-def _require_api_key(
-    authorization: str | None = Header(default=None),
-) -> None:
-    """Enforce bearer-token auth when PAIN001_API_KEY is configured.
-
-    When the environment variable is unset the API remains open
-    (local development mode); set it in any shared deployment.
-    """
-    expected = os.environ.get("PAIN001_API_KEY")
-    if not expected:
-        return
-    provided = ""
-    if authorization and authorization.startswith("Bearer "):
-        provided = authorization[len("Bearer ") :]
-    if not secrets.compare_digest(provided, expected):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API key",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 
 def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
@@ -210,33 +193,6 @@ def _gate_output_dir(user_dir: str | None) -> Path:
     )
 
 
-def _sanitise_message_type(message_type: str) -> str:
-    """Re-validate ``message_type`` against the fixed allow-list.
-
-    Pydantic already constrains ``message_type`` at deserialisation
-    time, but CodeQL doesn't track the enum. An explicit set-membership
-    check is a barrier the taint tracker recognises, so values that
-    flow into ``str.format`` / path joining downstream are sanitised.
-
-    Args:
-        message_type: The string value of the request's message_type enum.
-
-    Returns:
-        The same string, guaranteed to be in
-        :data:`pain001.constants.valid_xml_types`.
-
-    Raises:
-        HTTPException: ``400`` if the value is not in the allow-list.
-    """
-    allowed = frozenset(valid_xml_types)
-    if message_type not in allowed:
-        raise HTTPException(  # pragma: no cover - pydantic enforces this
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid message type",
-        )
-    return message_type
-
-
 def _resolve_generation_paths(
     request: GenerateXMLRequest,
 ) -> tuple[str, str, str]:
@@ -297,6 +253,14 @@ TAGS_METADATA = [
         "name": "Job Management",
         "description": "Poll, cancel, and manage asynchronous generation jobs.",
     },
+    {
+        "name": "UI",
+        "description": (
+            "Backing endpoints for the hosted dashboard at `/api/v1/ui`: "
+            "the same validation and generation, fed with an uploaded "
+            "file's content instead of a server-side path."
+        ),
+    },
 ]
 
 API_DESCRIPTION = """\
@@ -311,12 +275,34 @@ validation.
   requests per client.
 
 Interactive reference: [`/api/reference`](/api/reference) ·
-OpenAPI document: [`/openapi.json`](/openapi.json)
+OpenAPI document: [`/openapi.json`](/openapi.json) ·
+Dashboard: [`/api/v1/ui`](/api/v1/ui) (disable with `PAIN001_UI_DISABLED=1`)
 """
+
+
+@asynccontextmanager
+async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
+    """Initialise process-wide services once, when the server starts.
+
+    Bootstraps the OpenTelemetry SDK (a no-op unless ``OTEL_ENABLED``
+    is set and the ``pain001[otel]`` extra is installed) so the first
+    request does not pay for it.
+
+    Args:
+        application: The FastAPI application being started.
+
+    Yields:
+        None: Control to the server for its lifetime.
+    """
+    del application  # The hook is process-wide; nothing app-specific.
+    init_otel()
+    yield
+
 
 # Create FastAPI application
 app = FastAPI(
     title="Pain001 REST API",
+    lifespan=_lifespan,
     description=API_DESCRIPTION,
     version=__version__,
     docs_url="/api/docs",
@@ -364,6 +350,7 @@ async def health() -> HealthResponse:
     summary="Validate payment data",
     dependencies=[Depends(_require_api_key)],
 )
+@traced("pain001.api.validate", attributes={"http.route": "/api/v1/validate"})
 async def validate_data(request: ValidationRequest) -> ValidationResponse:
     """Validate payment data against schema.
 
@@ -443,6 +430,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
     summary="Generate XML (synchronous)",
     dependencies=[Depends(_require_api_key)],
 )
+@traced("pain001.api.generate", attributes={"http.route": "/api/v1/generate"})
 async def generate_xml_sync(
     request: GenerateXMLRequest,
 ) -> GenerateXMLResponse:
@@ -562,6 +550,10 @@ async def generate_xml_sync(
     summary="Generate XML (asynchronous)",
     dependencies=[Depends(_require_api_key)],
 )
+@traced(
+    "pain001.api.generate_async",
+    attributes={"http.route": "/api/v1/generate/async"},
+)
 async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
     """Start async XML generation job.
 
@@ -604,6 +596,9 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
     tags=["Job Management"],
     summary="Get job status",
     dependencies=[Depends(_require_api_key)],
+)
+@traced(
+    "pain001.api.status", attributes={"http.route": "/api/v1/status/{job_id}"}
 )
 async def get_job_status(job_id: str) -> JobStatusResponse:
     """Get status of async job.
@@ -681,6 +676,10 @@ async def cancel_job(job_id: str) -> dict[str, str]:
     tags=["Generation"],
     summary="Download generated XML",
     dependencies=[Depends(_require_api_key)],
+)
+@traced(
+    "pain001.api.download",
+    attributes={"http.route": "/api/v1/download/{job_id}"},
 )
 async def download_xml(job_id: str) -> FileResponse:
     """Download generated XML file.
@@ -880,6 +879,10 @@ def _install_rate_limiting(application: FastAPI) -> None:
         window_seconds=window_seconds,
     )
 
+
+# The dashboard and its two JSON endpoints ride on the main router so
+# they are served under both prefixes and share its auth and metrics.
+router.include_router(ui_router)
 
 # Mount the routes: canonical, documented ``/api/v1`` plus the legacy
 # ``/api`` alias (served but hidden from the OpenAPI schema).

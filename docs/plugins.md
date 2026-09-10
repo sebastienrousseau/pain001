@@ -276,7 +276,10 @@ provide a `pain001 plugins migrate <plugin>` helper.
 
 A sixth, `gpg`, registers only when `pain001[gpg]` is installed; it
 decrypts and delegates to whichever loader matches the inner extension
-(`batch.csv.gpg` → `csv`).
+(`batch.csv.gpg` → `csv`). It reads its configuration from the
+environment — `PAIN001_GPG_HOMEDIR`, `PAIN001_GPG_PASSPHRASE_ENV`,
+`PAIN001_GPG_KEYFILE` — and the CLI exposes the two you reach for in a
+pipeline as `--decrypt-key <keyfile>` and `--decrypt-passphrase-env <VAR>`.
 
 ### Schemes
 
@@ -287,6 +290,7 @@ decrypts and delegates to whichever loader matches the inner extension
 | `sepa-b2b` | SEPA B2B Direct Debit (B2B sequence types) |
 | `sepa-inst` | SEPA Instant Credit Transfer (amount ceiling) |
 | `xborder-ct` | Cross-border Credit Transfer (any ISO currency) |
+| `anti-duplicate` | Cross-record duplicate detection (same creditor IBAN, amount and execution date) |
 
 These wrap the profiles in `pain001.validation.schemes`, which predate
 the contract: they take `data` positionally and return
@@ -314,14 +318,18 @@ Everything above carries `meta.source = "built-in"`. They live in
 external plugin uses, so a regression in the contract is caught
 against the built-ins before it can hurt downstream packages.
 
-Future ship under this contract (each tracked as its own roadmap
-issue):
+Shipped under this contract so far:
 
-- `pain001-loader-xlsx` — Excel loader (v0.0.54)
-- `pain001-loader-gpg` — composable GPG-decrypting wrapper (v0.0.54)
-- `pain001-scheme-anti-duplicate` — cross-record duplicate detection
-  (v0.0.55)
-- `pain001-scheme-cel` — custom YAML rules over CEL (v0.0.55)
+- [`pain001-loader-xlsx`](https://github.com/sebastienrousseau/pain001-loader-xlsx)
+  — Excel loader, a separate package (#180).
+- The `gpg` loader — composable GPG-decrypting wrapper, built in behind
+  the `pain001[gpg]` extra (#181).
+- The `anti-duplicate` scheme — cross-record duplicate detection, built
+  in and composable with every other scheme (#183).
+
+Still to come, tracked as its own roadmap issue:
+
+- `pain001-scheme-cel` — custom YAML rules over CEL (#184).
 
 ---
 

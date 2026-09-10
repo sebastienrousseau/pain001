@@ -1,0 +1,27 @@
+{
+  "name": "pain001",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": { "version": "lts" },
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+  "postCreateCommand": "pipx install poetry && poetry install --all-extras --with dev,docs && poetry run pre-commit install && make lint",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "charliermarsh.ruff",
+        "ms-python.mypy-type-checker",
+        "redhat.vscode-xml",
+        "DavidAnson.vscode-markdownlint",
+        "streetsidesoftware.code-spell-checker"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": ".venv/bin/python",
+        "editor.formatOnSave": true,
+        "editor.rulers": [79]
+      }
+    }
+  },
+  "remoteEnv": { "POETRY_VIRTUALENVS_IN_PROJECT": "true" }
+}

@@ -23,6 +23,7 @@
   <a href="https://codecov.io/github/sebastienrousseau/pain001?branch=main"><img src="https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge" alt="Coverage" /></a>
   <a href="#license"><img src="https://img.shields.io/pypi/l/pain001?style=for-the-badge" alt="License" /></a>
   <a href="https://www.bestpractices.dev/projects/13858"><img src="https://img.shields.io/cii/level/13858?style=for-the-badge&label=OpenSSF" alt="OpenSSF Best Practices" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pain001"><img src="https://api.scorecard.dev/projects/github.com/sebastienrousseau/pain001/badge?style=for-the-badge" alt="OpenSSF Scorecard" /></a>
 </p>
 
 ---
@@ -45,6 +46,7 @@
 
 **Operational**
 
+- [Stability guarantees](#stability-guarantees) — what counts as a breaking change, deprecation window
 - [When not to use Pain001](#when-not-to-use-pain001) — honest boundaries
 - [Deployment cookbook](docs/deployment-cookbook.md) — copy-pasteable docker-compose with TLS + Redis + Prometheus + Grafana
 - [Development](#development) — gates, make targets, CI matrix
@@ -73,7 +75,8 @@ It handles the parts that are easy to get wrong:
 | XML attacks | All XML parsing goes through `defusedxml` — XXE and entity expansion are blocked |
 | Agent-shaped input | Field aliases (`amount`, `currency`, `execution_date`, lower-case IBAN/BIC keys), date/boolean coercion, and computed totals let naturally-written records validate first try |
 | Large batches | Streaming mode chunks input and emits one file per chunk |
-| Scheme rules | `--scheme sepa-sct\|sepa-sdd\|sepa-inst\|sepa-b2b\|xborder-ct` layers per-rulebook checks on top of XSD |
+| Scheme rules | `--scheme sepa-sct\|sepa-sdd\|sepa-inst\|sepa-b2b\|xborder-ct\|anti-duplicate` layers per-rulebook checks on top of XSD; comma-separate to compose |
+| Browser dashboard | `/api/v1/ui` — drop a CSV, pick the rulebooks, download the XML; one HTML file served by the REST API, no build step |
 
 Templates and schemas for every supported message type ship inside the
 package — point Pain001 at your data and it resolves the rest.
@@ -90,10 +93,20 @@ package — point Pain001 at your data and it resolves the rest.
 | PyPI + Redis | `pip install "pain001[redis]"` | Distributed job store + rate limiter |
 | PyPI + MCP | `pip install "pain001[mcp]"` | In-tree MCP server for LLM clients |
 | PyPI + LSP | `pip install "pain001[lsp]"` | In-tree language server for CSV diagnostics |
+| PyPI + GPG | `pip install "pain001[gpg]"` | Read `.csv.gpg` / `.asc` inputs, decrypted in memory (`--decrypt-key`, `--decrypt-passphrase-env`) |
+| PyPI + OpenTelemetry | `pip install "pain001[otel]"` | Distributed traces for the generator and REST API (`OTEL_ENABLED=true`) |
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
 | Docker (GHCR) | `docker pull ghcr.io/sebastienrousseau/pain001:latest` | Multi-arch (linux/amd64, linux/arm64); CLI + `api` extra preinstalled |
 
-Requires Python 3.10 or later.
+### Requirements and toolchain policy
+
+Python **3.10 or later**. The floor is enforced by the CI matrix (3.10
+through 3.14) and by `python = "^3.10"` in `pyproject.toml`. It only
+rises when a Python version reaches upstream end-of-life, one release
+after that date, announced in the CHANGELOG of the preceding release;
+the reasoning is recorded in
+[ADR-0004](docs/adr/0004-python-floor-policy.md). No claim is made
+about any distribution's system Python; use a virtual environment.
 
 ### Docker
 
@@ -234,9 +247,13 @@ pain001 [generate] [OPTIONS]
       --show-config        Print the resolved configuration and exit
       --emit-metrics       Emit timing and lifecycle metrics to stdout
       --scheme             Validate rows against a scheme rulebook
-                           (sepa-sct, sepa-sdd, sepa-inst, sepa-b2b, xborder-ct)
+                           (sepa-sct, sepa-sdd, sepa-inst, sepa-b2b, xborder-ct,
+                           anti-duplicate; comma-separate to run several)
       --explain            With --scheme, print a remediation hint per finding
       --scheme-format      Scheme output format: text (default) or json
+      --decrypt-key        GPG private-key file for .gpg/.asc inputs (pain001[gpg])
+      --decrypt-passphrase-env
+                           Env var holding that key's passphrase
   -v, --verbose            Detailed logging output
   -h, --help               Show help and exit
 ```
@@ -255,17 +272,21 @@ per-row violations:
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 ```
 
-Five profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
+Six profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
 `sepa-sdd` (SEPA Direct Debit, pain.008), `sepa-inst` (SEPA Instant
 Credit Transfer, pain.001), `sepa-b2b` (SEPA Business-to-Business Direct
-Debit, FRST/RCUR-only + mandatory creditor identifier), and `xborder-ct`
-(generic cross-border, multi-currency, BIC-mandatory). Each profile
-checks currency, valid debtor/creditor IBANs (ISO 13616 / mod-97), BICs,
-the amount ceiling (100,000 EUR instant cap for `sepa-inst`), ISO 20022
-character-set and field-length limits, and (for SDD/B2B) mandate id and
-sequence type. Add `--explain` for remediation hints, or
-`--scheme-format json` for machine-readable output. The REST API accepts
-a `scheme` field on `/api/v1/validate` and `/api/v1/generate` too. See
+Debit, FRST/RCUR-only + mandatory creditor identifier), `xborder-ct`
+(generic cross-border, multi-currency, BIC-mandatory), and
+`anti-duplicate` (cross-record: flags rows that share creditor IBAN,
+amount and execution date, the signature of a payment keyed in twice).
+The intra-record profiles check currency, valid debtor/creditor IBANs
+(ISO 13616 / mod-97), BICs, the amount ceiling (100,000 EUR instant cap
+for `sepa-inst`), ISO 20022 character-set and field-length limits, and
+(for SDD/B2B) mandate id and sequence type. Profiles compose:
+`--scheme sepa-sct,anti-duplicate` runs both and reports the union. Add
+`--explain` for remediation hints, or `--scheme-format json` for
+machine-readable output. The REST API accepts a `scheme` field on
+`/api/v1/validate` and `/api/v1/generate` too. See
 [SCHEMES.md](SCHEMES.md) for the full rule catalogue. From Python:
 
 ```python
@@ -403,6 +424,8 @@ remain as a backwards-compatible alias.
 | `GET` | `/api/v1/status/{job_id}` | Poll an async job |
 | `GET` | `/api/v1/download/{job_id}` | Download a finished file |
 | `DELETE` | `/api/v1/jobs/{job_id}` | Cancel or clean up a job |
+| `GET` | `/api/v1/ui` | Browser dashboard: drop a file, validate, generate, download (beta) |
+| `POST` | `/api/v1/ui/validate`, `/api/v1/ui/generate` | The dashboard's endpoints; take the file's content inline instead of a server path |
 
 **Operational controls** (all environment-driven, all off by default):
 
@@ -414,10 +437,16 @@ remain as a backwards-compatible alias.
 | `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the distributed limiter (falls back to `PAIN001_JOB_STORE_URL` if unset) |
 | `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts |
 | `PAIN001_JOB_STORE_URL` | Redis URL for a fully distributed job store (use instead of `_DIR`) |
+| `PAIN001_UI_DISABLED` | Take the `/api/v1/ui` dashboard offline for a pure-API deployment |
+| `OTEL_ENABLED` | Emit OpenTelemetry spans (`pain001.api.*`, `pain001.generate`, `pain001.validate`, `pain001.write`) to the collector named by `OTEL_EXPORTER_OTLP_ENDPOINT`; requires `pain001[otel]` |
 
 **Documentation surfaces:** Swagger UI at `/api/docs`, ReDoc at
 `/api/redoc`, an interactive [Scalar](https://scalar.com) reference at
-`/api/reference`, and the raw OpenAPI document at `/openapi.json`. The
+`/api/reference`, and the raw OpenAPI document at `/openapi.json`. For
+people who would rather not call an API at all, `/api/v1/ui` is a
+single-page dashboard: drop a CSV, tick the scheme rulebooks, validate,
+and download the XML. It is one vanilla HTML file with no framework and
+no CDN, served by the same process, locked by the same API key. The
 same reference is hosted publicly:
 <https://sebastienrousseau.github.io/pain001/api-reference.html>.
 
@@ -587,10 +616,35 @@ below and helps future adopters make their case internally.
 
 - [PyPI downloads](https://pypistats.org/packages/pain001) (`pain001` + companions)
 - [GitHub stars](https://github.com/sebastienrousseau/pain001/stargazers) across the suite
-- [Awesome-list entries](#) (in flight; tracked in [`scripts/awesome-list-submissions.md`](scripts/awesome-list-submissions.md))
+- [Awesome-list entries](scripts/awesome-list-submissions.md) (in flight; the file tracks each submission)
 
 If you'd like to write up your integration as a public case study,
 we'd love that — but a logo or a +1 is plenty.
+
+---
+
+## Stability guarantees
+
+Pain001 is on the `0.0.x` line and every release is a single step up
+([ADR-0001](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
+Within that line the following are treated as **breaking**, announced
+one release ahead and listed under "Removed" or "Changed" in the
+CHANGELOG:
+
+- A change to the **generated XML for the same input**. Pain001 is a
+  formatter: if `pain001 generate` produces different bytes for the same
+  CSV, template and message type, that is a breaking change even when
+  no Python signature moved. The golden files under `tests/golden/`
+  enforce this.
+- A change to the **CSV, JSON and SQLite column contract** documented in
+  `pain001/schemas/`, to CLI flags and exit codes, to the REST request
+  and response models, or to the MCP tool signatures.
+- A change to the **plugin contract** in `pain001.plugins.contracts`.
+
+Deprecations keep working for at least one release with a
+`DeprecationWarning`, then are removed. Every member of the suite
+(`pain001-mcp`, `pain001-lsp`, the loaders) ships the same version
+number as the core, so a version pin on one is a pin on all.
 
 ---
 
@@ -643,15 +697,21 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state (v0.0.57): **1,425 tests passing**, **100% line + branch
+Current state (v0.0.66): **1,700 tests passing**, **100% line + branch
 coverage** against a **100% enforced floor**, mypy `--strict` clean,
-100% docstring coverage (interrogate). Coverage excludes only
+100% docstring coverage (interrogate). Everything a contributor needs to
+reproduce these gates locally is in [DEVELOPMENT.md](DEVELOPMENT.md). Coverage excludes only
 entry-point guards and genuinely-defensive barriers via
 `# pragma: no cover`; everything else is exercised.
 
 ---
 
 ## Security
+
+**Report a vulnerability privately** through
+[GitHub private vulnerability reporting](https://github.com/sebastienrousseau/pain001/security),
+never in a public issue; [SECURITY.md](SECURITY.md) states the response
+window and the supported-version policy.
 
 Pain001 treats payment data as hostile until proven otherwise:
 
@@ -664,17 +724,30 @@ Pain001 treats payment data as hostile until proven otherwise:
 - **Amounts** are `Decimal` throughout; control sums are recomputed,
   not echoed from input.
 - **Dependencies** are pinned via `poetry.lock` and audited by
-  `pip-audit`, Bandit, and CodeQL in CI.
-
-To report a vulnerability, please use
-[GitHub private vulnerability reporting](https://github.com/sebastienrousseau/pain001/security)
-rather than a public issue.
+  `pip-audit`, Bandit, and CodeQL in CI; GitHub Actions are pinned by
+  commit SHA and the Docker base image by digest.
+- **Fuzzing**: an Atheris coverage-guided harness under `fuzz/`
+  targets the IBAN, BIC and charset validators and runs weekly in
+  `nightly.yml`; Hypothesis property tests in
+  `tests/test_hypothesis_properties.py` run on every push. There is no
+  committed crash corpus and no OSS-Fuzz integration yet.
+- **Releases** are built in CI, published to PyPI with trusted
+  publishing, and ship a CycloneDX SBOM and SLSA provenance; see
+  [pkg/VERIFY.md](pkg/VERIFY.md) for how to check them.
 
 ---
 
 ## Documentation
 
-- **Guides & API reference:** [docs.pain001.com](https://docs.pain001.com)
+The same four entry points as every repository in the suite:
+
+- **User manual:** [docs.pain001.com](https://docs.pain001.com)
+- **API reference:** the Modules chapter of the manual, generated from the docstrings by Sphinx autodoc
+- **Developer docs:** [DEVELOPMENT.md](DEVELOPMENT.md) — toolchain, every CI gate reproduced locally, test layout, release model
+- **Ecosystem map:** [Companion packages](#companion-packages) and the suite table in [ROADMAP.md](ROADMAP.md)
+
+More:
+
 - **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — one self-checking script per feature (generation, every input format, CLI, REST API, scheme validation, parsers, migration, streaming, observability, MCP), all executed in CI
 - **Bundled templates & schemas:** [`pain001/templates/`](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates)
 - **Scheme validation rules:** [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md)

@@ -157,7 +157,7 @@ def validate_payment_scheme(
 
     Args:
         rows: Payment rows as a list of dicts.
-        profile: The scheme profile name (``sepa-sct``, ``sepa-sdd``, ``sepa-b2b``, ``sepa-inst``, or ``xborder-ct``).
+        profile: The scheme profile name (``sepa-sct``, ``sepa-sdd``, ``sepa-b2b``, ``sepa-inst``, ``xborder-ct``, or ``anti-duplicate``), or several comma-separated to run them together.
 
     Returns:
         A dict with ``profile``, ``is_valid``, and structured

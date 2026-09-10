@@ -7,11 +7,13 @@ This directory contains comprehensive quality tollgates for the Pain001 project,
 ## Active Tollgates
 
 ### Core Quality Gates (Always Enforced)
+
 1. **[python-quality.md](python-quality.md)** - XSD validation, truth engine, content accuracy
 2. **[python-security.md](python-security.md)** - XXE prevention, vulnerability scanning, secure practices
 3. **[python-deps.md](python-deps.md)** - Dependency governance, security impact analysis
 
 ### Advanced Tollgates (New - High Value)
+
 4. **[python-performance.md](python-performance.md)** - Performance benchmarking, SLO enforcement, regression detection
 5. **[python-contracts.md](python-contracts.md)** - API backward compatibility, input source parity, golden file testing
 6. **[python-supply-chain.md](python-supply-chain.md)** - SBOM generation, license compliance, CVE scanning, typosquatting detection
@@ -40,11 +42,13 @@ Level 3: Advanced Assurance (RECOMMENDED, becoming mandatory)
 ## Quick Start
 
 ### For New Contributors
+
 1. Read [python-quality.md](python-quality.md) - Core requirements
 2. Read [python-security.md](python-security.md) - Security red lines
 3. Review [python-deps.md](python-deps.md) if adding dependencies
 
 ### For Core Maintainers
+
 1. All of the above, plus:
 2. [python-performance.md](python-performance.md) - Performance budgets
 3. [python-contracts.md](python-contracts.md) - API stability
@@ -53,6 +57,7 @@ Level 3: Advanced Assurance (RECOMMENDED, becoming mandatory)
 ## Implementation Roadmap
 
 ### Phase 1: Already Implemented ✅
+
 - [x] Core quality gates (lint, type, coverage, security)
 - [x] XSD validation tollgate
 - [x] Content accuracy truth engine
@@ -60,17 +65,20 @@ Level 3: Advanced Assurance (RECOMMENDED, becoming mandatory)
 - [x] Codacy integration
 
 ### Phase 2: New Tollgates (This PR) 🚀
+
 - [x] Performance regression testing framework
 - [x] API contract validation guidelines
 - [x] Supply chain security checklist
 
 ### Phase 3: Automation (Next Sprint)
+
 - [ ] Automated performance benchmarks in CI
 - [ ] Golden file generation on release
 - [ ] SBOM auto-upload to releases
 - [ ] Weekly CVE scanning cron job
 
 ### Phase 4: Enforcement (Future)
+
 - [ ] Block PRs with performance regressions
 - [ ] Enforce contract tests before merge
 - [ ] Mandate SBOM for all releases
@@ -78,12 +86,14 @@ Level 3: Advanced Assurance (RECOMMENDED, becoming mandatory)
 ## Measuring Success
 
 ### Current Metrics (v0.0.44)
+
 - Test Coverage: 99.14% (target: ≥95%)
 - Security Vulnerabilities: 0 (target: 0)
 - Codacy Grade: A (target: A or B)
 - Type Safety: 100% (mypy strict)
 
 ### New Metrics (Proposed)
+
 - Performance Regressions: 0 (target: 0)
 - API Breaking Changes: 0 (target: 0 without major bump)
 - Supply Chain CVEs: 0 (target: 0)

@@ -465,7 +465,8 @@ with bank-side failover. Beyond the scope of this cookbook —
 talk to your bank about their availability story.
 
 **Disaster recovery (DR)**: nightly off-site backup of `data/redis`
-+ the compose stack itself (kept in git). Recovery time objective
+
+- the compose stack itself (kept in git). Recovery time objective
 (RTO): provision new host + restore Redis snapshot = ~1 hour for
 the runbook-prepared. Recovery point objective (RPO): 24 hours
 (nightly backup) or 5 minutes (AOF shipped to S3 continuously).

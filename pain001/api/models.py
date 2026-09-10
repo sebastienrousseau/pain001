@@ -73,7 +73,8 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
     scheme: str | None = Field(
         default=None,
         description="Payment-scheme rulebook to validate against "
-        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct')",
+        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct', "
+        "'anti-duplicate'); comma-separate names to run several",
     )
 
     model_config = ConfigDict(
@@ -115,7 +116,8 @@ class GenerateXMLRequest(BaseModel):
     scheme: str | None = Field(
         default=None,
         description="Payment-scheme rulebook to enforce before generating "
-        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct')",
+        "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct', "
+        "'anti-duplicate'); comma-separate names to run several",
     )
 
     model_config = ConfigDict(
@@ -216,6 +218,72 @@ class JobStatusResponse(BaseModel):
     )
 
     model_config = ConfigDict(use_enum_values=True)
+
+
+class UiFilePayload(BaseModel):
+    """An uploaded payment file, as the dashboard sends it.
+
+    The browser reads the dropped file and posts its text; the server
+    parses it in memory, so nothing the user uploads touches the disk.
+    """
+
+    filename: str = Field(
+        ...,
+        min_length=1,
+        max_length=255,
+        description="Name the browser reported; only the suffix "
+        "(.csv, .json, .jsonl) is used to pick a parser",
+    )
+    content: str = Field(..., description="The file's text (UTF-8)")
+    message_type: MessageType = Field(
+        default=MessageType.PAIN_001_03,
+        description="ISO 20022 message type",
+    )
+    scheme: str | None = Field(
+        default=None,
+        description="Payment-scheme rulebook(s) to enforce "
+        "(e.g. 'sepa-sct', 'anti-duplicate'); comma-separate names to "
+        "run several",
+    )
+
+    model_config = ConfigDict(
+        use_enum_values=False,
+        json_schema_extra={
+            "examples": [
+                {
+                    "filename": "payments.csv",
+                    "content": "id,date,nb_of_txs,...",
+                    "message_type": "pain.001.001.03",
+                    "scheme": "sepa-sct,anti-duplicate",
+                }
+            ]
+        },
+    )
+
+
+class UiGenerateResponse(BaseModel):
+    """Result of generating XML from an uploaded file.
+
+    On success the XML document travels inline so the browser can offer
+    it as a download; on failure the blocking findings are attached.
+    """
+
+    success: bool = Field(..., description="Whether generation succeeded")
+    message: str = Field(..., description="Result message")
+    filename: str | None = Field(
+        default=None, description="Suggested download name for the XML"
+    )
+    xml: str | None = Field(
+        default=None, description="The generated XML document"
+    )
+    validation_errors: list[ValidationError] = Field(
+        default_factory=list,
+        description="Validation errors if validation failed",
+    )
+    scheme_violations: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Scheme-rulebook violations if scheme validation failed",
+    )
 
 
 class HealthResponse(BaseModel):

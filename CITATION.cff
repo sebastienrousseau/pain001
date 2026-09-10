@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+cff-version: 1.2.0
+message: "If you use pain001 in research or production write-ups, please cite it as below."
+type: software
+title: "pain001: ISO 20022 payment file generation and validation"
+abstract: >-
+  A Python library, CLI, REST API, MCP server and language server that
+  generate and validate ISO 20022 pain.001 and pain.008 payment files
+  from CSV, SQLite, JSON, JSON Lines and Parquet, with scheme rulebook
+  validation for SEPA, cross-border and cross-record checks.
+authors:
+  - family-names: Rousseau
+    given-names: Sebastien
+    email: sebastian.rousseau@gmail.com
+version: "0.0.66"
+date-released: "2026-09-10"
+license: "Apache-2.0 OR MIT"
+repository-code: "https://github.com/sebastienrousseau/pain001"
+url: "https://pain001.com"
+keywords:
+  - ISO 20022
+  - pain.001
+  - pain.008
+  - SEPA
+  - payments
+  - fintech

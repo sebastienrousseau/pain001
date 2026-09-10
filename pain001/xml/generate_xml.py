@@ -29,6 +29,7 @@ from jinja2.sandbox import SandboxedEnvironment
 
 from pain001.exceptions import PaymentValidationError
 from pain001.observability import emit_metric_event
+from pain001.observability.otel import set_span_attributes, traced
 from pain001.security import validate_path
 from pain001.xml.generate_updated_xml_file_path import (
     generate_updated_xml_file_path,
@@ -306,6 +307,7 @@ def _load_trusted_template_source(xml_template_path: str) -> str:
     return template_source
 
 
+@traced("pain001.render")
 def generate_xml_string(
     data: list[dict[str, object]],
     payment_initiation_message_type: str,
@@ -398,6 +400,12 @@ def generate_xml_string(
     )
     template = env.from_string(template_source)
 
+    set_span_attributes(
+        **{
+            "pain001.message_type": payment_initiation_message_type,
+            "pain001.row_count": len(data),
+        }
+    )
     # Render the template to string
     render_started = time.time()
     xml_content = template.render(**xml_data)
@@ -437,6 +445,7 @@ def generate_xml_string(
     return xml_content
 
 
+@traced("pain001.write")
 def generate_xml(
     data: list[dict[str, Any]],
     payment_initiation_message_type: str,

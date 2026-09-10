@@ -17,7 +17,7 @@
 
 XSD validation proves a file is well-formed; scheme validation proves
 the payment obeys the rulebook of the scheme it will clear through.
-v0.0.53 ships five profiles, all exercised here:
+Six profiles ship today, all exercised here:
 
 * ``sepa-sct``    - SEPA Credit Transfer (EUR-only, SEPA service level)
 * ``sepa-sdd``    - SEPA Direct Debit (mandate + sequence-type rules)
@@ -26,6 +26,9 @@ v0.0.53 ships five profiles, all exercised here:
                     (FRST/RCUR sequence only, mandatory creditor id)
 * ``xborder-ct``  - Generic cross-border Credit Transfer
                     (multi-currency, BIC mandatory)
+* ``anti-duplicate`` - Cross-record duplicate detection (same creditor
+                    IBAN, amount and execution date in one batch);
+                    composes with any of the above
 
 Plus the ISO 20022 charset guard (``sanitize_to_charset``).
 
@@ -109,7 +112,7 @@ def _sepa_b2b() -> None:
 
 
 def _xborder_ct() -> None:
-    """Profile 5/5: generic cross-border Credit Transfer (BIC mandatory)."""
+    """Profile 5/6: generic cross-border Credit Transfer (BIC mandatory)."""
     # Missing BIC trips the BIC-MANDATORY rule even for non-EUR currencies.
     cross_row = COMPLIANT_SCT | {
         "payment_currency": "USD",
@@ -130,9 +133,10 @@ def _charset_guard() -> None:
 
 
 def _profile_registry() -> None:
-    """v0.0.53 ships exactly five profiles; the registry advertises them all."""
+    """Six profiles ship today; the registry advertises them all."""
     names = sorted(PROFILES)
     assert names == [
+        "anti-duplicate",
         "sepa-b2b",
         "sepa-inst",
         "sepa-sct",
@@ -140,6 +144,29 @@ def _profile_registry() -> None:
         "xborder-ct",
     ]
     print(f"PROFILES registry: {names}")
+
+
+def _anti_duplicate() -> None:
+    """Profile 6/6: the same payment keyed in twice, caught before the bank."""
+    keyed_twice = [
+        COMPLIANT_SCT | {"requested_execution_date": "2026-09-12"},
+        COMPLIANT_SCT | {"requested_execution_date": "2026-09-12"},
+        # One cent apart is a different payment: exact-key matching only.
+        COMPLIANT_SCT
+        | {
+            "requested_execution_date": "2026-09-12",
+            "payment_amount": "100.01",
+        },
+    ]
+    dupes = validate_scheme(keyed_twice, profile="anti-duplicate")
+    assert not dupes.is_valid
+    assert [v.index for v in dupes.violations] == [0, 1]
+    print(f"ANTI-DUPLICATE: rows 0 and 1 flagged {dupes.violations[0].rule}")
+
+    # Compose with an intra-record rulebook: one call, the union of findings.
+    both = validate_scheme(keyed_twice, profile="sepa-sct,anti-duplicate")
+    assert both.profile == "sepa-sct,anti-duplicate"
+    print(f"COMPOSED ({both.profile}): {len(both.violations)} violation(s)")
 
 
 def main() -> None:
@@ -150,6 +177,7 @@ def main() -> None:
     _sepa_inst()
     _sepa_b2b()
     _xborder_ct()
+    _anti_duplicate()
     _charset_guard()
     print("Scheme validation example completed.")
 

@@ -1,15 +1,18 @@
 # Python API Contract Testing Tollgate
 
 ## Mission
+
 Enforce 100% backward compatibility and API stability for payment processing.
 
 ## Tollgate Objectives
+
 - Enforce **zero breaking changes** without MAJOR version bump
 - Validate **all 4 input sources** (CSV, SQLite, List, Dict) work identically
 - Validate **all 9 ISO versions** (v03-v11) produce valid XML
 - Ensure **function signatures** never change without deprecation
 
 ## When This Tollgate Applies
+
 - Modifying `pain001/core/core.py` (public API)
 - Changing function signatures in `pain001/` modules
 - Modifying XML templates
@@ -19,6 +22,7 @@ Enforce 100% backward compatibility and API stability for payment processing.
 ## Tollgate Checks
 
 ### 1. Contract Test Suite (MANDATORY)
+
 ```bash
 # Run contract tests
 poetry run pytest tests/test_contracts.py -v
@@ -30,12 +34,14 @@ poetry run pytest tests/test_contracts.py -v
 ```
 
 **Success Criteria:**
+
 - All 4 input sources produce byte-identical XML (excluding timestamps)
 - All 9 ISO versions pass XSD validation
 - No function signature changes detected
 - Deprecation warnings display correctly
 
 ### 2. Golden File Testing (XML Output Validation)
+
 ```bash
 # Generate golden files (baseline)
 poetry run python scripts/generate_golden_files.py
@@ -47,11 +53,13 @@ poetry run pytest tests/test_golden_files.py --golden-diff
 ```
 
 **Success Criteria:**
+
 - Generated XML matches golden files byte-for-byte
 - Schema validation passes for all versions
 - No unexpected field changes
 
 ### 3. Input Source Parity (MANDATORY)
+
 ```bash
 # Test all 4 input sources produce identical output
 poetry run pytest tests/test_input_parity.py -v
@@ -65,11 +73,13 @@ poetry run pytest tests/test_input_parity.py -v
 ```
 
 **Success Criteria:**
+
 - SHA256 hash identical for all 4 sources
 - Field ordering consistent
 - Data types preserved correctly
 
 ### 4. Deprecation Warnings (Breaking Change Prevention)
+
 ```python
 # Check for proper deprecation warnings
 import warnings
@@ -80,11 +90,13 @@ poetry run pytest tests/ -W error::DeprecationWarning
 ```
 
 **Success Criteria:**
+
 - No unexpected deprecation warnings
 - Deprecated features show clear migration path
 - Deprecations documented in CHANGELOG
 
 ### 5. Type Contract Validation (Static Analysis)
+
 ```bash
 # Verify public API type hints are stable
 poetry run python scripts/check_api_contracts.py
@@ -96,6 +108,7 @@ poetry run python scripts/check_api_contracts.py
 ```
 
 **Success Criteria:**
+
 - No signature changes without version bump
 - Type hints complete and accurate
 - Exceptions documented
@@ -290,6 +303,7 @@ jobs:
 ## Escalation Path
 
 If contract tests fail:
+
 1. **STOP** - Do not proceed
 2. **Classify** - Is this a breaking change?
 3. **If breaking**:

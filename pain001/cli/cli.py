@@ -55,6 +55,8 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
+from pain001.observability.otel import init_otel
+from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.validation import validate_scheme
 from pain001.xml.validate_via_xsd import validate_via_xsd
@@ -179,6 +181,31 @@ def _run_scheme_check(
             style="red",
         )
         raise SystemExit(1)
+
+
+def _apply_gpg_options(
+    decrypt_key: str | None, decrypt_passphrase_env: str | None
+) -> None:
+    """Hand the ``--decrypt-*`` flags to the GPG loader via its env vars.
+
+    The loader (``pain001.plugins.builtins_gpg``) is configured through
+    the environment so the same knobs work for the CLI, the REST API
+    and library callers; the flags are sugar over those variables and
+    only apply for the lifetime of this process.
+
+    Args:
+        decrypt_key: Path to a GPG private-key file to import before
+            decrypting, or ``None`` to rely on the keyring.
+        decrypt_passphrase_env: Name of the environment variable that
+            holds the key's passphrase, or ``None`` when unprotected.
+    """
+    if decrypt_key:
+        os.environ["PAIN001_GPG_KEYFILE"] = decrypt_key
+        console.print(
+            f"[cyan]ℹ GPG key file: {sanitize_for_log(decrypt_key)}[/cyan]"
+        )
+    if decrypt_passphrase_env:
+        os.environ["PAIN001_GPG_PASSPHRASE_ENV"] = decrypt_passphrase_env
 
 
 def _validate_payment_data(
@@ -503,7 +530,9 @@ def _generate_xml_files(
     default=None,
     help=(
         "Validate rows against a payment-scheme rulebook "
-        "(e.g. sepa-sct, sepa-sdd, sepa-b2b, sepa-inst, xborder-ct) on top of XSD validation."
+        "(e.g. sepa-sct, sepa-sdd, sepa-b2b, sepa-inst, xborder-ct, "
+        "anti-duplicate) on top of XSD validation. Comma-separate names "
+        "to run several: sepa-sct,anti-duplicate."
     ),
 )
 @click.option(
@@ -517,6 +546,28 @@ def _generate_xml_files(
     type=click.Choice(["text", "json"]),
     default="text",
     help="Output format for --scheme results (text or json).",
+)
+@click.option(
+    "--decrypt-key",
+    "decrypt_key",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help=(
+        "GPG private-key file to import before reading a .gpg/.asc "
+        "data file (requires pain001[gpg]; sets PAIN001_GPG_KEYFILE)."
+    ),
+)
+@click.option(
+    "--decrypt-passphrase-env",
+    "decrypt_passphrase_env",
+    type=str,
+    default=None,
+    metavar="VAR",
+    help=(
+        "Name of the environment variable holding the GPG passphrase "
+        "(sets PAIN001_GPG_PASSPHRASE_ENV; the passphrase itself never "
+        "appears on the command line)."
+    ),
 )
 def main(
     xml_message_type: str | None,
@@ -537,6 +588,8 @@ def main(
     scheme: str | None,
     explain: bool,
     scheme_format: str,
+    decrypt_key: str | None = None,
+    decrypt_passphrase_env: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -564,6 +617,10 @@ def main(
             'sepa-sdd') to validate rows against, in addition to XSD.
         explain: If True, print a remediation hint per scheme violation.
         scheme_format: Output format for scheme results ('text' or 'json').
+        decrypt_key: Optional GPG private-key file to import before a
+            ``.gpg`` / ``.asc`` data file is decrypted.
+        decrypt_passphrase_env: Name of the environment variable that
+            holds the passphrase for that key.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -643,6 +700,7 @@ def main(
 
     if resolved_config.get("emit_metrics"):
         register_metrics_callback(_console_metrics_callback)
+    _apply_gpg_options(decrypt_key, decrypt_passphrase_env)
 
     output_dir = resolved_config.get("output_dir")
     if output_dir:
@@ -823,6 +881,21 @@ cli.add_command(main, name="generate")
     default="text",
     help="Output format for --scheme results (text or json).",
 )
+@click.option(
+    "--decrypt-key",
+    "decrypt_key",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="GPG private-key file to import before reading a .gpg/.asc file.",
+)
+@click.option(
+    "--decrypt-passphrase-env",
+    "decrypt_passphrase_env",
+    type=str,
+    default=None,
+    metavar="VAR",
+    help="Environment variable holding the GPG passphrase.",
+)
 @click.option("-v", "--verbose", is_flag=True, default=False)
 @click.pass_context
 def validate_cmd(
@@ -834,6 +907,8 @@ def validate_cmd(
     scheme: str | None,
     explain: bool,
     scheme_format: str,
+    decrypt_key: str | None,
+    decrypt_passphrase_env: str | None,
     verbose: bool,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
@@ -851,6 +926,8 @@ def validate_cmd(
         scheme: Optional scheme rulebook to enforce on top of XSD.
         explain: If True, print a remediation hint per scheme violation.
         scheme_format: Output format for scheme results ('text' or 'json').
+        decrypt_key: Optional GPG private-key file for ``.gpg`` inputs.
+        decrypt_passphrase_env: Environment variable holding its passphrase.
         verbose: If True, enable detailed logging output.
     """
     ctx.invoke(
@@ -862,6 +939,8 @@ def validate_cmd(
         scheme=scheme,
         explain=explain,
         scheme_format=scheme_format,
+        decrypt_key=decrypt_key,
+        decrypt_passphrase_env=decrypt_passphrase_env,
         verbose=verbose,
         dry_run=True,
     )
@@ -996,6 +1075,8 @@ def serve_cmd(host: str, port: int, reload: bool) -> None:
             "extra. Install it with: [cyan]pip install pain001[api][/cyan]"
         )
         sys.exit(2)
+    # Bootstrap tracing once per process (no-op unless OTEL_ENABLED).
+    init_otel()
     console.print(
         f"[cyan]→ Serving pain001 REST API on http://{host}:{port}[/cyan]"
     )

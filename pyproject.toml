@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.65"
+version = "0.0.66"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -59,11 +59,11 @@ pain001-lsp-builtin = "pain001.lsp.server:main"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-click = ">=8.3.3,<9"
+click = ">=8.5.0,<9"
 defusedxml = ">=0.7.1,<1"
 jinja2 = ">=3.1.6,<4"
 pyyaml = ">=6.0,<7.0"
-rich = ">=13.7,<15"
+rich = ">=15.0.0,<16"
 xmlschema = ">=4.3.2,<5.0.0"
 # Optional: when present, libxml2 validates a generated document ~46x
 # faster than the pure-Python validator, and validation is ~93% of the
@@ -74,10 +74,10 @@ jsonschema = ">=4.17,<5"
 # Optional feature sets — install with
 # pain001[api] / pain001[parquet] / pain001[mcp] / pain001[lsp] /
 # pain001[redis] / pain001[gpg] / pain001[otel]
-fastapi = {version = ">=0.95", optional = true}
+fastapi = {version = ">=0.141.1", optional = true}
 uvicorn = {version = ">=0.52.4", extras = ["standard"], optional = true}
 pyarrow = {version = ">=25.0.1,<26.0.0", optional = true}
-mcp = {version = ">=2.0,<3", optional = true}
+mcp = {version = ">=2.1.1,<3", optional = true}
 pygls = {version = ">=2.1,<3", optional = true}
 redis = {version = ">=8.1.0,<9", optional = true}
 python-gnupg = {version = ">=0.5,<1", optional = true}
@@ -101,12 +101,12 @@ httpx = ">=0.23"
 fakeredis = ">=2.37.1,<3"
 pytest = "^9.1.1"
 pytest-cov = "^7.0.0"
-pytest-benchmark = "^5.2.0"
+pytest-benchmark = "^5.3.0"
 pytest-xdist = "^3.0.0"
 mypy = "^2.3.1"
 bandit = "^1.9.4"
 pip-audit = ">=2.7,<3.0"
-ruff = "^0.16.2"
+ruff = "^0.16.5"
 types-defusedxml = "^0.7.0"
 diff-cover = "^10.5.1"
 types-setuptools = "^84.0.0"
@@ -114,22 +114,22 @@ radon = "^6.0.1"
 mutmut = "^3.7.0"
 hypothesis = "^6.165.10"
 memory-profiler = "^0.61.0"
-sphinx = "^7.0.0"
+sphinx = "^8.1.3"
 sphinx-rtd-theme = "^3.1.0"
 sphinx-autodoc-typehints = "^2.3.0"
 pip-licenses = "^5.5.5"
 twine = "^6.2.0"
 types-jsonschema = "^4.26.0.20260518"
 pandas = "^2.3.3"
-wheel = ">=0.46.2"
+wheel = ">=0.48.0"
 interrogate = "^1.7.0"
-pydoclint = "^0.7.3"
+pydoclint = "^0.9.1"
 
 [tool.poetry.group.docs]
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^7.0.0"
+sphinx = "^8.1.3"
 pydata-sphinx-theme = "^0.17.1"
 sphinx-autodoc-typehints = "^2.3.0"
 sphinx-design = "^0.6.0"
@@ -278,6 +278,14 @@ ignore_missing_imports = true
 [[tool.mypy.overrides]]
 module = "pain001.parquet.load_parquet_data"
 disallow_untyped_calls = false
+
+[tool.codespell]
+# Spelling gate for the docs-lint job and the pre-commit hook. ISO 20022
+# element names and code lists are not English; skip generated and
+# vendored trees rather than teaching the dictionary every tag.
+skip = "./.git,./.venv,./htmlcov,./docs/_build,./poetry.lock,./pain001/templates,./pain001/schemas,./tests/golden,./tests/data,./releases,./CHANGELOG.md,./docs/posts,./coverage.xml,*.xsd,*.xml,*.db,*.json,*.lock"
+ignore-words-list = "iban,bic,nam,ot,dtm,ccy,cdtr,dbtr,pmt,ustrd,strd,ctgy,purp,prtry,othr,mmb,fals,rcur,mandat,creat,ratio,te,inout,assertIn,ans,iff,shft,upto,nd,unparseable,intoto,fo"
+quiet-level = 3
 
 [tool.interrogate]
 fail-under = 100

@@ -35,6 +35,25 @@ REST API — add `"scheme"` to the request body of `POST /api/validate` or
 
 Exit codes (CLI): `0` pass · `1` violations found · `2` unknown profile.
 
+### Composing profiles
+
+Profiles compose. Name several, comma-separated, and every rulebook runs
+over the same rows; the result carries the union of their findings,
+ordered by row:
+
+```bash
+pain001 -t pain.001.001.03 -d batch.csv --scheme sepa-sct,anti-duplicate --dry-run
+```
+
+```python
+result = validate_scheme(rows, profile="sepa-sct,anti-duplicate")
+result.profile  # -> "sepa-sct,anti-duplicate"
+```
+
+The same spelling works in the `scheme` field of the REST API and the
+`profile` argument of the MCP `validate_payment_scheme` tool. An unknown
+name anywhere in the list is rejected as a whole (exit code `2`, HTTP 400).
+
 ## Profiles
 
 | Profile | Scheme | Message types |
@@ -44,6 +63,27 @@ Exit codes (CLI): `0` pass · `1` violations found · `2` unknown profile.
 | `sepa-b2b` | SEPA Direct Debit (Business-to-Business) | pain.008 |
 | `sepa-inst` | SEPA Instant Credit Transfer (SCT Inst) | pain.001 |
 | `xborder-ct` | Cross-border credit transfer (generic, multi-currency) | pain.001 |
+| `anti-duplicate` | Cross-record duplicate detection (composes with any of the above) | pain.001, pain.008 |
+
+### `anti-duplicate`: catching a payment keyed in twice
+
+Every profile above checks one row at a time. `anti-duplicate` looks
+across the batch: two or more rows with the **same creditor IBAN, the
+same amount and the same requested execution date** are the signature
+of a payment that was entered or exported twice, and each of them is
+flagged with `DUP-CREDITOR-DATE` naming the other rows in the group.
+
+- **Exact-key only.** Amounts are bucketed to the currency's ISO 4217
+  minor unit (two places for EUR, none for JPY, three for KWD), so
+  `100` and `100.00` collide while `100.00` and `100.01` do not. IBANs
+  are compared without whitespace and case-insensitively. Fuzzy name
+  matching is deliberately out of scope.
+- **Batch-local.** The engine has no memory between runs; cross-batch
+  deduplication belongs to the system that holds history.
+- **Rows missing a key field are skipped**, since they cannot be a
+  duplicate of anything; the intra-record profiles report them.
+- **Configurable precision.** `AntiDuplicateProfile(precision_overrides={"EUR": 0})`
+  buckets euro amounts to whole units when you want a coarser match.
 
 ## Rule catalogue
 
@@ -67,6 +107,7 @@ hint (shown by `--explain`).
 | `SDD-SEQTP` | error | `sepa-sdd` | Sequence type is one of `FRST`, `RCUR`, `OOFF`, `FNAL` |
 | `B2B-SEQTP` | error | `sepa-b2b` | Sequence type is one of `FRST`, `RCUR` (B2B excludes `OOFF` and `FNAL`) |
 | `B2B-CDTR-ID` | error | `sepa-b2b` | Creditor Identifier (`creditor_id`) present |
+| `DUP-CREDITOR-DATE` | error | `anti-duplicate` | No other row in the batch shares this row's creditor IBAN, amount and requested execution date |
 
 ## Adding a profile
 

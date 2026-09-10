@@ -16,7 +16,7 @@ Thanks for using Pain001. Here's the fastest way to get help, by need.
   one per feature. Every one is exercised in CI; they cannot rot.
 - **[SCHEMES.md](SCHEMES.md)** — the full scheme-validation
   catalogue (`sepa-sct`, `sepa-sdd`, `sepa-inst`, `sepa-b2b`,
-  `xborder-ct`) with every rule id and its remediation.
+  `xborder-ct`, `anti-duplicate`) with every rule id and its remediation.
 - **[OPERATIONS.md](OPERATIONS.md)** — production runbook for the
   REST API (config, scrape, alerts, scaling, incident playbook).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — module map and extension
@@ -43,7 +43,7 @@ with:
 - A failing input file (any sensitive values redacted with `XXXX…`)
 - The expected vs. actual behaviour
 
-If your bug also affects v0.0.52 or earlier, please mention so —
+If your bug also affects v0.0.64 or earlier, please mention so —
 backport eligibility depends on the supported-version window in
 [SECURITY.md](SECURITY.md#supported-versions).
 
@@ -54,17 +54,15 @@ Especially welcome:
 
 - **New scheme profiles** — see [SCHEMES.md](SCHEMES.md) for the
   `ValidationProfile` extension shape.
-- **New input loaders** — the v0.0.54+ plugin contract
+- **New input loaders** — the plugin contract (shipped in v0.0.56)
   ([`docs/plugins.md`](docs/plugins.md)) lets you ship one as an
   external package (canonical example:
   [`pain001-loader-xlsx`](https://github.com/sebastienrousseau/pain001-loader-xlsx)).
 - **Additional message types** — open a discussion first to gauge
   demand, then a tracking issue.
 
-Check the open milestones first to avoid duplication:
-[v0.0.54 - Plugin substrate + table-stakes formats](https://github.com/sebastienrousseau/pain001/milestone/6),
-[v0.0.55 - Validation depth](https://github.com/sebastienrousseau/pain001/milestone/7),
-[v0.0.56 - End-to-end workflow](https://github.com/sebastienrousseau/pain001/milestone/8).
+Check [ROADMAP.md](ROADMAP.md) first to avoid duplication: it lists
+what has shipped, what is in progress, and what is deliberately declined.
 
 ## Security
 
@@ -127,6 +125,6 @@ for the exact policy. Pain001 requires **Python 3.10+**.
 
 | Version | Supported? |
 | :--- | :--- |
-| 0.0.53 (latest) | ✅ |
-| 0.0.52 | ✅ best effort until v0.0.54 |
-| ≤ 0.0.51 | ❌ upgrade |
+| 0.0.66 (latest) | ✅ |
+| 0.0.65 | ✅ |
+| ≤ 0.0.64 | ❌ upgrade |

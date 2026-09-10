@@ -180,6 +180,15 @@ Contents
    faq
    glossary
 
+.. toctree::
+   :maxdepth: 1
+   :caption: Project
+
+   architecture
+   development
+   packaging
+   adr/README
+
 Indices and Tables
 ==================
 
