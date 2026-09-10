@@ -3,7 +3,7 @@ family: sepa-credit-transfer
 country: DE
 message_type: pain.001.001.03
 description: SEPA SCT salary batch with structured and unstructured remittance.
-sha256: 9ad84f87f0ac06cc29280b8f6bfbefef907f8d634c3fad4bdd18113a65850df7
+sha256: e7d6954d339967345dd35086ee4e193bd6ad70c3fb674ca50f79fee43b5bbd87
 build:
   renamed:
   - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC

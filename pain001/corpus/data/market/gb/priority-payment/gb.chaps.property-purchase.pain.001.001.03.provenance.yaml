@@ -3,7 +3,7 @@ family: priority-payment
 country: GB
 message_type: pain.001.001.03
 description: CHAPS same-day property completion with the BoE HLST purpose code.
-sha256: e77aa728309e781bd52caf4adc9f251b76d6c6a95e5252ae535a554f2e517f8b
+sha256: ccc6bc263c92a6c2f9b739969f839552bce22ef4e13cebcb4b7e1ccc75874d1d
 build:
   renamed:
   - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC

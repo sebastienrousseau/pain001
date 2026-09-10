@@ -64,12 +64,12 @@
       </Dbtr>
       <DbtrAcct>
         <Id>
-          <IBAN>DE78697757450325060766</IBAN>
+          <IBAN>DE09028457998082047609</IBAN>
         </Id>
       </DbtrAcct>
       <DbtrAgt>
         <FinInstnId>
-          <BIC>VZVIDEG0</BIC>
+          <BIC>OPSHDEW0</BIC>
         </FinInstnId>
       </DbtrAgt>
       <ChrgBr>SLEV</ChrgBr>
@@ -82,7 +82,7 @@
         </Amt>
         <CdtrAgt>
           <FinInstnId>
-            <BIC>YBRRDEN0</BIC>
+            <BIC>XOZFDEA0</BIC>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>
@@ -95,7 +95,7 @@
         </Cdtr>
         <CdtrAcct>
           <Id>
-            <IBAN>DE38417143712089622267</IBAN>
+            <IBAN>DE65261964603287767307</IBAN>
           </Id>
         </CdtrAcct>
         <Purp>
@@ -114,7 +114,7 @@
         </Amt>
         <CdtrAgt>
           <FinInstnId>
-            <BIC>IEYGDEQ0</BIC>
+            <BIC>DQBJDEN0</BIC>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>
@@ -127,7 +127,7 @@
         </Cdtr>
         <CdtrAcct>
           <Id>
-            <IBAN>DE56733858145709310671</IBAN>
+            <IBAN>DE74157667219201256428</IBAN>
           </Id>
         </CdtrAcct>
         <Purp>

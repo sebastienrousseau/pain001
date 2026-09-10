@@ -3,7 +3,7 @@ family: sepa-direct-debit
 country: NL
 message_type: pain.008.001.02
 description: SEPA Core direct debit, recurring collections under mandates.
-sha256: 2ba71f1a21ee70a57a52d279361c5ea02c150fefcaae7811f8d413612763d333
+sha256: 3c9c525e523684a66bca1afeeb9be867f522ac85e1577e4b1fc0ba71132c95cf
 build:
   renamed:
   - /Document/CstmrDrctDbtInitn/PmtInf/CdtrAgt/FinInstnId/BICFI -> BIC

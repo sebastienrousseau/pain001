@@ -165,6 +165,9 @@ def load_scenario(path: str | Path) -> Scenario:
 def load_scenarios(root: str | Path = SCENARIOS_DIR) -> list[Scenario]:
     """Load every ``*.yaml`` under ``root``, sorted by id.
 
+    The ``overlays`` subtree holds overlay files, not scenarios, and is
+    skipped.
+
     Args:
         root: The scenarios directory.
 
@@ -175,7 +178,12 @@ def load_scenarios(root: str | Path = SCENARIOS_DIR) -> list[Scenario]:
         ScenarioError: If any file is invalid, or two share an id.
     """
     root = Path(root)
-    scenarios = [load_scenario(p) for p in sorted(root.rglob("*.yaml"))]
+    files = [
+        p
+        for p in sorted(root.rglob("*.yaml"))
+        if "overlays" not in p.relative_to(root).parts
+    ]
+    scenarios = [load_scenario(p) for p in files]
     seen: dict[str, Path | None] = {}
     for scenario in scenarios:
         if scenario.id in seen:

@@ -43,12 +43,12 @@
       </Cdtr>
       <CdtrAcct>
         <Id>
-          <IBAN>NL23FUMK0568939085</IBAN>
+          <IBAN>NL66BVMB0131570021</IBAN>
         </Id>
       </CdtrAcct>
       <CdtrAgt>
         <FinInstnId>
-          <BIC>LKLUNL80</BIC>
+          <BIC>EDXWNL70</BIC>
         </FinInstnId>
       </CdtrAgt>
       <ChrgBr>SLEV</ChrgBr>
@@ -77,7 +77,7 @@
         </DrctDbtTx>
         <DbtrAgt>
           <FinInstnId>
-            <BIC>OQFMNLJ0</BIC>
+            <BIC>HWHFNLY0</BIC>
           </FinInstnId>
         </DbtrAgt>
         <Dbtr>
@@ -90,7 +90,7 @@
         </Dbtr>
         <DbtrAcct>
           <Id>
-            <IBAN>NL51CNVP0968894178</IBAN>
+            <IBAN>NL97FRJD0495470120</IBAN>
           </Id>
         </DbtrAcct>
         <RmtInf>
@@ -110,7 +110,7 @@
         </DrctDbtTx>
         <DbtrAgt>
           <FinInstnId>
-            <BIC>IGIZNL80</BIC>
+            <BIC>GWRNNLV0</BIC>
           </FinInstnId>
         </DbtrAgt>
         <Dbtr>
@@ -123,7 +123,7 @@
         </Dbtr>
         <DbtrAcct>
           <Id>
-            <IBAN>NL96FTMD0088603091</IBAN>
+            <IBAN>NL34TNFQ0528191462</IBAN>
           </Id>
         </DbtrAcct>
         <RmtInf>

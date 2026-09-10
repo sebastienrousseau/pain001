@@ -79,6 +79,21 @@ Entries are added as work lands.
   byte-identical with `--check`, and fails when the data tree exceeds
   the 400 KB compressed budget. The committed market files are the
   builder's golden tests.
+- **Overlay assertion grammar, shared.** `pain001.corpus.rules.overlays`
+  evaluates the rule files `iso20022-bank-profile-mcp` and the
+  readiness suite each carried their own engine for, unchanged
+  (`required`, `equals:X`, `if:A=B:equals:C`, bank-profile JSON
+  included), and adds `forbidden`, `one_of:[…]`, `max_length:n`,
+  `matches:regex`, `charset:iso20022|ascii|latin1` and `if:` with any
+  verb as its tail. A locator is a local name or a slash path suffix
+  and every occurrence is checked; an `if:` condition reads an
+  element's text or, failing that, an attribute of that name, which
+  is where `Ccy` lives in pain.001. Overlays live under
+  `scenarios/overlays/`; the first, the Bank of England's CHAPS
+  enhanced-data rules, passes on the CHAPS files and flags a stripped
+  one in the tests. Identifier generation no longer uses a
+  pseudo-random generator: digits come from a SHA-256 counter stream,
+  equally deterministic and free of bandit's B311.
 - **ISO external code sets, vendored.** Edition 2Q2026 v3 (163 sets,
   3,314 codes) ships verbatim under `pain001/corpus/data/external_codes/`
   with a loader (`pain001.corpus.rules.external_codes`: `codes`,

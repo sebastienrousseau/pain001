@@ -32,7 +32,7 @@ fine to use and the scenarios do; the account parts are synthetic.
 
 from __future__ import annotations
 
-import random
+import hashlib
 import string
 import uuid
 from collections.abc import Callable
@@ -55,22 +55,59 @@ LEI_PREFIX = "0000"
 _ALNUM = string.digits + string.ascii_uppercase
 
 
-def _rng(seed: int, salt: str) -> random.Random:
-    """A generator that depends on the seed and the factory using it."""
-    return random.Random(f"{salt}:{seed}")
+class _Stream:
+    """Deterministic bytes from SHA-256 in counter mode.
+
+    Not a pseudo-random generator and not meant to be one: the same
+    seed and salt always give the same digits, on every platform, and
+    nothing here is secret. Rejection sampling keeps ``choice`` unbiased.
+    """
+
+    def __init__(self, seed: int, salt: str) -> None:
+        self._key = f"{salt}:{seed}".encode()
+        self._counter = 0
+        self._buffer = b""
+
+    def _byte(self) -> int:
+        """The next byte of the stream."""
+        if not self._buffer:
+            block = self._key + self._counter.to_bytes(8, "big")
+            self._buffer = hashlib.sha256(block).digest()
+            self._counter += 1
+        value, self._buffer = self._buffer[0], self._buffer[1:]
+        return value
+
+    def choice(self, alphabet: str) -> str:
+        """One character of ``alphabet``, uniformly."""
+        limit = 256 - (256 % len(alphabet))
+        while True:
+            value = self._byte()
+            if value < limit:
+                return alphabet[value % len(alphabet)]
+
+    def getrandbits(self, bits: int) -> int:
+        """An integer of ``bits`` bits."""
+        return int.from_bytes(
+            bytes(self._byte() for _ in range(bits // 8)), "big"
+        )
 
 
-def _digits(rng: random.Random, n: int) -> str:
+def _rng(seed: int, salt: str) -> _Stream:
+    """A stream that depends on the seed and the factory using it."""
+    return _Stream(seed, salt)
+
+
+def _digits(rng: _Stream, n: int) -> str:
     """``n`` random decimal digits."""
     return "".join(rng.choice(string.digits) for _ in range(n))
 
 
-def _letters(rng: random.Random, n: int) -> str:
+def _letters(rng: _Stream, n: int) -> str:
     """``n`` random upper-case letters."""
     return "".join(rng.choice(string.ascii_uppercase) for _ in range(n))
 
 
-def _alnum(rng: random.Random, n: int) -> str:
+def _alnum(rng: _Stream, n: int) -> str:
     """``n`` random digits or upper-case letters."""
     return "".join(rng.choice(_ALNUM) for _ in range(n))
 
@@ -225,7 +262,7 @@ def czech_mod11_ok(number: str) -> bool:
     )
 
 
-def czech_number(rng: random.Random, length: int) -> str:
+def czech_number(rng: _Stream, length: int) -> str:
     """A number of ``length`` digits that passes the Czech mod-11 check."""
     while True:
         candidate = _digits(rng, length)
@@ -242,7 +279,7 @@ def luhn_check_digit(body: str) -> str:
     return str((10 - total % 10) % 10)
 
 
-def dutch_eleven_proof(rng: random.Random) -> str:
+def dutch_eleven_proof(rng: _Stream) -> str:
     """A ten-digit Dutch account number that passes the eleven-proof."""
     while True:
         candidate = "0" + _digits(rng, 9)
@@ -261,7 +298,7 @@ def aba_check_digit(first_eight: str) -> str:
 def make_aba(seed: int) -> str:
     """A nine-digit ABA routing number with a valid check digit."""
     rng = _rng(seed, "aba")
-    first = str(rng.choice([0, 1, 2, 3, 6, 7, 8])) + _digits(rng, 7)
+    first = rng.choice("0123678") + _digits(rng, 7)
     return first + aba_check_digit(first)
 
 
@@ -274,40 +311,40 @@ def aba_is_valid(routing: str) -> bool:
     )
 
 
-def _bban_gb(rng: random.Random) -> str:
+def _bban_gb(rng: _Stream) -> str:
     """Bank code (4 letters), sort code (6) and account (8)."""
     return _letters(rng, 4) + _digits(rng, 6) + _digits(rng, 8)
 
 
-def _bban_fr(rng: random.Random) -> str:
+def _bban_fr(rng: _Stream) -> str:
     """Bank (5), branch (5), account (11 alphanumeric) and RIB key (2)."""
     bank, branch, account = _digits(rng, 5), _digits(rng, 5), _alnum(rng, 11)
     return bank + branch + account + french_rib_key(bank, branch, account)
 
 
-def _bban_nl(rng: random.Random) -> str:
+def _bban_nl(rng: _Stream) -> str:
     """Bank code (4 letters) and a ten-digit eleven-proof account."""
     return _letters(rng, 4) + dutch_eleven_proof(rng)
 
 
-def _bban_de(rng: random.Random) -> str:
+def _bban_de(rng: _Stream) -> str:
     """Bankleitzahl (8) and account (10)."""
     return _digits(rng, 8) + _digits(rng, 10)
 
 
-def _bban_it(rng: random.Random) -> str:
+def _bban_it(rng: _Stream) -> str:
     """CIN letter, ABI (5), CAB (5) and account (12 alphanumeric)."""
     abi, cab, account = _digits(rng, 5), _digits(rng, 5), _alnum(rng, 12)
     return italian_cin(abi, cab, account) + abi + cab + account
 
 
-def _bban_be(rng: random.Random) -> str:
+def _bban_be(rng: _Stream) -> str:
     """Bank (3), account (7) and the mod-97 check (2)."""
     body = _digits(rng, 3) + _digits(rng, 7)
     return body + belgian_check(body)
 
 
-def _bban_es(rng: random.Random) -> str:
+def _bban_es(rng: _Stream) -> str:
     """Bank (4), branch (4), control digits (2) and account (10)."""
     bank, branch, account = _digits(rng, 4), _digits(rng, 4), _digits(rng, 10)
     return (
@@ -315,38 +352,38 @@ def _bban_es(rng: random.Random) -> str:
     )
 
 
-def _bban_cz(rng: random.Random) -> str:
+def _bban_cz(rng: _Stream) -> str:
     """Bank (4), prefix (6) and account (10), both mod-11 checked."""
     return _digits(rng, 4) + czech_number(rng, 6) + czech_number(rng, 10)
 
 
-def _bban_ch(rng: random.Random) -> str:
+def _bban_ch(rng: _Stream) -> str:
     """Clearing number (5) and account (12)."""
     return _digits(rng, 5) + _digits(rng, 12)
 
 
-def _bban_se(rng: random.Random) -> str:
+def _bban_se(rng: _Stream) -> str:
     """Clearing (3), account (16) and a Luhn digit over both."""
     body = _digits(rng, 3) + _digits(rng, 16)  # clearing + account
     return body + luhn_check_digit(body)
 
 
-def _bban_lu(rng: random.Random) -> str:
+def _bban_lu(rng: _Stream) -> str:
     """Bank (3) and account (13 alphanumeric)."""
     return _digits(rng, 3) + _alnum(rng, 13)
 
 
-def _bban_qa(rng: random.Random) -> str:
+def _bban_qa(rng: _Stream) -> str:
     """Bank code (4 letters) and account (21 alphanumeric)."""
     return _letters(rng, 4) + _alnum(rng, 21)
 
 
-def _bban_ae(rng: random.Random) -> str:
+def _bban_ae(rng: _Stream) -> str:
     """Bank (3) and account (16)."""
     return _digits(rng, 3) + _digits(rng, 16)
 
 
-_BBAN: dict[str, Callable[[random.Random], str]] = {
+_BBAN: dict[str, Callable[[_Stream], str]] = {
     "GB": _bban_gb,
     "FR": _bban_fr,
     "NL": _bban_nl,
