@@ -1,3 +1,15 @@
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+"""Smoke-generate one payment through every bundled message type.
+
+A quick local check that every template/XSD pair still renders and
+validates. Not part of the test suite; the golden-file tests cover the
+same ground with byte-exact assertions.
+
+Usage:
+    poetry run python scripts/smoke_generate_all_versions.py
+"""
+
 import os
 import sys
 import traceback

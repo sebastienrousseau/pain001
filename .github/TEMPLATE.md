@@ -54,7 +54,7 @@ Open your terminal and run the following command to add the latest version:
 python -m pip install pain001
 ```
 
-Add the -U switch to update to the current version, if `pain001` is already installed. 
+Add the -U switch to update to the current version, if `pain001` is already installed.
 
 ```sh
 python -m pip install -U pain001

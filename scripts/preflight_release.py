@@ -59,6 +59,8 @@ def versions() -> dict[str, str | None]:
         "pain001/constants.py": grab(
             "pain001/constants.py", r'^VERSION = "([^"]+)"'
         ),
+        "CITATION.cff": grab("CITATION.cff", r'^version: "?([^"\n]+)"?'),
+        "SECURITY.md": grab("SECURITY.md", r"^\| `([0-9.]+)` \(latest\)"),
     }
 
 

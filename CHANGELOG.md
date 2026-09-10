@@ -56,6 +56,24 @@ a browser dashboard (#188). Also carries the September dependency bumps.
   FastAPI lifespan and `pain001 serve` both call `init_otel()`, which
   the module docstring promised and nothing did.
 
+- **Repository layout aligned with the family standard** (`REPO-STANDARD.md`).
+  New root entry points: `DEVELOPMENT.md` (toolchain, every CI gate
+  reproduced locally, test layout, release model), `AGENTS.md` (the
+  invariants an AI-assisted contributor must keep), `CITATION.cff`,
+  `KEYS.asc` (the maintainer's SSH signing key in allowed-signers form
+  with a verification guide). `docs/adr/` records four decisions that
+  were previously tribal knowledge: monotonic `0.0.x` versioning and
+  suite lockstep, the dual licence, the example-corpus design, and the
+  Python floor policy. `docs/packaging.md` addresses distribution
+  maintainers; `pkg/VERIFY.md` shows how to verify a tag, wheel, SBOM,
+  image and commit. `.pre-commit-config.yaml`, a `.devcontainer/`, and a
+  `docs-lint.yml` workflow (codespell + markdownlint, both configured in
+  the repo) round it out. The README gains a Scorecard badge, a
+  toolchain policy, a stability-guarantees section, a security section
+  that leads with private reporting, and the four documentation links
+  every repository in the suite shares. The rendered manual now includes
+  the root architecture and development documents as chapters.
+
 ### Changed
 
 - `validate_scheme` accepts a comma-separated profile spec (above).
@@ -69,6 +87,23 @@ a browser dashboard (#188). Also carries the September dependency bumps.
   GitHub Actions bumps (#258 through #269).
 - `ROADMAP.md` reflects what shipped: it still described 0.0.53 as
   current and the plugin substrate as in flight.
+
+- Stale version references brought to 0.0.66: the container tag in
+  `OPERATIONS.md` (was 0.0.53), the support table and milestone text in
+  `SUPPORT.md` (0.0.53), the test-count line in the README (v0.0.57,
+  1,425 tests). `scripts/preflight_release.py` now also checks
+  `CITATION.cff` and the `SECURITY.md` support table so they cannot
+  drift again.
+
+### Removed
+
+- `VERSION_MANAGEMENT.md`, which described a `setup.py`/`setup.cfg`
+  version flow the project has not used since moving to Poetry; its
+  surviving content lives in `DEVELOPMENT.md` and ADR-0001.
+- Two stray scripts at the repository root: `generate_xml_examples.py`
+  (an unreferenced older copy of the one under `scripts/`) and
+  `verify_versions.py`, which was a generation smoke test rather than a
+  version check and now lives at `scripts/smoke_generate_all_versions.py`.
 
 ### Fixed
 

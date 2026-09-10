@@ -1,9 +1,11 @@
 # Python Supply Chain Security Tollgate
 
 ## Mission
+
 Prevent supply chain attacks and ensure dependency integrity in payment processing.
 
 ## Tollgate Objectives
+
 - Enforce **SBOM (Software Bill of Materials)** generation
 - Validate **dependency licenses** (no GPL, AGPL)
 - Check **known CVEs** in dependencies (zero tolerance)
@@ -11,6 +13,7 @@ Prevent supply chain attacks and ensure dependency integrity in payment processi
 - Detect **typosquatting** and malicious packages
 
 ## When This Tollgate Applies
+
 - Adding new dependencies to `pyproject.toml`
 - Updating existing dependencies
 - Before every release
@@ -19,6 +22,7 @@ Prevent supply chain attacks and ensure dependency integrity in payment processi
 ## Tollgate Checks
 
 ### 1. SBOM Generation (MANDATORY for Releases)
+
 ```bash
 # Option 1: Use Syft (external CLI - no GPL dependencies)
 curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh
@@ -35,6 +39,7 @@ trivy fs --format cyclonedx --output sbom.json .
 ```
 
 **Success Criteria:**
+
 - SBOM generated successfully
 - All dependencies listed with versions
 - Licenses identified for all packages
@@ -43,6 +48,7 @@ trivy fs --format cyclonedx --output sbom.json .
 **Note:** We use external SBOM tools instead of Python packages (e.g., cyclonedx-bom) to avoid GPL-licensed transitive dependencies (rfc3987). See Case Study below.
 
 ### 2. License Compliance (MANDATORY)
+
 ```bash
 # Check all dependency licenses
 poetry run pip-licenses --format=markdown --with-urls \
@@ -62,11 +68,13 @@ poetry run pip-licenses --format=markdown --with-urls \
 ```
 
 **Success Criteria:**
+
 - Zero copyleft licenses (GPL/AGPL)
 - All licenses compatible with Apache 2.0
 - No proprietary or restrictive licenses
 
 ### 3. CVE Scanning (MANDATORY Before Commit)
+
 ```bash
 # Scan for known vulnerabilities
 poetry run pip-audit --format json
@@ -79,11 +87,13 @@ gh api /repos/sebastienrousseau/pain001/dependabot/alerts
 ```
 
 **Success Criteria:**
+
 - Zero HIGH or CRITICAL CVEs
 - MEDIUM CVEs with mitigation plan
 - Advisory reviewed and acknowledged
 
 ### 4. Dependency Checksum Verification
+
 ```bash
 # Verify Poetry lock file integrity
 poetry check  # Validates pyproject.toml and poetry.lock sync
@@ -98,11 +108,13 @@ poetry run pip hash requests==2.31.0
 ```
 
 **Success Criteria:**
+
 - `poetry.lock` matches `pyproject.toml`
 - All package checksums verified
 - No tampered packages detected
 
 ### 5. Typosquatting Detection
+
 ```bash
 # Check for typosquatting attacks
 poetry run python scripts/check_typosquatting.py
@@ -114,11 +126,13 @@ poetry run python scripts/check_typosquatting.py
 ```
 
 **Success Criteria:**
+
 - All package names verified against PyPI
 - No known typosquat packages
 - Dependency names match official repos
 
 ### 6. Transitive Dependency Audit
+
 ```bash
 # Show full dependency tree
 poetry show --tree
@@ -130,11 +144,13 @@ poetry show --tree
 ```
 
 **Success Criteria:**
+
 - All transitive dependencies known
 - No unexpected dependencies
 - Transitive deps also security-scanned
 
 ### 7. Dependency Pinning (MANDATORY)
+
 ```bash
 # Verify all dependencies are pinned
 grep -E "\\^" pyproject.toml
@@ -144,11 +160,13 @@ grep -E "\\^" pyproject.toml
 ```
 
 **Success Criteria:**
+
 - All dependencies pinned to exact versions
 - `poetry.lock` committed to git
 - Reproducible builds guaranteed
 
 ### 8. Private Package Registry Check
+
 ```bash
 # Verify all packages from trusted sources
 poetry config repositories.pypi https://pypi.org/simple/
@@ -158,6 +176,7 @@ poetry config -- http-basic.private-registry false
 ```
 
 **Success Criteria:**
+
 - All packages from PyPI or approved mirrors
 - No private registries without security review
 - TLS required for all package downloads
@@ -174,18 +193,22 @@ poetry config -- http-basic.private-registry false
 ## Supply Chain Attack Scenarios
 
 ### Scenario 1: Typosquatting
+
 **Attack**: `requests` → `requsets` (malicious package)
 **Defense**: Automated typosquat detection script
 
 ### Scenario 2: Dependency Confusion
+
 **Attack**: Private package name hijacked on PyPI
 **Defense**: Use private registry with priority
 
 ### Scenario 3: Compromised Package Update
+
 **Attack**: Maintainer account compromised, malicious update pushed
 **Defense**: Pin exact versions, review all updates
 
 ### Scenario 4: Transitive Dependency Injection
+
 **Attack**: Trusted package A depends on malicious package B
 **Defense**: Audit full dependency tree, scan ALL deps
 
@@ -344,12 +367,14 @@ jobs:
 **Incident:** Supply Chain tollgate discovered GPL v3+ license violation during validation.
 
 **Root Cause:**
+
 - `cyclonedx-bom` package added for SBOM generation
 - Pulled in `jsonschema[format]` as transitive dependency
 - `jsonschema[format]` includes `rfc3987` (GPL v3+ licensed)
 - GPL v3+ incompatible with pain001's Apache 2.0 license
 
 **Dependency Chain:**
+
 ```
 pain001 (Apache 2.0)
 └── cyclonedx-bom ^4.0.0
@@ -359,17 +384,20 @@ pain001 (Apache 2.0)
 ```
 
 **Detection:**
+
 ```bash
 $ poetry run pip-licenses --format=markdown | grep GPL
 | rfc3987 | 1.3.8 | GNU General Public License v3+ (GPLv3+) |
 ```
 
 **Impact:**
+
 - 🔴 CRITICAL: Apache 2.0 + GPL v3+ = License conflict
 - 🔴 BLOCKING: Cannot release or deploy with this dependency
 - ⚠️ LEGAL: Potential copyright infringement if shipped
 
 **Resolution:**
+
 ```bash
 # Remove GPL-problematic package
 poetry remove cyclonedx-bom
@@ -379,12 +407,14 @@ poetry remove cyclonedx-bom
 ```
 
 **Lessons Learned:**
+
 1. ✅ **Tollgate worked**: Caught issue before production
 2. ✅ **Transitive deps matter**: Not just direct dependencies
 3. ✅ **External tools preferred**: Avoid pulling in heavy SBOM generators
 4. ⚠️ **Check before adding**: Always run license scan on new packages
 
 **Prevention:**
+
 - Always run `poetry run pip-licenses` before committing new dependencies
 - Use `--fail-on="GPL;AGPL"` in CI/CD to catch violations automatically
 - Prefer external CLI tools (syft, trivy) over Python packages for tooling

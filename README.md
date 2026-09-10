@@ -23,6 +23,7 @@
   <a href="https://codecov.io/github/sebastienrousseau/pain001?branch=main"><img src="https://img.shields.io/codecov/c/github/sebastienrousseau/pain001?style=for-the-badge" alt="Coverage" /></a>
   <a href="#license"><img src="https://img.shields.io/pypi/l/pain001?style=for-the-badge" alt="License" /></a>
   <a href="https://www.bestpractices.dev/projects/13858"><img src="https://img.shields.io/cii/level/13858?style=for-the-badge&label=OpenSSF" alt="OpenSSF Best Practices" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pain001"><img src="https://api.scorecard.dev/projects/github.com/sebastienrousseau/pain001/badge?style=for-the-badge" alt="OpenSSF Scorecard" /></a>
 </p>
 
 ---
@@ -45,6 +46,7 @@
 
 **Operational**
 
+- [Stability guarantees](#stability-guarantees) — what counts as a breaking change, deprecation window
 - [When not to use Pain001](#when-not-to-use-pain001) — honest boundaries
 - [Deployment cookbook](docs/deployment-cookbook.md) — copy-pasteable docker-compose with TLS + Redis + Prometheus + Grafana
 - [Development](#development) — gates, make targets, CI matrix
@@ -96,7 +98,15 @@ package — point Pain001 at your data and it resolves the rest.
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
 | Docker (GHCR) | `docker pull ghcr.io/sebastienrousseau/pain001:latest` | Multi-arch (linux/amd64, linux/arm64); CLI + `api` extra preinstalled |
 
-Requires Python 3.10 or later.
+### Requirements and toolchain policy
+
+Python **3.10 or later**. The floor is enforced by the CI matrix (3.10
+through 3.14) and by `python = "^3.10"` in `pyproject.toml`. It only
+rises when a Python version reaches upstream end-of-life, one release
+after that date, announced in the CHANGELOG of the preceding release;
+the reasoning is recorded in
+[ADR-0004](docs/adr/0004-python-floor-policy.md). No claim is made
+about any distribution's system Python; use a virtual environment.
 
 ### Docker
 
@@ -606,10 +616,35 @@ below and helps future adopters make their case internally.
 
 - [PyPI downloads](https://pypistats.org/packages/pain001) (`pain001` + companions)
 - [GitHub stars](https://github.com/sebastienrousseau/pain001/stargazers) across the suite
-- [Awesome-list entries](#) (in flight; tracked in [`scripts/awesome-list-submissions.md`](scripts/awesome-list-submissions.md))
+- [Awesome-list entries](scripts/awesome-list-submissions.md) (in flight; the file tracks each submission)
 
 If you'd like to write up your integration as a public case study,
 we'd love that — but a logo or a +1 is plenty.
+
+---
+
+## Stability guarantees
+
+Pain001 is on the `0.0.x` line and every release is a single step up
+([ADR-0001](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
+Within that line the following are treated as **breaking**, announced
+one release ahead and listed under "Removed" or "Changed" in the
+CHANGELOG:
+
+- A change to the **generated XML for the same input**. Pain001 is a
+  formatter: if `pain001 generate` produces different bytes for the same
+  CSV, template and message type, that is a breaking change even when
+  no Python signature moved. The golden files under `tests/golden/`
+  enforce this.
+- A change to the **CSV, JSON and SQLite column contract** documented in
+  `pain001/schemas/`, to CLI flags and exit codes, to the REST request
+  and response models, or to the MCP tool signatures.
+- A change to the **plugin contract** in `pain001.plugins.contracts`.
+
+Deprecations keep working for at least one release with a
+`DeprecationWarning`, then are removed. Every member of the suite
+(`pain001-mcp`, `pain001-lsp`, the loaders) ships the same version
+number as the core, so a version pin on one is a pin on all.
 
 ---
 
@@ -662,15 +697,21 @@ CI workflows:
 | `pr.yml` | Pull-request gate |
 | `docs.yml` | Build and deploy documentation |
 
-Current state (v0.0.57): **1,425 tests passing**, **100% line + branch
+Current state (v0.0.66): **1,700 tests passing**, **100% line + branch
 coverage** against a **100% enforced floor**, mypy `--strict` clean,
-100% docstring coverage (interrogate). Coverage excludes only
+100% docstring coverage (interrogate). Everything a contributor needs to
+reproduce these gates locally is in [DEVELOPMENT.md](DEVELOPMENT.md). Coverage excludes only
 entry-point guards and genuinely-defensive barriers via
 `# pragma: no cover`; everything else is exercised.
 
 ---
 
 ## Security
+
+**Report a vulnerability privately** through
+[GitHub private vulnerability reporting](https://github.com/sebastienrousseau/pain001/security),
+never in a public issue; [SECURITY.md](SECURITY.md) states the response
+window and the supported-version policy.
 
 Pain001 treats payment data as hostile until proven otherwise:
 
@@ -683,17 +724,30 @@ Pain001 treats payment data as hostile until proven otherwise:
 - **Amounts** are `Decimal` throughout; control sums are recomputed,
   not echoed from input.
 - **Dependencies** are pinned via `poetry.lock` and audited by
-  `pip-audit`, Bandit, and CodeQL in CI.
-
-To report a vulnerability, please use
-[GitHub private vulnerability reporting](https://github.com/sebastienrousseau/pain001/security)
-rather than a public issue.
+  `pip-audit`, Bandit, and CodeQL in CI; GitHub Actions are pinned by
+  commit SHA and the Docker base image by digest.
+- **Fuzzing**: an Atheris coverage-guided harness under `fuzz/`
+  targets the IBAN, BIC and charset validators and runs weekly in
+  `nightly.yml`; Hypothesis property tests in
+  `tests/test_hypothesis_properties.py` run on every push. There is no
+  committed crash corpus and no OSS-Fuzz integration yet.
+- **Releases** are built in CI, published to PyPI with trusted
+  publishing, and ship a CycloneDX SBOM and SLSA provenance; see
+  [pkg/VERIFY.md](pkg/VERIFY.md) for how to check them.
 
 ---
 
 ## Documentation
 
-- **Guides & API reference:** [docs.pain001.com](https://docs.pain001.com)
+The same four entry points as every repository in the suite:
+
+- **User manual:** [docs.pain001.com](https://docs.pain001.com)
+- **API reference:** the Modules chapter of the manual, generated from the docstrings by Sphinx autodoc
+- **Developer docs:** [DEVELOPMENT.md](DEVELOPMENT.md) — toolchain, every CI gate reproduced locally, test layout, release model
+- **Ecosystem map:** [Companion packages](#companion-packages) and the suite table in [ROADMAP.md](ROADMAP.md)
+
+More:
+
 - **Runnable examples:** [`examples/`](https://github.com/sebastienrousseau/pain001/tree/main/examples) — one self-checking script per feature (generation, every input format, CLI, REST API, scheme validation, parsers, migration, streaming, observability, MCP), all executed in CI
 - **Bundled templates & schemas:** [`pain001/templates/`](https://github.com/sebastienrousseau/pain001/tree/main/pain001/templates)
 - **Scheme validation rules:** [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md)

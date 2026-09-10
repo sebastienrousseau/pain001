@@ -34,6 +34,7 @@ preference:
    [MAINTAINERS.md](MAINTAINERS.md)
 
 Please include:
+
 - A description of the vulnerability and its potential impact
 - A minimal reproducer (preferably a failing test case)
 - The version(s) affected (`python -c "import pain001; print(pain001.__version__)"`)
@@ -48,7 +49,7 @@ We publish a CVE through GitHub Security Advisories (the GitHub
 Advisory Database mirrors into OSV/PyPI) when the issue is fixed.
 Reporters are credited unless they ask to remain anonymous.
 
-## Security posture (current, as of v0.0.53)
+## Security posture (current; items marked v0.0.53-NEW arrived in that release)
 
 ### Input handling
 

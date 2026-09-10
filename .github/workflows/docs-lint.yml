@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Cheap documentation lint on every push and pull request: spelling
+# across the tree (codespell) and Markdown style (markdownlint-cli2).
+# Both run locally with `uvx codespell` and `npx markdownlint-cli2 "**/*.md"`.
+name: Docs lint
+
+on:
+  push:
+    branches: [main, "feat/*"]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  docs-lint:
+    name: codespell + markdownlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+
+      - name: ❯ Spelling (codespell, configured in pyproject.toml)
+        run: |
+          python -m pip install --quiet "codespell[toml]==2.4.1"
+          codespell
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+
+      - name: ❯ Markdown style (markdownlint-cli2, configured in .markdownlint-cli2.jsonc)
+        run: npx --yes markdownlint-cli2@0.18.1 "**/*.md"

@@ -1,15 +1,18 @@
 # Python Performance Tollgate
 
 ## Mission
+
 Enforce SLO compliance and prevent performance regressions in payment processing.
 
 ## Tollgate Objectives
+
 - Enforce **XML generation < 500ms** for 1000 transactions
 - Enforce **test suite < 60s** execution time
 - Enforce **no memory leaks** in long-running operations
 - Detect **performance regressions** > 10% slowdown
 
 ## When This Tollgate Applies
+
 - Modifying `pain001/core/core.py` (orchestration)
 - Modifying `pain001/xml/generate_xml.py` (XML generation)
 - Modifying `pain001/data/loader.py` (data loading)
@@ -18,6 +21,7 @@ Enforce SLO compliance and prevent performance regressions in payment processing
 ## Tollgate Checks
 
 ### 1. Benchmark XML Generation (MANDATORY)
+
 ```bash
 # Run performance benchmark
 poetry run pytest tests/test_performance.py --benchmark-only
@@ -29,12 +33,14 @@ poetry run pytest tests/test_performance.py --benchmark-only
 ```
 
 **Success Criteria:**
+
 - XML generation: < 500ms for 1000 transactions
 - CSV loading: < 200ms for 10,000 rows
 - SQLite loading: < 150ms for 10,000 rows
 - No regression > 10% from baseline
 
 ### 2. Memory Profiling (For Large Dataset Changes)
+
 ```bash
 # Profile memory usage
 poetry run python -m memory_profiler scripts/profile_memory.py
@@ -44,11 +50,13 @@ grep -i "leak\|growing\|increase" memory_profile.log
 ```
 
 **Success Criteria:**
+
 - Peak memory < 500MB for 10,000 transactions
 - No memory growth in repeated runs
 - Proper cleanup of file handles and connections
 
 ### 3. Test Suite Performance (MANDATORY)
+
 ```bash
 # Time full test suite
 time poetry run pytest
@@ -57,11 +65,13 @@ time poetry run pytest
 ```
 
 **Success Criteria:**
+
 - Total test time: < 60 seconds
 - Individual test: < 5 seconds (except integration tests)
 - No tests marked `slow` without justification
 
 ### 4. Cyclomatic Complexity (Code Maintainability)
+
 ```bash
 # Check complexity scores
 poetry run radon cc pain001/ -a -nb
@@ -71,11 +81,13 @@ poetry run radon cc pain001/ -n C
 ```
 
 **Success Criteria:**
+
 - Average complexity: < 5 (A grade)
 - No functions > 15 complexity (refuse D/F grades)
 - Refactor complex functions into smaller units
 
 ### 5. Load Testing (For Major Changes)
+
 ```bash
 # Stress test with large dataset
 poetry run python scripts/stress_test.py --transactions 50000
@@ -87,6 +99,7 @@ poetry run python scripts/stress_test.py --transactions 50000
 ```
 
 **Success Criteria:**
+
 - 50,000 transactions: < 20 seconds
 - Memory usage: < 2GB
 - No exceptions or timeouts
@@ -113,6 +126,7 @@ poetry run python scripts/stress_test.py --transactions 50000
 ## Benchmark Baseline Files
 
 Create baseline benchmarks for comparison:
+
 ```bash
 # Generate baseline (do this once after release)
 poetry run pytest tests/test_performance.py --benchmark-only \
@@ -164,6 +178,7 @@ def test_csv_loading_10000_rows(benchmark):
 ## Escalation Path
 
 If performance degrades:
+
 1. **STOP** - Do not merge PR
 2. **Profile** - Use `cProfile` or `memory_profiler` to find hotspot
 3. **Optimize** - Refactor slow code
@@ -173,6 +188,7 @@ If performance degrades:
 ## Integration with CI/CD
 
 Add to `.github/workflows/quality.yml`:
+
 ```yaml
 - name: Run Performance Benchmarks
   run: |

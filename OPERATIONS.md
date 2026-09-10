@@ -19,12 +19,12 @@ uvicorn pain001.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 
 ```bash
 # Pull a tagged release (or :latest from main).
-docker pull ghcr.io/sebastienrousseau/pain001:0.0.53
+docker pull ghcr.io/sebastienrousseau/pain001:0.0.66
 
 # Run the REST API.
 docker run --rm -p 8000:8000 \
   -e PAIN001_API_KEY=$(openssl rand -hex 32) \
-  ghcr.io/sebastienrousseau/pain001:0.0.53 \
+  ghcr.io/sebastienrousseau/pain001:0.0.66 \
   serve --host 0.0.0.0 --port 8000
 ```
 
