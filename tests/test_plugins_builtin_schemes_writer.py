@@ -38,6 +38,7 @@ BUNDLED_SCHEMES = (
     "sepa-b2b",
     "sepa-inst",
     "xborder-ct",
+    "anti-duplicate",
 )
 
 #: A row that breaches SEPA-CCY (USD in a EUR-only rulebook).
@@ -197,7 +198,7 @@ def test_writer_returns_an_absolute_path(tmp_path: pathlib.Path) -> None:
 def test_plugins_list_shows_the_full_bundled_set() -> None:
     """Issue #179's acceptance criterion, as a test.
 
-    Five loaders, five schemes, one writer — every one ``built-in``.
+    Five loaders, six schemes, one writer — every one ``built-in``.
     """
     listed = registry.list_plugins()
     by_kind: dict[str, set[str]] = {}

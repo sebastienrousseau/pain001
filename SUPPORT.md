@@ -16,7 +16,7 @@ Thanks for using Pain001. Here's the fastest way to get help, by need.
   one per feature. Every one is exercised in CI; they cannot rot.
 - **[SCHEMES.md](SCHEMES.md)** — the full scheme-validation
   catalogue (`sepa-sct`, `sepa-sdd`, `sepa-inst`, `sepa-b2b`,
-  `xborder-ct`) with every rule id and its remediation.
+  `xborder-ct`, `anti-duplicate`) with every rule id and its remediation.
 - **[OPERATIONS.md](OPERATIONS.md)** — production runbook for the
   REST API (config, scrape, alerts, scaling, incident playbook).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — module map and extension

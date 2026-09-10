@@ -222,6 +222,10 @@ _SCHEME_DESCRIPTIONS: dict[str, str] = {
     "sepa-b2b": "SEPA B2B Direct Debit rulebook (B2B sequence types).",
     "sepa-inst": "SEPA Instant Credit Transfer rulebook (amount ceiling).",
     "xborder-ct": "Cross-border Credit Transfer rulebook (any ISO currency).",
+    "anti-duplicate": (
+        "Cross-record duplicate detection (same creditor IBAN, amount "
+        "and execution date)."
+    ),
 }
 
 

@@ -27,10 +27,12 @@ in :data:`REMEDIATIONS`.
 """
 
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass, field
-from decimal import Decimal, InvalidOperation
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
+from pain001.observability.otel import set_span_attributes, traced
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.charset import find_invalid_characters
 from pain001.validation.iban_validator import validate_iban_safe
@@ -81,6 +83,11 @@ REMEDIATIONS: dict[str, str] = {
     "B2B-CDTR-ID": (
         "Provide creditor_id; the SEPA B2B rulebook requires the "
         "Creditor Identifier (CI) issued in the creditor's country."
+    ),
+    "DUP-CREDITOR-DATE": (
+        "Remove or merge the duplicate rows. If both payments are "
+        "intended, give them distinct amounts or execution dates, or "
+        "split them across batches."
     ),
 }
 
@@ -724,6 +731,178 @@ class CrossBorderCreditTransferProfile(ValidationProfile):
         return result
 
 
+#: ISO 4217 minor-unit exponents that differ from the default of two.
+#: Used to bucket amounts before comparing them for duplicates, so
+#: ``100`` and ``100.00`` collide while ``100.00`` and ``100.01`` do not.
+_CURRENCY_MINOR_UNITS: dict[str, int] = {
+    "BIF": 0,
+    "CLP": 0,
+    "DJF": 0,
+    "GNF": 0,
+    "ISK": 0,
+    "JPY": 0,
+    "KMF": 0,
+    "KRW": 0,
+    "PYG": 0,
+    "RWF": 0,
+    "UGX": 0,
+    "VND": 0,
+    "VUV": 0,
+    "XAF": 0,
+    "XOF": 0,
+    "XPF": 0,
+    "BHD": 3,
+    "IQD": 3,
+    "JOD": 3,
+    "KWD": 3,
+    "LYD": 3,
+    "OMR": 3,
+    "TND": 3,
+}
+_DEFAULT_MINOR_UNITS = 2
+
+
+def _minor_units(currency: str, overrides: Mapping[str, int]) -> int:
+    """Return the number of decimal places used to bucket ``currency``.
+
+    Args:
+        currency: Upper-cased ISO 4217 code (may be empty).
+        overrides: Caller-supplied precision overrides, keyed by code.
+
+    Returns:
+        The override when present, else the ISO 4217 minor unit for the
+        code, else the default of two.
+    """
+    if currency in overrides:
+        return overrides[currency]
+    return _CURRENCY_MINOR_UNITS.get(currency, _DEFAULT_MINOR_UNITS)
+
+
+def _duplicate_key(
+    row: dict[str, Any], overrides: Mapping[str, int]
+) -> tuple[str, str, str, str] | None:
+    """Build the exact-match key the anti-duplicate profile groups on.
+
+    The key is ``(creditor IBAN, bucketed amount, currency, execution
+    date)``. The IBAN is whitespace-stripped and upper-cased so
+    ``"de89 3704..."`` and ``"DE893704..."`` collide; the amount is
+    quantised to the currency's minor unit so ``100`` and ``100.00``
+    collide; the date is compared as its trimmed string form.
+
+    Args:
+        row: The payment row.
+        overrides: Per-currency precision overrides.
+
+    Returns:
+        The key, or ``None`` when the row lacks any of the three fields
+        or carries an unparsable amount (such rows cannot be duplicates
+        of anything and are left to the intra-record profiles to flag).
+    """
+    iban = "".join(str(row.get("creditor_account_IBAN") or "").split())
+    date = str(row.get("requested_execution_date") or "").strip()
+    raw_amount = row.get("payment_amount")
+    if not iban or not date or raw_amount is None or raw_amount == "":
+        return None
+    try:
+        amount = Decimal(str(raw_amount))
+    except (InvalidOperation, ValueError, TypeError):
+        return None
+    if not amount.is_finite():
+        return None
+    currency = (
+        str(row.get("payment_currency") or row.get("currency") or "")
+        .strip()
+        .upper()
+    )
+    places = _minor_units(currency, overrides)
+    bucketed = amount.quantize(
+        Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP
+    )
+    return iban.upper(), str(bucketed), currency, date
+
+
+class AntiDuplicateProfile(ValidationProfile):
+    """Cross-record duplicate detection within a single batch.
+
+    Flags every group of two or more rows that share the same creditor
+    IBAN, the same amount, and the same requested execution date: the
+    signature of a payment that was keyed in (or exported) twice. Each
+    row in a group is reported once, with the row indices of its
+    partners in the message, so an operator can see both sides.
+
+    Unlike the SEPA and cross-border profiles this rulebook looks
+    *across* rows rather than at each row on its own, which is why it
+    is designed to compose: ``--scheme sepa-sct,anti-duplicate`` runs
+    both and reports the union of findings.
+
+    Matching is exact-key only. Amounts are bucketed to the currency's
+    ISO 4217 minor unit (two places for EUR, none for JPY, three for
+    KWD) so formatting noise does not hide a duplicate, but a one-cent
+    difference is a different payment. Rows missing any key field are
+    skipped; the intra-record profiles report those. The engine has no
+    memory between runs, so cross-batch deduplication is out of scope.
+
+    Attributes:
+        name: Stable profile identifier, ``"anti-duplicate"``.
+        rule: Rule id raised for every row in a duplicate group,
+            ``"DUP-CREDITOR-DATE"``.
+
+    Args:
+        precision_overrides: Optional mapping of ISO 4217 code to the
+            number of decimal places used to bucket amounts in that
+            currency, overriding the built-in minor-unit table.
+    """
+
+    name: str = "anti-duplicate"
+    rule: str = "DUP-CREDITOR-DATE"
+
+    def __init__(
+        self, precision_overrides: Mapping[str, int] | None = None
+    ) -> None:
+        self._precision_overrides: dict[str, int] = {
+            code.upper(): places
+            for code, places in (precision_overrides or {}).items()
+        }
+
+    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
+        """Group rows by their duplicate key and flag every group of two+.
+
+        Args:
+            data: Loaded payment rows (the normalised internal form).
+
+        Returns:
+            A :class:`SchemeValidationResult` with one
+            ``DUP-CREDITOR-DATE`` violation per row that has at least
+            one duplicate, in row order.
+        """
+        result = SchemeValidationResult(profile=self.name)
+        groups: dict[tuple[str, str, str, str], list[int]] = {}
+        for index, row in enumerate(data):
+            key = _duplicate_key(row, self._precision_overrides)
+            if key is not None:
+                groups.setdefault(key, []).append(index)
+        for (iban, amount, currency, date), indices in groups.items():
+            if len(indices) < 2:
+                continue
+            amount_text = f"{amount} {currency}".strip()
+            for index in indices:
+                partners = ", ".join(str(i) for i in indices if i != index)
+                result.violations.append(
+                    SchemeViolation(
+                        rule=self.rule,
+                        message=(
+                            f"duplicate of row(s) {partners}: same "
+                            f"creditor IBAN {iban}, amount {amount_text} "
+                            f"and execution date {date}"
+                        ),
+                        index=index,
+                        field="creditor_account_IBAN",
+                    )
+                )
+        result.violations.sort(key=lambda v: v.index)
+        return result
+
+
 #: Registry of available scheme profiles, keyed by their ``name``.
 PROFILES: dict[str, ValidationProfile] = {
     SepaCreditTransferProfile.name: SepaCreditTransferProfile(),
@@ -735,9 +914,30 @@ PROFILES: dict[str, ValidationProfile] = {
     CrossBorderCreditTransferProfile.name: (
         CrossBorderCreditTransferProfile()
     ),
+    AntiDuplicateProfile.name: AntiDuplicateProfile(),
 }
 
 
+def _split_profile_spec(profile: str) -> list[str]:
+    """Split a profile spec into distinct names, first occurrence first.
+
+    Args:
+        profile: One profile name, or several separated by commas
+            (``"sepa-sct,anti-duplicate"``). Whitespace around names is
+            ignored; repeated names are kept once.
+
+    Returns:
+        The distinct names in order (possibly empty for a blank spec).
+    """
+    names: list[str] = []
+    for raw in profile.split(","):
+        name = raw.strip()
+        if name and name not in names:
+            names.append(name)
+    return names
+
+
+@traced("pain001.validate.scheme")
 def validate_scheme(
     data: list[dict[str, Any]], profile: str = "sepa-sct"
 ) -> SchemeValidationResult:
@@ -745,13 +945,17 @@ def validate_scheme(
 
     Args:
         data: Loaded payment rows (the normalised internal form).
-        profile: Profile name to apply (default: ``"sepa-sct"``).
+        profile: Profile name to apply (default: ``"sepa-sct"``), or a
+            comma-separated list of names (``"sepa-sct,anti-duplicate"``)
+            to run several rulebooks and report the union of their
+            findings. The combined result's ``profile`` joins the names
+            with commas and its violations are ordered by row.
 
     Returns:
         A :class:`SchemeValidationResult` listing every violation.
 
     Raises:
-        ValueError: If ``profile`` is not a registered profile name.
+        ValueError: If ``profile`` names a profile that is not registered.
 
     Example:
         >>> rows = [{
@@ -765,12 +969,31 @@ def validate_scheme(
         False
         >>> result.violations[0].rule
         'SEPA-CCY'
+        >>> both = validate_scheme(rows * 2, profile="sepa-sct,anti-duplicate")
+        >>> both.profile
+        'sepa-sct,anti-duplicate'
     """
-    try:
-        chosen = PROFILES[profile]
-    except KeyError as exc:
+    names = _split_profile_spec(profile)
+    unknown = [name for name in names if name not in PROFILES]
+    if not names or unknown:
         available = ", ".join(sorted(PROFILES))
+        offending = unknown[0] if unknown else profile
         raise ValueError(
-            f"Unknown scheme profile '{profile}'. Available: {available}"
-        ) from exc
-    return chosen.validate(data)
+            f"Unknown scheme profile '{offending}'. Available: {available}"
+        )
+    profiles = [PROFILES[name] for name in names]
+    set_span_attributes(
+        **{
+            "pain001.scheme": ",".join(chosen.name for chosen in profiles),
+            "pain001.row_count": len(data),
+        }
+    )
+    if len(profiles) == 1:
+        return profiles[0].validate(data)
+    combined = SchemeValidationResult(
+        profile=",".join(chosen.name for chosen in profiles)
+    )
+    for chosen in profiles:
+        combined.violations.extend(chosen.validate(data).violations)
+    combined.violations.sort(key=lambda v: v.index)
+    return combined
