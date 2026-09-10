@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.0.66] - Unreleased
+## [0.0.67] - Unreleased
+
+The first of the three example-corpus releases
+([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md)):
+the ground cleared, the schema inventory and coverage engine, the
+scenario builder, and a schema coverage corpus for every bundled XSD.
+Entries are added as work lands.
+
+## [0.0.66] - 2026-09-10
 
 Closes the four roadmap issues that were already mostly shipped and
 lands the two that were not: cross-record duplicate detection (#183) and
