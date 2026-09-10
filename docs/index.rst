@@ -189,6 +189,7 @@ Contents
    :caption: Project
 
    architecture
+   message-deltas
    development
    packaging
    adr/README
