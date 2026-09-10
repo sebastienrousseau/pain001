@@ -41,7 +41,8 @@ help:
 	@echo "  complex       - Code complexity analysis"
 	@echo "  mutate        - Mutation testing"
 	@echo "  docs          - Build documentation"
-	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors"
+	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors
+	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)""
 	@echo ""
 	@echo "Advanced Tollgates (Enterprise Production):"
 	@echo "  tollgate-deps        - Verify no new dependencies (Dependency Governance)"
@@ -203,11 +204,17 @@ xml-examples:
 	@poetry run python scripts/regenerate_template_dbs.py
 	@echo "$(GREEN)✓ Bundled examples regenerated$(NC)"
 
+# --- Corpus coverage gate (ADR-0003) ---
+corpus-coverage:
+	@echo "$(YELLOW)Measuring coverage sets against the schema inventories...$(NC)"
+	@poetry run python scripts/corpus_coverage.py
+	@echo "$(GREEN)✓ Corpus coverage gate passed$(NC)"
+
 # --- SLO verification (recommended before commit) ---
 slos: lint type test perf
 	@echo "$(GREEN)✓ All SLOs verified$(NC)"
 
 # --- Full quality gate (blocking) ---
-check: lint cov sec
+check: lint cov sec corpus-coverage
 	@echo "$(GREEN)✓ Full quality gate passed$(NC)"
 
