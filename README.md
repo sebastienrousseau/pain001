@@ -73,7 +73,8 @@ It handles the parts that are easy to get wrong:
 | XML attacks | All XML parsing goes through `defusedxml` — XXE and entity expansion are blocked |
 | Agent-shaped input | Field aliases (`amount`, `currency`, `execution_date`, lower-case IBAN/BIC keys), date/boolean coercion, and computed totals let naturally-written records validate first try |
 | Large batches | Streaming mode chunks input and emits one file per chunk |
-| Scheme rules | `--scheme sepa-sct\|sepa-sdd\|sepa-inst\|sepa-b2b\|xborder-ct` layers per-rulebook checks on top of XSD |
+| Scheme rules | `--scheme sepa-sct\|sepa-sdd\|sepa-inst\|sepa-b2b\|xborder-ct\|anti-duplicate` layers per-rulebook checks on top of XSD; comma-separate to compose |
+| Browser dashboard | `/api/v1/ui` — drop a CSV, pick the rulebooks, download the XML; one HTML file served by the REST API, no build step |
 
 Templates and schemas for every supported message type ship inside the
 package — point Pain001 at your data and it resolves the rest.
@@ -90,6 +91,8 @@ package — point Pain001 at your data and it resolves the rest.
 | PyPI + Redis | `pip install "pain001[redis]"` | Distributed job store + rate limiter |
 | PyPI + MCP | `pip install "pain001[mcp]"` | In-tree MCP server for LLM clients |
 | PyPI + LSP | `pip install "pain001[lsp]"` | In-tree language server for CSV diagnostics |
+| PyPI + GPG | `pip install "pain001[gpg]"` | Read `.csv.gpg` / `.asc` inputs, decrypted in memory (`--decrypt-key`, `--decrypt-passphrase-env`) |
+| PyPI + OpenTelemetry | `pip install "pain001[otel]"` | Distributed traces for the generator and REST API (`OTEL_ENABLED=true`) |
 | Source | `git clone https://github.com/sebastienrousseau/pain001 && cd pain001 && poetry install` | For development |
 | Docker (GHCR) | `docker pull ghcr.io/sebastienrousseau/pain001:latest` | Multi-arch (linux/amd64, linux/arm64); CLI + `api` extra preinstalled |
 
@@ -234,9 +237,13 @@ pain001 [generate] [OPTIONS]
       --show-config        Print the resolved configuration and exit
       --emit-metrics       Emit timing and lifecycle metrics to stdout
       --scheme             Validate rows against a scheme rulebook
-                           (sepa-sct, sepa-sdd, sepa-inst, sepa-b2b, xborder-ct)
+                           (sepa-sct, sepa-sdd, sepa-inst, sepa-b2b, xborder-ct,
+                           anti-duplicate; comma-separate to run several)
       --explain            With --scheme, print a remediation hint per finding
       --scheme-format      Scheme output format: text (default) or json
+      --decrypt-key        GPG private-key file for .gpg/.asc inputs (pain001[gpg])
+      --decrypt-passphrase-env
+                           Env var holding that key's passphrase
   -v, --verbose            Detailed logging output
   -h, --help               Show help and exit
 ```
@@ -255,17 +262,21 @@ per-row violations:
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 ```
 
-Five profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
+Six profiles ship today — `sepa-sct` (SEPA Credit Transfer, pain.001),
 `sepa-sdd` (SEPA Direct Debit, pain.008), `sepa-inst` (SEPA Instant
 Credit Transfer, pain.001), `sepa-b2b` (SEPA Business-to-Business Direct
-Debit, FRST/RCUR-only + mandatory creditor identifier), and `xborder-ct`
-(generic cross-border, multi-currency, BIC-mandatory). Each profile
-checks currency, valid debtor/creditor IBANs (ISO 13616 / mod-97), BICs,
-the amount ceiling (100,000 EUR instant cap for `sepa-inst`), ISO 20022
-character-set and field-length limits, and (for SDD/B2B) mandate id and
-sequence type. Add `--explain` for remediation hints, or
-`--scheme-format json` for machine-readable output. The REST API accepts
-a `scheme` field on `/api/v1/validate` and `/api/v1/generate` too. See
+Debit, FRST/RCUR-only + mandatory creditor identifier), `xborder-ct`
+(generic cross-border, multi-currency, BIC-mandatory), and
+`anti-duplicate` (cross-record: flags rows that share creditor IBAN,
+amount and execution date, the signature of a payment keyed in twice).
+The intra-record profiles check currency, valid debtor/creditor IBANs
+(ISO 13616 / mod-97), BICs, the amount ceiling (100,000 EUR instant cap
+for `sepa-inst`), ISO 20022 character-set and field-length limits, and
+(for SDD/B2B) mandate id and sequence type. Profiles compose:
+`--scheme sepa-sct,anti-duplicate` runs both and reports the union. Add
+`--explain` for remediation hints, or `--scheme-format json` for
+machine-readable output. The REST API accepts a `scheme` field on
+`/api/v1/validate` and `/api/v1/generate` too. See
 [SCHEMES.md](SCHEMES.md) for the full rule catalogue. From Python:
 
 ```python
@@ -403,6 +414,8 @@ remain as a backwards-compatible alias.
 | `GET` | `/api/v1/status/{job_id}` | Poll an async job |
 | `GET` | `/api/v1/download/{job_id}` | Download a finished file |
 | `DELETE` | `/api/v1/jobs/{job_id}` | Cancel or clean up a job |
+| `GET` | `/api/v1/ui` | Browser dashboard: drop a file, validate, generate, download (beta) |
+| `POST` | `/api/v1/ui/validate`, `/api/v1/ui/generate` | The dashboard's endpoints; take the file's content inline instead of a server path |
 
 **Operational controls** (all environment-driven, all off by default):
 
@@ -414,10 +427,16 @@ remain as a backwards-compatible alias.
 | `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the distributed limiter (falls back to `PAIN001_JOB_STORE_URL` if unset) |
 | `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts |
 | `PAIN001_JOB_STORE_URL` | Redis URL for a fully distributed job store (use instead of `_DIR`) |
+| `PAIN001_UI_DISABLED` | Take the `/api/v1/ui` dashboard offline for a pure-API deployment |
+| `OTEL_ENABLED` | Emit OpenTelemetry spans (`pain001.api.*`, `pain001.generate`, `pain001.validate`, `pain001.write`) to the collector named by `OTEL_EXPORTER_OTLP_ENDPOINT`; requires `pain001[otel]` |
 
 **Documentation surfaces:** Swagger UI at `/api/docs`, ReDoc at
 `/api/redoc`, an interactive [Scalar](https://scalar.com) reference at
-`/api/reference`, and the raw OpenAPI document at `/openapi.json`. The
+`/api/reference`, and the raw OpenAPI document at `/openapi.json`. For
+people who would rather not call an API at all, `/api/v1/ui` is a
+single-page dashboard: drop a CSV, tick the scheme rulebooks, validate,
+and download the XML. It is one vanilla HTML file with no framework and
+no CDN, served by the same process, locked by the same API key. The
 same reference is hosted publicly:
 <https://sebastienrousseau.github.io/pain001/api-reference.html>.
 

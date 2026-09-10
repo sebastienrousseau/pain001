@@ -5,6 +5,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.66] - Unreleased
+
+Closes the four roadmap issues that were already mostly shipped and
+lands the two that were not: cross-record duplicate detection (#183) and
+a browser dashboard (#188). Also carries the September dependency bumps.
+
+### Added
+
+- **`anti-duplicate` scheme profile** (#183). The first cross-record
+  rulebook: rows that share creditor IBAN, amount and requested
+  execution date, the signature of a payment keyed in twice, are each
+  flagged `DUP-CREDITOR-DATE` naming the other rows in the group.
+  Exact-key only: amounts bucket to the currency's ISO 4217 minor unit
+  (`100` and `100.00` collide, `100.00` and `100.01` do not), IBANs
+  compare without whitespace or case, rows missing a key field are
+  skipped. `AntiDuplicateProfile(precision_overrides={"EUR": 0})`
+  widens the bucket. Exported from `pain001.validation`; registered as
+  a built-in plugin like the other five.
+- **Scheme composition.** `--scheme sepa-sct,anti-duplicate` (and the
+  same spelling in the REST `scheme` field and the MCP `profile`
+  argument) runs every named rulebook over the rows and reports the
+  union of findings ordered by row; `result.profile` joins the names.
+  An unknown name anywhere in the list is rejected as a whole.
+- **Browser dashboard at `/api/v1/ui`** (#188). One vanilla HTML file
+  served by the REST API, no framework, no build step, no CDN, no new
+  dependency: drop a `.csv` / `.json` / `.jsonl`, pick the message type
+  and rulebooks, validate, generate, download. Backed by
+  `POST /api/v1/ui/validate` and `POST /api/v1/ui/generate`, which take
+  the file's content inline (a browser cannot name a server path) and
+  return the XML inline so nothing the user uploads touches the disk.
+  Same `PAIN001_API_KEY` lock as every route; `PAIN001_UI_DISABLED=1`
+  takes the surface offline for pure-API deployments. Marked beta.
+- **`--decrypt-key <keyfile>` and `--decrypt-passphrase-env <VAR>`**
+  on `generate` and `validate` (#181), the two flags the issue
+  specified and 0.0.56 shipped without. `--decrypt-key` imports a
+  private-key file into the GPG homedir before decrypting (new
+  `PAIN001_GPG_KEYFILE` variable), for pipelines that hold the key in
+  a secret store rather than a keyring. Both are sugar over the
+  loader's environment variables.
+- **The spans the OpenTelemetry issue asked for** (#182). A traced
+  `pain001 generate` run now shows `pain001.generate` →
+  `pain001.write` → `pain001.render` → `pain001.validate` rather than
+  the single batch span 0.0.56 emitted; `validate_scheme` is
+  `pain001.validate.scheme` stamped with `pain001.scheme`; the
+  streaming path is `pain001.generate.streaming`; every REST handler,
+  the dashboard's included, is a `pain001.api.*` span carrying
+  `http.route`. `traced` now wraps coroutine functions and accepts
+  static `attributes=`. The SDK is bootstrapped once at startup: the
+  FastAPI lifespan and `pain001 serve` both call `init_otel()`, which
+  the module docstring promised and nothing did.
+
+### Changed
+
+- `validate_scheme` accepts a comma-separated profile spec (above).
+  Single names behave exactly as before.
+- `require_api_key` moved to `pain001.api.auth` so the dashboard router
+  and the application module can share it without importing each
+  other; `pain001.api.app` keeps the private alias.
+- Dependencies: click 8.5.0, rich 15.0.0, fastapi 0.141.1, mcp 2.2.0,
+  elementpath 5.1.4, httpx2 / httpcore2 2.12.0, ruff 0.16.6, pydoclint
+  0.9.1, pytest-benchmark 5.3.0, sphinx 8.1.3, wheel 0.48.0, and ten
+  GitHub Actions bumps (#258 through #269).
+- `ROADMAP.md` reflects what shipped: it still described 0.0.53 as
+  current and the plugin substrate as in flight.
+
+### Fixed
+
+- **`requirements.txt` pinned xmlschema 3.4.5**, which requires
+  elementpath below 5, so the elementpath 5 bump that #244 made and
+  #253 reverted failed the Docker build again with
+  `ResolutionImpossible`. `pyproject.toml` has required xmlschema 4.x
+  since #220 and the lock resolved 4.3.2; the pin file was never
+  regenerated, so the image and the docs workflow were installing 3.4.5
+  behind a project that promises 4.x. Pinned to 4.3.2 with the lock's
+  hashes.
+
 ## [0.0.65] - 2026-08-29
 
 Aligns the `pain001` suite on one version number, and adds the benchmark

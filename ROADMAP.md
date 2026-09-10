@@ -7,30 +7,42 @@ small, well-tested core, first-class developer surfaces (library, CLI,
 REST, MCP, LSP), and a formal plugin contract so the ecosystem can
 extend it without forking.
 
-## Where we are (v0.0.53, shipped 2026-06-20)
+## Where we are (v0.0.65 shipped 2026-08-29; v0.0.66 in progress)
 
 - **Generation:** pain.001.001.03 to .12 and pain.008.001.02,
   registry-driven, `Decimal` end-to-end, mandatory XSD validation
   (XXE-safe via `defusedxml`).
-- **Validation:** five scheme rulebooks — `sepa-sct`, `sepa-sdd`,
-  `sepa-inst`, **`sepa-b2b` (new in v0.0.53)**, `xborder-ct`. IBAN /
-  BIC / charset validators. Structured per-row violations with
-  remediation hints.
+- **Validation:** six scheme rulebooks — `sepa-sct`, `sepa-sdd`,
+  `sepa-inst`, `sepa-b2b`, `xborder-ct`, and the cross-record
+  **`anti-duplicate` (new in v0.0.66)**, composable as
+  `--scheme sepa-sct,anti-duplicate`. IBAN / BIC / charset validators.
+  Structured per-row violations with remediation hints.
+- **Plugins (v0.0.56, v0.0.60):** `pain001.plugins` publishes
+  `AbstractLoader` / `AbstractValidator` / `AbstractScheme` /
+  `AbstractWriter`, entry-point discovery, `pain001 plugins list`, and
+  the built-ins registered through the same contract external authors
+  use. `pain001-loader-xlsx` is the first external plugin.
 - **Parsers:** pain.002 status reports + camt.053 statements, plus
   `build_pain002_report` for round-trip testing.
-- **Inputs:** CSV, SQLite, JSON, JSON Lines, Parquet; streaming for
-  large batches; cross-version migration between pain.001 versions.
+- **Inputs:** CSV, SQLite, JSON, JSON Lines, Parquet, and GPG-encrypted
+  wrappers of any of them (`pain001[gpg]`, `--decrypt-key`); streaming
+  for large batches; cross-version migration between pain.001 versions.
 - **Surfaces:** CLI command suite (`generate`, `validate`,
   `versions`, `inspect`, `init`, `serve`, `mcp`); REST `/api/v1`
   (auth, rate limiting, durable jobs, OpenAPI/Scalar, Prometheus
-  `/metrics`); MCP server; LSP server with editor diagnostics.
+  `/metrics`) plus the single-file browser dashboard at `/api/v1/ui`
+  (v0.0.66); MCP server; LSP server with editor diagnostics.
+- **Observability:** Prometheus metrics and, behind `pain001[otel]` and
+  `OTEL_ENABLED=true`, OpenTelemetry spans for the generator
+  (`pain001.generate` → `write` → `render` → `validate`), the scheme
+  checks, and every REST handler.
 - **Distributed backends (new in v0.0.53):** Redis-backed job store
   and rate limiter so multi-replica deployments share state and
   enforce caps across the load balancer.
 - **Distribution (new in v0.0.53):** official multi-arch Docker
   image at `ghcr.io/sebastienrousseau/pain001`, OpenAPI client SDK
   pipeline with drift-guard CI, hosted Scalar API reference.
-- **Quality:** **1,265 tests**, **100% line + branch coverage (100%
+- **Quality:** **1,700 tests**, **100% line + branch coverage (100%
   enforced floor)**, `mypy --strict`, 100% docstring coverage,
   ruff + pydoclint + bandit clean, CodeQL + pip-audit clean, every
   example exercised in CI.
@@ -47,17 +59,19 @@ version numbers.
 
 | Package | Role | Latest |
 | :--- | :--- | :--- |
-| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.53 |
-| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (16 tools) | 0.0.53 |
-| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.53 |
-| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.53 |
+| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.65 |
+| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (16 tools) | 0.0.65 |
+| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.65 |
+| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.65 |
+| [`pain001-loader-mt101`](https://pypi.org/project/pain001-loader-mt101/) | SWIFT MT101 loader plugin | 0.0.65 |
 
 ## Planned releases
 
-Three coordinated milestones, ~3-10 weeks each. Issue links go to
-the canonical specs filed at [`pain001` issues](https://github.com/sebastienrousseau/pain001/issues).
+Three coordinated milestones. Issue links go to the canonical specs
+filed at [`pain001` issues](https://github.com/sebastienrousseau/pain001/issues).
+A ✅ marks an item that has shipped, with the release that carried it.
 
-### v0.0.54 — Plugin substrate + table-stakes formats *(in flight)*
+### Plugin substrate + table-stakes formats *(shipped: v0.0.56 → v0.0.66)*
 
 Foundation release. Every subsequent format and validator becomes a
 first-class plugin, so the contract has to land *before* those
@@ -66,12 +80,12 @@ the ecosystem extend pain001 without merging through the upstream.
 
 | Issue | Item | Effort |
 | :--- | :--- | :--- |
-| [#179](https://github.com/sebastienrousseau/pain001/issues/179) | **Plugin architecture** — `AbstractLoader`, `AbstractValidator`, `AbstractScheme`, `AbstractWriter` Protocols; entry-point discovery; `pain001 plugins list` CLI | L |
-| [#180](https://github.com/sebastienrousseau/pain001/issues/180) | XLSX loader as a first-class plugin | S (✅ already published as `pain001-loader-xlsx 0.0.53`) |
-| [#181](https://github.com/sebastienrousseau/pain001/issues/181) | GPG-encrypted input files via composable loader | M |
-| [#182](https://github.com/sebastienrousseau/pain001/issues/182) | OpenTelemetry instrumentation for the generator and REST API | S |
+| [#179](https://github.com/sebastienrousseau/pain001/issues/179) | **Plugin architecture** — `AbstractLoader`, `AbstractValidator`, `AbstractScheme`, `AbstractWriter` Protocols; entry-point discovery; `pain001 plugins list` CLI | ✅ v0.0.56 (substrate), v0.0.60 (built-ins as plugins). Open: the `pain001-plugin-template` cookiecutter repo. |
+| [#180](https://github.com/sebastienrousseau/pain001/issues/180) | XLSX loader as a first-class plugin | ✅ published as `pain001-loader-xlsx` |
+| [#181](https://github.com/sebastienrousseau/pain001/issues/181) | GPG-encrypted input files via composable loader | ✅ v0.0.56 (loader), v0.0.66 (`--decrypt-key`, `--decrypt-passphrase-env`) |
+| [#182](https://github.com/sebastienrousseau/pain001/issues/182) | OpenTelemetry instrumentation for the generator and REST API | ✅ v0.0.56 (surface), v0.0.66 (validate / write / scheme / REST spans, startup bootstrap) |
 
-### v0.0.55 — Validation depth *(after v0.0.54)*
+### Validation depth *(in progress)*
 
 With plugins live, validation extensions ship without core changes.
 The first cross-record rule (anti-duplicate) and the first
@@ -80,11 +94,11 @@ into shipping artefacts.
 
 | Issue | Item | Effort |
 | :--- | :--- | :--- |
-| [#183](https://github.com/sebastienrousseau/pain001/issues/183) | Cross-record duplicate-detection scheme profile (`anti-duplicate`) | M |
+| [#183](https://github.com/sebastienrousseau/pain001/issues/183) | Cross-record duplicate-detection scheme profile (`anti-duplicate`) | ✅ v0.0.66, composable via `--scheme a,b` |
 | [#184](https://github.com/sebastienrousseau/pain001/issues/184) | Custom YAML rule DSL via CEL (`pain001 --rules my-policy.yaml`) | L |
 | [#185](https://github.com/sebastienrousseau/pain001/issues/185) | MCP `suggest_record_fix` tool for LLM-orchestrated correction | M |
 
-### v0.0.56 — End-to-end workflow *(after v0.0.55)*
+### End-to-end workflow *(next)*
 
 The bits that take pain001 from "validator" to "payment gateway."
 
@@ -92,7 +106,7 @@ The bits that take pain001 from "validator" to "payment gateway."
 | :--- | :--- | :--- |
 | [#186](https://github.com/sebastienrousseau/pain001/issues/186) | `pain001 upload --sftp` subcommand (SFTP only; EBICS deferred) | L |
 | [#187](https://github.com/sebastienrousseau/pain001/issues/187) | `pain001-mockbank` Docker image for pain.002 round-trip testing | M |
-| [#188](https://github.com/sebastienrousseau/pain001/issues/188) | Single-file hosted dashboard at `/api/v1/ui` (vanilla HTML, no framework) | S |
+| [#188](https://github.com/sebastienrousseau/pain001/issues/188) | Single-file hosted dashboard at `/api/v1/ui` (vanilla HTML, no framework) | ✅ v0.0.66 (beta) |
 
 ## Explicitly declined / deferred
 
