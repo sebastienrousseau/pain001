@@ -30,6 +30,7 @@ from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pain001 import __version__
 from pain001.api.auth import require_api_key as _require_api_key
+from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import JobStatus, job_manager
 from pain001.api.metrics import MetricsMiddleware, render_prometheus
 from pain001.api.models import (
@@ -45,7 +46,7 @@ from pain001.api.models import (
 )
 from pain001.api.ratelimit import RateLimitMiddleware, parse_rate_limit
 from pain001.api.ui import ui_router
-from pain001.constants import TEMPLATES_DIR, valid_xml_types
+from pain001.constants import TEMPLATES_DIR
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
 from pain001.observability.otel import init_otel, traced
@@ -190,33 +191,6 @@ def _gate_output_dir(user_dir: str | None) -> Path:
         status_code=status.HTTP_403_FORBIDDEN,
         detail="Access denied: output_dir outside allowed directory",
     )
-
-
-def _sanitise_message_type(message_type: str) -> str:
-    """Re-validate ``message_type`` against the fixed allow-list.
-
-    Pydantic already constrains ``message_type`` at deserialisation
-    time, but CodeQL doesn't track the enum. An explicit set-membership
-    check is a barrier the taint tracker recognises, so values that
-    flow into ``str.format`` / path joining downstream are sanitised.
-
-    Args:
-        message_type: The string value of the request's message_type enum.
-
-    Returns:
-        The same string, guaranteed to be in
-        :data:`pain001.constants.valid_xml_types`.
-
-    Raises:
-        HTTPException: ``400`` if the value is not in the allow-list.
-    """
-    allowed = frozenset(valid_xml_types)
-    if message_type not in allowed:
-        raise HTTPException(  # pragma: no cover - pydantic enforces this
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid message type",
-        )
-    return message_type
 
 
 def _resolve_generation_paths(

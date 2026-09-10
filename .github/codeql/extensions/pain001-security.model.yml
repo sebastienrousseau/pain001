@@ -24,3 +24,4 @@ extensions:
       - ["pain001.api.app", "Member[_validate_safe_path]", "summary"]
       - ["pain001.api.app", "Member[_gate_output_dir]", "summary"]
       - ["pain001.api.app", "Member[_sanitise_message_type]", "summary"]
+      - ["pain001.api.guards", "Member[sanitise_message_type]", "summary"]

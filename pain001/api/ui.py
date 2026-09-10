@@ -49,6 +49,7 @@ from fastapi.responses import HTMLResponse
 
 from pain001 import __version__
 from pain001.api.auth import require_api_key
+from pain001.api.guards import sanitise_message_type
 from pain001.api.models import (
     UiFilePayload,
     UiGenerateResponse,
@@ -260,7 +261,9 @@ async def ui_validate(payload: UiFilePayload) -> ValidationResponse:
         The same shape as ``POST /validate``.
     """
     rows = _parse_rows(payload.filename, payload.content)
-    validator = SchemaValidator(payload.message_type.value)
+    validator = SchemaValidator(
+        sanitise_message_type(payload.message_type.value)
+    )
     total, valid, errors = validator.validate_batch(rows)
     scheme_ok, violations = _scheme_violations(rows, payload.scheme)
     return ValidationResponse(
@@ -299,7 +302,10 @@ async def ui_generate(payload: UiFilePayload) -> UiGenerateResponse:
             rendered document does not satisfy the XSD).
     """
     rows = _parse_rows(payload.filename, payload.content)
-    message_type = payload.message_type.value
+    # Allow-list barrier: the enum is already constrained, but the value
+    # is joined into filesystem paths below and static analysis only
+    # recognises an explicit membership check as a sanitiser.
+    message_type = sanitise_message_type(payload.message_type.value)
     validator = SchemaValidator(message_type)
     total, valid, errors = validator.validate_batch(rows)
     if errors:
