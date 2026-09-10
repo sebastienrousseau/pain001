@@ -43,6 +43,7 @@ include = [
     "pain001/templates/**/*",
     "pain001/config/*.yaml",
     "pain001/corpus/data/**/*",
+    "pain001/corpus/schema/*.json",
     "pain001/migration/mappings/*.yaml",
     "pain001/test_fixtures/**/*",
 ]
@@ -284,7 +285,7 @@ disallow_untyped_calls = false
 # Spelling gate for the docs-lint job and the pre-commit hook. ISO 20022
 # element names and code lists are not English; skip generated and
 # vendored trees rather than teaching the dictionary every tag.
-skip = "./.git,./.venv,./htmlcov,./docs/_build,./poetry.lock,./pain001/templates,./pain001/schemas,./tests/golden,./tests/data,./releases,./CHANGELOG.md,./docs/posts,./docs/message-deltas.md,./coverage.xml,*.xsd,*.xml,*.db,*.json,*.lock"
+skip = "./.git,./.venv,./htmlcov,./docs/_build,./poetry.lock,./pain001/templates,./pain001/schemas,./tests/golden,./tests/data,./releases,./CHANGELOG.md,./docs/posts,./docs/message-deltas.md,./scenarios,./pain001/tmp,./coverage.xml,*.xsd,*.xml,*.db,*.json,*.lock"
 ignore-words-list = "iban,bic,nam,ot,dtm,ccy,cdtr,dbtr,pmt,ustrd,strd,ctgy,purp,prtry,othr,mmb,fals,rcur,mandat,creat,ratio,te,inout,assertIn,ans,iff,shft,upto,nd,unparseable,intoto,fo"
 quiet-level = 3
 

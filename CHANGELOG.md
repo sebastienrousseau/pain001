@@ -45,6 +45,40 @@ Entries are added as work lands.
   registry: UETR arrived with .09, and .13's additions are the
   regulatory-reporting detail choice, a reporting code and structured
   securities data.
+- **Scenario DSL, loader and version-aware builder** (ADR-0003
+  workstream 2, decision 6). A scenario is a YAML document under
+  `scenarios/` (source of truth, not shipped) that says what a payment
+  is in friendly keys: header, rail choices, parties with structured,
+  hybrid or unstructured addresses and organisation or private
+  identification, accounts, agents, transactions, remittance
+  (unstructured and structured with creditor references), mandates for
+  direct debits, and a `raw` object at any level for ISO-named elements
+  the friendly layer does not cover. `pain001/corpus/schema/corpus.schema.json`
+  validates it and `pain001.corpus.registry` loads it with the JSON
+  pointer of the first problem. `pain001.corpus.builder.build(scenario,
+  version)` composes one ISO tree and fits it to each edition from the
+  schema inventory: `BIC`/`BICFI` and `BICOrBEI`/`AnyBIC` renamed,
+  scalars wrapped into the choices later editions introduced
+  (`AdrTp`, `ReqdExctnDt`, `Frqcy`), repeats cut to the edition's cap,
+  elements the edition lacks dropped, everything reported. Output is
+  ordered from the inventory, serialised deterministically and must
+  pass the edition's XSD. Three scenarios ship: a GB CHAPS property
+  completion (.03 and .09), a DE SEPA salary batch (.03, .09, .13) and
+  a NL SEPA Core direct debit (pain.008 .02 and .08).
+- **Synthetic identifiers** (decision 5). `pain001.corpus.identifiers`
+  generates, deterministically from a seed, IBANs in the BBAN shape of
+  each of the thirteen IBAN markets with their national check digits,
+  routing and account pairs for the US, Hong Kong, Singapore and
+  Malaysia, test-form BICs, ISO 17442 LEIs under an unassigned prefix
+  and v4-shaped UETRs; `auto` in a scenario asks for one. Published
+  example IBANs pin every algorithm and hypothesis drives the rest.
+- **`scripts/build_corpus.py`** (`make corpus-build`) renders every
+  scenario to `pain001/corpus/data/market/<country>/<family>/` with a
+  `.provenance.yaml` sidecar (sources, confidence, evidence, the fit
+  report and the file's SHA-256), removes orphans, proves a rebuild is
+  byte-identical with `--check`, and fails when the data tree exceeds
+  the 400 KB compressed budget. The committed market files are the
+  builder's golden tests.
 - **ISO external code sets, vendored.** Edition 2Q2026 v3 (163 sets,
   3,314 codes) ships verbatim under `pain001/corpus/data/external_codes/`
   with a loader (`pain001.corpus.rules.external_codes`: `codes`,

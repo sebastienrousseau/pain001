@@ -1,0 +1,24 @@
+scenario: gb.chaps.property-purchase
+family: priority-payment
+country: GB
+message_type: pain.001.001.09
+description: CHAPS same-day property completion with the BoE HLST purpose code.
+sha256: b8cb35ce9249f6e60b23337bf35b8feb8e6ea25684a053a19a293a8a2a379f4b
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+provenance:
+  sources:
+  - title: 'Bank of England: ISO 20022 purpose codes for CHAPS property transactions'
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints:
+- end_to_end_id_max: 35
+- address_min:
+  - TwnNm
+  - Ctry

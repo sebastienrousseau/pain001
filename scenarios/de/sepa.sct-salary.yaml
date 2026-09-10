@@ -1,0 +1,57 @@
+# A German SEPA credit transfer salary run: one batch, two employees,
+# SEPA service level, SALA purpose, structured creditor reference on the
+# second payment. Renders the legacy .03, the EPC 2019 .09 and the
+# current ISO .13.
+id: de.sepa.sct-salary
+family: sepa-credit-transfer
+country: DE
+versions: [pain.001.001.03, pain.001.001.09, pain.001.001.13]
+seed: 4711
+description: SEPA SCT salary batch with structured and unstructured remittance.
+
+parties:
+  employer:
+    name: Musterfirma GmbH
+    address: {form: structured, street: Hauptstraße, building_number: "12", post_code: "80331", town: München, country: DE}
+    id: {org: {other: [{id: DE98ZZZ09999999999, scheme: BANK}]}}
+
+header:
+  message_id: MSTR-SAL-2026-09
+  created: "2026-09-25T10:00:00"
+  initiating_party: {ref: employer}
+
+payment:
+  id: SAL-2026-09
+  method: TRF
+  batch_booking: true
+  type: {service_level: SEPA, category_purpose: SALA}
+  requested_execution_date: "2026-09-28"
+  debtor: {ref: employer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: SAL-2026-09-0001
+    amount: {ccy: EUR, value: "3250.00"}
+    creditor_agent: {bic: auto}
+    creditor: {name: Anna Beispiel, address: {form: hybrid, post_code: "10115", town: Berlin, country: DE}}
+    creditor_account: {iban: auto}
+    purpose: SALA
+    remittance: {unstructured: "Gehalt September 2026"}
+  - end_to_end_id: SAL-2026-09-0002
+    amount: {ccy: EUR, value: "2980.50"}
+    creditor_agent: {bic: auto}
+    creditor: {name: Max Mustermann, address: {form: hybrid, post_code: "20095", town: Hamburg, country: DE}}
+    creditor_account: {iban: auto}
+    purpose: SALA
+    remittance:
+      structured:
+        - creditor_reference: {type: SCOR, reference: RF18539007547034}
+
+provenance:
+  sources:
+    - {title: "EPC125-05 SEPA Credit Transfer Rulebook 2025 v1.0", read: "2026-09-10"}
+    - {title: "EPC132-08 Customer-to-PSP SCT Implementation Guidelines 2025", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

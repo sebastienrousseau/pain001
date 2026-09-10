@@ -1,0 +1,24 @@
+scenario: de.sepa.sct-salary
+family: sepa-credit-transfer
+country: DE
+message_type: pain.001.001.03
+description: SEPA SCT salary batch with structured and unstructured remittance.
+sha256: 9ad84f87f0ac06cc29280b8f6bfbefef907f8d634c3fad4bdd18113a65850df7
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+provenance:
+  sources:
+  - title: EPC125-05 SEPA Credit Transfer Rulebook 2025 v1.0
+    read: '2026-09-10'
+  - title: EPC132-08 Customer-to-PSP SCT Implementation Guidelines 2025
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []
