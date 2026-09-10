@@ -40,7 +40,7 @@ Key Features
 
 .. rst-class:: feature-grid
 
-* **🏦 ISO 20022 Compliance** — Generate files compliant with pain.001.001.03 through pain.001.001.12 and pain.008.001.02
+* **🏦 ISO 20022 Compliance** — Generate files compliant with pain.001.001.03 through pain.001.001.13, pain.008.001.02 and pain.008.001.08
 * **📊 Multiple Data Sources** — Support for CSV files, SQLite databases, and Python data structures
 * **✅ Automatic Validation** — Built-in XSD schema validation for generated XML files
 * **🔒 Secure by Design** — Uses defusedxml to prevent XXE attacks and SQL injection protection
@@ -101,9 +101,13 @@ Supported ISO 20022 Versions
      - 23
      - Current credit transfer pilot support
    * - pain.008.001.02
+     - ✅ Stable
+     - 26
+     - SEPA direct debit initiation, legacy files
+   * - pain.008.001.08
      - ✅ New
      - 26
-     - SEPA direct debit initiation
+     - SEPA direct debit initiation, EPC 2025 rulebooks and CBPR+
 
 Why Pain001?
 ============

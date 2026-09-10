@@ -13,6 +13,17 @@ the ground cleared, the schema inventory and coverage engine, the
 scenario builder, and a schema coverage corpus for every bundled XSD.
 Entries are added as work lands.
 
+### Added
+
+- **`pain.008.001.08` as a bundled message type.** The ISO 2019
+  Customer Direct Debit Initiation V08 is the version the EPC 2025 SEPA
+  Direct Debit rulebooks and CBPR+ carry (ADR-0003, decision 4). It
+  ships like every other type: the official XSD, a Jinja template, the
+  26-column sample CSV and its SQLite mirror, a JSON schema, registry
+  metadata, a bundled example and a golden file. It takes the same CSV
+  as `pain.008.001.02`; the rendered difference is `BICFI` for `BIC`.
+  The REST `MessageType` enum gains `PAIN_008_08`. The `pain001-mcp`
+  and `pain001-lsp` version lists follow in their own releases.
 ### Fixed
 
 - **Bundled examples regenerated and pinned.** Every

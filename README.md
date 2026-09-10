@@ -185,8 +185,8 @@ pain001 generate -t pain.001.001.03 -d my-payments.csv  # ship it
 
 | Message type | Description |
 | :--- | :--- |
-| `pain.001.001.03` – `pain.001.001.12` | Customer Credit Transfer Initiation, all ten ISO 20022 versions |
-| `pain.008.001.02` | Customer Direct Debit Initiation |
+| `pain.001.001.03` – `pain.001.001.13` | Customer Credit Transfer Initiation, all eleven ISO 20022 versions |
+| `pain.008.001.02`, `pain.008.001.08` | Customer Direct Debit Initiation (V02 for legacy SEPA files, V08 for the EPC 2025 rulebooks and CBPR+) |
 
 Each bundled message type ships with a Jinja2 template, the official XSD
 schema, and registry metadata. List them from the CLI:

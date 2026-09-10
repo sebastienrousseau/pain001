@@ -4,9 +4,12 @@ Additional Message Types
 Pain001 now includes incremental support for more ISO 20022 families beyond
 ``pain.001``:
 
-``pain.008.001.02``
+``pain.008.001.02`` and ``pain.008.001.08``
     Direct debit initiation generation is supported through the same XML
-    generation pipeline used for ``pain.001``.
+    generation pipeline used for ``pain.001``. V02 is the version legacy
+    SEPA files carry; V08 is the one the EPC 2025 Direct Debit rulebooks
+    and CBPR+ specify. Both take the same 26-column CSV; the rendered
+    difference is ``BICFI`` in place of ``BIC``.
 
 ``pain.002``
     Payment status reports can be parsed into Python dictionaries with
