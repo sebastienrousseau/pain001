@@ -189,6 +189,7 @@ Contents
    :caption: Project
 
    architecture
+   corpus
    message-deltas
    development
    packaging

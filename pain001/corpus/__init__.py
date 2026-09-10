@@ -24,6 +24,13 @@ and the vendored ISO external code sets. The market packs for the
 sixteen countries follow in 0.0.68 and 0.0.69.
 """
 
+from pain001.corpus.api import (
+    CorpusFile,
+    coverage_report,
+    get_file,
+    list_files,
+    provenance,
+)
 from pain001.corpus.builder import (
     BuildError,
     BuildReport,
@@ -51,6 +58,11 @@ from pain001.corpus.registry import (
 )
 
 __all__ = [
+    "provenance",
+    "list_files",
+    "get_file",
+    "coverage_report",
+    "CorpusFile",
     "BuildError",
     "BuildReport",
     "BuildResult",
