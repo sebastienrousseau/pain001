@@ -268,9 +268,15 @@ def render(deltas: list[Delta]) -> str:
             ]
             lines += [f"- `{b}`" for b in d.branches_removed]
             lines.append("")
-    while lines and lines[-1] == "":
-        lines.pop()
-    return "\n".join(lines) + "\n"
+    # Sections end with a blank and the next begins with one; keep one.
+    squeezed: list[str] = []
+    for line in lines:
+        if line == "" and squeezed and squeezed[-1] == "":
+            continue
+        squeezed.append(line)
+    while squeezed and squeezed[-1] == "":
+        squeezed.pop()
+    return "\n".join(squeezed) + "\n"
 
 
 def main(argv: list[str] | None = None) -> int:

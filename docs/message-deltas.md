@@ -95,7 +95,6 @@ written `holder -> first element`.
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocAmt/TaxAmt/Tp -> Cd`
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocAmt/TaxAmt/Tp -> Prtry`
 
-
 ## pain.001.001.04 → pain.001.001.05
 
 ### Added (4: PmtInf 4)
@@ -105,7 +104,6 @@ written `holder -> first element`.
 ### Changed (3, 2 type renames that follow a parent's omitted)
 
 - `/Document/CstmrCdtTrfInitn` — CustomerCreditTransferInitiationV04, 1..1 → CustomerCreditTransferInitiationV05, 1..1
-
 
 ## pain.001.001.05 → pain.001.001.06
 
@@ -143,7 +141,6 @@ written `holder -> first element`.
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/GrnshmtRmt/Tp/CdOrPrtry -> Cd`
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/GrnshmtRmt/Tp/CdOrPrtry -> Prtry`
 
-
 ## pain.001.001.06 → pain.001.001.07
 
 ### Added (35: PmtInf 35)
@@ -163,7 +160,6 @@ written `holder -> first element`.
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocInf/LineDtls/Id/Tp/CdOrPrtry -> Cd`
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocInf/LineDtls/Id/Tp/CdOrPrtry -> Prtry`
 
-
 ## pain.001.001.07 → pain.001.001.08
 
 ### Added (2: PmtInf 2)
@@ -180,7 +176,6 @@ written `holder -> first element`.
 
 - `PmtInf/ReqdExctnDt -> Dt`
 - `PmtInf/ReqdExctnDt -> DtTm`
-
 
 ## pain.001.001.08 → pain.001.001.09
 
@@ -654,7 +649,6 @@ written `holder -> first element`.
 - `PmtInf/UltmtDbtr/PstlAdr/AdrTp -> Cd`
 - `PmtInf/UltmtDbtr/PstlAdr/AdrTp -> Prtry`
 
-
 ## pain.001.001.09 → pain.001.001.10
 
 ### Added (44: GrpHdr 4, PmtInf 40)
@@ -691,7 +685,6 @@ written `holder -> first element`.
 - `PmtInf/ReqdAdvcTp/DbtAdvc -> Cd`
 - `PmtInf/ReqdAdvcTp/DbtAdvc -> Prtry`
 
-
 ## pain.001.001.10 → pain.001.001.11
 
 ### Changed (37, 24 type renames that follow a parent's omitted)
@@ -709,7 +702,6 @@ written `holder -> first element`.
 - `PmtInf/CdtTrfTxInf/Tax/Rcrd/TaxAmt/Dtls/Prd/Yr` — ISODate, 0..1 → ISOYear, 0..1
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/TaxRmt/Rcrd/Prd/Yr` — ISODate, 0..1 → ISOYear, 0..1
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/TaxRmt/Rcrd/TaxAmt/Dtls/Prd/Yr` — ISODate, 0..1 → ISOYear, 0..1
-
 
 ## pain.001.001.11 → pain.001.001.12
 
@@ -1000,7 +992,6 @@ written `holder -> first element`.
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocInf/LineDtls/Amt/TaxAmt/Tp -> Cd`
 - `PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocInf/LineDtls/Amt/TaxAmt/Tp -> Prtry`
 
-
 ## pain.001.001.12 → pain.001.001.13
 
 ### Added (7: PmtInf 7)
@@ -1024,7 +1015,6 @@ written `holder -> first element`.
 
 - `PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Tp -> Cd`
 - `PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Tp -> Prtry`
-
 
 ## pain.008.001.02 → pain.008.001.08
 
