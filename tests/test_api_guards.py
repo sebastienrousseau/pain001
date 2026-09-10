@@ -19,7 +19,6 @@ from __future__ import annotations
 import pytest
 from fastapi import HTTPException
 
-from pain001.api import app as app_module_pkg  # noqa: F401 - import side effects
 from pain001.api.guards import sanitise_message_type
 from pain001.constants import valid_xml_types
 
