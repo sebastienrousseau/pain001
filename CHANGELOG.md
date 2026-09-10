@@ -133,6 +133,40 @@ Entries are added as work lands.
   to eleven files (119 KB compressed for all thirteen, 230 KB for the
   whole data tree). `make corpus-coverage` now also runs the MDR rules
   over every coverage-set and market file, the L1 gate of the plan.
+- **Rail profiles** (workstream 4, second part). `pain001.validation.rails`
+  adds eighteen declarative rulebooks drawn from the public scheme and
+  bank documents the plan cites: `uk-bacs`, `uk-fps`, `uk-chaps`,
+  `uk-bacs-dd`, `de-ccu`, `de-axz`, `ch-domestic`, `ch-sepa`,
+  `se-bankgiro`, `us-ach`, `us-wire`, `us-rtp`, `hk-fps`, `sg-fast`,
+  `my-duitnow`, `qa-qatch`, `ae-uaefts` and `cbpr-cross-border`, plus
+  the five country purpose mandates `purpose-mandate-ae|qa|my|gb|hk`.
+  One engine checks currency and per-item ceilings, service levels and
+  local instruments (Nacha SEC codes), domestic account shapes (sort
+  codes, ABA routing numbers with their check digit, HKICL and SGIBG
+  codes), reference lengths, purpose and regulatory-reporting mandates
+  (CBUAE form), addresses and UETRs, and for direct debits mandates,
+  sequence types and creditor identifiers; Swiss QRR references are
+  paired with QR-IBANs and check-digit verified, SCOR as ISO 11649,
+  Swedish OCR by Luhn. What a scheme document states is an error; what
+  the plan records as typical bank practice is a warning. Every rule
+  id is `<RAIL>-<ASPECT>` with a remediation hint naming the source.
+  All twenty-three compose with the six existing profiles through the
+  comma syntax and reach the CLI, REST, MCP and dashboard through the
+  plugin registry unchanged; SCHEMES.md lists them with their sources.
+- **The validation ladder on every corpus file.**
+  `pain001.corpus.rules.projection` reads a built document back into the
+  CSV-shaped rows the profiles judge (one per transaction, PmtInf merged
+  in), so a corpus file is held to the same rulebooks a CSV is.
+  `pain001.corpus.rules.ladder` runs L0 (XSD), L1 (MDR), L2 (the
+  profiles a scenario lists under `profiles:`) and L3 (the overlays that
+  apply); the build writes the result into every provenance sidecar and
+  refuses a file that fails, and `make corpus-coverage` re-runs L2 and
+  L3 over the shipped market files. The three scenarios list their
+  rails and all pass. `make corpus-evidence` prints, per scenario, the
+  external validator the plan expects (HSBC, SIX, ValidateFin) and what
+  has been recorded; `scripts/corpus_evidence.py record` appends an
+  external result to the scenario's provenance, the source of truth the
+  build copies into the sidecars (decision 7).
 - **ISO external code sets, vendored.** Edition 2Q2026 v3 (163 sets,
   3,314 codes) ships verbatim under `pain001/corpus/data/external_codes/`
   with a loader (`pain001.corpus.rules.external_codes`: `codes`,

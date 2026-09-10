@@ -10,6 +10,23 @@ build:
   unwrapped: []
   dropped: []
   truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sdd:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
 provenance:
   sources:
   - title: EPC016-06 SEPA Core Direct Debit Rulebook 2025 v1.0

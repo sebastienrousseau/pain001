@@ -32,6 +32,8 @@ from pain001.plugins import (
 from pain001.plugins._builtins import _as_sentence
 
 #: Every profile bundled in :mod:`pain001.validation.schemes`.
+from pain001.validation.rails import RAIL_PROFILES  # noqa: E402
+
 BUNDLED_SCHEMES = (
     "sepa-sct",
     "sepa-sdd",
@@ -39,6 +41,7 @@ BUNDLED_SCHEMES = (
     "sepa-inst",
     "xborder-ct",
     "anti-duplicate",
+    *sorted(RAIL_PROFILES),
 )
 
 #: A row that breaches SEPA-CCY (USD in a EUR-only rulebook).

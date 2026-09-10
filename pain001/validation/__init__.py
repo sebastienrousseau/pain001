@@ -36,6 +36,13 @@ from pain001.validation.iban_validator import (
     validate_iban_format,
     validate_iban_safe,
 )
+from pain001.validation.rails import (
+    PURPOSE_MANDATES,
+    RAILS,
+    PurposeMandate,
+    Rail,
+    RailProfile,
+)
 from pain001.validation.schemes import (
     PROFILES,
     REMEDIATIONS,
@@ -90,6 +97,12 @@ __all__ = [
     "PROFILES",
     "REMEDIATIONS",
     "remediation_for",
+    # Rail rulebooks
+    "RAILS",
+    "PURPOSE_MANDATES",
+    "Rail",
+    "RailProfile",
+    "PurposeMandate",
     # Required-column contract
     "required_columns",
 ]

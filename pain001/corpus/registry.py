@@ -68,6 +68,17 @@ class Scenario:
         return self.versions[0][:8]
 
     @property
+    def profiles(self) -> tuple[str, ...]:
+        """Scheme and rail profile names the built files must pass (L2)."""
+        return tuple(self.data.get("profiles", ()))
+
+    @property
+    def overlays(self) -> tuple[str, ...] | None:
+        """Overlay ids to apply (L3), or ``None`` to apply by ``applies_to``."""
+        listed = self.data.get("overlays")
+        return None if listed is None else tuple(listed)
+
+    @property
     def seed(self) -> int:
         """The identifier seed: ``seed`` if given, else a hash of the id."""
         given = self.data.get("seed")

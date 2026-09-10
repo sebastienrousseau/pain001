@@ -11,6 +11,23 @@ build:
   unwrapped: []
   dropped: []
   truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sct:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
 provenance:
   sources:
   - title: EPC125-05 SEPA Credit Transfer Rulebook 2025 v1.0

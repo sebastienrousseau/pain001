@@ -8,6 +8,8 @@ versions: [pain.008.001.02, pain.008.001.08]
 seed: 3131
 description: SEPA Core direct debit, recurring collections under mandates.
 
+profiles: [sepa-sdd, anti-duplicate]
+
 parties:
   utility:
     name: Energie Noord BV

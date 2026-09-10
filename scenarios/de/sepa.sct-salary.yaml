@@ -9,6 +9,8 @@ versions: [pain.001.001.03, pain.001.001.09, pain.001.001.13]
 seed: 4711
 description: SEPA SCT salary batch with structured and unstructured remittance.
 
+profiles: [sepa-sct, anti-duplicate]
+
 parties:
   employer:
     name: Musterfirma GmbH

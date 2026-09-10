@@ -53,6 +53,7 @@ from pain001.corpus.builder import BuildResult, build
 from pain001.corpus.coverage_sets import build_coverage_set
 from pain001.corpus.inventory import CoverageReport
 from pain001.corpus.registry import SCENARIOS_DIR, Scenario, load_scenarios
+from pain001.corpus.rules.ladder import ladder_passes, run_ladder
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = REPO_ROOT / "pain001" / "corpus" / "data"
@@ -75,8 +76,26 @@ def target_for(
 
 
 def provenance_for(scenario: Scenario, result: BuildResult) -> str:
-    """The sidecar text: scenario provenance plus how the file was built."""
+    """The sidecar text: provenance, how the file was built, and the ladder.
+
+    Args:
+        scenario: The scenario.
+        result: The build result for one edition.
+
+    Returns:
+        YAML text.
+
+    Raises:
+        SystemExit: If the file fails a rung of the validation ladder;
+            a file that cannot pass is not shipped.
+    """
     report = result.report
+    ladder = run_ladder(scenario, result.version, result.xml)
+    if not ladder_passes(ladder):
+        raise SystemExit(
+            f"{scenario.id} in {result.version} fails the validation ladder: "
+            f"{ladder}"
+        )
     record = {
         "scenario": scenario.id,
         "family": scenario.family,
@@ -91,6 +110,7 @@ def provenance_for(scenario: Scenario, result: BuildResult) -> str:
             "dropped": list(report.dropped),
             "truncated": list(report.truncated),
         },
+        "validation": ladder,
         "provenance": scenario.data.get(
             "provenance", {"confidence": "assumed"}
         ),

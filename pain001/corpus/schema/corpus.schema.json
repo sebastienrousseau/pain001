@@ -5,221 +5,968 @@
   "description": "A scenario says what a payment is; the builder decides how each ISO 20022 edition spells it. Friendly keys cover the blocks every market file needs; a `raw` object at any level carries ISO-named elements verbatim for the long tail, and is conformed to the target version like everything else.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["id", "family", "country", "versions", "payment", "transactions"],
+  "required": [
+    "id",
+    "family",
+    "country",
+    "versions",
+    "payment",
+    "transactions"
+  ],
   "properties": {
-    "id": {"type": "string", "pattern": "^[a-z]{2}\\.[a-z0-9-]+(\\.[a-z0-9-]+)+$", "description": "country.rail.scenario, e.g. gb.chaps.property-purchase"},
-    "family": {"type": "string", "pattern": "^[a-z0-9-]+$"},
-    "country": {"type": "string", "pattern": "^[A-Z]{2}$"},
-    "versions": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "pattern": "^pain\\.(001|008)\\.001\\.[0-9]{2}$"}},
-    "seed": {"type": "integer", "minimum": 0},
-    "description": {"type": "string"},
-    "parties": {"type": "object", "additionalProperties": {"$ref": "#/definitions/party"}, "description": "Named parties a `ref` can point at."},
-    "header": {"$ref": "#/definitions/header"},
-    "payment": {"$ref": "#/definitions/payment"},
-    "transactions": {"type": "array", "minItems": 1, "items": {"$ref": "#/definitions/transaction"}},
-    "constraints": {"type": "array", "items": {}},
-    "provenance": {"$ref": "#/definitions/provenance"}
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z]{2}\\.[a-z0-9-]+(\\.[a-z0-9-]+)+$",
+      "description": "country.rail.scenario, e.g. gb.chaps.property-purchase"
+    },
+    "family": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "country": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$"
+    },
+    "versions": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^pain\\.(001|008)\\.001\\.[0-9]{2}$"
+      }
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "description": {
+      "type": "string"
+    },
+    "parties": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/party"
+      },
+      "description": "Named parties a `ref` can point at."
+    },
+    "header": {
+      "$ref": "#/definitions/header"
+    },
+    "payment": {
+      "$ref": "#/definitions/payment"
+    },
+    "transactions": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/transaction"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "items": {}
+    },
+    "provenance": {
+      "$ref": "#/definitions/provenance"
+    },
+    "profiles": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "description": "Scheme and rail profiles (pain001.validation.PROFILES names) the built files must pass; the plan's L2."
+    },
+    "overlays": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      },
+      "description": "Overlay ids the built files must pass (L3); by default every overlay whose applies_to names the scenario or its family."
+    }
   },
   "definitions": {
-    "raw": {"type": "object", "description": "ISO-named elements merged verbatim at this level."},
+    "raw": {
+      "type": "object",
+      "description": "ISO-named elements merged verbatim at this level."
+    },
     "code_or_proprietary": {
       "oneOf": [
-        {"type": "string"},
-        {"type": "object", "additionalProperties": false, "properties": {"code": {"type": "string"}, "proprietary": {"type": "string"}}, "minProperties": 1, "maxProperties": 1}
+        {
+          "type": "string"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "proprietary": {
+              "type": "string"
+            }
+          },
+          "minProperties": 1,
+          "maxProperties": 1
+        }
       ]
     },
     "amount": {
-      "type": "object", "additionalProperties": false, "required": ["ccy", "value"],
-      "properties": {"ccy": {"type": "string", "pattern": "^[A-Z]{3}$"}, "value": {"type": "string", "pattern": "^[0-9]+(\\.[0-9]{1,5})?$"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ccy",
+        "value"
+      ],
+      "properties": {
+        "ccy": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "value": {
+          "type": "string",
+          "pattern": "^[0-9]+(\\.[0-9]{1,5})?$"
+        }
+      }
     },
     "address": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "form": {"type": "string", "enum": ["structured", "hybrid", "unstructured"]},
-        "type": {"$ref": "#/definitions/code_or_proprietary"},
-        "department": {"type": "string"}, "sub_department": {"type": "string"},
-        "street": {"type": "string"}, "building_number": {"type": "string"}, "building_name": {"type": "string"},
-        "floor": {"type": "string"}, "post_box": {"type": "string"}, "room": {"type": "string"},
-        "post_code": {"type": "string"}, "town": {"type": "string"}, "town_location": {"type": "string"},
-        "district": {"type": "string"}, "country_subdivision": {"type": "string"},
-        "country": {"type": "string", "pattern": "^[A-Z]{2}$"},
-        "lines": {"type": "array", "maxItems": 7, "items": {"type": "string"}},
-        "raw": {"$ref": "#/definitions/raw"}
+        "form": {
+          "type": "string",
+          "enum": [
+            "structured",
+            "hybrid",
+            "unstructured"
+          ]
+        },
+        "type": {
+          "$ref": "#/definitions/code_or_proprietary"
+        },
+        "department": {
+          "type": "string"
+        },
+        "sub_department": {
+          "type": "string"
+        },
+        "street": {
+          "type": "string"
+        },
+        "building_number": {
+          "type": "string"
+        },
+        "building_name": {
+          "type": "string"
+        },
+        "floor": {
+          "type": "string"
+        },
+        "post_box": {
+          "type": "string"
+        },
+        "room": {
+          "type": "string"
+        },
+        "post_code": {
+          "type": "string"
+        },
+        "town": {
+          "type": "string"
+        },
+        "town_location": {
+          "type": "string"
+        },
+        "district": {
+          "type": "string"
+        },
+        "country_subdivision": {
+          "type": "string"
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "lines": {
+          "type": "array",
+          "maxItems": 7,
+          "items": {
+            "type": "string"
+          }
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "other_id": {
-      "type": "object", "additionalProperties": false, "required": ["id"],
-      "properties": {"id": {"type": "string"}, "scheme": {"type": "string"}, "proprietary_scheme": {"type": "string"}, "issuer": {"type": "string"}}
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "scheme": {
+          "type": "string"
+        },
+        "proprietary_scheme": {
+          "type": "string"
+        },
+        "issuer": {
+          "type": "string"
+        }
+      }
     },
     "party_id": {
-      "type": "object", "additionalProperties": false, "minProperties": 1, "maxProperties": 1,
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "maxProperties": 1,
       "properties": {
-        "org": {"type": "object", "additionalProperties": false, "properties": {"bic": {"type": "string"}, "lei": {"type": "string", "description": "An LEI, or `auto` for a checked synthetic one."}, "other": {"type": "array", "items": {"$ref": "#/definitions/other_id"}}}},
-        "private": {"type": "object", "additionalProperties": false, "properties": {
-          "birth": {"type": "object", "additionalProperties": false, "required": ["date", "city", "country"], "properties": {"date": {"type": "string"}, "province": {"type": "string"}, "city": {"type": "string"}, "country": {"type": "string"}}},
-          "other": {"type": "array", "items": {"$ref": "#/definitions/other_id"}}}}
+        "org": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "bic": {
+              "type": "string"
+            },
+            "lei": {
+              "type": "string",
+              "description": "An LEI, or `auto` for a checked synthetic one."
+            },
+            "other": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/other_id"
+              }
+            }
+          }
+        },
+        "private": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "birth": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "date",
+                "city",
+                "country"
+              ],
+              "properties": {
+                "date": {
+                  "type": "string"
+                },
+                "province": {
+                  "type": "string"
+                },
+                "city": {
+                  "type": "string"
+                },
+                "country": {
+                  "type": "string"
+                }
+              }
+            },
+            "other": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/other_id"
+              }
+            }
+          }
+        }
       }
     },
     "contact": {
-      "type": "object", "additionalProperties": false,
-      "properties": {"prefix": {"type": "string"}, "name": {"type": "string"}, "phone": {"type": "string"}, "mobile": {"type": "string"}, "fax": {"type": "string"}, "email": {"type": "string"}, "raw": {"$ref": "#/definitions/raw"}}
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "prefix": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "mobile": {
+          "type": "string"
+        },
+        "fax": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
+      }
     },
     "party": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "ref": {"type": "string"},
-        "name": {"type": "string"},
-        "address": {"$ref": "#/definitions/address"},
-        "id": {"$ref": "#/definitions/party_id"},
-        "country_of_residence": {"type": "string", "pattern": "^[A-Z]{2}$"},
-        "contact": {"$ref": "#/definitions/contact"},
-        "raw": {"$ref": "#/definitions/raw"}
+        "ref": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        },
+        "id": {
+          "$ref": "#/definitions/party_id"
+        },
+        "country_of_residence": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "contact": {
+          "$ref": "#/definitions/contact"
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "account": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "iban": {"type": "string", "description": "An IBAN, or `auto` for a synthetic one in the party's country."},
-        "other": {"$ref": "#/definitions/other_id"},
-        "currency": {"type": "string", "pattern": "^[A-Z]{3}$"},
-        "name": {"type": "string"},
-        "type": {"$ref": "#/definitions/code_or_proprietary"},
-        "proxy": {"type": "object", "additionalProperties": false, "required": ["id"], "properties": {"type": {"$ref": "#/definitions/code_or_proprietary"}, "id": {"type": "string"}}},
-        "raw": {"$ref": "#/definitions/raw"}
+        "iban": {
+          "type": "string",
+          "description": "An IBAN, or `auto` for a synthetic one in the party's country."
+        },
+        "other": {
+          "$ref": "#/definitions/other_id"
+        },
+        "currency": {
+          "type": "string",
+          "pattern": "^[A-Z]{3}$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "type": {
+          "$ref": "#/definitions/code_or_proprietary"
+        },
+        "proxy": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id"
+          ],
+          "properties": {
+            "type": {
+              "$ref": "#/definitions/code_or_proprietary"
+            },
+            "id": {
+              "type": "string"
+            }
+          }
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "agent": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "bic": {"type": "string", "description": "A BIC, or `auto` for a test-form BIC in the agent's country."},
-        "country": {"type": "string", "pattern": "^[A-Z]{2}$"},
-        "lei": {"type": "string"},
-        "name": {"type": "string"},
-        "clearing": {"type": "object", "additionalProperties": false, "required": ["member_id"], "properties": {"system": {"$ref": "#/definitions/code_or_proprietary"}, "member_id": {"type": "string"}}},
-        "other": {"$ref": "#/definitions/other_id"},
-        "address": {"$ref": "#/definitions/address"},
-        "branch": {"type": "object", "additionalProperties": false, "properties": {"id": {"type": "string"}, "lei": {"type": "string"}, "name": {"type": "string"}, "address": {"$ref": "#/definitions/address"}}},
-        "raw": {"$ref": "#/definitions/raw"}
+        "bic": {
+          "type": "string",
+          "description": "A BIC, or `auto` for a test-form BIC in the agent's country."
+        },
+        "country": {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$"
+        },
+        "lei": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "clearing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "member_id"
+          ],
+          "properties": {
+            "system": {
+              "$ref": "#/definitions/code_or_proprietary"
+            },
+            "member_id": {
+              "type": "string"
+            }
+          }
+        },
+        "other": {
+          "$ref": "#/definitions/other_id"
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        },
+        "branch": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "lei": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "address": {
+              "$ref": "#/definitions/address"
+            }
+          }
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "payment_type": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "priority": {"type": "string", "enum": ["HIGH", "NORM"]},
-        "service_level": {"oneOf": [{"$ref": "#/definitions/code_or_proprietary"}, {"type": "array", "items": {"$ref": "#/definitions/code_or_proprietary"}}]},
-        "local_instrument": {"$ref": "#/definitions/code_or_proprietary"},
-        "sequence_type": {"type": "string", "enum": ["FRST", "RCUR", "FNAL", "OOFF", "RPRE"]},
-        "category_purpose": {"$ref": "#/definitions/code_or_proprietary"}
+        "priority": {
+          "type": "string",
+          "enum": [
+            "HIGH",
+            "NORM"
+          ]
+        },
+        "service_level": {
+          "oneOf": [
+            {
+              "$ref": "#/definitions/code_or_proprietary"
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/code_or_proprietary"
+              }
+            }
+          ]
+        },
+        "local_instrument": {
+          "$ref": "#/definitions/code_or_proprietary"
+        },
+        "sequence_type": {
+          "type": "string",
+          "enum": [
+            "FRST",
+            "RCUR",
+            "FNAL",
+            "OOFF",
+            "RPRE"
+          ]
+        },
+        "category_purpose": {
+          "$ref": "#/definitions/code_or_proprietary"
+        }
       }
     },
     "header": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "message_id": {"type": "string"},
-        "created": {"type": "string"},
-        "authorisation": {"type": "array", "maxItems": 2, "items": {"$ref": "#/definitions/code_or_proprietary"}},
-        "control_sum": {"type": "boolean"},
-        "initiating_party": {"$ref": "#/definitions/party"},
-        "forwarding_agent": {"$ref": "#/definitions/agent"},
-        "raw": {"$ref": "#/definitions/raw"}
+        "message_id": {
+          "type": "string"
+        },
+        "created": {
+          "type": "string"
+        },
+        "authorisation": {
+          "type": "array",
+          "maxItems": 2,
+          "items": {
+            "$ref": "#/definitions/code_or_proprietary"
+          }
+        },
+        "control_sum": {
+          "type": "boolean"
+        },
+        "initiating_party": {
+          "$ref": "#/definitions/party"
+        },
+        "forwarding_agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "payment": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "id": {"type": "string"},
-        "method": {"type": "string", "enum": ["TRF", "CHK", "TRA", "DD"]},
-        "batch_booking": {"type": "boolean"},
-        "type": {"$ref": "#/definitions/payment_type"},
-        "requested_execution_date": {"type": "string"},
-        "requested_collection_date": {"type": "string"},
-        "pooling_adjustment_date": {"type": "string"},
-        "charge_bearer": {"type": "string", "enum": ["DEBT", "CRED", "SHAR", "SLEV"]},
-        "debtor": {"$ref": "#/definitions/party"},
-        "debtor_account": {"$ref": "#/definitions/account"},
-        "debtor_agent": {"$ref": "#/definitions/agent"},
-        "debtor_agent_account": {"$ref": "#/definitions/account"},
-        "ultimate_debtor": {"$ref": "#/definitions/party"},
-        "creditor": {"$ref": "#/definitions/party"},
-        "creditor_account": {"$ref": "#/definitions/account"},
-        "creditor_agent": {"$ref": "#/definitions/agent"},
-        "creditor_agent_account": {"$ref": "#/definitions/account"},
-        "ultimate_creditor": {"$ref": "#/definitions/party"},
-        "creditor_scheme_id": {"$ref": "#/definitions/party"},
-        "charges_account": {"$ref": "#/definitions/account"},
-        "charges_account_agent": {"$ref": "#/definitions/agent"},
-        "raw": {"$ref": "#/definitions/raw"}
+        "id": {
+          "type": "string"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "TRF",
+            "CHK",
+            "TRA",
+            "DD"
+          ]
+        },
+        "batch_booking": {
+          "type": "boolean"
+        },
+        "type": {
+          "$ref": "#/definitions/payment_type"
+        },
+        "requested_execution_date": {
+          "type": "string"
+        },
+        "requested_collection_date": {
+          "type": "string"
+        },
+        "pooling_adjustment_date": {
+          "type": "string"
+        },
+        "charge_bearer": {
+          "type": "string",
+          "enum": [
+            "DEBT",
+            "CRED",
+            "SHAR",
+            "SLEV"
+          ]
+        },
+        "debtor": {
+          "$ref": "#/definitions/party"
+        },
+        "debtor_account": {
+          "$ref": "#/definitions/account"
+        },
+        "debtor_agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "debtor_agent_account": {
+          "$ref": "#/definitions/account"
+        },
+        "ultimate_debtor": {
+          "$ref": "#/definitions/party"
+        },
+        "creditor": {
+          "$ref": "#/definitions/party"
+        },
+        "creditor_account": {
+          "$ref": "#/definitions/account"
+        },
+        "creditor_agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "creditor_agent_account": {
+          "$ref": "#/definitions/account"
+        },
+        "ultimate_creditor": {
+          "$ref": "#/definitions/party"
+        },
+        "creditor_scheme_id": {
+          "$ref": "#/definitions/party"
+        },
+        "charges_account": {
+          "$ref": "#/definitions/account"
+        },
+        "charges_account_agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "document_reference": {
-      "type": "object", "additionalProperties": false,
-      "properties": {"type": {"$ref": "#/definitions/code_or_proprietary"}, "issuer": {"type": "string"}, "number": {"type": "string"}, "date": {"type": "string"}}
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "$ref": "#/definitions/code_or_proprietary"
+        },
+        "issuer": {
+          "type": "string"
+        },
+        "number": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        }
+      }
     },
     "structured_remittance": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "documents": {"type": "array", "items": {"$ref": "#/definitions/document_reference"}},
-        "amounts": {"type": "object", "additionalProperties": false, "properties": {"due": {"$ref": "#/definitions/amount"}, "remitted": {"$ref": "#/definitions/amount"}, "credit_note": {"$ref": "#/definitions/amount"}}},
-        "creditor_reference": {"type": "object", "additionalProperties": false, "required": ["reference"], "properties": {"type": {"$ref": "#/definitions/code_or_proprietary"}, "issuer": {"type": "string"}, "reference": {"type": "string"}}},
-        "invoicer": {"$ref": "#/definitions/party"},
-        "invoicee": {"$ref": "#/definitions/party"},
-        "additional": {"type": "array", "maxItems": 3, "items": {"type": "string"}},
-        "raw": {"$ref": "#/definitions/raw"}
+        "documents": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/document_reference"
+          }
+        },
+        "amounts": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "due": {
+              "$ref": "#/definitions/amount"
+            },
+            "remitted": {
+              "$ref": "#/definitions/amount"
+            },
+            "credit_note": {
+              "$ref": "#/definitions/amount"
+            }
+          }
+        },
+        "creditor_reference": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "reference"
+          ],
+          "properties": {
+            "type": {
+              "$ref": "#/definitions/code_or_proprietary"
+            },
+            "issuer": {
+              "type": "string"
+            },
+            "reference": {
+              "type": "string"
+            }
+          }
+        },
+        "invoicer": {
+          "$ref": "#/definitions/party"
+        },
+        "invoicee": {
+          "$ref": "#/definitions/party"
+        },
+        "additional": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "type": "string"
+          }
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "remittance": {
-      "type": "object", "additionalProperties": false,
+      "type": "object",
+      "additionalProperties": false,
       "properties": {
-        "unstructured": {"oneOf": [{"type": "string"}, {"type": "array", "items": {"type": "string"}}]},
-        "structured": {"type": "array", "items": {"$ref": "#/definitions/structured_remittance"}}
+        "unstructured": {
+          "oneOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          ]
+        },
+        "structured": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/structured_remittance"
+          }
+        }
       }
     },
     "mandate": {
-      "type": "object", "additionalProperties": false, "required": ["id"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id"
+      ],
       "properties": {
-        "id": {"type": "string"}, "date_of_signature": {"type": "string"}, "amendment_indicator": {"type": "boolean"},
-        "electronic_signature": {"type": "string"}, "first_collection_date": {"type": "string"}, "final_collection_date": {"type": "string"},
-        "frequency": {"type": "string"}, "raw": {"$ref": "#/definitions/raw"}
+        "id": {
+          "type": "string"
+        },
+        "date_of_signature": {
+          "type": "string"
+        },
+        "amendment_indicator": {
+          "type": "boolean"
+        },
+        "electronic_signature": {
+          "type": "string"
+        },
+        "first_collection_date": {
+          "type": "string"
+        },
+        "final_collection_date": {
+          "type": "string"
+        },
+        "frequency": {
+          "type": "string"
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "transaction": {
-      "type": "object", "additionalProperties": false, "required": ["end_to_end_id", "amount"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "end_to_end_id",
+        "amount"
+      ],
       "properties": {
-        "instruction_id": {"type": "string"},
-        "end_to_end_id": {"type": "string"},
-        "uetr": {"type": "string", "description": "A UUID, or `auto`."},
-        "type": {"$ref": "#/definitions/payment_type"},
-        "amount": {"$ref": "#/definitions/amount"},
-        "equivalent_amount": {"type": "object", "additionalProperties": false, "required": ["amount", "currency_of_transfer"], "properties": {"amount": {"$ref": "#/definitions/amount"}, "currency_of_transfer": {"type": "string"}}},
-        "exchange_rate": {"type": "object", "additionalProperties": false, "properties": {"unit_currency": {"type": "string"}, "rate": {"type": "string"}, "type": {"type": "string", "enum": ["SPOT", "SALE", "AGRD"]}, "contract_id": {"type": "string"}}},
-        "charge_bearer": {"type": "string", "enum": ["DEBT", "CRED", "SHAR", "SLEV"]},
-        "mandate": {"$ref": "#/definitions/mandate"},
-        "pre_notification": {"type": "object", "additionalProperties": false, "properties": {"id": {"type": "string"}, "date": {"type": "string"}}},
-        "creditor_scheme_id": {"$ref": "#/definitions/party"},
-        "ultimate_debtor": {"$ref": "#/definitions/party"},
-        "debtor": {"$ref": "#/definitions/party"},
-        "debtor_account": {"$ref": "#/definitions/account"},
-        "debtor_agent": {"$ref": "#/definitions/agent"},
-        "debtor_agent_account": {"$ref": "#/definitions/account"},
-        "intermediary_agents": {"type": "array", "maxItems": 3, "items": {"$ref": "#/definitions/agent"}},
-        "creditor_agent": {"$ref": "#/definitions/agent"},
-        "creditor_agent_account": {"$ref": "#/definitions/account"},
-        "creditor": {"$ref": "#/definitions/party"},
-        "creditor_account": {"$ref": "#/definitions/account"},
-        "ultimate_creditor": {"$ref": "#/definitions/party"},
-        "instructions_for_creditor_agent": {"type": "array", "items": {"type": "object", "additionalProperties": false, "properties": {"code": {"type": "string"}, "text": {"type": "string"}}}},
-        "instruction_for_debtor_agent": {"type": "string"},
-        "purpose": {"$ref": "#/definitions/code_or_proprietary"},
-        "remittance": {"$ref": "#/definitions/remittance"},
-        "raw": {"$ref": "#/definitions/raw"}
+        "instruction_id": {
+          "type": "string"
+        },
+        "end_to_end_id": {
+          "type": "string"
+        },
+        "uetr": {
+          "type": "string",
+          "description": "A UUID, or `auto`."
+        },
+        "type": {
+          "$ref": "#/definitions/payment_type"
+        },
+        "amount": {
+          "$ref": "#/definitions/amount"
+        },
+        "equivalent_amount": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "amount",
+            "currency_of_transfer"
+          ],
+          "properties": {
+            "amount": {
+              "$ref": "#/definitions/amount"
+            },
+            "currency_of_transfer": {
+              "type": "string"
+            }
+          }
+        },
+        "exchange_rate": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "unit_currency": {
+              "type": "string"
+            },
+            "rate": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "SPOT",
+                "SALE",
+                "AGRD"
+              ]
+            },
+            "contract_id": {
+              "type": "string"
+            }
+          }
+        },
+        "charge_bearer": {
+          "type": "string",
+          "enum": [
+            "DEBT",
+            "CRED",
+            "SHAR",
+            "SLEV"
+          ]
+        },
+        "mandate": {
+          "$ref": "#/definitions/mandate"
+        },
+        "pre_notification": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "date": {
+              "type": "string"
+            }
+          }
+        },
+        "creditor_scheme_id": {
+          "$ref": "#/definitions/party"
+        },
+        "ultimate_debtor": {
+          "$ref": "#/definitions/party"
+        },
+        "debtor": {
+          "$ref": "#/definitions/party"
+        },
+        "debtor_account": {
+          "$ref": "#/definitions/account"
+        },
+        "debtor_agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "debtor_agent_account": {
+          "$ref": "#/definitions/account"
+        },
+        "intermediary_agents": {
+          "type": "array",
+          "maxItems": 3,
+          "items": {
+            "$ref": "#/definitions/agent"
+          }
+        },
+        "creditor_agent": {
+          "$ref": "#/definitions/agent"
+        },
+        "creditor_agent_account": {
+          "$ref": "#/definitions/account"
+        },
+        "creditor": {
+          "$ref": "#/definitions/party"
+        },
+        "creditor_account": {
+          "$ref": "#/definitions/account"
+        },
+        "ultimate_creditor": {
+          "$ref": "#/definitions/party"
+        },
+        "instructions_for_creditor_agent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "text": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "instruction_for_debtor_agent": {
+          "type": "string"
+        },
+        "purpose": {
+          "$ref": "#/definitions/code_or_proprietary"
+        },
+        "remittance": {
+          "$ref": "#/definitions/remittance"
+        },
+        "raw": {
+          "$ref": "#/definitions/raw"
+        }
       }
     },
     "provenance": {
-      "type": "object", "additionalProperties": false, "required": ["confidence"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "confidence"
+      ],
       "properties": {
-        "sources": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["title"], "properties": {"title": {"type": "string"}, "url": {"type": "string"}, "read": {"type": "string"}, "note": {"type": "string"}}}},
-        "confidence": {"type": "string", "enum": ["verified", "derived", "assumed"]},
-        "evidence": {"type": "array", "items": {"type": "object", "additionalProperties": false, "required": ["state"], "properties": {"state": {"type": "string", "enum": ["hsbc-validated", "portal-validated", "self-validated"]}, "tool": {"type": "string"}, "date": {"type": "string"}, "result": {"type": "string"}, "note": {"type": "string"}}}}
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "title"
+            ],
+            "properties": {
+              "title": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "read": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "confidence": {
+          "type": "string",
+          "enum": [
+            "verified",
+            "derived",
+            "assumed"
+          ]
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "state"
+            ],
+            "properties": {
+              "state": {
+                "type": "string",
+                "enum": [
+                  "hsbc-validated",
+                  "portal-validated",
+                  "self-validated"
+                ]
+              },
+              "tool": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              },
+              "result": {
+                "type": "string"
+              },
+              "note": {
+                "type": "string"
+              },
+              "version": {
+                "type": "string"
+              }
+            }
+          }
+        }
       }
     }
   }

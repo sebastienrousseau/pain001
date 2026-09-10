@@ -18,9 +18,10 @@ This package grows over the 0.0.67 to 0.0.69 releases. Today it holds
 the schema inventory and coverage yardstick, the scenario loader and
 the version-aware builder with its identifier factories, the shipped
 market files under ``data/market``, the generated coverage sets under
-``data/coverage`` and, under ``rules``, the vendored
-ISO external code sets; the MDR rules, overlays and the coverage sets
-follow in their own workstreams.
+``data/coverage`` and, under ``rules``, the MDR cross-element rules,
+the overlay grammar, the XML-to-row projection, the validation ladder
+and the vendored ISO external code sets. The market packs for the
+sixteen countries follow in 0.0.68 and 0.0.69.
 """
 
 from pain001.corpus.builder import (

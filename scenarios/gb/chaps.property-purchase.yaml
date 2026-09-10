@@ -9,13 +9,15 @@ versions: [pain.001.001.03, pain.001.001.09]
 seed: 20260912
 description: CHAPS same-day property completion with the BoE HLST purpose code.
 
+profiles: [uk-chaps, purpose-mandate-gb, anti-duplicate]
+
 parties:
   uk-corporate:
     name: Elm Road Developments Ltd
     address: {form: hybrid, street: Elm Road, building_number: "14", post_code: SW1A 1AA, town: London, country: GB}
     id: {org: {lei: auto}}
   uk-solicitor:
-    name: Bramley & Co Solicitors Client Account
+    name: Bramley and Co Solicitors Client Account
     address: {form: hybrid, street: High Street, building_number: "2", post_code: RG1 2AB, town: Reading, country: GB}
 
 header:

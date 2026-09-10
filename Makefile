@@ -43,7 +43,8 @@ help:
 	@echo "  docs          - Build documentation"
 	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors
 	@echo "  corpus-build  - Render scenarios/ and the coverage sets into pain001/corpus/data (deterministic)"
-	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)""
+	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)"
+	@echo "  corpus-evidence - Print the external-validation checklist per scenario""
 	@echo ""
 	@echo "Advanced Tollgates (Enterprise Production):"
 	@echo "  tollgate-deps        - Verify no new dependencies (Dependency Governance)"
@@ -210,6 +211,10 @@ corpus-build:
 	@echo "$(YELLOW)Building the corpus from scenarios/...$(NC)"
 	@poetry run python scripts/build_corpus.py
 	@echo "$(GREEN)✓ Corpus built$(NC)"
+
+# --- Corpus evidence checklist (ADR-0003, D7) ---
+corpus-evidence:
+	@poetry run python scripts/corpus_evidence.py checklist
 
 # --- Corpus coverage gate (ADR-0003) ---
 corpus-coverage:

@@ -39,6 +39,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 from pain001.corpus import CoverageReport, coverage, inventory_for
 from pain001.corpus.rules.mdr import evaluate_mdr
@@ -98,6 +99,48 @@ def _mdr_check(files: list[Path]) -> int:
                 + "; ".join(f"{f.rule_id} at {f.path}" for f in findings[:3])
             )
     return failing
+
+
+def _ladder_check(files: list[Path]) -> int:
+    """Re-run L2 and L3 on market files from their scenarios; count failures."""
+    from pain001.corpus.registry import load_scenarios  # noqa: PLC0415
+    from pain001.corpus.rules.ladder import (  # noqa: PLC0415
+        ladder_passes,
+        run_ladder,
+    )
+
+    scenarios = {s.id: s for s in load_scenarios()}
+    failing = 0
+    for path in files:
+        scenario_id, _, rest = path.name.partition(".pain.")
+        version = "pain." + rest[: -len(".xml")]
+        scenario = scenarios.get(scenario_id)
+        if scenario is None:
+            print(f"    L2/L3 {path.name}: no scenario named {scenario_id!r}")
+            failing += 1
+            continue
+        record = run_ladder(
+            scenario, version, path.read_text(encoding="utf-8")
+        )
+        if not ladder_passes(record):
+            failing += 1
+            print(f"    L2/L3 {path.name}: {_failed_rungs(record)}")
+    return failing
+
+
+def _failed_rungs(record: dict[str, Any]) -> dict[str, Any]:
+    """The rungs of a ladder record that carry errors."""
+    failed: dict[str, Any] = {}
+    for rung in ("xsd", "mdr"):
+        if record[rung]["errors"]:
+            failed[rung] = record[rung]["findings"]
+    for rung in ("profiles", "overlays"):
+        bad = {
+            k: v["findings"] for k, v in record[rung].items() if v["errors"]
+        }
+        if bad:
+            failed[rung] = bad
+    return failed
 
 
 def write_inventories(out_dir: Path) -> int:
@@ -165,6 +208,7 @@ def main(argv: list[str] | None = None) -> int:
     market_root = args.coverage_root.parent / "market"
     if market_root.is_dir():
         failures += _mdr_check(sorted(market_root.rglob("*.xml")))
+        failures += _ladder_check(sorted(market_root.rglob("*.xml")))
     if args.json is not None:
         args.json.write_text(json.dumps(reports, indent=2), encoding="utf-8")
     if failures:
