@@ -40,6 +40,8 @@ import xmlschema
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
 
+from pain001.observability.otel import traced
+
 logger = logging.getLogger(__name__)
 
 try:  # pragma: no cover - presence depends on the install
@@ -103,6 +105,7 @@ def _lxml_accepts(xml_content: str, xsd_file_path: str) -> bool:
         return False
 
 
+@traced("pain001.validate")
 def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
     """
     Validates an XML file against an XSD schema.
@@ -172,6 +175,7 @@ def collect_xsd_validation_errors(
     return messages
 
 
+@traced("pain001.validate")
 def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
     """
     Validates an XML string against an XSD schema.

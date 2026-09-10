@@ -344,6 +344,7 @@ def process_files(
         raise
 
 
+@traced("pain001.generate.streaming")
 def process_files_streaming(
     xml_message_type: str,
     xml_template_file_path: str,
