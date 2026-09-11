@@ -21,7 +21,8 @@ JSON Schema Draft 2020-12 for ISO 20022:2013* (v2.0, June 2025):
 * an amount with a currency attribute is ``{"amt": "…", "Ccy": "…"}``;
 * decimals, dates and times are strings exactly as the XML spells them;
 * booleans are the strings ``"true"`` and ``"false"``;
-* namespaces are not represented (the edition names the schema);
+* namespaces and ``xsi`` hints are not represented (the edition names
+  the schema);
 * an empty element, which the XSD allows and the RA forbids, is ``{}``
   so the twin stays lossless; the schema reports it.
 
@@ -36,7 +37,7 @@ raises :class:`TwinError` rather than producing bad XML.
 
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET
+import xml.etree.ElementTree as ET  # nosec B405 - serialisation only; parsing is xmlschema's
 from functools import cache
 from typing import Any
 
@@ -54,6 +55,11 @@ _XMLNS = "@xmlns"
 
 class TwinError(ValueError):
     """The twin or the edition is not usable."""
+
+
+def _is_hint(key: str) -> bool:
+    """True for namespace declarations and xsi hints, which carry no data."""
+    return key.startswith("@xmlns") or key.startswith("@xsi:")
 
 
 def supported(version: str) -> bool:
@@ -107,11 +113,20 @@ def _encode_node(node: Any, path: str, repeatable: frozenset[str]) -> Any:
         return {}  # an empty element: lossless, and the RA schema rejects it
     if isinstance(node, dict):
         if _TEXT in node:
-            # simple content with attributes: only Ccy exists in pain.001
-            return {"amt": node[_TEXT], "Ccy": node[_CCY]}
+            attributes = {
+                k for k in node if k.startswith("@") and not _is_hint(k)
+            }
+            if not attributes:
+                return node[_TEXT]  # a redundant xmlns on a leaf, dropped
+            if attributes == {_CCY}:
+                # simple content with attributes: only Ccy exists in pain.001
+                return {"amt": node[_TEXT], "Ccy": node[_CCY]}
+            raise TwinError(
+                f"{path}: attributes {sorted(attributes)} have no twin form"
+            )
         out: dict[str, Any] = {}
         for key, value in node.items():
-            if key == _XMLNS:
+            if _is_hint(key):
                 continue
             child = f"{path}/{key}" if path else key
             encoded = _encode_node(value, child, repeatable)

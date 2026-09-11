@@ -213,3 +213,13 @@ def test_empty_components_stay_lossless() -> None:
     back = from_iso_json(twin, "pain.001.001.09")
     assert _canon(back) == _canon(EMPTY_COMPONENTS)
     assert "<InitgPty />" in back or "<InitgPty/>" in back
+
+
+def test_unknown_attributes_have_no_twin_form() -> None:
+    """Only Ccy is defined; any other attribute on text is refused."""
+    with pytest.raises(TwinError, match="no twin form"):
+        iso_json._encode_node({"$": "x", "@Other": "y"}, "Elem", frozenset())
+    assert (
+        iso_json._encode_node({"$": "x", "@xmlns": "urn:x"}, "E", frozenset())
+        == "x"
+    )

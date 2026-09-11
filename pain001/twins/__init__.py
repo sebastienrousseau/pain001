@@ -17,7 +17,9 @@
 A twin carries everything the XML carries and comes back as the same
 XML, element for element. The canonical twin is the ISO 20022
 Registration Authority's JSON convention of 2025
-(:mod:`pain001.twins.iso_json`). Faces, which project a message for a
+(:mod:`pain001.twins.iso_json`); the records twin
+(:mod:`pain001.twins.records`) is the library's own flat input rows with
+the list of what they cannot carry. Faces, which project a message for a
 compatible standard with a loss report, are a later layer.
 """
 
@@ -28,6 +30,12 @@ from pain001.twins.iso_json import (
     supported,
     to_iso_json,
 )
+from pain001.twins.records import (
+    RecordsTwin,
+    column_paths,
+    preparer_required,
+    to_records,
+)
 from pain001.twins.schema import (
     generate_schema,
     iso_json_schema,
@@ -35,8 +43,12 @@ from pain001.twins.schema import (
 )
 
 __all__ = [
+    "RecordsTwin",
     "SUPPORTED_PREFIX",
     "TwinError",
+    "column_paths",
+    "preparer_required",
+    "to_records",
     "from_iso_json",
     "generate_schema",
     "iso_json_schema",
