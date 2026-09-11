@@ -1,0 +1,45 @@
+# A Swedish supplier payment to a Plusgiro number: the creditor account
+# carried under the proprietary scheme PGNR with Nordea as the Plusgiro
+# agent, an unstructured invoice message instead of an OCR reference.
+id: se.plusgiro.supplier
+family: plusgiro-credit
+country: SE
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 460002
+description: Swedish Plusgiro supplier payment with an invoice message.
+profiles: [se-bankgiro, anti-duplicate]
+
+parties:
+  payer:
+    name: Norrland Trävaror AB
+    address: {form: hybrid, street: Storgatan, building_number: "22", post_code: "903 26", town: Umeå, country: SE}
+
+header:
+  message_id: NTA-20260921-02
+  created: "2026-09-21T07:50:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: NTA-PG-20260921
+  method: TRF
+  batch_booking: true
+  type: {service_level: NURG}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto, currency: SEK}
+  debtor_agent: {bic: auto, country: SE}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: NTA-2026-0921-003
+    amount: {ccy: SEK, value: "7125.50"}
+    creditor_agent: {bic: NDEASESS}
+    creditor: {name: Fjällmaskin Service AB, address: {form: hybrid, post_code: "831 30", town: Östersund, country: SE}}
+    creditor_account: {other: {id: "123455", proprietary_scheme: PGNR}}
+    remittance: {unstructured: "Faktura 2026-0512"}
+
+provenance:
+  sources:
+    - {title: "Nordea, pain.001 examples and Corporate Access implementation guide (Jun 2026): Plusgiro payment", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

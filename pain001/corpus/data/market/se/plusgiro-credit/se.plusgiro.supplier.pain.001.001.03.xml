@@ -1,0 +1,88 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>NTA-20260921-02</MsgId>
+      <CreDtTm>2026-09-21T07:50:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>7125.50</CtrlSum>
+      <InitgPty>
+        <Nm>Norrland Trävaror AB</Nm>
+        <PstlAdr>
+          <PstCd>903 26</PstCd>
+          <TwnNm>Umeå</TwnNm>
+          <Ctry>SE</Ctry>
+          <AdrLine>Storgatan 22</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>NTA-PG-20260921</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>true</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>7125.50</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>NURG</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>2026-09-22</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Norrland Trävaror AB</Nm>
+        <PstlAdr>
+          <PstCd>903 26</PstCd>
+          <TwnNm>Umeå</TwnNm>
+          <Ctry>SE</Ctry>
+          <AdrLine>Storgatan 22</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>SE4407238474849977370614</IBAN>
+        </Id>
+        <Ccy>SEK</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>MNWHSEA0</BIC>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>NTA-2026-0921-003</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="SEK">7125.50</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BIC>NDEASESS</BIC>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Fjällmaskin Service AB</Nm>
+          <PstlAdr>
+            <PstCd>831 30</PstCd>
+            <TwnNm>Östersund</TwnNm>
+            <Ctry>SE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>123455</Id>
+              <SchmeNm>
+                <Prtry>PGNR</Prtry>
+              </SchmeNm>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Faktura 2026-0512</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

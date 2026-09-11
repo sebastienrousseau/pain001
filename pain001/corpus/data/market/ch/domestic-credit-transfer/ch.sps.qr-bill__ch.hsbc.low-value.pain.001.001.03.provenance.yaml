@@ -1,0 +1,69 @@
+scenario: ch.sps.qr-bill
+family: domestic-credit-transfer
+country: CH
+message_type: pain.001.001.03
+variant:
+  overlay: ch.hsbc.low-value
+  title: HSBC Switzerland Low Value Payment (HSBCnet, v03)
+  source:
+    title: HSBC Switzerland Low Value Payment usage guideline for pain.001.001.03,
+      HSBCnet Europe
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      type:
+        service_level: NURG
+      debtor_agent:
+        address:
+          form: structured
+          country: CH
+    transactions:
+      '*':
+        creditor_agent:
+          address:
+            form: structured
+            country: CH
+description: Swiss domestic credit transfer settling a QR-bill (QRR reference).
+sha256: fc2419ced8d6c5fed2c6a0111a47c09c83af13d25b15b6f6a406bd2026b29905
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    ch-domestic:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    ch.hsbc.low-value:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: SIX, Swiss Payment Standards, Implementation Guidelines for Customer-to-Bank
+      Messages, Credit Transfer (pain.001), SPS 2025 v2.2, payment type D
+    read: '2026-09-10'
+  - title: 'SIX, Swiss Implementation Guidelines QR-bill v2.3: QR reference and QR-IBAN'
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

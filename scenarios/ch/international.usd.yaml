@@ -1,0 +1,49 @@
+# A cross-border payment from a Swiss account: payment type X under the
+# Swiss Payment Standards, USD to a creditor in the United States, urgent,
+# charges shared, purpose and structured addresses as the cross-border
+# rails expect.
+id: ch.international.usd
+family: cross-border
+country: CH
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 410004
+description: Cross-border USD payment from Switzerland (SPS payment type X).
+profiles: [cbpr-cross-border, anti-duplicate]
+
+parties:
+  payer:
+    name: Alpina Feinmechanik AG
+    address: {form: hybrid, street: Industriestrasse, building_number: "14", post_code: "8952", town: Schlieren, country_subdivision: ZH, country: CH}
+    id: {org: {lei: auto}}
+
+header:
+  message_id: AFM-20260921-04
+  created: "2026-09-21T09:30:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: AFM-X-260921-01
+  method: TRF
+  batch_booking: false
+  type: {priority: HIGH, service_level: URGP}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto, currency: USD}
+  debtor_agent: {bic: auto, country: CH}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: AFM-X-0921-001
+    uetr: auto
+    amount: {ccy: USD, value: "48200.00"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "121000248"}}
+    creditor: {name: Sierra Optics Inc, address: {form: hybrid, street: Fremont Boulevard, building_number: "4800", post_code: "94538", town: Fremont, country_subdivision: CA, country: US}}
+    creditor_account: {other: {id: "5512345678", scheme: BBAN}}
+    purpose: GDDS
+    remittance: {unstructured: "PO 2026-772"}
+
+provenance:
+  sources:
+    - {title: "SIX, Swiss Payment Standards, Implementation Guidelines Credit Transfer (pain.001), SPS 2025 v2.2, payment type X", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

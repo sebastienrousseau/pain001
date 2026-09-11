@@ -30,13 +30,7 @@ validation:
       errors: 0
       warnings: 0
       findings: []
-  overlays:
-    gb.boe.chaps-enhanced-data:
-      errors: 0
-      warnings: 1
-      findings:
-      - 'CHAPS_PURPOSE_NOT_PROPERTY: A property purchase uses the BoE housing code
-        HLST.'
+  overlays: {}
 provenance:
   sources:
   - title: Federal Reserve Fedwire Funds Service ISO 20022 quick reference

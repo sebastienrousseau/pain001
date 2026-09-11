@@ -213,9 +213,13 @@ that change what a scenario must carry, and the scenarios each affects:
 - **0.0.67**: the engine (inventory, builder, identifiers, overlay grammar,
   MDR rules, rail profiles, ladder), the coverage corpus for all thirteen
   editions, three market scenarios (GB CHAPS, DE SEPA SCT, NL SEPA SDD).
-- **0.0.68**: tier-1 market packs (UK, SEPA core countries, US, CH, SE) and
-  the website corpus page. The UK pack ships first: Faster Payments, Bacs
-  Direct Credit, Bacs Direct Debit, CHAPS and an international USD payment,
-  each with an HSBC variant from the bank's HSBCnet guidelines.
+- **0.0.68**: the five tier-1 market packs and the website corpus page.
+  UK (Faster Payments, Bacs Direct Credit and Direct Debit, CHAPS, an
+  international USD payment), the SEPA core countries (DE, FR, NL, BE, ES,
+  IT, LU with each country's reference convention and the German DK order
+  types), US (ACH, EFTPS, Fedwire, RTP, cheque), CH (the Swiss Payment
+  Standards types D, S and X, QR-bill and SCOR references) and SE
+  (Bankgiro with OCR, Plusgiro, salary, RIX). Every pack carries HSBC
+  variants from the bank's HSBCnet guidelines.
 - **0.0.69**: tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence
   chips, and the CSV pipeline extension for the twelve most-used rails.

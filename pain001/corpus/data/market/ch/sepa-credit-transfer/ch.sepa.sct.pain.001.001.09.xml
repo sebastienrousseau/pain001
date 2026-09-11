@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>AFM-20260921-03</MsgId>
+      <CreDtTm>2026-09-21T09:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>6250.00</CtrlSum>
+      <InitgPty>
+        <Nm>Alpina Feinmechanik AG</Nm>
+        <PstlAdr>
+          <PstCd>8952</PstCd>
+          <TwnNm>Schlieren</TwnNm>
+          <Ctry>CH</Ctry>
+          <AdrLine>Industriestrasse 14</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>AFM-S-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>6250.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>SEPA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Alpina Feinmechanik AG</Nm>
+        <PstlAdr>
+          <PstCd>8952</PstCd>
+          <TwnNm>Schlieren</TwnNm>
+          <Ctry>CH</Ctry>
+          <AdrLine>Industriestrasse 14</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>CH0225323063368134316</IBAN>
+        </Id>
+        <Ccy>EUR</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>EGTLCHC0</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>AFM-2026-0921-004</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">6250.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>BBECDEY0</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Präzisionsstahl Schwaben GmbH</Nm>
+          <PstlAdr>
+            <PstCd>89073</PstCd>
+            <TwnNm>Ulm</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE57148839832248984871</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Invoice 2026-3310</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

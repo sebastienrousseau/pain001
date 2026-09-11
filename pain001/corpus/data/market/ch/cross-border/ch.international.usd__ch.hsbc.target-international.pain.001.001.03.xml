@@ -2,26 +2,27 @@
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
   <CstmrCdtTrfInitn>
     <GrpHdr>
-      <MsgId>CMI-WIRE-20260922-01</MsgId>
-      <CreDtTm>2026-09-22T11:00:00</CreDtTm>
+      <MsgId>AFM-20260921-04</MsgId>
+      <CreDtTm>2026-09-21T09:30:00</CreDtTm>
       <NbOfTxs>1</NbOfTxs>
-      <CtrlSum>125000.00</CtrlSum>
+      <CtrlSum>48200.00</CtrlSum>
       <InitgPty>
-        <Nm>Cascade Millwork Inc</Nm>
+        <Nm>Alpina Feinmechanik AG</Nm>
         <PstlAdr>
-          <PstCd>97204</PstCd>
-          <TwnNm>Portland</TwnNm>
-          <CtrySubDvsn>OR</CtrySubDvsn>
-          <Ctry>US</Ctry>
-          <AdrLine>1200 Pine Street</AdrLine>
+          <PstCd>8952</PstCd>
+          <TwnNm>Schlieren</TwnNm>
+          <CtrySubDvsn>ZH</CtrySubDvsn>
+          <Ctry>CH</Ctry>
+          <AdrLine>Industriestrasse 14</AdrLine>
         </PstlAdr>
       </InitgPty>
     </GrpHdr>
     <PmtInf>
-      <PmtInfId>WIRE-20260922-01</PmtInfId>
+      <PmtInfId>AFM-X-260921-01</PmtInfId>
       <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
       <NbOfTxs>1</NbOfTxs>
-      <CtrlSum>125000.00</CtrlSum>
+      <CtrlSum>48200.00</CtrlSum>
       <PmtTpInf>
         <InstrPrty>HIGH</InstrPrty>
         <SvcLvl>
@@ -30,52 +31,41 @@
       </PmtTpInf>
       <ReqdExctnDt>2026-09-22</ReqdExctnDt>
       <Dbtr>
-        <Nm>Cascade Millwork Inc</Nm>
+        <Nm>Alpina Feinmechanik AG</Nm>
         <PstlAdr>
-          <StrtNm>Pine Street</StrtNm>
-          <BldgNb>1200</BldgNb>
-          <PstCd>97204</PstCd>
-          <TwnNm>Portland</TwnNm>
-          <CtrySubDvsn>OR</CtrySubDvsn>
-          <Ctry>US</Ctry>
+          <StrtNm>Industriestrasse</StrtNm>
+          <BldgNb>14</BldgNb>
+          <PstCd>8952</PstCd>
+          <TwnNm>Schlieren</TwnNm>
+          <CtrySubDvsn>ZH</CtrySubDvsn>
+          <Ctry>CH</Ctry>
         </PstlAdr>
       </Dbtr>
       <DbtrAcct>
         <Id>
-          <Othr>
-            <Id>4412345678</Id>
-            <SchmeNm>
-              <Cd>BBAN</Cd>
-            </SchmeNm>
-          </Othr>
+          <IBAN>CH9009808930715794848</IBAN>
         </Id>
+        <Ccy>USD</Ccy>
       </DbtrAcct>
       <DbtrAgt>
         <FinInstnId>
-          <BIC>YPTEUSH0</BIC>
-          <ClrSysMmbId>
-            <ClrSysId>
-              <Cd>USABA</Cd>
-            </ClrSysId>
-            <MmbId>021000021</MmbId>
-          </ClrSysMmbId>
+          <BIC>OSEDCHZ0</BIC>
           <PstlAdr>
-            <TwnNm>New York</TwnNm>
-            <Ctry>US</Ctry>
+            <Ctry>CH</Ctry>
           </PstlAdr>
         </FinInstnId>
       </DbtrAgt>
-      <ChrgBr>DEBT</ChrgBr>
+      <ChrgBr>SHAR</ChrgBr>
       <CdtTrfTxInf>
         <PmtId>
-          <EndToEndId>CMI-WIRE-2026-0922-01</EndToEndId>
+          <EndToEndId>AFM-X-0921-001</EndToEndId>
         </PmtId>
         <Amt>
-          <InstdAmt Ccy="USD">125000.00</InstdAmt>
+          <InstdAmt Ccy="USD">48200.00</InstdAmt>
         </Amt>
         <CdtrAgt>
           <FinInstnId>
-            <BIC>DZKNUSB0</BIC>
+            <BIC>DXTQUSY0</BIC>
             <ClrSysMmbId>
               <ClrSysId>
                 <Cd>USABA</Cd>
@@ -83,18 +73,17 @@
               <MmbId>121000248</MmbId>
             </ClrSysMmbId>
             <PstlAdr>
-              <TwnNm>San Francisco</TwnNm>
               <Ctry>US</Ctry>
             </PstlAdr>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>
-          <Nm>Golden Gate Timber Corp</Nm>
+          <Nm>Sierra Optics Inc</Nm>
           <PstlAdr>
-            <StrtNm>Market Street</StrtNm>
-            <BldgNb>600</BldgNb>
-            <PstCd>94104</PstCd>
-            <TwnNm>San Francisco</TwnNm>
+            <StrtNm>Fremont Boulevard</StrtNm>
+            <BldgNb>4800</BldgNb>
+            <PstCd>94538</PstCd>
+            <TwnNm>Fremont</TwnNm>
             <CtrySubDvsn>CA</CtrySubDvsn>
             <Ctry>US</Ctry>
           </PstlAdr>
@@ -113,7 +102,7 @@
           <Cd>GDDS</Cd>
         </Purp>
         <RmtInf>
-          <Ustrd>Contract 2026-31 milestone 2</Ustrd>
+          <Ustrd>PO 2026-772</Ustrd>
         </RmtInf>
       </CdtTrfTxInf>
     </PmtInf>

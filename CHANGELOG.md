@@ -86,9 +86,32 @@ and in the MCP and LSP tools. Entries are added as work lands.
   guideline written for pain.001.001.03 spells `BIC`, so it builds and
   judges .03 variants only; the HSBC overlays are marked .03 (and
   pain.008 .02), and `Overlay.applies` takes the edition.
+- **Swiss pack.** Four scenarios under `scenarios/ch/` follow the Swiss
+  Payment Standards payment types: a QR-bill settlement (type D, CHF to
+  a QR-IBAN with the 27-digit QR reference as the proprietary type
+  `QRR`), a domestic transfer with an ISO 11649 `SCOR` reference and a
+  second unstructured transaction, a SEPA credit transfer from a Swiss
+  account (type S) and a cross-border USD payment (type X). HSBC
+  Switzerland overlays (`ch.hsbc.low-value`,
+  `ch.hsbc.target-international`) are curated from the HSBCnet Europe
+  guidelines and build the .03 variants.
+- **Swedish pack.** Four scenarios under `scenarios/se/`: a Bankgiro
+  supplier payment (creditor account as the Bankgiro number under the
+  proprietary scheme `BGNR`, Bankgirot as creditor agent, Luhn-checked
+  OCR references as `SCOR`), a Plusgiro payment (`PGNR`), a Bankgirot
+  Löner salary batch (`SALA`, one debit) and an urgent SEK payment
+  through RIX (`URGP`, `INTC`). HSBC Sweden Virtual Presence overlays
+  (`se.hsbc.low-value`, `se.hsbc.high-value`) pin the bank's clearing
+  member and structured addresses. The tree is 35 scenarios and 204
+  market files (32 HSBC variants) at 373 KB of the 400 KB budget.
 
 ### Changed
 
+- **Country overlays target scenarios, not families.** The Bank of
+  England CHAPS overlay and the HSBC UK, German and SEPA credit-transfer
+  overlays listed a rail family, so they also judged the US Fedwire,
+  Swedish RIX and Swiss scenarios; each now names its scenarios, and the
+  stray `us.wire.domestic__gb.hsbc.priority` variant is gone.
 - **`uk-fps` accepts `URNS`.** Reading the HSBC UK Faster Payments
   guideline closed the plan's open question: the bank restricts the
   service level to `URNS` (urgent payment, net settlement), not `URGP`.

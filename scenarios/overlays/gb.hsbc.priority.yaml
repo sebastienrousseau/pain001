@@ -3,7 +3,7 @@
 # bank's usage guideline (2025; HSBC-restricted; not in this repository).
 overlay_id: gb.hsbc.priority
 title: HSBC UK Priority and International Payments (HSBCnet, v03)
-applies_to: [priority-payment]
+applies_to: [gb.chaps.property-purchase, gb.international.usd]
 versions: [pain.001.001.03]
 source:
   title: "HSBC UK TARGET and International Payments usage guideline for pain.001.001.03, HSBCnet"

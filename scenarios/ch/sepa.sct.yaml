@@ -1,0 +1,45 @@
+# A SEPA credit transfer from a Swiss account: payment type S under the
+# Swiss Payment Standards. EUR, service level SEPA, charges SLEV, IBAN and
+# BIC on both sides, creditor in Germany.
+id: ch.sepa.sct
+family: sepa-credit-transfer
+country: CH
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 410003
+description: SEPA credit transfer from Switzerland (SPS payment type S).
+profiles: [ch-sepa, anti-duplicate]
+
+parties:
+  payer:
+    name: Alpina Feinmechanik AG
+    address: {form: hybrid, street: Industriestrasse, building_number: "14", post_code: "8952", town: Schlieren, country: CH}
+
+header:
+  message_id: AFM-20260921-03
+  created: "2026-09-21T09:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: AFM-S-260921-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: SEPA}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto, currency: EUR}
+  debtor_agent: {bic: auto, country: CH}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: AFM-2026-0921-004
+    amount: {ccy: EUR, value: "6250.00"}
+    creditor_agent: {bic: auto, country: DE}
+    creditor: {name: Präzisionsstahl Schwaben GmbH, address: {form: hybrid, post_code: "89073", town: Ulm, country: DE}}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Invoice 2026-3310"}
+
+provenance:
+  sources:
+    - {title: "SIX, Swiss Payment Standards, Implementation Guidelines Credit Transfer (pain.001), SPS 2025 v2.2, payment type S", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

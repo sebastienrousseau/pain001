@@ -52,12 +52,6 @@ validation:
       warnings: 0
       findings: []
   overlays:
-    gb.boe.chaps-enhanced-data:
-      errors: 0
-      warnings: 1
-      findings:
-      - 'CHAPS_PURPOSE_NOT_PROPERTY: A property purchase uses the BoE housing code
-        HLST.'
     us.hsbc.wire:
       errors: 0
       warnings: 0

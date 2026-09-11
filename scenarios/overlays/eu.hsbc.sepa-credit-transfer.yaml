@@ -3,7 +3,7 @@
 # this repository).
 overlay_id: eu.hsbc.sepa-credit-transfer
 title: HSBC SEPA Credit Transfer (HSBCnet, v03)
-applies_to: [sepa-credit-transfer]
+applies_to: [be.sepa.sct-supplier, de.sepa.sct-salary, es.sepa.sct-single, fr.sepa.sct-supplier, it.sepa.sct-single, lu.sepa.sct-single, nl.sepa.sct-supplier]
 versions: [pain.001.001.03]
 source:
   title: "HSBC SEPA Credit Transfer usage guideline for pain.001.001.03, HSBCnet Europe"

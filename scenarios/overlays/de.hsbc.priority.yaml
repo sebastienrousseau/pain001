@@ -3,7 +3,7 @@
 # HSBC-restricted; not in this repository).
 overlay_id: de.hsbc.priority
 title: HSBC Germany TARGET and International Payments (HSBCnet, v03)
-applies_to: [urgent-euro, cross-border]
+applies_to: [de.ccu.urgent, de.axz.foreign]
 versions: [pain.001.001.03]
 source:
   title: "HSBC TARGET and International Payments usage guideline for Germany, pain.001.001.03, HSBCnet Europe"

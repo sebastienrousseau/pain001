@@ -1,0 +1,51 @@
+# A Swedish salary run through Bankgirot Löner: SEK, category purpose
+# SALA, batch booked so the statement shows one debit, employees paid to
+# their IBANs with the employee number as the message.
+id: se.bankgiro.salary
+family: salary
+country: SE
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 460003
+description: Swedish salary batch (Bankgirot Löner), SALA, one debit.
+profiles: [se-bankgiro, anti-duplicate]
+
+parties:
+  payer:
+    name: Norrland Trävaror AB
+    address: {form: hybrid, street: Storgatan, building_number: "22", post_code: "903 26", town: Umeå, country: SE}
+
+header:
+  message_id: NTA-LON-202609
+  created: "2026-09-22T06:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: NTA-LON-20260925
+  method: TRF
+  batch_booking: true
+  type: {service_level: NURG, category_purpose: SALA}
+  requested_execution_date: "2026-09-25"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto, currency: SEK}
+  debtor_agent: {bic: auto, country: SE}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: NTA-LON-0925-0001
+    amount: {ccy: SEK, value: "31200.00"}
+    creditor_agent: {bic: auto, country: SE}
+    creditor: {name: Anna Lindqvist}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Lön september 2026 anst 710996"}
+  - end_to_end_id: NTA-LON-0925-0002
+    amount: {ccy: SEK, value: "28750.00"}
+    creditor_agent: {bic: auto, country: SE}
+    creditor: {name: Erik Sandström}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Lön september 2026 anst 720995"}
+
+provenance:
+  sources:
+    - {title: "Bankgirot, Bankgirot Löner (salary) service description; Nordea Corporate Access salary examples (Jun 2026)", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

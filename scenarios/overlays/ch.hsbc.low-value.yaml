@@ -1,0 +1,77 @@
+# HSBC Switzerland Low Value Payment (HSBCnet, pain.001.001.03). Curated
+# from the bank's usage guideline (2025; HSBC-restricted; not in this
+# repository): domestic CHF payments, non-urgent, IBAN debtor accounts,
+# SCOR or QRR references, no intermediary agent.
+overlay_id: ch.hsbc.low-value
+title: HSBC Switzerland Low Value Payment (HSBCnet, v03)
+applies_to: [ch.sps.qr-bill, ch.sps.scor]
+versions: [pain.001.001.03]
+source:
+  title: "HSBC Switzerland Low Value Payment usage guideline for pain.001.001.03, HSBCnet Europe"
+  publisher: HSBC Direct Channels
+  published: "2025"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    type: {service_level: NURG}
+    debtor_agent: {address: {form: structured, country: CH}}
+  transactions:
+    "*":
+      creditor_agent: {address: {form: structured, country: CH}}
+rules:
+  - rule_id: hsbc-ch-lvp-payment-type
+    description: Payment type information is present at the payment-information level.
+    locator: PmtInf/PmtTpInf
+    assertion: required
+    error_code: HSBC_CH_LVP_PMTTPINF
+  - rule_id: hsbc-ch-lvp-service-level
+    description: The service level is NURG; proprietary service levels are not accepted.
+    locator: PmtTpInf/SvcLvl/Cd
+    assertion: one_of:[NURG]
+    error_code: HSBC_CH_LVP_SVCLVL
+  - rule_id: hsbc-ch-lvp-method
+    description: The payment method is TRF or TRA.
+    locator: PmtInf/PmtMtd
+    assertion: one_of:[TRF, TRA]
+    error_code: HSBC_CH_LVP_PMTMTD
+  - rule_id: hsbc-ch-lvp-payment-id-length
+    description: The payment information id is at most 16 characters.
+    locator: PmtInf/PmtInfId
+    assertion: max_length:16
+    error_code: HSBC_CH_LVP_PMTINFID_LEN
+  - rule_id: hsbc-ch-lvp-debtor-iban
+    description: The debtor account is an IBAN; other account identifications are not accepted.
+    locator: DbtrAcct/Id/Othr
+    assertion: forbidden
+    error_code: HSBC_CH_LVP_DBTRACCT_OTHR
+  - rule_id: hsbc-ch-lvp-no-private-debtor-id
+    description: The debtor is identified as an organisation, never by a private id or a BIC.
+    locator: Dbtr/Id/PrvtId
+    assertion: forbidden
+    error_code: HSBC_CH_LVP_DBTR_PRVTID
+  - rule_id: hsbc-ch-lvp-debtor-agent-country
+    description: A debtor agent postal address carries the country.
+    locator: DbtrAgt/FinInstnId/PstlAdr/Ctry
+    assertion: if:DbtrAgt/FinInstnId/PstlAdr:required
+    error_code: HSBC_CH_LVP_DBTRAGT_CTRY
+  - rule_id: hsbc-ch-lvp-creditor-agent
+    description: Every transaction names the creditor agent with a postal address and country.
+    locator: CdtrAgt/FinInstnId/PstlAdr/Ctry
+    assertion: if:CdtrAgt:required
+    error_code: HSBC_CH_LVP_CDTRAGT_CTRY
+  - rule_id: hsbc-ch-lvp-no-tx-category-purpose
+    description: Category purpose is not carried at the transaction level.
+    locator: CdtTrfTxInf/PmtTpInf/CtgyPurp
+    assertion: forbidden
+    error_code: HSBC_CH_LVP_TX_CTGYPURP
+  - rule_id: hsbc-ch-lvp-no-intermediary
+    description: No intermediary agent on a domestic low value payment.
+    locator: IntrmyAgt1
+    assertion: forbidden
+    error_code: HSBC_CH_LVP_INTRMYAGT
+  - rule_id: hsbc-ch-lvp-reference-code
+    description: A coded creditor reference type is SCOR; the QR reference travels as the proprietary type QRR.
+    locator: CdtrRefInf/Tp/CdOrPrtry/Cd
+    assertion: one_of:[SCOR]
+    error_code: HSBC_CH_LVP_CDTRREF_CD

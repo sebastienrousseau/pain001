@@ -1,0 +1,53 @@
+# A Swiss domestic credit transfer to an ordinary IBAN with an ISO 11649
+# creditor reference (SCOR): the second reference form the QR-bill
+# allows, never paired with a QR-IBAN.
+id: ch.sps.scor
+family: domestic-credit-transfer
+country: CH
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 410002
+description: Swiss domestic credit transfer with an ISO 11649 creditor reference (SCOR).
+profiles: [ch-domestic, anti-duplicate]
+
+parties:
+  payer:
+    name: Alpina Feinmechanik AG
+    address: {form: hybrid, street: Industriestrasse, building_number: "14", post_code: "8952", town: Schlieren, country: CH}
+
+header:
+  message_id: AFM-20260921-02
+  created: "2026-09-21T08:35:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: AFM-D-260921-02
+  method: TRF
+  batch_booking: true
+  type: {service_level: NURG}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto, country: CH}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: AFM-2026-0921-002
+    amount: {ccy: CHF, value: "912.00"}
+    creditor_agent: {bic: auto, country: CH}
+    creditor: {name: Kanzlei Bergmann, address: {form: hybrid, post_code: "3011", town: Bern, country: CH}}
+    creditor_account: {iban: auto}
+    remittance:
+      structured:
+        - creditor_reference: {type: SCOR, reference: RF18539007547034}
+  - end_to_end_id: AFM-2026-0921-003
+    amount: {ccy: CHF, value: "215.40"}
+    creditor_agent: {bic: auto, country: CH}
+    creditor: {name: Druckerei Sonnenberg, address: {form: hybrid, post_code: "9000", town: St. Gallen, country: CH}}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Auftrag 4471"}
+
+provenance:
+  sources:
+    - {title: "SIX, Swiss Payment Standards, Implementation Guidelines Credit Transfer (pain.001), SPS 2025 v2.2, payment type D with SCOR", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

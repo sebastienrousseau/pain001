@@ -33,13 +33,7 @@ validation:
       errors: 0
       warnings: 0
       findings: []
-  overlays:
-    gb.boe.chaps-enhanced-data:
-      errors: 0
-      warnings: 1
-      findings:
-      - 'CHAPS_PURPOSE_NOT_PROPERTY: A property purchase uses the BoE housing code
-        HLST.'
+  overlays: {}
 provenance:
   sources:
   - title: Swift CBPR+ usage guidelines SR2025, pain.001.001.09 (restricted; not in

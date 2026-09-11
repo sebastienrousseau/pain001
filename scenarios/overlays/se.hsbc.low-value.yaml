@@ -1,0 +1,89 @@
+# HSBC Sweden Low Value Payment, Virtual Presence (HSBCnet,
+# pain.001.001.03). Curated from the bank's usage guideline (2025;
+# HSBC-restricted; not in this repository): SEK Bankgiro, Plusgiro and
+# account payments, non-urgent, with the HSBC Sweden clearing member.
+overlay_id: se.hsbc.low-value
+title: HSBC Sweden Low Value Payment (HSBCnet Virtual Presence, v03)
+applies_to: [se.bankgiro.supplier, se.plusgiro.supplier, se.bankgiro.salary]
+versions: [pain.001.001.03]
+source:
+  title: "HSBC Sweden Virtual Presence Low Value Payment usage guideline for pain.001.001.03, HSBCnet Europe"
+  publisher: HSBC Direct Channels
+  published: "2025"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    type: {service_level: NURG}
+    debtor_agent: {clearing: {system: SESBA, member_id: "400515"}, address: {form: structured, country: SE}}
+  transactions:
+    "*":
+      creditor_agent: {address: {form: structured, country: SE}}
+patches:
+  se.bankgiro.supplier:
+    payment: {id: BG-260921-01}
+  se.plusgiro.supplier:
+    payment: {id: PG-260921-01}
+  se.bankgiro.salary:
+    payment: {id: LON-260925}
+rules:
+  - rule_id: hsbc-se-lvp-service-level
+    description: The service level is NURG.
+    locator: PmtTpInf/SvcLvl/Cd
+    assertion: one_of:[NURG]
+    error_code: HSBC_SE_LVP_SVCLVL
+  - rule_id: hsbc-se-lvp-method
+    description: The payment method is TRF.
+    locator: PmtInf/PmtMtd
+    assertion: one_of:[TRF]
+    error_code: HSBC_SE_LVP_PMTMTD
+  - rule_id: hsbc-se-lvp-payment-id-length
+    description: The payment information id is at most 12 characters.
+    locator: PmtInf/PmtInfId
+    assertion: max_length:12
+    error_code: HSBC_SE_LVP_PMTINFID_LEN
+  - rule_id: hsbc-se-lvp-clearing-member
+    description: The debtor agent carries the HSBC Sweden clearing member id.
+    locator: DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    assertion: one_of:[400515]
+    error_code: HSBC_SE_LVP_DBTRAGT_MMBID
+  - rule_id: hsbc-se-lvp-debtor-agent-country
+    description: The debtor agent postal address carries the country.
+    locator: DbtrAgt/FinInstnId/PstlAdr/Ctry
+    assertion: required
+    error_code: HSBC_SE_LVP_DBTRAGT_CTRY
+  - rule_id: hsbc-se-lvp-debtor-address
+    description: The debtor carries a postal address with the country and no country subdivision.
+    locator: Dbtr/PstlAdr/Ctry
+    assertion: required
+    error_code: HSBC_SE_LVP_DBTR_CTRY
+  - rule_id: hsbc-se-lvp-no-debtor-subdivision
+    description: The debtor address does not carry a country subdivision.
+    locator: Dbtr/PstlAdr/CtrySubDvsn
+    assertion: forbidden
+    error_code: HSBC_SE_LVP_DBTR_SUBDIV
+  - rule_id: hsbc-se-lvp-creditor-agent-country
+    description: The creditor agent carries a postal address with the country SE.
+    locator: CdtrAgt/FinInstnId/PstlAdr/Ctry
+    assertion: one_of:[SE]
+    error_code: HSBC_SE_LVP_CDTRAGT_CTRY
+  - rule_id: hsbc-se-lvp-creditor-name-length
+    description: The creditor name is at most 35 characters.
+    locator: Cdtr/Nm
+    assertion: max_length:35
+    error_code: HSBC_SE_LVP_CDTR_NM_LEN
+  - rule_id: hsbc-se-lvp-currency
+    description: The instructed amount is in SEK.
+    locator: InstdAmt/@Ccy
+    assertion: one_of:[SEK]
+    error_code: HSBC_SE_LVP_CCY
+  - rule_id: hsbc-se-lvp-no-intermediary
+    description: No intermediary agent on a domestic low value payment.
+    locator: IntrmyAgt1
+    assertion: forbidden
+    error_code: HSBC_SE_LVP_INTRMYAGT
+  - rule_id: hsbc-se-lvp-no-reference-type-issuer
+    description: A structured creditor reference carries no issuer; the OCR number travels as SCOR.
+    locator: CdtrRefInf/Tp/Issr
+    assertion: forbidden
+    error_code: HSBC_SE_LVP_CDTRREF_ISSR
