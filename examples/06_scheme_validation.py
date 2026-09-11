@@ -30,7 +30,10 @@ Six profiles ship today, all exercised here:
                     IBAN, amount and execution date in one batch);
                     composes with any of the above
 
-Plus the ISO 20022 charset guard (``sanitize_to_charset``).
+Plus the ISO 20022 charset guard (``sanitize_to_charset``), and the
+**rail profiles** that joined the same registry in 0.0.67 (``uk-chaps``,
+``us-ach``, ``ch-domestic``, ``se-bankgiro`` and more, plus the country
+purpose mandates), shown on rows projected from a shipped corpus file.
 
 Run from the repository root::
 
@@ -38,6 +41,8 @@ Run from the repository root::
 """
 
 from pain001 import sanitize_to_charset, validate_scheme
+from pain001.corpus import get_file
+from pain001.corpus.rules.projection import rows_from_xml
 from pain001.validation.schemes import PROFILES
 
 COMPLIANT_SCT = {
@@ -149,6 +154,32 @@ def _profile_registry() -> None:
     print(f"PROFILES registry: {len(schemes)} schemes + {len(rails)} rails")
 
 
+def _rail_profiles() -> None:
+    """Rail profiles: national rules on a file projected to flat rows.
+
+    ``rows_from_xml`` reads a built document into the same flat rows a
+    CSV gives the validator, so a rail profile judges both alike. The
+    shipped CHAPS file passes ``uk-chaps`` and the UK purpose mandate; a
+    Swiss QR reference with a broken check digit is caught by
+    ``ch-domestic``.
+    """
+    rows = rows_from_xml(
+        get_file("gb.chaps.property-purchase", "pain.001.001.09")
+    )
+    chaps = validate_scheme(rows, profile="uk-chaps,purpose-mandate-gb")
+    assert chaps.is_valid
+    print(f"RAIL uk-chaps + purpose-mandate-gb: valid ({len(rows)} row(s))")
+    swiss = rows_from_xml(get_file("ch.sps.qr-bill", "pain.001.001.09"))
+    assert validate_scheme(swiss, profile="ch-domestic").is_valid
+    broken = [
+        row | {"creditor_reference": "210000000003139471430009018"}
+        for row in swiss
+    ]
+    bad = validate_scheme(broken, profile="ch-domestic")
+    assert any(v.rule.endswith("CDTRREF") for v in bad.violations)
+    print("RAIL ch-domestic (bad QRR check digit): flagged CDTRREF")
+
+
 def _anti_duplicate() -> None:
     """Profile 6/6: the same payment keyed in twice, caught before the bank."""
     keyed_twice = [
@@ -181,6 +212,7 @@ def main() -> None:
     _sepa_b2b()
     _xborder_ct()
     _anti_duplicate()
+    _rail_profiles()
     _charset_guard()
     print("Scheme validation example completed.")
 

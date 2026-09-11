@@ -1,13 +1,13 @@
-pain001.data package
-====================
+pain001.mcp package
+===================
 
 Submodules
 ----------
 
-pain001.data.loader module
---------------------------
+pain001.mcp.server module
+-------------------------
 
-.. automodule:: pain001.data.loader
+.. automodule:: pain001.mcp.server
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ pain001.data.loader module
 Module contents
 ---------------
 
-.. automodule:: pain001.data
+.. automodule:: pain001.mcp
    :members:
    :undoc-members:
    :show-inheritance:

@@ -111,6 +111,8 @@ jobs:
       # verified and is not.
       - name: Run the benchmark
         run: poetry run python benches/bench_generate.py --quick
+      - name: Run the corpus benchmark
+        run: poetry run python benches/bench_corpus.py --quick
 
   typecheck:
     runs-on: ubuntu-latest

@@ -1,13 +1,13 @@
-pain001.data package
+pain001.json package
 ====================
 
 Submodules
 ----------
 
-pain001.data.loader module
---------------------------
+pain001.json.load\_json\_data module
+------------------------------------
 
-.. automodule:: pain001.data.loader
+.. automodule:: pain001.json.load_json_data
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ pain001.data.loader module
 Module contents
 ---------------
 
-.. automodule:: pain001.data
+.. automodule:: pain001.json
    :members:
    :undoc-members:
    :show-inheritance:

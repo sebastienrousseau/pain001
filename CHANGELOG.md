@@ -89,6 +89,18 @@ website and in the MCP and LSP tools. Entries are added as work lands.
   through RIX (`URGP`, `INTC`). The tree is 35 scenarios and 140 market
   files.
 
+- **Examples, benchmark and API reference for the corpus.**
+  `examples/15_example_corpus.py` walks the read API and coverage
+  manifest, the schema inventory, synthetic identifiers, a build with an
+  illustrative private overlay, the four-rung ladder and rail projection,
+  the ISO external code sets, the derive tool on a synthetic guideline
+  outside the repository, and `pain.008.001.08` generation;
+  `examples/06_scheme_validation.py` gains the rail profiles.
+  `benches/bench_corpus.py` measures inventory, build, ladder and
+  coverage-set generation (`--quick` in CI). The Sphinx API reference
+  now covers every subpackage, `pain001.corpus` and
+  `pain001.validation` included.
+
 ### Changed
 
 - **Public rulebook content only.** pain001 stays within the terms of
