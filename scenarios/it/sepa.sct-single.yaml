@@ -1,0 +1,44 @@
+# An Italian SEPA credit transfer, single, salary category, .09 as the
+# Italian banks now require for bulk submissions.
+id: it.sepa.sct-single
+family: sepa-credit-transfer
+country: IT
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 390001
+description: SEPA credit transfer, single supplier payment.
+profiles: [sepa-sct, anti-duplicate]
+
+parties:
+  payer:
+    name: Officine Meccaniche Lombarde SpA
+    address: {form: hybrid, street: Via Torino, building_number: "15", post_code: "20123", town: Milano, country: IT}
+
+header:
+  message_id: OML-SCT-20260921
+  created: "2026-09-21T12:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: SCT-20260921-IT-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: SEPA}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: OML-2026-0921-01
+    amount: {ccy: EUR, value: "2200.00"}
+    creditor_agent: {bic: auto}
+    creditor: {name: Fonderia Bresciana Srl, address: {form: hybrid, post_code: "25121", town: Brescia, country: IT}}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Fattura 117/2026"}
+
+provenance:
+  sources:
+    - {title: "EPC132-08 Customer-to-PSP SCT Implementation Guidelines 2025 v1.0", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

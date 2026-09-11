@@ -1,0 +1,40 @@
+scenario: de.ccu.urgent
+family: urgent-euro
+country: DE
+message_type: pain.001.001.09
+variant: null
+description: Urgent euro payment (TARGET) from a German account, DK order type CCU.
+sha256: 2d730538ba631a26d6273ed75f60614d58a25c317fbc03155292db2f9432512c
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    de-ccu:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: DK DFUE-Abkommen Anlage 3 V26.11, order type CCU
+    read: '2026-09-10'
+  - title: DZ BANK, CCU product description
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

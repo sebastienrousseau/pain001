@@ -42,6 +42,7 @@ def applicable_overlays(
     scenario: Scenario,
     pool: list[Overlay],
     variant: str | None = None,
+    version: str | None = None,
 ) -> list[Overlay]:
     """The overlays that judge one file.
 
@@ -54,6 +55,8 @@ def applicable_overlays(
         pool: Every loaded overlay.
         variant: The overlay id the file was built with, or ``None`` for
             the generic file.
+        version: The edition of the file; overlays that do not cover it
+            are left out.
 
     Returns:
         The overlays to evaluate, in pool order.
@@ -61,6 +64,12 @@ def applicable_overlays(
     wanted = scenario.overlays
     chosen: list[Overlay] = []
     for overlay in pool:
+        if (
+            version is not None
+            and overlay.versions
+            and version not in overlay.versions
+        ):
+            continue
         if wanted is None:
             if not overlay.applies(scenario.id, scenario.family):
                 continue
@@ -110,7 +119,7 @@ def run_ladder(
         }
     pool = load_overlays() if overlays is None else overlays
     applied: dict[str, Any] = {}
-    for overlay in applicable_overlays(scenario, pool, variant):
+    for overlay in applicable_overlays(scenario, pool, variant, version):
         findings = evaluate(overlay, xml)
         applied[overlay.overlay_id] = {
             "errors": sum(f.severity == "error" for f in findings),

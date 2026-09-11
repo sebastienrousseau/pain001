@@ -5,6 +5,7 @@
 overlay_id: gb.hsbc.faster-payments
 title: HSBC UK Faster Payments (HSBCnet, v03)
 applies_to: [faster-payment]
+versions: [pain.001.001.03]
 source:
   title: "HSBC UK Faster Payments usage guideline for pain.001.001.03, HSBCnet"
   publisher: HSBC Direct Channels

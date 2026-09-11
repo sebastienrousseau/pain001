@@ -1,0 +1,84 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>OML-SCT-20260921</MsgId>
+      <CreDtTm>2026-09-21T12:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>2200.00</CtrlSum>
+      <InitgPty>
+        <Nm>Officine Meccaniche Lombarde SpA</Nm>
+        <PstlAdr>
+          <PstCd>20123</PstCd>
+          <TwnNm>Milano</TwnNm>
+          <Ctry>IT</Ctry>
+          <AdrLine>Via Torino 15</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SCT-20260921-IT-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>2200.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>SEPA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Officine Meccaniche Lombarde SpA</Nm>
+        <PstlAdr>
+          <PstCd>20123</PstCd>
+          <TwnNm>Milano</TwnNm>
+          <Ctry>IT</Ctry>
+          <AdrLine>Via Torino 15</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>IT48T78971134594OGDKY5VXE41</IBAN>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>TLAOIT60</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>OML-2026-0921-01</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">2200.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>MHXHITI0</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Fonderia Bresciana Srl</Nm>
+          <PstlAdr>
+            <PstCd>25121</PstCd>
+            <TwnNm>Brescia</TwnNm>
+            <Ctry>IT</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>IT23J14887404856NF3794IGWXN</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Fattura 117/2026</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

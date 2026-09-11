@@ -1,0 +1,62 @@
+scenario: be.sepa.sct-supplier
+family: sepa-credit-transfer
+country: BE
+message_type: pain.001.001.03
+variant:
+  overlay: eu.hsbc.sepa-credit-transfer
+  title: HSBC SEPA Credit Transfer (HSBCnet, v03)
+  source:
+    title: HSBC SEPA Credit Transfer usage guideline for pain.001.001.03, HSBCnet
+      Europe
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      type:
+        service_level: SEPA
+      charge_bearer: SLEV
+description: SEPA credit transfer with a Belgian structured communication (BBA).
+sha256: dd39856cc3472cb90a897a02c558748c573fda573207dc44cdcdef4f23b71150
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sct:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    be.febelfin.structured-communication:
+      errors: 0
+      warnings: 0
+      findings: []
+    eu.hsbc.sepa-credit-transfer:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Febelfin, XML message for SEPA Credit Transfer initiation, implementation
+      guidelines (pain.001)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

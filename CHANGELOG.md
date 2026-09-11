@@ -51,6 +51,30 @@ and in the MCP and LSP tools. Entries are added as work lands.
   trees, or any schema, sample or rule file carrying a MyStandards text
   signature.
 
+- **SEPA core pack.** Thirteen scenarios across DE, FR, NL, BE, ES, IT
+  and LU: SEPA credit transfers with the country references (an ISO
+  11649 RF reference issued by ISO for France, the Belgian structured
+  communication issued by BBA, the Dutch betalingskenmerk issued by
+  CUR), a Spanish transfer with the initiating party's NIF, Italian and
+  Luxembourg singles, a German SEPA Instant transfer (.09, `INST` at
+  `PmtInf`, date-time execution), SEPA direct debits (German B2B first
+  collection, French Core on an amended mandate with SMNDA, Spanish and
+  Belgian Core with the national creditor identifiers), and the two
+  German DK order types beyond SEPA: CCU urgent euro and AXZ foreign
+  payment with regulatory reporting. SEPA creditor identifiers are
+  computed with the EPC check digits (the German one reproduces the
+  Bundesbank's published example).
+- **HSBC SEPA overlays** (`eu.hsbc.sepa-credit-transfer`,
+  `eu.hsbc.sepa-instant`, `eu.hsbc.sepa-direct-debit`) and
+  `de.hsbc.priority`, curated from the HSBCnet Europe guidelines; and
+  four public country overlays from the national implementation
+  guides (`be.febelfin.structured-communication`, `nl.betalingskenmerk`,
+  `fr.cfonb.sepa`, `es.aeb.sepa`).
+- **Overlays declare the editions they cover** (`versions:`). A
+  guideline written for pain.001.001.03 spells `BIC`, so it builds and
+  judges .03 variants only; the HSBC overlays are marked .03 (and
+  pain.008 .02), and `Overlay.applies` takes the edition.
+
 ### Changed
 
 - **`uk-fps` accepts `URNS`.** Reading the HSBC UK Faster Payments

@@ -1,0 +1,42 @@
+scenario: es.sepa.sct-single
+family: sepa-credit-transfer
+country: ES
+message_type: pain.001.001.09
+variant: null
+description: SEPA credit transfer, single, initiating party identified by NIF.
+sha256: 0deaca66ac9f27e2771bb5dd98597329242eb2a4479f63168eb673685ff7354b
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sct:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    es.aeb.sepa:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: AEB, Guia de implantacion pain.001 v1.0, Rulebook 2025 (Oct 2025)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

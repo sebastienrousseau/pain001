@@ -1,0 +1,38 @@
+scenario: lu.sepa.sct-single
+family: sepa-credit-transfer
+country: LU
+message_type: pain.001.001.09
+variant: null
+description: SEPA credit transfer, single supplier payment.
+sha256: f1ff789b194726424ab05629ec1052b5cc35a172b042448a332db378b7091197
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sct:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: ABBL, SEPA credit transfer implementation guideline for Luxembourg
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

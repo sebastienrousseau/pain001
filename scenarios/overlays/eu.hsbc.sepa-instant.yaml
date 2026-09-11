@@ -1,0 +1,52 @@
+# HSBC SEPA Instant Credit Transfer (HSBCnet, pain.001.001.03, HSBC
+# Europe). Curated from the bank's usage guideline (2025; HSBC-restricted;
+# not in this repository).
+overlay_id: eu.hsbc.sepa-instant
+title: HSBC SEPA Instant Credit Transfer (HSBCnet, v03)
+applies_to: [sepa-instant]
+versions: [pain.001.001.03]
+source:
+  title: "HSBC SEPA Credit Transfer Instant usage guideline for pain.001.001.03, HSBCnet Europe"
+  publisher: HSBC Direct Channels
+  published: "2025"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    type: {service_level: SEPA, local_instrument: INST}
+rules:
+  - rule_id: hsbc-inst-local-instrument
+    description: The local instrument INST sits at the payment-information level.
+    locator: PmtInf/PmtTpInf/LclInstrm/Cd
+    assertion: one_of:[INST]
+    error_code: HSBC_INST_LCLINSTRM
+  - rule_id: hsbc-inst-service-level
+    description: The service level is SEPA.
+    locator: PmtTpInf/SvcLvl/Cd
+    assertion: one_of:[SEPA]
+    error_code: HSBC_INST_SVCLVL
+  - rule_id: hsbc-inst-debtor-country
+    description: The debtor address carries a country.
+    locator: Dbtr/PstlAdr/Ctry
+    assertion: required
+    error_code: HSBC_INST_DBTR_CTRY
+  - rule_id: hsbc-inst-debtor-agent-bic
+    description: The debtor agent is identified by BIC.
+    locator: DbtrAgt/FinInstnId/BIC
+    assertion: required
+    error_code: HSBC_INST_DBTRAGT_BIC
+  - rule_id: hsbc-inst-creditor-agent-bic
+    description: The creditor agent is identified by BIC.
+    locator: CdtrAgt/FinInstnId/BIC
+    assertion: if:CdtrAgt:required
+    error_code: HSBC_INST_CDTRAGT_BIC
+  - rule_id: hsbc-inst-creditor
+    description: Creditor name and account are present.
+    locator: CdtTrfTxInf/Cdtr/Nm
+    assertion: required
+    error_code: HSBC_INST_CDTR
+  - rule_id: hsbc-inst-no-charges-account-agent
+    description: A charges account agent is not accepted.
+    locator: ChrgsAcctAgt
+    assertion: forbidden
+    error_code: HSBC_INST_CHRGSACCTAGT

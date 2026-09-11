@@ -1,0 +1,104 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>BDE-SCT-20260921</MsgId>
+      <CreDtTm>2026-09-21T11:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>5120.00</CtrlSum>
+      <InitgPty>
+        <Nm>Bodegas del Ebro SL</Nm>
+        <PstlAdr>
+          <PstCd>26001</PstCd>
+          <TwnNm>Logrono</TwnNm>
+          <Ctry>ES</Ctry>
+          <AdrLine>Calle Mayor 8</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <Othr>
+              <Id>B12345674</Id>
+              <SchmeNm>
+                <Cd>COID</Cd>
+              </SchmeNm>
+            </Othr>
+          </OrgId>
+        </Id>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SCT-20260921-ES-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>5120.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>SEPA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Bodegas del Ebro SL</Nm>
+        <PstlAdr>
+          <PstCd>26001</PstCd>
+          <TwnNm>Logrono</TwnNm>
+          <Ctry>ES</Ctry>
+          <AdrLine>Calle Mayor 8</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <Othr>
+              <Id>B12345674</Id>
+              <SchmeNm>
+                <Cd>COID</Cd>
+              </SchmeNm>
+            </Othr>
+          </OrgId>
+        </Id>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>ES4793760993178221590616</IBAN>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>PUKAESC0</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>BDE-2026-0921-01</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">5120.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>RDHSESH0</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Vidrieria Riojana SA</Nm>
+          <PstlAdr>
+            <PstCd>26006</PstCd>
+            <TwnNm>Logrono</TwnNm>
+            <Ctry>ES</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>ES7200732545500484629565</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Factura 2026-0117</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

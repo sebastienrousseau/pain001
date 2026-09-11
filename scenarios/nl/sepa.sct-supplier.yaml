@@ -1,0 +1,47 @@
+# A Dutch SEPA credit transfer carrying a betalingskenmerk: the sixteen
+# digit Dutch payment reference with issuer CUR (Currence), as the Dutch
+# banks' SEPA implementation guidelines describe.
+id: nl.sepa.sct-supplier
+family: sepa-credit-transfer
+country: NL
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 310001
+description: SEPA credit transfer with a Dutch payment reference (CUR).
+profiles: [sepa-sct, anti-duplicate]
+
+parties:
+  payer:
+    name: Molen Techniek BV
+    address: {form: hybrid, street: Keizersgracht, building_number: "62", post_code: 1015 CS, town: Amsterdam, country: NL}
+
+header:
+  message_id: MTB-SCT-20260921
+  created: "2026-09-21T10:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: SCT-20260921-NL-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: SEPA}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: MTB-2026-0921-01
+    amount: {ccy: EUR, value: "764.30"}
+    creditor_agent: {bic: auto}
+    creditor: {name: Staalhandel Zuid, address: {form: hybrid, post_code: 5611 AB, town: Eindhoven, country: NL}}
+    creditor_account: {iban: auto}
+    remittance:
+      structured:
+        - creditor_reference: {type: SCOR, issuer: CUR, reference: "1234567890123456"}
+
+provenance:
+  sources:
+    - {title: "Betaalvereniging Nederland, SEPA Credit Transfer implementation guidelines for pain.001 (Dutch banks)", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

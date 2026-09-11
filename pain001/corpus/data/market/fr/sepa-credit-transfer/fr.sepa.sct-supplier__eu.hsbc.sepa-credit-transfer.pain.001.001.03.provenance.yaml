@@ -1,0 +1,63 @@
+scenario: fr.sepa.sct-supplier
+family: sepa-credit-transfer
+country: FR
+message_type: pain.001.001.03
+variant:
+  overlay: eu.hsbc.sepa-credit-transfer
+  title: HSBC SEPA Credit Transfer (HSBCnet, v03)
+  source:
+    title: HSBC SEPA Credit Transfer usage guideline for pain.001.001.03, HSBCnet
+      Europe
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      type:
+        service_level: SEPA
+      charge_bearer: SLEV
+description: SEPA credit transfer, supplier invoice with an RF creditor reference.
+sha256: 9afddb87a497e55390fe5f2d6aa73d37a5659f66fcf36bc48280873fc713625b
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sct:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    eu.hsbc.sepa-credit-transfer:
+      errors: 0
+      warnings: 0
+      findings: []
+    fr.cfonb.sepa:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: CFONB, Guide d'utilisation du virement SEPA client-banque V2.6 (Jan 2023)
+    read: '2026-09-10'
+  - title: EPC132-08 Customer-to-PSP SCT Implementation Guidelines 2025 v1.0
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

@@ -1,0 +1,48 @@
+# A Spanish SEPA Core direct debit: the creditor identifier is the
+# Spanish form (ES + check + business suffix + NIF).
+id: es.sepa.sdd-core
+family: sepa-direct-debit
+country: ES
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 340002
+description: SEPA Core direct debit, recurring, Spanish creditor identifier.
+profiles: [sepa-sdd, anti-duplicate]
+
+parties:
+  creditor:
+    name: Gimnasio Ebro SL
+    address: {form: hybrid, post_code: "26002", town: Logrono, country: ES}
+  scheme:
+    id: {private: {other: [{id: ES97000B12345678, scheme: SEPA}]}}
+
+header:
+  message_id: GEB-DD-20260925
+  created: "2026-09-18T10:00:00"
+  initiating_party: {ref: creditor}
+
+payment:
+  id: DD-20260925-ES-01
+  method: DD
+  batch_booking: true
+  type: {service_level: SEPA, local_instrument: CORE, sequence_type: RCUR}
+  requested_collection_date: "2026-09-25"
+  creditor: {ref: creditor}
+  creditor_account: {iban: auto}
+  creditor_agent: {bic: auto}
+  charge_bearer: SLEV
+  creditor_scheme_id: {ref: scheme}
+
+transactions:
+  - end_to_end_id: GEB-2026-09-000001
+    amount: {ccy: EUR, value: "39.90"}
+    mandate: {id: GEB-MNDT-2025-0987, date_of_signature: "2025-02-03"}
+    debtor_agent: {bic: auto}
+    debtor: {name: Maria Garcia Lopez, address: {form: hybrid, post_code: "26004", town: Logrono, country: ES}}
+    debtor_account: {iban: auto}
+    remittance: {unstructured: "Cuota octubre 2026"}
+
+provenance:
+  sources:
+    - {title: "AEB, Guia de implantacion SDD Core, Rulebook 2025", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

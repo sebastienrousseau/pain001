@@ -123,6 +123,9 @@ class Overlay:
         path: Where it was loaded from, if a file.
         patch: Scenario keys merged in before building a variant.
         patches: Per-scenario additions to ``patch``, keyed by scenario id.
+        versions: Message types the overlay covers; empty means every
+            edition. A guideline written for pain.001.001.03 does not
+            judge a .09 file, whose elements are spelled differently.
     """
 
     overlay_id: str
@@ -133,6 +136,7 @@ class Overlay:
     path: Path | None = None
     patch: dict[str, Any] = field(default_factory=dict)
     patches: dict[str, dict[str, Any]] = field(default_factory=dict)
+    versions: tuple[str, ...] = ()
 
     def patch_for(self, scenario_id: str) -> dict[str, Any]:
         """The patch for one scenario: ``patch`` plus its ``patches`` entry."""
@@ -145,8 +149,28 @@ class Overlay:
         """True when the overlay builds variants."""
         return bool(self.patch or self.patches)
 
-    def applies(self, scenario_id: str, family: str | None = None) -> bool:
-        """True when the overlay targets the scenario or its family."""
+    def applies(
+        self,
+        scenario_id: str,
+        family: str | None = None,
+        version: str | None = None,
+    ) -> bool:
+        """True when the overlay targets the scenario or its family.
+
+        Args:
+            scenario_id: The scenario.
+            family: Its rail family.
+            version: The edition being judged; ``None`` skips the check.
+
+        Returns:
+            Whether the overlay applies.
+        """
+        if (
+            version is not None
+            and self.versions
+            and version not in self.versions
+        ):
+            return False
         if not self.applies_to:
             return True
         return scenario_id in self.applies_to or family in self.applies_to
@@ -267,6 +291,7 @@ def overlay_from(
         path,
         dict(document.get("patch") or {}),
         {str(k): dict(v) for k, v in (document.get("patches") or {}).items()},
+        tuple(str(v) for v in (document.get("versions") or [])),
     )
 
 

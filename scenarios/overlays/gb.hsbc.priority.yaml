@@ -4,6 +4,7 @@
 overlay_id: gb.hsbc.priority
 title: HSBC UK Priority and International Payments (HSBCnet, v03)
 applies_to: [priority-payment]
+versions: [pain.001.001.03]
 source:
   title: "HSBC UK TARGET and International Payments usage guideline for pain.001.001.03, HSBCnet"
   publisher: HSBC Direct Channels

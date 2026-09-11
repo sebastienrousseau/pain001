@@ -1,0 +1,65 @@
+scenario: de.ccu.urgent
+family: urgent-euro
+country: DE
+message_type: pain.001.001.03
+variant:
+  overlay: de.hsbc.priority
+  title: HSBC Germany TARGET and International Payments (HSBCnet, v03)
+  source:
+    title: HSBC TARGET and International Payments usage guideline for Germany, pain.001.001.03,
+      HSBCnet Europe
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      debtor:
+        address:
+          form: structured
+    transactions:
+      '*':
+        creditor:
+          address:
+            form: structured
+description: Urgent euro payment (TARGET) from a German account, DK order type CCU.
+sha256: b6a7f31bb7c867cc531e44549e23e5261a9e336aeedb3fd0022428f0730d3a2b
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    de-ccu:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    de.hsbc.priority:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: DK DFUE-Abkommen Anlage 3 V26.11, order type CCU
+    read: '2026-09-10'
+  - title: DZ BANK, CCU product description
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

@@ -1,0 +1,39 @@
+scenario: de.sepa.sdd-b2b
+family: sepa-direct-debit
+country: DE
+message_type: pain.008.001.08
+variant: null
+description: SEPA B2B direct debit, first collection.
+sha256: 1debdb2ede92c67c0878ecb04bd7415dc7ad7762b5f03836eadeb36ae549d8de
+build:
+  renamed: []
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-b2b:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: EPC131-08 Customer-to-PSP SDD B2B Implementation Guidelines 2025 v1.0
+    read: '2026-09-10'
+  - title: Deutsche Bundesbank, Glaeubiger-Identifikationsnummer format
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

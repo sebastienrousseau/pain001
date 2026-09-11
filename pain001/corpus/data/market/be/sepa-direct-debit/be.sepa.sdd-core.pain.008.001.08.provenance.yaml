@@ -1,0 +1,42 @@
+scenario: be.sepa.sdd-core
+family: sepa-direct-debit
+country: BE
+message_type: pain.008.001.08
+variant: null
+description: SEPA Core direct debit, recurring, Belgian creditor identifier.
+sha256: 6426fd54243af6bf29da43f5aafaae31cae6a324af2bffabe59b253decfdd242
+build:
+  renamed: []
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sdd:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    be.febelfin.structured-communication:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Febelfin, XML message for SEPA Direct Debit initiation, implementation
+      guidelines (pain.008)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

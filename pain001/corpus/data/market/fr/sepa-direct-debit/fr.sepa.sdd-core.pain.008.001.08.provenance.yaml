@@ -1,0 +1,45 @@
+scenario: fr.sepa.sdd-core
+family: sepa-direct-debit
+country: FR
+message_type: pain.008.001.08
+variant: null
+description: SEPA Core direct debit, recurring collection on an amended mandate.
+sha256: ba71042980d7bddbdb65d14def5316d3a9ab68f220a7d1620481dad9f1b0a0c7
+build:
+  renamed: []
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sdd:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    fr.cfonb.sepa:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: EPC130-08 Customer-to-PSP SDD Core Implementation Guidelines 2025 v1.0
+      (SMNDA)
+    read: '2026-09-10'
+  - title: CFONB, Guide d'utilisation du prelevement SEPA pain.008 V1.6 with the January
+      2026 addendum
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

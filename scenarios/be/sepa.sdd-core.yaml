@@ -1,0 +1,50 @@
+# A Belgian SEPA Core direct debit: the creditor identifier carries the
+# KBO-BCE enterprise number; Core and B2B never share a payment block.
+id: be.sepa.sdd-core
+family: sepa-direct-debit
+country: BE
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 320002
+description: SEPA Core direct debit, recurring, Belgian creditor identifier.
+profiles: [sepa-sdd, anti-duplicate]
+
+parties:
+  creditor:
+    name: Telenet Facturatie
+    address: {form: hybrid, post_code: "2800", town: Mechelen, country: BE}
+  scheme:
+    id: {private: {other: [{id: BE68ZZZ0123456789, scheme: SEPA}]}}
+
+header:
+  message_id: TLN-DD-20260925
+  created: "2026-09-18T11:00:00"
+  initiating_party: {ref: creditor}
+
+payment:
+  id: DD-20260925-BE-01
+  method: DD
+  batch_booking: true
+  type: {service_level: SEPA, local_instrument: CORE, sequence_type: RCUR}
+  requested_collection_date: "2026-09-25"
+  creditor: {ref: creditor}
+  creditor_account: {iban: auto}
+  creditor_agent: {bic: auto}
+  charge_bearer: SLEV
+  creditor_scheme_id: {ref: scheme}
+
+transactions:
+  - end_to_end_id: TLN-2026-09-000001
+    amount: {ccy: EUR, value: "54.99"}
+    mandate: {id: TLN-MNDT-000456, date_of_signature: "2024-11-20"}
+    debtor_agent: {bic: auto}
+    debtor: {name: An Peeters, address: {form: hybrid, post_code: "3000", town: Leuven, country: BE}}
+    debtor_account: {iban: auto}
+    remittance:
+      structured:
+        - creditor_reference: {type: SCOR, issuer: BBA, reference: "090123456744"}
+
+provenance:
+  sources:
+    - {title: "Febelfin, XML message for SEPA Direct Debit initiation, implementation guidelines (pain.008)", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

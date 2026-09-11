@@ -1,0 +1,53 @@
+# A German foreign payment (DK order type AXZ): USD to a supplier in the
+# United States, charges shared, structured addresses, regulatory
+# reporting for the Bundesbank's Z4 return. The AWV reporting code is a
+# placeholder sample, not a verified code.
+id: de.axz.foreign
+family: cross-border
+country: DE
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 490005
+description: Foreign payment in USD from a German account, DK order type AXZ.
+profiles: [de-axz, anti-duplicate]
+
+parties:
+  payer:
+    name: Musterfirma GmbH
+    address: {form: structured, street: Hauptstrasse, building_number: "12", post_code: "80331", town: Muenchen, country_subdivision: BY, country: DE}
+
+header:
+  message_id: MSTR-AXZ-20260921-01
+  created: "2026-09-21T10:30:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: AXZ-20260921-01
+  method: TRF
+  type: {service_level: URGP}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto, address: {form: structured, town: Muenchen, country: DE}}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: MSTR-AXZ-2026-0921-01
+    uetr: auto
+    amount: {ccy: USD, value: "42000.00"}
+    creditor_agent: {bic: auto, country: US, address: {form: structured, town: Chicago, country_subdivision: IL, country: US}}
+    creditor: {name: Midwest Precision Tools Inc, address: {form: structured, street: Wacker Drive, building_number: "233", post_code: "60606", town: Chicago, country_subdivision: IL, country: US}}
+    creditor_account: {other: {id: "5512345678", scheme: BBAN}}
+    purpose: GDDS
+    remittance: {unstructured: "Invoice 2026-4471"}
+    raw:
+      RgltryRptg:
+        DbtCdtRptgInd: DEBT
+        Authrty: {Nm: Deutsche Bundesbank, Ctry: DE}
+        Dtls: {Ctry: US, Cd: "545", Inf: "AWV Z4 Kennzahl 545 (sample)"}
+
+provenance:
+  sources:
+    - {title: "DK DFUE-Abkommen Anlage 3 V3.8, order type AXZ", read: "2026-09-10"}
+    - {title: "DZ BANK, AXZ product description (AWV reporting)", read: "2026-09-10"}
+  confidence: assumed
+  evidence: []

@@ -5,6 +5,7 @@
 overlay_id: gb.hsbc.direct-debit
 title: HSBC UK Direct Debit (HSBCnet, pain.008 v02)
 applies_to: [bacs-direct-debit]
+versions: [pain.008.001.02]
 source:
   title: "HSBC UK Direct Debit usage guideline for pain.008.001.02, HSBCnet"
   publisher: HSBC Direct Channels

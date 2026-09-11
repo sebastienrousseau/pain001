@@ -158,27 +158,27 @@ def test_variant_files_are_built_named_and_judged() -> None:
     scenario = SCENARIOS["gb.fps.single"]
     overlay = OVERLAYS["gb.hsbc.faster-payments"]
     target = build_corpus.target_for(
-        scenario, "pain.001.001.09", variant=overlay.overlay_id
+        scenario, "pain.001.001.03", variant=overlay.overlay_id
     )
     assert (
         target.name
-        == "gb.fps.single__gb.hsbc.faster-payments.pain.001.001.09.xml"
+        == "gb.fps.single__gb.hsbc.faster-payments.pain.001.001.03.xml"
     )
     assert target.exists()
     xml = target.read_text(encoding="utf-8")
     assert "<Cd>URNS</Cd>" in xml and "<ChrgBr>SHAR</ChrgBr>" in xml
-    generic = build_corpus.target_for(scenario, "pain.001.001.09").read_text(
+    generic = build_corpus.target_for(scenario, "pain.001.001.03").read_text(
         encoding="utf-8"
     )
     assert "<Cd>URGP</Cd>" in generic
     record = run_ladder(
-        scenario, "pain.001.001.09", xml, variant=overlay.overlay_id
+        scenario, "pain.001.001.03", xml, variant=overlay.overlay_id
     )
     assert record["overlays"]["gb.hsbc.faster-payments"]["errors"] == 0
     # the generic file would fail the HSBC rules, which is why it is a variant
     forced = run_ladder(
         scenario,
-        "pain.001.001.09",
+        "pain.001.001.03",
         generic,
         [overlay],
         variant=overlay.overlay_id,
@@ -194,7 +194,7 @@ def test_variant_files_are_built_named_and_judged() -> None:
     )
     assert "restricted" in sidecar["variant"]["source"]["access"]
     plain = yaml.safe_load(
-        build_corpus.target_for(scenario, "pain.001.001.09")
+        build_corpus.target_for(scenario, "pain.001.001.03")
         .with_suffix(".provenance.yaml")
         .read_text(encoding="utf-8")
     )
@@ -205,26 +205,66 @@ def test_api_and_gate_understand_variants() -> None:
     """list_files exposes the variant; get_file and provenance select by it."""
     market = api.list_files("market")
     variants = [f for f in market if f.variant]
-    assert {f.variant for f in variants} == {
+    assert {f.variant for f in variants} >= {
         "gb.hsbc.faster-payments",
         "gb.hsbc.bacs",
         "gb.hsbc.priority",
         "gb.hsbc.direct-debit",
+        "eu.hsbc.sepa-credit-transfer",
     }
     hsbc = api.get_file(
-        "gb.fps.single", "pain.001.001.09", "gb.hsbc.faster-payments"
+        "gb.fps.single", "pain.001.001.03", "gb.hsbc.faster-payments"
     )
     assert "<Cd>URNS</Cd>" in hsbc and "<Cd>URNS</Cd>" not in api.get_file(
-        "gb.fps.single", "pain.001.001.09"
+        "gb.fps.single", "pain.001.001.03"
     )
     assert (
         api.provenance(
-            "gb.fps.single", "pain.001.001.09", "gb.hsbc.faster-payments"
+            "gb.fps.single", "pain.001.001.03", "gb.hsbc.faster-payments"
         )["variant"]["overlay"]
         == "gb.hsbc.faster-payments"
     )
     with pytest.raises(FileNotFoundError):
-        api.get_file("gb.fps.single", "pain.001.001.09", "gb.hsbc.bacs")
+        api.get_file(
+            "gb.fps.single", "pain.001.001.09", "gb.hsbc.faster-payments"
+        )  # a v03 guideline, no .09 variant
     files = sorted(build_corpus.MARKET_ROOT.rglob("*__*.xml"))
-    assert len(files) == 10
+    assert len(files) == 19
     assert corpus_coverage._ladder_check(files) == 0
+
+
+def test_overlay_versions_limit_variants_and_judgement() -> None:
+    """A v03 guideline builds and judges .03 files only."""
+    scenario = SCENARIOS["gb.fps.single"]
+    overlay = OVERLAYS["gb.hsbc.faster-payments"]
+    assert overlay.versions == ("pain.001.001.03",)
+    pool = list(OVERLAYS.values())
+    assert [
+        o.overlay_id
+        for o in build_corpus.variants_for(scenario, pool, "pain.001.001.03")
+    ] == ["gb.hsbc.faster-payments"]
+    assert build_corpus.variants_for(scenario, pool, "pain.001.001.09") == []
+    assert [
+        o.overlay_id
+        for o in applicable_overlays(
+            scenario, pool, "gb.hsbc.faster-payments", "pain.001.001.03"
+        )
+    ] == ["gb.hsbc.faster-payments"]
+    assert (
+        applicable_overlays(
+            scenario, pool, "gb.hsbc.faster-payments", "pain.001.001.09"
+        )
+        == []
+    )
+    assert overlay.applies(
+        "gb.fps.single", "faster-payment", "pain.001.001.03"
+    )
+    assert not overlay.applies(
+        "gb.fps.single", "faster-payment", "pain.001.001.09"
+    )
+    assert overlay.applies(
+        "gb.fps.single", "faster-payment"
+    )  # version unknown: not filtered
+    assert not build_corpus.target_for(
+        scenario, "pain.001.001.09", variant=overlay.overlay_id
+    ).exists()

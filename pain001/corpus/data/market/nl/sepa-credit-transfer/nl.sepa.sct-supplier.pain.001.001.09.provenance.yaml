@@ -1,0 +1,43 @@
+scenario: nl.sepa.sct-supplier
+family: sepa-credit-transfer
+country: NL
+message_type: pain.001.001.09
+variant: null
+description: SEPA credit transfer with a Dutch payment reference (CUR).
+sha256: 270beba3474ee7171e73b4fca50ab9abbcba85e4ec63386bd2d27023914ce145
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sct:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    nl.betalingskenmerk:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Betaalvereniging Nederland, SEPA Credit Transfer implementation guidelines
+      for pain.001 (Dutch banks)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

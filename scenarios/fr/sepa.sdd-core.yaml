@@ -1,0 +1,54 @@
+# A French SEPA Core direct debit on an amended mandate (SMNDA): the
+# debtor changed bank, so the amendment details carry the original agent.
+id: fr.sepa.sdd-core
+family: sepa-direct-debit
+country: FR
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 330002
+description: SEPA Core direct debit, recurring collection on an amended mandate.
+profiles: [sepa-sdd, anti-duplicate]
+
+parties:
+  creditor:
+    name: Eau et Assainissement Rhone
+    address: {form: hybrid, post_code: "69003", town: Lyon, country: FR}
+  scheme:
+    id: {private: {other: [{id: FR72ZZZ123456, scheme: SEPA}]}}
+
+header:
+  message_id: EAR-DD-20260925
+  created: "2026-09-18T09:00:00"
+  initiating_party: {ref: creditor}
+
+payment:
+  id: DD-20260925-FR-01
+  method: DD
+  batch_booking: true
+  type: {service_level: SEPA, local_instrument: CORE, sequence_type: RCUR}
+  requested_collection_date: "2026-09-25"
+  creditor: {ref: creditor}
+  creditor_account: {iban: auto}
+  creditor_agent: {bic: auto}
+  charge_bearer: SLEV
+  creditor_scheme_id: {ref: scheme}
+
+transactions:
+  - end_to_end_id: EAR-2026-09-000001
+    amount: {ccy: EUR, value: "63.20"}
+    mandate:
+      id: EAR-RUM-000123
+      date_of_signature: "2023-05-12"
+      amendment_indicator: true
+      raw:
+        AmdmntInfDtls: {OrgnlDbtrAgt: {FinInstnId: {Othr: {Id: SMNDA}}}}
+    debtor_agent: {bic: auto}
+    debtor: {name: M. Jean Dupont, address: {form: hybrid, post_code: "69100", town: Villeurbanne, country: FR}}
+    debtor_account: {iban: auto}
+    remittance: {unstructured: "Eau 3e trimestre 2026"}
+
+provenance:
+  sources:
+    - {title: "EPC130-08 Customer-to-PSP SDD Core Implementation Guidelines 2025 v1.0 (SMNDA)", read: "2026-09-10"}
+    - {title: "CFONB, Guide d'utilisation du prelevement SEPA pain.008 V1.6 with the January 2026 addendum", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

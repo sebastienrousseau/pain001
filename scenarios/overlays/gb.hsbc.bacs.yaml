@@ -3,6 +3,7 @@
 overlay_id: gb.hsbc.bacs
 title: HSBC UK BACS (HSBCnet, v03)
 applies_to: [bacs-direct-credit]
+versions: [pain.001.001.03]
 source:
   title: "HSBC UK BACS usage guideline for pain.001.001.03, HSBCnet"
   publisher: HSBC Direct Channels

@@ -1,0 +1,41 @@
+scenario: es.sepa.sdd-core
+family: sepa-direct-debit
+country: ES
+message_type: pain.008.001.08
+variant: null
+description: SEPA Core direct debit, recurring, Spanish creditor identifier.
+sha256: 586ac55f14b24b0285f06db45c391155edb87d7813901573f50f358d4e7ff206
+build:
+  renamed: []
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sdd:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    es.aeb.sepa:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: AEB, Guia de implantacion SDD Core, Rulebook 2025
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

@@ -84,12 +84,20 @@ def target_for(
     )
 
 
-def variants_for(scenario: Scenario, pool: list[Overlay]) -> list[Overlay]:
-    """The overlays with a patch that target the scenario, in pool order."""
+def variants_for(
+    scenario: Scenario, pool: list[Overlay], version: str | None = None
+) -> list[Overlay]:
+    """The overlays with a patch that target the scenario and edition."""
     wanted = scenario.overlays
     chosen = []
     for overlay in pool:
         if not overlay.has_patch:
+            continue
+        if (
+            version is not None
+            and overlay.versions
+            and version not in overlay.versions
+        ):
             continue
         if wanted is None and not overlay.applies(
             scenario.id, scenario.family
@@ -253,7 +261,7 @@ def main(argv: list[str] | None = None) -> int:
     for scenario in scenarios:
         for version in scenario.versions:
             renderings = [(None, build(scenario, version))]
-            for overlay in variants_for(scenario, pool):
+            for overlay in variants_for(scenario, pool, version):
                 renderings.append(
                     (
                         overlay,

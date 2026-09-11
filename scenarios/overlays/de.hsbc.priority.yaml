@@ -1,0 +1,65 @@
+# HSBC TARGET and International Payments, Germany (HSBCnet,
+# pain.001.001.03). Curated from the bank's usage guideline (2025;
+# HSBC-restricted; not in this repository).
+overlay_id: de.hsbc.priority
+title: HSBC Germany TARGET and International Payments (HSBCnet, v03)
+applies_to: [urgent-euro, cross-border]
+versions: [pain.001.001.03]
+source:
+  title: "HSBC TARGET and International Payments usage guideline for Germany, pain.001.001.03, HSBCnet Europe"
+  publisher: HSBC Direct Channels
+  published: "2025"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    debtor: {address: {form: structured}}
+  transactions:
+    "*":
+      creditor: {address: {form: structured}}
+rules:
+  - rule_id: hsbc-de-prty-payment-type
+    description: Payment type information is present at the payment-information level.
+    locator: PmtInf/PmtTpInf
+    assertion: required
+    error_code: HSBC_DE_PRTY_PMTTPINF
+  - rule_id: hsbc-de-prty-no-tx-priority
+    description: Instruction priority sits at the payment-information level only.
+    locator: CdtTrfTxInf/PmtTpInf/InstrPrty
+    assertion: forbidden
+    error_code: HSBC_DE_PRTY_TX_INSTRPRTY
+  - rule_id: hsbc-de-prty-debtor-structured
+    description: The debtor address is structured with town, subdivision and country; address lines are not accepted.
+    locator: Dbtr/PstlAdr/AdrLine
+    assertion: forbidden
+    error_code: HSBC_DE_PRTY_DBTR_ADRLINE
+  - rule_id: hsbc-de-prty-debtor-town
+    description: The debtor address carries a town.
+    locator: Dbtr/PstlAdr/TwnNm
+    assertion: required
+    error_code: HSBC_DE_PRTY_DBTR_TOWN
+  - rule_id: hsbc-de-prty-debtor-subdivision
+    description: The debtor address carries a country subdivision.
+    locator: Dbtr/PstlAdr/CtrySubDvsn
+    assertion: required
+    error_code: HSBC_DE_PRTY_DBTR_SUBDIV
+  - rule_id: hsbc-de-prty-creditor-structured
+    description: The creditor address is structured; address lines are not accepted.
+    locator: Cdtr/PstlAdr/AdrLine
+    assertion: forbidden
+    error_code: HSBC_DE_PRTY_CDTR_ADRLINE
+  - rule_id: hsbc-de-prty-creditor-town
+    description: The creditor address carries town, subdivision and country.
+    locator: Cdtr/PstlAdr/CtrySubDvsn
+    assertion: if:Cdtr:required
+    error_code: HSBC_DE_PRTY_CDTR_SUBDIV
+  - rule_id: hsbc-de-prty-creditor-agent-bic
+    description: The creditor agent is identified by BIC.
+    locator: CdtrAgt/FinInstnId/BIC
+    assertion: if:CdtrAgt:required
+    error_code: HSBC_DE_PRTY_CDTRAGT_BIC
+  - rule_id: hsbc-de-prty-no-debtor-agent-name
+    description: The debtor agent carries no name; it is identified by BIC.
+    locator: DbtrAgt/FinInstnId/Nm
+    assertion: forbidden
+    error_code: HSBC_DE_PRTY_DBTRAGT_NM

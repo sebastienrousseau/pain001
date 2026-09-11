@@ -1,0 +1,19 @@
+# The Dutch payment reference (betalingskenmerk): sixteen digits with a
+# check digit, issuer CUR (Currence), carried as a SCOR creditor reference.
+overlay_id: nl.betalingskenmerk
+title: Dutch payment reference (Currence)
+applies_to: [nl.sepa.sct-supplier]
+source:
+  title: "Betaalvereniging Nederland, SEPA Credit Transfer implementation guidelines for pain.001; Currence betalingskenmerk specification"
+  read: "2026-09-10"
+rules:
+  - rule_id: nl-bk-issuer
+    description: A betalingskenmerk is issued by CUR.
+    locator: CdtrRefInf/Tp/Issr
+    assertion: if:CdtrRefInf:equals:CUR
+    error_code: NL_BK_ISSUER
+  - rule_id: nl-bk-format
+    description: The betalingskenmerk is sixteen digits.
+    locator: CdtrRefInf/Ref
+    assertion: matches:[0-9]{16}
+    error_code: NL_BK_FORMAT

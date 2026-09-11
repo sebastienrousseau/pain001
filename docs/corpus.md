@@ -121,7 +121,9 @@ XSD, in the grammar shared with `iso20022-bank-profile-mcp` (`required`,
   `<scenario>__<overlay>.<version>.xml` beside the generic one and judges that
   variant by the overlay's rules. `patches:` keyed by scenario id adds what a
   single scenario needs, `"*"` against a list applies to every transaction,
-  and `null` removes a key.
+  and `null` removes a key. `versions:` lists the editions the overlay
+  covers: a guideline written for pain.001.001.03 spells `BIC` and must not
+  judge a .09 file, so its variants exist for .03 only.
 
 ```python
 from pain001.corpus import list_files, get_file
