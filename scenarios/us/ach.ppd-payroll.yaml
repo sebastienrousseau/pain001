@@ -1,0 +1,54 @@
+# A US ACH payroll run: Standard Entry Class PPD, category purpose SALA,
+# two employees, batch booked.
+id: us.ach.ppd-payroll
+family: ach-credit
+country: US
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 100002
+description: ACH PPD payroll run, two employees.
+profiles: [us-ach, anti-duplicate]
+
+parties:
+  employer:
+    name: Cascade Millwork Inc
+    address: {form: hybrid, street: Pine Street, building_number: "1200", post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+    id: {org: {other: [{id: "1234567890", proprietary_scheme: COMPANY-ID}]}}
+
+header:
+  message_id: CMI-PAY-20260925
+  created: "2026-09-23T17:00:00"
+  initiating_party: {ref: employer}
+
+payment:
+  id: PAY-20260925-01
+  method: TRF
+  batch_booking: true
+  type: {service_level: NURG, local_instrument: PPD, category_purpose: SALA}
+  requested_execution_date: "2026-09-25"
+  debtor: {ref: employer}
+  debtor_account: {other: {id: "4412345678", scheme: BBAN}}
+  debtor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}, address: {form: hybrid, town: New York, country: US}}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: PAY-2026-09-0001
+    amount: {ccy: USD, value: "3120.55"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "121000248"}, address: {form: hybrid, town: San Francisco, country: US}}
+    creditor: {name: Jordan Lee, address: {form: hybrid, post_code: "97209", town: Portland, country_subdivision: OR, country: US}}
+    creditor_account: {other: {id: "7712345678", scheme: BBAN}}
+    purpose: SALA
+    remittance: {unstructured: "Payroll Sep 2026"}
+  - end_to_end_id: PAY-2026-09-0002
+    amount: {ccy: USD, value: "2875.10"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "026009593"}, address: {form: hybrid, town: New York, country: US}}
+    creditor: {name: Sam Rivera, address: {form: hybrid, post_code: "97214", town: Portland, country_subdivision: OR, country: US}}
+    creditor_account: {other: {id: "7798765432", scheme: BBAN}}
+    purpose: SALA
+    remittance: {unstructured: "Payroll Sep 2026"}
+
+provenance:
+  sources:
+    - {title: "Nacha Operating Rules and Guidelines, PPD entries", read: "2026-09-10"}
+    - {title: "Bank of America pain.001.001.09 formatting guide", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

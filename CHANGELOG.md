@@ -70,6 +70,18 @@ and in the MCP and LSP tools. Entries are added as work lands.
   four public country overlays from the national implementation
   guides (`be.febelfin.structured-communication`, `nl.betalingskenmerk`,
   `fr.cfonb.sepa`, `es.aeb.sepa`).
+- **US pack.** Seven scenarios under `scenarios/us/`: ACH CCD supplier
+  credit and PPD payroll (Nacha Standard Entry Class codes as local
+  instrument, ABA routing numbers as clearing member ids, addenda-sized
+  remittance), an ACH debit collection (pain.008 .02 and .08), a federal
+  tax deposit through EFTPS (CCD with the Nacha TXP addenda string,
+  Treasury routing and account), a domestic Fedwire transfer, an RTP
+  real-time payment (`URNS`, proprietary local instrument `rtp`) and a
+  bank-issued cheque (`CHK` with a cheque instruction, the MDR cheque
+  rules satisfied). HSBC US overlays (`us.hsbc.ach`, `us.hsbc.wire`,
+  `us.hsbc.rtp`, `us.hsbc.ach-debit`) are curated from the HSBCnet North
+  America guidelines. The tree is 27 scenarios and 160 market files at
+  341 KB of the 400 KB budget.
 - **Overlays declare the editions they cover** (`versions:`). A
   guideline written for pain.001.001.03 spells `BIC`, so it builds and
   judges .03 variants only; the HSBC overlays are marked .03 (and

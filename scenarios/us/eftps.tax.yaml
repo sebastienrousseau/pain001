@@ -1,0 +1,48 @@
+# A federal tax payment through EFTPS: an ACH CCD credit to the Treasury
+# with the Nacha TXP addenda string verbatim in the unstructured
+# remittance, category purpose TAXS, at least one business day ahead.
+id: us.eftps.tax
+family: ach-credit
+country: US
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 100004
+description: IRS EFTPS federal tax deposit, CCD with the TXP addenda string.
+profiles: [us-ach, anti-duplicate]
+
+parties:
+  taxpayer:
+    name: Cascade Millwork Inc
+    address: {form: hybrid, post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+    id: {org: {other: [{id: "1234567890", proprietary_scheme: COMPANY-ID}]}}
+
+header:
+  message_id: CMI-TAX-20260930
+  created: "2026-09-28T10:00:00"
+  initiating_party: {ref: taxpayer}
+
+payment:
+  id: TAX-20260930-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: NURG, local_instrument: CCD, category_purpose: TAXS}
+  requested_execution_date: "2026-09-30"
+  debtor: {ref: taxpayer}
+  debtor_account: {other: {id: "4412345678", scheme: BBAN}}
+  debtor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}, address: {form: hybrid, town: New York, country: US}}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: TXP-941-2026Q3
+    amount: {ccy: USD, value: "18240.00"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "061036000"}, address: {form: hybrid, town: Atlanta, country: US}}
+    creditor: {name: US Treasury EFTPS, address: {form: hybrid, town: Atlanta, country_subdivision: GA, country: US}}
+    creditor_account: {other: {id: "23401009", scheme: BBAN}}
+    purpose: TAXS
+    remittance: {unstructured: "TXP*123456789*94105*260930*1*1824000\\"}
+
+provenance:
+  sources:
+    - {title: "US Treasury Financial Manual chapter 2000 and the Nacha TXP addenda convention", read: "2026-09-10"}
+    - {title: "IRS EFTPS same-day wire and ACH credit instructions (receiving ABA 061036000, account 23401009)", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

@@ -1,0 +1,59 @@
+scenario: us.ach.ppd-payroll
+family: ach-credit
+country: US
+message_type: pain.001.001.03
+variant:
+  overlay: us.hsbc.ach
+  title: HSBC US ACH (HSBCnet, v03)
+  source:
+    title: HSBC US Low Value Payment usage guideline for pain.001.001.03, HSBCnet
+      North America
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      type:
+        service_level: NURG
+description: ACH PPD payroll run, two employees.
+sha256: 746b9ecd75e3391fe7be5f9b2b88c334cceb741433be3e15c660b009511b8864
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-ach:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    us.hsbc.ach:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Nacha Operating Rules and Guidelines, PPD entries
+    read: '2026-09-10'
+  - title: Bank of America pain.001.001.09 formatting guide
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

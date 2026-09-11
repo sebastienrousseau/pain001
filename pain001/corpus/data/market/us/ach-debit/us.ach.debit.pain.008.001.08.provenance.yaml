@@ -1,0 +1,40 @@
+scenario: us.ach.debit
+family: ach-debit
+country: US
+message_type: pain.008.001.08
+variant: null
+description: ACH debit collection (CCD) with routing numbers.
+sha256: 7bb0988c3c89ee4bccec33d5a626da6ce4cd8249a6df73c6a445dc8337847909
+build:
+  renamed: []
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-ach:
+      errors: 0
+      warnings: 1
+      findings:
+      - 'US-ACH-SVCLVL: US ACH expects service level NURG/SDVA (got None)'
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Nacha Operating Rules and Guidelines, debit entries and authorisation
+    read: '2026-09-10'
+  - title: Citi and Bank of America pain.008 ACH debit formatting notes
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

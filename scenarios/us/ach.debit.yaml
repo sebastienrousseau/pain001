@@ -1,0 +1,45 @@
+# A US ACH debit collection: the originator collects from a customer's
+# account with Standard Entry Class CCD, routing numbers on both agents.
+id: us.ach.debit
+family: ach-debit
+country: US
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 100003
+description: ACH debit collection (CCD) with routing numbers.
+profiles: [us-ach, anti-duplicate]
+
+parties:
+  originator:
+    name: Cascade Millwork Inc
+    address: {form: hybrid, post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+    id: {org: {other: [{id: "1234567890", proprietary_scheme: COMPANY-ID}]}}
+
+header:
+  message_id: CMI-ACHD-20260925
+  created: "2026-09-23T18:00:00"
+  initiating_party: {ref: originator}
+
+payment:
+  id: ACHD-20260925-01
+  method: DD
+  type: {local_instrument: CCD, sequence_type: RCUR}
+  requested_collection_date: "2026-09-25"
+  creditor: {ref: originator}
+  creditor_account: {other: {id: "4412345678", scheme: BBAN}}
+  creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}, address: {form: hybrid, town: New York, country: US}}
+
+transactions:
+  - end_to_end_id: CMI-ACHD-2026-0925-01
+    amount: {ccy: USD, value: "1299.00"}
+    mandate: {id: AUTH-2026-0144, date_of_signature: "2026-03-02"}
+    debtor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "121000248"}, address: {form: hybrid, town: San Francisco, country: US}}
+    debtor: {name: Redwood Hardware Supply LLC, address: {form: hybrid, post_code: "94103", town: San Francisco, country_subdivision: CA, country: US}}
+    debtor_account: {other: {id: "5512345678", scheme: BBAN}}
+    remittance: {unstructured: "Service agreement Sep 2026"}
+
+provenance:
+  sources:
+    - {title: "Nacha Operating Rules and Guidelines, debit entries and authorisation", read: "2026-09-10"}
+    - {title: "Citi and Bank of America pain.008 ACH debit formatting notes", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

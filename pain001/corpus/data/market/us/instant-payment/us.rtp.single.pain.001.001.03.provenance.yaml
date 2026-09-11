@@ -1,0 +1,42 @@
+scenario: us.rtp.single
+family: instant-payment
+country: US
+message_type: pain.001.001.03
+variant: null
+description: RTP real-time payment, single.
+sha256: 2be3dcfc6d8d6adfc68efcb841d0961abae6bbaf939e82a4c396f8067e403dfc
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-rtp:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: The Clearing House RTP network rules (per-item limit)
+    read: '2026-09-10'
+  - title: Cross River RTP pain.001 input specification (local instrument rtp)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

@@ -1,0 +1,87 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>CMI-CHK-20260922-01</MsgId>
+      <CreDtTm>2026-09-22T13:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>1975.00</CtrlSum>
+      <InitgPty>
+        <Nm>Cascade Millwork Inc</Nm>
+        <PstlAdr>
+          <PstCd>97204</PstCd>
+          <TwnNm>Portland</TwnNm>
+          <CtrySubDvsn>OR</CtrySubDvsn>
+          <Ctry>US</Ctry>
+          <AdrLine>1200 Pine Street</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>CHK-20260922-01</PmtInfId>
+      <PmtMtd>CHK</PmtMtd>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>1975.00</CtrlSum>
+      <ReqdExctnDt>2026-09-23</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Cascade Millwork Inc</Nm>
+        <PstlAdr>
+          <PstCd>97204</PstCd>
+          <TwnNm>Portland</TwnNm>
+          <CtrySubDvsn>OR</CtrySubDvsn>
+          <Ctry>US</Ctry>
+          <AdrLine>1200 Pine Street</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>4412345678</Id>
+            <SchmeNm>
+              <Cd>BBAN</Cd>
+            </SchmeNm>
+          </Othr>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>IRUHUS20</BIC>
+          <ClrSysMmbId>
+            <ClrSysId>
+              <Cd>USABA</Cd>
+            </ClrSysId>
+            <MmbId>021000021</MmbId>
+          </ClrSysMmbId>
+        </FinInstnId>
+      </DbtrAgt>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>CMI-CHK-2026-0922-01</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">1975.00</InstdAmt>
+        </Amt>
+        <ChqInstr>
+          <ChqTp>CCHQ</ChqTp>
+          <DlvryMtd>
+            <Cd>MLCD</Cd>
+          </DlvryMtd>
+          <MemoFld>INV 2026-0918</MemoFld>
+        </ChqInstr>
+        <Cdtr>
+          <Nm>Willamette Office Supply</Nm>
+          <PstlAdr>
+            <PstCd>97209</PstCd>
+            <TwnNm>Portland</TwnNm>
+            <CtrySubDvsn>OR</CtrySubDvsn>
+            <Ctry>US</Ctry>
+            <AdrLine>300 Burnside Street</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <RmtInf>
+          <Ustrd>INV 2026-0918</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

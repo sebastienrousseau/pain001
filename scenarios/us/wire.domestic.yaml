@@ -1,0 +1,46 @@
+# A domestic Fedwire funds transfer: urgent, routing numbers on both
+# agents, charges borne by the debtor, hybrid addresses with state.
+id: us.wire.domestic
+family: priority-payment
+country: US
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 100005
+description: Fedwire domestic funds transfer, urgent.
+profiles: [us-wire, anti-duplicate]
+
+parties:
+  payer:
+    name: Cascade Millwork Inc
+    address: {form: hybrid, street: Pine Street, building_number: "1200", post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+
+header:
+  message_id: CMI-WIRE-20260922-01
+  created: "2026-09-22T11:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: WIRE-20260922-01
+  method: TRF
+  type: {priority: HIGH, service_level: URGP}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "4412345678", scheme: BBAN}}
+  debtor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}, address: {form: hybrid, town: New York, country: US}}
+  charge_bearer: DEBT
+
+transactions:
+  - end_to_end_id: CMI-WIRE-2026-0922-01
+    uetr: auto
+    amount: {ccy: USD, value: "125000.00"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "121000248"}, address: {form: hybrid, town: San Francisco, country: US}}
+    creditor: {name: Golden Gate Timber Corp, address: {form: hybrid, street: Market Street, building_number: "600", post_code: "94104", town: San Francisco, country_subdivision: CA, country: US}}
+    creditor_account: {other: {id: "5512345678", scheme: BBAN}}
+    purpose: GDDS
+    remittance: {unstructured: "Contract 2026-31 milestone 2"}
+
+provenance:
+  sources:
+    - {title: "Federal Reserve Fedwire Funds Service ISO 20022 quick reference", read: "2026-09-10"}
+    - {title: "Citi ISO 20022 FAQs (Feb 2026); Cross River pain.001.001.03 wire input specification", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

@@ -1,0 +1,46 @@
+# A real-time payment over The Clearing House RTP network: service level
+# URNS, proprietary local instrument rtp, within the network's per-item
+# limit, structured addresses.
+id: us.rtp.single
+family: instant-payment
+country: US
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 100006
+description: RTP real-time payment, single.
+profiles: [us-rtp, anti-duplicate]
+
+parties:
+  payer:
+    name: Cascade Millwork Inc
+    address: {form: structured, street: Pine Street, building_number: "1200", post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+
+header:
+  message_id: CMI-RTP-20260922-01
+  created: "2026-09-22T12:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: RTP-20260922-01
+  method: TRF
+  type: {service_level: URNS, local_instrument: {proprietary: rtp}}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "4412345678", scheme: BBAN}}
+  debtor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}, address: {form: structured, town: New York, country_subdivision: NY, country: US}}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: CMI-RTP-2026-0922-01
+    uetr: auto
+    amount: {ccy: USD, value: "8600.00"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "121000248"}, address: {form: structured, town: San Francisco, country_subdivision: CA, country: US}}
+    creditor: {name: Redwood Hardware Supply LLC, address: {form: structured, street: Mission Street, building_number: "800", post_code: "94103", town: San Francisco, country_subdivision: CA, country: US}}
+    creditor_account: {other: {id: "5512345678", scheme: BBAN}}
+    remittance: {unstructured: "INV 2026-0912"}
+
+provenance:
+  sources:
+    - {title: "The Clearing House RTP network rules (per-item limit)", read: "2026-09-10"}
+    - {title: "Cross River RTP pain.001 input specification (local instrument rtp)", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

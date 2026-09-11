@@ -1,0 +1,41 @@
+scenario: us.eftps.tax
+family: ach-credit
+country: US
+message_type: pain.001.001.09
+variant: null
+description: IRS EFTPS federal tax deposit, CCD with the TXP addenda string.
+sha256: 56031a4002e6b68f9efae26fe2978d1cb65482e264aeb7b31c250cec898a6403
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-ach:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: US Treasury Financial Manual chapter 2000 and the Nacha TXP addenda convention
+    read: '2026-09-10'
+  - title: IRS EFTPS same-day wire and ACH credit instructions (receiving ABA 061036000,
+      account 23401009)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

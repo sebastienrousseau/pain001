@@ -1,0 +1,56 @@
+# HSBC US High Value Payment (wire) (HSBCnet, pain.001.001.03). Curated
+# from the bank's usage guideline (2025; HSBC-restricted; not in this
+# repository).
+overlay_id: us.hsbc.wire
+title: HSBC US High Value Payment (HSBCnet, v03)
+applies_to: [us.wire.domestic]
+versions: [pain.001.001.03]
+source:
+  title: "HSBC US High Value Payment usage guideline for pain.001.001.03, HSBCnet North America"
+  publisher: HSBC Direct Channels
+  published: "2025"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    debtor: {address: {form: structured}}
+    debtor_agent: {name: null}
+  transactions:
+    "*":
+      creditor: {address: {form: structured}}
+rules:
+  - rule_id: hsbc-us-wire-payment-type
+    description: Payment type information with a service level sits at the payment-information level.
+    locator: PmtInf/PmtTpInf/SvcLvl
+    assertion: required
+    error_code: HSBC_US_WIRE_SVCLVL
+  - rule_id: hsbc-us-wire-no-tx-priority
+    description: Instruction priority sits at the payment-information level only.
+    locator: CdtTrfTxInf/PmtTpInf/InstrPrty
+    assertion: forbidden
+    error_code: HSBC_US_WIRE_TX_INSTRPRTY
+  - rule_id: hsbc-us-wire-debtor-structured
+    description: The debtor address is structured with town, state and country; address lines are not accepted.
+    locator: Dbtr/PstlAdr/AdrLine
+    assertion: forbidden
+    error_code: HSBC_US_WIRE_DBTR_ADRLINE
+  - rule_id: hsbc-us-wire-debtor-state
+    description: The debtor address carries a state as country subdivision.
+    locator: Dbtr/PstlAdr/CtrySubDvsn
+    assertion: required
+    error_code: HSBC_US_WIRE_DBTR_STATE
+  - rule_id: hsbc-us-wire-creditor-structured
+    description: The creditor address is structured; address lines are not accepted.
+    locator: Cdtr/PstlAdr/AdrLine
+    assertion: forbidden
+    error_code: HSBC_US_WIRE_CDTR_ADRLINE
+  - rule_id: hsbc-us-wire-no-iban
+    description: Accounts are domestic account numbers, never IBANs.
+    locator: DbtrAcct/Id/IBAN
+    assertion: forbidden
+    error_code: HSBC_US_WIRE_IBAN
+  - rule_id: hsbc-us-wire-no-debtor-agent-name
+    description: The debtor agent is identified by routing number, without a name.
+    locator: DbtrAgt/FinInstnId/Nm
+    assertion: forbidden
+    error_code: HSBC_US_WIRE_DBTRAGT_NM

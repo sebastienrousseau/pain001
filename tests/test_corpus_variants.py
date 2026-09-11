@@ -229,7 +229,7 @@ def test_api_and_gate_understand_variants() -> None:
             "gb.fps.single", "pain.001.001.09", "gb.hsbc.faster-payments"
         )  # a v03 guideline, no .09 variant
     files = sorted(build_corpus.MARKET_ROOT.rglob("*__*.xml"))
-    assert len(files) == 19
+    assert len(files) == 26
     assert corpus_coverage._ladder_check(files) == 0
 
 
