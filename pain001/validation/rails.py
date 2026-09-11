@@ -227,6 +227,47 @@ def _text(row: dict[str, Any], *keys: str) -> str | None:
 # --- the engine ----------------------------------------------------------------
 
 
+@dataclass(frozen=True)
+class _RowContext:
+    """What every rail check reads from a row, computed once.
+
+    Attributes:
+        side: ``debtor`` for a direct debit, else ``creditor``: the
+            counterparty whose agent and account the rail constrains.
+        currency: The payment currency.
+        agent_bic: The counterparty agent's BIC.
+        member: The counterparty agent's clearing member id.
+        clearing: The counterparty agent's clearing system code.
+        iban: The counterparty IBAN.
+        other: The counterparty domestic account number.
+    """
+
+    side: str
+    currency: str | None
+    agent_bic: str | None
+    member: str | None
+    clearing: str | None
+    iban: str | None
+    other: str | None
+
+    @classmethod
+    def of(cls, row: dict[str, Any]) -> _RowContext:
+        """Read the shared values from a row."""
+        direct_debit = (
+            _text(row, "payment_method") == "DD" or "mandate_id" in row
+        )
+        side = "debtor" if direct_debit else "creditor"
+        return cls(
+            side=side,
+            currency=_text(row, "payment_currency", "currency"),
+            agent_bic=_text(row, f"{side}_agent_BIC"),
+            member=_text(row, f"{side}_agent_member_id"),
+            clearing=_text(row, f"{side}_agent_clearing_system"),
+            iban=_text(row, f"{side}_account_IBAN"),
+            other=_text(row, f"{side}_account_id"),
+        )
+
+
 class RailProfile(ValidationProfile):
     """Validate rows against one :class:`Rail`."""
 
@@ -272,13 +313,20 @@ class RailProfile(ValidationProfile):
     def _check_row(
         self, row: dict[str, Any], index: int, result: SchemeValidationResult
     ) -> None:
-        """Apply every configured rule to one row."""
-        rail = self.rail
-        direct_debit = (
-            _text(row, "payment_method") == "DD" or "mandate_id" in row
-        )
-        side = "debtor" if direct_debit else "creditor"
-        currency = _text(row, "payment_currency", "currency")
+        """Apply every configured rule to one row, one concern at a time."""
+        ctx = _RowContext.of(row)
+        for check in self._CHECKS:
+            check(self, row, index, result, ctx)
+
+    def _check_currency(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """The rail's currencies, or any ISO 4217 code when unrestricted."""
+        rail, currency = self.rail, ctx.currency
         if rail.currencies and currency not in rail.currencies:
             self._flag(
                 result,
@@ -299,22 +347,43 @@ class RailProfile(ValidationProfile):
                 index,
                 "payment_currency",
             )
+
+    def _check_amount(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """The per-item ceiling."""
+        rail = self.rail
         amount = _text(row, "payment_amount")
-        if rail.max_amount is not None and amount is not None:
-            try:
-                over = Decimal(amount) > rail.max_amount
-            except InvalidOperation:
-                over = False
-            if over:
-                self._flag(
-                    result,
-                    "AMT",
-                    f"{rail.title} items are capped at {rail.max_amount:,} {currency or ''}".rstrip()
-                    + f" (got {amount})",
-                    index,
-                    "payment_amount",
-                    rail.max_amount_severity,
-                )
+        if rail.max_amount is None or amount is None:
+            return
+        try:
+            over = Decimal(amount) > rail.max_amount
+        except InvalidOperation:
+            over = False
+        if over:
+            self._flag(
+                result,
+                "AMT",
+                f"{rail.title} items are capped at {rail.max_amount:,} {ctx.currency or ''}".rstrip()
+                + f" (got {amount})",
+                index,
+                "payment_amount",
+                rail.max_amount_severity,
+            )
+
+    def _check_payment_type(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """Service level and local instrument."""
+        rail = self.rail
         service = _text(row, "service_level_code")
         if rail.service_levels and service not in rail.service_levels:
             self._flag(
@@ -363,10 +432,17 @@ class RailProfile(ValidationProfile):
                 "local_instrument_proprietary",
                 rail.local_instrument_severity,
             )
-        agent_bic = _text(row, f"{side}_agent_BIC")
-        member = _text(row, f"{side}_agent_member_id")
-        clearing = _text(row, f"{side}_agent_clearing_system")
-        if rail.bic_required and not agent_bic:
+
+    def _check_agents(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """BIC presence and shape on the counterparty agent, or both."""
+        rail, side = self.rail, ctx.side
+        if rail.bic_required and not ctx.agent_bic:
             self._flag(
                 result,
                 "BIC",
@@ -384,102 +460,133 @@ class RailProfile(ValidationProfile):
                         index,
                         f"{party}_agent_BIC",
                     )
-        if agent_bic and not validate_bic_safe(agent_bic):
+        if ctx.agent_bic and not validate_bic_safe(ctx.agent_bic):
             self._flag(
                 result,
                 "BIC",
-                f"{side} agent BIC {agent_bic} is not well-formed",
+                f"{side} agent BIC {ctx.agent_bic} is not well-formed",
                 index,
                 f"{side}_agent_BIC",
             )
-        iban = _text(row, f"{side}_account_IBAN")
-        other = _text(row, f"{side}_account_id")
-        if rail.iban_countries:
-            if not iban:
+
+    def _check_iban_countries(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """The counterparty IBAN must come from the rail's countries."""
+        rail, side, iban = self.rail, ctx.side, ctx.iban
+        if not rail.iban_countries:
+            return
+        if not iban:
+            self._flag(
+                result,
+                "IBAN",
+                f"{rail.title} requires a {'/'.join(rail.iban_countries)} IBAN for the {side}",
+                index,
+                f"{side}_account_IBAN",
+            )
+        elif iban[:2] not in rail.iban_countries or not validate_iban_safe(
+            iban
+        ):
+            self._flag(
+                result,
+                "IBAN",
+                f"{side} IBAN {iban} is not a valid {'/'.join(rail.iban_countries)} IBAN",
+                index,
+                f"{side}_account_IBAN",
+            )
+
+    def _check_domestic(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """A valid IBAN, or the domestic routing-and-account shape."""
+        rail, side = self.rail, ctx.side
+        shape = rail.domestic
+        if shape is None:
+            return
+        if ctx.iban:
+            if not validate_iban_safe(ctx.iban):
                 self._flag(
                     result,
                     "IBAN",
-                    f"{rail.title} requires a {'/'.join(rail.iban_countries)} IBAN for the {side}",
+                    f"{side} IBAN {ctx.iban} is not valid",
                     index,
                     f"{side}_account_IBAN",
                 )
-            elif iban[:2] not in rail.iban_countries or not validate_iban_safe(
-                iban
-            ):
-                self._flag(
-                    result,
-                    "IBAN",
-                    f"{side} IBAN {iban} is not a valid {'/'.join(rail.iban_countries)} IBAN",
-                    index,
-                    f"{side}_account_IBAN",
-                )
-        if rail.domestic is not None:
-            shape = rail.domestic
-            if iban:
-                if not validate_iban_safe(iban):
-                    self._flag(
-                        result,
-                        "IBAN",
-                        f"{side} IBAN {iban} is not valid",
-                        index,
-                        f"{side}_account_IBAN",
-                    )
-            else:
-                if clearing and clearing not in shape.clearing_systems:
-                    self._flag(
-                        result,
-                        "MMBID",
-                        f"clearing system {clearing} is not {'/'.join(shape.clearing_systems)}",
-                        index,
-                        f"{side}_agent_clearing_system",
-                    )
-                if member is None and not agent_bic:
-                    self._flag(
-                        result,
-                        "MMBID",
-                        f"{rail.title} needs the {side} agent's {shape.member_digits}-digit member id or a BIC",
-                        index,
-                        f"{side}_agent_member_id",
-                    )
-                elif member is not None and (
-                    len(member) != shape.member_digits or not member.isdigit()
-                ):
-                    self._flag(
-                        result,
-                        "MMBID",
-                        f"member id {member} must be {shape.member_digits} digits",
-                        index,
-                        f"{side}_agent_member_id",
-                    )
-                elif (
-                    member is not None
-                    and shape.member_check == "aba"
-                    and not _aba_ok(member)
-                ):
-                    self._flag(
-                        result,
-                        "MMBID",
-                        f"routing number {member} fails the ABA check digit",
-                        index,
-                        f"{side}_agent_member_id",
-                    )
-                low, high = shape.account_digits
-                if other is None:
-                    self._flag(
-                        result,
-                        "ACCT",
-                        f"{rail.title} needs the {side} account number ({low}-{high} digits) or an IBAN",
-                        index,
-                        f"{side}_account_id",
-                    )
-                elif not other.isdigit() or not low <= len(other) <= high:
-                    self._flag(
-                        result,
-                        "ACCT",
-                        f"account number {other} must be {low}-{high} digits",
-                        index,
-                        f"{side}_account_id",
-                    )
+            return
+        member, clearing, other = ctx.member, ctx.clearing, ctx.other
+        if clearing and clearing not in shape.clearing_systems:
+            self._flag(
+                result,
+                "MMBID",
+                f"clearing system {clearing} is not {'/'.join(shape.clearing_systems)}",
+                index,
+                f"{side}_agent_clearing_system",
+            )
+        if member is None and not ctx.agent_bic:
+            self._flag(
+                result,
+                "MMBID",
+                f"{rail.title} needs the {side} agent's {shape.member_digits}-digit member id or a BIC",
+                index,
+                f"{side}_agent_member_id",
+            )
+        elif member is not None and (
+            len(member) != shape.member_digits or not member.isdigit()
+        ):
+            self._flag(
+                result,
+                "MMBID",
+                f"member id {member} must be {shape.member_digits} digits",
+                index,
+                f"{side}_agent_member_id",
+            )
+        elif (
+            member is not None
+            and shape.member_check == "aba"
+            and not _aba_ok(member)
+        ):
+            self._flag(
+                result,
+                "MMBID",
+                f"routing number {member} fails the ABA check digit",
+                index,
+                f"{side}_agent_member_id",
+            )
+        low, high = shape.account_digits
+        if other is None:
+            self._flag(
+                result,
+                "ACCT",
+                f"{rail.title} needs the {side} account number ({low}-{high} digits) or an IBAN",
+                index,
+                f"{side}_account_id",
+            )
+        elif not other.isdigit() or not low <= len(other) <= high:
+            self._flag(
+                result,
+                "ACCT",
+                f"account number {other} must be {low}-{high} digits",
+                index,
+                f"{side}_account_id",
+            )
+
+    def _check_references(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """End-to-end id and unstructured remittance lengths."""
+        rail = self.rail
         e2e = _text(row, "end_to_end_id", "payment_id")
         if (
             rail.end_to_end_max is not None
@@ -507,6 +614,16 @@ class RailProfile(ValidationProfile):
                 "remittance_information",
                 rail.remittance_severity,
             )
+
+    def _check_purpose(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """Purpose code presence and membership of the ISO external list."""
+        rail = self.rail
         purpose = _text(row, "purpose_code")
         if (
             rail.purpose
@@ -529,6 +646,16 @@ class RailProfile(ValidationProfile):
                 index,
                 "purpose_code",
             )
+
+    def _check_regulatory(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """Regulatory reporting presence and form."""
+        rail = self.rail
         regulatory = _text(
             row, "regulatory_reporting_code", "regulatory_reporting_info"
         )
@@ -553,6 +680,16 @@ class RailProfile(ValidationProfile):
                     index,
                     "regulatory_reporting_code",
                 )
+
+    def _check_charges_address_uetr(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """Charge bearer, counterparty address and UETR expectations."""
+        rail, side = self.rail, ctx.side
         bearer = _text(row, "charge_bearer")
         if rail.charge_bearers and bearer not in rail.charge_bearers:
             self._flag(
@@ -589,6 +726,16 @@ class RailProfile(ValidationProfile):
                 "uetr",
                 "warning",
             )
+
+    def _check_direct_debit(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """Sequence type, mandate id and creditor identifier (pain.008)."""
+        rail = self.rail
         if rail.sequence_types:
             sequence = _text(row, "sequence_type")
             if sequence not in rail.sequence_types:
@@ -629,8 +776,18 @@ class RailProfile(ValidationProfile):
                     index,
                     "creditor_id",
                 )
+
+    def _check_reference_and_booking(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """National creditor references and the batch-booking habit."""
+        rail = self.rail
         if rail.creditor_reference:
-            self._check_creditor_reference(row, index, result, iban)
+            self._check_creditor_reference(row, index, result, ctx.iban)
         if rail.batch_booking is not None:
             booking = _text(row, "batch_booking")
             if booking is not None and booking != rail.batch_booking:
@@ -642,6 +799,22 @@ class RailProfile(ValidationProfile):
                     "batch_booking",
                     "warning",
                 )
+
+    #: The concerns, in the order the findings are reported.
+    _CHECKS = (
+        _check_currency,
+        _check_amount,
+        _check_payment_type,
+        _check_agents,
+        _check_iban_countries,
+        _check_domestic,
+        _check_references,
+        _check_purpose,
+        _check_regulatory,
+        _check_charges_address_uetr,
+        _check_direct_debit,
+        _check_reference_and_booking,
+    )
 
     def _check_creditor_reference(
         self,
