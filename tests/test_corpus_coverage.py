@@ -46,6 +46,21 @@ def _entry(**kw) -> ElementEntry:
     return ElementEntry(**base)
 
 
+_BUILT: dict[str, cov.CoverageSet] = {}
+
+
+def built(version: str) -> cov.CoverageSet:
+    """The edition's set, generated once per session.
+
+    Generation is deterministic and costs seconds per edition, so the
+    tests that read a normal build share one; the tests that cap or
+    stall the generator call it directly.
+    """
+    if version not in _BUILT:
+        _BUILT[version] = cov.build_coverage_set(version)
+    return _BUILT[version]
+
+
 def test_sample_values_follow_the_facets() -> None:
     """Enumeration first, then pattern, then primitive, then length."""
     assert (
@@ -100,7 +115,7 @@ def test_every_pattern_sample_matches_its_pattern() -> None:
 @pytest.mark.parametrize("version", valid_xml_types)
 def test_committed_set_is_complete_valid_and_fresh(version: str) -> None:
     """Each edition's set: complete, schema-valid, equal to a rebuild."""
-    generated = cov.build_coverage_set(version)
+    generated = built(version)
     assert generated.report.complete
     assert generated.report.path_percent == 100.0
     assert generated.report.branch_percent == 100.0
@@ -128,7 +143,7 @@ def test_committed_set_is_complete_valid_and_fresh(version: str) -> None:
 
 def test_first_file_is_full_and_later_files_shrink() -> None:
     """File one carries everything the transfer recipe allows; the rest less."""
-    generated = cov.build_coverage_set("pain.001.001.09")
+    generated = built("pain.001.001.09")
     sizes = [len(f) for f in generated.files]
     assert 8 <= len(sizes) <= 16
     assert sizes[0] == max(sizes) and sizes[1] < sizes[0]
@@ -149,7 +164,7 @@ def test_sets_follow_the_mdr_recipes() -> None:
     """Placement is exclusive, the cheque path is its own file, all MDR-clean."""
     from pain001.corpus.rules.mdr import evaluate_mdr
 
-    generated = cov.build_coverage_set("pain.001.001.09")
+    generated = built("pain.001.001.09")
     for text in generated.files:
         assert evaluate_mdr(text) == []
     cheque_files = [f for f in generated.files if "<PmtMtd>CHK</PmtMtd>" in f]
@@ -168,7 +183,7 @@ def test_sets_follow_the_mdr_recipes() -> None:
     pmtinf_level = first.split("<CdtTrfTxInf>")[0]
     assert "<PmtTpInf>" in pmtinf_level and "<ChrgBr>" in pmtinf_level
     assert "<PmtTpInf>" not in first.split("<CdtTrfTxInf>")[1]
-    debit = cov.build_coverage_set("pain.008.001.08")
+    debit = built("pain.008.001.08")
     for text in debit.files:
         assert evaluate_mdr(text) == []
     assert any("<AmdmntInfDtls>" in f for f in debit.files)
@@ -274,7 +289,7 @@ def test_manifest_names_and_describes_every_file() -> None:
     later file names the blocks its new coverage falls under, so a
     reader can pick a file without opening it.
     """
-    generated = cov.build_coverage_set("pain.001.001.03")
+    generated = built("pain.001.001.03")
     names = [info.name for info in generated.manifest]
     assert len(names) == len(generated.files) == len(set(names))
     assert names[0] == "01-transfer-every-element.xml"
