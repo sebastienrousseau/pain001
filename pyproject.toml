@@ -160,7 +160,17 @@ addopts = [
     "--tb=short",
     "-ra",
     "--strict-markers",
-    "--disable-warnings"
+]
+filterwarnings = [
+    "error",
+    # the high-level API still defaults to the legacy output location
+    "ignore:Calling generate_xml without output_path:DeprecationWarning",
+    # third-party deprecations are reported by the dependency bump, not here
+    "ignore::DeprecationWarning:xmlschema.*",
+    "ignore::DeprecationWarning:elementpath.*",
+    "ignore::DeprecationWarning:starlette.*",
+    "ignore::DeprecationWarning:httpx.*",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
 
 # Markers for test categorization
@@ -174,7 +184,6 @@ markers = [
 ]
 
 # Timeout for blocking tests (5s default, prevent hangs)
-timeout = 5
 
 # Parallel execution (xdist)
 # Uncomment to enable: -n auto
