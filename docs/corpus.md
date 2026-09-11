@@ -109,50 +109,65 @@ coverage gate in CI; `make corpus-build` regenerates everything and
 
 ## Bank variants and overlays
 
-An overlay is a short, cited rule set a bank or scheme layers on top of the
-XSD, in the grammar shared with `iso20022-bank-profile-mcp` (`required`,
-`forbidden`, `equals`, `one_of`, `max_length`, `matches`, `charset`, and
-`if:<elem>[=<value>]:<verb>`). Two kinds live under `scenarios/overlays/`:
+An overlay is a short, cited rule set a scheme body, a regulator or a bank
+layers on top of the XSD, in the grammar shared with
+`iso20022-bank-profile-mcp` (`required`, `forbidden`, `equals`, `one_of`,
+`max_length`, `matches`, `charset`, and `if:<elem>[=<value>]:<verb>`). Two
+kinds exist:
 
-- a **rule-only overlay** (the Bank of England CHAPS rules) judges every file
-  of the scenarios it targets;
-- an overlay with a **`patch`** (the HSBC guidelines) pins the bank's fixed
-  choices, so the build renders a second file
-  `<scenario>__<overlay>.<version>.xml` beside the generic one and judges that
-  variant by the overlay's rules. `patches:` keyed by scenario id adds what a
-  single scenario needs, `"*"` against a list applies to every transaction,
-  and `null` removes a key. `versions:` lists the editions the overlay
-  covers: a guideline written for pain.001.001.03 spells `BIC` and must not
-  judge a .09 file, so its variants exist for .03 only.
+- a **rule-only overlay** (the Bank of England CHAPS rules, the Febelfin,
+  Currence, CFONB and AEB conventions under `scenarios/overlays/`) judges
+  every file of the scenarios it targets;
+- an overlay with a **`patch`** pins a bank's fixed choices, so the build
+  renders a second file `<scenario>__<overlay>.<version>.xml` beside the
+  generic one and judges that variant by the overlay's rules. `patches:`
+  keyed by scenario id adds what a single scenario needs, `"*"` against a
+  list applies to every transaction, and `null` removes a key. `versions:`
+  lists the editions the overlay covers: a guideline written for
+  pain.001.001.03 spells `BIC` and must not judge a .09 file.
+
+The repository ships **public overlays only**. Bank usage guidelines are
+the bank's documentation under its own terms, so no overlay derived from
+one, no variant built from one and no citation of one is committed here
+or published on the website. The variant mechanism exists so that you can
+apply your own bank's guideline privately:
 
 ```python
 from pain001.corpus import list_files, get_file
+from pain001.corpus.builder import build
+from pain001.corpus.registry import load_scenarios
+from pain001.corpus.rules.overlays import load_overlays
 
-hsbc = [f for f in list_files("market") if f.variant == "gb.hsbc.faster-payments"]
-xml = get_file("gb.fps.single", "pain.001.001.09", variant="gb.hsbc.faster-payments")
+# your overlays live outside this checkout
+mine = {o.overlay_id: o for o in load_overlays("/secure/my-bank-overlays")}
+scenario = {s.id: s for s in load_scenarios()}["gb.fps.single"]
+variant = build(scenario, "pain.001.001.03", mine["gb.mybank.fps"].patch_for(scenario.id))
 ```
+
+`scripts/build_corpus.py --market-root /secure/out` renders such variants
+into a tree of your own when the overlays are placed under a private
+`scenarios/overlays/` copy passed with `--scenarios`.
 
 ### Deriving an overlay from a usage guideline
 
-Banks publish their guidelines on MyStandards under restricted terms. Those
-exports (PDF, XSD, Excel, zip) never enter this repository:
-`.gitignore` blocks their names and `tests/test_no_restricted_material.py`
-fails the build on any tracked file that looks like one. The workflow is:
+Banks publish their guidelines on MyStandards or their client portals
+under restricted terms. Those exports (PDF, XSD, Excel, zip) never enter
+this repository: `.gitignore` blocks their names and
+`tests/test_no_restricted_material.py` fails the build on any tracked file
+that looks like one, or that carries a MyStandards signature. The private
+workflow is:
 
-1. keep the export in your own storage, outside the checkout;
+1. download the guideline from your bank or financial organisation under
+   your own agreement and keep it in your own storage, outside any public
+   checkout;
 2. run `poetry run python scripts/derive_overlay.py GUIDELINE.xsd --base
-   pain.001.001.03`, which inventories the guideline schema, diffs it against
-   the bundled ISO edition and prints removed elements, elements made
-   mandatory, capped repeats, narrowed code lists, shortened lengths and
-   changed patterns (`--as-rules` prints them in overlay syntax); it refuses
-   a path inside the repository and writes nothing;
-3. commit only the few rules a scenario variant needs, with a prose citation
-   (title, publisher, publication date, `access: restricted`), never the
-   export's file name and never the complete diff.
-
-The first use closed the plan's open question: HSBC UK Faster Payments
-restricts the service level to `URNS` (urgent payment, net settlement); the
-`uk-fps` rail now accepts `URGP` and `URNS`, and the HSBC variant pins `URNS`.
+   pain.001.001.03`, which inventories the guideline schema, diffs it
+   against the bundled ISO edition and prints removed elements, elements
+   made mandatory, capped repeats, narrowed code lists, shortened lengths
+   and changed patterns (`--as-rules` prints them in overlay syntax); it
+   refuses a path inside the repository and writes nothing;
+3. keep the resulting overlay and the variants it builds in your own
+   environment. Do not contribute them here.
 
 ## How to add a country or rail
 
@@ -176,9 +191,9 @@ XSD validity is necessary, not sufficient. Each market file carries an
 evidence state ([ADR-0003](adr/0003-example-corpus-two-corpora-one-engine.md),
 decision 7):
 
-- `hsbc-validated`: HSBC's client validation through MyStandards, the only
-  gated access the project has; the HSBC usage guidelines themselves stay
-  outside the repository;
+- `bank-validated`: a bank's client validation service (for example through
+  MyStandards), run privately by whoever holds that access; only the
+  result is recorded, never the guideline;
 - `portal-validated`: the public SIX portal (Swiss files) and ValidateFin
   (SEPA files);
 - `self-validated`: this repository's ladder only, which every shipped file
@@ -219,7 +234,7 @@ that change what a scenario must carry, and the scenarios each affects:
   IT, LU with each country's reference convention and the German DK order
   types), US (ACH, EFTPS, Fedwire, RTP, cheque), CH (the Swiss Payment
   Standards types D, S and X, QR-bill and SCOR references) and SE
-  (Bankgiro with OCR, Plusgiro, salary, RIX). Every pack carries HSBC
-  variants from the bank's HSBCnet guidelines.
+  (Bankgiro with OCR, Plusgiro, salary, RIX), every file from public
+  rulebooks. Bank variants are built privately from your bank's guideline.
 - **0.0.69**: tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence
   chips, and the CSV pipeline extension for the twelve most-used rails.

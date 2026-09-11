@@ -944,7 +944,7 @@
               "state": {
                 "type": "string",
                 "enum": [
-                  "hsbc-validated",
+                  "bank-validated",
                   "portal-validated",
                   "self-validated"
                 ]

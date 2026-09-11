@@ -111,9 +111,9 @@ corpus gate can run them (the plan's L2).
 
 | Rail | Sources |
 | :--- | :--- |
-| `uk-bacs` | HSBCnet UK BACS usage guideline (pain.001.001.03); Bacs ISO 20022 / Standard 18 translation guide v1.1 |
-| `uk-fps` | Pay.UK Faster Payments scheme limits; HSBCnet UK Faster Payments usage guideline (pain.001.001.03) |
-| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses); HSBCnet UK Priority Payments usage guideline; NatWest Bankline XML import guide (Jan 2025) |
+| `uk-bacs` | Bacs ISO 20022 / Standard 18 translation guide v1.1; Bacs service description (originator name and reference lengths) |
+| `uk-fps` | Pay.UK Faster Payments scheme limits; Pay.UK ISO 20022 usage (service levels URGP and URNS) |
+| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses); NatWest Bankline XML import guide (Jan 2025) |
 | `uk-bacs-dd` | Bacs AUDDIS service guide; Bacs ISO 20022 translation guide v1.1 (sequence-type to transaction-code mapping is an assumption) |
 | `de-ccu` | DK DFÜ-Abkommen Anlage 3 V26.11, order type CCU; DZ BANK CCU product description |
 | `de-axz` | DK DFÜ-Abkommen Anlage 3 V3.8, order type AXZ; DZ BANK AXZ product description (regulatory reporting for AWV) |

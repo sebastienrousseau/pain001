@@ -119,7 +119,7 @@ per country and rail with provenance and an evidence state.
 | Release | Scope | Status |
 | :--- | :--- | :--- |
 | v0.0.67 | Ground cleared; XSD inventory, message deltas, external code sets; `pain.008.001.08` bundled; scenario DSL and builder; coverage corpus at 100 % for 13 XSDs; MDR rules; 18 rail profiles and 5 purpose mandates; validation ladder and evidence workflow; three market scenarios (GB CHAPS, DE SEPA SCT, NL SEPA SDD) | in progress ([#271](https://github.com/sebastienrousseau/pain001/pull/271)) |
-| v0.0.68 | Tier-1 market packs (UK, SEPA core countries, US, CH, SE), HSBC overlays where evidenced, website corpus page, MCP and LSP corpus tools | planned |
+| v0.0.68 | Tier-1 market packs (UK, SEPA core countries, US, CH, SE), overlay tooling to apply a bank's guideline privately, website corpus page, MCP and LSP corpus tools | planned |
 | v0.0.69 | Tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence chips; CSV pipeline extension for the twelve most-used rails | planned |
 
 ## Explicitly declined / deferred

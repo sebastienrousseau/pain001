@@ -9,9 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 The second example-corpus release
 ([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md)):
-the tier-1 market packs (UK, the SEPA core countries, US, CH, SE),
-HSBC overlays where the evidence exists, and the corpus on the website
-and in the MCP and LSP tools. Entries are added as work lands.
+the tier-1 market packs (UK, the SEPA core countries, US, CH, SE), the
+tooling to apply a bank's own guideline privately, and the corpus on the
+website and in the MCP and LSP tools. Entries are added as work lands.
 
 ### Added
 
@@ -31,45 +31,29 @@ and in the MCP and LSP tools. Entries are added as work lands.
   and `null` removes a key; party references now deep-merge their
   overrides. The overlay grammar gains the presence form
   `if:<elem>:<verb>`. `list_files` exposes `variant`, and `get_file` and
-  `provenance` take it.
-- **HSBC UK overlays**, curated from the bank's HSBCnet usage guidelines
-  (Faster Payments and BACS of 18 September 2025, TARGET and
-  International Payments, Direct Debit): `gb.hsbc.faster-payments`,
-  `gb.hsbc.bacs`, `gb.hsbc.priority`, `gb.hsbc.direct-debit`, ten to
-  twelve rules each with a prose citation and `access: restricted`. The
-  ten HSBC variant files they produce are the evidenced path for the UK
-  (decision 7). The guidelines themselves are not in the repository.
+  `provenance` take it. The repository ships no bank-derived overlay; the
+  mechanism is for readers to apply their own bank's guideline privately.
 - **`scripts/derive_overlay.py`**, an author-side tool that inventories a
-  usage-guideline XSD kept outside the repository, diffs it against the
-  bundled ISO edition and prints removed elements, elements made
-  mandatory, capped repeats, narrowed code lists, shortened lengths and
-  changed patterns, or the same as overlay rules; it refuses a path inside
-  the repository and writes nothing.
+  bank usage-guideline XSD kept outside the repository, diffs it against
+  the bundled ISO edition and prints the restrictions (removed elements,
+  new mandatories, capped repeats, narrowed code lists, shortened
+  lengths, changed patterns), in overlay syntax with `--as-rules`. It
+  refuses a path inside the repository and writes nothing.
 - **Compliance gate.** `.gitignore` blocks MyStandards export names and
   `tests/test_no_restricted_material.py` fails the build on any tracked
-  file named like an export, any PDF, Excel or zip under the corpus
-  trees, or any schema, sample or rule file carrying a MyStandards text
-  signature.
-
+  file named like an export, any PDF, Excel or zip under the corpus trees,
+  or any schema, sample or rule file carrying a MyStandards or bank
+  signature. Nothing downloaded from swift.com or a bank portal is in the
+  repository.
 - **SEPA core pack.** Thirteen scenarios across DE, FR, NL, BE, ES, IT
-  and LU: SEPA credit transfers with the country references (an ISO
-  11649 RF reference issued by ISO for France, the Belgian structured
-  communication issued by BBA, the Dutch betalingskenmerk issued by
-  CUR), a Spanish transfer with the initiating party's NIF, Italian and
-  Luxembourg singles, a German SEPA Instant transfer (.09, `INST` at
-  `PmtInf`, date-time execution), SEPA direct debits (German B2B first
-  collection, French Core on an amended mandate with SMNDA, Spanish and
-  Belgian Core with the national creditor identifiers), and the two
-  German DK order types beyond SEPA: CCU urgent euro and AXZ foreign
-  payment with regulatory reporting. SEPA creditor identifiers are
-  computed with the EPC check digits (the German one reproduces the
-  Bundesbank's published example).
-- **HSBC SEPA overlays** (`eu.hsbc.sepa-credit-transfer`,
-  `eu.hsbc.sepa-instant`, `eu.hsbc.sepa-direct-debit`) and
-  `de.hsbc.priority`, curated from the HSBCnet Europe guidelines; and
-  four public country overlays from the national implementation
-  guides (`be.febelfin.structured-communication`, `nl.betalingskenmerk`,
-  `fr.cfonb.sepa`, `es.aeb.sepa`).
+  and LU: credit transfers with each country's reference convention
+  (ISO 11649 RF, Belgian structured communication, Dutch payment
+  reference), the Spanish NIF as initiating-party id, SEPA Instant (.09),
+  Core and B2B direct debits with the national creditor identifiers (EPC
+  check digits; the German one reproduces the Bundesbank example), and
+  the German DK order types CCU (urgent euro) and AXZ (foreign payment
+  with regulatory reporting). Four public country overlays (Febelfin,
+  Currence, CFONB, AEB) judge the national conventions.
 - **US pack.** Seven scenarios under `scenarios/us/`: ACH CCD supplier
   credit and PPD payroll (Nacha Standard Entry Class codes as local
   instrument, ABA routing numbers as clearing member ids, addenda-sized
@@ -78,23 +62,16 @@ and in the MCP and LSP tools. Entries are added as work lands.
   Treasury routing and account), a domestic Fedwire transfer, an RTP
   real-time payment (`URNS`, proprietary local instrument `rtp`) and a
   bank-issued cheque (`CHK` with a cheque instruction, the MDR cheque
-  rules satisfied). HSBC US overlays (`us.hsbc.ach`, `us.hsbc.wire`,
-  `us.hsbc.rtp`, `us.hsbc.ach-debit`) are curated from the HSBCnet North
-  America guidelines. The tree is 27 scenarios and 160 market files at
-  341 KB of the 400 KB budget.
+  rules satisfied).
 - **Overlays declare the editions they cover** (`versions:`). A
   guideline written for pain.001.001.03 spells `BIC`, so it builds and
-  judges .03 variants only; the HSBC overlays are marked .03 (and
-  pain.008 .02), and `Overlay.applies` takes the edition.
+  judges .03 variants only; `Overlay.applies` takes the edition.
 - **Swiss pack.** Four scenarios under `scenarios/ch/` follow the Swiss
   Payment Standards payment types: a QR-bill settlement (type D, CHF to
   a QR-IBAN with the 27-digit QR reference as the proprietary type
   `QRR`), a domestic transfer with an ISO 11649 `SCOR` reference and a
   second unstructured transaction, a SEPA credit transfer from a Swiss
-  account (type S) and a cross-border USD payment (type X). HSBC
-  Switzerland overlays (`ch.hsbc.low-value`,
-  `ch.hsbc.target-international`) are curated from the HSBCnet Europe
-  guidelines and build the .03 variants.
+  account (type S) and a cross-border USD payment (type X).
 - **Coverage files named for what they exercise.** `set-NN.xml` becomes
   `NN-<recipe>-<focus>.xml`: `01-transfer-every-element.xml` is the
   baseline that carries every element once, and each later file is named
@@ -109,27 +86,33 @@ and in the MCP and LSP tools. Entries are added as work lands.
   proprietary scheme `BGNR`, Bankgirot as creditor agent, Luhn-checked
   OCR references as `SCOR`), a Plusgiro payment (`PGNR`), a Bankgirot
   Löner salary batch (`SALA`, one debit) and an urgent SEK payment
-  through RIX (`URGP`, `INTC`). HSBC Sweden Virtual Presence overlays
-  (`se.hsbc.low-value`, `se.hsbc.high-value`) pin the bank's clearing
-  member and structured addresses. The tree is 35 scenarios and 204
-  market files (32 HSBC variants) at 373 KB of the 400 KB budget.
+  through RIX (`URGP`, `INTC`). The tree is 35 scenarios and 140 market
+  files.
 
 ### Changed
 
+- **Public rulebook content only.** pain001 stays within the terms of
+  ISO 20022, Swift MyStandards and the banks: the overlays that had been
+  derived from one bank's restricted usage guidelines, the variant files
+  they built and every citation of those guidelines are removed from the
+  repository, and the website publishes the generic files with their
+  public sources. The evidence state `hsbc-validated` is renamed
+  `bank-validated` (a bank's client validation run privately by whoever
+  holds the access). Readers apply their own bank's guideline with the
+  overlay grammar, the derive tool and the builder, in their own
+  environment.
 - **Country overlays target scenarios, not families.** The Bank of
-  England CHAPS overlay and the HSBC UK, German and SEPA credit-transfer
-  overlays listed a rail family, so they also judged the US Fedwire,
-  Swedish RIX and Swiss scenarios; each now names its scenarios, and the
-  stray `us.wire.domestic__gb.hsbc.priority` variant is gone.
-- **`uk-fps` accepts `URNS`.** Reading the HSBC UK Faster Payments
-  guideline closed the plan's open question: the bank restricts the
-  service level to `URNS` (urgent payment, net settlement), not `URGP`.
-  The rail now accepts both, the HSBC variant pins `URNS`, and the
-  generic scenario keeps `URGP`.
+  England CHAPS overlay listed a rail family, so it also judged the US
+  Fedwire and Swedish RIX scenarios; overlays now name their scenarios.
+- **`uk-fps` accepts `URNS`.** UK Faster Payments channels use `URNS`
+  (urgent payment, net settlement) as well as `URGP`; the rail accepts
+  both and the generic scenario keeps `URGP`.
 - The generic Bacs Direct Debit scenario carries no local instrument:
-  no public source gives a code, and the HSBC guideline keeps only the
-  ISO code form, so the plan's transaction-code mapping stays an
-  assumption recorded as a warning in `uk-bacs-dd`.
+  no public source gives a code, so the plan's transaction-code mapping
+  stays an assumption recorded as a warning in `uk-bacs-dd`.
+- The generic Faster Payments scenario no longer names a bank as the
+  issuer of the customer id; a public sample file carries no real bank's
+  name.
 
 ## [0.0.67] - Unreleased
 

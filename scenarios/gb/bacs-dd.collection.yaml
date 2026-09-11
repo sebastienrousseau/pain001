@@ -1,7 +1,7 @@
 # A Bacs Direct Debit collection under AUDDIS: a utility collecting a
 # first and a recurring instalment. No UK bank publishes a pain.008
-# guideline in public; the HSBC guideline restricts the ISO base and is
-# the evidenced variant. The mapping of sequence types to Bacs
+# guideline in public, so the file follows the ISO base and the Bacs
+# service description; the mapping of sequence types to Bacs
 # transaction codes stays an assumption recorded in the rail profile.
 id: gb.bacs-dd.collection
 family: bacs-direct-debit
@@ -50,6 +50,5 @@ transactions:
 provenance:
   sources:
     - {title: "Bacs AUDDIS service guide", read: "2026-09-10"}
-    - {title: "HSBC UK Direct Debit usage guideline (pain.008.001.02), HSBCnet, 2025 (restricted; not in this repository)", read: "2026-09-11"}
   confidence: derived
   evidence: []

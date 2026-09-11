@@ -33,9 +33,6 @@ provenance:
   sources:
   - title: Bacs ISO 20022 / Standard 18 translation guide v1.1
     read: '2026-09-10'
-  - title: HSBC UK BACS usage guideline, HSBCnet, 18 September 2025 (restricted; not
-      in this repository)
-    read: '2026-09-11'
   confidence: derived
   evidence: []
 constraints: []

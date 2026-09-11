@@ -48,6 +48,5 @@ provenance:
   sources:
     - {title: "Swift CBPR+ usage guidelines SR2025, pain.001.001.09 (restricted; not in this repository)", read: "2026-09-10"}
     - {title: "CGI-MP pain.001 V09 implementation guide", read: "2026-09-10"}
-    - {title: "HSBC UK TARGET and International Payments usage guideline, HSBCnet, 2025 (restricted; not in this repository)", read: "2026-09-11"}
   confidence: derived
   evidence: []

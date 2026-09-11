@@ -35,9 +35,6 @@ provenance:
   sources:
   - title: Bacs AUDDIS service guide
     read: '2026-09-10'
-  - title: HSBC UK Direct Debit usage guideline (pain.008.001.02), HSBCnet, 2025 (restricted;
-      not in this repository)
-    read: '2026-09-11'
   confidence: derived
   evidence: []
 constraints: []

@@ -12,11 +12,18 @@
 # implied. See the applicable Licence for the specific language
 # governing permissions and limitations.
 
-"""Bank variants: overlays with patches build their own judged files."""
+"""Bank variants: overlays with patches build their own judged files.
+
+The repository ships public overlays only, so the variant mechanism is
+exercised here with an illustrative overlay built in the test: the
+shape a reader would write from their own bank's guideline, kept in
+their own environment.
+"""
 
 from __future__ import annotations
 
 import copy
+import shutil
 import sys
 from pathlib import Path
 
@@ -26,6 +33,7 @@ import yaml  # type: ignore[import-untyped]
 from pain001.corpus import api
 from pain001.corpus.builder import build, deep_merge
 from pain001.corpus.registry import load_scenarios, scenario_from
+from pain001.corpus.rules import ladder
 from pain001.corpus.rules.ladder import applicable_overlays, run_ladder
 from pain001.corpus.rules.overlays import load_overlays, overlay_from
 
@@ -35,7 +43,64 @@ import build_corpus  # noqa: E402
 import corpus_coverage  # noqa: E402
 
 SCENARIOS = {s.id: s for s in load_scenarios()}
-OVERLAYS = {o.overlay_id: o for o in load_overlays()}
+PUBLIC = load_overlays()
+
+EXAMPLE_OVERLAY = {
+    "overlay_id": "gb.example.priority",
+    "title": "An illustrative priority-payment profile (not a real bank)",
+    "applies_to": ["gb.chaps.property-purchase", "gb.international.usd"],
+    "versions": ["pain.001.001.03"],
+    "source": {
+        "title": "Illustrative profile written for the test suite",
+        "read": "2026-09-11",
+        "access": "public (test fixture)",
+    },
+    "patch": {
+        "payment": {
+            "debtor": {
+                "address": {
+                    "form": "structured",
+                    "country_subdivision": "England",
+                }
+            },
+            "type": {"service_level": "URNS"},
+        },
+        "transactions": {
+            "*": {"creditor": {"address": {"form": "structured"}}}
+        },
+    },
+    "patches": {
+        "gb.chaps.property-purchase": {
+            "transactions": {
+                "*": {
+                    "creditor": {"address": {"country_subdivision": "England"}}
+                }
+            }
+        }
+    },
+    "rules": [
+        {
+            "rule_id": "example-debtor-subdivision",
+            "description": "The debtor address carries a country subdivision.",
+            "locator": "Dbtr/PstlAdr/CtrySubDvsn",
+            "assertion": "required",
+            "error_code": "EX_DBTR_SUBDIV",
+        },
+        {
+            "rule_id": "example-service-level",
+            "description": "The service level is URNS.",
+            "locator": "PmtTpInf/SvcLvl/Cd",
+            "assertion": "one_of:[URNS]",
+            "error_code": "EX_SVCLVL",
+        },
+    ],
+}
+
+
+@pytest.fixture
+def example():
+    """The illustrative patched overlay."""
+    return overlay_from(copy.deepcopy(EXAMPLE_OVERLAY))
 
 
 def test_deep_merge_lists_and_removals() -> None:
@@ -92,14 +157,15 @@ def test_deep_merge_lists_and_removals() -> None:
     )
 
 
-def test_overlay_patch_for_and_has_patch() -> None:
+def test_overlay_patch_for_and_has_patch(example) -> None:
     """Per-scenario patches merge over the common patch."""
-    overlay = OVERLAYS["gb.hsbc.priority"]
-    assert (
-        overlay.has_patch
-        and not OVERLAYS["gb.boe.chaps-enhanced-data"].has_patch
+    public = {o.overlay_id: o for o in PUBLIC}
+    assert example.has_patch
+    assert not any(o.has_patch for o in PUBLIC), (
+        "public overlays are rule-only"
     )
-    chaps = overlay.patch_for("gb.chaps.property-purchase")
+    assert not public["gb.boe.chaps-enhanced-data"].has_patch
+    chaps = example.patch_for("gb.chaps.property-purchase")
     assert chaps["payment"]["debtor"]["address"] == {
         "form": "structured",
         "country_subdivision": "England",
@@ -110,161 +176,190 @@ def test_overlay_patch_for_and_has_patch() -> None:
         ]
         == "England"
     )
-    usd = overlay.patch_for("gb.international.usd")
+    usd = example.patch_for("gb.international.usd")
     assert (
         "country_subdivision"
         not in usd["transactions"]["*"]["creditor"]["address"]
     )
-    assert overlay.patch_for("nobody") == overlay.patch
+    assert example.patch_for("nobody") == example.patch
     plain = overlay_from({"overlay_id": "p", "patches": {"x": {"a": 1}}})
-    assert (
-        plain.has_patch
-        and plain.patch_for("x") == {"a": 1}
-        and plain.patch_for("y") == {}
-    )
+    assert plain.has_patch and plain.patch_for("x") == {"a": 1}
+    assert plain.patch_for("y") == {}
 
 
-def test_applicable_overlays_split_generic_and_variant() -> None:
+def test_applicable_overlays_split_generic_and_variant(example) -> None:
     """Rule-only overlays judge every file; a patched one judges its variant only."""
     scenario = SCENARIOS["gb.chaps.property-purchase"]
-    pool = list(OVERLAYS.values())
+    pool = [*PUBLIC, example]
     generic = [o.overlay_id for o in applicable_overlays(scenario, pool)]
     assert generic == ["gb.boe.chaps-enhanced-data"]
     variant = [
         o.overlay_id
-        for o in applicable_overlays(scenario, pool, "gb.hsbc.priority")
+        for o in applicable_overlays(scenario, pool, "gb.example.priority")
     ]
-    assert variant == ["gb.boe.chaps-enhanced-data", "gb.hsbc.priority"]
+    assert variant == ["gb.boe.chaps-enhanced-data", "gb.example.priority"]
     doc = copy.deepcopy(scenario.data)
-    doc["overlays"] = ["gb.hsbc.priority"]
+    doc["overlays"] = ["gb.example.priority"]
     listed = scenario_from(doc)
     assert [o.overlay_id for o in applicable_overlays(listed, pool)] == []
     assert [
         o.overlay_id
-        for o in applicable_overlays(listed, pool, "gb.hsbc.priority")
-    ] == ["gb.hsbc.priority"]
+        for o in applicable_overlays(listed, pool, "gb.example.priority")
+    ] == ["gb.example.priority"]
     assert [
         o.overlay_id for o in build_corpus.variants_for(scenario, pool)
-    ] == ["gb.hsbc.priority"]
+    ] == ["gb.example.priority"]
     assert [o.overlay_id for o in build_corpus.variants_for(listed, pool)] == [
-        "gb.hsbc.priority"
+        "gb.example.priority"
     ]
     doc["overlays"] = []
     assert build_corpus.variants_for(scenario_from(doc), pool) == []
 
 
-def test_variant_files_are_built_named_and_judged() -> None:
-    """The HSBC variants exist, carry the patch, and pass their own rules."""
-    scenario = SCENARIOS["gb.fps.single"]
-    overlay = OVERLAYS["gb.hsbc.faster-payments"]
-    target = build_corpus.target_for(
-        scenario, "pain.001.001.03", variant=overlay.overlay_id
-    )
-    assert (
-        target.name
-        == "gb.fps.single__gb.hsbc.faster-payments.pain.001.001.03.xml"
-    )
-    assert target.exists()
-    xml = target.read_text(encoding="utf-8")
-    assert "<Cd>URNS</Cd>" in xml and "<ChrgBr>SHAR</ChrgBr>" in xml
-    generic = build_corpus.target_for(scenario, "pain.001.001.03").read_text(
-        encoding="utf-8"
-    )
-    assert "<Cd>URGP</Cd>" in generic
-    record = run_ladder(
-        scenario, "pain.001.001.03", xml, variant=overlay.overlay_id
-    )
-    assert record["overlays"]["gb.hsbc.faster-payments"]["errors"] == 0
-    # the generic file would fail the HSBC rules, which is why it is a variant
-    forced = run_ladder(
-        scenario,
-        "pain.001.001.03",
-        generic,
-        [overlay],
-        variant=overlay.overlay_id,
-    )
-    assert forced["overlays"]["gb.hsbc.faster-payments"]["errors"] >= 1
-    sidecar = yaml.safe_load(
-        target.with_suffix(".provenance.yaml").read_text(encoding="utf-8")
-    )
-    assert sidecar["variant"]["overlay"] == "gb.hsbc.faster-payments"
-    assert (
-        sidecar["variant"]["patch"]["payment"]["type"]["service_level"]
-        == "URNS"
-    )
-    assert "restricted" in sidecar["variant"]["source"]["access"]
+def test_shipped_tree_has_no_variants_and_no_bank_names() -> None:
+    """Public content only: no variant files, no bank-derived overlay."""
+    assert sorted(build_corpus.MARKET_ROOT.rglob("*__*")) == []
+    for path in build_corpus.MARKET_ROOT.rglob("*"):
+        if path.is_file():
+            assert "hsbc" not in path.read_text(encoding="utf-8").lower(), path
+    assert all(f.variant is None for f in api.list_files("market"))
     plain = yaml.safe_load(
-        build_corpus.target_for(scenario, "pain.001.001.03")
+        build_corpus.target_for(SCENARIOS["gb.fps.single"], "pain.001.001.03")
         .with_suffix(".provenance.yaml")
         .read_text(encoding="utf-8")
     )
     assert plain["variant"] is None
 
 
-def test_api_and_gate_understand_variants() -> None:
-    """list_files exposes the variant; get_file and provenance select by it."""
-    market = api.list_files("market")
-    variants = [f for f in market if f.variant]
-    assert {f.variant for f in variants} >= {
-        "gb.hsbc.faster-payments",
-        "gb.hsbc.bacs",
-        "gb.hsbc.priority",
-        "gb.hsbc.direct-debit",
-        "eu.hsbc.sepa-credit-transfer",
-    }
-    hsbc = api.get_file(
-        "gb.fps.single", "pain.001.001.03", "gb.hsbc.faster-payments"
+def test_variant_files_are_built_named_and_judged(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, example
+) -> None:
+    """A private overlay builds a variant beside the generic file.
+
+    The build runs into a temporary market root from a temporary
+    scenario tree holding one scenario, with the illustrative overlay
+    in the pool; the variant carries the patch, is judged by the
+    overlay's rules, and the generic file would fail them.
+    """
+    scenarios = tmp_path / "scenarios"
+    scenarios.mkdir()
+    shutil.copy(
+        SCENARIOS["gb.chaps.property-purchase"].source,
+        scenarios / "chaps.yaml",
     )
-    assert "<Cd>URNS</Cd>" in hsbc and "<Cd>URNS</Cd>" not in api.get_file(
-        "gb.fps.single", "pain.001.001.03"
+    market = tmp_path / "market"
+    monkeypatch.setattr(
+        build_corpus, "load_overlays", lambda: [*PUBLIC, example]
+    )
+    assert (
+        build_corpus.main(
+            [
+                "--scenarios",
+                str(scenarios),
+                "--market-root",
+                str(market),
+                "--skip-coverage",
+                "--data-root",
+                str(tmp_path),
+            ]
+        )
+        == 0
+    )
+    scenario = SCENARIOS["gb.chaps.property-purchase"]
+    target = build_corpus.target_for(
+        scenario, "pain.001.001.03", market, variant=example.overlay_id
+    )
+    assert target.name == (
+        "gb.chaps.property-purchase__gb.example.priority.pain.001.001.03.xml"
+    )
+    assert target.exists()
+    xml = target.read_text(encoding="utf-8")
+    assert (
+        "<CtrySubDvsn>England</CtrySubDvsn>" in xml and "<Cd>URNS</Cd>" in xml
+    )
+    generic = build_corpus.target_for(
+        scenario, "pain.001.001.03", market
+    ).read_text(encoding="utf-8")
+    assert "<Cd>URNS</Cd>" not in generic
+    record = run_ladder(
+        scenario,
+        "pain.001.001.03",
+        xml,
+        [*PUBLIC, example],
+        variant=example.overlay_id,
+    )
+    assert record["overlays"]["gb.example.priority"]["errors"] == 0
+    forced = run_ladder(
+        scenario,
+        "pain.001.001.03",
+        generic,
+        [example],
+        variant=example.overlay_id,
+    )
+    assert forced["overlays"]["gb.example.priority"]["errors"] >= 1
+    sidecar = yaml.safe_load(
+        target.with_suffix(".provenance.yaml").read_text(encoding="utf-8")
+    )
+    assert sidecar["variant"]["overlay"] == "gb.example.priority"
+    assert (
+        sidecar["variant"]["patch"]["payment"]["type"]["service_level"]
+        == "URNS"
+    )
+    assert not build_corpus.target_for(
+        scenario, "pain.001.001.09", market, variant=example.overlay_id
+    ).exists(), "a v03 profile builds no .09 variant"
+
+    # the API selects by variant when pointed at that tree
+    monkeypatch.setattr(api, "MARKET_ROOT", market)
+    files = api.list_files("market")
+    assert {f.variant for f in files} == {None, "gb.example.priority"}
+    assert "<Cd>URNS</Cd>" in api.get_file(
+        "gb.chaps.property-purchase", "pain.001.001.03", "gb.example.priority"
     )
     assert (
         api.provenance(
-            "gb.fps.single", "pain.001.001.03", "gb.hsbc.faster-payments"
+            "gb.chaps.property-purchase",
+            "pain.001.001.03",
+            "gb.example.priority",
         )["variant"]["overlay"]
-        == "gb.hsbc.faster-payments"
+        == "gb.example.priority"
     )
     with pytest.raises(FileNotFoundError):
         api.get_file(
-            "gb.fps.single", "pain.001.001.09", "gb.hsbc.faster-payments"
-        )  # a v03 guideline, no .09 variant
-    files = sorted(build_corpus.MARKET_ROOT.rglob("*__*.xml"))
-    assert len(files) == 32
-    assert corpus_coverage._ladder_check(files) == 0
+            "gb.chaps.property-purchase",
+            "pain.001.001.09",
+            "gb.example.priority",
+        )
+    monkeypatch.setattr(ladder, "load_overlays", lambda: [*PUBLIC, example])
+    assert corpus_coverage._ladder_check(sorted(market.rglob("*__*.xml"))) == 0
 
 
-def test_overlay_versions_limit_variants_and_judgement() -> None:
-    """A v03 guideline builds and judges .03 files only."""
-    scenario = SCENARIOS["gb.fps.single"]
-    overlay = OVERLAYS["gb.hsbc.faster-payments"]
-    assert overlay.versions == ("pain.001.001.03",)
-    pool = list(OVERLAYS.values())
+def test_overlay_versions_limit_variants_and_judgement(example) -> None:
+    """A v03 profile builds and judges .03 files only."""
+    scenario = SCENARIOS["gb.chaps.property-purchase"]
+    assert example.versions == ("pain.001.001.03",)
+    pool = [*PUBLIC, example]
     assert [
         o.overlay_id
         for o in build_corpus.variants_for(scenario, pool, "pain.001.001.03")
-    ] == ["gb.hsbc.faster-payments"]
+    ] == ["gb.example.priority"]
     assert build_corpus.variants_for(scenario, pool, "pain.001.001.09") == []
     assert [
         o.overlay_id
         for o in applicable_overlays(
-            scenario, pool, "gb.hsbc.faster-payments", "pain.001.001.03"
+            scenario, pool, "gb.example.priority", "pain.001.001.03"
         )
-    ] == ["gb.hsbc.faster-payments"]
-    assert (
-        applicable_overlays(
-            scenario, pool, "gb.hsbc.faster-payments", "pain.001.001.09"
+    ] == ["gb.boe.chaps-enhanced-data", "gb.example.priority"]
+    assert [
+        o.overlay_id
+        for o in applicable_overlays(
+            scenario, pool, "gb.example.priority", "pain.001.001.09"
         )
-        == []
+    ] == ["gb.boe.chaps-enhanced-data"]
+    assert example.applies(
+        "gb.chaps.property-purchase", "priority-payment", "pain.001.001.03"
     )
-    assert overlay.applies(
-        "gb.fps.single", "faster-payment", "pain.001.001.03"
+    assert not example.applies(
+        "gb.chaps.property-purchase", "priority-payment", "pain.001.001.09"
     )
-    assert not overlay.applies(
-        "gb.fps.single", "faster-payment", "pain.001.001.09"
-    )
-    assert overlay.applies(
-        "gb.fps.single", "faster-payment"
-    )  # version unknown: not filtered
-    assert not build_corpus.target_for(
-        scenario, "pain.001.001.09", variant=overlay.overlay_id
-    ).exists()
+    assert example.applies("gb.chaps.property-purchase", "priority-payment")
