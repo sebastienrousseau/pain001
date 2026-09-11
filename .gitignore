@@ -163,3 +163,18 @@ pain001/tmp/
 # Test-output XML/CSV written to cwd by the suite
 /pain.0*.xml
 /migrated*.csv
+
+# Restricted material downloaded from swift.com / MyStandards (HSBC Direct
+# Channels, CBPR+, CGI-MP usage guidelines). It lives in iCloud, never here;
+# tests/test_no_restricted_material.py fails the build if any slips in.
+*MyStandards*
+HSBC_pain*
+HSBC_pacs*
+HSBC_camt*
+*swift.cbprplus*
+*CGI-MP*
+*_externalcodesets_*.xlsx
+*.ug.xsd
+scenarios/**/*.pdf
+scenarios/**/*.xlsx
+scenarios/**/*.zip
