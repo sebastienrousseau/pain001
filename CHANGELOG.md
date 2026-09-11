@@ -95,6 +95,15 @@ and in the MCP and LSP tools. Entries are added as work lands.
   Switzerland overlays (`ch.hsbc.low-value`,
   `ch.hsbc.target-international`) are curated from the HSBCnet Europe
   guidelines and build the .03 variants.
+- **Coverage files named for what they exercise.** `set-NN.xml` becomes
+  `NN-<recipe>-<focus>.xml`: `01-transfer-every-element.xml` is the
+  baseline that carries every element once, and each later file is named
+  after the blocks its new coverage falls under
+  (`05-transfer-UltmtDbtr-PstlAdr-Id.xml`,
+  `09-cheque-to-agent-ChqInstr-ChqFr-DlvrTo.xml`). `coverage.json`
+  gains a `files` manifest with each file's recipe, one-sentence
+  description, focus blocks and the number of paths and branches it is
+  the first to cover; `CoverageSet.manifest` carries the same.
 - **Swedish pack.** Four scenarios under `scenarios/se/`: a Bankgiro
   supplier payment (creditor account as the Bankgiro number under the
   proprietary scheme `BGNR`, Bankgirot as creditor agent, Luhn-checked

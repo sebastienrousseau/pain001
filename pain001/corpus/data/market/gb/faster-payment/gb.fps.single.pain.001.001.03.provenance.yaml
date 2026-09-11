@@ -4,7 +4,7 @@ country: GB
 message_type: pain.001.001.03
 variant: null
 description: Faster Payments single supplier payment, sort code and account.
-sha256: 1abf49c73e1a43cda43580262af74341230c3a8bb97bbf2c07ef31652a022251
+sha256: a3d78639833ff1bbcf0836c677ffb4a06128bc93a4e6a9d79a3907e0bc17dcbe
 build:
   renamed:
   - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC

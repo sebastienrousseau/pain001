@@ -105,7 +105,7 @@ def test_committed_set_is_complete_valid_and_fresh(version: str) -> None:
     assert generated.report.path_percent == 100.0
     assert generated.report.branch_percent == 100.0
     set_dir = COVERAGE_ROOT / version
-    files = sorted(set_dir.glob("set-*.xml"))
+    files = sorted(set_dir.glob("*.xml"))
     assert [f.read_text(encoding="utf-8") for f in files] == list(
         generated.files
     )
@@ -116,8 +116,11 @@ def test_committed_set_is_complete_valid_and_fresh(version: str) -> None:
         (set_dir / "coverage.json").read_text(encoding="utf-8")
     )
     assert report == build_corpus.slim_report(
-        generated.report, len(generated.files)
+        generated.report, generated.manifest
     )
+    assert [info.name for info in generated.manifest] == [
+        f.name for f in files
+    ]
     assert report["complete"] and report["paths"]["percent"] == 100.0
     assert report["sources"] == [f.name for f in files]
     assert coverage(inventory_for(version), files).complete
@@ -262,3 +265,43 @@ def test_mdr_breach_in_a_generated_file_raises(
     )
     with pytest.raises(cov.CoverageBuildError, match="breaks X at /Document"):
         cov.build_coverage_set("pain.001.001.03")
+
+
+def test_manifest_names_and_describes_every_file() -> None:
+    """File names carry their position, recipe and focus; descriptions differ.
+
+    The first file is the baseline that carries every element; every
+    later file names the blocks its new coverage falls under, so a
+    reader can pick a file without opening it.
+    """
+    generated = cov.build_coverage_set("pain.001.001.03")
+    names = [info.name for info in generated.manifest]
+    assert len(names) == len(generated.files) == len(set(names))
+    assert names[0] == "01-transfer-every-element.xml"
+    assert "every element of the schema" in generated.manifest[0].description
+    for index, info in enumerate(generated.manifest, start=1):
+        assert info.name.startswith(f"{index:02d}-{info.recipe}-")
+        assert info.name.endswith(".xml")
+        assert info.adds_paths + info.adds_branches > 0
+        assert info.recipe in cov.RECIPE_LABELS
+    later = generated.manifest[1]
+    assert later.focus and all(block in later.name for block in later.focus)
+    assert f"{later.adds_paths} element path" in later.description
+    assert {info.recipe for info in generated.manifest} >= {
+        "transfer",
+        "cheque-to-agent",
+        "cheque-no-agent",
+    }
+
+
+def test_describe_file_without_focus_falls_back() -> None:
+    """A later file whose hits have no block name is still named."""
+    info = cov.describe_file(3, cov.RECIPES["pain.008"][0], 2, 1, ())
+    assert info.name == "03-collection-remaining.xml"
+    assert "the remaining blocks" in info.description
+    assert cov._focus(set(), "/Document/X") == ()
+    single = cov._focus(
+        {"/D/R/PmtInf/UltmtDbtr/Id/OrgId", "/D/R/PmtInf/UltmtDbtr/Nm -> A+B"},
+        "/D/R",
+    )
+    assert single == ("UltmtDbtr", "Id", "Nm")

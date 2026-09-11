@@ -1,17 +1,148 @@
 {
   "message_type": "pain.001.001.13",
   "sources": [
-    "set-01.xml",
-    "set-02.xml",
-    "set-03.xml",
-    "set-04.xml",
-    "set-05.xml",
-    "set-06.xml",
-    "set-07.xml",
-    "set-08.xml",
-    "set-09.xml",
-    "set-10.xml",
-    "set-11.xml"
+    "01-transfer-every-element.xml",
+    "02-transfer-RmtInf-InitgPty-Cdtr.xml",
+    "03-transfer-PmtTpInf-RmtInf-MndtRltdInf.xml",
+    "04-transfer-RmtInf-PmtTpInf-InitgPty.xml",
+    "05-transfer-UltmtDbtr-PstlAdr-CtctDtls.xml",
+    "06-transfer-UltmtDbtr-Id-PstlAdr.xml",
+    "07-transfer-UltmtDbtr-Id.xml",
+    "08-transfer-UltmtDbtr-Id.xml",
+    "09-cheque-to-agent-ChqInstr-ChqFr-DlvrTo.xml",
+    "10-cheque-to-agent-ChqInstr-ChqFr-DlvrTo.xml",
+    "11-cheque-no-agent-ChqInstr-DlvryMtd.xml"
+  ],
+  "files": [
+    {
+      "name": "01-transfer-every-element.xml",
+      "recipe": "transfer",
+      "description": "The baseline: every element of the schema once as a credit transfer (PmtMtd TRF), taking the first branch of every choice.",
+      "focus": [
+        "RmtInf",
+        "FwdgAgt",
+        "CdtrAgt"
+      ],
+      "adds_paths": 1232,
+      "adds_branches": 103
+    },
+    {
+      "name": "02-transfer-RmtInf-InitgPty-Cdtr.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 297 element paths and 111 choice branches no earlier file covers, mostly under RmtInf, InitgPty, Cdtr.",
+      "focus": [
+        "RmtInf",
+        "InitgPty",
+        "Cdtr"
+      ],
+      "adds_paths": 297,
+      "adds_branches": 111
+    },
+    {
+      "name": "03-transfer-PmtTpInf-RmtInf-MndtRltdInf.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 28 element paths and 21 choice branches no earlier file covers, mostly under PmtTpInf, RmtInf, MndtRltdInf.",
+      "focus": [
+        "PmtTpInf",
+        "RmtInf",
+        "MndtRltdInf"
+      ],
+      "adds_paths": 28,
+      "adds_branches": 21
+    },
+    {
+      "name": "04-transfer-RmtInf-PmtTpInf-InitgPty.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 12 element paths and 12 choice branches no earlier file covers, mostly under RmtInf, PmtTpInf, InitgPty.",
+      "focus": [
+        "RmtInf",
+        "PmtTpInf",
+        "InitgPty"
+      ],
+      "adds_paths": 12,
+      "adds_branches": 12
+    },
+    {
+      "name": "05-transfer-UltmtDbtr-PstlAdr-CtctDtls.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 48 element paths and 3 choice branches no earlier file covers, mostly under UltmtDbtr, PstlAdr, CtctDtls.",
+      "focus": [
+        "UltmtDbtr",
+        "PstlAdr",
+        "CtctDtls"
+      ],
+      "adds_paths": 48,
+      "adds_branches": 3
+    },
+    {
+      "name": "06-transfer-UltmtDbtr-Id-PstlAdr.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 15 element paths and 3 choice branches no earlier file covers, mostly under UltmtDbtr, Id, PstlAdr.",
+      "focus": [
+        "UltmtDbtr",
+        "Id",
+        "PstlAdr"
+      ],
+      "adds_paths": 15,
+      "adds_branches": 3
+    },
+    {
+      "name": "07-transfer-UltmtDbtr-Id.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 1 element path and 1 choice branch no earlier file covers, mostly under UltmtDbtr, Id.",
+      "focus": [
+        "UltmtDbtr",
+        "Id"
+      ],
+      "adds_paths": 1,
+      "adds_branches": 1
+    },
+    {
+      "name": "08-transfer-UltmtDbtr-Id.xml",
+      "recipe": "transfer",
+      "description": "A credit transfer (PmtMtd TRF) that adds 1 element path and 1 choice branch no earlier file covers, mostly under UltmtDbtr, Id.",
+      "focus": [
+        "UltmtDbtr",
+        "Id"
+      ],
+      "adds_paths": 1,
+      "adds_branches": 1
+    },
+    {
+      "name": "09-cheque-to-agent-ChqInstr-ChqFr-DlvrTo.xml",
+      "recipe": "cheque-to-agent",
+      "description": "A cheque delivered to the creditor agent (PmtMtd CHK) that adds 56 element paths and 3 choice branches no earlier file covers, mostly under ChqInstr, ChqFr, DlvrTo.",
+      "focus": [
+        "ChqInstr",
+        "ChqFr",
+        "DlvrTo"
+      ],
+      "adds_paths": 56,
+      "adds_branches": 3
+    },
+    {
+      "name": "10-cheque-to-agent-ChqInstr-ChqFr-DlvrTo.xml",
+      "recipe": "cheque-to-agent",
+      "description": "A cheque delivered to the creditor agent (PmtMtd CHK) that adds 8 element paths and 2 choice branches no earlier file covers, mostly under ChqInstr, ChqFr, DlvrTo.",
+      "focus": [
+        "ChqInstr",
+        "ChqFr",
+        "DlvrTo"
+      ],
+      "adds_paths": 8,
+      "adds_branches": 2
+    },
+    {
+      "name": "11-cheque-no-agent-ChqInstr-DlvryMtd.xml",
+      "recipe": "cheque-no-agent",
+      "description": "A cheque with no creditor agent (PmtMtd CHK) that adds 1 element path and 1 choice branch no earlier file covers, mostly under ChqInstr, DlvryMtd.",
+      "focus": [
+        "ChqInstr",
+        "DlvryMtd"
+      ],
+      "adds_paths": 1,
+      "adds_branches": 1
+    }
   ],
   "paths": {
     "declared": 1699,

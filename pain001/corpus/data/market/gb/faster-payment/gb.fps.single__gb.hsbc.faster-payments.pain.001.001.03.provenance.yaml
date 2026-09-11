@@ -17,7 +17,7 @@ variant:
         service_level: URNS
       charge_bearer: SHAR
 description: Faster Payments single supplier payment, sort code and account.
-sha256: 0c0a6f3e6d49dce483972991d2405dd7086ffb01f55a8f0dcfbf3f2b8e6471b6
+sha256: b6640b39a6c56daf87edce8511f26eda6c1c1b17b185d5533ca7ec742b366aac
 build:
   renamed:
   - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC

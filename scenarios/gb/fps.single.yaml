@@ -1,6 +1,6 @@
 # A single Faster Payment: a UK corporate paying a supplier invoice the
 # same day. Generic choices follow the plan's UK table (TRF, sort code
-# and 8-digit account, 18-character references, GBP); the HSBC variant
+# and 8-digit account, 18-character references, GBP); the bank variant
 # built from the overlay pins the bank's service level.
 id: gb.fps.single
 family: faster-payment
@@ -14,7 +14,7 @@ parties:
   payer:
     name: Elm Road Developments Ltd
     address: {form: hybrid, street: Elm Road, building_number: "14", post_code: SW1A 1AA, town: London, country: GB}
-    id: {org: {other: [{id: "123456", scheme: CUST, issuer: HSBC}]}}
+    id: {org: {other: [{id: "123456", scheme: CUST}]}}
   supplier:
     name: Northgate Timber Supplies
     address: {form: hybrid, post_code: LS1 4AP, town: Leeds, country: GB}

@@ -21,7 +21,6 @@
               <SchmeNm>
                 <Cd>CUST</Cd>
               </SchmeNm>
-              <Issr>HSBC</Issr>
             </Othr>
           </OrgId>
         </Id>
@@ -54,7 +53,6 @@
               <SchmeNm>
                 <Cd>CUST</Cd>
               </SchmeNm>
-              <Issr>HSBC</Issr>
             </Othr>
           </OrgId>
         </Id>

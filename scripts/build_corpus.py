@@ -23,7 +23,7 @@ changes nothing and ``--check`` proves it:
   sources, confidence and evidence, the builder's fit report and the
   file's SHA-256;
 * the coverage corpus: every bundled edition gets
-  ``pain001/corpus/data/coverage/<version>/set-NN.xml`` generated from
+  ``pain001/corpus/data/coverage/<version>/NN-<recipe>-<focus>.xml`` generated from
   its schema inventory until every element path and choice branch is
   hit, plus ``coverage.json`` with the report ``make corpus-coverage``
   re-checks.
@@ -43,6 +43,7 @@ import gzip
 import hashlib
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +51,7 @@ import yaml  # type: ignore[import-untyped]
 
 from pain001.constants import valid_xml_types
 from pain001.corpus.builder import BuildResult, build
-from pain001.corpus.coverage_sets import build_coverage_set
+from pain001.corpus.coverage_sets import CoverageFileInfo, build_coverage_set
 from pain001.corpus.inventory import CoverageReport
 from pain001.corpus.registry import SCENARIOS_DIR, Scenario, load_scenarios
 from pain001.corpus.rules.ladder import ladder_passes, run_ladder
@@ -176,20 +177,34 @@ def provenance_for(
     return yaml.safe_dump(record, sort_keys=False, allow_unicode=True)
 
 
-def slim_report(report: CoverageReport, count: int) -> dict[str, Any]:
+def slim_report(
+    report: CoverageReport, manifest: Sequence[CoverageFileInfo]
+) -> dict[str, Any]:
     """The coverage verdict without the hit lists, which the gate recomputes.
 
     Args:
         report: The set's coverage report.
-        count: How many files the set has.
+        manifest: What each file of the set is for, in order.
 
     Returns:
-        A JSON-ready dict: sources, counts, percentages, completeness,
-        and the missing, exempt and unknown lists.
+        A JSON-ready dict: sources, what each file is for, counts,
+        percentages, completeness, and the missing, exempt and unknown
+        lists.
     """
     return {
         "message_type": report.message_type,
-        "sources": [f"set-{n:02d}.xml" for n in range(1, count + 1)],
+        "sources": [info.name for info in manifest],
+        "files": [
+            {
+                "name": info.name,
+                "recipe": info.recipe,
+                "description": info.description,
+                "focus": list(info.focus),
+                "adds_paths": info.adds_paths,
+                "adds_branches": info.adds_branches,
+            }
+            for info in manifest
+        ],
         "paths": {
             "declared": len(report.hit_paths) + len(report.missing_paths),
             "hit": len(report.hit_paths),
@@ -300,10 +315,12 @@ def main(argv: list[str] | None = None) -> int:
             coverage_set = build_coverage_set(version)
             set_dir = args.coverage_root / version
             wanted = {
-                set_dir / f"set-{n:02d}.xml": text
-                for n, text in enumerate(coverage_set.files, start=1)
+                set_dir / info.name: text
+                for info, text in zip(
+                    coverage_set.manifest, coverage_set.files, strict=True
+                )
             }
-            report = slim_report(coverage_set.report, len(coverage_set.files))
+            report = slim_report(coverage_set.report, coverage_set.manifest)
             wanted[set_dir / "coverage.json"] = (
                 json.dumps(report, indent=2) + "\n"
             )

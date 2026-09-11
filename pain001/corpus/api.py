@@ -88,7 +88,7 @@ def list_files(kind: str | None = None) -> list[CorpusFile]:
                 )
             )
     if kind in (None, "coverage") and COVERAGE_ROOT.is_dir():
-        for path in sorted(COVERAGE_ROOT.rglob("set-*.xml")):
+        for path in sorted(COVERAGE_ROOT.rglob("*.xml")):
             files.append(CorpusFile("coverage", path.parent.name, path))
     return files
 
