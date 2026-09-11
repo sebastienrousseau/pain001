@@ -30,6 +30,42 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 85798880dcb63146a372175b35f99f0c6c81c54ae29ba87f285cbca20f48aeb7
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/SchmeNm/Prtry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Ustrd
+    - CstmrCdtTrfInitn/PmtInf/ChrgBr
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Ccy
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/IBAN
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required:
+    - initiator_street_name
+    - initiator_building_number
+    - debtor_street_name
+    - debtor_building_number
+    - debtor_account_IBAN
+    - creditor_street_name
+    - creditor_building_number
+    - creditor_postal_code
+    - creditor_town_name
+    - creditor_country_code
+    - purpose_code
+    - reference_number
+    - reference_date
 provenance:
   sources:
   - title: 'Nordea, pain.001 examples and Corporate Access implementation guide (Jun

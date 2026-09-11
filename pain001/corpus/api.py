@@ -61,6 +61,36 @@ class CorpusFile:
         """The file's text."""
         return self.path.read_text(encoding="utf-8")
 
+    def twin(self, fmt: str = "iso-json") -> Any:
+        """A twin of the file (ADR-0005).
+
+        Args:
+            fmt: ``iso-json`` for the ISO JSON twin as a dict (the shipped
+                ``.iso.json`` when there is one, else computed), or
+                ``records`` for the :class:`~pain001.twins.RecordsTwin`.
+
+        Returns:
+            The twin.
+
+        Raises:
+            ValueError: For an unknown format.
+        """
+        from pain001.twins import to_iso_json, to_records
+
+        if fmt == "iso-json":
+            shipped = self.path.with_suffix(".iso.json")
+            if shipped.exists():
+                data: dict[str, Any] = json.loads(
+                    shipped.read_text(encoding="utf-8")
+                )
+                return data
+            return to_iso_json(self.read(), self.version)
+        if fmt == "records":
+            return to_records(self.read(), self.version)
+        raise ValueError(
+            f"unknown twin format {fmt!r}; use iso-json or records"
+        )
+
 
 def list_files(kind: str | None = None) -> list[CorpusFile]:
     """Every shipped corpus file: market files, then coverage sets, each by path.
@@ -116,6 +146,36 @@ def get_file(
             and entry.variant == variant
         ):
             return entry.read()
+    raise FileNotFoundError(f"no market file for {scenario_id} in {version}")
+
+
+def get_twin(
+    scenario_id: str,
+    version: str,
+    fmt: str = "iso-json",
+    variant: str | None = None,
+) -> Any:
+    """A twin of one market file (ADR-0005).
+
+    Args:
+        scenario_id: The scenario.
+        version: The message type; twins cover pain.001 editions.
+        fmt: ``iso-json`` or ``records``.
+        variant: An overlay id for a bank variant, else the generic file.
+
+    Returns:
+        The ISO JSON twin as a dict, or the records twin.
+
+    Raises:
+        FileNotFoundError: If the scenario has no file for that edition.
+    """
+    for entry in list_files("market"):
+        if (
+            entry.scenario_id == scenario_id
+            and entry.version == version
+            and entry.variant == variant
+        ):
+            return entry.twin(fmt)
     raise FileNotFoundError(f"no market file for {scenario_id} in {version}")
 
 
@@ -177,6 +237,7 @@ __all__ = [
     "CorpusFile",
     "coverage_report",
     "get_file",
+    "get_twin",
     "list_files",
     "provenance",
 ]

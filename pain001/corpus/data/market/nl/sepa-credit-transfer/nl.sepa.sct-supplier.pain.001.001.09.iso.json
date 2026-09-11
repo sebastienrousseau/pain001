@@ -1,0 +1,110 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MTB-SCT-20260921",
+        "CreDtTm": "2026-09-21T10:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "764.30",
+        "InitgPty": {
+          "Nm": "Molen Techniek BV",
+          "PstlAdr": {
+            "PstCd": "1015 CS",
+            "TwnNm": "Amsterdam",
+            "Ctry": "NL",
+            "AdrLine": [
+              "Keizersgracht 62"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SCT-20260921-NL-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "764.30",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "SEPA"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Molen Techniek BV",
+            "PstlAdr": {
+              "PstCd": "1015 CS",
+              "TwnNm": "Amsterdam",
+              "Ctry": "NL",
+              "AdrLine": [
+                "Keizersgracht 62"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "NL58HDNL0657267333"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "VXOONL70"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MTB-2026-0921-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "764.30",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "KEMPNLV0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Staalhandel Zuid",
+                "PstlAdr": {
+                  "PstCd": "5611 AB",
+                  "TwnNm": "Eindhoven",
+                  "Ctry": "NL"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "NL93JFZI0849932270"
+                }
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        },
+                        "Issr": "CUR"
+                      },
+                      "Ref": "1234567890123456"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

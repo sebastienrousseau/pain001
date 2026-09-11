@@ -29,6 +29,53 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: c13b46f4de561b3fd16388a797cd077fc1e5578786d8fafb37acd487d17bee4e
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/BldgNb
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/StrtNm
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/BldgNb
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/StrtNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/Id
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Purp/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Authrty/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Authrty/Nm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/DbtCdtRptgInd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Inf
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/BldgNb
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/StrtNm
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required:
+    - creditor_account_IBAN
 provenance:
   sources:
   - title: DK DFUE-Abkommen Anlage 3 V3.8, order type AXZ

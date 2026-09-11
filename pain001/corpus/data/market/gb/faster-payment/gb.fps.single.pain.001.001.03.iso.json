@@ -1,0 +1,151 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "ELMRD-FPS-20260915-01",
+        "CreDtTm": "2026-09-15T09:15:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "1250.00",
+        "InitgPty": {
+          "Nm": "Elm Road Developments Ltd",
+          "PstlAdr": {
+            "PstCd": "SW1A 1AA",
+            "TwnNm": "London",
+            "Ctry": "GB",
+            "AdrLine": [
+              "14 Elm Road"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "123456",
+                  "SchmeNm": {
+                    "Cd": "CUST"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "FPS-20260915-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "1250.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "URGP"
+            }
+          },
+          "ReqdExctnDt": "2026-09-15",
+          "Dbtr": {
+            "Nm": "Elm Road Developments Ltd",
+            "PstlAdr": {
+              "PstCd": "SW1A 1AA",
+              "TwnNm": "London",
+              "Ctry": "GB",
+              "AdrLine": [
+                "14 Elm Road"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "123456",
+                    "SchmeNm": {
+                      "Cd": "CUST"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "12345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            },
+            "Ccy": "GBP"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "MKWNGBI0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "GBDSC"
+                },
+                "MmbId": "040004"
+              },
+              "PstlAdr": {
+                "TwnNm": "London",
+                "Ctry": "GB"
+              }
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "INV-2026-0915-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "1250.00",
+                  "Ccy": "GBP"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "NIYGGB80",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "GBDSC"
+                    },
+                    "MmbId": "309634"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "Leeds",
+                    "Ctry": "GB"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Northgate Timber Supplies",
+                "PstlAdr": {
+                  "PstCd": "LS1 4AP",
+                  "TwnNm": "Leeds",
+                  "Ctry": "GB"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "87654321",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV-2026-0915-01"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

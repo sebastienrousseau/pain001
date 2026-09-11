@@ -27,6 +27,7 @@ python examples/01_generate_xml_file.py
 | `13_lsp_diagnostics.py` | The LSP diagnostic engine linting a CSV for bad IBAN/BIC/currency/charset and missing columns (editor server: `pain001-lsp`, `pip install pain001[lsp]`) |
 | `14_redis_distributed.py` | v0.0.53 Redis-backed durable job store (`RedisJobStore`) + cross-replica rate limiter (`RedisFixedWindowBackend`); fakeredis-driven so the script runs without a Redis daemon (requires `pip install pain001[redis]`) |
 | `15_example_corpus.py` | The example corpus: read API and coverage manifest, schema inventory and coverage of your own file, synthetic identifiers, building a scenario with an illustrative private overlay, the four-rung ladder and rail projection, ISO external code sets, the guideline derive tool on a synthetic guideline outside the repository, and `pain.008.001.08` generation |
+| `16_iso_json_twins.py` | The ISO JSON twin of a corpus file (RA 2025 convention), validation against the per-edition JSON Schema, editing in JSON and encoding back through the XSD, the schema rejecting a bad decimal, and the records twin with its measured gap and regeneration through the CSV pipeline |
 
 Together these scripts exercise generation (all message types), every
 input format, the CLI suite, the REST API, scheme validation, the parsers,

@@ -1,0 +1,133 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MSTR-AXZ-20260921-01",
+        "CreDtTm": "2026-09-21T10:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "42000.00",
+        "InitgPty": {
+          "Nm": "Musterfirma GmbH",
+          "PstlAdr": {
+            "StrtNm": "Hauptstrasse",
+            "BldgNb": "12",
+            "PstCd": "80331",
+            "TwnNm": "Muenchen",
+            "CtrySubDvsn": "BY",
+            "Ctry": "DE"
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "AXZ-20260921-01",
+          "PmtMtd": "TRF",
+          "NbOfTxs": "1",
+          "CtrlSum": "42000.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "URGP"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Musterfirma GmbH",
+            "PstlAdr": {
+              "StrtNm": "Hauptstrasse",
+              "BldgNb": "12",
+              "PstCd": "80331",
+              "TwnNm": "Muenchen",
+              "CtrySubDvsn": "BY",
+              "Ctry": "DE"
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "DE35077281791134433984"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "UNTDDEI0",
+              "PstlAdr": {
+                "TwnNm": "Muenchen",
+                "Ctry": "DE"
+              }
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MSTR-AXZ-2026-0921-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "42000.00",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "PFXKUS80",
+                  "PstlAdr": {
+                    "TwnNm": "Chicago",
+                    "CtrySubDvsn": "IL",
+                    "Ctry": "US"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Midwest Precision Tools Inc",
+                "PstlAdr": {
+                  "StrtNm": "Wacker Drive",
+                  "BldgNb": "233",
+                  "PstCd": "60606",
+                  "TwnNm": "Chicago",
+                  "CtrySubDvsn": "IL",
+                  "Ctry": "US"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "5512345678",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RgltryRptg": [
+                {
+                  "DbtCdtRptgInd": "DEBT",
+                  "Authrty": {
+                    "Nm": "Deutsche Bundesbank",
+                    "Ctry": "DE"
+                  },
+                  "Dtls": [
+                    {
+                      "Ctry": "US",
+                      "Cd": "545",
+                      "Inf": [
+                        "AWV Z4 Kennzahl 545 (sample)"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "RmtInf": {
+                "Ustrd": [
+                  "Invoice 2026-4471"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

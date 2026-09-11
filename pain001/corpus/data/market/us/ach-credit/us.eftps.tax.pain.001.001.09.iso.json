@@ -1,0 +1,159 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "CMI-TAX-20260930",
+        "CreDtTm": "2026-09-28T10:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "18240.00",
+        "InitgPty": {
+          "Nm": "Cascade Millwork Inc",
+          "PstlAdr": {
+            "PstCd": "97204",
+            "TwnNm": "Portland",
+            "CtrySubDvsn": "OR",
+            "Ctry": "US"
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "1234567890",
+                  "SchmeNm": {
+                    "Prtry": "COMPANY-ID"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "TAX-20260930-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "18240.00",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "NURG"
+              }
+            ],
+            "LclInstrm": {
+              "Cd": "CCD"
+            },
+            "CtgyPurp": {
+              "Cd": "TAXS"
+            }
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-30"
+          },
+          "Dbtr": {
+            "Nm": "Cascade Millwork Inc",
+            "PstlAdr": {
+              "PstCd": "97204",
+              "TwnNm": "Portland",
+              "CtrySubDvsn": "OR",
+              "Ctry": "US"
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "1234567890",
+                    "SchmeNm": {
+                      "Prtry": "COMPANY-ID"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "4412345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "NVECUSD0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "USABA"
+                },
+                "MmbId": "021000021"
+              },
+              "PstlAdr": {
+                "TwnNm": "New York",
+                "Ctry": "US"
+              }
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "TXP-941-2026Q3"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "18240.00",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "DIXNUSF0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "USABA"
+                    },
+                    "MmbId": "061036000"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "Atlanta",
+                    "Ctry": "US"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "US Treasury EFTPS",
+                "PstlAdr": {
+                  "TwnNm": "Atlanta",
+                  "CtrySubDvsn": "GA",
+                  "Ctry": "US"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "23401009",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "TAXS"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "TXP*123456789*94105*260930*1*1824000\\"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

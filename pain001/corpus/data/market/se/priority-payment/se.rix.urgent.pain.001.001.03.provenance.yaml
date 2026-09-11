@@ -29,6 +29,40 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 84da54e5b277bde44b5605299f9399d2c63ea992be3169e59ff28a06ed6254e9
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/IBAN
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Ustrd
+    - CstmrCdtTrfInitn/PmtInf/ChrgBr
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Ccy
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/IBAN
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/CtgyPurp/Cd
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/InstrPrty
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required:
+    - initiator_street_name
+    - initiator_building_number
+    - debtor_street_name
+    - debtor_building_number
+    - debtor_account_IBAN
+    - creditor_account_IBAN
+    - purpose_code
+    - reference_number
+    - reference_date
 provenance:
   sources:
   - title: Sveriges Riksbank, RIX-RTGS participant and message guidance; Nordea Corporate

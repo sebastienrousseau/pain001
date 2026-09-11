@@ -1,0 +1,133 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "AFM-20260921-04",
+        "CreDtTm": "2026-09-21T09:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "48200.00",
+        "InitgPty": {
+          "Nm": "Alpina Feinmechanik AG",
+          "PstlAdr": {
+            "PstCd": "8952",
+            "TwnNm": "Schlieren",
+            "CtrySubDvsn": "ZH",
+            "Ctry": "CH",
+            "AdrLine": [
+              "Industriestrasse 14"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "LEI": "0000006CAZNK09K2SG52"
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "AFM-X-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "48200.00",
+          "PmtTpInf": {
+            "InstrPrty": "HIGH",
+            "SvcLvl": [
+              {
+                "Cd": "URGP"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Alpina Feinmechanik AG",
+            "PstlAdr": {
+              "PstCd": "8952",
+              "TwnNm": "Schlieren",
+              "CtrySubDvsn": "ZH",
+              "Ctry": "CH",
+              "AdrLine": [
+                "Industriestrasse 14"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "LEI": "0000006CAZNK09K2SG52"
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "CH9009808930715794848"
+            },
+            "Ccy": "USD"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "OSEDCHZ0"
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "AFM-X-0921-001",
+                "UETR": "939a78eb-9ed2-4fab-bb57-65dc07d0f58d"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "48200.00",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "DXTQUSY0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "USABA"
+                    },
+                    "MmbId": "121000248"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Sierra Optics Inc",
+                "PstlAdr": {
+                  "PstCd": "94538",
+                  "TwnNm": "Fremont",
+                  "CtrySubDvsn": "CA",
+                  "Ctry": "US",
+                  "AdrLine": [
+                    "4800 Fremont Boulevard"
+                  ]
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "5512345678",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "PO 2026-772"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

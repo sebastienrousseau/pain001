@@ -31,6 +31,46 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 18fb22779b59426f9d0067272b7478d3d1ce87d6a0545a8b18450519c25116fa
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Ustrd
+    - CstmrCdtTrfInitn/PmtInf/ChrgBr
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/InstrPrty
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required:
+    - initiator_street_name
+    - initiator_building_number
+    - debtor_street_name
+    - debtor_building_number
+    - reference_number
+    - reference_date
 provenance:
   sources:
   - title: Federal Reserve Fedwire Funds Service ISO 20022 quick reference

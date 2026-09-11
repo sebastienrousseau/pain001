@@ -29,6 +29,51 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 9f41e24065562f48adb67702c817a52024dd6962870d45cd69ec1ac866632fd5
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/Id
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Purp/Cd
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/CtrySubDvsn
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/Id
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/InstrPrty
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required:
+    - debtor_account_IBAN
+    - creditor_account_IBAN
 provenance:
   sources:
   - title: Federal Reserve Fedwire Funds Service ISO 20022 quick reference

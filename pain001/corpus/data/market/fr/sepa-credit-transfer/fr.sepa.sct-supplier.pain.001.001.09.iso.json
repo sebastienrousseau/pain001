@@ -1,0 +1,137 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "ADR-SCT-20260921-01",
+        "CreDtTm": "2026-09-21T08:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "2340.80",
+        "InitgPty": {
+          "Nm": "Ateliers du Rhone SAS",
+          "PstlAdr": {
+            "PstCd": "69002",
+            "TwnNm": "Lyon",
+            "Ctry": "FR",
+            "AdrLine": [
+              "Rue de la Republique 42"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "83201234500017",
+                  "SchmeNm": {
+                    "Cd": "SREN"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SCT-20260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "2340.80",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "SEPA"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Ateliers du Rhone SAS",
+            "PstlAdr": {
+              "PstCd": "69002",
+              "TwnNm": "Lyon",
+              "Ctry": "FR",
+              "AdrLine": [
+                "Rue de la Republique 42"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "83201234500017",
+                    "SchmeNm": {
+                      "Cd": "SREN"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "FR893354380052HVVA82N96W433"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "SRKHFRC0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "FACT-2026-09-0117"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "2340.80",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "RGMPFRJ0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Fournitures Industrielles Nord",
+                "PstlAdr": {
+                  "PstCd": "59000",
+                  "TwnNm": "Lille",
+                  "Ctry": "FR"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "FR45661040549856QM2V1TIAZ01"
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        },
+                        "Issr": "ISO"
+                      },
+                      "Ref": "RF18539007547034"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

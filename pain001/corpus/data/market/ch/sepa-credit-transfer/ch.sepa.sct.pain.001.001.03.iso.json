@@ -1,0 +1,97 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "AFM-20260921-03",
+        "CreDtTm": "2026-09-21T09:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "6250.00",
+        "InitgPty": {
+          "Nm": "Alpina Feinmechanik AG",
+          "PstlAdr": {
+            "PstCd": "8952",
+            "TwnNm": "Schlieren",
+            "Ctry": "CH",
+            "AdrLine": [
+              "Industriestrasse 14"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "AFM-S-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "6250.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "SEPA"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Alpina Feinmechanik AG",
+            "PstlAdr": {
+              "PstCd": "8952",
+              "TwnNm": "Schlieren",
+              "Ctry": "CH",
+              "AdrLine": [
+                "Industriestrasse 14"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "CH0225323063368134316"
+            },
+            "Ccy": "EUR"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "EGTLCHC0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "AFM-2026-0921-004"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "6250.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "BBECDEY0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Präzisionsstahl Schwaben GmbH",
+                "PstlAdr": {
+                  "PstCd": "89073",
+                  "TwnNm": "Ulm",
+                  "Ctry": "DE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "DE57148839832248984871"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Invoice 2026-3310"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

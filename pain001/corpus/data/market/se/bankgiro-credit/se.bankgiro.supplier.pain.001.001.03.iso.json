@@ -1,0 +1,183 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "NTA-20260921-01",
+        "CreDtTm": "2026-09-21T07:45:00",
+        "NbOfTxs": "2",
+        "CtrlSum": "21440.00",
+        "InitgPty": {
+          "Nm": "Norrland Trävaror AB",
+          "PstlAdr": {
+            "PstCd": "903 26",
+            "TwnNm": "Umeå",
+            "Ctry": "SE",
+            "AdrLine": [
+              "Storgatan 22"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "5561234567",
+                  "SchmeNm": {
+                    "Prtry": "ORGNR"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "NTA-BG-20260921",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "2",
+          "CtrlSum": "21440.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "NURG"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Norrland Trävaror AB",
+            "PstlAdr": {
+              "PstCd": "903 26",
+              "TwnNm": "Umeå",
+              "Ctry": "SE",
+              "AdrLine": [
+                "Storgatan 22"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "5561234567",
+                    "SchmeNm": {
+                      "Prtry": "ORGNR"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "SE4256065723789397612318"
+            },
+            "Ccy": "SEK"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "FURLSEN0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "NTA-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "18450.00",
+                  "Ccy": "SEK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "BGABSESS"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Sågverk Öster AB",
+                "PstlAdr": {
+                  "PstCd": "891 33",
+                  "TwnNm": "Örnsköldsvik",
+                  "Ctry": "SE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "50501055",
+                    "SchmeNm": {
+                      "Prtry": "BGNR"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        }
+                      },
+                      "Ref": "20260911000000316"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PmtId": {
+                "EndToEndId": "NTA-2026-0921-002"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "2990.00",
+                  "Ccy": "SEK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "BGABSESS"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Kontorsservice Nord",
+                "PstlAdr": {
+                  "PstCd": "972 32",
+                  "TwnNm": "Luleå",
+                  "Ctry": "SE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "50501055",
+                    "SchmeNm": {
+                      "Prtry": "BGNR"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        }
+                      },
+                      "Ref": "123456782"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

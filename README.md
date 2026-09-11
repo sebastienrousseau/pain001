@@ -227,10 +227,17 @@ Two corpora ship in the wheel, built by one engine
   0.0.69. Browse and download every file at
   [pain001.com/example-corpus](https://pain001.com/example-corpus/).
 
+Every pain.001 market file also ships its **ISO JSON twin** (the ISO
+20022 RA's JSON convention, lossless, with a JSON Schema 2020-12 per
+edition) and a **records twin**, the flat rows the CSV pipeline consumes
+with the list of what they cannot carry; see
+[docs/twins.md](docs/twins.md).
+
 ```python
-from pain001.corpus import get_file, provenance, coverage_report
+from pain001.corpus import get_file, get_twin, provenance, coverage_report
 
 xml = get_file("gb.chaps.property-purchase", "pain.001.001.09")
+twin = get_twin("gb.chaps.property-purchase", "pain.001.001.09")  # {"Document": ...}
 record = provenance("gb.chaps.property-purchase", "pain.001.001.09")
 assert record["validation"]["profiles"]["uk-chaps"]["errors"] == 0
 assert coverage_report("pain.001.001.13")["complete"]

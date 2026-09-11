@@ -1,0 +1,143 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "AFM-20260921-02",
+        "CreDtTm": "2026-09-21T08:35:00",
+        "NbOfTxs": "2",
+        "CtrlSum": "1127.40",
+        "InitgPty": {
+          "Nm": "Alpina Feinmechanik AG",
+          "PstlAdr": {
+            "PstCd": "8952",
+            "TwnNm": "Schlieren",
+            "Ctry": "CH",
+            "AdrLine": [
+              "Industriestrasse 14"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "AFM-D-260921-02",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "2",
+          "CtrlSum": "1127.40",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "NURG"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Alpina Feinmechanik AG",
+            "PstlAdr": {
+              "PstCd": "8952",
+              "TwnNm": "Schlieren",
+              "Ctry": "CH",
+              "AdrLine": [
+                "Industriestrasse 14"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "CH9865371906857213108"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "WPGBCHR0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "AFM-2026-0921-002"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "912.00",
+                  "Ccy": "CHF"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "AVGFCHE0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Kanzlei Bergmann",
+                "PstlAdr": {
+                  "PstCd": "3011",
+                  "TwnNm": "Bern",
+                  "Ctry": "CH"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "CH3059010197641085953"
+                }
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        }
+                      },
+                      "Ref": "RF18539007547034"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "PmtId": {
+                "EndToEndId": "AFM-2026-0921-003"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "215.40",
+                  "Ccy": "CHF"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "QKITCHA0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Druckerei Sonnenberg",
+                "PstlAdr": {
+                  "PstCd": "9000",
+                  "TwnNm": "St. Gallen",
+                  "Ctry": "CH"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "CH7201909996508230257"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Auftrag 4471"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

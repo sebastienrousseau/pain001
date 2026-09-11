@@ -29,6 +29,7 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins: null
 provenance:
   sources:
   - title: Nacha Operating Rules and Guidelines, debit entries and authorisation

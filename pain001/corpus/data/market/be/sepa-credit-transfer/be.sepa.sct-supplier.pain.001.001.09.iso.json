@@ -1,0 +1,134 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "BDS-SCT-20260921",
+        "CreDtTm": "2026-09-21T09:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "1180.00",
+        "InitgPty": {
+          "Nm": "Brasserie de la Senne NV",
+          "PstlAdr": {
+            "PstCd": "1000",
+            "TwnNm": "Brussels",
+            "Ctry": "BE",
+            "AdrLine": [
+              "Rue Picard 3"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "0123456789",
+                  "SchmeNm": {
+                    "Prtry": "KBO-BCE"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SCT-20260921-BE-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "1",
+          "CtrlSum": "1180.00",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "SEPA"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Brasserie de la Senne NV",
+            "PstlAdr": {
+              "PstCd": "1000",
+              "TwnNm": "Brussels",
+              "Ctry": "BE",
+              "AdrLine": [
+                "Rue Picard 3"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "0123456789",
+                    "SchmeNm": {
+                      "Prtry": "KBO-BCE"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "BE72536889307716"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "BWBGBE80"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "BDS-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "1180.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "KWBZBE60"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Mouterij Dingemans",
+                "PstlAdr": {
+                  "PstCd": "2860",
+                  "TwnNm": "Sint-Katelijne-Waver",
+                  "Ctry": "BE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "BE22575526903747"
+                }
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        },
+                        "Issr": "BBA"
+                      },
+                      "Ref": "090123456744"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

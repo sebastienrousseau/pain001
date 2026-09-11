@@ -34,6 +34,7 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins: null
 provenance:
   sources:
   - title: EPC130-08 Customer-to-PSP SDD Core Implementation Guidelines 2025 v1.0

@@ -19,6 +19,9 @@ cost curve worth knowing before it lands in a pipeline:
   search that emits a file, measures, and repeats until every path and
   branch is hit. This is the expensive one and runs only when the corpus
   is rebuilt.
+* **twin**: the ISO JSON twin of a built file and its way back through
+  the XSD, the schema validation of the twin, and the records twin with
+  its gap. What a JSON consumer pays per file.
 
 Run::
 
@@ -52,6 +55,12 @@ from pain001.corpus import (  # noqa: E402
 )
 from pain001.corpus.rules.ladder import run_ladder  # noqa: E402
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY  # noqa: E402
+from pain001.twins import (  # noqa: E402
+    from_iso_json,
+    to_iso_json,
+    to_records,
+    validate_iso_json,
+)
 
 
 def _best(call, repeats: int) -> float:
@@ -84,6 +93,7 @@ def run(quick: bool) -> dict:
         "build": [],
         "ladder": [],
         "coverage_set": [],
+        "twin": [],
     }
 
     for edition in editions:
@@ -124,6 +134,30 @@ def run(quick: bool) -> dict:
                     "ms": seconds * 1e3,
                 }
             )
+            if edition.startswith("pain.001."):
+                twin = to_iso_json(result.xml, edition)
+                results["twin"].append(
+                    {
+                        "scenario": scenario.id,
+                        "edition": edition,
+                        "to_ms": _best(
+                            partial(to_iso_json, result.xml, edition), repeats
+                        )
+                        * 1e3,
+                        "back_ms": _best(
+                            partial(from_iso_json, twin, edition), repeats
+                        )
+                        * 1e3,
+                        "validate_ms": _best(
+                            partial(validate_iso_json, twin, edition), repeats
+                        )
+                        * 1e3,
+                        "records_ms": _best(
+                            partial(to_records, result.xml, edition), repeats
+                        )
+                        * 1e3,
+                    }
+                )
 
     for edition in editions:
         start = time.perf_counter()
@@ -151,6 +185,13 @@ def render(results: dict) -> None:
         print(
             f"  {b['scenario']:<30} {b['edition']:<16} {b['bytes']:>6} B  "
             f"build {b['ms']:>7.1f} ms  ladder {lad['ms']:>7.1f} ms"
+        )
+    print("twin (per pain.001 file)")
+    for row in results["twin"]:
+        print(
+            f"  {row['scenario']:<30} {row['edition']:<16} to {row['to_ms']:>6.1f} ms  "
+            f"back {row['back_ms']:>6.1f} ms  validate {row['validate_ms']:>6.1f} ms  "
+            f"records {row['records_ms']:>6.1f} ms"
         )
     print("coverage set (per edition)")
     for row in results["coverage_set"]:

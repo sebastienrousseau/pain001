@@ -1,0 +1,135 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "AFM-20260921-01",
+        "CreDtTm": "2026-09-21T08:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "3488.55",
+        "InitgPty": {
+          "Nm": "Alpina Feinmechanik AG",
+          "PstlAdr": {
+            "PstCd": "8952",
+            "TwnNm": "Schlieren",
+            "Ctry": "CH",
+            "AdrLine": [
+              "Industriestrasse 14"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "CHE-123.456.789",
+                  "SchmeNm": {
+                    "Prtry": "UID"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "AFM-D-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "3488.55",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "NURG"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Alpina Feinmechanik AG",
+            "PstlAdr": {
+              "PstCd": "8952",
+              "TwnNm": "Schlieren",
+              "Ctry": "CH",
+              "AdrLine": [
+                "Industriestrasse 14"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "CHE-123.456.789",
+                    "SchmeNm": {
+                      "Prtry": "UID"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "CH7827307265471511330"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "WEUVCH20"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "AFM-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "3488.55",
+                  "Ccy": "CHF"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "TRIDCHS0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Werkzeugbau Muster GmbH",
+                "PstlAdr": {
+                  "PstCd": "6003",
+                  "TwnNm": "Luzern",
+                  "Ctry": "CH",
+                  "AdrLine": [
+                    "Bahnhofstrasse 7"
+                  ]
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "CH7430000001234567891"
+                }
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Prtry": "QRR"
+                        }
+                      },
+                      "Ref": "210000000003139471430009017"
+                    },
+                    "AddtlRmtInf": [
+                      "Rechnung 2026-1187"
+                    ]
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

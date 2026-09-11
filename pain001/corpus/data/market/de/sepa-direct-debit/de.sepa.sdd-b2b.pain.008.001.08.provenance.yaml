@@ -28,6 +28,7 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins: null
 provenance:
   sources:
   - title: EPC131-08 Customer-to-PSP SDD B2B Implementation Guidelines 2025 v1.0

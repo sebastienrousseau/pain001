@@ -36,7 +36,7 @@ def test_committed_corpus_is_up_to_date(
     """``--check`` on the tree passes and reports within budget."""
     assert build_corpus.main(["--check"]) == 0
     out = capsys.readouterr().out
-    assert "up to date" in out and "of 400,000 budget" in out
+    assert "up to date" in out and "of 500,000 budget" in out
 
 
 def _sandbox(tmp_path: Path) -> tuple[Path, Path, list[str]]:
@@ -65,7 +65,7 @@ def test_build_writes_then_check_passes_then_detects_drift(
     assert "STALE" in capsys.readouterr().out
     assert build_corpus.main(argv) == 0
     out = capsys.readouterr().out
-    assert out.count("wrote") == 140 and "35 scenario(s), 140 file(s)" in out
+    assert out.count("wrote") == 196 and "35 scenario(s), 196 file(s)" in out
     assert build_corpus.main(argv + ["--check"]) == 0
     assert (
         build_corpus.main(argv) == 0
@@ -121,7 +121,7 @@ def test_coverage_sets_are_written_beside_the_market_files(
     ]
     assert build_corpus.main(argv) == 0
     out = capsys.readouterr().out
-    assert out.count("coverage.json") == 13 and "284 file(s)" in out
+    assert out.count("coverage.json") == 13 and "340 file(s)" in out
     report = json.loads(
         (
             tmp_path

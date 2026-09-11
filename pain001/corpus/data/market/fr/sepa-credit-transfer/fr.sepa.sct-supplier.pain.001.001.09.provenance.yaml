@@ -33,6 +33,39 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: 82a9ea4fb152326de3480c2c95a29713bf117805b52c6638227c3385f84e2484
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/Othr/Id
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/BtchBookg
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Purp/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/CdtrRefInf/Ref
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/CdtrRefInf/Tp/CdOrPrtry/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/CdtrRefInf/Tp/Issr
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/Othr/Id
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/Othr/SchmeNm/Cd
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required: []
 provenance:
   sources:
   - title: CFONB, Guide d'utilisation du virement SEPA client-banque V2.6 (Jan 2023)

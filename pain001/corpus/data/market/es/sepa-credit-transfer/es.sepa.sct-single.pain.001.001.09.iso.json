@@ -1,0 +1,124 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "BDE-SCT-20260921",
+        "CreDtTm": "2026-09-21T11:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "5120.00",
+        "InitgPty": {
+          "Nm": "Bodegas del Ebro SL",
+          "PstlAdr": {
+            "PstCd": "26001",
+            "TwnNm": "Logrono",
+            "Ctry": "ES",
+            "AdrLine": [
+              "Calle Mayor 8"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "B12345674",
+                  "SchmeNm": {
+                    "Cd": "COID"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SCT-20260921-ES-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "5120.00",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "SEPA"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Bodegas del Ebro SL",
+            "PstlAdr": {
+              "PstCd": "26001",
+              "TwnNm": "Logrono",
+              "Ctry": "ES",
+              "AdrLine": [
+                "Calle Mayor 8"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "B12345674",
+                    "SchmeNm": {
+                      "Cd": "COID"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "ES4793760993178221590616"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "PUKAESC0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "BDE-2026-0921-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "5120.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "RDHSESH0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Vidrieria Riojana SA",
+                "PstlAdr": {
+                  "PstCd": "26006",
+                  "TwnNm": "Logrono",
+                  "Ctry": "ES"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "ES7200732545500484629565"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Factura 2026-0117"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

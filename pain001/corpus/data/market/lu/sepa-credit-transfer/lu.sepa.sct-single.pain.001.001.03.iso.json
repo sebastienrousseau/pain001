@@ -1,0 +1,96 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "KLS-SCT-20260921",
+        "CreDtTm": "2026-09-21T13:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "980.00",
+        "InitgPty": {
+          "Nm": "Kirchberg Logistics SA",
+          "PstlAdr": {
+            "PstCd": "L-2540",
+            "TwnNm": "Luxembourg",
+            "Ctry": "LU",
+            "AdrLine": [
+              "Rue Edward Steichen 12"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SCT-20260921-LU-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "980.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "SEPA"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Kirchberg Logistics SA",
+            "PstlAdr": {
+              "PstCd": "L-2540",
+              "TwnNm": "Luxembourg",
+              "Ctry": "LU",
+              "AdrLine": [
+                "Rue Edward Steichen 12"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "LU4838625GRVNAWDC2NO"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "CRRMLUS0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "KLS-2026-0921-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "980.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "WAQRLU80"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Transports Moselle Sarl",
+                "PstlAdr": {
+                  "PstCd": "L-6791",
+                  "TwnNm": "Grevenmacher",
+                  "Ctry": "LU"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "LU2777470UPND72BZXA4"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Facture 2026-117"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

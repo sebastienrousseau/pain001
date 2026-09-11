@@ -1,0 +1,107 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "CMI-CHK-20260922-01",
+        "CreDtTm": "2026-09-22T13:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "1975.00",
+        "InitgPty": {
+          "Nm": "Cascade Millwork Inc",
+          "PstlAdr": {
+            "PstCd": "97204",
+            "TwnNm": "Portland",
+            "CtrySubDvsn": "OR",
+            "Ctry": "US",
+            "AdrLine": [
+              "1200 Pine Street"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "CHK-20260922-01",
+          "PmtMtd": "CHK",
+          "NbOfTxs": "1",
+          "CtrlSum": "1975.00",
+          "ReqdExctnDt": {
+            "Dt": "2026-09-23"
+          },
+          "Dbtr": {
+            "Nm": "Cascade Millwork Inc",
+            "PstlAdr": {
+              "PstCd": "97204",
+              "TwnNm": "Portland",
+              "CtrySubDvsn": "OR",
+              "Ctry": "US",
+              "AdrLine": [
+                "1200 Pine Street"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "4412345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "IRUHUS20",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "USABA"
+                },
+                "MmbId": "021000021"
+              }
+            }
+          },
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "CMI-CHK-2026-0922-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "1975.00",
+                  "Ccy": "USD"
+                }
+              },
+              "ChqInstr": {
+                "ChqTp": "CCHQ",
+                "DlvryMtd": {
+                  "Cd": "MLCD"
+                },
+                "MemoFld": [
+                  "INV 2026-0918"
+                ]
+              },
+              "Cdtr": {
+                "Nm": "Willamette Office Supply",
+                "PstlAdr": {
+                  "PstCd": "97209",
+                  "TwnNm": "Portland",
+                  "CtrySubDvsn": "OR",
+                  "Ctry": "US",
+                  "AdrLine": [
+                    "300 Burnside Street"
+                  ]
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV 2026-0918"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

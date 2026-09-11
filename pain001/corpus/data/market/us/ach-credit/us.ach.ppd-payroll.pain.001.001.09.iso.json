@@ -1,0 +1,219 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "CMI-PAY-20260925",
+        "CreDtTm": "2026-09-23T17:00:00",
+        "NbOfTxs": "2",
+        "CtrlSum": "5995.65",
+        "InitgPty": {
+          "Nm": "Cascade Millwork Inc",
+          "PstlAdr": {
+            "PstCd": "97204",
+            "TwnNm": "Portland",
+            "CtrySubDvsn": "OR",
+            "Ctry": "US",
+            "AdrLine": [
+              "1200 Pine Street"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "1234567890",
+                  "SchmeNm": {
+                    "Prtry": "COMPANY-ID"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "PAY-20260925-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "2",
+          "CtrlSum": "5995.65",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "NURG"
+              }
+            ],
+            "LclInstrm": {
+              "Cd": "PPD"
+            },
+            "CtgyPurp": {
+              "Cd": "SALA"
+            }
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-25"
+          },
+          "Dbtr": {
+            "Nm": "Cascade Millwork Inc",
+            "PstlAdr": {
+              "PstCd": "97204",
+              "TwnNm": "Portland",
+              "CtrySubDvsn": "OR",
+              "Ctry": "US",
+              "AdrLine": [
+                "1200 Pine Street"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "1234567890",
+                    "SchmeNm": {
+                      "Prtry": "COMPANY-ID"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "4412345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "RSEDUS60",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "USABA"
+                },
+                "MmbId": "021000021"
+              },
+              "PstlAdr": {
+                "TwnNm": "New York",
+                "Ctry": "US"
+              }
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "PAY-2026-09-0001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "3120.55",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "HQSGUS70",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "USABA"
+                    },
+                    "MmbId": "121000248"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "San Francisco",
+                    "Ctry": "US"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Jordan Lee",
+                "PstlAdr": {
+                  "PstCd": "97209",
+                  "TwnNm": "Portland",
+                  "CtrySubDvsn": "OR",
+                  "Ctry": "US"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "7712345678",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "SALA"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Payroll Sep 2026"
+                ]
+              }
+            },
+            {
+              "PmtId": {
+                "EndToEndId": "PAY-2026-09-0002"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "2875.10",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "QMOLUSD0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "USABA"
+                    },
+                    "MmbId": "026009593"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "New York",
+                    "Ctry": "US"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Sam Rivera",
+                "PstlAdr": {
+                  "PstCd": "97214",
+                  "TwnNm": "Portland",
+                  "CtrySubDvsn": "OR",
+                  "Ctry": "US"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "7798765432",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "SALA"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Payroll Sep 2026"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

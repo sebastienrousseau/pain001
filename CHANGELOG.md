@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.69] - Unreleased
+
+The third example-corpus release: the tier 2 and 3 packs, the CSV
+pipeline extension, and the pain.001 twin foundation
+([ADR-0005](docs/adr/0005-twins-and-faces.md)). Entries are added as
+work lands.
+
+### Added
+
+- **ISO JSON twin.** `pain001.twins.to_iso_json` renders a pain.001
+  document in the ISO 20022 Registration Authority's 2025 JSON
+  convention (tag names under a `Document` root, `{"amt","Ccy"}`
+  amounts, every value a string) and `from_iso_json` brings it back
+  through the XSD. Repeatable elements are always arrays, this project's
+  normalisation rule; the decoder accepts the RA's bare-value form too.
+  Every pain.001 market and coverage file round-trips element for
+  element. The scope is pain.001; pain.008 is refused.
+- **A JSON Schema 2020-12 per pain.001 edition** under
+  `pain001/schemas/iso-json/`, generated from the schema inventory by
+  the RA's rules and byte-stable; `validate_iso_json` reports the
+  deepest finding. The coverage generator no longer emits empty
+  components, which the RA forbids.
+- **Records twin.** `pain001.twins.to_records` reads a document back
+  into the flat rows the CSV pipeline consumes, one per transaction,
+  with a measured gap: the paths no column carries, the elements that
+  share a column, the payment blocks beyond the first, and the columns
+  the edition's preparer requires that the file lacks. The column
+  mapping is derived from the bundled template itself.
+- **Twins in the corpus.** `<stem>.iso.json` beside every pain.001
+  market file, a `twins:` block in each sidecar, `get_twin` and
+  `CorpusFile.twin()` in the corpus API, coverage twins on demand. The
+  compressed budget for the data tree and the twin schemas together is
+  500 KB (ADR-0005).
+- `docs/twins.md`, `examples/16_iso_json_twins.py`, a twin section in
+  `benches/bench_corpus.py` and the `pain001.twins` API reference.
+
 ## [0.0.68] - Unreleased
 
 The second example-corpus release

@@ -33,6 +33,34 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: d0d357a0e0b7f10b47a18c72da592896b07310a5eae44fd7dab05f049be14b53
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/BtchBookg
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/CdtrRefInf/Ref
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/CdtrRefInf/Tp/CdOrPrtry/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/CdtrRefInf/Tp/Issr
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required: []
 provenance:
   sources:
   - title: Betaalvereniging Nederland, SEPA Credit Transfer implementation guidelines

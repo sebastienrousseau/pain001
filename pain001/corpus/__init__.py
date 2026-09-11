@@ -28,6 +28,7 @@ from pain001.corpus.api import (
     CorpusFile,
     coverage_report,
     get_file,
+    get_twin,
     list_files,
     provenance,
 )
@@ -61,6 +62,7 @@ __all__ = [
     "provenance",
     "list_files",
     "get_file",
+    "get_twin",
     "coverage_report",
     "CorpusFile",
     "BuildError",
