@@ -1,0 +1,54 @@
+# A Bacs Direct Credit supplier run: two payments, three-day cycle,
+# NURG, no local instrument, references of at most eighteen characters
+# repeated in the remittance line, the service user number as the
+# debtor's organisation id.
+id: gb.bacs.supplier-run
+family: bacs-direct-credit
+country: GB
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 20260918
+description: Bacs Direct Credit supplier run, two payments, SUN in the debtor id.
+profiles: [uk-bacs, anti-duplicate]
+
+parties:
+  payer:
+    name: Elm Road Developments
+    address: {form: hybrid, street: Elm Road, building_number: "14", post_code: SW1A 1AA, town: London, country: GB}
+    id: {org: {other: [{id: "654321", proprietary_scheme: SUN}]}}
+
+header:
+  message_id: ELMRD-BACS-20260918
+  created: "2026-09-15T17:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: BACS-20260918-01
+  method: TRF
+  batch_booking: true
+  type: {service_level: NURG}
+  requested_execution_date: "2026-09-18"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "12345678", scheme: BBAN}, currency: GBP}
+  debtor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "040004"}, address: {form: hybrid, town: London, country: GB}}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: INV-0915-0042
+    amount: {ccy: GBP, value: "4800.00"}
+    creditor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "200415"}, address: {form: hybrid, town: Leeds, country: GB}}
+    creditor: {name: Northgate Timber, address: {form: hybrid, town: Leeds, country: GB}}
+    creditor_account: {other: {id: "87654321", scheme: BBAN}}
+    remittance: {unstructured: INV-0915-0042}
+  - end_to_end_id: INV-0915-0043
+    amount: {ccy: GBP, value: "960.50"}
+    creditor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "309634"}, address: {form: hybrid, town: Bristol, country: GB}}
+    creditor: {name: Avon Plant Hire, address: {form: hybrid, town: Bristol, country: GB}}
+    creditor_account: {other: {id: "11223344", scheme: BBAN}}
+    remittance: {unstructured: INV-0915-0043}
+
+provenance:
+  sources:
+    - {title: "Bacs ISO 20022 / Standard 18 translation guide v1.1", read: "2026-09-10"}
+    - {title: "HSBC UK BACS usage guideline, HSBCnet, 18 September 2025 (restricted; not in this repository)", read: "2026-09-11"}
+  confidence: derived
+  evidence: []

@@ -102,6 +102,10 @@ def test_extended_verbs() -> None:
     assert _codes(_rule("i", "Purp/Cd", "if:Ccy=EUR:one_of:[SALA]")) == []
     assert _codes(_rule("i2", "UltmtDbtr", "if:Ccy=EUR:required")) == ["i2"]
     assert _codes(_rule("i3", "Purp", "if:Ccy=EUR:forbidden")) == ["i3"]
+    # presence form: the tail applies when the element exists at all
+    assert _codes(_rule("p1", "TwnNm", "if:PstlAdr:required")) == []
+    assert _codes(_rule("p2", "PstCd", "if:PstlAdr:required")) == ["p2"]
+    assert _codes(_rule("p3", "PstCd", "if:Nope:required")) == []
     # a condition on something absent never applies; attributes are
     # searched only after elements, and by local name
     assert _codes(_rule("i4", "Purp", "if:Nope=1:forbidden")) == []
@@ -171,7 +175,7 @@ def test_parse_rule_and_assertion_errors() -> None:
         ("max_length:many", "needs a number"),
         ("matches:[", "bad regex"),
         ("charset:klingon", "charset must be one of"),
-        ("if:Ccy:equals:X", "form if:"),
+        ("if::equals:X", "form if:"),
         ("if:Ccy=EUR", "form if:"),
         ("if:Ccy=EUR:if:X=Y:required", "cannot nest"),
     ]:
@@ -261,6 +265,14 @@ def test_overlay_files_in_both_shapes(tmp_path: Path) -> None:
     single = ov.overlay_from(
         {"overlay_id": "x", "applies_to": "sepa-credit-transfer"}
     )
+    patched = ov.overlay_from(
+        {
+            "overlay_id": "y",
+            "patch": {"payment": {"type": {"service_level": "URNS"}}},
+        }
+    )
+    assert patched.patch == {"payment": {"type": {"service_level": "URNS"}}}
+    assert single.patch == {}
     assert single.applies_to == ("sepa-credit-transfer",)
     assert single.applies(
         "de.x", "sepa-credit-transfer"
@@ -274,8 +286,10 @@ def test_overlay_files_in_both_shapes(tmp_path: Path) -> None:
 def test_shipped_overlay_against_the_chaps_scenario() -> None:
     """The BoE overlay passes on the CHAPS files and flags a stripped one."""
     overlays = ov.load_overlays()
-    assert [o.overlay_id for o in overlays] == ["gb.boe.chaps-enhanced-data"]
-    overlay = overlays[0]
+    assert "gb.boe.chaps-enhanced-data" in [o.overlay_id for o in overlays]
+    overlay = next(
+        o for o in overlays if o.overlay_id == "gb.boe.chaps-enhanced-data"
+    )
     assert overlay.applies("gb.chaps.property-purchase", "priority-payment")
     assert not overlay.applies("de.sepa.sct-salary", "sepa-credit-transfer")
     scenario = {s.id: s for s in load_scenarios()}[

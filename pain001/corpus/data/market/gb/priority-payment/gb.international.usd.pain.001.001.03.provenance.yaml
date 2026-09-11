@@ -1,0 +1,55 @@
+scenario: gb.international.usd
+family: priority-payment
+country: GB
+message_type: pain.001.001.03
+variant: null
+description: USD cross-border payment from a UK account to a US supplier.
+sha256: 9fc601e715ad22e3304de63d281401d6d1e363283b96c412a747611ff2349863
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped:
+  - /Document/CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/LEI
+  - /Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/LEI
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    cbpr-cross-border:
+      errors: 0
+      warnings: 1
+      findings:
+      - 'CBPR-UETR: Swift CBPR+ cross-border expects a UETR on every transaction'
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    gb.boe.chaps-enhanced-data:
+      errors: 0
+      warnings: 1
+      findings:
+      - 'CHAPS_PURPOSE_NOT_PROPERTY: A property purchase uses the BoE housing code
+        HLST.'
+provenance:
+  sources:
+  - title: Swift CBPR+ usage guidelines SR2025, pain.001.001.09 (restricted; not in
+      this repository)
+    read: '2026-09-10'
+  - title: CGI-MP pain.001 V09 implementation guide
+    read: '2026-09-10'
+  - title: HSBC UK TARGET and International Payments usage guideline, HSBCnet, 2025
+      (restricted; not in this repository)
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []

@@ -1,0 +1,120 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>ELMRD-INTL-20260916-01</MsgId>
+      <CreDtTm>2026-09-16T10:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>18500.00</CtrlSum>
+      <InitgPty>
+        <Nm>Elm Road Developments Ltd</Nm>
+        <PstlAdr>
+          <PstCd>SW1A 1AA</PstCd>
+          <TwnNm>London</TwnNm>
+          <Ctry>GB</Ctry>
+          <AdrLine>14 Elm Road</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <LEI>0000001ODT6PK08RLJ71</LEI>
+          </OrgId>
+        </Id>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>INTL-20260916-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>18500.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>URGP</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-16</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Elm Road Developments Ltd</Nm>
+        <PstlAdr>
+          <PstCd>SW1A 1AA</PstCd>
+          <TwnNm>London</TwnNm>
+          <Ctry>GB</Ctry>
+          <AdrLine>14 Elm Road</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <LEI>0000001ODT6PK08RLJ71</LEI>
+          </OrgId>
+        </Id>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>GB36KGFR97386824311654</IBAN>
+        </Id>
+        <Ccy>GBP</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>CDMXGB80</BICFI>
+          <PstlAdr>
+            <TwnNm>London</TwnNm>
+            <Ctry>GB</Ctry>
+          </PstlAdr>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>PO-2026-0916-7781</EndToEndId>
+          <UETR>e507a755-8cd9-4634-85cb-c1af0981bc63</UETR>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">18500.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>TXRPUSY0</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>021000021</MmbId>
+            </ClrSysMmbId>
+            <PstlAdr>
+              <TwnNm>New York</TwnNm>
+              <Ctry>US</Ctry>
+            </PstlAdr>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Cascade Millwork Inc</Nm>
+          <PstlAdr>
+            <PstCd>97204</PstCd>
+            <TwnNm>Portland</TwnNm>
+            <CtrySubDvsn>OR</CtrySubDvsn>
+            <Ctry>US</Ctry>
+            <AdrLine>1200 Pine Street</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>4412345678</Id>
+              <SchmeNm>
+                <Cd>BBAN</Cd>
+              </SchmeNm>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>GDDS</Cd>
+        </Purp>
+        <RmtInf>
+          <Ustrd>PO 2026-0916-7781 millwork</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

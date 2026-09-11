@@ -107,6 +107,51 @@ into its `.provenance.yaml`:
 coverage gate in CI; `make corpus-build` regenerates everything and
 `scripts/build_corpus.py --check` proves a rebuild is byte-identical.
 
+## Bank variants and overlays
+
+An overlay is a short, cited rule set a bank or scheme layers on top of the
+XSD, in the grammar shared with `iso20022-bank-profile-mcp` (`required`,
+`forbidden`, `equals`, `one_of`, `max_length`, `matches`, `charset`, and
+`if:<elem>[=<value>]:<verb>`). Two kinds live under `scenarios/overlays/`:
+
+- a **rule-only overlay** (the Bank of England CHAPS rules) judges every file
+  of the scenarios it targets;
+- an overlay with a **`patch`** (the HSBC guidelines) pins the bank's fixed
+  choices, so the build renders a second file
+  `<scenario>__<overlay>.<version>.xml` beside the generic one and judges that
+  variant by the overlay's rules. `patches:` keyed by scenario id adds what a
+  single scenario needs, `"*"` against a list applies to every transaction,
+  and `null` removes a key.
+
+```python
+from pain001.corpus import list_files, get_file
+
+hsbc = [f for f in list_files("market") if f.variant == "gb.hsbc.faster-payments"]
+xml = get_file("gb.fps.single", "pain.001.001.09", variant="gb.hsbc.faster-payments")
+```
+
+### Deriving an overlay from a usage guideline
+
+Banks publish their guidelines on MyStandards under restricted terms. Those
+exports (PDF, XSD, Excel, zip) never enter this repository:
+`.gitignore` blocks their names and `tests/test_no_restricted_material.py`
+fails the build on any tracked file that looks like one. The workflow is:
+
+1. keep the export in your own storage, outside the checkout;
+2. run `poetry run python scripts/derive_overlay.py GUIDELINE.xsd --base
+   pain.001.001.03`, which inventories the guideline schema, diffs it against
+   the bundled ISO edition and prints removed elements, elements made
+   mandatory, capped repeats, narrowed code lists, shortened lengths and
+   changed patterns (`--as-rules` prints them in overlay syntax); it refuses
+   a path inside the repository and writes nothing;
+3. commit only the few rules a scenario variant needs, with a prose citation
+   (title, publisher, publication date, `access: restricted`), never the
+   export's file name and never the complete diff.
+
+The first use closed the plan's open question: HSBC UK Faster Payments
+restricts the service level to `URNS` (urgent payment, net settlement); the
+`uk-fps` rail now accepts `URGP` and `URNS`, and the HSBC variant pins `URNS`.
+
 ## How to add a country or rail
 
 1. Write the scenario under `scenarios/<cc>/<rail>.<name>.yaml` from the
@@ -167,6 +212,8 @@ that change what a scenario must carry, and the scenarios each affects:
   MDR rules, rail profiles, ladder), the coverage corpus for all thirteen
   editions, three market scenarios (GB CHAPS, DE SEPA SCT, NL SEPA SDD).
 - **0.0.68**: tier-1 market packs (UK, SEPA core countries, US, CH, SE) and
-  the website corpus page.
+  the website corpus page. The UK pack ships first: Faster Payments, Bacs
+  Direct Credit, Bacs Direct Debit, CHAPS and an international USD payment,
+  each with an HSBC variant from the bank's HSBCnet guidelines.
 - **0.0.69**: tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence
   chips, and the CSV pipeline extension for the twelve most-used rails.

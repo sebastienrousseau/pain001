@@ -57,16 +57,20 @@ MINIMAL = {
 def test_bundled_scenarios_load_sorted_and_unique() -> None:
     """The three shipped scenarios load, sorted by id, one family each."""
     scenarios = load_scenarios()
-    assert [s.id for s in scenarios] == [
+    ids = [s.id for s in scenarios]
+    assert ids == sorted(ids) and len(ids) == len(set(ids))
+    assert {
         "de.sepa.sct-salary",
         "gb.chaps.property-purchase",
         "nl.sepa.sdd-core",
-    ]
+    } <= set(ids)
     assert {s.message for s in scenarios} == {"pain.001", "pain.008"}
     assert all(
         s.source and s.source.is_relative_to(SCENARIOS_DIR) for s in scenarios
     )
-    assert scenarios[2].seed == 3131
+    assert (
+        next(s for s in scenarios if s.id == "nl.sepa.sdd-core").seed == 3131
+    )
 
 
 def test_seed_defaults_to_a_stable_hash_of_the_id() -> None:

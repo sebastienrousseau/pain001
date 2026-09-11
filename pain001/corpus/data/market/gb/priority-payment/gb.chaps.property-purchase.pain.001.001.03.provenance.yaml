@@ -2,6 +2,7 @@ scenario: gb.chaps.property-purchase
 family: priority-payment
 country: GB
 message_type: pain.001.001.03
+variant: null
 description: CHAPS same-day property completion with the BoE HLST purpose code.
 sha256: 436ada306c5c5def1a6df6d660cd0bda820f6b02b24d6c52517e1757f7816936
 build:

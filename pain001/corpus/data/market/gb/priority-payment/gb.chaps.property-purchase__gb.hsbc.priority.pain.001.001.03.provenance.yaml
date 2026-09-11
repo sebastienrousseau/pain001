@@ -1,0 +1,80 @@
+scenario: gb.chaps.property-purchase
+family: priority-payment
+country: GB
+message_type: pain.001.001.03
+variant:
+  overlay: gb.hsbc.priority
+  title: HSBC UK Priority and International Payments (HSBCnet, v03)
+  source:
+    title: HSBC UK TARGET and International Payments usage guideline for pain.001.001.03,
+      HSBCnet
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      batch_booking: null
+      debtor:
+        address:
+          form: structured
+          country_subdivision: England
+    transactions:
+      '*':
+        creditor:
+          address:
+            form: structured
+            country_subdivision: England
+description: CHAPS same-day property completion with the BoE HLST purpose code.
+sha256: cc9f1400c0f9f9422783fef95668324f3b7b8c24d22c2edd3e80608dd4d5508b
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped:
+  - /Document/CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/LEI
+  - /Document/CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/LEI
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-chaps:
+      errors: 0
+      warnings: 0
+      findings: []
+    purpose-mandate-gb:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    gb.boe.chaps-enhanced-data:
+      errors: 0
+      warnings: 0
+      findings: []
+    gb.hsbc.priority:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: 'Bank of England: ISO 20022 purpose codes for CHAPS property transactions'
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints:
+- end_to_end_id_max: 35
+- address_min:
+  - TwnNm
+  - Ctry

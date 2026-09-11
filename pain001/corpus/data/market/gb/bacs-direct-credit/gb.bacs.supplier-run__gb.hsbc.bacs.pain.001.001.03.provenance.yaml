@@ -1,0 +1,62 @@
+scenario: gb.bacs.supplier-run
+family: bacs-direct-credit
+country: GB
+message_type: pain.001.001.03
+variant:
+  overlay: gb.hsbc.bacs
+  title: HSBC UK BACS (HSBCnet, v03)
+  source:
+    title: HSBC UK BACS usage guideline for pain.001.001.03, HSBCnet
+    publisher: HSBC Direct Channels
+    published: '2025-09-18'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      type:
+        service_level: NURG
+    parties:
+      payer:
+        name: Elm Road Dev Ltd
+description: Bacs Direct Credit supplier run, two payments, SUN in the debtor id.
+sha256: 34af0564b043fdf764e0e7c4cfc8de6780bc83bce10e42a36eca6228ef028d4e
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-bacs:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    gb.hsbc.bacs:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Bacs ISO 20022 / Standard 18 translation guide v1.1
+    read: '2026-09-10'
+  - title: HSBC UK BACS usage guideline, HSBCnet, 18 September 2025 (restricted; not
+      in this repository)
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []

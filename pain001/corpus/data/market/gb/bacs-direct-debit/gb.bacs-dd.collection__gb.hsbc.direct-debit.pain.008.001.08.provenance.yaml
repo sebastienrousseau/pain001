@@ -1,0 +1,58 @@
+scenario: gb.bacs-dd.collection
+family: bacs-direct-debit
+country: GB
+message_type: pain.008.001.08
+variant:
+  overlay: gb.hsbc.direct-debit
+  title: HSBC UK Direct Debit (HSBCnet, pain.008 v02)
+  source:
+    title: HSBC UK Direct Debit usage guideline for pain.008.001.02, HSBCnet
+    publisher: HSBC Direct Channels
+    published: '2025'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      batch_booking: null
+    parties:
+      utility:
+        name: Thames Valley Wtr
+description: Bacs Direct Debit collection, first and recurring, SUN as creditor id.
+sha256: 25fe906d307d4148911ba55b06b48da5cfae9df561d7cb27b67207a37cfe9f68
+build:
+  renamed: []
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-bacs-dd:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    gb.hsbc.direct-debit:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Bacs AUDDIS service guide
+    read: '2026-09-10'
+  - title: HSBC UK Direct Debit usage guideline (pain.008.001.02), HSBCnet, 2025 (restricted;
+      not in this repository)
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []

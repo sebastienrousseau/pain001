@@ -2,6 +2,7 @@ scenario: de.sepa.sct-salary
 family: sepa-credit-transfer
 country: DE
 message_type: pain.001.001.09
+variant: null
 description: SEPA SCT salary batch with structured and unstructured remittance.
 sha256: d29c2ff6df303bff9400707a622507270168e3d6aa07551c4995b2f326fc1669
 build:

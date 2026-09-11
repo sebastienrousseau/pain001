@@ -1,0 +1,53 @@
+# An international payment from a UK account: USD to a supplier in the
+# United States, urgent, charges shared, hybrid addresses on both sides,
+# a purpose code and a UETR, as CBPR+ and the UK bank guides expect.
+id: gb.international.usd
+family: priority-payment
+country: GB
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 20260916
+description: USD cross-border payment from a UK account to a US supplier.
+profiles: [cbpr-cross-border, anti-duplicate]
+
+parties:
+  payer:
+    name: Elm Road Developments Ltd
+    address: {form: hybrid, street: Elm Road, building_number: "14", post_code: SW1A 1AA, town: London, country: GB}
+    id: {org: {lei: auto}}
+  supplier:
+    name: Cascade Millwork Inc
+    address: {form: hybrid, street: Pine Street, building_number: "1200", post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+
+header:
+  message_id: ELMRD-INTL-20260916-01
+  created: "2026-09-16T10:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: INTL-20260916-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: URGP}
+  requested_execution_date: "2026-09-16"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto, currency: GBP}
+  debtor_agent: {bic: auto, address: {form: hybrid, town: London, country: GB}}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: PO-2026-0916-7781
+    uetr: auto
+    amount: {ccy: USD, value: "18500.00"}
+    creditor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}, address: {form: hybrid, town: New York, country: US}}
+    creditor: {ref: supplier}
+    creditor_account: {other: {id: "4412345678", scheme: BBAN}}
+    purpose: GDDS
+    remittance: {unstructured: "PO 2026-0916-7781 millwork"}
+
+provenance:
+  sources:
+    - {title: "Swift CBPR+ usage guidelines SR2025, pain.001.001.09 (restricted; not in this repository)", read: "2026-09-10"}
+    - {title: "CGI-MP pain.001 V09 implementation guide", read: "2026-09-10"}
+    - {title: "HSBC UK TARGET and International Payments usage guideline, HSBCnet, 2025 (restricted; not in this repository)", read: "2026-09-11"}
+  confidence: derived
+  evidence: []

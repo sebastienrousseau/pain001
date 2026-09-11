@@ -1,0 +1,41 @@
+scenario: gb.fps.single
+family: faster-payment
+country: GB
+message_type: pain.001.001.09
+variant: null
+description: Faster Payments single supplier payment, sort code and account.
+sha256: d5759ffa524b5f8da431c12521c5ff2907178ac64675fe63cd07aea49352b4b4
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-fps:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Pay.UK Faster Payments scheme limits and ISO 20022 library
+    read: '2026-09-10'
+  - title: HSBC UK Faster Payments usage guideline, HSBCnet, 18 September 2025 (restricted;
+      not in this repository)
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []

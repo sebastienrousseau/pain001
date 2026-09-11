@@ -1,0 +1,70 @@
+# HSBC UK Direct Debit (HSBCnet, pain.008.001.02). Curated from the
+# bank's usage guideline (2025; HSBC-restricted; not in this repository).
+# The bank keeps the local instrument code and drops the proprietary
+# form, so the plan's transaction-code mapping is not how HSBC spells it.
+overlay_id: gb.hsbc.direct-debit
+title: HSBC UK Direct Debit (HSBCnet, pain.008 v02)
+applies_to: [bacs-direct-debit]
+source:
+  title: "HSBC UK Direct Debit usage guideline for pain.008.001.02, HSBCnet"
+  publisher: HSBC Direct Channels
+  published: "2025"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    batch_booking: null
+patches:
+  gb.bacs-dd.collection:
+    parties: {utility: {name: Thames Valley Wtr}}
+rules:
+  - rule_id: hsbc-dd-no-batch-booking
+    description: Batch booking is not accepted.
+    locator: BtchBookg
+    assertion: forbidden
+    error_code: HSBC_DD_BTCHBOOKG
+  - rule_id: hsbc-dd-no-proprietary-local-instrument
+    description: The local instrument is a code, never proprietary.
+    locator: LclInstrm/Prtry
+    assertion: forbidden
+    error_code: HSBC_DD_LCLINSTRM_PRTRY
+  - rule_id: hsbc-dd-no-priority
+    description: Instruction priority is not accepted.
+    locator: PmtTpInf/InstrPrty
+    assertion: forbidden
+    error_code: HSBC_DD_INSTRPRTY
+  - rule_id: hsbc-dd-creditor-name
+    description: The creditor name is at most 18 characters (the Bacs service user name).
+    locator: PmtInf/Cdtr/Nm
+    assertion: max_length:18
+    error_code: HSBC_DD_CDTR_NM_LEN
+  - rule_id: hsbc-dd-sun
+    description: The creditor organisation id carries the six-character service user number.
+    locator: Cdtr/Id/OrgId/Othr/Id
+    assertion: max_length:6
+    error_code: HSBC_DD_SUN_LEN
+  - rule_id: hsbc-dd-creditor-sort-code
+    description: The creditor agent carries a sort code as clearing member id.
+    locator: PmtInf/CdtrAgt/FinInstnId/ClrSysMmbId
+    assertion: required
+    error_code: HSBC_DD_CDTR_SORT_CODE
+  - rule_id: hsbc-dd-sort-code-length
+    description: Sort codes are six characters.
+    locator: FinInstnId/ClrSysMmbId/MmbId
+    assertion: max_length:6
+    error_code: HSBC_DD_SORT_CODE_LEN
+  - rule_id: hsbc-dd-account-number
+    description: Account numbers are at most eight characters.
+    locator: Acct/Id/Othr/Id
+    assertion: max_length:8
+    error_code: HSBC_DD_ACCT_LEN
+  - rule_id: hsbc-dd-debtor-name
+    description: The debtor name is at most 18 characters.
+    locator: DrctDbtTxInf/Dbtr/Nm
+    assertion: max_length:18
+    error_code: HSBC_DD_DBTR_NM_LEN
+  - rule_id: hsbc-dd-end-to-end
+    description: The end-to-end id is at most 18 characters.
+    locator: PmtId/EndToEndId
+    assertion: max_length:18
+    error_code: HSBC_DD_E2E_LEN

@@ -1,0 +1,78 @@
+# HSBC UK Faster Payments (HSBCnet, pain.001.001.03). Curated from the
+# bank's usage guideline of 18 September 2025, which restricts the ISO
+# base; the guideline itself is HSBC-restricted and is not in this
+# repository. Only the constraints a scenario needs are recorded here.
+overlay_id: gb.hsbc.faster-payments
+title: HSBC UK Faster Payments (HSBCnet, v03)
+applies_to: [faster-payment]
+source:
+  title: "HSBC UK Faster Payments usage guideline for pain.001.001.03, HSBCnet"
+  publisher: HSBC Direct Channels
+  published: "2025-09-18"
+  read: "2026-09-11"
+  access: restricted (HSBC client documentation; not redistributed)
+patch:
+  payment:
+    type: {service_level: URNS}
+    charge_bearer: SHAR
+rules:
+  - rule_id: hsbc-fps-service-level
+    description: HSBC UK Faster Payments carries the service level URNS (urgent payment, net settlement); URGP is not accepted.
+    locator: PmtTpInf/SvcLvl/Cd
+    assertion: one_of:[URNS]
+    error_code: HSBC_FPS_SVCLVL
+  - rule_id: hsbc-fps-no-proprietary-service-level
+    description: A proprietary service level is not accepted.
+    locator: SvcLvl/Prtry
+    assertion: forbidden
+    error_code: HSBC_FPS_SVCLVL_PRTRY
+  - rule_id: hsbc-fps-charge-bearer
+    description: Charges are shared.
+    locator: ChrgBr
+    assertion: one_of:[SHAR]
+    error_code: HSBC_FPS_CHRGBR
+  - rule_id: hsbc-fps-payment-info-id
+    description: The payment information id is at most 18 characters.
+    locator: PmtInf/PmtInfId
+    assertion: max_length:18
+    error_code: HSBC_FPS_PMTINFID_LEN
+  - rule_id: hsbc-fps-end-to-end-id
+    description: The end-to-end id is at most 18 characters.
+    locator: PmtId/EndToEndId
+    assertion: max_length:18
+    error_code: HSBC_FPS_E2E_LEN
+  - rule_id: hsbc-fps-sort-code
+    description: The creditor agent carries a six-digit sort code as clearing member id.
+    locator: CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    assertion: if:CdtrAgt:required
+    error_code: HSBC_FPS_SORT_CODE
+  - rule_id: hsbc-fps-sort-code-length
+    description: The sort code is six characters.
+    locator: CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    assertion: max_length:6
+    error_code: HSBC_FPS_SORT_CODE_LEN
+  - rule_id: hsbc-fps-account-number
+    description: The creditor account number is at most eight characters.
+    locator: CdtrAcct/Id/Othr/Id
+    assertion: max_length:8
+    error_code: HSBC_FPS_ACCT_LEN
+  - rule_id: hsbc-fps-creditor-country
+    description: The creditor address carries a country.
+    locator: Cdtr/PstlAdr/Ctry
+    assertion: if:Cdtr/PstlAdr:required
+    error_code: HSBC_FPS_CDTR_CTRY
+  - rule_id: hsbc-fps-debtor-country
+    description: The debtor address carries a country.
+    locator: Dbtr/PstlAdr/Ctry
+    assertion: if:Dbtr/PstlAdr:required
+    error_code: HSBC_FPS_DBTR_CTRY
+  - rule_id: hsbc-fps-initiating-party-id
+    description: The initiating party carries an identification.
+    locator: InitgPty/Id
+    assertion: required
+    error_code: HSBC_FPS_INITG_ID
+  - rule_id: hsbc-fps-no-equivalent-amount
+    description: Equivalent amounts and exchange-rate information are not accepted.
+    locator: EqvtAmt
+    assertion: forbidden
+    error_code: HSBC_FPS_EQVTAMT

@@ -2,6 +2,7 @@ scenario: nl.sepa.sdd-core
 family: sepa-direct-debit
 country: NL
 message_type: pain.008.001.08
+variant: null
 description: SEPA Core direct debit, recurring collections under mandates.
 sha256: fecd56a0b103cc04091a3a6dc54520e07d4e063fe5c101c8ced6b72a019bed3b
 build:

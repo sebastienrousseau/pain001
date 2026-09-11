@@ -1,0 +1,43 @@
+scenario: gb.bacs.supplier-run
+family: bacs-direct-credit
+country: GB
+message_type: pain.001.001.03
+variant: null
+description: Bacs Direct Credit supplier run, two payments, SUN in the debtor id.
+sha256: 12f220ea49af91295c920e43d0d5ff74383c241c4a6daa6459a9f9b50abcaea0
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-bacs:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Bacs ISO 20022 / Standard 18 translation guide v1.1
+    read: '2026-09-10'
+  - title: HSBC UK BACS usage guideline, HSBCnet, 18 September 2025 (restricted; not
+      in this repository)
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []

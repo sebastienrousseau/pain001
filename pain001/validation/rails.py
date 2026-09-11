@@ -848,11 +848,11 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "Pay.UK Faster Payments scheme limits",
-            "HSBCnet UK Faster Payments usage guideline (pain.001.001.03)",
+            "HSBC UK Faster Payments usage guideline, MyStandards, 18 September 2025 (service level restricted to URNS)",
         ),
         currencies=("GBP",),
         max_amount=Decimal("1000000.00"),
-        service_levels=("URGP",),
+        service_levels=("URGP", "URNS"),
         domestic=GB_DOMESTIC,
         end_to_end_max=18,
     ),

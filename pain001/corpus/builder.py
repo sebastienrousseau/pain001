@@ -167,7 +167,9 @@ class _Composer:
                     f"{self.scenario.id}: party ref {key!r} is not "
                     "defined under parties"
                 )
-            spec = {**base, **{k: v for k, v in spec.items() if k != "ref"}}
+            spec = deep_merge(
+                base, {k: v for k, v in spec.items() if k != "ref"}
+            )
         tree: Tree = {
             "Nm": spec.get("name"),
             "PstlAdr": self.address(spec.get("address")),
@@ -843,12 +845,53 @@ def _fill(element: etree._Element, tree: Tree, namespace: str) -> None:
                     child.text = _text(item)
 
 
-def build(scenario: Scenario | dict[str, Any], version: str) -> BuildResult:
+def deep_merge(base: dict[str, Any], patch: dict[str, Any]) -> dict[str, Any]:
+    """A copy of ``base`` with ``patch`` merged in, nested dicts recursively.
+
+    Args:
+        base: The scenario document.
+        patch: Keys to set; a nested dict merges, anything else replaces;
+            ``{"*": {...}}`` against a list merges into every item;
+            ``None`` removes the key.
+
+    Returns:
+        The merged copy; neither input is modified.
+    """
+    merged = dict(base)
+    for key, value in patch.items():
+        current = merged.get(key)
+        if value is None:
+            merged.pop(key, None)
+        elif isinstance(value, dict) and isinstance(current, dict):
+            merged[key] = deep_merge(current, value)
+        elif (
+            isinstance(value, dict)
+            and isinstance(current, list)
+            and "*" in value
+        ):
+            merged[key] = [
+                deep_merge(item, value["*"])
+                if isinstance(item, dict)
+                else item
+                for item in current
+            ]
+        else:
+            merged[key] = value
+    return merged
+
+
+def build(
+    scenario: Scenario | dict[str, Any],
+    version: str,
+    patch: dict[str, Any] | None = None,
+) -> BuildResult:
     """Render one scenario in one edition.
 
     Args:
         scenario: A :class:`Scenario` or a scenario document.
         version: A bundled message type the scenario lists.
+        patch: Scenario keys to merge in first, as an overlay's ``patch``
+            does for a bank variant.
 
     Returns:
         The :class:`BuildResult` with XML text and the fit report.
@@ -859,6 +902,10 @@ def build(scenario: Scenario | dict[str, Any], version: str) -> BuildResult:
     """
     if not isinstance(scenario, Scenario):
         scenario = scenario_from(scenario)
+    if patch:
+        scenario = scenario_from(
+            deep_merge(scenario.data, patch), scenario.source
+        )
     if version not in scenario.versions:
         raise BuildError(
             f"{scenario.id} does not list {version}; it lists {', '.join(scenario.versions)}"
@@ -886,6 +933,7 @@ def build_all(scenario: Scenario) -> list[BuildResult]:
 
 __all__ = [
     "ALIASES",
+    "deep_merge",
     "BuildError",
     "BuildReport",
     "BuildResult",

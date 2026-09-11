@@ -28,7 +28,7 @@ def test_list_files_covers_market_and_coverage() -> None:
     market = api.list_files("market")
     sets = api.list_files("coverage")
     assert len(everything) == len(market) + len(sets)
-    assert {f.scenario_id for f in market} == {
+    assert {f.scenario_id for f in market} >= {
         "de.sepa.sct-salary",
         "gb.chaps.property-purchase",
         "nl.sepa.sdd-core",

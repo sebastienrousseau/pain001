@@ -65,7 +65,7 @@ def test_build_writes_then_check_passes_then_detects_drift(
     assert "STALE" in capsys.readouterr().out
     assert build_corpus.main(argv) == 0
     out = capsys.readouterr().out
-    assert out.count("wrote") == 14 and "3 scenario(s), 14 file(s)" in out
+    assert out.count("wrote") == 50 and "7 scenario(s), 50 file(s)" in out
     assert build_corpus.main(argv + ["--check"]) == 0
     assert (
         build_corpus.main(argv) == 0
@@ -121,7 +121,7 @@ def test_coverage_sets_are_written_beside_the_market_files(
     ]
     assert build_corpus.main(argv) == 0
     out = capsys.readouterr().out
-    assert out.count("coverage.json") == 13 and "158 file(s)" in out
+    assert out.count("coverage.json") == 13 and "194 file(s)" in out
     report = json.loads(
         (
             tmp_path

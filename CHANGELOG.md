@@ -13,6 +13,56 @@ the tier-1 market packs (UK, the SEPA core countries, US, CH, SE),
 HSBC overlays where the evidence exists, and the corpus on the website
 and in the MCP and LSP tools. Entries are added as work lands.
 
+### Added
+
+- **UK market pack.** Four new scenarios under `scenarios/gb/` join the
+  CHAPS property completion: a Faster Payments single supplier payment
+  (`gb.fps.single`), a Bacs Direct Credit supplier run
+  (`gb.bacs.supplier-run`), a Bacs Direct Debit collection under AUDDIS
+  (`gb.bacs-dd.collection`, pain.008 .02 and .08) and an international
+  USD payment from a UK account (`gb.international.usd`,
+  `cbpr-cross-border`). Each renders .03 and .09, lists its rail
+  profile, and passes the four-rung ladder.
+- **Bank variants.** An overlay may carry a `patch` (and per-scenario
+  `patches`): the build then renders `<scenario>__<overlay>.<version>.xml`
+  beside the generic file, with the bank's fixed choices pinned, and
+  judges that variant by the overlay's rules; rule-only overlays keep
+  judging every file. `"*"` against a list applies to every transaction
+  and `null` removes a key; party references now deep-merge their
+  overrides. The overlay grammar gains the presence form
+  `if:<elem>:<verb>`. `list_files` exposes `variant`, and `get_file` and
+  `provenance` take it.
+- **HSBC UK overlays**, curated from the bank's HSBCnet usage guidelines
+  (Faster Payments and BACS of 18 September 2025, TARGET and
+  International Payments, Direct Debit): `gb.hsbc.faster-payments`,
+  `gb.hsbc.bacs`, `gb.hsbc.priority`, `gb.hsbc.direct-debit`, ten to
+  twelve rules each with a prose citation and `access: restricted`. The
+  ten HSBC variant files they produce are the evidenced path for the UK
+  (decision 7). The guidelines themselves are not in the repository.
+- **`scripts/derive_overlay.py`**, an author-side tool that inventories a
+  usage-guideline XSD kept outside the repository, diffs it against the
+  bundled ISO edition and prints removed elements, elements made
+  mandatory, capped repeats, narrowed code lists, shortened lengths and
+  changed patterns, or the same as overlay rules; it refuses a path inside
+  the repository and writes nothing.
+- **Compliance gate.** `.gitignore` blocks MyStandards export names and
+  `tests/test_no_restricted_material.py` fails the build on any tracked
+  file named like an export, any PDF, Excel or zip under the corpus
+  trees, or any schema, sample or rule file carrying a MyStandards text
+  signature.
+
+### Changed
+
+- **`uk-fps` accepts `URNS`.** Reading the HSBC UK Faster Payments
+  guideline closed the plan's open question: the bank restricts the
+  service level to `URNS` (urgent payment, net settlement), not `URGP`.
+  The rail now accepts both, the HSBC variant pins `URNS`, and the
+  generic scenario keeps `URGP`.
+- The generic Bacs Direct Debit scenario carries no local instrument:
+  no public source gives a code, and the HSBC guideline keeps only the
+  ISO code form, so the plan's transaction-code mapping stays an
+  assumption recorded as a warning in `uk-bacs-dd`.
+
 ## [0.0.67] - Unreleased
 
 The first of the three example-corpus releases

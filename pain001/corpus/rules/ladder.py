@@ -38,11 +38,46 @@ from pain001.validation.schemes import validate_scheme
 from pain001.xml.validate_via_xsd import collect_xsd_validation_errors
 
 
+def applicable_overlays(
+    scenario: Scenario,
+    pool: list[Overlay],
+    variant: str | None = None,
+) -> list[Overlay]:
+    """The overlays that judge one file.
+
+    Rule-only overlays that target the scenario or its family judge
+    every file of the scenario. An overlay with a ``patch`` judges only
+    the variant built with that patch.
+
+    Args:
+        scenario: The scenario.
+        pool: Every loaded overlay.
+        variant: The overlay id the file was built with, or ``None`` for
+            the generic file.
+
+    Returns:
+        The overlays to evaluate, in pool order.
+    """
+    wanted = scenario.overlays
+    chosen: list[Overlay] = []
+    for overlay in pool:
+        if wanted is None:
+            if not overlay.applies(scenario.id, scenario.family):
+                continue
+        elif overlay.overlay_id not in wanted:
+            continue
+        if overlay.has_patch and overlay.overlay_id != variant:
+            continue
+        chosen.append(overlay)
+    return chosen
+
+
 def run_ladder(
     scenario: Scenario,
     version: str,
     xml: str,
     overlays: list[Overlay] | None = None,
+    variant: str | None = None,
 ) -> dict[str, Any]:
     """Run L0 to L3 on one built file.
 
@@ -51,6 +86,7 @@ def run_ladder(
         version: The edition.
         xml: The built document.
         overlays: The overlay pool; defaults to ``scenarios/overlays``.
+        variant: The overlay id the file was built with, if any.
 
     Returns:
         ``{"xsd": ..., "mdr": ..., "profiles": {...}, "overlays": {...}}``
@@ -73,14 +109,8 @@ def run_ladder(
             ],
         }
     pool = load_overlays() if overlays is None else overlays
-    wanted = scenario.overlays
     applied: dict[str, Any] = {}
-    for overlay in pool:
-        if wanted is None:
-            if not overlay.applies(scenario.id, scenario.family):
-                continue
-        elif overlay.overlay_id not in wanted:
-            continue
+    for overlay in applicable_overlays(scenario, pool, variant):
         findings = evaluate(overlay, xml)
         applied[overlay.overlay_id] = {
             "errors": sum(f.severity == "error" for f in findings),
@@ -108,4 +138,4 @@ def ladder_passes(record: dict[str, Any]) -> bool:
     return True
 
 
-__all__ = ["ladder_passes", "run_ladder"]
+__all__ = ["applicable_overlays", "ladder_passes", "run_ladder"]

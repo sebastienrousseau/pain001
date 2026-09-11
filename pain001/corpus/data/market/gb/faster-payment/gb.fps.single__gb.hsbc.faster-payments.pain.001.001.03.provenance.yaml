@@ -1,0 +1,60 @@
+scenario: gb.fps.single
+family: faster-payment
+country: GB
+message_type: pain.001.001.03
+variant:
+  overlay: gb.hsbc.faster-payments
+  title: HSBC UK Faster Payments (HSBCnet, v03)
+  source:
+    title: HSBC UK Faster Payments usage guideline for pain.001.001.03, HSBCnet
+    publisher: HSBC Direct Channels
+    published: '2025-09-18'
+    read: '2026-09-11'
+    access: restricted (HSBC client documentation; not redistributed)
+  patch:
+    payment:
+      type:
+        service_level: URNS
+      charge_bearer: SHAR
+description: Faster Payments single supplier payment, sort code and account.
+sha256: 0c0a6f3e6d49dce483972991d2405dd7086ffb01f55a8f0dcfbf3f2b8e6471b6
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-fps:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays:
+    gb.hsbc.faster-payments:
+      errors: 0
+      warnings: 0
+      findings: []
+provenance:
+  sources:
+  - title: Pay.UK Faster Payments scheme limits and ISO 20022 library
+    read: '2026-09-10'
+  - title: HSBC UK Faster Payments usage guideline, HSBCnet, 18 September 2025 (restricted;
+      not in this repository)
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []
