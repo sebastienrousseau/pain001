@@ -236,10 +236,8 @@ def generate_schema(version: str) -> dict[str, Any]:
         version: A bundled pain.001 edition.
 
     Returns:
-        The JSON Schema document.
-
-    Raises:
-        TwinError: If the edition is not a bundled pain.001 edition.
+        The JSON Schema document; a non-pain.001 edition is refused with
+        :class:`TwinError` by the shared check.
     """
     _check(version)
     return _Generator(inventory_for(version)).build()
@@ -253,9 +251,6 @@ def iso_json_schema(version: str) -> dict[str, Any]:
 
     Returns:
         The JSON Schema document.
-
-    Raises:
-        TwinError: If the edition is not a bundled pain.001 edition.
     """
     _check(version)
     path = SCHEMA_DIR / f"{version}.schema.json"
@@ -293,9 +288,6 @@ def validate_iso_json(doc: Any, version: str) -> list[str]:
     Returns:
         Findings as ``<json path>: <message>``, deepest first within each
         failure; empty when valid.
-
-    Raises:
-        TwinError: If the edition is not a bundled pain.001 edition.
     """
     validator = jsonschema.Draft202012Validator(iso_json_schema(version))
     findings: set[str] = set()
