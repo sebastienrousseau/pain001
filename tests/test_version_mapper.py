@@ -204,3 +204,79 @@ def test_cast_helpers_reject_non_mappings() -> None:
     assert cast_mapping(["not", "a", "mapping"]) == {}
     assert cast_list_mapping("nope") == {}
     assert cast_list_mapping({"a": ["x"], "b": "skip"}) == {"a": ["x"]}
+
+
+def test_generic_mapping_applies_fallbacks_and_defaults() -> None:
+    """Missing fields fall back to alternates, then to the mapping defaults."""
+    mapper = VersionMapper()
+    legacy = {
+        "id": "MSG1",
+        "date": "2026-09-12",
+        "initiator_name": "Init",
+        "payment_id": "PAY1",
+        "requested_execution_date": "2026-09-13",
+        "debtor_name": "D",
+        "debtor_account_IBAN": "DE89370400440532013000",
+        "debtor_agent_BIC": "DEUTDEFF",
+        "payment_amount": "1.00",
+        "payment_currency": "EUR",
+        "creditor_agent_BICFI": "COBADEFF",
+        "creditor_name": "C",
+        "creditor_account_IBAN": "FR7630006000011234567890189",
+        "reference_number": "REF-1",
+    }
+    second = {**legacy, "payment_id": "PAY2", "reference_number": ""}
+    del second["payment_amount"]
+    second["payment_amount"] = "2.00"
+    migrated = mapper.migrate_rows([legacy, second], "v03", "v12")
+    assert migrated[0]["creditor_agent_BIC"] == "COBADEFF"  # fallback
+    assert migrated[0]["remittance_information"] == "REF-1"
+    assert migrated[0]["payment_method"] == "TRF"  # default
+    assert migrated[0]["charge_bearer"] == "SLEV"
+    # the second row has no reference, so its payment id is the remittance
+    assert migrated[1]["remittance_information"] == "PAY2"
+    # no candidate at all leaves the mapped empty value in place
+    bare = {k: v for k, v in legacy.items() if k != "creditor_agent_BICFI"}
+    assert (
+        mapper.migrate_rows([bare], "v03", "v12")[0]["creditor_agent_BIC"]
+        == ""
+    )
+    # a target already mapped is not overwritten by a fallback
+    direct = {**legacy, "creditor_agent_BIC": "DIRECT"}
+    assert (
+        mapper.migrate_rows([direct], "v03", "v12")[0]["creditor_agent_BIC"]
+        == "DIRECT"
+    )
+
+
+def test_group_fields_are_copied_from_the_first_row() -> None:
+    """Header-level fields left empty on later rows inherit the first row's."""
+    rows = [
+        {
+            "id": "MSG1",
+            "date": "2026-09-12",
+            "initiator_name": "Init",
+            "debtor_name": "D",
+            "payment_id": "P1",
+        },
+        {"id": "", "date": None, "payment_id": "P2"},
+    ]
+    VersionMapper._normalize_group_fields(rows)
+    assert rows[1]["id"] == "MSG1" and rows[1]["date"] == "2026-09-12"
+    assert (
+        rows[1]["initiator_name"] == "Init" and rows[1]["debtor_name"] == "D"
+    )
+    assert rows[0]["nb_of_txs"] == "2" and rows[1]["nb_of_txs"] == "2"
+    assert rows[1]["remittance_information"] == "P2"
+
+
+def test_migrate_file_from_parquet(tmp_path: Path) -> None:
+    pytest.importorskip("pyarrow")
+    import pyarrow as pa
+    import pyarrow.parquet as pq
+
+    source = tmp_path / "rows.parquet"
+    pq.write_table(pa.Table.from_pylist([SAMPLE_ROW]), source)
+    mapper = VersionMapper()
+    migrated = mapper.migrate_file(str(source), "v03", "v09")
+    assert migrated[0]["remittance_information"] == "REF12345"

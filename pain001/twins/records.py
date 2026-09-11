@@ -31,7 +31,9 @@ from __future__ import annotations
 
 import json
 import re
-import xml.etree.ElementTree as ET  # nosec B405 - the Element type only; parsing is defused
+
+# The Element type only; parsing is defused.
+import xml.etree.ElementTree as ET  # nosec B405
 from dataclasses import dataclass, field
 from functools import cache
 from pathlib import Path

@@ -66,12 +66,10 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         raise
 
     # Check file existence using os.path for string path
-    if not os.path.isfile(safe_path):  # pragma: no cover
+    if not os.path.isfile(safe_path):
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logger.error(
-            f"File not found: {sanitize_for_log(str(file_path))}"
-        )  # pragma: no cover
-        raise FileNotFoundError(  # pragma: no cover
+        logger.error(f"File not found: {sanitize_for_log(str(file_path))}")
+        raise FileNotFoundError(
             f"File '{sanitize_for_log(str(file_path))}' not found."
         )
 
@@ -165,12 +163,12 @@ def load_csv_data_streaming(
             if chunk:
                 yield chunk
 
-    except FileNotFoundError:
+    except (
+        FileNotFoundError
+    ):  # pragma: no cover - removed between the check and the open
         # Sanitize at sink (CWE-117: Log Injection prevention)
-        logger.error(
-            f"File '{sanitize_for_log(str(file_path))}' not found."
-        )  # pragma: no cover
-        raise  # pragma: no cover
+        logger.error(f"File '{sanitize_for_log(str(file_path))}' not found.")
+        raise
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logger.error(

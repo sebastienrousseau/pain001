@@ -275,8 +275,8 @@ class ValidationService:
                 field="data_file_path",
             )
 
-        if not os.path.isfile(safe_path):  # pragma: no cover
-            return ValidationResult(  # pragma: no cover
+        if not os.path.isfile(safe_path):
+            return ValidationResult(
                 is_valid=False,
                 error=f"Data file does not exist: {data_path_str}",
                 field="data_file_path",
@@ -307,14 +307,14 @@ class ValidationService:
         try:
             validate_via_xsd(str(template_path), str(schema_path))
             return ValidationResult(is_valid=True)
-        except SchemaValidationError as exc:  # pragma: no cover
-            return ValidationResult(  # pragma: no cover
+        except SchemaValidationError as exc:
+            return ValidationResult(
                 is_valid=False,
                 error=f"Schema validation failed: {exc}",
                 details=str(exc),
             )
-        except Exception as exc:  # pylint: disable=broad-exception-caught  # pragma: no cover
-            return ValidationResult(  # pragma: no cover
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            return ValidationResult(
                 is_valid=False,
                 error=f"Unexpected schema validation error: {exc}",
                 details=str(exc),
@@ -346,7 +346,7 @@ class ValidationService:
                 details=str(exc),
             )
         except DataSourceError as exc:
-            return ValidationResult(  # pragma: no cover
+            return ValidationResult(
                 is_valid=False,
                 error=f"Data source error: {exc}",
                 field="data_file_path",

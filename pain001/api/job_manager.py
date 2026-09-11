@@ -133,8 +133,8 @@ class JobManager:
         Returns:
             Job ID.
         """
-        if len(self.jobs) >= self.max_jobs:  # pragma: no cover
-            self.cleanup_old_jobs()  # pragma: no cover
+        if len(self.jobs) >= self.max_jobs:
+            self.cleanup_old_jobs()
         job_id = str(uuid.uuid4())
         self.jobs[job_id] = JobResult(
             job_id=job_id,
@@ -175,10 +175,10 @@ class JobManager:
         late-arriving update (e.g. a worker finishing after the user
         cancelled the job) must not resurrect or overwrite them.
         """
-        if job_id in self.jobs:  # pragma: no cover
+        if job_id in self.jobs:
             job = self.jobs[job_id]
-            if job.status in TERMINAL_STATUSES:  # pragma: no cover
-                return  # pragma: no cover
+            if job.status in TERMINAL_STATUSES:
+                return
             job.status = status
             job.progress_percent = min(100, max(0, progress))
             job.updated_at = datetime.now(timezone.utc)
@@ -212,19 +212,17 @@ class JobManager:
         Args:
             keep_count: Number of recent jobs to keep.
         """
-        completed_jobs = [  # pragma: no cover
+        completed_jobs = [
             (job_id, job)
             for job_id, job in self.jobs.items()
             if job.status in TERMINAL_STATUSES
         ]
 
         # Sort by updated_at and remove oldest
-        if len(completed_jobs) > keep_count:  # pragma: no cover
-            completed_jobs.sort(
-                key=lambda x: x[1].updated_at
-            )  # pragma: no cover
-            for job_id, _ in completed_jobs[:-keep_count]:  # pragma: no cover
-                del self.jobs[job_id]  # pragma: no cover
+        if len(completed_jobs) > keep_count:
+            completed_jobs.sort(key=lambda x: x[1].updated_at)
+            for job_id, _ in completed_jobs[:-keep_count]:
+                del self.jobs[job_id]
 
 
 # Global job manager instance. Persistence activates only when

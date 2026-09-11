@@ -95,10 +95,8 @@ def parse_pain002_report(
         root = defused_et.parse(safe_xml_path).getroot()
     except (ParseError, OSError) as exc:
         raise DataSourceError(f"Unable to parse pain.002 XML: {exc}") from exc
-    if root is None:  # pragma: no cover
-        raise DataSourceError(
-            "pain.002 XML document is empty"
-        )  # pragma: no cover
+    if root is None:  # pragma: no cover - a parsed document always has a root
+        raise DataSourceError("pain.002 XML document is empty")
 
     ns = _detect_namespace(root)
     report = root.find(f".//{ns}CstmrPmtStsRpt")
@@ -118,7 +116,7 @@ def parse_pain002_report(
             ),
         }
         tx_status = payment_info.find(f"{ns}TxInfAndSts")
-        if tx_status is not None:  # pragma: no cover
+        if tx_status is not None:
             status_record["original_end_to_end_id"] = _find_text(
                 tx_status, ns, "OrgnlEndToEndId"
             )
@@ -183,11 +181,9 @@ def _detect_namespace(root: Any) -> str:
 
 def _find_text(parent: Any, ns: str, path: str) -> str:
     """Read nested text using slash-separated relative paths."""
-    current: Any | None = parent
+    current: Any = parent
     for part in path.split("/"):
-        current = current.find(f"{ns}{part}") if current is not None else None
-        if current is None:  # pragma: no cover
-            return ""  # pragma: no cover
-    if current is None:  # pragma: no cover
-        return ""  # pragma: no cover
+        current = current.find(f"{ns}{part}")
+        if current is None:
+            return ""
     return (current.text or "").strip()

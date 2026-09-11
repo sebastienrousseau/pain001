@@ -150,3 +150,25 @@ def test_parse_camt053_without_namespace(tmp_path: Path) -> None:
     entries = cast(list[dict[str, str]], statement["entries"])
     assert entries[0]["currency"] == "EUR"
     assert entries[0]["remittance_information"] == ""
+
+
+def test_parse_pain002_reads_transaction_status() -> None:
+    """Transaction-level status and reason codes are lifted onto the record."""
+    report = cast(
+        dict[str, Any],
+        parse_pain002_report("pain001/test_fixtures/pain002_sample.xml"),
+    )
+    first = report["payment_statuses"][0]
+    assert first["original_end_to_end_id"] == "PaymentID6789"
+    assert first["transaction_status"] == "RJCT"
+
+
+def test_find_text_returns_empty_for_missing_paths() -> None:
+    from xml.etree import ElementTree as ET
+
+    from pain001.pain002.parser import _find_text
+
+    root = ET.fromstring("<a><b><c>x</c></b></a>")
+    assert _find_text(root, "", "b/c") == "x"
+    assert _find_text(root, "", "b/missing") == ""
+    assert _find_text(root, "", "missing/c") == ""

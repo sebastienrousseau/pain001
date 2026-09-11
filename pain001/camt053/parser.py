@@ -40,9 +40,7 @@ def parse_camt053_statement(
             safe_xsd_path = validate_path(xsd_file_path, must_exist=True)
         except Exception as exc:
             raise DataSourceError(f"Invalid camt.053 XSD path: {exc}") from exc
-        if not validate_via_xsd(
-            safe_xml_path, safe_xsd_path
-        ):  # pragma: no cover
+        if not validate_via_xsd(safe_xml_path, safe_xsd_path):
             raise SchemaValidationError(
                 f"camt.053 XML failed validation against {safe_xsd_path}"
             )
@@ -51,10 +49,8 @@ def parse_camt053_statement(
         root = defused_et.parse(safe_xml_path).getroot()
     except (ParseError, OSError) as exc:
         raise DataSourceError(f"Unable to parse camt.053 XML: {exc}") from exc
-    if root is None:  # pragma: no cover
-        raise DataSourceError(
-            "camt.053 XML document is empty"
-        )  # pragma: no cover
+    if root is None:  # pragma: no cover - a parsed document always has a root
+        raise DataSourceError("camt.053 XML document is empty")
 
     ns = _detect_namespace(root)
     statement = root.find(f".//{ns}Stmt")
@@ -106,11 +102,9 @@ def _detect_namespace(root: Any) -> str:
 
 def _find_text(parent: Any, ns: str, path: str) -> str:
     """Read nested text using slash-separated relative paths."""
-    current: Any | None = parent
+    current: Any = parent
     for part in path.split("/"):
-        current = current.find(f"{ns}{part}") if current is not None else None
+        current = current.find(f"{ns}{part}")
         if current is None:
             return ""
-    if current is None:  # pragma: no cover
-        return ""  # pragma: no cover
     return (current.text or "").strip()

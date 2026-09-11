@@ -137,12 +137,13 @@ class TestInitCommand:
         assert out.is_file()
         assert out.read_text().strip()
 
-    def test_init_default_destination(self) -> None:
+    def test_init_default_destination(self, tmp_path, monkeypatch) -> None:
         """Without -o, the CSV lands at ./<message_type>.csv."""
-        with self.runner.isolated_filesystem():
-            result = self.runner.invoke(cli, ["init", MTYPE])
-            assert result.exit_code == 0
-            assert "Wrote starter CSV" in result.output
+        monkeypatch.chdir(tmp_path)
+        result = self.runner.invoke(cli, ["init", MTYPE])
+        assert result.exit_code == 0
+        assert "Wrote starter CSV" in result.output
+        assert (tmp_path / f"{MTYPE}.csv").is_file()
 
     def test_init_unknown_type(self) -> None:
         """An unknown type exits 2."""

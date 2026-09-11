@@ -37,7 +37,8 @@ raises :class:`TwinError` rather than producing bad XML.
 
 from __future__ import annotations
 
-import xml.etree.ElementTree as ET  # nosec B405 - serialisation only; parsing is xmlschema's
+# Serialisation only; parsing is xmlschema's.
+import xml.etree.ElementTree as ET  # nosec B405
 from functools import cache
 from typing import Any
 

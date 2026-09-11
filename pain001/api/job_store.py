@@ -150,8 +150,8 @@ class FileJobStore:
         for path in sorted(self.directory.glob("*.json")):
             try:
                 jobs[path.stem] = json.loads(path.read_text(encoding="utf-8"))
-            except (json.JSONDecodeError, OSError):  # pragma: no cover
-                continue  # pragma: no cover
+            except (json.JSONDecodeError, OSError):
+                continue
         return jobs
 
     def delete(self, job_id: str) -> None:

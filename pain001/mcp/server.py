@@ -212,5 +212,5 @@ def main() -> None:  # pragma: no cover - process entry point
     mcp.run()
 
 
-if __name__ == "__main__":  # pragma: no cover
+if __name__ == "__main__":  # pragma: no cover - script entry point
     main()

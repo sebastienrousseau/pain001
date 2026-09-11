@@ -28,7 +28,7 @@ from pain001.constants import BASE_DIR
 
 try:
     import tomllib  # type: ignore[import-not-found]
-except ModuleNotFoundError:  # pragma: no cover
+except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 only
     import tomli as tomllib
 
 
@@ -176,7 +176,7 @@ class ConfigManager:
         project_config = self.discover_project_config()
         if project_config:
             profiles = self.load_from_file(project_config).get("profiles", {})
-            if profile_name in profiles:  # pragma: no cover
+            if profile_name in profiles:
                 return dict(profiles[profile_name])
         raise KeyError(f"Unknown profile '{profile_name}'")
 
@@ -202,8 +202,8 @@ class ConfigManager:
     def _coerce_value(self, key: str, value: Any) -> Any:
         """Coerce string values to the boolean or integer type a key expects."""
         if key in {"streaming", "emit_metrics"}:
-            if isinstance(value, bool):  # pragma: no cover
-                return value  # pragma: no cover
+            if isinstance(value, bool):
+                return value
             return str(value).strip().lower() in {"1", "true", "yes", "on"}
         if key == "chunk_size":
             return int(value)
@@ -229,12 +229,8 @@ class ConfigManager:
         """Recursively merge override into base, skipping None values."""
         merged = dict(base)
         for key, value in override.items():
-            if isinstance(merged.get(key), dict) and isinstance(
-                value, dict
-            ):  # pragma: no cover
-                merged[key] = self._deep_merge(
-                    merged[key], value
-                )  # pragma: no cover
-            elif value is not None:  # pragma: no cover
+            if isinstance(merged.get(key), dict) and isinstance(value, dict):
+                merged[key] = self._deep_merge(merged[key], value)
+            elif value is not None:
                 merged[key] = value
         return merged

@@ -79,6 +79,35 @@ work lands.
 - Deferred: the ISO 2018 compatibility face, which needs the ISO 20022
   e-Repository's unabbreviated names; it joins the first faces release.
 
+### Changed
+
+- **Warnings fail the tests.** `filterwarnings = ["error", ...]` in the
+  pytest configuration, with named exemptions for third-party
+  deprecations and for the library's own notice about calling
+  `generate_xml` without an output path. The unknown `timeout` option
+  and the blanket `--disable-warnings` flag are gone.
+- **No-cover pragmas explain themselves.** The unexplained
+  `# pragma: no cover` markers (143 of them) are gone: each is now a
+  test, or carries a one-line reason (optional-extra import guards,
+  CodeQL taint barriers that `validate_path` already enforces, script
+  entry points). Tests cover the job manager's eviction and
+  terminal-status rules, the loaders' directory and undecodable-input
+  paths, the schema validator's missing, malformed and invalid schema
+  files, the version mapper's fallbacks and defaults, the REST API's
+  early returns (validate-only, schema and scheme failures, temp-root
+  refusals, unexpected errors), the validation service's failure
+  results, `--dry-run`, and the XML indenter.
+- **Rail checks, one method per concern.** `RailProfile._check_row`
+  is a table of twelve small checkers over a `_RowContext`; the
+  largest block in the module went from E(35) to C(17).
+
+### Fixed
+
+- **Projection with ElementTree.** `_children` replaces an element
+  truthiness test that Python 3.12 deprecates, so the corpus
+  projection no longer emits a `DeprecationWarning` on empty
+  postal-address blocks.
+
 ## [0.0.68] - Unreleased
 
 The second example-corpus release

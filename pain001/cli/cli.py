@@ -299,9 +299,9 @@ def _print_template_details(message_type: str) -> None:
     console.print(f"category: {metadata.message_category}")
     console.print(f"template: {metadata.template_path}")
     console.print(f"schema: {metadata.xsd_path}")
-    if metadata.example_data_path:  # pragma: no cover
+    if metadata.example_data_path:
         console.print(f"example data: {metadata.example_data_path}")
-    if metadata.example_xml_path:  # pragma: no cover
+    if metadata.example_xml_path:
         console.print(f"example xml: {metadata.example_xml_path}")
     console.print(
         f"input formats: {', '.join(metadata.supported_input_formats)}"
@@ -715,7 +715,9 @@ def main(
     )
 
     # Redundant with Click validation; kept so the failure is logged.
-    if xml_message_type not in valid_xml_types:  # pragma: no cover
+    if (
+        xml_message_type not in valid_xml_types
+    ):  # pragma: no cover - Click rejects it first
         log_validation_event(
             logger,
             "message_type",

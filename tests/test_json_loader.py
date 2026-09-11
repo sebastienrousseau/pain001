@@ -484,3 +484,37 @@ def test_jsonl_streaming_memory_efficiency(large_jsonl_file):
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+@pytest.mark.parametrize("suffix", ["json", "jsonl"])
+def test_directory_path_is_not_a_file(tmp_path, suffix):
+    """A directory exists, so path validation passes, but it is not a file."""
+    from pain001.json.load_json_data import (
+        load_json_data,
+        load_jsonl_data,
+        load_jsonl_data_streaming,
+    )
+
+    folder = tmp_path / f"rows.{suffix}"
+    folder.mkdir()
+    loader = load_json_data if suffix == "json" else load_jsonl_data
+    with pytest.raises(FileNotFoundError, match="file not found"):
+        loader(str(folder))
+    if suffix == "jsonl":
+        with pytest.raises(FileNotFoundError, match="file not found"):
+            list(load_jsonl_data_streaming(str(folder)))
+
+
+def test_jsonl_undecodable_bytes_become_a_data_source_error(tmp_path):
+    """Non UTF-8 content is reported as a read error, not a raw exception."""
+    from pain001.json.load_json_data import (
+        load_jsonl_data,
+        load_jsonl_data_streaming,
+    )
+
+    path = tmp_path / "rows.jsonl"
+    path.write_bytes(b'{"id": "1"}\n\xff\xfe\n')
+    with pytest.raises(DataSourceError, match="Error reading JSONL file"):
+        load_jsonl_data(str(path))
+    with pytest.raises(DataSourceError, match="Error reading JSONL file"):
+        list(load_jsonl_data_streaming(str(path), chunk_size=1))

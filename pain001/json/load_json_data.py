@@ -66,10 +66,8 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         ) from e
 
     # Check file existence using os.path for string path
-    if not os.path.isfile(safe_path):  # pragma: no cover
-        raise FileNotFoundError(
-            f"JSON file not found: {file_path}"
-        )  # pragma: no cover
+    if not os.path.isfile(safe_path):
+        raise FileNotFoundError(f"JSON file not found: {file_path}")
 
     try:
         with open(safe_path, encoding="utf-8") as f:  # nosec B108
@@ -167,10 +165,8 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
         ) from e
 
     # Check file existence using os.path for string path
-    if not os.path.isfile(file_path_validated):  # pragma: no cover
-        raise FileNotFoundError(
-            f"JSONL file not found: {file_path}"
-        )  # pragma: no cover
+    if not os.path.isfile(file_path_validated):
+        raise FileNotFoundError(f"JSONL file not found: {file_path}")
 
     data = []
     try:
@@ -193,9 +189,9 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
                     ) from e
 
     except Exception as e:
-        if isinstance(e, DataSourceError):  # pragma: no cover
+        if isinstance(e, DataSourceError):
             raise
-        raise DataSourceError(  # pragma: no cover
+        raise DataSourceError(
             f"Error reading JSONL file {file_path}: {e}"
         ) from e
 
@@ -243,10 +239,8 @@ def load_jsonl_data_streaming(
         ) from e
 
     # Check file existence using os.path for string path
-    if not os.path.isfile(file_path_validated):  # pragma: no cover
-        raise FileNotFoundError(
-            f"JSONL file not found: {file_path}"
-        )  # pragma: no cover
+    if not os.path.isfile(file_path_validated):
+        raise FileNotFoundError(f"JSONL file not found: {file_path}")
 
     chunk: list[dict[str, Any]] = []
 
@@ -281,8 +275,8 @@ def load_jsonl_data_streaming(
             yield chunk
 
     except Exception as e:
-        if isinstance(e, DataSourceError):  # pragma: no cover
+        if isinstance(e, DataSourceError):
             raise
-        raise DataSourceError(  # pragma: no cover
+        raise DataSourceError(
             f"Error reading JSONL file {file_path}: {e}"
         ) from e

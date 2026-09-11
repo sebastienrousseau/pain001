@@ -103,8 +103,10 @@ def _current_trace_context() -> dict[str, Any]:
         return {}
 
     span = trace.get_current_span()
-    if span is None:  # pragma: no cover
-        return {}  # pragma: no cover
+    if (
+        span is None
+    ):  # pragma: no cover - the API returns INVALID_SPAN, never None
+        return {}
     context = span.get_span_context()
     if context is None or not context.is_valid:
         return {}
