@@ -127,3 +127,13 @@ template renders neither `BtchBookg` nor `CtrlSum`.
   the same way; they are not shipped twice.
 - `make corpus-build` regenerates twins and schemas; `make corpus-coverage`
   checks them.
+
+## Deferred: the ISO 2018 compatibility face
+
+The RA's 2018 whitepaper convention (snake_case, unabbreviated names, no
+`Document` root) needs a table of unabbreviated element names per
+edition, which only the ISO 20022 e-Repository provides; the bundled
+XSDs carry no annotations. It is deferred until that repository is
+available and will be built as the first face, with the repository
+release and read date recorded. Nothing else in the twin layer depends
+on it.

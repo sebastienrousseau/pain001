@@ -40,6 +40,8 @@ work lands.
   500 KB (ADR-0005).
 - `docs/twins.md`, `examples/16_iso_json_twins.py`, a twin section in
   `benches/bench_corpus.py` and the `pain001.twins` API reference.
+- Deferred: the ISO 2018 compatibility face, which needs the ISO 20022
+  e-Repository's unabbreviated names; it joins the first faces release.
 
 ## [0.0.68] - Unreleased
 
