@@ -222,8 +222,10 @@ Two corpora ship in the wheel, built by one engine
   payment *is*; the builder spells it per edition), each validated on a
   four-rung ladder (XSD, MDR rules, the rail profile, the bank overlay) and
   shipped with a provenance sidecar naming its sources, confidence and
-  evidence state. 0.0.67 ships GB CHAPS, DE SEPA SCT and NL SEPA SDD; the
-  country packs follow in 0.0.68 and 0.0.69.
+  evidence state. 0.0.68 ships the five tier-1 packs (UK, the SEPA core
+  countries, US, CH, SE) with HSBC variants; tiers 2 and 3 follow in
+  0.0.69. Browse and download every file at
+  [pain001.com/example-corpus](https://pain001.com/example-corpus/).
 
 ```python
 from pain001.corpus import get_file, provenance, coverage_report
