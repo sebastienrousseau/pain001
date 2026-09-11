@@ -1,0 +1,47 @@
+# A Malaysian DuitNow credit in MYR: BICs on both agents as PayNet
+# requires, a Bank Negara Malaysia purpose code, and a fourteen-digit
+# account number.
+id: my.duitnow.single
+family: instant-payment
+country: MY
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 600001
+description: Malaysia DuitNow credit in MYR with a BNM purpose code.
+profiles: [my-duitnow, purpose-mandate-my, anti-duplicate]
+
+parties:
+  payer:
+    name: Selangor Palm Products Sdn Bhd
+    address: {form: hybrid, street: Jalan Ampang, building_number: "160", post_code: "50450", town: Kuala Lumpur, country: MY}
+
+header:
+  message_id: SPP-20260921-01
+  created: "2026-09-21T09:30:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: SPP-DN-260921-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: URGP}
+  requested_execution_date: "2026-09-21"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "12345678901234", scheme: BBAN}, currency: MYR}
+  debtor_agent: {bic: auto, country: MY}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: SPP-2026-0921-001
+    amount: {ccy: MYR, value: "18750.00"}
+    creditor_agent: {bic: auto, country: MY}
+    creditor: {name: Penang Machinery Trading, address: {form: hybrid, post_code: "10450", town: George Town, country: MY}}
+    creditor_account: {other: {id: "98765432109876", scheme: BBAN}}
+    purpose: GDDS
+    remittance: {unstructured: "INV PMT-2026-0331"}
+
+provenance:
+  sources:
+    - {title: "PayNet, DuitNow developer documentation (public)", read: "2026-09-11"}
+    - {title: "Bank Negara Malaysia purpose-code lists as published by Malaysian banks", read: "2026-09-11"}
+  confidence: assumed
+  evidence: []

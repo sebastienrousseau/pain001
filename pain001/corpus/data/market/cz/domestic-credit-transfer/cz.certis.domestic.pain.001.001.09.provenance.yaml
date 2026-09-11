@@ -1,0 +1,71 @@
+scenario: cz.certis.domestic
+family: domestic-credit-transfer
+country: CZ
+message_type: pain.001.001.09
+variant: null
+description: Czech domestic CZK transfer through CERTIS with VS/KS/SS payment symbols.
+sha256: f525725bd26538d981697b191add734872ac33618f669f8c4eccf291d162500d
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+twins:
+  iso_json:
+    sha256: 00ab96af23e1e0b6be33d8145d9cfb3c4f479a50af97d151a3a5ba052cdc6375
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/Othr/Id
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/Othr/SchmeNm/Prtry
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/BtchBookg
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/Othr/Id
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/Othr/SchmeNm/Prtry
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/PstCd
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Ccy
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
+    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required: []
+provenance:
+  sources:
+  - title: Czech Banking Association, Standard ČBA pain.001 (XML format for payment
+      orders), payment symbols in unstructured remittance
+    read: '2026-09-11'
+  - title: Czech National Bank, CERTIS interbank payment system description
+    read: '2026-09-11'
+  confidence: derived
+  evidence: []
+constraints: []

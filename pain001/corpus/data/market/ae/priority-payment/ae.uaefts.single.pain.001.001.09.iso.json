@@ -1,0 +1,115 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "AKB-20260921-01",
+        "CreDtTm": "2026-09-21T08:45:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "156000.00",
+        "InitgPty": {
+          "Nm": "Al Khaleej Building Materials LLC",
+          "PstlAdr": {
+            "TwnNm": "Dubai",
+            "Ctry": "AE",
+            "AdrLine": [
+              "Sheikh Zayed Road 220"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "AKB-FTS-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "156000.00",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "URGP"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-21"
+          },
+          "Dbtr": {
+            "Nm": "Al Khaleej Building Materials LLC",
+            "PstlAdr": {
+              "TwnNm": "Dubai",
+              "Ctry": "AE",
+              "AdrLine": [
+                "Sheikh Zayed Road 220"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "AE307070122266392446102"
+            },
+            "Ccy": "AED"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "EDCDAEL0"
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "AKB-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "156000.00",
+                  "Ccy": "AED"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "UGENAE20"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Emirates Steel Distribution",
+                "PstlAdr": {
+                  "TwnNm": "Abu Dhabi",
+                  "Ctry": "AE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "AE950889557780374725853"
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RgltryRptg": [
+                {
+                  "DbtCdtRptgInd": "CRED",
+                  "Dtls": [
+                    {
+                      "Ctry": "AE",
+                      "Cd": "GDS",
+                      "Inf": [
+                        "/BENEFRES/AE//GDS"
+                      ]
+                    }
+                  ]
+                }
+              ],
+              "RmtInf": {
+                "Ustrd": [
+                  "PO 2026-0812"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,91 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>AKB-20260921-01</MsgId>
+      <CreDtTm>2026-09-21T08:45:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>156000.00</CtrlSum>
+      <InitgPty>
+        <Nm>Al Khaleej Building Materials LLC</Nm>
+        <PstlAdr>
+          <TwnNm>Dubai</TwnNm>
+          <Ctry>AE</Ctry>
+          <AdrLine>Sheikh Zayed Road 220</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>AKB-FTS-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>156000.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>URGP</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>2026-09-21</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Al Khaleej Building Materials LLC</Nm>
+        <PstlAdr>
+          <TwnNm>Dubai</TwnNm>
+          <Ctry>AE</Ctry>
+          <AdrLine>Sheikh Zayed Road 220</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>AE307070122266392446102</IBAN>
+        </Id>
+        <Ccy>AED</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>EDCDAEL0</BIC>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>AKB-2026-0921-001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="AED">156000.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BIC>UGENAE20</BIC>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Emirates Steel Distribution</Nm>
+          <PstlAdr>
+            <TwnNm>Abu Dhabi</TwnNm>
+            <Ctry>AE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>AE950889557780374725853</IBAN>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>GDDS</Cd>
+        </Purp>
+        <RgltryRptg>
+          <DbtCdtRptgInd>CRED</DbtCdtRptgInd>
+          <Dtls>
+            <Ctry>AE</Ctry>
+            <Cd>GDS</Cd>
+            <Inf>/BENEFRES/AE//GDS</Inf>
+          </Dtls>
+        </RgltryRptg>
+        <RmtInf>
+          <Ustrd>PO 2026-0812</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

@@ -223,8 +223,8 @@ Two corpora ship in the wheel, built by one engine
   four-rung ladder (XSD, MDR rules, the rail profile, the bank overlay) and
   shipped with a provenance sidecar naming its sources, confidence and
   evidence state. 0.0.68 ships the five tier-1 packs (UK, the SEPA core
-  countries, US, CH, SE) from public rulebooks; tiers 2 and 3 follow in
-  0.0.69. Browse and download every file at
+  countries, US, CH, SE) from public rulebooks; 0.0.69 adds tiers 2 and
+  3 (CZ, HK, SG, MY, QA, AE) with their confidence chips. Browse and download every file at
   [pain001.com/example-corpus](https://pain001.com/example-corpus/).
 
 Every pain.001 market file also ships its **ISO JSON twin** (the ISO

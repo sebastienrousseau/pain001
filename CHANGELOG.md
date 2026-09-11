@@ -14,6 +14,20 @@ work lands.
 
 ### Added
 
+- **Tier 2 and 3 packs.** Seven scenarios: a Czech CERTIS domestic
+  transfer with the VS/KS/SS payment symbols in the remittance and a
+  SEPA credit transfer from a Czech EUR account (`scenarios/cz/`), a
+  Hong Kong FPS credit with HKICL clearing codes (`hk.fps.single`), a
+  Singapore FAST credit under the S$200,000 cap with addresses on both
+  parties (`sg.fast.single`), a Malaysian DuitNow credit with a BNM
+  purpose code (`my.duitnow.single`), a Qatar QATCH credit with the QCB
+  purpose of payment (`qa.qatch.single`) and a UAE UAEFTS transfer with
+  the CBUAE regulatory reporting line (`ae.uaefts.single`). Each renders
+  .03 and .09, passes its rail profile and purpose mandate, and carries
+  its confidence chip: `derived` for the Czech and SEPA files, `assumed`
+  for the tier-3 markets, where no public sample was available to
+  compare. The tree is 42 scenarios and 238 market files at 488 KB of
+  the 500 KB budget.
 - **ISO JSON twin.** `pain001.twins.to_iso_json` renders a pain.001
   document in the ISO 20022 Registration Authority's 2025 JSON
   convention (tag names under a `Document` root, `{"amt","Ccy"}`

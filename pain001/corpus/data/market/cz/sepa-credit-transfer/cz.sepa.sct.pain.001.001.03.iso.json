@@ -1,0 +1,97 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MSB-20260921-02",
+        "CreDtTm": "2026-09-21T08:10:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "7320.00",
+        "InitgPty": {
+          "Nm": "Moravske strojirny s.r.o.",
+          "PstlAdr": {
+            "PstCd": "639 00",
+            "TwnNm": "Brno",
+            "Ctry": "CZ",
+            "AdrLine": [
+              "Videnska 118"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "MSB-EUR-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "7320.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "SEPA"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Moravske strojirny s.r.o.",
+            "PstlAdr": {
+              "PstCd": "639 00",
+              "TwnNm": "Brno",
+              "Ctry": "CZ",
+              "AdrLine": [
+                "Videnska 118"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "CZ5222115594100842233660"
+            },
+            "Ccy": "EUR"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "OBVWCZG0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MSB-2026-0921-002"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "7320.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "EYFTDEE0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Werkzeugtechnik Passau GmbH",
+                "PstlAdr": {
+                  "PstCd": "94032",
+                  "TwnNm": "Passau",
+                  "Ctry": "DE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "DE90885632568114584698"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Invoice 2026-4471"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

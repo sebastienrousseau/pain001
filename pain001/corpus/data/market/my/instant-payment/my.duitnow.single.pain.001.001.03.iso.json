@@ -1,0 +1,110 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "SPP-20260921-01",
+        "CreDtTm": "2026-09-21T09:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "18750.00",
+        "InitgPty": {
+          "Nm": "Selangor Palm Products Sdn Bhd",
+          "PstlAdr": {
+            "PstCd": "50450",
+            "TwnNm": "Kuala Lumpur",
+            "Ctry": "MY",
+            "AdrLine": [
+              "160 Jalan Ampang"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SPP-DN-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "18750.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "URGP"
+            }
+          },
+          "ReqdExctnDt": "2026-09-21",
+          "Dbtr": {
+            "Nm": "Selangor Palm Products Sdn Bhd",
+            "PstlAdr": {
+              "PstCd": "50450",
+              "TwnNm": "Kuala Lumpur",
+              "Ctry": "MY",
+              "AdrLine": [
+                "160 Jalan Ampang"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "12345678901234",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            },
+            "Ccy": "MYR"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "EFYIMYS0"
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "SPP-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "18750.00",
+                  "Ccy": "MYR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "KILXMYT0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Penang Machinery Trading",
+                "PstlAdr": {
+                  "PstCd": "10450",
+                  "TwnNm": "George Town",
+                  "Ctry": "MY"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "98765432109876",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV PMT-2026-0331"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

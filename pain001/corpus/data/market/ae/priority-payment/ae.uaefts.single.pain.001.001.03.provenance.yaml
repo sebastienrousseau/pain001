@@ -1,0 +1,86 @@
+scenario: ae.uaefts.single
+family: priority-payment
+country: AE
+message_type: pain.001.001.03
+variant: null
+description: UAE domestic AED transfer through UAEFTS with the CBUAE regulatory reporting
+  code.
+sha256: 13c3794ea88ea8cd0bd345ae88c564d65ac870569bace99aba84687eff85130d
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    ae-uaefts:
+      errors: 0
+      warnings: 0
+      findings: []
+    purpose-mandate-ae:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+twins:
+  iso_json:
+    sha256: 0238a3a97d715104560d031364fd926687baf84777df5d79ddba32a515e1cb80
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
+    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/IBAN
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/DbtCdtRptgInd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Dtls/Inf
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Ustrd
+    - CstmrCdtTrfInitn/PmtInf/ChrgBr
+    - CstmrCdtTrfInitn/PmtInf/CtrlSum
+    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Ccy
+    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/IBAN
+    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
+    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
+    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    missing_required:
+    - initiator_street_name
+    - initiator_building_number
+    - initiator_postal_code
+    - debtor_street_name
+    - debtor_building_number
+    - debtor_postal_code
+    - debtor_account_IBAN
+    - creditor_street_name
+    - creditor_building_number
+    - creditor_postal_code
+    - creditor_town_name
+    - creditor_country_code
+    - creditor_account_IBAN
+    - reference_number
+    - reference_date
+provenance:
+  sources:
+  - title: Central Bank of the UAE, technical notes on transaction codes for balance-of-payments
+      reporting (AUX700)
+    read: '2026-09-11'
+  confidence: assumed
+  evidence: []
+constraints: []

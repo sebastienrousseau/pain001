@@ -1,0 +1,122 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MTP-20260921-01",
+        "CreDtTm": "2026-09-21T10:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "45200.00",
+        "InitgPty": {
+          "Nm": "Merlion Trading Pte Ltd",
+          "PstlAdr": {
+            "PstCd": "068895",
+            "TwnNm": "Singapore",
+            "Ctry": "SG",
+            "AdrLine": [
+              "71 Robinson Road"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "MTP-FAST-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "45200.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "URGP"
+            }
+          },
+          "ReqdExctnDt": "2026-09-21",
+          "Dbtr": {
+            "Nm": "Merlion Trading Pte Ltd",
+            "PstlAdr": {
+              "PstCd": "068895",
+              "TwnNm": "Singapore",
+              "Ctry": "SG",
+              "AdrLine": [
+                "71 Robinson Road"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "0123456789",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            },
+            "Ccy": "SGD"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "YVRSSGD0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "SGIBG"
+                },
+                "MmbId": "9990001"
+              }
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MTP-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "45200.00",
+                  "Ccy": "SGD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "QKCYSGM0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "SGIBG"
+                    },
+                    "MmbId": "9990002"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Jurong Packaging Supplies",
+                "PstlAdr": {
+                  "PstCd": "628505",
+                  "TwnNm": "Singapore",
+                  "Ctry": "SG",
+                  "AdrLine": [
+                    "12 Pioneer Road"
+                  ]
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "9876543210",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Invoice JPS-2026-118"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

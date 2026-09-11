@@ -1,0 +1,47 @@
+# A Qatar QATCH credit in QAR: QA IBANs on both sides, BICs on both
+# agents, and the Qatar Central Bank purpose of payment that every
+# domestic transfer carries.
+id: qa.qatch.single
+family: domestic-credit-transfer
+country: QA
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 740001
+description: Qatar QATCH credit in QAR with the QCB purpose of payment.
+profiles: [qa-qatch, purpose-mandate-qa, anti-duplicate]
+
+parties:
+  payer:
+    name: Doha Marine Supplies WLL
+    address: {form: hybrid, street: Al Corniche Street, building_number: "5", town: Doha, country: QA}
+
+header:
+  message_id: DMS-20260921-01
+  created: "2026-09-21T08:30:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: DMS-QATCH-260921-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: NURG}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto, currency: QAR}
+  debtor_agent: {bic: auto, country: QA}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: DMS-2026-0921-001
+    amount: {ccy: QAR, value: "92000.00"}
+    creditor_agent: {bic: auto, country: QA}
+    creditor: {name: Gulf Engineering Services, address: {form: hybrid, town: Doha, country: QA}}
+    creditor_account: {iban: auto}
+    purpose: SUPP
+    remittance: {unstructured: "Contract 2026-14 milestone 1"}
+
+provenance:
+  sources:
+    - {title: "Qatar Central Bank, retail payment systems pages (QATCH)", read: "2026-09-11"}
+    - {title: "ClearingPost, QA-RTGS and QATCH message guide (public)", read: "2026-09-11"}
+  confidence: assumed
+  evidence: []

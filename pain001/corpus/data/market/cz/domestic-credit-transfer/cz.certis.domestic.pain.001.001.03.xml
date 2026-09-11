@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSB-20260921-01</MsgId>
+      <CreDtTm>2026-09-21T08:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>48600.00</CtrlSum>
+      <InitgPty>
+        <Nm>Moravské strojírny s.r.o.</Nm>
+        <PstlAdr>
+          <PstCd>639 00</PstCd>
+          <TwnNm>Brno</TwnNm>
+          <Ctry>CZ</Ctry>
+          <AdrLine>Vídeňská 118</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <Othr>
+              <Id>27654321</Id>
+              <SchmeNm>
+                <Prtry>ICO</Prtry>
+              </SchmeNm>
+            </Othr>
+          </OrgId>
+        </Id>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>MSB-CZK-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>48600.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>NURG</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>2026-09-22</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Moravské strojírny s.r.o.</Nm>
+        <PstlAdr>
+          <PstCd>639 00</PstCd>
+          <TwnNm>Brno</TwnNm>
+          <Ctry>CZ</Ctry>
+          <AdrLine>Vídeňská 118</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <Othr>
+              <Id>27654321</Id>
+              <SchmeNm>
+                <Prtry>ICO</Prtry>
+              </SchmeNm>
+            </Othr>
+          </OrgId>
+        </Id>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>CZ2715658290382437641520</IBAN>
+        </Id>
+        <Ccy>CZK</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>PCLSCZO0</BIC>
+          <ClrSysMmbId>
+            <ClrSysId>
+              <Cd>CZNCC</Cd>
+            </ClrSysId>
+            <MmbId>9876</MmbId>
+          </ClrSysMmbId>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>MSB-2026-0921-001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="CZK">48600.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BIC>MXHXCZI0</BIC>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>CZNCC</Cd>
+              </ClrSysId>
+              <MmbId>9871</MmbId>
+            </ClrSysMmbId>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Kovoslužba Ostrava a.s.</Nm>
+          <PstlAdr>
+            <PstCd>702 00</PstCd>
+            <TwnNm>Ostrava</TwnNm>
+            <Ctry>CZ</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>CZ8889551188181098287840</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>/VS/2026091201/KS/0308/SS/12345</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

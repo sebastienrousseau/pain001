@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>DMS-20260921-01</MsgId>
+      <CreDtTm>2026-09-21T08:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>92000.00</CtrlSum>
+      <InitgPty>
+        <Nm>Doha Marine Supplies WLL</Nm>
+        <PstlAdr>
+          <TwnNm>Doha</TwnNm>
+          <Ctry>QA</Ctry>
+          <AdrLine>Al Corniche Street 5</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>DMS-QATCH-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>92000.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>NURG</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Doha Marine Supplies WLL</Nm>
+        <PstlAdr>
+          <TwnNm>Doha</TwnNm>
+          <Ctry>QA</Ctry>
+          <AdrLine>Al Corniche Street 5</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>QA58VDZTMHRMT3J8Z4KX3U36MI9SL</IBAN>
+        </Id>
+        <Ccy>QAR</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>DKKFQAK0</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>DMS-2026-0921-001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="QAR">92000.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>MSNXQAS0</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Gulf Engineering Services</Nm>
+          <PstlAdr>
+            <TwnNm>Doha</TwnNm>
+            <Ctry>QA</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>QA17KWOYL77GFWYXAE267CIYE03FN</IBAN>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>SUPP</Cd>
+        </Purp>
+        <RmtInf>
+          <Ustrd>Contract 2026-14 milestone 1</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

@@ -1,0 +1,85 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSB-20260921-02</MsgId>
+      <CreDtTm>2026-09-21T08:10:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>7320.00</CtrlSum>
+      <InitgPty>
+        <Nm>Moravske strojirny s.r.o.</Nm>
+        <PstlAdr>
+          <PstCd>639 00</PstCd>
+          <TwnNm>Brno</TwnNm>
+          <Ctry>CZ</Ctry>
+          <AdrLine>Videnska 118</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>MSB-EUR-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>7320.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>SEPA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Moravske strojirny s.r.o.</Nm>
+        <PstlAdr>
+          <PstCd>639 00</PstCd>
+          <TwnNm>Brno</TwnNm>
+          <Ctry>CZ</Ctry>
+          <AdrLine>Videnska 118</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>CZ5222115594100842233660</IBAN>
+        </Id>
+        <Ccy>EUR</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>OBVWCZG0</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>MSB-2026-0921-002</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">7320.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>EYFTDEE0</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Werkzeugtechnik Passau GmbH</Nm>
+          <PstlAdr>
+            <PstCd>94032</PstCd>
+            <TwnNm>Passau</TwnNm>
+            <Ctry>DE</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE90885632568114584698</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Invoice 2026-4471</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

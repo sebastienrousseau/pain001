@@ -1,0 +1,97 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "DMS-20260921-01",
+        "CreDtTm": "2026-09-21T08:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "92000.00",
+        "InitgPty": {
+          "Nm": "Doha Marine Supplies WLL",
+          "PstlAdr": {
+            "TwnNm": "Doha",
+            "Ctry": "QA",
+            "AdrLine": [
+              "Al Corniche Street 5"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "DMS-QATCH-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "92000.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "NURG"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Doha Marine Supplies WLL",
+            "PstlAdr": {
+              "TwnNm": "Doha",
+              "Ctry": "QA",
+              "AdrLine": [
+                "Al Corniche Street 5"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "QA58VDZTMHRMT3J8Z4KX3U36MI9SL"
+            },
+            "Ccy": "QAR"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "DKKFQAK0"
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "DMS-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "92000.00",
+                  "Ccy": "QAR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "MSNXQAS0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Gulf Engineering Services",
+                "PstlAdr": {
+                  "TwnNm": "Doha",
+                  "Ctry": "QA"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "QA17KWOYL77GFWYXAE267CIYE03FN"
+                }
+              },
+              "Purp": {
+                "Cd": "SUPP"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Contract 2026-14 milestone 1"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

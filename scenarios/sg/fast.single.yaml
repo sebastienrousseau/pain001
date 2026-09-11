@@ -1,0 +1,47 @@
+# A Singapore FAST credit in SGD within the S$200,000 per-transaction
+# cap: bank and branch codes on both agents (SGIBG), account numbers,
+# and addresses on both parties as the Singapore banks' ISO 20022
+# pages expect.
+id: sg.fast.single
+family: instant-payment
+country: SG
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 650001
+description: Singapore FAST credit in SGD, bank and branch codes, addresses on both parties.
+profiles: [sg-fast, anti-duplicate]
+
+parties:
+  payer:
+    name: Merlion Trading Pte Ltd
+    address: {form: hybrid, street: Robinson Road, building_number: "71", post_code: "068895", town: Singapore, country: SG}
+
+header:
+  message_id: MTP-20260921-01
+  created: "2026-09-21T10:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: MTP-FAST-260921-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: URGP}
+  requested_execution_date: "2026-09-21"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "0123456789", scheme: BBAN}, currency: SGD}
+  debtor_agent: {bic: auto, country: SG, clearing: {system: SGIBG, member_id: "9990001"}}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: MTP-2026-0921-001
+    amount: {ccy: SGD, value: "45200.00"}
+    creditor_agent: {bic: auto, country: SG, clearing: {system: SGIBG, member_id: "9990002"}}
+    creditor: {name: Jurong Packaging Supplies, address: {form: hybrid, street: Pioneer Road, building_number: "12", post_code: "628505", town: Singapore, country: SG}}
+    creditor_account: {other: {id: "9876543210", scheme: BBAN}}
+    remittance: {unstructured: "Invoice JPS-2026-118"}
+
+provenance:
+  sources:
+    - {title: "Association of Banks in Singapore, FAST service description (S$200,000 per transaction)", read: "2026-09-11"}
+    - {title: "UOB, OCBC and DBS ISO 20022 pain.001 pages (public)", read: "2026-09-11"}
+  confidence: assumed
+  evidence: []

@@ -1,0 +1,133 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MSB-20260921-01",
+        "CreDtTm": "2026-09-21T08:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "48600.00",
+        "InitgPty": {
+          "Nm": "Moravské strojírny s.r.o.",
+          "PstlAdr": {
+            "PstCd": "639 00",
+            "TwnNm": "Brno",
+            "Ctry": "CZ",
+            "AdrLine": [
+              "Vídeňská 118"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "27654321",
+                  "SchmeNm": {
+                    "Prtry": "ICO"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "MSB-CZK-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "48600.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "NURG"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Moravské strojírny s.r.o.",
+            "PstlAdr": {
+              "PstCd": "639 00",
+              "TwnNm": "Brno",
+              "Ctry": "CZ",
+              "AdrLine": [
+                "Vídeňská 118"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "27654321",
+                    "SchmeNm": {
+                      "Prtry": "ICO"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "CZ2715658290382437641520"
+            },
+            "Ccy": "CZK"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "PCLSCZO0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "CZNCC"
+                },
+                "MmbId": "9876"
+              }
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MSB-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "48600.00",
+                  "Ccy": "CZK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "MXHXCZI0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "CZNCC"
+                    },
+                    "MmbId": "9871"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Kovoslužba Ostrava a.s.",
+                "PstlAdr": {
+                  "PstCd": "702 00",
+                  "TwnNm": "Ostrava",
+                  "Ctry": "CZ"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "CZ8889551188181098287840"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "/VS/2026091201/KS/0308/SS/12345"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
