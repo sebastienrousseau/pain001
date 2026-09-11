@@ -448,6 +448,14 @@ class _Planner:
             ):
                 continue
             wanted.append(name)
+        if (
+            not wanted
+            and path not in self.any_slots
+            and self.children.get(path)
+        ):
+            # A component with nothing to add would render empty; the
+            # RA JSON convention forbids that, so carry one leaf.
+            wanted.append(self._first_leaf(path, picks))
         for name in list(wanted):
             needed = PREREQUISITES.get(name)
             if (
@@ -465,6 +473,17 @@ class _Planner:
             flag = "true" if "AmdmntInfDtls" in tree else "false"
             tree["AmdmntInd"] = {"$": flag}
         return tree
+
+    def _first_leaf(self, path: str, picks: dict[str, int]) -> str:
+        """The first child of ``path`` the recipe and the choices allow."""
+        for child in self.children.get(path, []):
+            name = child.path.rsplit("/", 1)[1]
+            if self._forbidden(child.path) or not self._chosen(
+                path, name, picks
+            ):
+                continue
+            return name
+        raise CoverageBuildError(f"{path}: no child the recipe allows")
 
     def pick_sides(self, unhit: set[str] | None) -> dict[int, int]:
         """For every exclusive pair, the side that still leads somewhere unhit.

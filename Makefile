@@ -210,6 +210,7 @@ xml-examples:
 corpus-build:
 	@echo "$(YELLOW)Building the corpus from scenarios/...$(NC)"
 	@poetry run python scripts/build_corpus.py
+	@poetry run python scripts/generate_iso_json_schemas.py
 	@echo "$(GREEN)✓ Corpus built$(NC)"
 
 # --- Corpus evidence checklist (ADR-0003, D7) ---
@@ -221,6 +222,7 @@ corpus-coverage:
 	@echo "$(YELLOW)Measuring coverage sets against the schema inventories...$(NC)"
 	@poetry run python scripts/corpus_coverage.py --strict
 	@echo "$(GREEN)✓ Corpus coverage gate passed$(NC)"
+	@poetry run python scripts/generate_iso_json_schemas.py --check
 
 # --- SLO verification (recommended before commit) ---
 slos: lint type test perf

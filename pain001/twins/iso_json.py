@@ -21,7 +21,9 @@ JSON Schema Draft 2020-12 for ISO 20022:2013* (v2.0, June 2025):
 * an amount with a currency attribute is ``{"amt": "…", "Ccy": "…"}``;
 * decimals, dates and times are strings exactly as the XML spells them;
 * booleans are the strings ``"true"`` and ``"false"``;
-* namespaces are not represented (the edition names the schema).
+* namespaces are not represented (the edition names the schema);
+* an empty element, which the XSD allows and the RA forbids, is ``{}``
+  so the twin stays lossless; the schema reports it.
 
 One rule is this project's, not the RA's: every element the schema
 declares repeatable is always an array, even with one occurrence, so a
@@ -101,6 +103,8 @@ def _encode_node(node: Any, path: str, repeatable: frozenset[str]) -> Any:
         return [_encode_node(item, path, repeatable) for item in node]
     if isinstance(node, bool):
         return "true" if node else "false"
+    if node is None:
+        return {}  # an empty element: lossless, and the RA schema rejects it
     if isinstance(node, dict):
         if _TEXT in node:
             # simple content with attributes: only Ccy exists in pain.001
@@ -148,6 +152,8 @@ def _decode_node(node: Any, path: str, booleans: frozenset[str]) -> Any:
     if isinstance(node, list):
         return [_decode_node(item, path, booleans) for item in node]
     if isinstance(node, dict):
+        if not node:
+            return None  # back to an empty element
         if set(node) == {"amt", "Ccy"}:
             return {_CCY: node["Ccy"], _TEXT: node["amt"]}
         return {

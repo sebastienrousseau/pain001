@@ -187,3 +187,29 @@ def test_always_array_normalisation_is_ours() -> None:
         "true",
         "false",
     ]
+
+
+EMPTY_COMPONENTS = (
+    '<?xml version="1.0" encoding="UTF-8"?>'
+    '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">'
+    "<CstmrCdtTrfInitn><GrpHdr><MsgId>M</MsgId>"
+    "<CreDtTm>2026-01-02T09:00:00</CreDtTm><NbOfTxs>1</NbOfTxs>"
+    "<InitgPty/></GrpHdr><PmtInf><PmtInfId>P</PmtInfId><PmtMtd>TRF</PmtMtd>"
+    "<ReqdExctnDt><Dt>2026-01-02</Dt></ReqdExctnDt><Dbtr/>"
+    "<DbtrAcct><Id><IBAN>DE89370400440532013000</IBAN></Id></DbtrAcct>"
+    "<DbtrAgt><FinInstnId/></DbtrAgt><CdtTrfTxInf><PmtId><EndToEndId>E"
+    '</EndToEndId></PmtId><Amt><InstdAmt Ccy="EUR">1.00</InstdAmt></Amt>'
+    "<Cdtr/></CdtTrfTxInf></PmtInf></CstmrCdtTrfInitn></Document>"
+)
+
+
+def test_empty_components_stay_lossless() -> None:
+    """The XSD allows an empty component; the twin keeps it as {}."""
+    twin = to_iso_json(EMPTY_COMPONENTS, "pain.001.001.09")
+    header = twin["Document"]["CstmrCdtTrfInitn"]["GrpHdr"]
+    assert header["InitgPty"] == {}
+    pmt = twin["Document"]["CstmrCdtTrfInitn"]["PmtInf"][0]
+    assert pmt["Dbtr"] == {} and pmt["DbtrAgt"] == {"FinInstnId": {}}
+    back = from_iso_json(twin, "pain.001.001.09")
+    assert _canon(back) == _canon(EMPTY_COMPONENTS)
+    assert "<InitgPty />" in back or "<InitgPty/>" in back

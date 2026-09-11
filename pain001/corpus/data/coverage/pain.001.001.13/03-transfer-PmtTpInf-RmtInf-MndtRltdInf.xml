@@ -47,7 +47,9 @@
         </Id>
       </DbtrAcct>
       <DbtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BICFI>BANKDEFFXXX</BICFI>
+        </FinInstnId>
       </DbtrAgt>
       <DbtrAgtAcct>
         <Id>
@@ -109,7 +111,9 @@
           </Frqcy>
         </MndtRltdInf>
         <IntrmyAgt1>
-          <FinInstnId/>
+          <FinInstnId>
+            <BICFI>BANKDEFFXXX</BICFI>
+          </FinInstnId>
         </IntrmyAgt1>
         <IntrmyAgt1Acct>
           <Id>
@@ -122,7 +126,9 @@
           </Id>
         </IntrmyAgt1Acct>
         <IntrmyAgt2>
-          <FinInstnId/>
+          <FinInstnId>
+            <BICFI>BANKDEFFXXX</BICFI>
+          </FinInstnId>
         </IntrmyAgt2>
         <IntrmyAgt2Acct>
           <Id>
@@ -135,7 +141,9 @@
           </Id>
         </IntrmyAgt2Acct>
         <IntrmyAgt3>
-          <FinInstnId/>
+          <FinInstnId>
+            <BICFI>BANKDEFFXXX</BICFI>
+          </FinInstnId>
         </IntrmyAgt3>
         <IntrmyAgt3Acct>
           <Id>

@@ -305,3 +305,28 @@ def test_describe_file_without_focus_falls_back() -> None:
         "/D/R",
     )
     assert single == ("UltmtDbtr", "Id", "Nm")
+
+
+def test_no_coverage_file_carries_an_empty_component() -> None:
+    """A sparse file never renders an empty complex element (RA rule)."""
+    for path in COVERAGE_ROOT.rglob("*.xml"):
+        assert "/>" not in path.read_text(encoding="utf-8"), path.name
+
+
+def test_first_leaf_needs_an_allowed_child() -> None:
+    """A component whose every child the recipe forbids cannot be filled."""
+    inventory = inventory_for("pain.001.001.03")
+    planner = cov._Planner(inventory)
+    parent = planner.pmtinf + "/CdtTrfTxInf/ChqInstr"
+    names = [
+        e.path.rsplit("/", 1)[1]
+        for e in inventory.elements
+        if e.path.rsplit("/", 1)[0] == parent
+    ]
+    planner.recipe = cov.Recipe(
+        "none",
+        {},
+        forbid=frozenset(f"CdtTrfTxInf/ChqInstr/{n}" for n in names),
+    )
+    with pytest.raises(cov.CoverageBuildError, match="no child"):
+        planner._first_leaf(parent, {})

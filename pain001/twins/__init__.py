@@ -28,11 +28,19 @@ from pain001.twins.iso_json import (
     supported,
     to_iso_json,
 )
+from pain001.twins.schema import (
+    generate_schema,
+    iso_json_schema,
+    validate_iso_json,
+)
 
 __all__ = [
     "SUPPORTED_PREFIX",
     "TwinError",
     "from_iso_json",
+    "generate_schema",
+    "iso_json_schema",
     "supported",
     "to_iso_json",
+    "validate_iso_json",
 ]
