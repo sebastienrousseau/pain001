@@ -1,67 +1,276 @@
 <?xml version="1.0"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.11"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.11 pain.001.001.11.xsd">
+	{%- macro address(a) %}
+	{%- if a %}
+	<PstlAdr>
+		{%- if a.street_name %}
+		<StrtNm>{{a.street_name}}</StrtNm>
+		{%- endif %}
+		{%- if a.building_number %}
+		<BldgNb>{{a.building_number}}</BldgNb>
+		{%- endif %}
+		{%- if a.postal_code %}
+		<PstCd>{{a.postal_code}}</PstCd>
+		{%- endif %}
+		{%- if a.town_name %}
+		<TwnNm>{{a.town_name}}</TwnNm>
+		{%- endif %}
+		{%- if a.country_subdivision %}
+		<CtrySubDvsn>{{a.country_subdivision}}</CtrySubDvsn>
+		{%- endif %}
+		{%- if a.country_code %}
+		<Ctry>{{a.country_code}}</Ctry>
+		{%- endif %}
+		{%- if a.address_line %}
+		<AdrLine>{{a.address_line}}</AdrLine>
+		{%- endif %}
+	</PstlAdr>
+	{%- endif %}
+	{%- endmacro %}
+	{%- macro party_id(p) %}
+	{%- if p.lei or p.id %}
+	<Id>
+		<OrgId>
+			{%- if p.lei %}
+			<LEI>{{p.lei}}</LEI>
+			{%- endif %}
+			{%- if p.id %}
+			<Othr>
+				<Id>{{p.id}}</Id>
+				{%- if p.id_scheme %}
+				<SchmeNm>
+					<Cd>{{p.id_scheme}}</Cd>
+				</SchmeNm>
+				{%- elif p.id_scheme_proprietary %}
+				<SchmeNm>
+					<Prtry>{{p.id_scheme_proprietary}}</Prtry>
+				</SchmeNm>
+				{%- endif %}
+			</Othr>
+			{%- endif %}
+		</OrgId>
+	</Id>
+	{%- endif %}
+	{%- endmacro %}
+	{%- macro agent(g) %}
+	<FinInstnId>
+		{%- if g.bic %}
+		<BICFI>{{g.bic}}</BICFI>
+		{%- endif %}
+		{%- if g.member_id %}
+		<ClrSysMmbId>
+			{%- if g.clearing_system %}
+			<ClrSysId>
+				<Cd>{{g.clearing_system}}</Cd>
+			</ClrSysId>
+			{%- endif %}
+			<MmbId>{{g.member_id}}</MmbId>
+		</ClrSysMmbId>
+		{%- endif %}
+		{%- if g.name %}
+		<Nm>{{g.name}}</Nm>
+		{%- endif %}
+		{%- if g.address %}
+		<PstlAdr>
+			{%- if g.address.town_name %}
+			<TwnNm>{{g.address.town_name}}</TwnNm>
+			{%- endif %}
+			{%- if g.address.country_subdivision %}
+			<CtrySubDvsn>{{g.address.country_subdivision}}</CtrySubDvsn>
+			{%- endif %}
+			{%- if g.address.country_code %}
+			<Ctry>{{g.address.country_code}}</Ctry>
+			{%- endif %}
+		</PstlAdr>
+		{%- endif %}
+	</FinInstnId>
+	{%- endmacro %}
+	{%- macro account(c) %}
+	<Id>
+		{%- if c.iban %}
+		<IBAN>{{c.iban}}</IBAN>
+		{%- else %}
+		<Othr>
+			<Id>{{c.number}}</Id>
+			{%- if c.scheme %}
+			<SchmeNm>
+				<Cd>{{c.scheme}}</Cd>
+			</SchmeNm>
+			{%- elif c.scheme_proprietary %}
+			<SchmeNm>
+				<Prtry>{{c.scheme_proprietary}}</Prtry>
+			</SchmeNm>
+			{%- endif %}
+		</Othr>
+		{%- endif %}
+	</Id>
+	{%- if c.currency %}
+	<Ccy>{{c.currency}}</Ccy>
+	{%- endif %}
+	{%- endmacro %}
 	<CstmrCdtTrfInitn>
 		<GrpHdr>
 			<MsgId>{{id}}</MsgId>
 			<CreDtTm>{{date}}</CreDtTm>
 			<NbOfTxs>{{nb_of_txs}}</NbOfTxs>
+			<CtrlSum>{{ctrl_sum}}</CtrlSum>
 			<InitgPty>
 				<Nm>{{initiator_name}}</Nm>
+				{{- address(initiator_address) | indent('\t\t\t') }}
+				{{- party_id(initiator) | indent('\t\t\t') }}
 			</InitgPty>
 		</GrpHdr>
 		<PmtInf>
-			<PmtInfId>{{payment_id}}</PmtInfId>
+			<PmtInfId>{{payment_information_id}}</PmtInfId>
 			<PmtMtd>{{payment_method}}</PmtMtd>
+			{%- if batch_booking is not none %}
+			<BtchBookg>{{batch_booking}}</BtchBookg>
+			{%- endif %}
+			<NbOfTxs>{{nb_of_txs}}</NbOfTxs>
+			<CtrlSum>{{ctrl_sum}}</CtrlSum>
+			{%- if payment_type %}
+			<PmtTpInf>
+				{%- if payment_type.instruction_priority %}
+				<InstrPrty>{{payment_type.instruction_priority}}</InstrPrty>
+				{%- endif %}
+				{%- if payment_type.service_level_code %}
+				<SvcLvl>
+					<Cd>{{payment_type.service_level_code}}</Cd>
+				</SvcLvl>
+				{%- endif %}
+				{%- if payment_type.local_instrument_code %}
+				<LclInstrm>
+					<Cd>{{payment_type.local_instrument_code}}</Cd>
+				</LclInstrm>
+				{%- elif payment_type.local_instrument_proprietary %}
+				<LclInstrm>
+					<Prtry>{{payment_type.local_instrument_proprietary}}</Prtry>
+				</LclInstrm>
+				{%- endif %}
+				{%- if payment_type.category_purpose_code %}
+				<CtgyPurp>
+					<Cd>{{payment_type.category_purpose_code}}</Cd>
+				</CtgyPurp>
+				{%- endif %}
+			</PmtTpInf>
+			{%- endif %}
 			<ReqdExctnDt>
+				{%- if requested_execution_datetime %}
+				<DtTm>{{requested_execution_datetime}}</DtTm>
+				{%- else %}
 				<Dt>{{requested_execution_date}}</Dt>
+				{%- endif %}
 			</ReqdExctnDt>
 			<Dbtr>
 				<Nm>{{debtor_name}}</Nm>
+				{{- address(debtor_address) | indent('\t\t\t') }}
+				{{- party_id(debtor) | indent('\t\t\t') }}
 			</Dbtr>
 			<DbtrAcct>
-				<Id>
-					<IBAN>{{debtor_account_IBAN}}</IBAN>
-				</Id>
+				{{- account(debtor_account) | indent('\t\t\t') }}
 			</DbtrAcct>
 			<DbtrAgt>
-				<FinInstnId>
-					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.11">{{debtor_agent_BIC}}</BICFI>
-				</FinInstnId>
+				{{- agent(debtor_agent) | indent('\t\t\t') }}
 			</DbtrAgt>
+			{%- if ultimate_debtor_name %}
+			<UltmtDbtr>
+				<Nm>{{ultimate_debtor_name}}</Nm>
+			</UltmtDbtr>
+			{%- endif %}
 			<ChrgBr>{{charge_bearer}}</ChrgBr>
-			{% for tx in transactions %} <CdtTrfTxInf>
-			<PmtId>
-				<EndToEndId>{{tx.payment_id}}</EndToEndId>
-			</PmtId>
-			<Amt>
-				<InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
-			</Amt>
-			<CdtrAgt>
-				<FinInstnId>
-					<BICFI xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.11">{{tx.creditor_agent_BIC}}</BICFI>
-				</FinInstnId>
-			</CdtrAgt>
-			<Cdtr>
-				<Nm>{{tx.creditor_name}}</Nm>
-			</Cdtr>
-			<CdtrAcct>
-				<Id>
-					<IBAN>{{tx.creditor_account_IBAN}}</IBAN>
-				</Id>
-			</CdtrAcct>
-			{% if tx.remittance_information %}
-			<RmtInf>
-				<Ustrd>{{tx.remittance_information}}</Ustrd>
-			</RmtInf>
-			{% endif %}
-			{% if tx.supplementary_data %}<SplmtryData>
-				<Envlp>
-					<WC>{{tx.supplementary_data}}</WC>
-				</Envlp>
-			</SplmtryData>
-			{% endif %}
-	</CdtTrfTxInf>
-			{% endfor %} </PmtInf>
-</CstmrCdtTrfInitn>
+			{%- for tx in transactions %}
+			<CdtTrfTxInf>
+				<PmtId>
+					{%- if tx.instruction_id %}
+					<InstrId>{{tx.instruction_id}}</InstrId>
+					{%- endif %}
+					<EndToEndId>{{tx.payment_id}}</EndToEndId>
+					{%- if tx.uetr %}
+					<UETR>{{tx.uetr}}</UETR>
+					{%- endif %}
+				</PmtId>
+				<Amt>
+					<InstdAmt Ccy="{{tx.payment_currency}}">{{tx.payment_amount}}</InstdAmt>
+				</Amt>
+				<CdtrAgt>
+					{{- agent(tx.creditor_agent) | indent('\t\t\t\t') }}
+				</CdtrAgt>
+				<Cdtr>
+					<Nm>{{tx.creditor_name}}</Nm>
+					{{- address(tx.creditor_address) | indent('\t\t\t\t') }}
+				</Cdtr>
+				<CdtrAcct>
+					{{- account(tx.creditor_account) | indent('\t\t\t\t') }}
+				</CdtrAcct>
+				{%- if tx.ultimate_creditor_name %}
+				<UltmtCdtr>
+					<Nm>{{tx.ultimate_creditor_name}}</Nm>
+				</UltmtCdtr>
+				{%- endif %}
+				{%- if tx.purpose_code %}
+				<Purp>
+					<Cd>{{tx.purpose_code}}</Cd>
+				</Purp>
+				{%- endif %}
+				{%- if tx.regulatory %}
+				<RgltryRptg>
+					{%- if tx.regulatory.indicator %}
+					<DbtCdtRptgInd>{{tx.regulatory.indicator}}</DbtCdtRptgInd>
+					{%- endif %}
+					<Dtls>
+						{%- if tx.regulatory.country %}
+						<Ctry>{{tx.regulatory.country}}</Ctry>
+						{%- endif %}
+						{%- if tx.regulatory.code %}
+						<Cd>{{tx.regulatory.code}}</Cd>
+						{%- endif %}
+						{%- if tx.regulatory.info %}
+						<Inf>{{tx.regulatory.info}}</Inf>
+						{%- endif %}
+					</Dtls>
+				</RgltryRptg>
+				{%- endif %}
+				{%- if tx.remittance_information or tx.creditor_reference %}
+				<RmtInf>
+					{%- if tx.remittance_information %}
+					<Ustrd>{{tx.remittance_information}}</Ustrd>
+					{%- endif %}
+					{%- if tx.creditor_reference %}
+					<Strd>
+						<CdtrRefInf>
+							{%- if tx.creditor_reference_type %}
+							<Tp>
+								<CdOrPrtry>
+									{%- if tx.creditor_reference_is_code %}
+									<Cd>{{tx.creditor_reference_type}}</Cd>
+									{%- else %}
+									<Prtry>{{tx.creditor_reference_type}}</Prtry>
+									{%- endif %}
+								</CdOrPrtry>
+								{%- if tx.creditor_reference_issuer %}
+								<Issr>{{tx.creditor_reference_issuer}}</Issr>
+								{%- endif %}
+							</Tp>
+							{%- endif %}
+							<Ref>{{tx.creditor_reference}}</Ref>
+						</CdtrRefInf>
+						{%- if tx.additional_remittance_information %}
+						<AddtlRmtInf>{{tx.additional_remittance_information}}</AddtlRmtInf>
+						{%- endif %}
+					</Strd>
+					{%- endif %}
+				</RmtInf>
+				{%- endif %}
+				{%- if tx.supplementary_data %}
+				<SplmtryData>
+					<Envlp>
+						<WC>{{tx.supplementary_data}}</WC>
+					</Envlp>
+				</SplmtryData>
+				{%- endif %}
+			</CdtTrfTxInf>
+			{%- endfor %}
+		</PmtInf>
+	</CstmrCdtTrfInitn>
 </Document>

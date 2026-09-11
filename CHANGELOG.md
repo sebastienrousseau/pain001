@@ -28,6 +28,28 @@ work lands.
   for the tier-3 markets, where no public sample was available to
   compare. The tree is 42 scenarios and 238 market files at 488 KB of
   the 500 KB budget.
+- **CSV pipeline extension.** The `pain.001.001.03` and `.09` to `.13`
+  templates share one flat vocabulary of about seventy columns, listed
+  in `docs/input-columns.md` and generated from the templates by the
+  records twin. New optional columns render only when given: payment
+  information id, batch booking, instruction priority, service level,
+  local instrument (code or proprietary), category purpose, structured
+  addresses and organisation ids (code or proprietary scheme, LEI) for
+  the initiating party, debtor and creditor, account currency, agent
+  clearing member ids and names and addresses, ultimate parties,
+  instruction id, UETR, purpose code, regulatory reporting, a structured
+  creditor reference (ISO code or proprietary type, issuer), additional
+  remittance information, and a date-time execution date for instant
+  schemes. An account may be an IBAN or a number with a scheme; an agent
+  a BIC or a clearing member id. The `.03` template now writes an IBAN
+  as `IBAN` rather than under `Othr/Id`, renders the charge bearer at
+  the payment-information level, and no longer demands address,
+  purpose and referred-document columns (they still render when given).
+  Both levels carry the computed `NbOfTxs` and `CtrlSum`. The corpus is
+  the golden target: 68 of the 70 pain.001 market files regenerate
+  through the pipeline with the same values at every mapped path; the
+  two cheque files cannot, having no creditor account or agent by
+  design. The `.04` to `.08` templates are unchanged.
 - **ISO JSON twin.** `pain001.twins.to_iso_json` renders a pain.001
   document in the ISO 20022 Registration Authority's 2025 JSON
   convention (tag names under a `Document` root, `{"amt","Ccy"}`

@@ -108,13 +108,13 @@ uses, and its gap is measured, not assumed:
   document with the same value at every mapped path; the corpus tests
   prove it for every market file that qualifies.
 
-What the twin measures today, and what the 0.0.69 CSV pipeline
-extension takes as its input: every `.09` and `.13` file with IBANs on
-both sides regenerates; the `.03` template needs address and reference
-columns and writes account identifiers under `Othr/Id`; the UK and US
-`.09` files carry sort codes and routing numbers, not IBANs; no template
-renders `service_level_code` or `forwarding_agent_BIC`, and the `.09`
-template renders neither `BtchBookg` nor `CtrlSum`.
+What the twin measures today, after the 0.0.69 CSV pipeline extension:
+68 of the 70 pain.001 market files regenerate through the pipeline with
+the same value at every mapped path. The two that cannot are the cheque
+scenario, which has no creditor account or agent by design. The only
+paths the pipeline still cannot carry are the regulatory reporting
+authority block and cheque instructions. `docs/input-columns.md` lists
+the vocabulary, generated from the same mapping.
 
 ## What ships, and where
 

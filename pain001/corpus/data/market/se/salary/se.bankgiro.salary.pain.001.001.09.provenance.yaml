@@ -35,23 +35,7 @@ twins:
     schema_findings: []
   records:
     rows: 2
-    gap:
-    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/Ctry
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/PstCd
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/TwnNm
-    - CstmrCdtTrfInitn/PmtInf/BtchBookg
-    - CstmrCdtTrfInitn/PmtInf/CtrlSum
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/Ctry
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/PstCd
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/TwnNm
-    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Ccy
-    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
-    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
-    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/CtgyPurp/Cd
-    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
+    gap: []
     missing_required: []
 provenance:
   sources:

@@ -35,6 +35,10 @@ from pain001.twins import (
 from pain001.twins import records as rec
 
 EDITIONS = [v for v in valid_xml_types if v.startswith(SUPPORTED_PREFIX)]
+#: Editions whose template and preparer carry the extended vocabulary.
+EXTENDED = {
+    v for v in EDITIONS if v not in {f"pain.001.001.0{n}" for n in range(4, 9)}
+}
 MARKET = [
     f for f in list_files("market") if f.version.startswith(SUPPORTED_PREFIX)
 ]
@@ -69,8 +73,20 @@ def test_every_edition_maps_its_columns(version: str) -> None:
     )
     assert mapping["currency"] == mapping["payment_currency"], "alias"
     assert any(p.endswith("/NbOfTxs") for p in mapping["nb_of_txs"])
-    assert mapping["service_level_code"] == (), "no template renders it"
-    assert mapping["forwarding_agent_BIC"] == ()
+    if version in EXTENDED:
+        assert mapping["service_level_code"] == (
+            "Document/CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd",
+        )
+        assert mapping["debtor_account_number"] == (
+            "Document/CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/Id",
+        )
+        assert mapping["creditor_reference_type"] == (
+            "Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd"
+            "/CdtrRefInf/Tp/CdOrPrtry/Cd",
+            "Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd"
+            "/CdtrRefInf/Tp/CdOrPrtry/Prtry",
+        )
+    assert mapping["forwarding_agent_BIC"] == (), "no template renders it"
     for column, paths in mapping.items():
         for path in paths:
             assert path.startswith("Document/CstmrCdtTrfInitn/"), (
@@ -79,19 +95,26 @@ def test_every_edition_maps_its_columns(version: str) -> None:
             )
 
 
-def test_the_v03_template_writes_accounts_as_other_ids() -> None:
-    """A finding the twin makes measurable: .03 has no IBAN element."""
-    mapping = column_paths("pain.001.001.03")
-    assert mapping["debtor_account_IBAN"] == (
-        "Document/CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/Id",
-    )
-    assert column_paths("pain.001.001.09")["debtor_account_IBAN"] == (
+def test_editions_differ_where_the_schema_does() -> None:
+    """The .03 template has no UETR, LEI or date-time execution date."""
+    v03 = column_paths("pain.001.001.03")
+    v09 = column_paths("pain.001.001.09")
+    assert v03["debtor_account_IBAN"] == (
         "Document/CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/IBAN",
+    )
+    assert "uetr" not in v03 and v09["uetr"] == (
+        "Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/PmtId/UETR",
+    )
+    assert v09["requested_execution_datetime"] == (
+        "Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt/DtTm",
+    )
+    assert v03["reference_number"] == (
+        "Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Strd/RfrdDocInf/Nb",
     )
 
 
 def test_chaps_records_and_gap() -> None:
-    """One row, the pipeline's columns, and every path it cannot carry."""
+    """One row, the pipeline's columns, and nothing the pipeline cannot carry."""
     twin = to_records(get_file(*CHAPS), CHAPS[1])
     assert len(twin.rows) == 1
     row = twin.rows[0]
@@ -100,15 +123,13 @@ def test_chaps_records_and_gap() -> None:
     assert row["payment_currency"] == "GBP" and row["currency"] == "GBP"
     assert row["creditor_name"] == "Bramley and Co Solicitors Client Account"
     assert row["nb_of_txs"] == "1"
-    assert "CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/LEI" in twin.gap
-    assert "CstmrCdtTrfInitn/PmtInf/BtchBookg" in twin.gap
-    assert "CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Purp/Cd" in twin.gap
-    assert (
-        "CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)"
-        in twin.gap
-    )
+    assert row["initiator_lei"].startswith("0000")
+    assert row["batch_booking"] == "false"
+    assert row["purpose_code"] == "HLST"
+    assert row["payment_information_id"] == "CHAPS-20260912-001"
+    assert row["service_level_code"] == "SDVA"
+    assert twin.gap == []
     assert twin.missing_required == []
-    assert "CstmrCdtTrfInitn/GrpHdr/MsgId" not in twin.gap
 
 
 @pytest.mark.parametrize("entry", MARKET, ids=lambda f: f.path.name)
@@ -140,32 +161,42 @@ def test_records_regenerate_or_say_why_not(entry) -> None:
                 assert rec._read(after, rel, index) == value, (column, rel)
 
 
-def test_at_least_the_iban_editions_regenerate() -> None:
-    """The measured state today: every .09 file with IBANs on both sides."""
-    regenerable = [
-        f.path.name
+def test_all_but_the_cheque_regenerate() -> None:
+    """The measured state: every pain.001 market file but the cheque scenario."""
+    blocked = {
+        f.path.name: to_records(f.read(), f.version).missing_required
         for f in MARKET
-        if not to_records(f.read(), f.version).missing_required
-    ]
-    assert len(regenerable) >= 15
-    assert "gb.chaps.property-purchase.pain.001.001.09.xml" in regenerable
-    assert "gb.fps.single.pain.001.001.09.xml" not in regenerable, (
-        "sort code and account, not an IBAN"
-    )
-    v03 = [f for f in MARKET if f.version == "pain.001.001.03"]
+    }
+    blocked = {k: v for k, v in blocked.items() if v}
+    assert set(blocked) == {
+        "us.check.vendor.pain.001.001.03.xml",
+        "us.check.vendor.pain.001.001.09.xml",
+    }, "a cheque has no creditor account or agent by design"
     assert all(
-        to_records(f.read(), f.version).missing_required for f in v03
-    ), "the .03 template needs address and reference columns and Othr ids"
+        "creditor_account_IBAN|creditor_account_number" in v
+        for v in blocked.values()
+    )
+    fps = to_records(
+        get_file("gb.fps.single", "pain.001.001.09"), "pain.001.001.09"
+    )
+    assert fps.rows[0]["debtor_agent_member_id"] == "040004"
+    assert fps.rows[0]["debtor_agent_clearing_system"] == "GBDSC"
 
 
 def test_preparer_requirements_are_learned_from_the_preparer() -> None:
-    """The gate is the preparer's list, aliases understood."""
+    """The gate is the preparer's list; alternatives are one group."""
     required = preparer_required("pain.001.001.09")
-    assert "id" in required and "creditor_account_IBAN" in required
-    assert "currency" in required and "payment_currency" not in required
+    assert "id" in required
+    assert "creditor_account_IBAN|creditor_account_number" in required
+    assert "creditor_agent_BIC|creditor_agent_member_id" in required
+    assert "requested_execution_date|requested_execution_datetime" in required
+    assert "currency|payment_currency" in required
     assert "(or" not in " ".join(required)
-    assert len(preparer_required("pain.001.001.03")) > len(required)
-    assert "initiator_street_name" in preparer_required("pain.001.001.03")
+    v03 = preparer_required("pain.001.001.03")
+    assert (
+        "requested_execution_date" in v03
+        and "initiator_street_name" not in v03
+    )
 
 
 def test_second_payment_block_is_a_gap() -> None:

@@ -37,47 +37,8 @@ twins:
     schema_findings: []
   records:
     rows: 1
-    gap:
-    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/Othr/Id
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/Id/OrgId/Othr/SchmeNm/Cd
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAcct/Id/Othr/SchmeNm/Cd
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/ClrSysMmbId/MmbId
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/Ctry
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/PstlAdr/TwnNm
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Ustrd
-    - CstmrCdtTrfInitn/PmtInf/ChrgBr
-    - CstmrCdtTrfInitn/PmtInf/CtrlSum
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/Othr/Id
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/Id/OrgId/Othr/SchmeNm/Cd
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
-    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Ccy
-    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/SchmeNm/Cd
-    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
-    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
-    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/Ctry
-    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/PstlAdr/TwnNm
-    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
-    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
-    - CstmrCdtTrfInitn/PmtInf/PmtTpInf/SvcLvl/Cd
-    missing_required:
-    - initiator_street_name
-    - initiator_building_number
-    - debtor_street_name
-    - debtor_building_number
-    - creditor_street_name
-    - creditor_building_number
-    - creditor_postal_code
-    - creditor_town_name
-    - creditor_country_code
-    - purpose_code
-    - reference_number
-    - reference_date
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Pay.UK Faster Payments scheme limits and ISO 20022 library

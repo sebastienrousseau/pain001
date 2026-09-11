@@ -108,7 +108,7 @@ def _records() -> None:
     row = records.rows[0]
     print(
         f"records: {len(row)} columns for 1 transaction; the pipeline cannot "
-        f"carry {len(records.gap)} paths, e.g. {records.gap[1]}"
+        f"carry {len(records.gap)} path(s){': ' + records.gap[0] if records.gap else ''}"
     )
     mapping = column_paths(EDITION)
     print(
@@ -124,10 +124,13 @@ def _records() -> None:
     )
     assert "<Nm>Bramley and Co Solicitors Client Account</Nm>" in regenerated
     uk = to_records(get_file("gb.fps.single", EDITION), EDITION)
-    assert "debtor_account_IBAN" in uk.missing_required
+    assert uk.missing_required == [], "sort code and account number carry"
+    assert uk.rows[0]["debtor_account_number"] == "12345678"
+    cheque = to_records(get_file("us.check.vendor", EDITION), EDITION)
+    assert cheque.missing_required, "a cheque has no creditor account"
     print(
-        "  regenerated through the CSV pipeline; a Faster Payments file cannot "
-        f"be (missing {', '.join(uk.missing_required)})"
+        "  regenerated through the CSV pipeline; a Faster Payments file too, "
+        f"a cheque cannot be (missing {'; '.join(cheque.missing_required)})"
     )
 
 

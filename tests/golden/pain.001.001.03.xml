@@ -7,6 +7,7 @@
             <MsgId>1</MsgId>
             <CreDtTm>2023-03-10T15:30:47.000Z</CreDtTm>
             <NbOfTxs>2</NbOfTxs>
+            <CtrlSum>450.00</CtrlSum>
             <InitgPty>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
@@ -19,10 +20,16 @@
             </InitgPty>
         </GrpHdr>
         <PmtInf>
-            <PmtInfId>PaymentID6789</PmtInfId>
+            <PmtInfId>Payment-Info-12345</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
-            <BtchBookg>
-            true</BtchBookg>
+            <BtchBookg>true</BtchBookg>
+            <NbOfTxs>2</NbOfTxs>
+            <CtrlSum>450.00</CtrlSum>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
             <ReqdExctnDt>2023-03-12</ReqdExctnDt>
             <Dbtr>
                 <Nm>Acme Corp</Nm>
@@ -36,9 +43,7 @@
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <Othr>
-                        <Id>DE07512108001245126162</Id>
-                    </Othr>
+                    <IBAN>DE07512108001245126162</IBAN>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
@@ -46,6 +51,7 @@
                     <BIC>BANKDEFFXXX</BIC>
                 </FinInstnId>
             </DbtrAgt>
+            <ChrgBr>SLEV</ChrgBr>
             <CdtTrfTxInf>
                 <PmtId>
                     <InstrId>TX-1</InstrId>
@@ -54,7 +60,6 @@
                 <Amt>
                     <InstdAmt Ccy="EUR">150.00</InstdAmt>
                 </Amt>
-                <ChrgBr>SLEV</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
                         <BIC>SPUEDE2UXXX</BIC>
@@ -63,24 +68,23 @@
                 <Cdtr>
                     <Nm>Global Tech</Nm>
                     <PstlAdr>
-                        <AdrLine>Global Street</AdrLine>
-                        <AdrLine>3</AdrLine>
-                        <AdrLine>11223</AdrLine>
-                        <AdrLine>Global Town</AdrLine>
-                        <AdrLine>DE</AdrLine>
+                        <StrtNm>Global Street</StrtNm>
+                        <BldgNb>3</BldgNb>
+                        <PstCd>11223</PstCd>
+                        <TwnNm>Global Town</TwnNm>
+                        <Ctry>DE</Ctry>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
-                        <Othr>
-                            <Id>DE36210501700024690959</Id>
-                        </Othr>
+                        <IBAN>DE36210501700024690959</IBAN>
                     </Id>
                 </CdtrAcct>
                 <Purp>
                     <Cd>OTHR</Cd>
                 </Purp>
                 <RmtInf>
+                    <Ustrd>Invoice-12345</Ustrd>
                     <Strd>
                         <RfrdDocInf>
                             <Nb>Invoice-98765</Nb>
@@ -97,7 +101,6 @@
                 <Amt>
                     <InstdAmt Ccy="EUR">300.00</InstdAmt>
                 </Amt>
-                <ChrgBr>SHAR</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
                         <BIC>SPUEDE2UXXX</BIC>
@@ -106,24 +109,23 @@
                 <Cdtr>
                     <Nm>Green Energy</Nm>
                     <PstlAdr>
-                        <AdrLine>Green Street</AdrLine>
-                        <AdrLine>30</AdrLine>
-                        <AdrLine>78901</AdrLine>
-                        <AdrLine>Green Town</AdrLine>
-                        <AdrLine>DE</AdrLine>
+                        <StrtNm>Green Street</StrtNm>
+                        <BldgNb>30</BldgNb>
+                        <PstCd>78901</PstCd>
+                        <TwnNm>Green Town</TwnNm>
+                        <Ctry>DE</Ctry>
                     </PstlAdr>
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
-                        <Othr>
-                            <Id>DE67370400440532013008</Id>
-                        </Othr>
+                        <IBAN>DE67370400440532013008</IBAN>
                     </Id>
                 </CdtrAcct>
                 <Purp>
                     <Cd>OTHR</Cd>
                 </Purp>
                 <RmtInf>
+                    <Ustrd>Invoice-67890</Ustrd>
                     <Strd>
                         <RfrdDocInf>
                             <Nb>Invoice-12345</Nb>
@@ -132,6 +134,6 @@
                     </Strd>
                 </RmtInf>
             </CdtTrfTxInf>
-            </PmtInf>
+        </PmtInf>
     </CstmrCdtTrfInitn>
 </Document>

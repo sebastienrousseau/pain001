@@ -32,35 +32,12 @@ twins:
   records:
     rows: 1
     gap:
-    - CstmrCdtTrfInitn/GrpHdr/CtrlSum
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/AdrLine
-    - CstmrCdtTrfInitn/GrpHdr/InitgPty/PstlAdr/CtrySubDvsn
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/Ctry
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/CtrySubDvsn
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/PstCd
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/Cdtr/PstlAdr/TwnNm
     - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/ChqInstr/ChqTp
     - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/ChqInstr/DlvryMtd/Cd
     - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/ChqInstr/MemoFld
-    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RmtInf/Ustrd
-    - CstmrCdtTrfInitn/PmtInf/CtrlSum
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/AdrLine
-    - CstmrCdtTrfInitn/PmtInf/Dbtr/PstlAdr/CtrySubDvsn
-    - CstmrCdtTrfInitn/PmtInf/DbtrAcct/Id/Othr/SchmeNm/Cd
-    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd
-    - CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/ClrSysMmbId/MmbId
-    - CstmrCdtTrfInitn/PmtInf/NbOfTxs
-    - CstmrCdtTrfInitn/PmtInf/PmtInfId (collapsed into payment_id)
     missing_required:
-    - initiator_street_name
-    - initiator_building_number
-    - debtor_street_name
-    - debtor_building_number
-    - creditor_agent_BIC
-    - creditor_account_IBAN
-    - purpose_code
-    - reference_number
-    - reference_date
+    - creditor_account_IBAN|creditor_account_number
+    - creditor_agent_BIC|creditor_agent_member_id
 provenance:
   sources:
   - title: ISO 20022 MDR Payments Initiation 2020-2021, cheque rules; Cross River

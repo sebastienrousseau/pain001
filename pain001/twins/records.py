@@ -30,6 +30,7 @@ the template the pipeline actually uses.
 from __future__ import annotations
 
 import json
+import re
 import xml.etree.ElementTree as ET  # nosec B405 - the Element type only; parsing is defused
 from dataclasses import dataclass, field
 from functools import cache
@@ -105,7 +106,9 @@ def preparer_required(version: str) -> tuple[str, ...]:
 
     Learned by asking the preparer to render an empty row and reading
     the names it lists, so the records twin judges against the gate the
-    pipeline really applies rather than the input schema's list.
+    pipeline really applies rather than the input schema's list. A
+    group of alternatives (an IBAN or an account number) is one entry,
+    its names joined by ``|``.
     """
     from pain001.exceptions import PaymentValidationError
 
@@ -116,9 +119,19 @@ def preparer_required(version: str) -> tuple[str, ...]:
         names: list[str] = []
         for part in text.split(":", 1)[1].split(";"):
             part = part.split(":", 1)[-1]
-            for name in part.split(","):
-                name = name.strip().split(" ", 1)[0]
-                if name and name not in names:
+            for item in re.split(r",(?![^(]*\))", part):
+                item = item.strip()
+                if not item:
+                    continue
+                match = re.fullmatch(r"(\w+) \(or ([^)]+)\)", item)
+                if match:
+                    name = "|".join(
+                        [match.group(1)]
+                        + [a.strip() for a in match.group(2).split(",")]
+                    )
+                else:
+                    name = item.split(" ", 1)[0]
+                if name not in names:
                     names.append(name)
         return tuple(names)
     return ()  # pragma: no cover - every bundled preparer has a gate
@@ -132,6 +145,8 @@ def _sentinel(column: str, index: int, row: int) -> str:
         return str(_ROWS)
     if column == "date":
         return f"2001-01-0{row + 1}T0{index % 10}:{index % 60:02d}:00"
+    if column.endswith("_datetime"):
+        return f"2003-{index % 12 + 1:02d}-0{row + 1}T{index % 24:02d}:00:00"
     if column.endswith("_date"):
         return f"2002-{index % 12 + 1:02d}-0{row + 1}"
     if column == "batch_booking":
@@ -186,6 +201,23 @@ def _texts(xml: str) -> dict[str, list[str]]:
     return found
 
 
+#: Columns a template renders only when the preferred column is absent.
+_ALTERNATES: dict[str, str] = {
+    "debtor_account_number": "debtor_account_IBAN",
+    "debtor_account_scheme": "debtor_account_IBAN",
+    "debtor_account_scheme_proprietary": "debtor_account_scheme",
+    "creditor_account_number": "creditor_account_IBAN",
+    "creditor_account_scheme": "creditor_account_IBAN",
+    "creditor_account_scheme_proprietary": "creditor_account_scheme",
+    "initiator_id_scheme_proprietary": "initiator_id_scheme",
+    "debtor_id_scheme_proprietary": "debtor_id_scheme",
+    "local_instrument_proprietary": "local_instrument_code",
+    "requested_execution_date": "requested_execution_datetime",
+}
+#: Values that make a template take its other branch for one column.
+_EXTRA_RENDERS: dict[str, str] = {"creditor_reference_type": "SCOR"}
+
+
 @cache
 def column_paths(version: str) -> dict[str, tuple[str, ...]]:
     """Which element paths each input column renders to, per edition.
@@ -208,7 +240,30 @@ def column_paths(version: str) -> dict[str, tuple[str, ...]]:
         for r in range(_ROWS)
     ]
     texts = _texts(_render(version, rows))
+    # a second rendering without the preferred columns reveals where the
+    # alternates land (an account number instead of an IBAN)
+    for alternate in _ALTERNATES:
+        if alternate not in columns:
+            continue
+        # drop the whole chain of preferred columns above this alternate
+        removed: set[str] = set()
+        current = alternate
+        while current in _ALTERNATES:
+            current = _ALTERNATES[current]
+            removed.add(current)
+        sparse = [
+            {c: v for c, v in r.items() if c not in removed} for r in rows
+        ]
+        for value, paths in _texts(_render(version, sparse)).items():
+            texts.setdefault(value, []).extend(paths)
     mapping: dict[str, set[str]] = {c: set() for c in columns}
+    for column, other in _EXTRA_RENDERS.items():
+        if column not in columns:
+            continue
+        variant = [dict(r, **{column: other}) for r in rows]
+        for value, paths in _texts(_render(version, variant)).items():
+            if value.startswith(other):
+                mapping[column].update(paths)
     for value, paths in texts.items():
         for index, column in enumerate(columns):
             if value == _sentinel(column, index, 0) or (
@@ -325,9 +380,12 @@ def to_records(xml: str, version: str) -> RecordsTwin:
         gap.append(f"CstmrCdtTrfInitn/PmtInf (occurrences 2 to {len(blocks)})")
     present = set().union(*(set(r) for r in rows)) if rows else set()
     missing = [
-        c
-        for c in preparer_required(version)
-        if c not in present and _FIELD_ALIASES.get(c) not in present
+        group
+        for group in preparer_required(version)
+        if not any(
+            c in present or _FIELD_ALIASES.get(c) in present
+            for c in group.split("|")
+        )
     ]
     return RecordsTwin(rows, gap, missing)
 

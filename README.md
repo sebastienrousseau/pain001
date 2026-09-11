@@ -227,6 +227,11 @@ Two corpora ship in the wheel, built by one engine
   3 (CZ, HK, SG, MY, QA, AE) with their confidence chips. Browse and download every file at
   [pain001.com/example-corpus](https://pain001.com/example-corpus/).
 
+The CSV pipeline's flat columns, about seventy for the `.03` and `.09` to
+`.13` editions, are listed with the element each lands on in
+[docs/input-columns.md](docs/input-columns.md); every pain.001 market
+file but the cheque regenerates through them.
+
 Every pain.001 market file also ships its **ISO JSON twin** (the ISO
 20022 RA's JSON convention, lossless, with a JSON Schema 2020-12 per
 edition) and a **records twin**, the flat rows the CSV pipeline consumes
