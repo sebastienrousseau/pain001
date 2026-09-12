@@ -215,6 +215,21 @@ jobs:
       - name: ❯ Publish to PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
 
+      # The website regenerates its corpus pages, demo samples and version
+      # stamps from each release and opens a pull request there. Needs a
+      # fine-grained PAT (contents: write, pull requests: write on
+      # pain001.github.io) in SITE_DISPATCH_TOKEN; without it this step
+      # fails on its own and the release is unaffected.
+      - name: ❯ Ask the website to regenerate
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.SITE_DISPATCH_TOKEN }}
+        run: |
+          [ -n "$GH_TOKEN" ] || { echo "SITE_DISPATCH_TOKEN not set; skipping"; exit 1; }
+          gh api repos/sebastienrousseau/pain001.github.io/dispatches \
+            -f event_type=suite-release \
+            -F "client_payload[version]=${GITHUB_REF#refs/tags/v}"
+
   # 5. SIGNED PROVENANCE (Only on Tags)
   #
   # This must live in the same workflow as the publish job: a release
