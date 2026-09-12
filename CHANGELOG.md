@@ -126,6 +126,8 @@ website and in the MCP and LSP tools. Entries are added as work lands.
   issuer of the customer id; a public sample file carries no real bank's
   name.
 
+## [0.0.67] - 2026-09-12
+||||||| 287dd9a
 ## [0.0.67] - Unreleased
 
 The first of the three example-corpus releases
