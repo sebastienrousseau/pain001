@@ -108,7 +108,7 @@ work lands.
   projection no longer emits a `DeprecationWarning` on empty
   postal-address blocks.
 
-## [0.0.68] - Unreleased
+## [0.0.68] - 2026-09-12
 
 The second example-corpus release
 ([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md)):
