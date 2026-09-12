@@ -11,7 +11,7 @@ While the project is pre-`1.0`, that means **the latest released
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.69` (latest) | Current | ✅ Yes |
+| `0.0.70` (latest) | Current | ✅ Yes |
 | `0.0.68` | Prior | ✅ Yes |
 | `≤ 0.0.67` | Old | ❌ No — upgrade |
 

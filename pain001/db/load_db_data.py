@@ -20,15 +20,16 @@
 
 import os
 import re
-import sqlite3
 from typing import Any
 
 from pain001.exceptions import ConfigurationError
 from pain001.security import validate_path
 
 
-def _connect_sqlite_read_only(safe_path: str) -> sqlite3.Connection:
+def _connect_sqlite_read_only(safe_path: str) -> Any:
     """Open an SQLite database in read-only mode."""
+    import sqlite3  # noqa: PLC0415 - loaded only when a database is read
+
     return sqlite3.connect(f"file:{safe_path}?mode=ro", uri=True)  # nosec B608
 
 

@@ -16,13 +16,12 @@
 
 import logging
 
-__version__ = "0.0.69"
+__version__ = "0.0.70"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-from pain001.__main__ import main
 from pain001.async_adapter import (
     generate_xml_string_async,
     process_files_async,
@@ -88,3 +87,26 @@ __all__ = [
     "DataSourceError",
     "__version__",
 ]
+
+
+def __getattr__(name: str) -> object:
+    """Resolve ``pain001.main`` lazily so importing the library never loads the CLI.
+
+    The command-line entry point pulls in ``rich`` and ``click``; a program
+    (or a browser runtime) that only generates and validates files should
+    not pay for them.
+
+    Args:
+        name: The attribute being looked up.
+
+    Returns:
+        The CLI entry point for ``main``.
+
+    Raises:
+        AttributeError: For any other name.
+    """
+    if name == "main":
+        from pain001.__main__ import main  # noqa: PLC0415
+
+        return main
+    raise AttributeError(f"module 'pain001' has no attribute {name!r}")

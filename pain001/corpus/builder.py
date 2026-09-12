@@ -46,8 +46,6 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
-from lxml import etree
-
 from pain001.corpus import identifiers as ids
 from pain001.corpus.inventory import ElementEntry, Inventory, inventory_for
 from pain001.corpus.registry import Scenario, scenario_from
@@ -809,6 +807,9 @@ class _Fitter:
 
 def _serialise(root_name: str, tree: Tree, namespace: str) -> str:
     """Write the tree as a pretty-printed, declared UTF-8 document."""
+    # The builder is a maintainer tool; twins and the API must not pay for lxml.
+    from lxml import etree  # noqa: PLC0415
+
     document = etree.Element(
         f"{{{namespace}}}Document", nsmap={None: namespace}
     )
@@ -828,8 +829,10 @@ def _text(value: Any) -> str:
     return str(value)
 
 
-def _fill(element: etree._Element, tree: Tree, namespace: str) -> None:
+def _fill(element: Any, tree: Tree, namespace: str) -> None:
     """Add ``tree`` under ``element`` as namespaced children."""
+    from lxml import etree  # noqa: PLC0415
+
     for key, value in tree.items():
         if key == "$":
             element.text = _text(value)
