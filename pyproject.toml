@@ -171,6 +171,10 @@ filterwarnings = [
     "ignore::DeprecationWarning:starlette.*",
     "ignore::DeprecationWarning:httpx.*",
     "ignore::pytest.PytestUnraisableExceptionWarning",
+    # opentelemetry on Python 3.10/3.11 (importlib.metadata entry points)
+    "ignore:SelectableGroups dict interface is deprecated:DeprecationWarning",
+    # pygls on Python 3.14
+    "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning",
 ]
 
 # Markers for test categorization
