@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.70] - Unreleased
+
+### Changed
+
+- **Optional dependencies load when used, not on import.** `import pain001`
+  no longer loads the CLI (and with it `rich`), the corpus builder no
+  longer imports `lxml` at module level, and the SQLite loader imports
+  `sqlite3` only when a database is opened. A program that only generates
+  and validates files, or a browser runtime that runs the library in
+  WebAssembly, no longer pays for any of them: the wheel set needed in
+  Pyodide shrinks from about 13 MB to about 3.5 MB. `pain001.main` still
+  resolves, lazily.
+
 ## [0.0.69] - 2026-09-12
 
 The third example-corpus release: the tier 2 and 3 packs, the CSV
