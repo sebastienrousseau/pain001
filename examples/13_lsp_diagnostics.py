@@ -29,10 +29,13 @@ from pain001.lsp import Severity, diagnostics_for_csv
 
 # A document with one clean row and one row seeded with four mistakes:
 # a bad IBAN, a bad BIC, a non-ISO currency, and a non-Latin character.
+# The header carries every column the pain.001.001.03 JSON schema
+# requires; the engine reports a missing-column error for each absent
+# one, the same verdict the CSV validator would give.
 DOCUMENT = """\
-id,payment_amount,currency,debtor_name,debtor_account_IBAN,debtor_agent_BIC,creditor_name,creditor_account_IBAN
-1,150,EUR,Acme Corp,DE89370400440532013000,BANKDEFFXXX,Globex,DE89370400440532013000
-2,150,EURO,Café Solé,DE00INVALID,NOTABIC,Globex,DE89370400440532013000
+id,date,initiator_name,payment_information_id,service_level_code,requested_execution_date,payment_id,payment_amount,currency,debtor_name,debtor_account_IBAN,debtor_agent_BIC,creditor_name,creditor_account_IBAN,creditor_agent_BIC
+1,2026-01-02,Initiator,PMT-1,SEPA,2026-01-03,PAY-1,150,EUR,Acme Corp,DE89370400440532013000,BANKDEFFXXX,Globex,DE89370400440532013000,BANKDEFFXXX
+2,2026-01-02,Initiator,PMT-1,SEPA,2026-01-03,PAY-2,150,EURO,Café Solé,DE00INVALID,NOTABIC,Globex,DE89370400440532013000,BANKDEFFXXX
 """
 
 

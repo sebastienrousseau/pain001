@@ -27,6 +27,8 @@ import io
 from dataclasses import dataclass
 from enum import IntEnum
 
+from pain001.constants import valid_xml_types
+from pain001.schemas.required_columns import required_columns
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.charset import find_invalid_characters
 from pain001.validation.iban_validator import validate_iban_safe
@@ -62,27 +64,13 @@ class Diagnostic:
     code: str
 
 
-# Core columns each family of message must provide. Kept deliberately
-# minimal — the optional remainder is validated only when present.
-_CREDIT_TRANSFER_REQUIRED = frozenset(
-    {
-        "id",
-        "payment_amount",
-        "currency",
-        "debtor_name",
-        "debtor_account_IBAN",
-        "creditor_name",
-        "creditor_account_IBAN",
-    }
-)
-_DIRECT_DEBIT_REQUIRED = _CREDIT_TRANSFER_REQUIRED | {
-    "mandate_id",
-    "sequence_type",
-}
-
-
 def _required_columns(message_type: str) -> frozenset[str]:
     """Return the required column set for a message type.
+
+    The set is the ``required`` list of the bundled JSON schema, the
+    same contract the CSV and SQLite validators enforce. A message type
+    that is not bundled falls back to the columns every bundled schema
+    describes.
 
     Args:
         message_type: ISO 20022 message type (e.g. ``pain.001.001.03``).
@@ -90,9 +78,9 @@ def _required_columns(message_type: str) -> frozenset[str]:
     Returns:
         The set of column names that must be present.
     """
-    if message_type.startswith("pain.008"):
-        return _DIRECT_DEBIT_REQUIRED
-    return _CREDIT_TRANSFER_REQUIRED
+    if message_type not in valid_xml_types:
+        return frozenset(required_columns())
+    return frozenset(required_columns(message_type))
 
 
 def _cell_spans(line_text: str) -> list[tuple[int, int]]:

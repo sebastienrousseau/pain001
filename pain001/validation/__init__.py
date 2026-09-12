@@ -18,6 +18,7 @@ This module provides centralized validation services for payment data,
 templates, schemas, and data sources.
 """
 
+from pain001.schemas.required_columns import required_columns
 from pain001.validation.bic_validator import (
     validate_bic,
     validate_bic_format,
@@ -34,6 +35,13 @@ from pain001.validation.iban_validator import (
     validate_iban_checksum,
     validate_iban_format,
     validate_iban_safe,
+)
+from pain001.validation.rails import (
+    PURPOSE_MANDATES,
+    RAILS,
+    PurposeMandate,
+    Rail,
+    RailProfile,
 )
 from pain001.validation.schemes import (
     PROFILES,
@@ -89,4 +97,12 @@ __all__ = [
     "PROFILES",
     "REMEDIATIONS",
     "remediation_for",
+    # Rail rulebooks
+    "RAILS",
+    "PURPOSE_MANDATES",
+    "Rail",
+    "RailProfile",
+    "PurposeMandate",
+    # Required-column contract
+    "required_columns",
 ]

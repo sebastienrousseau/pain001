@@ -39,6 +39,7 @@
 **Library reference**
 
 - [Supported messages](#supported-messages) — every bundled ISO 20022 message type
+- [Example corpus](#example-corpus) — schema coverage sets for every XSD and bank-ready market files with provenance
 - [Input formats](#input-formats) — CSV, SQLite, JSON, JSONL, Parquet
 - [Usage](#usage) — CLI, scheme validation, dry-run, streaming, input normalization, REST API, Python API
 - [Companion packages](#companion-packages) — MCP server, Language Server
@@ -185,8 +186,8 @@ pain001 generate -t pain.001.001.03 -d my-payments.csv  # ship it
 
 | Message type | Description |
 | :--- | :--- |
-| `pain.001.001.03` – `pain.001.001.12` | Customer Credit Transfer Initiation, all ten ISO 20022 versions |
-| `pain.008.001.02` | Customer Direct Debit Initiation |
+| `pain.001.001.03` – `pain.001.001.13` | Customer Credit Transfer Initiation, all eleven ISO 20022 versions |
+| `pain.008.001.02`, `pain.008.001.08` | Customer Direct Debit Initiation (V02 for legacy SEPA files, V08 for the EPC 2025 rulebooks and CBPR+) |
 
 Each bundled message type ships with a Jinja2 template, the official XSD
 schema, and registry metadata. List them from the CLI:
@@ -204,6 +205,38 @@ Related tooling included in the package:
   sends back, and `build_pain002_report(...)` to generate one (e.g. to
   simulate a bank in tests); the two round-trip.
 - **camt.053 parser** — read end-of-day bank statements.
+
+---
+
+## Example corpus
+
+Two corpora ship in the wheel, built by one engine
+([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md),
+[docs/corpus.md](docs/corpus.md)):
+
+- **Schema coverage sets** for all thirteen bundled XSDs: every element path
+  and every choice branch appears in at least one file of an edition's set,
+  every file is schema-valid and passes the ISO MDR cross-element rules.
+  `make corpus-coverage` fails if a set is incomplete.
+- **Market files** rendered from scenarios under `scenarios/` (what the
+  payment *is*; the builder spells it per edition), each validated on a
+  four-rung ladder (XSD, MDR rules, the rail profile, the bank overlay) and
+  shipped with a provenance sidecar naming its sources, confidence and
+  evidence state. 0.0.67 ships GB CHAPS, DE SEPA SCT and NL SEPA SDD; the
+  country packs follow in 0.0.68 and 0.0.69.
+
+```python
+from pain001.corpus import get_file, provenance, coverage_report
+
+xml = get_file("gb.chaps.property-purchase", "pain.001.001.09")
+record = provenance("gb.chaps.property-purchase", "pain.001.001.09")
+assert record["validation"]["profiles"]["uk-chaps"]["errors"] == 0
+assert coverage_report("pain.001.001.13")["complete"]
+```
+
+The engine also adds eighteen rail profiles (`--scheme uk-chaps`, `us-ach`,
+`ch-domestic`, `cbpr-cross-border` …) and five country purpose mandates to
+the scheme validator; see [SCHEMES.md](SCHEMES.md).
 
 ---
 

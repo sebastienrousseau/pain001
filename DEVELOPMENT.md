@@ -72,7 +72,9 @@ Conventions that bite: sample CSVs under `pain001/templates/` and
 `examples/data/` are linted for IBAN, BIC and currency validity; any
 column ending in `IBAN` or `BIC` is checked by suffix. Changing a
 template, a preparer or a sample CSV requires regenerating the golden
-files and, for CSV changes, `scripts/regenerate_template_dbs.py`.
+files (`scripts/generate_golden_files.py`) and the bundled examples and
+SQLite mirrors (`make xml-examples`); `tests/test_bundled_examples.py`
+fails until you do.
 
 ## Documentation
 

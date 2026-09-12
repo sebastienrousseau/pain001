@@ -7,9 +7,9 @@ small, well-tested core, first-class developer surfaces (library, CLI,
 REST, MCP, LSP), and a formal plugin contract so the ecosystem can
 extend it without forking.
 
-## Where we are (v0.0.65 shipped 2026-08-29; v0.0.66 in progress)
+## Where we are (v0.0.66 shipped 2026-09-10; v0.0.67 in progress)
 
-- **Generation:** pain.001.001.03 to .12 and pain.008.001.02,
+- **Generation:** pain.001.001.03 to .13, pain.008.001.02 and .08,
   registry-driven, `Decimal` end-to-end, mandatory XSD validation
   (XXE-safe via `defusedxml`).
 - **Validation:** six scheme rulebooks — `sepa-sct`, `sepa-sdd`,
@@ -95,7 +95,7 @@ into shipping artefacts.
 | Issue | Item | Effort |
 | :--- | :--- | :--- |
 | [#183](https://github.com/sebastienrousseau/pain001/issues/183) | Cross-record duplicate-detection scheme profile (`anti-duplicate`) | ✅ v0.0.66, composable via `--scheme a,b` |
-| [#184](https://github.com/sebastienrousseau/pain001/issues/184) | Custom YAML rule DSL via CEL (`pain001 --rules my-policy.yaml`) | L |
+| [#184](https://github.com/sebastienrousseau/pain001/issues/184) | Custom YAML rule DSL via CEL (`pain001 --rules my-policy.yaml`) | L — the declarative part landed as the overlay grammar in v0.0.67 (`scenarios/overlays/`, shared with `iso20022-bank-profile-mcp`); a CEL expression layer on top remains open |
 | [#185](https://github.com/sebastienrousseau/pain001/issues/185) | MCP `suggest_record_fix` tool for LLM-orchestrated correction | M |
 
 ### End-to-end workflow *(next)*
@@ -107,6 +107,20 @@ The bits that take pain001 from "validator" to "payment gateway."
 | [#186](https://github.com/sebastienrousseau/pain001/issues/186) | `pain001 upload --sftp` subcommand (SFTP only; EBICS deferred) | L |
 | [#187](https://github.com/sebastienrousseau/pain001/issues/187) | `pain001-mockbank` Docker image for pain.002 round-trip testing | M |
 | [#188](https://github.com/sebastienrousseau/pain001/issues/188) | Single-file hosted dashboard at `/api/v1/ui` (vanilla HTML, no framework) | ✅ v0.0.66 (beta) |
+
+### Example corpus *(in progress: v0.0.67 → v0.0.69)*
+
+Two corpora, one engine
+([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md),
+[docs/corpus.md](docs/corpus.md)): schema coverage sets that exercise every
+element and choice branch of every bundled XSD, and bank-ready market files
+per country and rail with provenance and an evidence state.
+
+| Release | Scope | Status |
+| :--- | :--- | :--- |
+| v0.0.67 | Ground cleared; XSD inventory, message deltas, external code sets; `pain.008.001.08` bundled; scenario DSL and builder; coverage corpus at 100 % for 13 XSDs; MDR rules; 18 rail profiles and 5 purpose mandates; validation ladder and evidence workflow; three market scenarios (GB CHAPS, DE SEPA SCT, NL SEPA SDD) | in progress ([#271](https://github.com/sebastienrousseau/pain001/pull/271)) |
+| v0.0.68 | Tier-1 market packs (UK, SEPA core countries, US, CH, SE), HSBC overlays where evidenced, website corpus page, MCP and LSP corpus tools | planned |
+| v0.0.69 | Tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence chips; CSV pipeline extension for the twelve most-used rails | planned |
 
 ## Explicitly declined / deferred
 

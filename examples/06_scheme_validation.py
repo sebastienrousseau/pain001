@@ -133,9 +133,9 @@ def _charset_guard() -> None:
 
 
 def _profile_registry() -> None:
-    """Six profiles ship today; the registry advertises them all."""
+    """The six scheme profiles plus the rail profiles, all advertised."""
     names = sorted(PROFILES)
-    assert names == [
+    schemes = [
         "anti-duplicate",
         "sepa-b2b",
         "sepa-inst",
@@ -143,7 +143,10 @@ def _profile_registry() -> None:
         "sepa-sdd",
         "xborder-ct",
     ]
-    print(f"PROFILES registry: {names}")
+    assert all(name in names for name in schemes)
+    rails = [n for n in names if n not in schemes]
+    assert "uk-chaps" in rails and "purpose-mandate-gb" in rails
+    print(f"PROFILES registry: {len(schemes)} schemes + {len(rails)} rails")
 
 
 def _anti_duplicate() -> None:

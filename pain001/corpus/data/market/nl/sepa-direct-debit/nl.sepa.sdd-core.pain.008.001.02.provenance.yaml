@@ -1,0 +1,39 @@
+scenario: nl.sepa.sdd-core
+family: sepa-direct-debit
+country: NL
+message_type: pain.008.001.02
+description: SEPA Core direct debit, recurring collections under mandates.
+sha256: 3c9c525e523684a66bca1afeeb9be867f522ac85e1577e4b1fc0ba71132c95cf
+build:
+  renamed:
+  - /Document/CstmrDrctDbtInitn/PmtInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrDrctDbtInitn/PmtInf/DrctDbtTxInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrDrctDbtInitn/PmtInf/DrctDbtTxInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sepa-sdd:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: EPC016-06 SEPA Core Direct Debit Rulebook 2025 v1.0
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

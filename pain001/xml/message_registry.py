@@ -399,7 +399,7 @@ def _prepare_xml_data_v09_to_v12(data: list[dict[str, Any]]) -> dict[str, Any]:
 def _prepare_xml_data_v08_direct_debit(
     data: list[dict[str, Any]],
 ) -> dict[str, Any]:
-    """Prepare XML data for pain.008.001.02 direct debit messages."""
+    """Prepare XML data for pain.008.001.02 and .08 direct debit messages."""
     return {
         "id": data[0].get("id", ""),
         "date": data[0].get("date", ""),
@@ -484,15 +484,26 @@ MESSAGE_REGISTRY: dict[str, MessageDefinition] = {
     "pain.001.001.12": MessageDefinition(
         "pain.001.001.12", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
-    # V13 (ISO, 19 Mar 2026) is additive over V12: it introduces the
-    # optional UnqTxIdr (UETR) and DbtCdtRptgInd elements and removes
-    # nothing, so the V09-V12 preparation strategy applies unchanged.
+    # V13 (ISO, 19 Mar 2026) is additive over V12 for everything the
+    # CSV pipeline fills: per docs/message-deltas.md it turns the
+    # regulatory-reporting detail type into a Cd/Prtry choice, adds a
+    # reporting code and structured securities data in remittance, and
+    # removes nothing, so the V09-V12 preparation strategy applies.
     "pain.001.001.13": MessageDefinition(
         "pain.001.001.13", "modern_v09_to_v12", _prepare_xml_data_v09_to_v12
     ),
     "pain.008.001.02": MessageDefinition(
         "pain.008.001.02",
         "direct_debit_v02",
+        _prepare_xml_data_v08_direct_debit,
+    ),
+    # V08 (ISO 2019, the version the EPC SEPA Direct Debit 2025
+    # rulebooks and CBPR+ carry) keeps the V02 shape for everything the
+    # CSV pipeline fills; the visible change is BICFI for BIC, which
+    # lives in the template, so the V02 preparer applies unchanged.
+    "pain.008.001.08": MessageDefinition(
+        "pain.008.001.08",
+        "direct_debit_v08",
         _prepare_xml_data_v08_direct_debit,
     ),
 }

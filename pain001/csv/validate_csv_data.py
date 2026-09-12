@@ -44,6 +44,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from pain001.schemas.required_columns import required_columns
+
 logger = logging.getLogger(__name__)
 
 
@@ -196,39 +198,24 @@ def _format_errors(
     return errors
 
 
-def validate_csv_data(data: list[dict[str, Any]]) -> bool:
-    """Validate the CSV data before processing it.
+def validate_csv_data(
+    data: list[dict[str, Any]], message_type: str | None = None
+) -> bool:
+    """Validate payment rows against the required-column contract.
+
+    The columns and types come from :func:`required_columns`: the
+    bundled JSON schema of ``message_type`` when given, otherwise every
+    column all bundled schemas describe.
 
     Args:
         data: A list of dictionaries containing the CSV data.
+        message_type: The target message type, e.g. ``pain.001.001.09``,
+            or ``None`` when it is not yet known.
 
     Returns:
         bool: True if the data is valid, False otherwise.
     """
-    required_columns = {
-        "id": int,
-        "date": datetime,
-        "nb_of_txs": int,
-        "ctrl_sum": float,
-        "initiator_name": str,
-        "payment_information_id": str,
-        "payment_method": str,
-        "batch_booking": bool,
-        "service_level_code": str,
-        "requested_execution_date": datetime,
-        "debtor_name": str,
-        "debtor_account_IBAN": str,
-        "debtor_agent_BIC": str,
-        "forwarding_agent_BIC": str,
-        "charge_bearer": str,
-        "payment_id": str,
-        "payment_amount": float,
-        "currency": str,
-        "creditor_agent_BIC": str,
-        "creditor_name": str,
-        "creditor_account_IBAN": str,
-        "remittance_information": str,
-    }
+    required = required_columns(message_type)
 
     if not data:
         logger.error("The CSV data is empty.")
@@ -238,14 +225,12 @@ def validate_csv_data(data: list[dict[str, Any]]) -> bool:
     all_errors = []  # Batch error messages for better performance
 
     for row in data:
-        missing_columns, invalid_columns = _validate_row(row, required_columns)
+        missing_columns, invalid_columns = _validate_row(row, required)
 
         if missing_columns or invalid_columns:
             is_valid = False
             all_errors.extend(
-                _format_errors(
-                    row, missing_columns, invalid_columns, required_columns
-                )
+                _format_errors(row, missing_columns, invalid_columns, required)
             )
 
     if all_errors:

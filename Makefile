@@ -41,7 +41,10 @@ help:
 	@echo "  complex       - Code complexity analysis"
 	@echo "  mutate        - Mutation testing"
 	@echo "  docs          - Build documentation"
-	@echo "  xml-examples  - Generate XML example files for XSD validation tests"
+	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors
+	@echo "  corpus-build  - Render scenarios/ and the coverage sets into pain001/corpus/data (deterministic)"
+	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)"
+	@echo "  corpus-evidence - Print the external-validation checklist per scenario""
 	@echo ""
 	@echo "Advanced Tollgates (Enterprise Production):"
 	@echo "  tollgate-deps        - Verify no new dependencies (Dependency Governance)"
@@ -198,15 +201,32 @@ tollgates: tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity
 
 # --- XML Example Generation ---
 xml-examples:
-	@echo "$(YELLOW)Generating XML example files for XSD validation tests...$(NC)"
+	@echo "$(YELLOW)Regenerating bundled example XML and SQLite mirrors...$(NC)"
 	@poetry run python scripts/generate_xml_examples.py
-	@echo "$(GREEN)✓ XML examples generated$(NC)"
+	@poetry run python scripts/regenerate_template_dbs.py
+	@echo "$(GREEN)✓ Bundled examples regenerated$(NC)"
+
+# --- Corpus build (ADR-0003): scenarios -> pain001/corpus/data/market ---
+corpus-build:
+	@echo "$(YELLOW)Building the corpus from scenarios/...$(NC)"
+	@poetry run python scripts/build_corpus.py
+	@echo "$(GREEN)✓ Corpus built$(NC)"
+
+# --- Corpus evidence checklist (ADR-0003, D7) ---
+corpus-evidence:
+	@poetry run python scripts/corpus_evidence.py checklist
+
+# --- Corpus coverage gate (ADR-0003) ---
+corpus-coverage:
+	@echo "$(YELLOW)Measuring coverage sets against the schema inventories...$(NC)"
+	@poetry run python scripts/corpus_coverage.py --strict
+	@echo "$(GREEN)✓ Corpus coverage gate passed$(NC)"
 
 # --- SLO verification (recommended before commit) ---
 slos: lint type test perf
 	@echo "$(GREEN)✓ All SLOs verified$(NC)"
 
 # --- Full quality gate (blocking) ---
-check: lint cov sec
+check: lint cov sec corpus-coverage
 	@echo "$(GREEN)✓ Full quality gate passed$(NC)"
 

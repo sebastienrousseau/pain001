@@ -1,0 +1,57 @@
+# A CHAPS property completion payment from a corporate to a solicitor's
+# client account, the shape the Bank of England mandated purpose codes
+# for from 1 May 2025. The same scenario renders pain.001.001.03 (what
+# most UK corporate channels still take) and .09 (the CBPR+ generation).
+id: gb.chaps.property-purchase
+family: priority-payment
+country: GB
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 20260912
+description: CHAPS same-day property completion with the BoE HLST purpose code.
+
+profiles: [uk-chaps, purpose-mandate-gb, anti-duplicate]
+
+parties:
+  uk-corporate:
+    name: Elm Road Developments Ltd
+    address: {form: hybrid, street: Elm Road, building_number: "14", post_code: SW1A 1AA, town: London, country: GB}
+    id: {org: {lei: auto}}
+  uk-solicitor:
+    name: Bramley and Co Solicitors Client Account
+    address: {form: hybrid, street: High Street, building_number: "2", post_code: RG1 2AB, town: Reading, country: GB}
+
+header:
+  message_id: ELMRD-20260912-0001
+  created: "2026-09-12T08:30:00"
+  initiating_party: {ref: uk-corporate}
+
+payment:
+  id: CHAPS-20260912-001
+  method: TRF
+  batch_booking: false
+  type: {priority: HIGH, service_level: SDVA}
+  requested_execution_date: "2026-09-12"
+  debtor: {ref: uk-corporate}
+  debtor_account: {iban: auto, currency: GBP}
+  debtor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "040004"}}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: COMPLETION-2026-0912
+    uetr: auto
+    amount: {ccy: GBP, value: "425000.00"}
+    creditor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "309634"}}
+    creditor: {ref: uk-solicitor}
+    creditor_account: {iban: auto}
+    purpose: HLST
+    remittance: {unstructured: "Completion 14 Elm Road"}
+
+constraints:
+  - end_to_end_id_max: 35
+  - address_min: [TwnNm, Ctry]
+
+provenance:
+  sources:
+    - {title: "Bank of England: ISO 20022 purpose codes for CHAPS property transactions", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

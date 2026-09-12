@@ -6,8 +6,8 @@
         <GrpHdr>
             <MsgId>1</MsgId>
             <CreDtTm>2023-01-01T12:00:00Z</CreDtTm>
-            <NbOfTxs>3</NbOfTxs>
-            <CtrlSum>500.75</CtrlSum>
+            <NbOfTxs>1</NbOfTxs>
+            <CtrlSum>100.00</CtrlSum>
             <InitgPty>
                 <Nm>John Doe</Nm>
                 <PstlAdr>
@@ -52,7 +52,7 @@
                     <EndToEndId>90876</EndToEndId>
                 </PmtId>
                 <Amt>
-                    <InstdAmt Ccy="EUR">100</InstdAmt>
+                    <InstdAmt Ccy="EUR">100.00</InstdAmt>
                 </Amt>
                 <ChrgBr>SLEV</ChrgBr>
                 <CdtrAgt>

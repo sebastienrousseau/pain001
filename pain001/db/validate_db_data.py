@@ -15,44 +15,34 @@
 """Validate SQLite payment data against required-field rules."""
 
 import logging
-from datetime import datetime
 from typing import Any
 
 from pain001.csv.validate_csv_data import _validate_field_type
+from pain001.schemas.required_columns import required_columns
 
 logger = logging.getLogger(__name__)
 
-# Core required fields with expected types — kept in type parity with
-# the CSV validator so a row passes or fails identically regardless of
-# the data source it was loaded from.
-REQUIRED_COLUMNS: dict[str, type] = {
-    "id": int,
-    "date": datetime,
-    "nb_of_txs": int,
-    "initiator_name": str,
-    "payment_information_id": str,
-    "payment_method": str,
-    "debtor_name": str,
-    "debtor_account_IBAN": str,
-    "payment_amount": float,
-    "currency": str,
-    "creditor_name": str,
-    "creditor_account_IBAN": str,
-}
 
-
-def validate_db_data(data: list[dict[str, Any]]) -> bool:
+def validate_db_data(
+    data: list[dict[str, Any]], message_type: str | None = None
+) -> bool:
     """
     Validate the data from a database.
 
+    The columns and types come from :func:`required_columns`, the same
+    contract the CSV validator enforces.
+
     Args:
         data: The rows to validate, one dictionary per row.
+        message_type: The target message type, e.g. ``pain.001.001.09``,
+            or ``None`` when it is not yet known.
 
     Returns:
         bool: True if the data is valid, False otherwise.
     """
+    required = required_columns(message_type)
     for row in data:
-        for column, data_type in REQUIRED_COLUMNS.items():
+        for column, data_type in required.items():
             if column not in row or row[column] is None or row[column] == "":
                 logger.error(
                     "Error: Missing value for required column '%s' in row: %s",

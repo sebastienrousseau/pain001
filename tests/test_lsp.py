@@ -15,14 +15,19 @@ from pain001.lsp.diagnostics import (
 )
 
 # A minimal valid credit-transfer document (header + one clean row).
+# The columns pain.001.001.03's JSON schema requires, which is what the
+# diagnostics engine demands since it shares the validators' contract.
 HEADER = (
-    "id,payment_amount,currency,debtor_name,debtor_account_IBAN,"
-    "debtor_agent_BIC,creditor_name,creditor_account_IBAN"
+    "id,date,initiator_name,payment_information_id,service_level_code,"
+    "requested_execution_date,payment_id,payment_amount,currency,"
+    "debtor_name,debtor_account_IBAN,debtor_agent_BIC,creditor_name,"
+    "creditor_account_IBAN,creditor_agent_BIC"
 )
 # Uses genuinely mod-97-valid IBANs so the row lints clean.
 GOOD_ROW = (
-    "1,150,EUR,Acme Corp,DE89370400440532013000,BANKDEFFXXX,"
-    "Globex,DE89370400440532013000"
+    "1,2026-01-02,Initiator,PMT-1,SEPA,2026-01-03,PAY-1,150,EUR,"
+    "Acme Corp,DE89370400440532013000,BANKDEFFXXX,"
+    "Globex,DE89370400440532013000,BANKDEFFXXX"
 )
 
 
@@ -92,10 +97,7 @@ class TestDiagnosticsEngine:
 
     def test_empty_cells_skipped(self) -> None:
         """Empty individual cells are skipped, not flagged."""
-        row = (
-            "1,150,EUR,,DE89370400440532013000,BANKDEFFXXX,"
-            "Globex,DE89370400440532013000"
-        )
+        row = GOOD_ROW.replace("Acme Corp", "")
         assert diagnostics_for_csv(f"{HEADER}\n{row}") == []
 
     def test_diagnostic_span_locates_cell(self) -> None:

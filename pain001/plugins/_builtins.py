@@ -365,11 +365,15 @@ def register_all(reg: PluginRegistry) -> None:
     # Scheme profiles. Imported here rather than at module scope so the
     # rulebook module (and its Decimal/regex tables) is only paid for by
     # processes that actually look a plugin up.
+    from pain001.validation.rails import DESCRIPTIONS  # noqa: PLC0415
     from pain001.validation.schemes import PROFILES  # noqa: PLC0415
 
     for name, profile in PROFILES.items():
         reg.register_scheme(
-            _ProfileScheme(profile, _SCHEME_DESCRIPTIONS.get(name, ""))
+            _ProfileScheme(
+                profile,
+                _SCHEME_DESCRIPTIONS.get(name, DESCRIPTIONS.get(name, "")),
+            )
         )
 
     reg.register_writer(_XmlFileWriter())

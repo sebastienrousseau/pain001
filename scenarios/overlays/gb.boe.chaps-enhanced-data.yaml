@@ -1,0 +1,47 @@
+# What the Bank of England requires of CHAPS payments since the ISO 20022
+# enhanced-data mandate: a purpose code on property and inter-financial
+# payments (1 May 2025), and structured or hybrid addresses on all
+# payments (from November 2025). Public source; no bank overlay.
+overlay_id: gb.boe.chaps-enhanced-data
+title: Bank of England CHAPS enhanced data
+applies_to: [priority-payment]
+source:
+  title: "Bank of England: ISO 20022 enhanced data in CHAPS, Policy Statement"
+  read: "2026-09-10"
+rules:
+  - rule_id: chaps-purpose-required
+    description: A CHAPS payment carries a purpose code.
+    locator: CdtTrfTxInf/Purp/Cd
+    assertion: required
+    error_code: CHAPS_PURPOSE_MISSING
+  - rule_id: chaps-property-purpose
+    description: A property purchase uses the BoE housing code HLST.
+    locator: Purp/Cd
+    assertion: one_of:[HLST, HLRP, HLTR]
+    error_code: CHAPS_PURPOSE_NOT_PROPERTY
+    severity: warning
+  - rule_id: chaps-town-required
+    description: Creditor addresses carry a town name (hybrid or structured).
+    locator: Cdtr/PstlAdr/TwnNm
+    assertion: required
+    error_code: CHAPS_CDTR_TOWN_MISSING
+  - rule_id: chaps-country-required
+    description: Creditor addresses carry a country.
+    locator: Cdtr/PstlAdr/Ctry
+    assertion: required
+    error_code: CHAPS_CDTR_COUNTRY_MISSING
+  - rule_id: chaps-address-lines
+    description: Hybrid addresses use at most two address lines.
+    locator: PstlAdr/AdrLine
+    assertion: max_length:70
+    error_code: CHAPS_ADRLINE_TOO_LONG
+  - rule_id: chaps-gbp-charges
+    description: For GBP payments the charge bearer is SHAR.
+    locator: ChrgBr
+    assertion: if:Ccy=GBP:equals:SHAR
+    error_code: CHAPS_CHRGBR_NOT_SHAR
+  - rule_id: chaps-latin-remittance
+    description: Remittance text stays within the ISO 20022 Latin character set.
+    locator: Ustrd
+    assertion: charset:iso20022
+    error_code: CHAPS_RMT_CHARSET

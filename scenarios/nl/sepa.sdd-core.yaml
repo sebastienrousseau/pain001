@@ -1,0 +1,57 @@
+# A Dutch SEPA Core direct debit collection: a utility collecting two
+# recurring instalments under existing mandates. Renders pain.008.001.02
+# (what most Dutch corporate channels still take) and .08 (EPC 2025).
+id: nl.sepa.sdd-core
+family: sepa-direct-debit
+country: NL
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 3131
+description: SEPA Core direct debit, recurring collections under mandates.
+
+profiles: [sepa-sdd, anti-duplicate]
+
+parties:
+  utility:
+    name: Energie Noord BV
+    address: {form: hybrid, street: Stationsplein, building_number: "9", post_code: 9726 AE, town: Groningen, country: NL}
+  scheme:
+    id: {private: {other: [{id: NL98ZZZ123456780001, scheme: SEPA}]}}
+
+header:
+  message_id: ENB-DD-2026-10
+  created: "2026-09-28T07:00:00"
+  initiating_party: {ref: utility}
+
+payment:
+  id: DD-2026-10-CORE
+  method: DD
+  batch_booking: true
+  type: {service_level: SEPA, local_instrument: CORE, sequence_type: RCUR}
+  requested_collection_date: "2026-10-01"
+  creditor: {ref: utility}
+  creditor_account: {iban: auto}
+  creditor_agent: {bic: auto}
+  charge_bearer: SLEV
+  creditor_scheme_id: {ref: scheme}
+
+transactions:
+  - end_to_end_id: ENB-2026-10-000001
+    amount: {ccy: EUR, value: "85.00"}
+    mandate: {id: MNDT-2024-000123, date_of_signature: "2024-03-01"}
+    debtor_agent: {bic: auto}
+    debtor: {name: J. de Vries, address: {form: hybrid, post_code: 1012 AB, town: Amsterdam, country: NL}}
+    debtor_account: {iban: auto}
+    remittance: {unstructured: "Energie oktober 2026"}
+  - end_to_end_id: ENB-2026-10-000002
+    amount: {ccy: EUR, value: "112.40"}
+    mandate: {id: MNDT-2025-004567, date_of_signature: "2025-01-15"}
+    debtor_agent: {bic: auto}
+    debtor: {name: Fatima El Amrani, address: {form: hybrid, post_code: 3011 AD, town: Rotterdam, country: NL}}
+    debtor_account: {iban: auto}
+    remittance: {unstructured: "Energie oktober 2026"}
+
+provenance:
+  sources:
+    - {title: "EPC016-06 SEPA Core Direct Debit Rulebook 2025 v1.0", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

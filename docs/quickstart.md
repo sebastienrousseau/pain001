@@ -69,8 +69,9 @@ Supported message types
   pain.001.001.04
   pain.001.001.05
   ...
-  pain.001.001.12
+  pain.001.001.13
   pain.008.001.02
+  pain.008.001.08
 ```
 
 `pain.001.001.03` is the most widely supported version — most

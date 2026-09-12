@@ -1,84 +1,104 @@
-#!/usr/bin/env python3
-"""
-Generate all 9 XML example files for XSD validation tests.
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Licensed under either of the Apache License, Version 2.0 or the MIT
+# License, at your option. You may not use this file except in
+# compliance with one of those licences. Copies are provided in
+# LICENSE-APACHE and LICENSE-MIT.
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the Licences is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
+# implied. See the applicable Licence for the specific language
+# governing permissions and limitations.
 
-This script generates pain.001.001.03 through pain.001.001.11 XML example files
-by loading the respective template.csv files and rendering them through the
-Jinja2 templates with XSD validation.
+"""Regenerate the bundled example XML for every registered message type.
+
+Each ``pain001/templates/<type>/<type>.xml`` is the rendering of that
+bundle's ``template.csv`` (every row) through its Jinja template,
+validated against its XSD. The result is what ``metadata.yaml`` points
+at as ``files.example_xml`` and what ``pain001 inspect`` prints.
+
+``tests/test_bundled_examples.py`` asserts the committed files equal this
+rendering byte for byte, so run this after changing a template, a
+preparer or a sample CSV, then commit the result alongside the golden
+files from ``scripts/generate_golden_files.py``.
 
 Usage:
-    poetry run python scripts/generate_xml_examples.py
+    poetry run python scripts/generate_xml_examples.py [--check]
+
+``--check`` writes nothing and exits 1 if any example is stale.
 """
 
-import os
+from __future__ import annotations
+
+import csv
 import sys
 from pathlib import Path
 
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
+from pain001.xml.generate_xml import generate_xml_string
 
-from pain001.csv.load_csv_data import load_csv_data  # noqa: E402
-from pain001.xml.generate_xml import generate_xml_string  # noqa: E402
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
-def main():
-    """Generate all XML example files."""
-    versions = ["03", "04", "05", "06", "07", "08", "09", "10", "11"]
+def render_example(message_type: str) -> tuple[Path, str]:
+    """Render the example for ``message_type`` from its bundle.
 
-    project_root = Path(__file__).parent.parent
-    os.chdir(project_root)
+    Args:
+        message_type: A registered message type, e.g. ``pain.001.001.09``.
 
-    print("Generating XML example files for XSD validation tests...")
-    print("=" * 60)
-
-    for ver in versions:
-        version_str = f"pain.001.001.{ver}"
-        template_dir = project_root / "pain001" / "templates" / version_str
-        csv_path = template_dir / "template.csv"
-        output_file = template_dir / f"{version_str}.xml"
-        xsd_path = template_dir / f"{version_str}.xsd"
-
-        print(f"\n[{version_str}]")
-        print(f"  CSV: {csv_path.relative_to(project_root)}")
-        print(f"  XSD: {xsd_path.relative_to(project_root)}")
-        print(f"  Output: {output_file.relative_to(project_root)}")
-
-        try:
-            # Load CSV data
-            payment_data = load_csv_data(str(csv_path))
-            print(f"  ✓ Loaded {len(payment_data)} payment(s) from CSV")
-
-            # Change to template directory for Jinja2
-            orig_dir = os.getcwd()
-            os.chdir(str(template_dir))
-
-            # Generate XML
-            xml_content = generate_xml_string(
-                payment_data,
-                version_str,
-                xml_template_path="template.xml",
-                xsd_schema_path=str(xsd_path.resolve()),
-            )
-
-            # Change back and write
-            os.chdir(orig_dir)
-            output_file.write_text(xml_content, encoding="utf-8")
-
-            print(f"  ✓ Generated XML: {len(xml_content)} bytes")
-            print(f"  ✓ Saved to: {output_file}")
-
-        except Exception as e:
-            print(f"  ✗ ERROR: {e}")
-            os.chdir(orig_dir)
-            return 1
-
-    print("\n" + "=" * 60)
-    print(f"✅ Successfully generated all {len(versions)} XML example files")
-    print(
-        "\nThese files enable XSD validation tests for all ISO 20022 versions."
+    Returns:
+        The path the example lives at and the rendered, XSD-valid XML.
+    """
+    meta = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
+    data_path = meta.example_data_path or meta.template_path.parent / (
+        "template.csv"
     )
+    with open(data_path, newline="", encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    xml = generate_xml_string(
+        rows, message_type, str(meta.template_path), str(meta.xsd_path)
+    )
+    out = meta.example_xml_path or meta.template_path.parent / (
+        f"{message_type}.xml"
+    )
+    return out, xml
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Regenerate (or with ``--check`` verify) every bundled example.
+
+    Args:
+        argv: Command-line arguments; ``--check`` verifies only.
+
+    Returns:
+        Process exit code: 0 when up to date or regenerated, 1 when
+        ``--check`` found a stale example.
+    """
+    check = "--check" in (argv if argv is not None else sys.argv[1:])
+    stale = 0
+    for meta in DEFAULT_TEMPLATE_REGISTRY.list_templates():
+        out, xml = render_example(meta.message_type)
+        current = out.read_text(encoding="utf-8") if out.exists() else None
+        if current == xml:
+            print(f"up to date  {out.relative_to(REPO_ROOT)}")
+            continue
+        stale += 1
+        if check:
+            print(f"STALE       {out.relative_to(REPO_ROOT)}")
+        else:
+            out.write_text(xml, encoding="utf-8")
+            print(
+                f"regenerated {out.relative_to(REPO_ROOT)} ({len(xml)} bytes)"
+            )
+    if check and stale:
+        print(
+            f"{stale} stale example(s); run scripts/generate_xml_examples.py"
+        )
+        return 1
     return 0
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover - script entry point
     sys.exit(main())

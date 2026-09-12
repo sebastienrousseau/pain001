@@ -21,7 +21,7 @@ from pathlib import Path
 BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 
 # Shared metadata
-VERSION = "0.0.66"
+VERSION = "0.0.67"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
@@ -39,6 +39,7 @@ valid_xml_types = [
     "pain.001.001.12",  # Customer Credit Transfer Initiation V12
     "pain.001.001.13",  # Customer Credit Transfer Initiation V13
     "pain.008.001.02",  # Customer Direct Debit Initiation V02
+    "pain.008.001.08",  # Customer Direct Debit Initiation V08
 ]
 
 # Application metadata

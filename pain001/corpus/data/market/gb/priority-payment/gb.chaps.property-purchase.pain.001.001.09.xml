@@ -1,0 +1,113 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>ELMRD-20260912-0001</MsgId>
+      <CreDtTm>2026-09-12T08:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>425000.00</CtrlSum>
+      <InitgPty>
+        <Nm>Elm Road Developments Ltd</Nm>
+        <PstlAdr>
+          <PstCd>SW1A 1AA</PstCd>
+          <TwnNm>London</TwnNm>
+          <Ctry>GB</Ctry>
+          <AdrLine>14 Elm Road</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <LEI>000000NMWEL2E9U1VL21</LEI>
+          </OrgId>
+        </Id>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>CHAPS-20260912-001</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>425000.00</CtrlSum>
+      <PmtTpInf>
+        <InstrPrty>HIGH</InstrPrty>
+        <SvcLvl>
+          <Cd>SDVA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-12</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Elm Road Developments Ltd</Nm>
+        <PstlAdr>
+          <PstCd>SW1A 1AA</PstCd>
+          <TwnNm>London</TwnNm>
+          <Ctry>GB</Ctry>
+          <AdrLine>14 Elm Road</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <LEI>000000NMWEL2E9U1VL21</LEI>
+          </OrgId>
+        </Id>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>GB07OUER60969382168086</IBAN>
+        </Id>
+        <Ccy>GBP</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>OICSGB40</BICFI>
+          <ClrSysMmbId>
+            <ClrSysId>
+              <Cd>GBDSC</Cd>
+            </ClrSysId>
+            <MmbId>040004</MmbId>
+          </ClrSysMmbId>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>COMPLETION-2026-0912</EndToEndId>
+          <UETR>069356c8-b718-4363-b1bc-824f86f5108f</UETR>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="GBP">425000.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>NPHBGBS0</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>GBDSC</Cd>
+              </ClrSysId>
+              <MmbId>309634</MmbId>
+            </ClrSysMmbId>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Bramley and Co Solicitors Client Account</Nm>
+          <PstlAdr>
+            <PstCd>RG1 2AB</PstCd>
+            <TwnNm>Reading</TwnNm>
+            <Ctry>GB</Ctry>
+            <AdrLine>2 High Street</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>GB20OYKL60284231569811</IBAN>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>HLST</Cd>
+        </Purp>
+        <RmtInf>
+          <Ustrd>Completion 14 Elm Road</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>
