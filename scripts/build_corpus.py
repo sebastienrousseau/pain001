@@ -23,7 +23,7 @@ changes nothing and ``--check`` proves it:
   sources, confidence and evidence, the builder's fit report and the
   file's SHA-256;
 * the coverage corpus: every bundled edition gets
-  ``pain001/corpus/data/coverage/<version>/set-NN.xml`` generated from
+  ``pain001/corpus/data/coverage/<version>/NN-<recipe>-<focus>.xml`` generated from
   its schema inventory until every element path and choice branch is
   hit, plus ``coverage.json`` with the report ``make corpus-coverage``
   re-checks.
@@ -43,6 +43,7 @@ import gzip
 import hashlib
 import json
 import sys
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -50,10 +51,11 @@ import yaml  # type: ignore[import-untyped]
 
 from pain001.constants import valid_xml_types
 from pain001.corpus.builder import BuildResult, build
-from pain001.corpus.coverage_sets import build_coverage_set
+from pain001.corpus.coverage_sets import CoverageFileInfo, build_coverage_set
 from pain001.corpus.inventory import CoverageReport
 from pain001.corpus.registry import SCENARIOS_DIR, Scenario, load_scenarios
 from pain001.corpus.rules.ladder import ladder_passes, run_ladder
+from pain001.corpus.rules.overlays import Overlay, load_overlays
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = REPO_ROOT / "pain001" / "corpus" / "data"
@@ -64,23 +66,63 @@ BUDGET_BYTES = 400_000
 
 
 def target_for(
-    scenario: Scenario, version: str, market_root: Path = MARKET_ROOT
+    scenario: Scenario,
+    version: str,
+    market_root: Path = MARKET_ROOT,
+    variant: str | None = None,
 ) -> Path:
-    """Where a scenario's rendering of ``version`` lives."""
+    """Where a scenario's rendering of ``version`` lives.
+
+    A bank variant built with an overlay's patch is named
+    ``<scenario>__<overlay>.<version>.xml`` beside the generic file.
+    """
+    stem = scenario.id if variant is None else f"{scenario.id}__{variant}"
     return (
         market_root
         / scenario.country.lower()
         / scenario.family
-        / f"{scenario.id}.{version}.xml"
+        / f"{stem}.{version}.xml"
     )
 
 
-def provenance_for(scenario: Scenario, result: BuildResult) -> str:
+def variants_for(
+    scenario: Scenario, pool: list[Overlay], version: str | None = None
+) -> list[Overlay]:
+    """The overlays with a patch that target the scenario and edition."""
+    wanted = scenario.overlays
+    chosen = []
+    for overlay in pool:
+        if not overlay.has_patch:
+            continue
+        if (
+            version is not None
+            and overlay.versions
+            and version not in overlay.versions
+        ):
+            continue
+        if wanted is None and not overlay.applies(
+            scenario.id, scenario.family
+        ):
+            continue
+        if wanted is not None and overlay.overlay_id not in wanted:
+            continue
+        chosen.append(overlay)
+    return chosen
+
+
+def provenance_for(
+    scenario: Scenario,
+    result: BuildResult,
+    variant: Overlay | None = None,
+    pool: list[Overlay] | None = None,
+) -> str:
     """The sidecar text: provenance, how the file was built, and the ladder.
 
     Args:
         scenario: The scenario.
         result: The build result for one edition.
+        variant: The overlay whose patch built this file, if any.
+        pool: The overlay pool; defaults to ``scenarios/overlays``.
 
     Returns:
         YAML text.
@@ -90,7 +132,13 @@ def provenance_for(scenario: Scenario, result: BuildResult) -> str:
             a file that cannot pass is not shipped.
     """
     report = result.report
-    ladder = run_ladder(scenario, result.version, result.xml)
+    ladder = run_ladder(
+        scenario,
+        result.version,
+        result.xml,
+        pool,
+        variant.overlay_id if variant else None,
+    )
     if not ladder_passes(ladder):
         raise SystemExit(
             f"{scenario.id} in {result.version} fails the validation ladder: "
@@ -101,6 +149,16 @@ def provenance_for(scenario: Scenario, result: BuildResult) -> str:
         "family": scenario.family,
         "country": scenario.country,
         "message_type": result.version,
+        "variant": (
+            {
+                "overlay": variant.overlay_id,
+                "title": variant.title,
+                "source": variant.source,
+                "patch": variant.patch_for(scenario.id),
+            }
+            if variant
+            else None
+        ),
         "description": scenario.data.get("description"),
         "sha256": hashlib.sha256(result.xml.encode("utf-8")).hexdigest(),
         "build": {
@@ -119,20 +177,34 @@ def provenance_for(scenario: Scenario, result: BuildResult) -> str:
     return yaml.safe_dump(record, sort_keys=False, allow_unicode=True)
 
 
-def slim_report(report: CoverageReport, count: int) -> dict[str, Any]:
+def slim_report(
+    report: CoverageReport, manifest: Sequence[CoverageFileInfo]
+) -> dict[str, Any]:
     """The coverage verdict without the hit lists, which the gate recomputes.
 
     Args:
         report: The set's coverage report.
-        count: How many files the set has.
+        manifest: What each file of the set is for, in order.
 
     Returns:
-        A JSON-ready dict: sources, counts, percentages, completeness,
-        and the missing, exempt and unknown lists.
+        A JSON-ready dict: sources, what each file is for, counts,
+        percentages, completeness, and the missing, exempt and unknown
+        lists.
     """
     return {
         "message_type": report.message_type,
-        "sources": [f"set-{n:02d}.xml" for n in range(1, count + 1)],
+        "sources": [info.name for info in manifest],
+        "files": [
+            {
+                "name": info.name,
+                "recipe": info.recipe,
+                "description": info.description,
+                "focus": list(info.focus),
+                "adds_paths": info.adds_paths,
+                "adds_branches": info.adds_branches,
+            }
+            for info in manifest
+        ],
         "paths": {
             "declared": len(report.hit_paths) + len(report.missing_paths),
             "hit": len(report.hit_paths),
@@ -200,16 +272,31 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     stale = 0
     expected: set[Path] = set()
+    pool = load_overlays()
     for scenario in scenarios:
         for version in scenario.versions:
-            result = build(scenario, version)
-            target = target_for(scenario, version, args.market_root)
-            sidecar = target.with_suffix(".provenance.yaml")
-            expected.update({target, sidecar})
-            wanted = {
-                target: result.xml,
-                sidecar: provenance_for(scenario, result),
-            }
+            renderings = [(None, build(scenario, version))]
+            for overlay in variants_for(scenario, pool, version):
+                renderings.append(
+                    (
+                        overlay,
+                        build(
+                            scenario, version, overlay.patch_for(scenario.id)
+                        ),
+                    )
+                )
+            wanted: dict[Path, str] = {}
+            for overlay, result in renderings:
+                variant = overlay.overlay_id if overlay else None
+                target = target_for(
+                    scenario, version, args.market_root, variant
+                )
+                sidecar = target.with_suffix(".provenance.yaml")
+                wanted[target] = result.xml
+                wanted[sidecar] = provenance_for(
+                    scenario, result, overlay, pool
+                )
+            expected.update(wanted)
             for path, text in wanted.items():
                 current = (
                     path.read_text(encoding="utf-8") if path.exists() else None
@@ -228,10 +315,12 @@ def main(argv: list[str] | None = None) -> int:
             coverage_set = build_coverage_set(version)
             set_dir = args.coverage_root / version
             wanted = {
-                set_dir / f"set-{n:02d}.xml": text
-                for n, text in enumerate(coverage_set.files, start=1)
+                set_dir / info.name: text
+                for info, text in zip(
+                    coverage_set.manifest, coverage_set.files, strict=True
+                )
             }
-            report = slim_report(coverage_set.report, len(coverage_set.files))
+            report = slim_report(coverage_set.report, coverage_set.manifest)
             wanted[set_dir / "coverage.json"] = (
                 json.dumps(report, indent=2) + "\n"
             )

@@ -1,0 +1,26 @@
+# Belgian structured communication (OGM/VCS) on SEPA files: twelve digits
+# whose last two are a mod-97 check, carried as a SCOR creditor reference
+# with issuer BBA. Public source.
+overlay_id: be.febelfin.structured-communication
+title: Febelfin structured communication (BBA)
+applies_to: [be.sepa.sct-supplier, be.sepa.sdd-core]
+source:
+  title: "Febelfin, XML message for SEPA Credit Transfer and Direct Debit initiation, implementation guidelines"
+  read: "2026-09-10"
+rules:
+  - rule_id: be-ogm-issuer
+    description: A Belgian structured communication is issued by BBA.
+    locator: CdtrRefInf/Tp/Issr
+    assertion: if:CdtrRefInf:equals:BBA
+    error_code: BE_OGM_ISSUER
+  - rule_id: be-ogm-format
+    description: The structured communication is twelve digits.
+    locator: CdtrRefInf/Ref
+    assertion: matches:[0-9]{12}
+    error_code: BE_OGM_FORMAT
+  - rule_id: be-sct-batch-booking
+    description: Belgian files are batch-booked by default.
+    locator: BtchBookg
+    assertion: equals:true
+    error_code: BE_BTCHBOOKG
+    severity: warning

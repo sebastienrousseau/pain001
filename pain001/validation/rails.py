@@ -831,8 +831,8 @@ RAILS: tuple[Rail, ...] = (
         "UK-BACS",
         ("pain.001",),
         (
-            "HSBCnet UK BACS usage guideline (pain.001.001.03)",
             "Bacs ISO 20022 / Standard 18 translation guide v1.1",
+            "Bacs service description: originator name and reference lengths",
         ),
         currencies=("GBP",),
         service_levels=("NURG",),
@@ -848,11 +848,11 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "Pay.UK Faster Payments scheme limits",
-            "HSBCnet UK Faster Payments usage guideline (pain.001.001.03)",
+            "Pay.UK Faster Payments ISO 20022 usage: service levels URGP and URNS both in use by UK channels",
         ),
         currencies=("GBP",),
         max_amount=Decimal("1000000.00"),
-        service_levels=("URGP",),
+        service_levels=("URGP", "URNS"),
         domestic=GB_DOMESTIC,
         end_to_end_max=18,
     ),
@@ -863,7 +863,6 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses)",
-            "HSBCnet UK Priority Payments usage guideline",
             "NatWest Bankline XML import guide (Jan 2025)",
         ),
         currencies=("GBP",),

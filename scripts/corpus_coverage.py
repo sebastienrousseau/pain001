@@ -112,7 +112,8 @@ def _ladder_check(files: list[Path]) -> int:
     scenarios = {s.id: s for s in load_scenarios()}
     failing = 0
     for path in files:
-        scenario_id, _, rest = path.name.partition(".pain.")
+        stem, _, rest = path.name.partition(".pain.")
+        scenario_id, _, variant = stem.partition("__")
         version = "pain." + rest[: -len(".xml")]
         scenario = scenarios.get(scenario_id)
         if scenario is None:
@@ -120,7 +121,10 @@ def _ladder_check(files: list[Path]) -> int:
             failing += 1
             continue
         record = run_ladder(
-            scenario, version, path.read_text(encoding="utf-8")
+            scenario,
+            version,
+            path.read_text(encoding="utf-8"),
+            variant=variant or None,
         )
         if not ladder_passes(record):
             failing += 1

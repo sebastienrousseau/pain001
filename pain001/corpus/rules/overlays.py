@@ -41,7 +41,15 @@ Verbs
     (or ``one_of:a|b|c``), ``max_length:<n>``, ``matches:<regex>``,
     ``charset:<name>`` (``iso20022``, ``ascii``, ``latin1``) and
     ``if:<elem>=<v>:<verb...>``, whose tail is any verb above; the
-    original ``if:<elem>=<v>:equals:<v2>`` reads the same.
+    original ``if:<elem>=<v>:equals:<v2>`` reads the same, and
+    ``if:<elem>:<verb...>`` (no ``=``) applies the tail when the element
+    is present at all.
+
+Patches
+    An overlay may carry a ``patch``: scenario keys deep-merged into the
+    scenario before building, so a bank's fixed choices (a service level
+    code, a charge bearer) produce their own file variant beside the
+    generic one, judged by the overlay's rules.
 """
 
 from __future__ import annotations
@@ -113,6 +121,11 @@ class Overlay:
         source: Citation of the document it derives from.
         rules: The rules.
         path: Where it was loaded from, if a file.
+        patch: Scenario keys merged in before building a variant.
+        patches: Per-scenario additions to ``patch``, keyed by scenario id.
+        versions: Message types the overlay covers; empty means every
+            edition. A guideline written for pain.001.001.03 does not
+            judge a .09 file, whose elements are spelled differently.
     """
 
     overlay_id: str
@@ -121,9 +134,43 @@ class Overlay:
     source: dict[str, Any] = field(default_factory=dict)
     rules: tuple[Rule, ...] = ()
     path: Path | None = None
+    patch: dict[str, Any] = field(default_factory=dict)
+    patches: dict[str, dict[str, Any]] = field(default_factory=dict)
+    versions: tuple[str, ...] = ()
 
-    def applies(self, scenario_id: str, family: str | None = None) -> bool:
-        """True when the overlay targets the scenario or its family."""
+    def patch_for(self, scenario_id: str) -> dict[str, Any]:
+        """The patch for one scenario: ``patch`` plus its ``patches`` entry."""
+        from pain001.corpus.builder import deep_merge  # noqa: PLC0415
+
+        return deep_merge(self.patch, self.patches.get(scenario_id, {}))
+
+    @property
+    def has_patch(self) -> bool:
+        """True when the overlay builds variants."""
+        return bool(self.patch or self.patches)
+
+    def applies(
+        self,
+        scenario_id: str,
+        family: str | None = None,
+        version: str | None = None,
+    ) -> bool:
+        """True when the overlay targets the scenario or its family.
+
+        Args:
+            scenario_id: The scenario.
+            family: Its rail family.
+            version: The edition being judged; ``None`` skips the check.
+
+        Returns:
+            Whether the overlay applies.
+        """
+        if (
+            version is not None
+            and self.versions
+            and version not in self.versions
+        ):
+            return False
         if not self.applies_to:
             return True
         return scenario_id in self.applies_to or family in self.applies_to
@@ -242,6 +289,9 @@ def overlay_from(
         dict(document.get("source") or {}),
         rules,
         path,
+        dict(document.get("patch") or {}),
+        {str(k): dict(v) for k, v in (document.get("patches") or {}).items()},
+        tuple(str(v) for v in (document.get("versions") or [])),
     )
 
 
@@ -388,13 +438,15 @@ def _parse_assertion(assertion: str, where: str) -> tuple[str, Any]:
         return verb, argument
     if verb == "if":
         condition, _, tail = argument.partition(":")
-        if "=" not in condition or not tail:
+        if not condition or not tail:
             raise OverlayError(
-                f"{where}: if needs the form if:<elem>=<value>:<verb...>"
+                f"{where}: if needs the form if:<elem>[=<value>]:<verb...>"
             )
         if tail.startswith("if:"):
             raise OverlayError(f"{where}: if cannot nest")
-        return verb, (condition.split("=", 1), _parse_assertion(tail, where))
+        parts = condition.split("=", 1)
+        pair = (parts[0], parts[1] if len(parts) == 2 else None)
+        return verb, (pair, _parse_assertion(tail, where))
     raise OverlayError(
         f"{where}: unknown verb in {assertion!r}"
     )  # pragma: no cover
@@ -443,7 +495,10 @@ def evaluate_rules(rules: Any, xml: str) -> list[Finding]:
         verb, argument = _parse_assertion(rule.assertion, rule.rule_id)
         if verb == "if":
             (cond_elem, cond_value), (verb, argument) = argument
-            if _first_text(index, cond_elem) != cond_value:
+            if cond_value is None:
+                if not _select(index, cond_elem):
+                    continue
+            elif _first_text(index, cond_elem) != cond_value:
                 continue
         matches = _select(index, rule.locator)
         if verb == "required":

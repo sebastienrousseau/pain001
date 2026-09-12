@@ -1,0 +1,49 @@
+# A German SEPA B2B direct debit: first collection under a new mandate,
+# the creditor identified by its Glaeubiger-Identifikationsnummer.
+id: de.sepa.sdd-b2b
+family: sepa-direct-debit
+country: DE
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 490003
+description: SEPA B2B direct debit, first collection.
+profiles: [sepa-b2b, anti-duplicate]
+
+parties:
+  creditor:
+    name: Leasing Sued GmbH
+    address: {form: hybrid, street: Leopoldstrasse, building_number: "5", post_code: "80802", town: Muenchen, country: DE}
+  scheme:
+    id: {private: {other: [{id: DE98ZZZ09999999999, scheme: SEPA}]}}
+
+header:
+  message_id: LSG-B2B-20260925
+  created: "2026-09-18T08:00:00"
+  initiating_party: {ref: creditor}
+
+payment:
+  id: B2B-20260925-01
+  method: DD
+  batch_booking: true
+  type: {service_level: SEPA, local_instrument: B2B, sequence_type: FRST}
+  requested_collection_date: "2026-09-25"
+  creditor: {ref: creditor}
+  creditor_account: {iban: auto}
+  creditor_agent: {bic: auto}
+  charge_bearer: SLEV
+  creditor_scheme_id: {ref: scheme}
+
+transactions:
+  - end_to_end_id: LSG-2026-09-000001
+    amount: {ccy: EUR, value: "1490.00"}
+    mandate: {id: LSG-MNDT-2026-0044, date_of_signature: "2026-09-01"}
+    debtor_agent: {bic: auto}
+    debtor: {name: Speditions Meier GmbH, address: {form: hybrid, post_code: "70173", town: Stuttgart, country: DE}}
+    debtor_account: {iban: auto}
+    remittance: {unstructured: "Leasingrate 10/2026"}
+
+provenance:
+  sources:
+    - {title: "EPC131-08 Customer-to-PSP SDD B2B Implementation Guidelines 2025 v1.0", read: "2026-09-10"}
+    - {title: "Deutsche Bundesbank, Glaeubiger-Identifikationsnummer format", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

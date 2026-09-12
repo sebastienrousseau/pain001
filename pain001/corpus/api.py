@@ -46,6 +46,7 @@ class CorpusFile:
         scenario_id: The scenario, for market files.
         country: ISO 3166 alpha-2, for market files.
         family: The rail family, for market files.
+        variant: The overlay id a bank variant was built with.
     """
 
     kind: str
@@ -54,6 +55,7 @@ class CorpusFile:
     scenario_id: str | None = None
     country: str | None = None
     family: str | None = None
+    variant: str | None = None
 
     def read(self) -> str:
         """The file's text."""
@@ -72,7 +74,8 @@ def list_files(kind: str | None = None) -> list[CorpusFile]:
     files: list[CorpusFile] = []
     if kind in (None, "market") and MARKET_ROOT.is_dir():
         for path in sorted(MARKET_ROOT.rglob("*.xml")):
-            scenario_id, _, rest = path.name.partition(".pain.")
+            stem, _, rest = path.name.partition(".pain.")
+            scenario_id, _, variant = stem.partition("__")
             files.append(
                 CorpusFile(
                     "market",
@@ -81,20 +84,24 @@ def list_files(kind: str | None = None) -> list[CorpusFile]:
                     scenario_id,
                     path.parent.parent.name.upper(),
                     path.parent.name,
+                    variant or None,
                 )
             )
     if kind in (None, "coverage") and COVERAGE_ROOT.is_dir():
-        for path in sorted(COVERAGE_ROOT.rglob("set-*.xml")):
+        for path in sorted(COVERAGE_ROOT.rglob("*.xml")):
             files.append(CorpusFile("coverage", path.parent.name, path))
     return files
 
 
-def get_file(scenario_id: str, version: str) -> str:
+def get_file(
+    scenario_id: str, version: str, variant: str | None = None
+) -> str:
     """The text of one market file.
 
     Args:
         scenario_id: The scenario, e.g. ``gb.chaps.property-purchase``.
         version: The message type, e.g. ``pain.001.001.09``.
+        variant: An overlay id for a bank variant, else the generic file.
 
     Returns:
         The XML text.
@@ -103,17 +110,24 @@ def get_file(scenario_id: str, version: str) -> str:
         FileNotFoundError: If the scenario has no file for that edition.
     """
     for entry in list_files("market"):
-        if entry.scenario_id == scenario_id and entry.version == version:
+        if (
+            entry.scenario_id == scenario_id
+            and entry.version == version
+            and entry.variant == variant
+        ):
             return entry.read()
     raise FileNotFoundError(f"no market file for {scenario_id} in {version}")
 
 
-def provenance(scenario_id: str, version: str) -> dict[str, Any]:
+def provenance(
+    scenario_id: str, version: str, variant: str | None = None
+) -> dict[str, Any]:
     """The provenance sidecar of one market file, parsed.
 
     Args:
         scenario_id: The scenario.
         version: The message type.
+        variant: An overlay id for a bank variant, else the generic file.
 
     Returns:
         The sidecar: sources, confidence, evidence, build report,
@@ -123,7 +137,11 @@ def provenance(scenario_id: str, version: str) -> dict[str, Any]:
         FileNotFoundError: If the scenario has no file for that edition.
     """
     for entry in list_files("market"):
-        if entry.scenario_id == scenario_id and entry.version == version:
+        if (
+            entry.scenario_id == scenario_id
+            and entry.version == version
+            and entry.variant == variant
+        ):
             sidecar = entry.path.with_suffix(".provenance.yaml")
             data: dict[str, Any] = yaml.safe_load(
                 sidecar.read_text(encoding="utf-8")

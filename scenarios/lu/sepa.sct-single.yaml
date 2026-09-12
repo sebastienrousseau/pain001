@@ -1,0 +1,43 @@
+# A Luxembourg SEPA credit transfer, single, per the ABBL guideline.
+id: lu.sepa.sct-single
+family: sepa-credit-transfer
+country: LU
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 352001
+description: SEPA credit transfer, single supplier payment.
+profiles: [sepa-sct, anti-duplicate]
+
+parties:
+  payer:
+    name: Kirchberg Logistics SA
+    address: {form: hybrid, street: Rue Edward Steichen, building_number: "12", post_code: L-2540, town: Luxembourg, country: LU}
+
+header:
+  message_id: KLS-SCT-20260921
+  created: "2026-09-21T13:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: SCT-20260921-LU-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: SEPA}
+  requested_execution_date: "2026-09-22"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: KLS-2026-0921-01
+    amount: {ccy: EUR, value: "980.00"}
+    creditor_agent: {bic: auto}
+    creditor: {name: Transports Moselle Sarl, address: {form: hybrid, post_code: L-6791, town: Grevenmacher, country: LU}}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Facture 2026-117"}
+
+provenance:
+  sources:
+    - {title: "ABBL, SEPA credit transfer implementation guideline for Luxembourg", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

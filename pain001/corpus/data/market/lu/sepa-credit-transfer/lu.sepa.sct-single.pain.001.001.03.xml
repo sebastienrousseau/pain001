@@ -1,0 +1,82 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>KLS-SCT-20260921</MsgId>
+      <CreDtTm>2026-09-21T13:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>980.00</CtrlSum>
+      <InitgPty>
+        <Nm>Kirchberg Logistics SA</Nm>
+        <PstlAdr>
+          <PstCd>L-2540</PstCd>
+          <TwnNm>Luxembourg</TwnNm>
+          <Ctry>LU</Ctry>
+          <AdrLine>Rue Edward Steichen 12</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SCT-20260921-LU-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>980.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>SEPA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>2026-09-22</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Kirchberg Logistics SA</Nm>
+        <PstlAdr>
+          <PstCd>L-2540</PstCd>
+          <TwnNm>Luxembourg</TwnNm>
+          <Ctry>LU</Ctry>
+          <AdrLine>Rue Edward Steichen 12</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>LU4838625GRVNAWDC2NO</IBAN>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>CRRMLUS0</BIC>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>KLS-2026-0921-01</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="EUR">980.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BIC>WAQRLU80</BIC>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Transports Moselle Sarl</Nm>
+          <PstlAdr>
+            <PstCd>L-6791</PstCd>
+            <TwnNm>Grevenmacher</TwnNm>
+            <Ctry>LU</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>LU2777470UPND72BZXA4</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Facture 2026-117</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

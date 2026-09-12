@@ -1,0 +1,122 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>CMI-WIRE-20260922-01</MsgId>
+      <CreDtTm>2026-09-22T11:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>125000.00</CtrlSum>
+      <InitgPty>
+        <Nm>Cascade Millwork Inc</Nm>
+        <PstlAdr>
+          <PstCd>97204</PstCd>
+          <TwnNm>Portland</TwnNm>
+          <CtrySubDvsn>OR</CtrySubDvsn>
+          <Ctry>US</Ctry>
+          <AdrLine>1200 Pine Street</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>WIRE-20260922-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>125000.00</CtrlSum>
+      <PmtTpInf>
+        <InstrPrty>HIGH</InstrPrty>
+        <SvcLvl>
+          <Cd>URGP</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Cascade Millwork Inc</Nm>
+        <PstlAdr>
+          <PstCd>97204</PstCd>
+          <TwnNm>Portland</TwnNm>
+          <CtrySubDvsn>OR</CtrySubDvsn>
+          <Ctry>US</Ctry>
+          <AdrLine>1200 Pine Street</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>4412345678</Id>
+            <SchmeNm>
+              <Cd>BBAN</Cd>
+            </SchmeNm>
+          </Othr>
+        </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>YPTEUSH0</BICFI>
+          <ClrSysMmbId>
+            <ClrSysId>
+              <Cd>USABA</Cd>
+            </ClrSysId>
+            <MmbId>021000021</MmbId>
+          </ClrSysMmbId>
+          <PstlAdr>
+            <TwnNm>New York</TwnNm>
+            <Ctry>US</Ctry>
+          </PstlAdr>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>DEBT</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>CMI-WIRE-2026-0922-01</EndToEndId>
+          <UETR>b91d993d-76d3-49a2-bf82-7486b4593fe3</UETR>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">125000.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>DZKNUSB0</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>121000248</MmbId>
+            </ClrSysMmbId>
+            <PstlAdr>
+              <TwnNm>San Francisco</TwnNm>
+              <Ctry>US</Ctry>
+            </PstlAdr>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Golden Gate Timber Corp</Nm>
+          <PstlAdr>
+            <PstCd>94104</PstCd>
+            <TwnNm>San Francisco</TwnNm>
+            <CtrySubDvsn>CA</CtrySubDvsn>
+            <Ctry>US</Ctry>
+            <AdrLine>600 Market Street</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>5512345678</Id>
+              <SchmeNm>
+                <Cd>BBAN</Cd>
+              </SchmeNm>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>GDDS</Cd>
+        </Purp>
+        <RmtInf>
+          <Ustrd>Contract 2026-31 milestone 2</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

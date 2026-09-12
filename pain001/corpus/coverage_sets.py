@@ -45,6 +45,7 @@ their prerequisites; a mandate's amendment flag follows its details.
 
 from __future__ import annotations
 
+from collections import Counter
 from dataclasses import dataclass
 from typing import Any
 
@@ -227,13 +228,130 @@ def sample_value(entry: ElementEntry) -> str:
     return ("Text" * ((length // 4) + 1))[: max(length, 1)]
 
 
+#: What each recipe shapes, in words a reader of the file name needs.
+RECIPE_LABELS: dict[str, str] = {
+    "transfer": "credit transfer (PmtMtd TRF)",
+    "cheque-to-agent": "cheque delivered to the creditor agent (PmtMtd CHK)",
+    "cheque-no-agent": "cheque with no creditor agent (PmtMtd CHK)",
+    "collection": "direct debit collection (PmtMtd DD)",
+}
+
+
+@dataclass(frozen=True)
+class CoverageFileInfo:
+    """What one file of a set is for, so its name means something.
+
+    Attributes:
+        name: The file name, ``NN-<recipe>-<focus>.xml``.
+        recipe: The recipe the file follows.
+        description: One sentence a reader can pick the file by.
+        focus: The blocks (children of PmtInf, of the transaction, or of
+            GrpHdr) the file's new coverage mostly falls under.
+        adds_paths: Declared paths this file is the first to use.
+        adds_branches: Choice branches this file is the first to take.
+    """
+
+    name: str
+    recipe: str
+    description: str
+    focus: tuple[str, ...]
+    adds_paths: int
+    adds_branches: int
+
+
 @dataclass(frozen=True)
 class CoverageSet:
-    """A generated set and its report."""
+    """A generated set, what each file is for, and the report."""
 
     version: str
     files: tuple[str, ...]
     report: CoverageReport
+    manifest: tuple[CoverageFileInfo, ...] = ()
+
+
+def _focus(new_hits: set[str], root_path: str) -> tuple[str, ...]:
+    """The up-to-three blocks most of ``new_hits`` fall under.
+
+    A path is reduced to the child of ``PmtInf`` it lives under, or the
+    child of the transaction block for transaction-level content, or the
+    child of ``GrpHdr``; branch ids (``path -> A+B``) use their path.
+
+    Args:
+        new_hits: Paths and branch ids the file is the first to cover.
+        root_path: The message root path (``/Document/<root>``).
+
+    Returns:
+        Block names, most frequent first.
+    """
+    prefix = root_path + "/"
+    tails: list[list[str]] = []
+    for item in sorted(new_hits):  # ties then fall alphabetically
+        path = item.split(" -> ", 1)[0]
+        rel = path[len(prefix) :] if path.startswith(prefix) else path
+        parts = [p for p in rel.split("/") if p and not p.startswith("@")]
+        if parts and parts[0] in ("PmtInf", "GrpHdr") and len(parts) > 1:
+            parts = parts[1:]
+            if parts[0] in ("CdtTrfTxInf", "DrctDbtTxInf") and len(parts) > 1:
+                parts = parts[1:]
+        if parts:
+            tails.append(parts)
+    counts: Counter[str] = Counter(parts[0] for parts in tails)
+    top = counts.most_common(3)
+    # One block taking every hit says little; name what is under it.
+    if len(top) == 1 and any(len(parts) > 1 for parts in tails):
+        block = top[0][0]
+        inner: Counter[str] = Counter(
+            parts[1] for parts in tails if len(parts) > 1
+        )
+        return (block, *(name for name, _ in inner.most_common(2)))
+    return tuple(name for name, _ in top)
+
+
+def describe_file(
+    index: int,
+    recipe: Recipe,
+    new_paths: int,
+    new_branches: int,
+    focus: tuple[str, ...],
+) -> CoverageFileInfo:
+    """Name and describe the ``index``-th file of a set.
+
+    Args:
+        index: One-based position in the set.
+        recipe: The recipe the file follows.
+        new_paths: Paths the file is the first to use.
+        new_branches: Branches the file is the first to take.
+        focus: The blocks the new coverage mostly falls under.
+
+    Returns:
+        The :class:`CoverageFileInfo`.
+    """
+    label = RECIPE_LABELS.get(recipe.name, recipe.name)
+    if index == 1:
+        slug = "every-element"
+        description = (
+            f"The baseline: every element of the schema once as a {label}, "
+            "taking the first branch of every choice."
+        )
+    else:
+        slug = "-".join(focus) or "remaining"
+        where = ", ".join(focus) if focus else "the remaining blocks"
+        paths = f"{new_paths} element path" + ("s" if new_paths != 1 else "")
+        branches = f"{new_branches} choice branch" + (
+            "es" if new_branches != 1 else ""
+        )
+        description = (
+            f"A {label} that adds {paths} and {branches} no earlier file "
+            f"covers, mostly under {where}."
+        )
+    return CoverageFileInfo(
+        name=f"{index:02d}-{recipe.name}-{slug}.xml",
+        recipe=recipe.name,
+        description=description,
+        focus=focus,
+        adds_paths=new_paths,
+        adds_branches=new_branches,
+    )
 
 
 class _Planner:
@@ -460,6 +578,7 @@ def build_coverage_set(version: str, max_files: int = 16) -> CoverageSet:
     root_name = root_path.rsplit("/", 1)[1]
     xsd = str(DEFAULT_TEMPLATE_REGISTRY.get_template(version).xsd_path)
     files: list[str] = []
+    manifest: list[CoverageFileInfo] = []
     hit_paths: set[str] = set()
     hit_branches: set[str] = set()
     all_items = inventory.paths() | {
@@ -491,27 +610,41 @@ def build_coverage_set(version: str, max_files: int = 16) -> CoverageSet:
                     + "; ".join(f"{f.rule_id} at {f.path}" for f in broken[:5])
                 )
             report = coverage(inventory, [*files, xml])
-            new_hits = (set(report.hit_paths) - hit_paths) | (
-                set(report.hit_branches) - hit_branches
-            )
+            new_paths = set(report.hit_paths) - hit_paths
+            new_branches = set(report.hit_branches) - hit_branches
+            new_hits = new_paths | new_branches
             if not new_hits:
                 break
             files.append(xml)
+            manifest.append(
+                describe_file(
+                    len(files),
+                    recipe,
+                    len(new_paths),
+                    len(new_branches),
+                    _focus(new_hits, root_path),
+                )
+            )
             hit_paths = set(report.hit_paths)
             hit_branches = set(report.hit_branches)
             if report.complete:
                 break
         if len(files) >= max_files or coverage(inventory, files).complete:
             break
-    return CoverageSet(version, tuple(files), coverage(inventory, files))
+    return CoverageSet(
+        version, tuple(files), coverage(inventory, files), tuple(manifest)
+    )
 
 
 __all__ = [
     "ANY_CONTENT",
     "PATTERN_SAMPLES",
     "PRIMITIVE_SAMPLES",
+    "RECIPE_LABELS",
     "CoverageBuildError",
+    "CoverageFileInfo",
     "CoverageSet",
     "build_coverage_set",
+    "describe_file",
     "sample_value",
 ]

@@ -1,0 +1,41 @@
+scenario: gb.international.usd
+family: priority-payment
+country: GB
+message_type: pain.001.001.09
+variant: null
+description: USD cross-border payment from a UK account to a US supplier.
+sha256: d3c4535eb1d401e46a300d5ea1a50cb63361cd64fec2a24d1b539038c38a55ab
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    cbpr-cross-border:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Swift CBPR+ usage guidelines SR2025, pain.001.001.09 (restricted; not in
+      this repository)
+    read: '2026-09-10'
+  - title: CGI-MP pain.001 V09 implementation guide
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

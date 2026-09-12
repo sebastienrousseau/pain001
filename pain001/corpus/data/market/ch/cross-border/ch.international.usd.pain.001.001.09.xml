@@ -1,0 +1,115 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>AFM-20260921-04</MsgId>
+      <CreDtTm>2026-09-21T09:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>48200.00</CtrlSum>
+      <InitgPty>
+        <Nm>Alpina Feinmechanik AG</Nm>
+        <PstlAdr>
+          <PstCd>8952</PstCd>
+          <TwnNm>Schlieren</TwnNm>
+          <CtrySubDvsn>ZH</CtrySubDvsn>
+          <Ctry>CH</Ctry>
+          <AdrLine>Industriestrasse 14</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <LEI>0000006CAZNK09K2SG52</LEI>
+          </OrgId>
+        </Id>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>AFM-X-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>48200.00</CtrlSum>
+      <PmtTpInf>
+        <InstrPrty>HIGH</InstrPrty>
+        <SvcLvl>
+          <Cd>URGP</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-22</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Alpina Feinmechanik AG</Nm>
+        <PstlAdr>
+          <PstCd>8952</PstCd>
+          <TwnNm>Schlieren</TwnNm>
+          <CtrySubDvsn>ZH</CtrySubDvsn>
+          <Ctry>CH</Ctry>
+          <AdrLine>Industriestrasse 14</AdrLine>
+        </PstlAdr>
+        <Id>
+          <OrgId>
+            <LEI>0000006CAZNK09K2SG52</LEI>
+          </OrgId>
+        </Id>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>CH9009808930715794848</IBAN>
+        </Id>
+        <Ccy>USD</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>OSEDCHZ0</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>AFM-X-0921-001</EndToEndId>
+          <UETR>939a78eb-9ed2-4fab-bb57-65dc07d0f58d</UETR>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="USD">48200.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>DXTQUSY0</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>USABA</Cd>
+              </ClrSysId>
+              <MmbId>121000248</MmbId>
+            </ClrSysMmbId>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Sierra Optics Inc</Nm>
+          <PstlAdr>
+            <PstCd>94538</PstCd>
+            <TwnNm>Fremont</TwnNm>
+            <CtrySubDvsn>CA</CtrySubDvsn>
+            <Ctry>US</Ctry>
+            <AdrLine>4800 Fremont Boulevard</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>5512345678</Id>
+              <SchmeNm>
+                <Cd>BBAN</Cd>
+              </SchmeNm>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>GDDS</Cd>
+        </Purp>
+        <RmtInf>
+          <Ustrd>PO 2026-772</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

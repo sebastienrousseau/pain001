@@ -1,0 +1,38 @@
+scenario: gb.fps.single
+family: faster-payment
+country: GB
+message_type: pain.001.001.09
+variant: null
+description: Faster Payments single supplier payment, sort code and account.
+sha256: 9bb0fc2a948373a8cd462cd5332686f5e912ddf40f733c40bc2e8e496b4209aa
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    uk-fps:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Pay.UK Faster Payments scheme limits and ISO 20022 library
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

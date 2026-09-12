@@ -578,3 +578,34 @@ def test_report_and_result_shapes() -> None:
         build(scenario, "pain.001.001.09").xml
         == build(_base(), "pain.001.001.09").xml
     )
+
+
+def test_patch_merges_before_building() -> None:
+    """A patch changes the tree; nested dicts merge, inputs stay intact."""
+    from pain001.corpus.builder import deep_merge
+
+    scenario = SCENARIOS["gb.chaps.property-purchase"]
+    before = copy.deepcopy(scenario.data)
+    patched = build(
+        scenario,
+        "pain.001.001.09",
+        patch={
+            "payment": {
+                "type": {"service_level": "URNS"},
+                "charge_bearer": "DEBT",
+            }
+        },
+    )
+    assert (
+        "<Cd>URNS</Cd>" in patched.xml
+        and "<ChrgBr>DEBT</ChrgBr>" in patched.xml
+    )
+    assert "<InstrPrty>HIGH</InstrPrty>" in patched.xml  # sibling keys survive
+    assert scenario.data == before
+    assert (
+        build(scenario, "pain.001.001.09", patch={}).xml
+        == build(scenario, "pain.001.001.09").xml
+    )
+    assert deep_merge(
+        {"a": {"b": 1, "c": 2}, "d": [1]}, {"a": {"b": 9}, "d": [2]}
+    ) == {"a": {"b": 9, "c": 2}, "d": [2]}

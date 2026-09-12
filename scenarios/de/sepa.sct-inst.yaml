@@ -1,0 +1,46 @@
+# A German SEPA Instant credit transfer: local instrument INST at the
+# payment-information level, a date-time execution date, one payment per
+# file as the DK guide asks.
+id: de.sepa.sct-inst
+family: sepa-instant
+country: DE
+versions: [pain.001.001.09]
+seed: 490002
+description: SEPA Instant credit transfer, single, INST at PmtInf.
+profiles: [sepa-inst, anti-duplicate]
+
+parties:
+  payer:
+    name: Musterfirma GmbH
+    address: {form: hybrid, street: Hauptstrasse, building_number: "12", post_code: "80331", town: Muenchen, country: DE}
+
+header:
+  message_id: MSTR-INST-20260921-01
+  created: "2026-09-21T14:05:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: INST-20260921-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: SEPA, local_instrument: INST}
+  requested_execution_date: "2026-09-21T14:05:00"
+  debtor: {ref: payer}
+  debtor_account: {iban: auto}
+  debtor_agent: {bic: auto}
+  charge_bearer: SLEV
+
+transactions:
+  - end_to_end_id: MSTR-INST-2026-0921-01
+    amount: {ccy: EUR, value: "450.00"}
+    creditor_agent: {bic: auto}
+    creditor: {name: Schnelldienst Berlin GmbH, address: {form: hybrid, post_code: "10115", town: Berlin, country: DE}}
+    creditor_account: {iban: auto}
+    remittance: {unstructured: "Eilrechnung 2026-117"}
+
+provenance:
+  sources:
+    - {title: "EPC121-16 Customer-to-PSP SCT Inst Implementation Guidelines 2025 v1.0", read: "2026-09-10"}
+    - {title: "DK DFUE-Abkommen Anlage 3 V3.8 (Echtzeitueberweisung)", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

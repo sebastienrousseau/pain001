@@ -1,0 +1,24 @@
+# CFONB customer-to-bank SEPA files: the Latin character set on text
+# fields and an ISO 11649 RF reference when a structured reference is used.
+overlay_id: fr.cfonb.sepa
+title: CFONB SEPA customer-to-bank guide V2.6
+applies_to: [fr.sepa.sct-supplier, fr.sepa.sdd-core]
+source:
+  title: "CFONB, Guide d'utilisation du virement SEPA client-banque V2.6 (Jan 2023) and prelevement SEPA pain.008 V1.6"
+  read: "2026-09-10"
+rules:
+  - rule_id: fr-cfonb-charset-name
+    description: Party names use the SEPA Latin character set.
+    locator: Nm
+    assertion: charset:iso20022
+    error_code: FR_CFONB_CHARSET_NM
+  - rule_id: fr-cfonb-charset-remittance
+    description: Remittance text uses the SEPA Latin character set.
+    locator: Ustrd
+    assertion: charset:iso20022
+    error_code: FR_CFONB_CHARSET_RMT
+  - rule_id: fr-cfonb-rf-reference
+    description: A structured creditor reference is an ISO 11649 RF reference issued by ISO.
+    locator: CdtrRefInf/Ref
+    assertion: if:CdtrRefInf/Tp/Issr=ISO:matches:RF[0-9]{2}[A-Z0-9]{1,21}
+    error_code: FR_CFONB_RF

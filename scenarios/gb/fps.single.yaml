@@ -1,0 +1,51 @@
+# A single Faster Payment: a UK corporate paying a supplier invoice the
+# same day. Generic choices follow the plan's UK table (TRF, sort code
+# and 8-digit account, 18-character references, GBP); the bank variant
+# built from the overlay pins the bank's service level.
+id: gb.fps.single
+family: faster-payment
+country: GB
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 20260915
+description: Faster Payments single supplier payment, sort code and account.
+profiles: [uk-fps, anti-duplicate]
+
+parties:
+  payer:
+    name: Elm Road Developments Ltd
+    address: {form: hybrid, street: Elm Road, building_number: "14", post_code: SW1A 1AA, town: London, country: GB}
+    id: {org: {other: [{id: "123456", scheme: CUST}]}}
+  supplier:
+    name: Northgate Timber Supplies
+    address: {form: hybrid, post_code: LS1 4AP, town: Leeds, country: GB}
+
+header:
+  message_id: ELMRD-FPS-20260915-01
+  created: "2026-09-15T09:15:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: FPS-20260915-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: URGP}
+  requested_execution_date: "2026-09-15"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "12345678", scheme: BBAN}, currency: GBP}
+  debtor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "040004"}, address: {form: hybrid, town: London, country: GB}}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: INV-2026-0915-01
+    uetr: auto
+    amount: {ccy: GBP, value: "1250.00"}
+    creditor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "309634"}, address: {form: hybrid, town: Leeds, country: GB}}
+    creditor: {ref: supplier}
+    creditor_account: {other: {id: "87654321", scheme: BBAN}}
+    remittance: {unstructured: INV-2026-0915-01}
+
+provenance:
+  sources:
+    - {title: "Pay.UK Faster Payments scheme limits and ISO 20022 library", read: "2026-09-10"}
+  confidence: derived
+  evidence: []

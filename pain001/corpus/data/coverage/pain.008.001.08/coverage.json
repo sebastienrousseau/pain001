@@ -1,14 +1,108 @@
 {
   "message_type": "pain.008.001.08",
   "sources": [
-    "set-01.xml",
-    "set-02.xml",
-    "set-03.xml",
-    "set-04.xml",
-    "set-05.xml",
-    "set-06.xml",
-    "set-07.xml",
-    "set-08.xml"
+    "01-collection-every-element.xml",
+    "02-collection-DrctDbtTx-RmtInf-InitgPty.xml",
+    "03-collection-DrctDbtTx-PmtTpInf-RmtInf.xml",
+    "04-collection-RmtInf-PmtTpInf-DrctDbtTx.xml",
+    "05-collection-DrctDbtTx-UltmtCdtr.xml",
+    "06-collection-DrctDbtTx-UltmtCdtr.xml",
+    "07-collection-DrctDbtTx-UltmtCdtr.xml",
+    "08-collection-DrctDbtTx-UltmtCdtr.xml"
+  ],
+  "files": [
+    {
+      "name": "01-collection-every-element.xml",
+      "recipe": "collection",
+      "description": "The baseline: every element of the schema once as a direct debit collection (PmtMtd DD), taking the first branch of every choice.",
+      "focus": [
+        "RmtInf",
+        "DrctDbtTx",
+        "FwdgAgt"
+      ],
+      "adds_paths": 1247,
+      "adds_branches": 102
+    },
+    {
+      "name": "02-collection-DrctDbtTx-RmtInf-InitgPty.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 322 element paths and 110 choice branches no earlier file covers, mostly under DrctDbtTx, RmtInf, InitgPty.",
+      "focus": [
+        "DrctDbtTx",
+        "RmtInf",
+        "InitgPty"
+      ],
+      "adds_paths": 322,
+      "adds_branches": 110
+    },
+    {
+      "name": "03-collection-DrctDbtTx-PmtTpInf-RmtInf.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 35 element paths and 25 choice branches no earlier file covers, mostly under DrctDbtTx, PmtTpInf, RmtInf.",
+      "focus": [
+        "DrctDbtTx",
+        "PmtTpInf",
+        "RmtInf"
+      ],
+      "adds_paths": 35,
+      "adds_branches": 25
+    },
+    {
+      "name": "04-collection-RmtInf-PmtTpInf-DrctDbtTx.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 15 element paths and 15 choice branches no earlier file covers, mostly under RmtInf, PmtTpInf, DrctDbtTx.",
+      "focus": [
+        "RmtInf",
+        "PmtTpInf",
+        "DrctDbtTx"
+      ],
+      "adds_paths": 15,
+      "adds_branches": 15
+    },
+    {
+      "name": "05-collection-DrctDbtTx-UltmtCdtr.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 90 element paths and 6 choice branches no earlier file covers, mostly under DrctDbtTx, UltmtCdtr.",
+      "focus": [
+        "DrctDbtTx",
+        "UltmtCdtr"
+      ],
+      "adds_paths": 90,
+      "adds_branches": 6
+    },
+    {
+      "name": "06-collection-DrctDbtTx-UltmtCdtr.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 30 element paths and 6 choice branches no earlier file covers, mostly under DrctDbtTx, UltmtCdtr.",
+      "focus": [
+        "DrctDbtTx",
+        "UltmtCdtr"
+      ],
+      "adds_paths": 30,
+      "adds_branches": 6
+    },
+    {
+      "name": "07-collection-DrctDbtTx-UltmtCdtr.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 2 element paths and 2 choice branches no earlier file covers, mostly under DrctDbtTx, UltmtCdtr.",
+      "focus": [
+        "DrctDbtTx",
+        "UltmtCdtr"
+      ],
+      "adds_paths": 2,
+      "adds_branches": 2
+    },
+    {
+      "name": "08-collection-DrctDbtTx-UltmtCdtr.xml",
+      "recipe": "collection",
+      "description": "A direct debit collection (PmtMtd DD) that adds 2 element paths and 2 choice branches no earlier file covers, mostly under DrctDbtTx, UltmtCdtr.",
+      "focus": [
+        "DrctDbtTx",
+        "UltmtCdtr"
+      ],
+      "adds_paths": 2,
+      "adds_branches": 2
+    }
   ],
   "paths": {
     "declared": 1743,

@@ -1,0 +1,41 @@
+scenario: us.ach.ccd-supplier
+family: ach-credit
+country: US
+message_type: pain.001.001.09
+variant: null
+description: ACH CCD credit to a supplier with an addenda remittance line.
+sha256: 06481f93cf28c3a76da3482de965f43194bdbc88e955315b02af847ae2163008
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-ach:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Nacha Operating Rules and Guidelines, Standard Entry Class codes
+    read: '2026-09-10'
+  - title: Huntington pain.001 developer documentation; Cross River pain.001.001.03
+      input specification
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

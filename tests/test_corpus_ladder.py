@@ -164,7 +164,7 @@ def test_evidence_checklist_and_record(
     )
     out = capsys.readouterr().out
     assert (
-        "gb.chaps.property-purchase" in out and "HSBC client validation" in out
+        "gb.chaps.property-purchase" in out and "bank client validation" in out
     )
     assert (
         "de.sepa.sct-salary" in out

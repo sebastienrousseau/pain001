@@ -1,0 +1,39 @@
+scenario: se.plusgiro.supplier
+family: plusgiro-credit
+country: SE
+message_type: pain.001.001.09
+variant: null
+description: Swedish Plusgiro supplier payment with an invoice message.
+sha256: 535b0be71df984bd36e61779b82df3450217199088e4f38256086bf6b30a1dc9
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    se-bankgiro:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: 'Nordea, pain.001 examples and Corporate Access implementation guide (Jun
+      2026): Plusgiro payment'
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

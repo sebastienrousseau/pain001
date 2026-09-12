@@ -1,0 +1,41 @@
+scenario: us.wire.domestic
+family: priority-payment
+country: US
+message_type: pain.001.001.09
+variant: null
+description: Fedwire domestic funds transfer, urgent.
+sha256: 453f29800096a3aaba906347941b6717cad9f3f9bcd449127ee6f0ef007a663e
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-wire:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Federal Reserve Fedwire Funds Service ISO 20022 quick reference
+    read: '2026-09-10'
+  - title: Citi ISO 20022 FAQs (Feb 2026); Cross River pain.001.001.03 wire input
+      specification
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

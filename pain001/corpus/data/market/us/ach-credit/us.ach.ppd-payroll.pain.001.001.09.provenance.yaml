@@ -1,0 +1,40 @@
+scenario: us.ach.ppd-payroll
+family: ach-credit
+country: US
+message_type: pain.001.001.09
+variant: null
+description: ACH PPD payroll run, two employees.
+sha256: 91b2b587fdcd59fb244e61a3abb3408c3131b961aaaa96489152fb32669f03ab
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    us-ach:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Nacha Operating Rules and Guidelines, PPD entries
+    read: '2026-09-10'
+  - title: Bank of America pain.001.001.09 formatting guide
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

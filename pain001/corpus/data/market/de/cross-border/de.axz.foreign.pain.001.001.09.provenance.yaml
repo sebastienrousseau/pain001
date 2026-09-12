@@ -1,0 +1,40 @@
+scenario: de.axz.foreign
+family: cross-border
+country: DE
+message_type: pain.001.001.09
+variant: null
+description: Foreign payment in USD from a German account, DK order type AXZ.
+sha256: 287fa7fe27c9b6ac58774881c828fa6a2ae4e734e0e3da513637c5cd4238225f
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    de-axz:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: DK DFUE-Abkommen Anlage 3 V3.8, order type AXZ
+    read: '2026-09-10'
+  - title: DZ BANK, AXZ product description (AWV reporting)
+    read: '2026-09-10'
+  confidence: assumed
+  evidence: []
+constraints: []

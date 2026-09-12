@@ -4,7 +4,7 @@
 # payments (from November 2025). Public source; no bank overlay.
 overlay_id: gb.boe.chaps-enhanced-data
 title: Bank of England CHAPS enhanced data
-applies_to: [priority-payment]
+applies_to: [gb.chaps.property-purchase]
 source:
   title: "Bank of England: ISO 20022 enhanced data in CHAPS, Policy Statement"
   read: "2026-09-10"

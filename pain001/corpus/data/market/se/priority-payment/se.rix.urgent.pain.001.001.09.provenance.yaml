@@ -1,0 +1,35 @@
+scenario: se.rix.urgent
+family: priority-payment
+country: SE
+message_type: pain.001.001.09
+variant: null
+description: Swedish domestic high-value SEK payment through RIX, urgent, intra-group.
+sha256: 015e5904b596c597d65f64db3958b5ac40f86e3320418f8c82647ce77ccd253d
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: Sveriges Riksbank, RIX-RTGS participant and message guidance; Nordea Corporate
+      Access urgent SEK payment examples (Jun 2026)
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

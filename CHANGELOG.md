@@ -5,6 +5,127 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.68] - 2026-09-12
+
+The second example-corpus release
+([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md)):
+the tier-1 market packs (UK, the SEPA core countries, US, CH, SE), the
+tooling to apply a bank's own guideline privately, and the corpus on the
+website and in the MCP and LSP tools. Entries are added as work lands.
+
+### Added
+
+- **UK market pack.** Four new scenarios under `scenarios/gb/` join the
+  CHAPS property completion: a Faster Payments single supplier payment
+  (`gb.fps.single`), a Bacs Direct Credit supplier run
+  (`gb.bacs.supplier-run`), a Bacs Direct Debit collection under AUDDIS
+  (`gb.bacs-dd.collection`, pain.008 .02 and .08) and an international
+  USD payment from a UK account (`gb.international.usd`,
+  `cbpr-cross-border`). Each renders .03 and .09, lists its rail
+  profile, and passes the four-rung ladder.
+- **Bank variants.** An overlay may carry a `patch` (and per-scenario
+  `patches`): the build then renders `<scenario>__<overlay>.<version>.xml`
+  beside the generic file, with the bank's fixed choices pinned, and
+  judges that variant by the overlay's rules; rule-only overlays keep
+  judging every file. `"*"` against a list applies to every transaction
+  and `null` removes a key; party references now deep-merge their
+  overrides. The overlay grammar gains the presence form
+  `if:<elem>:<verb>`. `list_files` exposes `variant`, and `get_file` and
+  `provenance` take it. The repository ships no bank-derived overlay; the
+  mechanism is for readers to apply their own bank's guideline privately.
+- **`scripts/derive_overlay.py`**, an author-side tool that inventories a
+  bank usage-guideline XSD kept outside the repository, diffs it against
+  the bundled ISO edition and prints the restrictions (removed elements,
+  new mandatories, capped repeats, narrowed code lists, shortened
+  lengths, changed patterns), in overlay syntax with `--as-rules`. It
+  refuses a path inside the repository and writes nothing.
+- **Compliance gate.** `.gitignore` blocks MyStandards export names and
+  `tests/test_no_restricted_material.py` fails the build on any tracked
+  file named like an export, any PDF, Excel or zip under the corpus trees,
+  or any schema, sample or rule file carrying a MyStandards or bank
+  signature. Nothing downloaded from swift.com or a bank portal is in the
+  repository.
+- **SEPA core pack.** Thirteen scenarios across DE, FR, NL, BE, ES, IT
+  and LU: credit transfers with each country's reference convention
+  (ISO 11649 RF, Belgian structured communication, Dutch payment
+  reference), the Spanish NIF as initiating-party id, SEPA Instant (.09),
+  Core and B2B direct debits with the national creditor identifiers (EPC
+  check digits; the German one reproduces the Bundesbank example), and
+  the German DK order types CCU (urgent euro) and AXZ (foreign payment
+  with regulatory reporting). Four public country overlays (Febelfin,
+  Currence, CFONB, AEB) judge the national conventions.
+- **US pack.** Seven scenarios under `scenarios/us/`: ACH CCD supplier
+  credit and PPD payroll (Nacha Standard Entry Class codes as local
+  instrument, ABA routing numbers as clearing member ids, addenda-sized
+  remittance), an ACH debit collection (pain.008 .02 and .08), a federal
+  tax deposit through EFTPS (CCD with the Nacha TXP addenda string,
+  Treasury routing and account), a domestic Fedwire transfer, an RTP
+  real-time payment (`URNS`, proprietary local instrument `rtp`) and a
+  bank-issued cheque (`CHK` with a cheque instruction, the MDR cheque
+  rules satisfied).
+- **Overlays declare the editions they cover** (`versions:`). A
+  guideline written for pain.001.001.03 spells `BIC`, so it builds and
+  judges .03 variants only; `Overlay.applies` takes the edition.
+- **Swiss pack.** Four scenarios under `scenarios/ch/` follow the Swiss
+  Payment Standards payment types: a QR-bill settlement (type D, CHF to
+  a QR-IBAN with the 27-digit QR reference as the proprietary type
+  `QRR`), a domestic transfer with an ISO 11649 `SCOR` reference and a
+  second unstructured transaction, a SEPA credit transfer from a Swiss
+  account (type S) and a cross-border USD payment (type X).
+- **Coverage files named for what they exercise.** `set-NN.xml` becomes
+  `NN-<recipe>-<focus>.xml`: `01-transfer-every-element.xml` is the
+  baseline that carries every element once, and each later file is named
+  after the blocks its new coverage falls under
+  (`05-transfer-UltmtDbtr-PstlAdr-Id.xml`,
+  `09-cheque-to-agent-ChqInstr-ChqFr-DlvrTo.xml`). `coverage.json`
+  gains a `files` manifest with each file's recipe, one-sentence
+  description, focus blocks and the number of paths and branches it is
+  the first to cover; `CoverageSet.manifest` carries the same.
+- **Swedish pack.** Four scenarios under `scenarios/se/`: a Bankgiro
+  supplier payment (creditor account as the Bankgiro number under the
+  proprietary scheme `BGNR`, Bankgirot as creditor agent, Luhn-checked
+  OCR references as `SCOR`), a Plusgiro payment (`PGNR`), a Bankgirot
+  Löner salary batch (`SALA`, one debit) and an urgent SEK payment
+  through RIX (`URGP`, `INTC`). The tree is 35 scenarios and 140 market
+  files.
+
+- **Examples, benchmark and API reference for the corpus.**
+  `examples/15_example_corpus.py` walks the read API and coverage
+  manifest, the schema inventory, synthetic identifiers, a build with an
+  illustrative private overlay, the four-rung ladder and rail projection,
+  the ISO external code sets, the derive tool on a synthetic guideline
+  outside the repository, and `pain.008.001.08` generation;
+  `examples/06_scheme_validation.py` gains the rail profiles.
+  `benches/bench_corpus.py` measures inventory, build, ladder and
+  coverage-set generation (`--quick` in CI). The Sphinx API reference
+  now covers every subpackage, `pain001.corpus` and
+  `pain001.validation` included.
+
+### Changed
+
+- **Public rulebook content only.** pain001 stays within the terms of
+  ISO 20022, Swift MyStandards and the banks: the overlays that had been
+  derived from one bank's restricted usage guidelines, the variant files
+  they built and every citation of those guidelines are removed from the
+  repository, and the website publishes the generic files with their
+  public sources. The bank-named evidence state is renamed
+  `bank-validated` (a bank's client validation run privately by whoever
+  holds the access). Readers apply their own bank's guideline with the
+  overlay grammar, the derive tool and the builder, in their own
+  environment.
+- **Country overlays target scenarios, not families.** The Bank of
+  England CHAPS overlay listed a rail family, so it also judged the US
+  Fedwire and Swedish RIX scenarios; overlays now name their scenarios.
+- **`uk-fps` accepts `URNS`.** UK Faster Payments channels use `URNS`
+  (urgent payment, net settlement) as well as `URGP`; the rail accepts
+  both and the generic scenario keeps `URGP`.
+- The generic Bacs Direct Debit scenario carries no local instrument:
+  no public source gives a code, so the plan's transaction-code mapping
+  stays an assumption recorded as a warning in `uk-bacs-dd`.
+- The generic Faster Payments scenario no longer names a bank as the
+  issuer of the customer id; a public sample file carries no real bank's
+  name.
+
 ## [0.0.67] - 2026-09-12
 
 The first of the three example-corpus releases
@@ -163,7 +284,7 @@ Entries are added as work lands.
   refuses a file that fails, and `make corpus-coverage` re-runs L2 and
   L3 over the shipped market files. The three scenarios list their
   rails and all pass. `make corpus-evidence` prints, per scenario, the
-  external validator the plan expects (HSBC, SIX, ValidateFin) and what
+  external validator the plan expects (the bank's client validator, SIX, ValidateFin) and what
   has been recorded; `scripts/corpus_evidence.py record` appends an
   external result to the scenario's provenance, the source of truth the
   build copies into the sidecars (decision 7).

@@ -47,7 +47,7 @@ summarised in the implementation plan the decisions below refer to.
    corpora first; the CSV pipeline is extended afterwards for the
    twelve most-used rails, with the corpus as the golden target.
 7. **Evidence.** Every market file carries a provenance record with an
-   evidence state: `hsbc-validated` where HSBC's client validation was
+   evidence state: `bank-validated` where a bank's client validation was
    used, `portal-validated` for the public SIX and ValidateFin
    validators, `self-validated` otherwise. No other gated access exists.
 8. **Tiers.** Tier 3 (Singapore, Malaysia, Qatar, UAE) ships with an

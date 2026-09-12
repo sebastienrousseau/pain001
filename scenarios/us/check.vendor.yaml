@@ -1,0 +1,45 @@
+# A cheque issued through the bank: payment method CHK, a cheque
+# instruction with type and delivery method, no creditor account, as the
+# MDR cheque rules require.
+id: us.check.vendor
+family: cheque
+country: US
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 100007
+description: Bank-issued cheque to a vendor, mailed to the creditor.
+profiles: [anti-duplicate]
+
+parties:
+  payer:
+    name: Cascade Millwork Inc
+    address: {form: hybrid, street: Pine Street, building_number: "1200", post_code: "97204", town: Portland, country_subdivision: OR, country: US}
+
+header:
+  message_id: CMI-CHK-20260922-01
+  created: "2026-09-22T13:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: CHK-20260922-01
+  method: CHK
+  requested_execution_date: "2026-09-23"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "4412345678", scheme: BBAN}}
+  debtor_agent: {bic: auto, country: US, clearing: {system: USABA, member_id: "021000021"}}
+
+transactions:
+  - end_to_end_id: CMI-CHK-2026-0922-01
+    amount: {ccy: USD, value: "1975.00"}
+    creditor: {name: Willamette Office Supply, address: {form: hybrid, street: Burnside Street, building_number: "300", post_code: "97209", town: Portland, country_subdivision: OR, country: US}}
+    remittance: {unstructured: "INV 2026-0918"}
+    raw:
+      ChqInstr:
+        ChqTp: CCHQ
+        DlvryMtd: {Cd: MLCD}
+        MemoFld: "INV 2026-0918"
+
+provenance:
+  sources:
+    - {title: "ISO 20022 MDR Payments Initiation 2020-2021, cheque rules; Cross River pain.001.001.03 check sample (index)", read: "2026-09-10"}
+  confidence: assumed
+  evidence: []

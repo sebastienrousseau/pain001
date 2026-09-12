@@ -14,7 +14,7 @@
 
 """Record external validator runs into a scenario's provenance (D7).
 
-The corpus carries three evidence states: ``hsbc-validated`` (HSBC's
+The corpus carries three evidence states: ``bank-validated`` (a bank's
 client validation through MyStandards), ``portal-validated`` (the
 public SIX and ValidateFin portals) and ``self-validated`` (this
 repository's L0 to L3 ladder, which every shipped file passes). The
@@ -43,15 +43,15 @@ import yaml  # type: ignore[import-untyped]
 
 from pain001.corpus.registry import SCENARIOS_DIR, load_scenarios
 
-STATES = ("hsbc-validated", "portal-validated", "self-validated")
+STATES = ("bank-validated", "portal-validated", "self-validated")
 #: Which external validator the plan expects per market (D7).
 EXPECTED: dict[str, str] = {
-    "GB": "HSBC client validation (MyStandards)",
-    "HK": "HSBC client validation (MyStandards)",
-    "AE": "HSBC client validation (MyStandards)",
-    "QA": "HSBC client validation (MyStandards)",
-    "MY": "HSBC client validation (MyStandards)",
-    "SG": "HSBC client validation (MyStandards)",
+    "GB": "bank client validation (MyStandards), run privately",
+    "HK": "bank client validation (MyStandards), run privately",
+    "AE": "bank client validation (MyStandards), run privately",
+    "QA": "bank client validation (MyStandards), run privately",
+    "MY": "bank client validation (MyStandards), run privately",
+    "SG": "bank client validation (MyStandards), run privately",
     "CH": "SIX validation portal",
     "DE": "ValidateFin (SEPA)",
     "FR": "ValidateFin (SEPA)",

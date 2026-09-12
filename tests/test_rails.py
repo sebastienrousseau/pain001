@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import re
 from decimal import Decimal
 
 import pytest
@@ -65,9 +66,8 @@ def test_all_rails_and_mandates_are_registered_with_hints() -> None:
     assert all(m.name in PROFILES for m in rails.PURPOSE_MANDATES)
     assert len({r.prefix for r in rails.RAILS}) == len(rails.RAILS)
     assert remediation_for("UK-FPS-AMT").startswith("Split the item")
-    assert "Pay.UK" in remediation_for("UK-FPS-AMT") and remediation_for(
-        "PURP-AE"
-    )
+    assert re.search(r"\bPay\.UK\b", remediation_for("UK-FPS-AMT"))
+    assert remediation_for("PURP-AE")
     assert rails.rail("uk-fps").title == "UK Faster Payments"
     with pytest.raises(KeyError):
         rails.rail("nope")

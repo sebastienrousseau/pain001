@@ -1,0 +1,42 @@
+scenario: ch.sps.qr-bill
+family: domestic-credit-transfer
+country: CH
+message_type: pain.001.001.03
+variant: null
+description: Swiss domestic credit transfer settling a QR-bill (QRR reference).
+sha256: 2bdf430626d4f17b92a81c9761c54b906ba77ece3783d54653d61735fdac116a
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    ch-domestic:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+provenance:
+  sources:
+  - title: SIX, Swiss Payment Standards, Implementation Guidelines for Customer-to-Bank
+      Messages, Credit Transfer (pain.001), SPS 2025 v2.2, payment type D
+    read: '2026-09-10'
+  - title: 'SIX, Swiss Implementation Guidelines QR-bill v2.3: QR reference and QR-IBAN'
+    read: '2026-09-10'
+  confidence: derived
+  evidence: []
+constraints: []

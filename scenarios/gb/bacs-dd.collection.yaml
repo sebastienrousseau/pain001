@@ -1,0 +1,54 @@
+# A Bacs Direct Debit collection under AUDDIS: a utility collecting a
+# first and a recurring instalment. No UK bank publishes a pain.008
+# guideline in public, so the file follows the ISO base and the Bacs
+# service description; the mapping of sequence types to Bacs
+# transaction codes stays an assumption recorded in the rail profile.
+id: gb.bacs-dd.collection
+family: bacs-direct-debit
+country: GB
+versions: [pain.008.001.02, pain.008.001.08]
+seed: 20260920
+description: Bacs Direct Debit collection, first and recurring, SUN as creditor id.
+profiles: [uk-bacs-dd, anti-duplicate]
+
+parties:
+  utility:
+    name: Thames Valley Water
+    address: {form: hybrid, post_code: RG1 8DJ, town: Reading, country: GB}
+    id: {org: {other: [{id: "654321", proprietary_scheme: SUN}]}}
+
+header:
+  message_id: TVW-DD-20260920
+  created: "2026-09-17T08:00:00"
+  initiating_party: {ref: utility}
+
+payment:
+  id: DD-20260920-01
+  method: DD
+  batch_booking: true
+  type: {sequence_type: RCUR}
+  requested_collection_date: "2026-09-20"
+  creditor: {ref: utility}
+  creditor_account: {other: {id: "12345678", scheme: BBAN}, currency: GBP}
+  creditor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "040004"}, address: {form: hybrid, town: Reading, country: GB}}
+  creditor_scheme_id: {id: {private: {other: [{id: "654321", proprietary_scheme: SUN}]}}}
+
+transactions:
+  - end_to_end_id: TVW-2026-09-000001
+    amount: {ccy: GBP, value: "42.00"}
+    mandate: {id: TVW000123456, date_of_signature: "2026-08-01"}
+    debtor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "309634"}, address: {form: hybrid, town: Reading, country: GB}}
+    debtor: {name: A Customer, address: {form: hybrid, town: Reading, country: GB}}
+    debtor_account: {other: {id: "87654321", scheme: BBAN}}
+  - end_to_end_id: TVW-2026-09-000002
+    amount: {ccy: GBP, value: "38.50"}
+    mandate: {id: TVW000123457, date_of_signature: "2025-03-14"}
+    debtor_agent: {bic: auto, clearing: {system: GBDSC, member_id: "200415"}, address: {form: hybrid, town: Slough, country: GB}}
+    debtor: {name: B Customer, address: {form: hybrid, town: Slough, country: GB}}
+    debtor_account: {other: {id: "11223344", scheme: BBAN}}
+
+provenance:
+  sources:
+    - {title: "Bacs AUDDIS service guide", read: "2026-09-10"}
+  confidence: derived
+  evidence: []
