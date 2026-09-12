@@ -108,7 +108,7 @@ website and in the MCP and LSP tools. Entries are added as work lands.
   derived from one bank's restricted usage guidelines, the variant files
   they built and every citation of those guidelines are removed from the
   repository, and the website publishes the generic files with their
-  public sources. The evidence state `hsbc-validated` is renamed
+  public sources. The bank-named evidence state is renamed
   `bank-validated` (a bank's client validation run privately by whoever
   holds the access). Readers apply their own bank's guideline with the
   overlay grammar, the derive tool and the builder, in their own
@@ -284,7 +284,7 @@ Entries are added as work lands.
   refuses a file that fails, and `make corpus-coverage` re-runs L2 and
   L3 over the shipped market files. The three scenarios list their
   rails and all pass. `make corpus-evidence` prints, per scenario, the
-  external validator the plan expects (HSBC, SIX, ValidateFin) and what
+  external validator the plan expects (the bank's client validator, SIX, ValidateFin) and what
   has been recorded; `scripts/corpus_evidence.py record` appends an
   external result to the scenario's provenance, the source of truth the
   build copies into the sidecars (decision 7).

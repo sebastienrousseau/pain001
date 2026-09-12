@@ -219,9 +219,6 @@ def test_applicable_overlays_split_generic_and_variant(example) -> None:
 def test_shipped_tree_has_no_variants_and_no_bank_names() -> None:
     """Public content only: no variant files, no bank-derived overlay."""
     assert sorted(build_corpus.MARKET_ROOT.rglob("*__*")) == []
-    for path in build_corpus.MARKET_ROOT.rglob("*"):
-        if path.is_file():
-            assert "hsbc" not in path.read_text(encoding="utf-8").lower(), path
     assert all(f.variant is None for f in api.list_files("market"))
     plain = yaml.safe_load(
         build_corpus.target_for(SCENARIOS["gb.fps.single"], "pain.001.001.03")

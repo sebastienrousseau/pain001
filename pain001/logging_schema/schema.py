@@ -99,7 +99,7 @@ class Fields:  # pylint: disable=too-few-public-methods
     MESSAGE_TYPE = "message_type"
     ISO_VERSION = "iso_version"
     DRY_RUN = "dry_run"  # Boolean flag
-    BANK_PROFILE = "bank_profile"  # e.g., hsbc_uk, jpm_cbpr_plus
+    BANK_PROFILE = "bank_profile"  # a bank or rail profile id
 
     # File paths (never log sensitive data)
     TEMPLATE_PATH = "template_path"
