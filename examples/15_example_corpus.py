@@ -136,7 +136,10 @@ def _identifiers() -> None:
         and ids.lei_is_valid(lei)
     )
     assert ids.iban_for("CH", seed=7) == iban, "deterministic per seed"
-    print(f"identifiers: IBAN {iban}, test BIC {bic}, LEI {lei}")
+    # synthetic values, but an account number is still not something to print
+    print(
+        f"identifiers: {len(iban)}-char IBAN valid, test BIC {bic}, LEI valid"
+    )
 
 
 def _build_with_private_overlay() -> dict:
