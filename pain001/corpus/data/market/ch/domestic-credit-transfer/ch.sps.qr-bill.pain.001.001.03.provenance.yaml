@@ -30,6 +30,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 57dab1631e6d7520120caea289485e4d909e2b18d35d1b391b0d89be3256be1b
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: SIX, Swiss Payment Standards, Implementation Guidelines for Customer-to-Bank

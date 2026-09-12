@@ -447,9 +447,7 @@ def _parse_assertion(assertion: str, where: str) -> tuple[str, Any]:
         parts = condition.split("=", 1)
         pair = (parts[0], parts[1] if len(parts) == 2 else None)
         return verb, (pair, _parse_assertion(tail, where))
-    raise OverlayError(
-        f"{where}: unknown verb in {assertion!r}"
-    )  # pragma: no cover
+    raise OverlayError(f"{where}: unknown verb in {assertion!r}")
 
 
 def _charset_ok(text: str, name: str) -> bool:

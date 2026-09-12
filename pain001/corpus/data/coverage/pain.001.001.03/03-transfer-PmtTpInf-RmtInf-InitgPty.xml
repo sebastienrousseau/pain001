@@ -45,7 +45,9 @@
         </Id>
       </DbtrAcct>
       <DbtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BIC>BANKDEFFXXX</BIC>
+        </FinInstnId>
       </DbtrAgt>
       <DbtrAgtAcct>
         <Id>
@@ -99,7 +101,9 @@
           <InstdAmt Ccy="EUR">1.00</InstdAmt>
         </Amt>
         <IntrmyAgt1>
-          <FinInstnId/>
+          <FinInstnId>
+            <BIC>BANKDEFFXXX</BIC>
+          </FinInstnId>
         </IntrmyAgt1>
         <IntrmyAgt1Acct>
           <Id>
@@ -112,7 +116,9 @@
           </Id>
         </IntrmyAgt1Acct>
         <IntrmyAgt2>
-          <FinInstnId/>
+          <FinInstnId>
+            <BIC>BANKDEFFXXX</BIC>
+          </FinInstnId>
         </IntrmyAgt2>
         <IntrmyAgt2Acct>
           <Id>
@@ -125,7 +131,9 @@
           </Id>
         </IntrmyAgt2Acct>
         <IntrmyAgt3>
-          <FinInstnId/>
+          <FinInstnId>
+            <BIC>BANKDEFFXXX</BIC>
+          </FinInstnId>
         </IntrmyAgt3>
         <IntrmyAgt3Acct>
           <Id>

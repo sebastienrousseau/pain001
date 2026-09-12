@@ -1,0 +1,53 @@
+scenario: ae.uaefts.single
+family: priority-payment
+country: AE
+message_type: pain.001.001.03
+variant: null
+description: UAE domestic AED transfer through UAEFTS with the CBUAE regulatory reporting
+  code.
+sha256: 13c3794ea88ea8cd0bd345ae88c564d65ac870569bace99aba84687eff85130d
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    ae-uaefts:
+      errors: 0
+      warnings: 0
+      findings: []
+    purpose-mandate-ae:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+twins:
+  iso_json:
+    sha256: 0238a3a97d715104560d031364fd926687baf84777df5d79ddba32a515e1cb80
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
+provenance:
+  sources:
+  - title: Central Bank of the UAE, technical notes on transaction codes for balance-of-payments
+      reporting (AUX700)
+    read: '2026-09-11'
+  confidence: assumed
+  evidence: []
+constraints: []

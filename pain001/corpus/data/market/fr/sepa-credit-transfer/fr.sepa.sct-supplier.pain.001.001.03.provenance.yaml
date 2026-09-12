@@ -34,6 +34,14 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: 18b766ef840d62d5954b01fdf9685bf122aa8734b42ec6982c442136908ed27a
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: CFONB, Guide d'utilisation du virement SEPA client-banque V2.6 (Jan 2023)

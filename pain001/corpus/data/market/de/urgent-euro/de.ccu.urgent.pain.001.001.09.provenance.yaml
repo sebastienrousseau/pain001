@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: f987f1d6c182cc6b7acfa14cdcb27ab84bcf354783a04bbae8853b24b5123dcf
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: DK DFUE-Abkommen Anlage 3 V26.11, order type CCU

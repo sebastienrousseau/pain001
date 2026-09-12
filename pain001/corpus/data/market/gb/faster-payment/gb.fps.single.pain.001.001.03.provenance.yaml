@@ -31,6 +31,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: faeb1fd71a8d05336f7f842ace6a4adab81b722330cf7da4b9117f4becf06d60
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Pay.UK Faster Payments scheme limits and ISO 20022 library

@@ -34,6 +34,7 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins: null
 provenance:
   sources:
   - title: AEB, Guia de implantacion SDD Core, Rulebook 2025

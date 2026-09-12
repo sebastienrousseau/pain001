@@ -140,7 +140,7 @@ def _parse_rows(filename: str, content: str) -> list[dict[str, Any]]:
         )
     if len(content.encode("utf-8")) > MAX_UPLOAD_BYTES:
         raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
             detail=(
                 f"File exceeds {MAX_UPLOAD_BYTES // (1024 * 1024)} MiB; "
                 "use the CLI or the path-based API for batches this size."

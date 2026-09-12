@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 2b90a22dab5b8eba1ecce06f186f8c83b218c580fe4de18e6cea95771b28735c
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Nacha Operating Rules and Guidelines, Standard Entry Class codes

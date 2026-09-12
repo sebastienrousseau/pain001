@@ -1,0 +1,106 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "NTA-20260921-02",
+        "CreDtTm": "2026-09-21T07:50:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "7125.50",
+        "InitgPty": {
+          "Nm": "Norrland Trävaror AB",
+          "PstlAdr": {
+            "PstCd": "903 26",
+            "TwnNm": "Umeå",
+            "Ctry": "SE",
+            "AdrLine": [
+              "Storgatan 22"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "NTA-PG-20260921",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "1",
+          "CtrlSum": "7125.50",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "NURG"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Norrland Trävaror AB",
+            "PstlAdr": {
+              "PstCd": "903 26",
+              "TwnNm": "Umeå",
+              "Ctry": "SE",
+              "AdrLine": [
+                "Storgatan 22"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "SE4407238474849977370614"
+            },
+            "Ccy": "SEK"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "MNWHSEA0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "NTA-2026-0921-003"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "7125.50",
+                  "Ccy": "SEK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "NDEASESS"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Fjällmaskin Service AB",
+                "PstlAdr": {
+                  "PstCd": "831 30",
+                  "TwnNm": "Östersund",
+                  "Ctry": "SE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "123455",
+                    "SchmeNm": {
+                      "Prtry": "PGNR"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Faktura 2026-0512"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

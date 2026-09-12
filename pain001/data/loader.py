@@ -373,8 +373,8 @@ def _load_from_list_streaming(
     # Yield data in chunks
     for i in range(0, len(data_list), chunk_size):
         chunk = data_list[i : i + chunk_size]
-        if validate and not validate_csv_data(chunk):  # pragma: no cover
-            raise PaymentValidationError(  # pragma: no cover
+        if validate and not validate_csv_data(chunk):
+            raise PaymentValidationError(
                 f"Data validation failed for chunk starting at index {i}"
             )
         yield chunk

@@ -36,9 +36,15 @@
           </PrvtId>
         </Id>
       </Dbtr>
-      <DbtrAcct/>
+      <DbtrAcct>
+        <Id>
+          <IBAN>DE89370400440532013000</IBAN>
+        </Id>
+      </DbtrAcct>
       <DbtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BICFI>BANKDEFFXXX</BICFI>
+        </FinInstnId>
       </DbtrAgt>
       <UltmtDbtr>
         <Id>
@@ -82,7 +88,11 @@
             </PrvtId>
           </Id>
         </Cdtr>
-        <CdtrAcct/>
+        <CdtrAcct>
+          <Id>
+            <IBAN>DE89370400440532013000</IBAN>
+          </Id>
+        </CdtrAcct>
         <UltmtCdtr>
           <Id>
             <PrvtId>

@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 8894bba085235ab4ef5abbe34576090c43f891715d9e7e393d366e75446f6171
+    schema_findings: []
+  records:
+    rows: 2
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: EPC125-05 SEPA Credit Transfer Rulebook 2025 v1.0

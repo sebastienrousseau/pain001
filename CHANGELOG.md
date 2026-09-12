@@ -5,6 +5,109 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.69] - 2026-09-12
+
+The third example-corpus release: the tier 2 and 3 packs, the CSV
+pipeline extension, and the pain.001 twin foundation
+([ADR-0005](docs/adr/0005-twins-and-faces.md)). Entries are added as
+work lands.
+
+### Added
+
+- **Tier 2 and 3 packs.** Seven scenarios: a Czech CERTIS domestic
+  transfer with the VS/KS/SS payment symbols in the remittance and a
+  SEPA credit transfer from a Czech EUR account (`scenarios/cz/`), a
+  Hong Kong FPS credit with HKICL clearing codes (`hk.fps.single`), a
+  Singapore FAST credit under the S$200,000 cap with addresses on both
+  parties (`sg.fast.single`), a Malaysian DuitNow credit with a BNM
+  purpose code (`my.duitnow.single`), a Qatar QATCH credit with the QCB
+  purpose of payment (`qa.qatch.single`) and a UAE UAEFTS transfer with
+  the CBUAE regulatory reporting line (`ae.uaefts.single`). Each renders
+  .03 and .09, passes its rail profile and purpose mandate, and carries
+  its confidence chip: `derived` for the Czech and SEPA files, `assumed`
+  for the tier-3 markets, where no public sample was available to
+  compare. The tree is 42 scenarios and 238 market files at 488 KB of
+  the 500 KB budget.
+- **CSV pipeline extension.** The `pain.001.001.03` and `.09` to `.13`
+  templates share one flat vocabulary of about seventy columns, listed
+  in `docs/input-columns.md` and generated from the templates by the
+  records twin. New optional columns render only when given: payment
+  information id, batch booking, instruction priority, service level,
+  local instrument (code or proprietary), category purpose, structured
+  addresses and organisation ids (code or proprietary scheme, LEI) for
+  the initiating party, debtor and creditor, account currency, agent
+  clearing member ids and names and addresses, ultimate parties,
+  instruction id, UETR, purpose code, regulatory reporting, a structured
+  creditor reference (ISO code or proprietary type, issuer), additional
+  remittance information, and a date-time execution date for instant
+  schemes. An account may be an IBAN or a number with a scheme; an agent
+  a BIC or a clearing member id. The `.03` template now writes an IBAN
+  as `IBAN` rather than under `Othr/Id`, renders the charge bearer at
+  the payment-information level, and no longer demands address,
+  purpose and referred-document columns (they still render when given).
+  Both levels carry the computed `NbOfTxs` and `CtrlSum`. The corpus is
+  the golden target: 68 of the 70 pain.001 market files regenerate
+  through the pipeline with the same values at every mapped path; the
+  two cheque files cannot, having no creditor account or agent by
+  design. The `.04` to `.08` templates are unchanged.
+- **ISO JSON twin.** `pain001.twins.to_iso_json` renders a pain.001
+  document in the ISO 20022 Registration Authority's 2025 JSON
+  convention (tag names under a `Document` root, `{"amt","Ccy"}`
+  amounts, every value a string) and `from_iso_json` brings it back
+  through the XSD. Repeatable elements are always arrays, this project's
+  normalisation rule; the decoder accepts the RA's bare-value form too.
+  Every pain.001 market and coverage file round-trips element for
+  element. The scope is pain.001; pain.008 is refused.
+- **A JSON Schema 2020-12 per pain.001 edition** under
+  `pain001/schemas/iso-json/`, generated from the schema inventory by
+  the RA's rules and byte-stable; `validate_iso_json` reports the
+  deepest finding. The coverage generator no longer emits empty
+  components, which the RA forbids.
+- **Records twin.** `pain001.twins.to_records` reads a document back
+  into the flat rows the CSV pipeline consumes, one per transaction,
+  with a measured gap: the paths no column carries, the elements that
+  share a column, the payment blocks beyond the first, and the columns
+  the edition's preparer requires that the file lacks. The column
+  mapping is derived from the bundled template itself.
+- **Twins in the corpus.** `<stem>.iso.json` beside every pain.001
+  market file, a `twins:` block in each sidecar, `get_twin` and
+  `CorpusFile.twin()` in the corpus API, coverage twins on demand. The
+  compressed budget for the data tree and the twin schemas together is
+  500 KB (ADR-0005).
+- `docs/twins.md`, `examples/16_iso_json_twins.py`, a twin section in
+  `benches/bench_corpus.py` and the `pain001.twins` API reference.
+- Deferred: the ISO 2018 compatibility face, which needs the ISO 20022
+  e-Repository's unabbreviated names; it joins the first faces release.
+
+### Changed
+
+- **Warnings fail the tests.** `filterwarnings = ["error", ...]` in the
+  pytest configuration, with named exemptions for third-party
+  deprecations and for the library's own notice about calling
+  `generate_xml` without an output path. The unknown `timeout` option
+  and the blanket `--disable-warnings` flag are gone.
+- **No-cover pragmas explain themselves.** The unexplained
+  `# pragma: no cover` markers (143 of them) are gone: each is now a
+  test, or carries a one-line reason (optional-extra import guards,
+  CodeQL taint barriers that `validate_path` already enforces, script
+  entry points). Tests cover the job manager's eviction and
+  terminal-status rules, the loaders' directory and undecodable-input
+  paths, the schema validator's missing, malformed and invalid schema
+  files, the version mapper's fallbacks and defaults, the REST API's
+  early returns (validate-only, schema and scheme failures, temp-root
+  refusals, unexpected errors), the validation service's failure
+  results, `--dry-run`, and the XML indenter.
+- **Rail checks, one method per concern.** `RailProfile._check_row`
+  is a table of twelve small checkers over a `_RowContext`; the
+  largest block in the module went from E(35) to C(17).
+
+### Fixed
+
+- **Projection with ElementTree.** `_children` replaces an element
+  truthiness test that Python 3.12 deprecates, so the corpus
+  projection no longer emits a `DeprecationWarning` on empty
+  postal-address blocks.
+
 ## [0.0.68] - 2026-09-12
 
 The second example-corpus release

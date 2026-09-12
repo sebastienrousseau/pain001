@@ -41,6 +41,11 @@ def _local(tag: Any) -> str:
     return str(tag).rsplit("}", 1)[-1]
 
 
+def _children(node: Any) -> list[Any]:
+    """The element's children, or none for a missing element."""
+    return list(node) if node is not None else []
+
+
 def _child(node: Any, *names: str) -> Any | None:
     """Descend through ``names`` by local name; ``None`` when absent."""
     for name in names:
@@ -81,7 +86,7 @@ def _party(node: Any, prefix: str) -> dict[str, str]:
         "street_name": _text(node, "PstlAdr", "StrtNm"),
         "address_lines": "|".join(
             str(line.text).strip()
-            for line in (_child(node, "PstlAdr") or [])
+            for line in _children(_child(node, "PstlAdr"))
             if _local(line.tag) == "AdrLine" and line.text
         )
         or None,

@@ -544,3 +544,32 @@ def test_parquet_vs_json_equivalence(sample_payment_data, tmp_path):
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
+
+
+def test_parquet_path_validation_failure_is_a_file_not_found(tmp_path) -> None:
+    """A path the validator rejects surfaces as FileNotFoundError, both loaders."""
+    import pytest
+
+    from pain001.parquet.load_parquet_data import (
+        load_parquet_data,
+        load_parquet_data_streaming,
+    )
+
+    bad = str(tmp_path / "a\x00b.parquet")
+    with pytest.raises(FileNotFoundError, match="path validation failed"):
+        load_parquet_data(bad)
+    with pytest.raises(FileNotFoundError, match="path validation failed"):
+        list(load_parquet_data_streaming(bad))
+
+
+def test_parquet_support_check_when_pyarrow_is_absent(monkeypatch) -> None:
+    """Without pyarrow the loaders explain how to install it."""
+    import importlib
+
+    import pytest
+
+    module = importlib.import_module("pain001.parquet.load_parquet_data")
+
+    monkeypatch.setattr(module, "HAS_PARQUET_SUPPORT", False)
+    with pytest.raises(module.DataSourceError, match="pip install pyarrow"):
+        module._check_parquet_support()

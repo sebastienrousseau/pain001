@@ -31,6 +31,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 12de62ab0739125f9ebdc8c1d0703c94e2dd8492159c8ba406b3439d29df1686
+    schema_findings: []
+  records:
+    rows: 2
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Bacs ISO 20022 / Standard 18 translation guide v1.1

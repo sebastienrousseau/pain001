@@ -36,13 +36,13 @@ def indent_xml(elem: et.Element, level: int = 0) -> None:
     """
     indent = "\n" + "  " * level
     if len(elem):
-        if not elem.text or not elem.text.strip():  # pragma: no cover
+        if not elem.text or not elem.text.strip():
             elem.text = indent + "  "
-        if not elem.tail or not elem.tail.strip():  # pragma: no cover
+        if not elem.tail or not elem.tail.strip():
             elem.tail = indent
         for child in elem:
             indent_xml(child, level + 1)
-        if not elem.tail or not elem.tail.strip():  # pragma: no cover
+        if not elem.tail or not elem.tail.strip():
             elem.tail = indent
     else:
         if level and (not elem.tail or not elem.tail.strip()):

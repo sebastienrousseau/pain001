@@ -107,13 +107,13 @@ def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
     result_str = str(result)
     cwd_prefix = str(Path.cwd().resolve())
     tmp_prefix = str(Path(tempfile.gettempdir()).resolve())
-    if not (  # pragma: no cover
+    if not (  # pragma: no cover - CodeQL barrier; validate_path enforces it
         result_str == cwd_prefix
         or result_str.startswith(cwd_prefix + os.sep)
         or result_str == tmp_prefix
         or result_str.startswith(tmp_prefix + os.sep)
     ):
-        raise HTTPException(  # pragma: no cover
+        raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Access denied: path outside allowed directory",
         )
@@ -367,9 +367,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
         # Validate and load data (secure path)
         file_path = str(_validate_safe_path(request.file_path))
         # CodeQL CWE-22 guard: same variable for guard and sink
-        if not file_path.startswith(
-            str(Path.cwd().resolve()) + os.sep
-        ):  # pragma: no cover
+        if not file_path.startswith(str(Path.cwd().resolve()) + os.sep):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
@@ -416,7 +414,7 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
-    except Exception as e:  # pragma: no cover
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Validation failed",
@@ -449,14 +447,12 @@ async def generate_xml_sync(
         # Validate file path (secure path)
         file_path = str(_validate_safe_path(request.file_path))
         # CodeQL CWE-22 guard: same variable for guard and sink
-        if not file_path.startswith(
-            str(Path.cwd().resolve()) + os.sep
-        ):  # pragma: no cover
+        if not file_path.startswith(str(Path.cwd().resolve()) + os.sep):
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
             )
-        if not os.path.exists(file_path):  # pragma: no cover
-            raise HTTPException(  # pragma: no cover
+        if not os.path.exists(file_path):
+            raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="File not found",
             )
@@ -467,12 +463,10 @@ async def generate_xml_sync(
         validator = SchemaValidator(request.message_type.value)
         total, valid, errors = validator.validate_batch(data)
 
-        if errors:  # pragma: no cover
-            error_models = _format_validation_errors(
-                errors
-            )  # pragma: no cover
+        if errors:
+            error_models = _format_validation_errors(errors)
 
-            return GenerateXMLResponse(  # pragma: no cover
+            return GenerateXMLResponse(
                 success=False,
                 message=f"Validation failed: {valid}/{total} rows valid",
                 file_path=None,
@@ -488,7 +482,7 @@ async def generate_xml_sync(
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail=str(exc),
                 ) from exc
-            if not scheme_result.is_valid:  # pragma: no cover
+            if not scheme_result.is_valid:
                 return GenerateXMLResponse(
                     success=False,
                     message=(f"Scheme '{request.scheme}' validation failed"),
@@ -499,8 +493,8 @@ async def generate_xml_sync(
                 )
 
         # Validate-only mode
-        if request.validate_only:  # pragma: no cover
-            return GenerateXMLResponse(  # pragma: no cover
+        if request.validate_only:
+            return GenerateXMLResponse(
                 success=True,
                 message=f"All {valid} rows are valid",
                 file_path=None,
@@ -535,7 +529,7 @@ async def generate_xml_sync(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
-    except Exception as e:  # pragma: no cover
+    except Exception as e:
         logger.exception("Synchronous XML generation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -581,9 +575,7 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
             "message": f"Job {job_id} created. Check status with /api/status/{job_id}",
         }
 
-    except HTTPException:  # pragma: no cover
-        raise  # pragma: no cover
-    except Exception as e:  # pragma: no cover
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create job",
@@ -715,9 +707,7 @@ async def download_xml(job_id: str) -> FileResponse:
 
     file_path = str(_validate_safe_path(job.result["file_path"]))
     # CodeQL CWE-22 guard: same variable for guard and sink
-    if not file_path.startswith(
-        str(Path.cwd().resolve()) + os.sep
-    ):  # pragma: no cover
+    if not file_path.startswith(str(Path.cwd().resolve()) + os.sep):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Access denied"
         )
@@ -754,9 +744,7 @@ async def _process_generation_job(
         # Validate file path (secure path)
         file_path = str(_validate_safe_path(request.file_path))
         # CodeQL CWE-22 guard: same variable for guard and sink
-        if not file_path.startswith(
-            str(Path.cwd().resolve()) + os.sep
-        ):  # pragma: no cover
+        if not file_path.startswith(str(Path.cwd().resolve()) + os.sep):
             job_manager.update_status(
                 job_id, JobStatus.FAILED, error="Access denied"
             )

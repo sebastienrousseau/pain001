@@ -31,6 +31,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 18fb22779b59426f9d0067272b7478d3d1ce87d6a0545a8b18450519c25116fa
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Federal Reserve Fedwire Funds Service ISO 20022 quick reference

@@ -45,7 +45,9 @@
         </Id>
       </CdtrAcct>
       <CdtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BICFI>BANKDEFFXXX</BICFI>
+        </FinInstnId>
       </CdtrAgt>
       <CdtrAgtAcct>
         <Id>
@@ -182,7 +184,9 @@
           </MndtRltdInf>
         </DrctDbtTx>
         <DbtrAgt>
-          <FinInstnId/>
+          <FinInstnId>
+            <BICFI>BANKDEFFXXX</BICFI>
+          </FinInstnId>
         </DbtrAgt>
         <DbtrAgtAcct>
           <Id>

@@ -1,0 +1,103 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MSTR-INST-20260921-01",
+        "CreDtTm": "2026-09-21T14:05:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "450.00",
+        "InitgPty": {
+          "Nm": "Musterfirma GmbH",
+          "PstlAdr": {
+            "PstCd": "80331",
+            "TwnNm": "Muenchen",
+            "Ctry": "DE",
+            "AdrLine": [
+              "Hauptstrasse 12"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "INST-20260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "450.00",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "SEPA"
+              }
+            ],
+            "LclInstrm": {
+              "Cd": "INST"
+            }
+          },
+          "ReqdExctnDt": {
+            "DtTm": "2026-09-21T14:05:00"
+          },
+          "Dbtr": {
+            "Nm": "Musterfirma GmbH",
+            "PstlAdr": {
+              "PstCd": "80331",
+              "TwnNm": "Muenchen",
+              "Ctry": "DE",
+              "AdrLine": [
+                "Hauptstrasse 12"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "DE32836434947078661011"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "CJPSDE90"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MSTR-INST-2026-0921-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "450.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "CYCVDEQ0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Schnelldienst Berlin GmbH",
+                "PstlAdr": {
+                  "PstCd": "10115",
+                  "TwnNm": "Berlin",
+                  "Ctry": "DE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "DE46910579234762349724"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Eilrechnung 2026-117"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

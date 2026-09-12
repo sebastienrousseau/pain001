@@ -1,0 +1,115 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MSTR-CCU-20260921-01",
+        "CreDtTm": "2026-09-21T09:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "250000.00",
+        "InitgPty": {
+          "Nm": "Musterfirma GmbH",
+          "PstlAdr": {
+            "StrtNm": "Hauptstrasse",
+            "BldgNb": "12",
+            "PstCd": "80331",
+            "TwnNm": "Muenchen",
+            "CtrySubDvsn": "BY",
+            "Ctry": "DE"
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "CCU-20260921-01",
+          "PmtMtd": "TRF",
+          "NbOfTxs": "1",
+          "CtrlSum": "250000.00",
+          "PmtTpInf": {
+            "InstrPrty": "HIGH",
+            "SvcLvl": [
+              {
+                "Cd": "URGP"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-21"
+          },
+          "Dbtr": {
+            "Nm": "Musterfirma GmbH",
+            "PstlAdr": {
+              "StrtNm": "Hauptstrasse",
+              "BldgNb": "12",
+              "PstCd": "80331",
+              "TwnNm": "Muenchen",
+              "CtrySubDvsn": "BY",
+              "Ctry": "DE"
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "DE89099991287457870052"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "HPXTDEW0",
+              "PstlAdr": {
+                "TwnNm": "Muenchen",
+                "Ctry": "DE"
+              }
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "MSTR-CCU-2026-0921-01",
+                "UETR": "12a4be1a-5290-4d64-97a5-6607b041914b"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "250000.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "FVEHFRT0",
+                  "PstlAdr": {
+                    "TwnNm": "Paris",
+                    "Ctry": "FR"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Compagnie Industrielle de Lorraine",
+                "PstlAdr": {
+                  "StrtNm": "Rue de Metz",
+                  "BldgNb": "7",
+                  "PstCd": "54000",
+                  "TwnNm": "Nancy",
+                  "CtrySubDvsn": "GES",
+                  "Ctry": "FR"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "FR2485465373980A5BUYVL3NS43"
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Anzahlung Auftrag 2026-4471"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

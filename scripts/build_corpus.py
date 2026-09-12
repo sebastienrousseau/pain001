@@ -28,7 +28,7 @@ changes nothing and ``--check`` proves it:
   hit, plus ``coverage.json`` with the report ``make corpus-coverage``
   re-checks.
 
-The wheel budget from the plan, 400 KB compressed for everything under
+The wheel budget (ADR-0005), 500 KB compressed for everything under
 ``pain001/corpus/data``, is enforced here: the build fails when the
 gzip'd size of the data tree exceeds it.
 
@@ -56,13 +56,22 @@ from pain001.corpus.inventory import CoverageReport
 from pain001.corpus.registry import SCENARIOS_DIR, Scenario, load_scenarios
 from pain001.corpus.rules.ladder import ladder_passes, run_ladder
 from pain001.corpus.rules.overlays import Overlay, load_overlays
+from pain001.twins import (
+    supported as twin_supported,
+)
+from pain001.twins import (
+    to_iso_json,
+    to_records,
+    validate_iso_json,
+)
+from pain001.twins.schema import SCHEMA_DIR
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = REPO_ROOT / "pain001" / "corpus" / "data"
 MARKET_ROOT = DATA_ROOT / "market"
 COVERAGE_ROOT = DATA_ROOT / "coverage"
 #: Compressed-size budget for everything under pain001/corpus/data.
-BUDGET_BYTES = 400_000
+BUDGET_BYTES = 500_000
 
 
 def target_for(
@@ -169,12 +178,50 @@ def provenance_for(
             "truncated": list(report.truncated),
         },
         "validation": ladder,
+        "twins": twins_for(result.xml, result.version),
         "provenance": scenario.data.get(
             "provenance", {"confidence": "assumed"}
         ),
         "constraints": scenario.data.get("constraints", []),
     }
     return yaml.safe_dump(record, sort_keys=False, allow_unicode=True)
+
+
+def twin_text(xml: str, version: str) -> str:
+    """The ISO JSON twin as the text the tree ships."""
+    return (
+        json.dumps(to_iso_json(xml, version), indent=2, ensure_ascii=False)
+        + "\n"
+    )
+
+
+def twins_for(xml: str, version: str) -> dict[str, Any] | None:
+    """The sidecar's twins block: what each twin of the file carries.
+
+    Args:
+        xml: The built document.
+        version: Its edition.
+
+    Returns:
+        ``None`` outside the twin scope (pain.008), else the ISO JSON
+        twin's digest and schema verdict and the records twin's row
+        count, gap and missing required columns.
+    """
+    if not twin_supported(version):
+        return None
+    text = twin_text(xml, version)
+    records = to_records(xml, version)
+    return {
+        "iso_json": {
+            "sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "schema_findings": validate_iso_json(json.loads(text), version),
+        },
+        "records": {
+            "rows": len(records.rows),
+            "gap": records.gap,
+            "missing_required": records.missing_required,
+        },
+    }
 
 
 def slim_report(
@@ -296,6 +343,10 @@ def main(argv: list[str] | None = None) -> int:
                 wanted[sidecar] = provenance_for(
                     scenario, result, overlay, pool
                 )
+                if twin_supported(version):
+                    wanted[target.with_suffix(".iso.json")] = twin_text(
+                        result.xml, version
+                    )
             expected.update(wanted)
             for path, text in wanted.items():
                 current = (
@@ -358,6 +409,10 @@ def main(argv: list[str] | None = None) -> int:
         )
         return 1
     size = compressed_size(args.data_root) if args.data_root.exists() else 0
+    if args.data_root == DATA_ROOT and SCHEMA_DIR.exists():
+        size += compressed_size(
+            SCHEMA_DIR
+        )  # the twin schemas share the budget
     print(
         f"{len(scenarios)} scenario(s), {len(expected)} file(s); "
         f"data tree {size:,} bytes compressed of {args.budget:,} budget"

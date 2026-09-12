@@ -37,6 +37,14 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: 42bdd319c9481c66c9f244c7afe5fc8315f4e86607c406be8c0b27e1653f3d5d
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: 'Bank of England: ISO 20022 purpose codes for CHAPS property transactions'

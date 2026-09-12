@@ -31,6 +31,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 744a777b786806ff47f62f05ec000f21b8bb3dd376c3ce8312d64ab18ed29d78
+    schema_findings: []
+  records:
+    rows: 2
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: SIX, Swiss Payment Standards, Implementation Guidelines Credit Transfer

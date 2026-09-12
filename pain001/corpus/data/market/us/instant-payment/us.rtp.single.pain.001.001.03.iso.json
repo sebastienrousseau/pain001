@@ -1,0 +1,133 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "CMI-RTP-20260922-01",
+        "CreDtTm": "2026-09-22T12:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "8600.00",
+        "InitgPty": {
+          "Nm": "Cascade Millwork Inc",
+          "PstlAdr": {
+            "StrtNm": "Pine Street",
+            "BldgNb": "1200",
+            "PstCd": "97204",
+            "TwnNm": "Portland",
+            "CtrySubDvsn": "OR",
+            "Ctry": "US"
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "RTP-20260922-01",
+          "PmtMtd": "TRF",
+          "NbOfTxs": "1",
+          "CtrlSum": "8600.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "URNS"
+            },
+            "LclInstrm": {
+              "Prtry": "rtp"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Cascade Millwork Inc",
+            "PstlAdr": {
+              "StrtNm": "Pine Street",
+              "BldgNb": "1200",
+              "PstCd": "97204",
+              "TwnNm": "Portland",
+              "CtrySubDvsn": "OR",
+              "Ctry": "US"
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "4412345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "GDNXUSX0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "USABA"
+                },
+                "MmbId": "021000021"
+              },
+              "PstlAdr": {
+                "TwnNm": "New York",
+                "CtrySubDvsn": "NY",
+                "Ctry": "US"
+              }
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "CMI-RTP-2026-0922-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "8600.00",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "TLSEUSI0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "USABA"
+                    },
+                    "MmbId": "121000248"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "San Francisco",
+                    "CtrySubDvsn": "CA",
+                    "Ctry": "US"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Redwood Hardware Supply LLC",
+                "PstlAdr": {
+                  "StrtNm": "Mission Street",
+                  "BldgNb": "800",
+                  "PstCd": "94103",
+                  "TwnNm": "San Francisco",
+                  "CtrySubDvsn": "CA",
+                  "Ctry": "US"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "5512345678",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV 2026-0912"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

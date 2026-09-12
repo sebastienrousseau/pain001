@@ -1,0 +1,170 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "MSTR-SAL-2026-09",
+        "CreDtTm": "2026-09-25T10:00:00",
+        "NbOfTxs": "2",
+        "CtrlSum": "6230.50",
+        "InitgPty": {
+          "Nm": "Musterfirma GmbH",
+          "PstlAdr": {
+            "StrtNm": "Hauptstraße",
+            "BldgNb": "12",
+            "PstCd": "80331",
+            "TwnNm": "München",
+            "Ctry": "DE"
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "DE98ZZZ09999999999",
+                  "SchmeNm": {
+                    "Cd": "BANK"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SAL-2026-09",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "2",
+          "CtrlSum": "6230.50",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "SEPA"
+            },
+            "CtgyPurp": {
+              "Cd": "SALA"
+            }
+          },
+          "ReqdExctnDt": "2026-09-28",
+          "Dbtr": {
+            "Nm": "Musterfirma GmbH",
+            "PstlAdr": {
+              "StrtNm": "Hauptstraße",
+              "BldgNb": "12",
+              "PstCd": "80331",
+              "TwnNm": "München",
+              "Ctry": "DE"
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "DE98ZZZ09999999999",
+                    "SchmeNm": {
+                      "Cd": "BANK"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "DE09028457998082047609"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "OPSHDEW0"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "SAL-2026-09-0001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "3250.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "XOZFDEA0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Anna Beispiel",
+                "PstlAdr": {
+                  "PstCd": "10115",
+                  "TwnNm": "Berlin",
+                  "Ctry": "DE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "DE65261964603287767307"
+                }
+              },
+              "Purp": {
+                "Cd": "SALA"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Gehalt September 2026"
+                ]
+              }
+            },
+            {
+              "PmtId": {
+                "EndToEndId": "SAL-2026-09-0002"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "2980.50",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "DQBJDEN0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Max Mustermann",
+                "PstlAdr": {
+                  "PstCd": "20095",
+                  "TwnNm": "Hamburg",
+                  "Ctry": "DE"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "DE74157667219201256428"
+                }
+              },
+              "Purp": {
+                "Cd": "SALA"
+              },
+              "RmtInf": {
+                "Strd": [
+                  {
+                    "CdtrRefInf": {
+                      "Tp": {
+                        "CdOrPrtry": {
+                          "Cd": "SCOR"
+                        }
+                      },
+                      "Ref": "RF18539007547034"
+                    }
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

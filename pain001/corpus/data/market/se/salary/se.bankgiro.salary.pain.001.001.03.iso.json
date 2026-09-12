@@ -1,0 +1,124 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "NTA-LON-202609",
+        "CreDtTm": "2026-09-22T06:00:00",
+        "NbOfTxs": "2",
+        "CtrlSum": "59950.00",
+        "InitgPty": {
+          "Nm": "Norrland Trävaror AB",
+          "PstlAdr": {
+            "PstCd": "903 26",
+            "TwnNm": "Umeå",
+            "Ctry": "SE",
+            "AdrLine": [
+              "Storgatan 22"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "NTA-LON-20260925",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "2",
+          "CtrlSum": "59950.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "NURG"
+            },
+            "CtgyPurp": {
+              "Cd": "SALA"
+            }
+          },
+          "ReqdExctnDt": "2026-09-25",
+          "Dbtr": {
+            "Nm": "Norrland Trävaror AB",
+            "PstlAdr": {
+              "PstCd": "903 26",
+              "TwnNm": "Umeå",
+              "Ctry": "SE",
+              "AdrLine": [
+                "Storgatan 22"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "SE7550639613542320999232"
+            },
+            "Ccy": "SEK"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "UIQTSE60"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "NTA-LON-0925-0001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "31200.00",
+                  "Ccy": "SEK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "EQOLSE60"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Anna Lindqvist"
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "SE2807489095803679803230"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Lön september 2026 anst 710996"
+                ]
+              }
+            },
+            {
+              "PmtId": {
+                "EndToEndId": "NTA-LON-0925-0002"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "28750.00",
+                  "Ccy": "SEK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "HFJKSET0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Erik Sandström"
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "SE9063629992753071679900"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Lön september 2026 anst 720995"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

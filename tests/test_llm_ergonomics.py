@@ -281,8 +281,9 @@ class TestSingleShotErrors:
             )
         message = str(excinfo.value)
         assert "pain.001.001.03" in message
-        assert "initiator_street_name" in message
-        assert "purpose_code" in message
+        assert "initiator_name" in message and "debtor_name" in message
+        assert "debtor_account_IBAN (or debtor_account_number)" in message
+        assert "creditor_agent_BIC (or creditor_agent_member_id)" in message
 
     def test_v03_defaults_for_method_booking_and_charge_bearer(self):
         row = {

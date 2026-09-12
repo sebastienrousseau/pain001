@@ -1,0 +1,46 @@
+# A Hong Kong Faster Payment System credit in HKD: the HKICL clearing
+# code on both agents, account numbers as the FPS carries them, and the
+# service level URGP the HK banks' ISO 20022 file specifications use.
+id: hk.fps.single
+family: instant-payment
+country: HK
+versions: [pain.001.001.03, pain.001.001.09]
+seed: 850001
+description: Hong Kong FPS credit in HKD, clearing codes and account numbers.
+profiles: [hk-fps, purpose-mandate-hk, anti-duplicate]
+
+parties:
+  payer:
+    name: Harbour Logistics Ltd
+    address: {form: hybrid, street: Hoi Bun Road, building_number: "88", town: Kwun Tong, country: HK}
+
+header:
+  message_id: HLL-20260921-01
+  created: "2026-09-21T09:00:00"
+  initiating_party: {ref: payer}
+
+payment:
+  id: HLL-FPS-260921-01
+  method: TRF
+  batch_booking: false
+  type: {service_level: URGP}
+  requested_execution_date: "2026-09-21"
+  debtor: {ref: payer}
+  debtor_account: {other: {id: "312345678", scheme: BBAN}, currency: HKD}
+  debtor_agent: {bic: auto, country: HK, clearing: {system: HKNCC, member_id: "876"}}
+  charge_bearer: SHAR
+
+transactions:
+  - end_to_end_id: HLL-2026-0921-001
+    amount: {ccy: HKD, value: "68500.00"}
+    creditor_agent: {bic: auto, country: HK, clearing: {system: HKNCC, member_id: "861"}}
+    creditor: {name: Kowloon Freight Services, address: {form: hybrid, town: Kowloon, country: HK}}
+    creditor_account: {other: {id: "123456789012", scheme: BBAN}}
+    remittance: {unstructured: "INV 2026-0921"}
+
+provenance:
+  sources:
+    - {title: "Hong Kong Interbank Clearing Limited, Faster Payment System rules and clearing-code list", read: "2026-09-11"}
+    - {title: "East West Bank HK, ISO 20022 FPS file specification (public)", read: "2026-09-11"}
+  confidence: assumed
+  evidence: []

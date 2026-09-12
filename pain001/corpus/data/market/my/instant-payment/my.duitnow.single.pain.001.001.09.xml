@@ -1,0 +1,98 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>SPP-20260921-01</MsgId>
+      <CreDtTm>2026-09-21T09:30:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>18750.00</CtrlSum>
+      <InitgPty>
+        <Nm>Selangor Palm Products Sdn Bhd</Nm>
+        <PstlAdr>
+          <PstCd>50450</PstCd>
+          <TwnNm>Kuala Lumpur</TwnNm>
+          <Ctry>MY</Ctry>
+          <AdrLine>160 Jalan Ampang</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>SPP-DN-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>18750.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>URGP</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-21</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Selangor Palm Products Sdn Bhd</Nm>
+        <PstlAdr>
+          <PstCd>50450</PstCd>
+          <TwnNm>Kuala Lumpur</TwnNm>
+          <Ctry>MY</Ctry>
+          <AdrLine>160 Jalan Ampang</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>12345678901234</Id>
+            <SchmeNm>
+              <Cd>BBAN</Cd>
+            </SchmeNm>
+          </Othr>
+        </Id>
+        <Ccy>MYR</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>EFYIMYS0</BICFI>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>SPP-2026-0921-001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="MYR">18750.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>KILXMYT0</BICFI>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Penang Machinery Trading</Nm>
+          <PstlAdr>
+            <PstCd>10450</PstCd>
+            <TwnNm>George Town</TwnNm>
+            <Ctry>MY</Ctry>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>98765432109876</Id>
+              <SchmeNm>
+                <Cd>BBAN</Cd>
+              </SchmeNm>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <Purp>
+          <Cd>GDDS</Cd>
+        </Purp>
+        <RmtInf>
+          <Ustrd>INV PMT-2026-0331</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

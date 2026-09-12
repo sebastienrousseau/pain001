@@ -28,6 +28,7 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins: null
 provenance:
   sources:
   - title: EPC016-06 SEPA Core Direct Debit Rulebook 2025 v1.0

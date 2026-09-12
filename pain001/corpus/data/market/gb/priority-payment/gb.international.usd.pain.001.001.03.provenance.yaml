@@ -34,6 +34,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 371b723fefd308abbb9a356078e7a44d09ee5bb728e11f350e53303e8e8a09e6
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Swift CBPR+ usage guidelines SR2025, pain.001.001.09 (restricted; not in

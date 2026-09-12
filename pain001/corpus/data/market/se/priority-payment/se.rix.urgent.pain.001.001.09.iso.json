@@ -1,0 +1,119 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "NTA-20260921-05",
+        "CreDtTm": "2026-09-21T10:15:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "2000000.00",
+        "InitgPty": {
+          "Nm": "Norrland Trävaror AB",
+          "PstlAdr": {
+            "PstCd": "903 26",
+            "TwnNm": "Umeå",
+            "Ctry": "SE",
+            "AdrLine": [
+              "Storgatan 22"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "LEI": "0000001MDIRQSR400E15"
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "NTA-RIX-20260921",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "2000000.00",
+          "PmtTpInf": {
+            "InstrPrty": "HIGH",
+            "SvcLvl": [
+              {
+                "Cd": "URGP"
+              }
+            ],
+            "CtgyPurp": {
+              "Cd": "INTC"
+            }
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-21"
+          },
+          "Dbtr": {
+            "Nm": "Norrland Trävaror AB",
+            "PstlAdr": {
+              "PstCd": "903 26",
+              "TwnNm": "Umeå",
+              "Ctry": "SE",
+              "AdrLine": [
+                "Storgatan 22"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "LEI": "0000001MDIRQSR400E15"
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "SE6586083667920426060071"
+            },
+            "Ccy": "SEK"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "WSMHSED0"
+            }
+          },
+          "ChrgBr": "DEBT",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "NTA-RIX-0921-001",
+                "UETR": "ed6c9d0b-f268-4ced-930f-594b01382789"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "2000000.00",
+                  "Ccy": "SEK"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "ETQWSE40"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Norrland Trävaror Finans AB",
+                "PstlAdr": {
+                  "PstCd": "111 20",
+                  "TwnNm": "Stockholm",
+                  "Ctry": "SE",
+                  "AdrLine": [
+                    "Vasagatan 11"
+                  ]
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "SE8324846535171284456770"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Treasury sweep 2026-09-21"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

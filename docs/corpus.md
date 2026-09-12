@@ -237,4 +237,7 @@ that change what a scenario must carry, and the scenarios each affects:
   (Bankgiro with OCR, Plusgiro, salary, RIX), every file from public
   rulebooks. Bank variants are built privately from your bank's guideline.
 - **0.0.69**: tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence
-  chips, and the CSV pipeline extension for the twelve most-used rails.
+  chips, the CSV pipeline extension for the twelve most-used rails, and
+  the pain.001 twin foundation: the ISO JSON twin beside every pain.001
+  market file, one JSON Schema per edition, and the records twin whose
+  gap list drives the pipeline work ([twins](twins.md), ADR-0005).

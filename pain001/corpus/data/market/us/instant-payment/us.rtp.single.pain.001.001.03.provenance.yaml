@@ -31,6 +31,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: dd32892f30ef2a7a7d6aec9a90e54b72e14a90b3e9f00e7afd95a5d39aa88200
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: The Clearing House RTP network rules (per-item limit)

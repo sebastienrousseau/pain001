@@ -34,6 +34,14 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: c1350d2d7c88f6cb9ee0bace583fd12d658698be4a6b4f71329ea5076d5e780a
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Betaalvereniging Nederland, SEPA Credit Transfer implementation guidelines

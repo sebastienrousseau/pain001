@@ -31,6 +31,16 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: d0a11ba75f2b2ae0896f8cd65669c212f736c32c8166b792895ce610fb69daaa
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Authrty/Ctry
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/RgltryRptg/Authrty/Nm
+    missing_required: []
 provenance:
   sources:
   - title: DK DFUE-Abkommen Anlage 3 V3.8, order type AXZ

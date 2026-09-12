@@ -29,6 +29,7 @@ Subpackages
    pain001.schemas
    pain001.security
    pain001.templates
+   pain001.twins
    pain001.validation
    pain001.xml
 

@@ -25,6 +25,19 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: d8f0b384c75fa0d0772fa75dd99f50a145a09bad7fc7060b6d6b6e774bf04561
+    schema_findings: []
+  records:
+    rows: 1
+    gap:
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/ChqInstr/ChqTp
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/ChqInstr/DlvryMtd/Cd
+    - CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/ChqInstr/MemoFld
+    missing_required:
+    - creditor_account_IBAN|creditor_account_number
+    - creditor_agent_BIC|creditor_agent_member_id
 provenance:
   sources:
   - title: ISO 20022 MDR Payments Initiation 2020-2021, cheque rules; Cross River

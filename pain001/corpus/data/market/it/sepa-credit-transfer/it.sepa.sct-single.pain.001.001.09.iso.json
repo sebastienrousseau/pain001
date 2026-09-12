@@ -1,0 +1,100 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "OML-SCT-20260921",
+        "CreDtTm": "2026-09-21T12:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "2200.00",
+        "InitgPty": {
+          "Nm": "Officine Meccaniche Lombarde SpA",
+          "PstlAdr": {
+            "PstCd": "20123",
+            "TwnNm": "Milano",
+            "Ctry": "IT",
+            "AdrLine": [
+              "Via Torino 15"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "SCT-20260921-IT-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "2200.00",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "SEPA"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-22"
+          },
+          "Dbtr": {
+            "Nm": "Officine Meccaniche Lombarde SpA",
+            "PstlAdr": {
+              "PstCd": "20123",
+              "TwnNm": "Milano",
+              "Ctry": "IT",
+              "AdrLine": [
+                "Via Torino 15"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "IT48T78971134594OGDKY5VXE41"
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "TLAOIT60"
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "OML-2026-0921-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "2200.00",
+                  "Ccy": "EUR"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "MHXHITI0"
+                }
+              },
+              "Cdtr": {
+                "Nm": "Fonderia Bresciana Srl",
+                "PstlAdr": {
+                  "PstCd": "25121",
+                  "TwnNm": "Brescia",
+                  "Ctry": "IT"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "IT23J14887404856NF3794IGWXN"
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Fattura 117/2026"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

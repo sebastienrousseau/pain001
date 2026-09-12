@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 9b28a9c74787303da358e79f101636b7017eba5d9faf135af1ef84e8fef27b8d
+    schema_findings: []
+  records:
+    rows: 2
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Bankgirot, Bankgirot Löner (salary) service description; Nordea Corporate

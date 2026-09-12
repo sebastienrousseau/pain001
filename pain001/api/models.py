@@ -173,16 +173,11 @@ class ValidationResponse(BaseModel):
         Returns:
             Calculated invalid rows (total - valid).
         """
-        # Pydantic v2 uses info.data instead of values dict
-        if hasattr(info, "data"):  # pragma: no cover
-            data = info.data
-            if (
-                "total_rows" in data and "valid_rows" in data
-            ):  # pragma: no cover
-                total = int(data["total_rows"])
-                valid = int(data["valid_rows"])
-                return total - valid
-        return v  # pragma: no cover
+        data = info.data
+        if "total_rows" in data and "valid_rows" in data:
+            return int(data["total_rows"]) - int(data["valid_rows"])
+        # total_rows failed its own validation; pydantic reports that error
+        return v
 
 
 class GenerateXMLResponse(BaseModel):

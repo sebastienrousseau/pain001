@@ -5,20 +5,26 @@
       <MsgId>T</MsgId>
       <CreDtTm>2026-01-02T09:00:00</CreDtTm>
       <NbOfTxs>1</NbOfTxs>
-      <InitgPty/>
+      <InitgPty>
+        <Nm>T</Nm>
+      </InitgPty>
     </GrpHdr>
     <PmtInf>
       <PmtInfId>T</PmtInfId>
       <PmtMtd>DD</PmtMtd>
       <ReqdColltnDt>2026-01-02</ReqdColltnDt>
-      <Cdtr/>
+      <Cdtr>
+        <Nm>T</Nm>
+      </Cdtr>
       <CdtrAcct>
         <Id>
           <IBAN>DE89370400440532013000</IBAN>
         </Id>
       </CdtrAcct>
       <CdtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BICFI>BANKDEFFXXX</BICFI>
+        </FinInstnId>
       </CdtrAgt>
       <DrctDbtTxInf>
         <PmtId>
@@ -84,9 +90,13 @@
           </Id>
         </UltmtCdtr>
         <DbtrAgt>
-          <FinInstnId/>
+          <FinInstnId>
+            <BICFI>BANKDEFFXXX</BICFI>
+          </FinInstnId>
         </DbtrAgt>
-        <Dbtr/>
+        <Dbtr>
+          <Nm>T</Nm>
+        </Dbtr>
         <DbtrAcct>
           <Id>
             <IBAN>DE89370400440532013000</IBAN>

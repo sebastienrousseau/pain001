@@ -5,7 +5,9 @@
       <MsgId>T</MsgId>
       <CreDtTm>2026-01-02T09:00:00</CreDtTm>
       <NbOfTxs>1</NbOfTxs>
-      <InitgPty/>
+      <InitgPty>
+        <Nm>T</Nm>
+      </InitgPty>
     </GrpHdr>
     <PmtInf>
       <PmtInfId>T</PmtInfId>
@@ -13,14 +15,18 @@
       <ReqdExctnDt>
         <Dt>2026-01-02</Dt>
       </ReqdExctnDt>
-      <Dbtr/>
+      <Dbtr>
+        <Nm>T</Nm>
+      </Dbtr>
       <DbtrAcct>
         <Id>
           <IBAN>DE89370400440532013000</IBAN>
         </Id>
       </DbtrAcct>
       <DbtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BICFI>BANKDEFFXXX</BICFI>
+        </FinInstnId>
       </DbtrAgt>
       <CdtTrfTxInf>
         <PmtId>
@@ -90,9 +96,13 @@
           <Sgntr>T</Sgntr>
         </ChqInstr>
         <CdtrAgt>
-          <FinInstnId/>
+          <FinInstnId>
+            <BICFI>BANKDEFFXXX</BICFI>
+          </FinInstnId>
         </CdtrAgt>
-        <Cdtr/>
+        <Cdtr>
+          <Nm>T</Nm>
+        </Cdtr>
       </CdtTrfTxInf>
     </PmtInf>
   </CstmrCdtTrfInitn>

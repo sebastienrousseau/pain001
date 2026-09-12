@@ -16,6 +16,7 @@
 
 # pylint: disable=too-few-public-methods
 
+import sys
 import uuid
 
 from fastapi.testclient import TestClient
@@ -864,11 +865,14 @@ class TestSyncGenerationSuccess:
 class TestAsyncWorkerErrorPaths:
     """Cover the failure branches of the async generation worker."""
 
-    def test_worker_access_denied_for_outside_path(self):
+    def test_worker_access_denied_for_outside_path(self, monkeypatch):
         """A path outside the allowed roots drives the job to FAILED."""
         import asyncio
         import os
         import tempfile
+
+        # The session keeps TMPDIR inside the checkout; use the real root.
+        monkeypatch.setattr(tempfile, "tempdir", "/tmp")
 
         from pain001.api.app import _process_generation_job
         from pain001.api.job_manager import JobStatus, job_manager
@@ -876,7 +880,7 @@ class TestAsyncWorkerErrorPaths:
 
         # A real file under the system temp dir: it passes path validation
         # (tmp is allowed) but is not under cwd, so the worker refuses it.
-        fd, path = tempfile.mkstemp(suffix=".csv")
+        fd, path = tempfile.mkstemp(suffix=".csv", dir="/tmp")
         os.close(fd)
         try:
             job_id = job_manager.create_job()
@@ -889,6 +893,7 @@ class TestAsyncWorkerErrorPaths:
             job = job_manager.get_job(job_id)
             assert job is not None
             assert job.status == JobStatus.FAILED
+            assert job.error == "Access denied"
         finally:
             os.remove(path)
 
@@ -1026,3 +1031,218 @@ class TestValidateSchemaErrors:
         body = response.json()
         assert body["is_valid"] is False
         assert body["errors"]
+
+
+class TestGuardedPaths:
+    """Paths under the system temp root pass validation but not the cwd guard."""
+
+    @staticmethod
+    def _tmp_csv(monkeypatch) -> str:
+        """A file in the real system temp root, outside the project cwd.
+
+        The test session points TMPDIR inside the checkout, so the temp
+        root is restored to the system one for the duration of the test.
+        """
+        import os
+        import tempfile
+
+        monkeypatch.setattr(tempfile, "tempdir", "/tmp")
+        fd, path = tempfile.mkstemp(suffix=".csv", dir="/tmp")
+        os.close(fd)
+        return path
+
+    def test_validate_refuses_temp_file(self, monkeypatch):
+        import os
+
+        path = self._tmp_csv(monkeypatch)
+        try:
+            response = client.post(
+                "/api/validate",
+                json={
+                    "data_source": "csv",
+                    "file_path": path,
+                    "message_type": "pain.001.001.03",
+                },
+            )
+            assert response.status_code == 403
+        finally:
+            os.remove(path)
+
+    def test_generate_refuses_temp_file(self, monkeypatch):
+        import os
+
+        path = self._tmp_csv(monkeypatch)
+        try:
+            response = client.post(
+                "/api/generate",
+                json={
+                    "data_source": "csv",
+                    "file_path": path,
+                    "message_type": "pain.001.001.03",
+                },
+            )
+            assert response.status_code == 403
+        finally:
+            os.remove(path)
+
+    def test_generate_missing_file_in_cwd_is_404(self):
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": "tests/data/does-not-exist.csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 404
+
+    def test_download_refuses_temp_file(self, monkeypatch):
+        import os
+
+        path = self._tmp_csv(monkeypatch)
+        job_id = job_manager.create_job()
+        job_manager.update_status(
+            job_id,
+            JobStatus.SUCCESS,
+            progress=100,
+            result={"success": True, "file_path": path},
+        )
+        try:
+            response = client.get(f"/api/download/{job_id}")
+            assert response.status_code == 403
+        finally:
+            os.remove(path)
+
+
+class TestSyncGenerationOutcomes:
+    """Every early return of the synchronous generation endpoint."""
+
+    _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
+    _VIOLATING_CSV = "tests/data/sepa_violating.csv"
+
+    def test_validate_only_reports_success_without_a_file(self):
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+                "validate_only": True,
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True and body["file_path"] is None
+        assert "rows are valid" in body["message"]
+
+    def test_schema_errors_are_returned_not_raised(
+        self, tmp_path, monkeypatch
+    ):
+        import csv
+
+        with open(self._BUNDLED_CSV, newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        rows[0]["currency"] = "EURO"
+        target = tmp_path / "bad-currency.csv"
+        with open(target, "w", newline="", encoding="utf-8") as handle:
+            writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+            writer.writeheader()
+            writer.writerows(rows)
+        monkeypatch.chdir(tmp_path)
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": str(target),
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is False
+        assert "Validation failed" in body["message"]
+        assert body["validation_errors"]
+
+    def test_scheme_pass_continues_to_generation(self):
+        import os
+
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+                "scheme": "sepa-sct",
+            },
+        )
+        try:
+            assert response.status_code == 200
+            body = response.json()
+            assert body["success"] is True and body["file_path"]
+        finally:
+            if os.path.exists("pain.001.001.03.xml"):
+                os.remove("pain.001.001.03.xml")
+
+    def test_scheme_violations_are_returned_not_raised(self):
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": self._VIOLATING_CSV,
+                "message_type": "pain.001.001.03",
+                "scheme": "sepa-sct",
+            },
+        )
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is False
+        assert body["scheme_violations"]
+
+
+class TestUnexpectedFailures:
+    """Unexpected exceptions become HTTP 500 rather than leaking."""
+
+    _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
+
+    def _boom(self, *_args, **_kwargs):
+        raise RuntimeError("boom")
+
+    def test_validate_endpoint_wraps_unexpected_errors(self, monkeypatch):
+        app_module = sys.modules["pain001.api.app"]
+        monkeypatch.setattr(app_module, "load_payment_data", self._boom)
+        response = client.post(
+            "/api/validate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 500
+        assert "Validation failed" in response.json()["detail"]
+
+    def test_generate_endpoint_wraps_unexpected_errors(self, monkeypatch):
+        app_module = sys.modules["pain001.api.app"]
+        monkeypatch.setattr(app_module, "load_payment_data", self._boom)
+        response = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 500
+
+    def test_async_generate_wraps_job_creation_errors(self, monkeypatch):
+        monkeypatch.setattr(job_manager, "create_job", self._boom)
+        response = client.post(
+            "/api/generate/async",
+            json={
+                "data_source": "csv",
+                "file_path": self._BUNDLED_CSV,
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert response.status_code == 500
+        assert response.json()["detail"] == "Failed to create job"

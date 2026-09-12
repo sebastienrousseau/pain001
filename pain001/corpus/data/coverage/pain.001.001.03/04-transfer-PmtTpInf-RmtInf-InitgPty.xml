@@ -40,7 +40,9 @@
         </Id>
       </DbtrAcct>
       <DbtrAgt>
-        <FinInstnId/>
+        <FinInstnId>
+          <BIC>BANKDEFFXXX</BIC>
+        </FinInstnId>
       </DbtrAgt>
       <UltmtDbtr>
         <Id>

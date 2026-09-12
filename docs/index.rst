@@ -190,6 +190,8 @@ Contents
 
    architecture
    corpus
+   twins
+   input-columns
    message-deltas
    development
    packaging

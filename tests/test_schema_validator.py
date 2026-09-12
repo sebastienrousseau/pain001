@@ -6,8 +6,11 @@
 
 """Tests for SchemaValidator module."""
 
+import json
 import unittest
 from pathlib import Path
+
+import pytest
 
 from pain001.validation.schema_validator import (
     SchemaValidator,
@@ -334,3 +337,40 @@ class TestSchemaValidator(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_schema_validator_defaults_to_the_bundled_schema_directory() -> None:
+    """No schema_dir means the package's own schemas directory."""
+    validator = SchemaValidator("pain.001.001.03")
+    assert validator.schema_path.endswith("pain.001.001.03.schema.json")
+
+
+def test_schema_validator_reports_a_missing_schema_file(
+    tmp_path: Path,
+) -> None:
+    """An empty schema directory cannot validate any message type."""
+    with pytest.raises(FileNotFoundError, match="Schema validation failed"):
+        SchemaValidator("pain.001.001.03", schema_dir=tmp_path)
+
+
+def test_schema_validator_rejects_a_malformed_schema_file(
+    tmp_path: Path,
+) -> None:
+    """A schema file that is not JSON is reported with its path."""
+    (tmp_path / "pain.001.001.03.schema.json").write_text(
+        "{not json", encoding="utf-8"
+    )
+    with pytest.raises(
+        json.JSONDecodeError, match="Invalid JSON in schema file"
+    ):
+        SchemaValidator("pain.001.001.03", schema_dir=tmp_path)
+
+
+def test_schema_validator_rejects_an_invalid_schema(tmp_path: Path) -> None:
+    """A well-formed file that is not a valid JSON Schema fails at validate time."""
+    (tmp_path / "pain.001.001.03.schema.json").write_text(
+        json.dumps({"type": "not-a-type"}), encoding="utf-8"
+    )
+    validator = SchemaValidator("pain.001.001.03", schema_dir=tmp_path)
+    with pytest.raises(ValueError, match="Invalid schema"):
+        validator.validate_data({"id": "1"})

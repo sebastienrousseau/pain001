@@ -191,3 +191,35 @@ def test_config_manager_env_value_coercion(monkeypatch) -> None:
     resolved = manager.resolve({})
     assert resolved["streaming"] is True
     assert resolved["xml_message_type"] == "pain.001.001.09"
+
+
+def test_config_manager_project_config_without_the_profile(
+    tmp_path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "pain001.yaml").write_text(
+        "profiles:\n  local:\n    xml_message_type: pain.001.001.09\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(KeyError, match="Unknown profile 'other'"):
+        ConfigManager().get_profile("other")
+
+
+def test_config_manager_keeps_boolean_values_as_is() -> None:
+    manager = ConfigManager()
+    assert manager._coerce_value("streaming", True) is True
+    assert manager._coerce_value("emit_metrics", False) is False
+    assert manager._coerce_value("streaming", "yes") is True
+
+
+def test_config_manager_deep_merge_nests_and_skips_none() -> None:
+    merged = ConfigManager()._deep_merge(
+        {"a": {"x": 1, "keep": True}, "b": 1, "d": "old"},
+        {"a": {"y": 2}, "b": None, "c": 3},
+    )
+    assert merged == {
+        "a": {"x": 1, "keep": True, "y": 2},
+        "b": 1,
+        "c": 3,
+        "d": "old",
+    }

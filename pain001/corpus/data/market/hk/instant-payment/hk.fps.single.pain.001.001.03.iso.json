@@ -1,0 +1,116 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "HLL-20260921-01",
+        "CreDtTm": "2026-09-21T09:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "68500.00",
+        "InitgPty": {
+          "Nm": "Harbour Logistics Ltd",
+          "PstlAdr": {
+            "TwnNm": "Kwun Tong",
+            "Ctry": "HK",
+            "AdrLine": [
+              "88 Hoi Bun Road"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "HLL-FPS-260921-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "68500.00",
+          "PmtTpInf": {
+            "SvcLvl": {
+              "Cd": "URGP"
+            }
+          },
+          "ReqdExctnDt": "2026-09-21",
+          "Dbtr": {
+            "Nm": "Harbour Logistics Ltd",
+            "PstlAdr": {
+              "TwnNm": "Kwun Tong",
+              "Ctry": "HK",
+              "AdrLine": [
+                "88 Hoi Bun Road"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "312345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            },
+            "Ccy": "HKD"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "MUPSHK80",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "HKNCC"
+                },
+                "MmbId": "876"
+              }
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "HLL-2026-0921-001"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "68500.00",
+                  "Ccy": "HKD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "ZGGDHKJ0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "HKNCC"
+                    },
+                    "MmbId": "861"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Kowloon Freight Services",
+                "PstlAdr": {
+                  "TwnNm": "Kowloon",
+                  "Ctry": "HK"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "123456789012",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV 2026-0921"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

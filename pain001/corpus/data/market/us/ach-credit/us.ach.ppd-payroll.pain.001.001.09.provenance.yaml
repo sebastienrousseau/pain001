@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 98d96206b9a0d7dd44f4debb93af2ae216e8d99009bfc7cf0ee125187a005fd9
+    schema_findings: []
+  records:
+    rows: 2
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Nacha Operating Rules and Guidelines, PPD entries

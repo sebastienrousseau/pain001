@@ -16,7 +16,7 @@
 
 try:
     import fastapi  # noqa: F401
-except ImportError as _e:  # pragma: no cover
+except ImportError as _e:  # pragma: no cover - fastapi is an optional extra
     raise ImportError(
         "The REST API requires the 'api' extra. "
         "Install with: pip install pain001[api]"

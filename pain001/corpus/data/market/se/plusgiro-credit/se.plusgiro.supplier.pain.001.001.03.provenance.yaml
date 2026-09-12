@@ -30,6 +30,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 85798880dcb63146a372175b35f99f0c6c81c54ae29ba87f285cbca20f48aeb7
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: 'Nordea, pain.001 examples and Corporate Access implementation guide (Jun

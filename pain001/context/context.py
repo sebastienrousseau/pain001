@@ -48,8 +48,9 @@ class Context:
         """
         if Context.instance is None:
             Context()
-        if Context.instance is None:  # pragma: no cover
-            # Defensive check: unreachable because Context() always sets instance
+        if (
+            Context.instance is None
+        ):  # pragma: no cover - Context() always sets it
             raise RuntimeError("Failed to initialize Context singleton")
         return Context.instance
 
@@ -106,8 +107,7 @@ class Context:
             else:
                 raise ValueError("Invalid log level")
 
-        if self.logger:  # pragma: no cover
-            self.logger.setLevel(self.log_level)
+        self.logger.setLevel(self.log_level)
 
     def init_logger(self) -> None:
         """Initializes the logger.

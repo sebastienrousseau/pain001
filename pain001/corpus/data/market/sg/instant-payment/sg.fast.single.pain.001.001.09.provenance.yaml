@@ -1,0 +1,50 @@
+scenario: sg.fast.single
+family: instant-payment
+country: SG
+message_type: pain.001.001.09
+variant: null
+description: Singapore FAST credit in SGD, bank and branch codes, addresses on both
+  parties.
+sha256: 4445dc1a90b9bd5ab66486c9c0ba72984f9b33cd8b1f21a0fd79677f76c1263d
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    sg-fast:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+twins:
+  iso_json:
+    sha256: 3299dcbd377aa7465c65bf21e8a920384ebe926470be936087b5eb65f9801e47
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
+provenance:
+  sources:
+  - title: Association of Banks in Singapore, FAST service description (S$200,000
+      per transaction)
+    read: '2026-09-11'
+  - title: UOB, OCBC and DBS ISO 20022 pain.001 pages (public)
+    read: '2026-09-11'
+  confidence: assumed
+  evidence: []
+constraints: []

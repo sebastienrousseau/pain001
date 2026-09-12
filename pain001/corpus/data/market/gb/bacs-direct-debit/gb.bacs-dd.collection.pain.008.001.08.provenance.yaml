@@ -28,6 +28,7 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins: null
 provenance:
   sources:
   - title: Bacs AUDDIS service guide

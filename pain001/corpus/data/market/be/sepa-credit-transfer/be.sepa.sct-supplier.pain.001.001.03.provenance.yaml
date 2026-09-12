@@ -34,6 +34,14 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: 359e9b1b2befc524dd2829cf0bf6accc5080041d068ca535f214ec9157dca4cd
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Febelfin, XML message for SEPA Credit Transfer initiation, implementation

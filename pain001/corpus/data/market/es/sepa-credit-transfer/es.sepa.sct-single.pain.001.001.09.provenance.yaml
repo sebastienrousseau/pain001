@@ -33,6 +33,14 @@ validation:
       errors: 0
       warnings: 0
       findings: []
+twins:
+  iso_json:
+    sha256: 28dbaa855e4948a1b4325029f982d68978bd0c6c5ab62e8857eb6e1a8e49bc50
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: AEB, Guia de implantacion pain.001 v1.0, Rulebook 2025 (Oct 2025)

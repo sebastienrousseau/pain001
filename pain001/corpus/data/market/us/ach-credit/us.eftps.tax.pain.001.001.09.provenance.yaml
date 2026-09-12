@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 7c85be43be27801714e897bce18523ec27f4ed997bc1b530b64a015bded58697
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: US Treasury Financial Manual chapter 2000 and the Nacha TXP addenda convention

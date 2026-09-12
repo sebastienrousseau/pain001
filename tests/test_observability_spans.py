@@ -25,6 +25,7 @@ those against an in-memory exporter.
 from __future__ import annotations
 
 import asyncio
+import inspect
 from pathlib import Path
 from unittest.mock import patch
 
@@ -78,7 +79,7 @@ def test_traced_wraps_coroutines_and_keeps_them_coroutines(exporter) -> None:
         await asyncio.sleep(0)
         return value * 2
 
-    assert asyncio.iscoroutinefunction(handler)
+    assert inspect.iscoroutinefunction(handler)
     assert asyncio.run(handler(21)) == 42
     assert _names(exporter) == ["pain001.test-async"]
 

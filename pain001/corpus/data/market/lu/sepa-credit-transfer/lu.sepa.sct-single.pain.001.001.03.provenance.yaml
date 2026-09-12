@@ -30,6 +30,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: 259940aa17cd1b9dc8e1b1c90a3d1cc40ecc85aaf682631bca69c94f64ed0660
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: ABBL, SEPA credit transfer implementation guideline for Luxembourg

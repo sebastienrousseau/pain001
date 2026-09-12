@@ -1,0 +1,202 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "ELMRD-BACS-20260918",
+        "CreDtTm": "2026-09-15T17:00:00",
+        "NbOfTxs": "2",
+        "CtrlSum": "5760.50",
+        "InitgPty": {
+          "Nm": "Elm Road Developments",
+          "PstlAdr": {
+            "PstCd": "SW1A 1AA",
+            "TwnNm": "London",
+            "Ctry": "GB",
+            "AdrLine": [
+              "14 Elm Road"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "Othr": [
+                {
+                  "Id": "654321",
+                  "SchmeNm": {
+                    "Prtry": "SUN"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "BACS-20260918-01",
+          "PmtMtd": "TRF",
+          "BtchBookg": "true",
+          "NbOfTxs": "2",
+          "CtrlSum": "5760.50",
+          "PmtTpInf": {
+            "SvcLvl": [
+              {
+                "Cd": "NURG"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-18"
+          },
+          "Dbtr": {
+            "Nm": "Elm Road Developments",
+            "PstlAdr": {
+              "PstCd": "SW1A 1AA",
+              "TwnNm": "London",
+              "Ctry": "GB",
+              "AdrLine": [
+                "14 Elm Road"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "Othr": [
+                  {
+                    "Id": "654321",
+                    "SchmeNm": {
+                      "Prtry": "SUN"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "12345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            },
+            "Ccy": "GBP"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "DYEMGBJ0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "GBDSC"
+                },
+                "MmbId": "040004"
+              },
+              "PstlAdr": {
+                "TwnNm": "London",
+                "Ctry": "GB"
+              }
+            }
+          },
+          "ChrgBr": "SLEV",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "INV-0915-0042"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "4800.00",
+                  "Ccy": "GBP"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "HERAGB80",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "GBDSC"
+                    },
+                    "MmbId": "200415"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "Leeds",
+                    "Ctry": "GB"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Northgate Timber",
+                "PstlAdr": {
+                  "TwnNm": "Leeds",
+                  "Ctry": "GB"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "87654321",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV-0915-0042"
+                ]
+              }
+            },
+            {
+              "PmtId": {
+                "EndToEndId": "INV-0915-0043"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "960.50",
+                  "Ccy": "GBP"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "MROCGBF0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "GBDSC"
+                    },
+                    "MmbId": "309634"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "Bristol",
+                    "Ctry": "GB"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Avon Plant Hire",
+                "PstlAdr": {
+                  "TwnNm": "Bristol",
+                  "Ctry": "GB"
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "11223344",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "INV-0915-0043"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

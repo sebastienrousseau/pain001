@@ -29,6 +29,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: bb1218c76fa891143761d3676df55b087298d3a87f4393c173fb1a6197030482
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: EPC121-16 Customer-to-PSP SCT Inst Implementation Guidelines 2025 v1.0

@@ -1,0 +1,135 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "CMI-WIRE-20260922-01",
+        "CreDtTm": "2026-09-22T11:00:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "125000.00",
+        "InitgPty": {
+          "Nm": "Cascade Millwork Inc",
+          "PstlAdr": {
+            "PstCd": "97204",
+            "TwnNm": "Portland",
+            "CtrySubDvsn": "OR",
+            "Ctry": "US",
+            "AdrLine": [
+              "1200 Pine Street"
+            ]
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "WIRE-20260922-01",
+          "PmtMtd": "TRF",
+          "NbOfTxs": "1",
+          "CtrlSum": "125000.00",
+          "PmtTpInf": {
+            "InstrPrty": "HIGH",
+            "SvcLvl": {
+              "Cd": "URGP"
+            }
+          },
+          "ReqdExctnDt": "2026-09-22",
+          "Dbtr": {
+            "Nm": "Cascade Millwork Inc",
+            "PstlAdr": {
+              "PstCd": "97204",
+              "TwnNm": "Portland",
+              "CtrySubDvsn": "OR",
+              "Ctry": "US",
+              "AdrLine": [
+                "1200 Pine Street"
+              ]
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "Othr": {
+                "Id": "4412345678",
+                "SchmeNm": {
+                  "Cd": "BBAN"
+                }
+              }
+            }
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BIC": "YPTEUSH0",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "USABA"
+                },
+                "MmbId": "021000021"
+              },
+              "PstlAdr": {
+                "TwnNm": "New York",
+                "Ctry": "US"
+              }
+            }
+          },
+          "ChrgBr": "DEBT",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "CMI-WIRE-2026-0922-01"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "125000.00",
+                  "Ccy": "USD"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BIC": "DZKNUSB0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "USABA"
+                    },
+                    "MmbId": "121000248"
+                  },
+                  "PstlAdr": {
+                    "TwnNm": "San Francisco",
+                    "Ctry": "US"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Golden Gate Timber Corp",
+                "PstlAdr": {
+                  "PstCd": "94104",
+                  "TwnNm": "San Francisco",
+                  "CtrySubDvsn": "CA",
+                  "Ctry": "US",
+                  "AdrLine": [
+                    "600 Market Street"
+                  ]
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "Othr": {
+                    "Id": "5512345678",
+                    "SchmeNm": {
+                      "Cd": "BBAN"
+                    }
+                  }
+                }
+              },
+              "Purp": {
+                "Cd": "GDDS"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Contract 2026-31 milestone 2"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

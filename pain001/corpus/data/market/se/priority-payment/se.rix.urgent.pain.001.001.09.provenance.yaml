@@ -25,6 +25,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: e8611c3a4d2e4e2a45f442752a2fe2a3d71dde5f11480b8a69a21e5f3b5d0faf
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: Sveriges Riksbank, RIX-RTGS participant and message guidance; Nordea Corporate

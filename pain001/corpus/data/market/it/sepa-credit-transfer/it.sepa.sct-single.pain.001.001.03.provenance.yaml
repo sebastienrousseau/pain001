@@ -30,6 +30,14 @@ validation:
       warnings: 0
       findings: []
   overlays: {}
+twins:
+  iso_json:
+    sha256: ff3702b7a335d8c73cfa01d30a62e744e31a226694456f51e1fa315701564754
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
 provenance:
   sources:
   - title: EPC132-08 Customer-to-PSP SCT Implementation Guidelines 2025 v1.0

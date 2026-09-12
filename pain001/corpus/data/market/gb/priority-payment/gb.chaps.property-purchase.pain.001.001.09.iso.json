@@ -1,0 +1,131 @@
+{
+  "Document": {
+    "CstmrCdtTrfInitn": {
+      "GrpHdr": {
+        "MsgId": "ELMRD-20260912-0001",
+        "CreDtTm": "2026-09-12T08:30:00",
+        "NbOfTxs": "1",
+        "CtrlSum": "425000.00",
+        "InitgPty": {
+          "Nm": "Elm Road Developments Ltd",
+          "PstlAdr": {
+            "PstCd": "SW1A 1AA",
+            "TwnNm": "London",
+            "Ctry": "GB",
+            "AdrLine": [
+              "14 Elm Road"
+            ]
+          },
+          "Id": {
+            "OrgId": {
+              "LEI": "000000NMWEL2E9U1VL21"
+            }
+          }
+        }
+      },
+      "PmtInf": [
+        {
+          "PmtInfId": "CHAPS-20260912-001",
+          "PmtMtd": "TRF",
+          "BtchBookg": "false",
+          "NbOfTxs": "1",
+          "CtrlSum": "425000.00",
+          "PmtTpInf": {
+            "InstrPrty": "HIGH",
+            "SvcLvl": [
+              {
+                "Cd": "SDVA"
+              }
+            ]
+          },
+          "ReqdExctnDt": {
+            "Dt": "2026-09-12"
+          },
+          "Dbtr": {
+            "Nm": "Elm Road Developments Ltd",
+            "PstlAdr": {
+              "PstCd": "SW1A 1AA",
+              "TwnNm": "London",
+              "Ctry": "GB",
+              "AdrLine": [
+                "14 Elm Road"
+              ]
+            },
+            "Id": {
+              "OrgId": {
+                "LEI": "000000NMWEL2E9U1VL21"
+              }
+            }
+          },
+          "DbtrAcct": {
+            "Id": {
+              "IBAN": "GB07OUER60969382168086"
+            },
+            "Ccy": "GBP"
+          },
+          "DbtrAgt": {
+            "FinInstnId": {
+              "BICFI": "OICSGB40",
+              "ClrSysMmbId": {
+                "ClrSysId": {
+                  "Cd": "GBDSC"
+                },
+                "MmbId": "040004"
+              }
+            }
+          },
+          "ChrgBr": "SHAR",
+          "CdtTrfTxInf": [
+            {
+              "PmtId": {
+                "EndToEndId": "COMPLETION-2026-0912",
+                "UETR": "069356c8-b718-4363-b1bc-824f86f5108f"
+              },
+              "Amt": {
+                "InstdAmt": {
+                  "amt": "425000.00",
+                  "Ccy": "GBP"
+                }
+              },
+              "CdtrAgt": {
+                "FinInstnId": {
+                  "BICFI": "NPHBGBS0",
+                  "ClrSysMmbId": {
+                    "ClrSysId": {
+                      "Cd": "GBDSC"
+                    },
+                    "MmbId": "309634"
+                  }
+                }
+              },
+              "Cdtr": {
+                "Nm": "Bramley and Co Solicitors Client Account",
+                "PstlAdr": {
+                  "PstCd": "RG1 2AB",
+                  "TwnNm": "Reading",
+                  "Ctry": "GB",
+                  "AdrLine": [
+                    "2 High Street"
+                  ]
+                }
+              },
+              "CdtrAcct": {
+                "Id": {
+                  "IBAN": "GB20OYKL60284231569811"
+                }
+              },
+              "Purp": {
+                "Cd": "HLST"
+              },
+              "RmtInf": {
+                "Ustrd": [
+                  "Completion 14 Elm Road"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

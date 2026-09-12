@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.09">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MTP-20260921-01</MsgId>
+      <CreDtTm>2026-09-21T10:00:00</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>45200.00</CtrlSum>
+      <InitgPty>
+        <Nm>Merlion Trading Pte Ltd</Nm>
+        <PstlAdr>
+          <PstCd>068895</PstCd>
+          <TwnNm>Singapore</TwnNm>
+          <Ctry>SG</Ctry>
+          <AdrLine>71 Robinson Road</AdrLine>
+        </PstlAdr>
+      </InitgPty>
+    </GrpHdr>
+    <PmtInf>
+      <PmtInfId>MTP-FAST-260921-01</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <BtchBookg>false</BtchBookg>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>45200.00</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>URGP</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>
+        <Dt>2026-09-21</Dt>
+      </ReqdExctnDt>
+      <Dbtr>
+        <Nm>Merlion Trading Pte Ltd</Nm>
+        <PstlAdr>
+          <PstCd>068895</PstCd>
+          <TwnNm>Singapore</TwnNm>
+          <Ctry>SG</Ctry>
+          <AdrLine>71 Robinson Road</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <Othr>
+            <Id>0123456789</Id>
+            <SchmeNm>
+              <Cd>BBAN</Cd>
+            </SchmeNm>
+          </Othr>
+        </Id>
+        <Ccy>SGD</Ccy>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BICFI>YVRSSGD0</BICFI>
+          <ClrSysMmbId>
+            <ClrSysId>
+              <Cd>SGIBG</Cd>
+            </ClrSysId>
+            <MmbId>9990001</MmbId>
+          </ClrSysMmbId>
+        </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SHAR</ChrgBr>
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>MTP-2026-0921-001</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="SGD">45200.00</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <BICFI>QKCYSGM0</BICFI>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>SGIBG</Cd>
+              </ClrSysId>
+              <MmbId>9990002</MmbId>
+            </ClrSysMmbId>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Jurong Packaging Supplies</Nm>
+          <PstlAdr>
+            <PstCd>628505</PstCd>
+            <TwnNm>Singapore</TwnNm>
+            <Ctry>SG</Ctry>
+            <AdrLine>12 Pioneer Road</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <Othr>
+              <Id>9876543210</Id>
+              <SchmeNm>
+                <Cd>BBAN</Cd>
+              </SchmeNm>
+            </Othr>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>Invoice JPS-2026-118</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>

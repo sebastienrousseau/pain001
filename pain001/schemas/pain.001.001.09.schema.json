@@ -8,16 +8,11 @@
     "id",
     "date",
     "initiator_name",
-    "requested_execution_date",
     "debtor_name",
-    "debtor_account_IBAN",
-    "debtor_agent_BIC",
     "payment_id",
     "payment_amount",
     "currency",
-    "creditor_agent_BIC",
-    "creditor_name",
-    "creditor_account_IBAN"
+    "creditor_name"
   ],
   "properties": {
     "id": {
@@ -70,16 +65,14 @@
     },
     "service_level_code": {
       "type": "string",
-      "enum": [
-        "SEPA",
-        "URNS"
-      ],
-      "description": "Service level code; optional for this version."
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Service level code (PmtTpInf/SvcLvl/Cd), e.g. SEPA, URGP, NURG, SDVA; optional."
     },
     "requested_execution_date": {
       "type": "string",
-      "format": "date",
-      "description": "Requested execution date, 'YYYY-MM-DD' (a full datetime is truncated to its date part)."
+      "description": "Requested execution date 'YYYY-MM-DD' (ReqdExctnDt/Dt); required unless requested_execution_datetime is given.",
+      "format": "date"
     },
     "debtor_name": {
       "type": "string",
@@ -155,6 +148,375 @@
       "minLength": 1,
       "maxLength": 140,
       "description": "Remittance information; optional, omitted from the XML when absent."
+    },
+    "instruction_priority": {
+      "type": "string",
+      "enum": [
+        "HIGH",
+        "NORM"
+      ],
+      "description": "Instruction priority (PmtTpInf/InstrPrty); optional."
+    },
+    "local_instrument_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Local instrument code (PmtTpInf/LclInstrm/Cd); optional."
+    },
+    "local_instrument_proprietary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Proprietary local instrument (PmtTpInf/LclInstrm/Prtry); optional, used when no code is given."
+    },
+    "category_purpose_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Category purpose code (PmtTpInf/CtgyPurp/Cd); optional."
+    },
+    "initiator_street_name": {
+      "type": "string",
+      "maxLength": 70,
+      "description": "Initiating party street name (InitgPty/PstlAdr/StrtNm); optional."
+    },
+    "initiator_building_number": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Initiating party building number; optional."
+    },
+    "initiator_postal_code": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Initiating party post code; optional."
+    },
+    "initiator_town_name": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Initiating party town; optional."
+    },
+    "initiator_country_subdivision": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Initiating party country subdivision; optional."
+    },
+    "initiator_country_code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Initiating party country; optional."
+    },
+    "initiator_address_line": {
+      "type": "string",
+      "maxLength": 70,
+      "description": "Initiating party address line (InitgPty/PstlAdr/AdrLine); optional."
+    },
+    "initiator_lei": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{18}[0-9]{2}$",
+      "description": "Initiating party LEI (InitgPty/Id/OrgId/LEI); optional."
+    },
+    "initiator_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Initiating party organisation id (InitgPty/Id/OrgId/Othr/Id); optional."
+    },
+    "initiator_id_scheme": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Scheme code of initiator_id (SchmeNm/Cd); optional."
+    },
+    "debtor_street_name": {
+      "type": "string",
+      "maxLength": 70,
+      "description": "Debtor street name (Dbtr/PstlAdr/StrtNm); optional."
+    },
+    "debtor_building_number": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Debtor building number; optional."
+    },
+    "debtor_postal_code": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Debtor post code; optional."
+    },
+    "debtor_town_name": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Debtor town; optional."
+    },
+    "debtor_country_subdivision": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Debtor country subdivision; optional."
+    },
+    "debtor_country_code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Debtor country; optional."
+    },
+    "debtor_address_line": {
+      "type": "string",
+      "maxLength": 70,
+      "description": "Debtor address line (Dbtr/PstlAdr/AdrLine); optional."
+    },
+    "debtor_lei": {
+      "type": "string",
+      "pattern": "^[A-Z0-9]{18}[0-9]{2}$",
+      "description": "Debtor LEI (Dbtr/Id/OrgId/LEI); optional."
+    },
+    "debtor_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Debtor organisation id (Dbtr/Id/OrgId/Othr/Id); optional."
+    },
+    "debtor_id_scheme": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Scheme code of debtor_id (SchmeNm/Cd); optional."
+    },
+    "debtor_account_number": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 34,
+      "description": "Debtor account number when it is not an IBAN (DbtrAcct/Id/Othr/Id); required if debtor_account_IBAN is absent."
+    },
+    "debtor_account_scheme": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Scheme code of debtor_account_number, e.g. BBAN (DbtrAcct/Id/Othr/SchmeNm/Cd); optional."
+    },
+    "debtor_account_currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "Debtor account currency (DbtrAcct/Ccy); optional."
+    },
+    "debtor_agent_clearing_system": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5,
+      "description": "Debtor agent clearing system code, e.g. GBDSC, USABA (DbtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd); optional."
+    },
+    "debtor_agent_member_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Debtor agent clearing member id, e.g. a sort code or routing number (DbtrAgt/FinInstnId/ClrSysMmbId/MmbId); required if debtor_agent_BIC is absent."
+    },
+    "debtor_agent_name": {
+      "type": "string",
+      "maxLength": 140,
+      "description": "Debtor agent name (DbtrAgt/FinInstnId/Nm); optional."
+    },
+    "ultimate_debtor_name": {
+      "type": "string",
+      "maxLength": 140,
+      "description": "Ultimate debtor name (UltmtDbtr/Nm); optional."
+    },
+    "instruction_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Instruction identification (PmtId/InstrId); optional."
+    },
+    "uetr": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$",
+      "description": "Unique end-to-end transaction reference (PmtId/UETR); optional."
+    },
+    "creditor_street_name": {
+      "type": "string",
+      "maxLength": 70,
+      "description": "Creditor street name (Cdtr/PstlAdr/StrtNm); optional."
+    },
+    "creditor_building_number": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Creditor building number; optional."
+    },
+    "creditor_postal_code": {
+      "type": "string",
+      "maxLength": 16,
+      "description": "Creditor post code; optional."
+    },
+    "creditor_town_name": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Creditor town; optional."
+    },
+    "creditor_country_subdivision": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Creditor country subdivision; optional."
+    },
+    "creditor_country_code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Creditor country; optional."
+    },
+    "creditor_address_line": {
+      "type": "string",
+      "maxLength": 70,
+      "description": "Creditor address line (Cdtr/PstlAdr/AdrLine); optional."
+    },
+    "creditor_account_number": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 34,
+      "description": "Creditor account number when it is not an IBAN (CdtrAcct/Id/Othr/Id); required if creditor_account_IBAN is absent."
+    },
+    "creditor_account_scheme": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Scheme code of creditor_account_number, e.g. BBAN (CdtrAcct/Id/Othr/SchmeNm/Cd); optional."
+    },
+    "creditor_account_currency": {
+      "type": "string",
+      "pattern": "^[A-Z]{3}$",
+      "description": "Creditor account currency (CdtrAcct/Ccy); optional."
+    },
+    "creditor_agent_clearing_system": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 5,
+      "description": "Creditor agent clearing system code (CdtrAgt/FinInstnId/ClrSysMmbId/ClrSysId/Cd); optional."
+    },
+    "creditor_agent_member_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Creditor agent clearing member id (CdtrAgt/FinInstnId/ClrSysMmbId/MmbId); required if creditor_agent_BIC is absent."
+    },
+    "creditor_agent_name": {
+      "type": "string",
+      "maxLength": 140,
+      "description": "Creditor agent name (CdtrAgt/FinInstnId/Nm); optional."
+    },
+    "ultimate_creditor_name": {
+      "type": "string",
+      "maxLength": 140,
+      "description": "Ultimate creditor name (UltmtCdtr/Nm); optional."
+    },
+    "purpose_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "ISO external purpose code (Purp/Cd); optional."
+    },
+    "regulatory_reporting_indicator": {
+      "type": "string",
+      "enum": [
+        "CRED",
+        "DEBT",
+        "BOTH"
+      ],
+      "description": "Regulatory reporting debit/credit indicator (RgltryRptg/DbtCdtRptgInd); optional."
+    },
+    "regulatory_reporting_country": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Regulatory reporting country (RgltryRptg/Dtls/Ctry); optional."
+    },
+    "regulatory_reporting_code": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 10,
+      "description": "Regulatory reporting code (RgltryRptg/Dtls/Cd); optional."
+    },
+    "regulatory_reporting_info": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Regulatory reporting information (RgltryRptg/Dtls/Inf); optional."
+    },
+    "creditor_reference": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Structured creditor reference (RmtInf/Strd/CdtrRefInf/Ref); optional."
+    },
+    "creditor_reference_type": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Creditor reference type: an ISO code such as SCOR is rendered as Cd, anything else as Prtry; optional."
+    },
+    "creditor_reference_issuer": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Creditor reference issuer (CdtrRefInf/Tp/Issr); optional."
+    },
+    "initiator_id_scheme_proprietary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Proprietary scheme name of initiator_id (SchmeNm/Prtry); used when no code is given."
+    },
+    "debtor_id_scheme_proprietary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Proprietary scheme name of debtor_id (SchmeNm/Prtry); used when no code is given."
+    },
+    "debtor_account_scheme_proprietary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Proprietary scheme name of debtor_account_number (SchmeNm/Prtry); used when no code is given."
+    },
+    "creditor_account_scheme_proprietary": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 35,
+      "description": "Proprietary scheme name of creditor_account_number, e.g. BGNR (SchmeNm/Prtry); used when no code is given."
+    },
+    "debtor_agent_town_name": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Debtor agent town (DbtrAgt/FinInstnId/PstlAdr/TwnNm); optional."
+    },
+    "debtor_agent_country_subdivision": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Debtor agent country subdivision; optional."
+    },
+    "debtor_agent_country_code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Debtor agent country (DbtrAgt/FinInstnId/PstlAdr/Ctry); optional."
+    },
+    "creditor_agent_town_name": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Creditor agent town (CdtrAgt/FinInstnId/PstlAdr/TwnNm); optional."
+    },
+    "creditor_agent_country_subdivision": {
+      "type": "string",
+      "maxLength": 35,
+      "description": "Creditor agent country subdivision; optional."
+    },
+    "creditor_agent_country_code": {
+      "type": "string",
+      "pattern": "^[A-Z]{2}$",
+      "description": "Creditor agent country (CdtrAgt/FinInstnId/PstlAdr/Ctry); optional."
+    },
+    "additional_remittance_information": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 140,
+      "description": "Additional structured remittance information (RmtInf/Strd/AddtlRmtInf), with a creditor reference; optional."
+    },
+    "requested_execution_datetime": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}",
+      "description": "Requested execution date-time (ReqdExctnDt/DtTm), for instant schemes; used instead of requested_execution_date when given."
     }
   },
   "additionalProperties": true

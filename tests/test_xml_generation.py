@@ -18,6 +18,8 @@ import os
 import unittest
 from unittest.mock import patch
 
+import pytest
+
 from pain001.xml.generate_xml import generate_xml
 from pain001.xml.validate_via_xsd import validate_xml_string_via_xsd
 
@@ -197,3 +199,12 @@ class TestGenerateXMLFunction(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_trusted_template_source_requires_an_xml_suffix(tmp_path) -> None:
+    from pain001.xml.generate_xml import _load_trusted_template_source
+
+    plain = tmp_path / "template.txt"
+    plain.write_text("<x/>", encoding="utf-8")
+    with pytest.raises(ValueError, match="must point to an .xml file"):
+        _load_trusted_template_source(str(plain))

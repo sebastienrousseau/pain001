@@ -1,0 +1,53 @@
+scenario: qa.qatch.single
+family: domestic-credit-transfer
+country: QA
+message_type: pain.001.001.03
+variant: null
+description: Qatar QATCH credit in QAR with the QCB purpose of payment.
+sha256: b4d5eb1b88d2c398d9c498696e551a9132dd20a540c27271b52fcd01b12fd5b3
+build:
+  renamed:
+  - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
+  - /Document/CstmrCdtTrfInitn/PmtInf/CdtTrfTxInf/CdtrAgt/FinInstnId/BICFI -> BIC
+  wrapped: []
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    qa-qatch:
+      errors: 0
+      warnings: 0
+      findings: []
+    purpose-mandate-qa:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+twins:
+  iso_json:
+    sha256: 72951283f3369f5aed38f724e1b5f76777c7ba8eff5b574fc09da356939e005b
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
+provenance:
+  sources:
+  - title: Qatar Central Bank, retail payment systems pages (QATCH)
+    read: '2026-09-11'
+  - title: ClearingPost, QA-RTGS and QATCH message guide (public)
+    read: '2026-09-11'
+  confidence: assumed
+  evidence: []
+constraints: []

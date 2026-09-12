@@ -1,0 +1,53 @@
+scenario: hk.fps.single
+family: instant-payment
+country: HK
+message_type: pain.001.001.09
+variant: null
+description: Hong Kong FPS credit in HKD, clearing codes and account numbers.
+sha256: fc387cac0bd08393e2980f052d0052dd63cd880bedea877b155dca05605880df
+build:
+  renamed: []
+  wrapped:
+  - /Document/CstmrCdtTrfInitn/PmtInf/ReqdExctnDt
+  unwrapped: []
+  dropped: []
+  truncated: []
+validation:
+  xsd:
+    errors: 0
+    findings: []
+  mdr:
+    errors: 0
+    findings: []
+  profiles:
+    hk-fps:
+      errors: 0
+      warnings: 0
+      findings: []
+    purpose-mandate-hk:
+      errors: 0
+      warnings: 0
+      findings: []
+    anti-duplicate:
+      errors: 0
+      warnings: 0
+      findings: []
+  overlays: {}
+twins:
+  iso_json:
+    sha256: 6e8e487a23e8f467e00ce2532af479acaa2b77cf7536fda7b1afcb3d592c3853
+    schema_findings: []
+  records:
+    rows: 1
+    gap: []
+    missing_required: []
+provenance:
+  sources:
+  - title: Hong Kong Interbank Clearing Limited, Faster Payment System rules and clearing-code
+      list
+    read: '2026-09-11'
+  - title: East West Bank HK, ISO 20022 FPS file specification (public)
+    read: '2026-09-11'
+  confidence: assumed
+  evidence: []
+constraints: []
