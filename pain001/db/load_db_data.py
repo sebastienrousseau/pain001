@@ -20,16 +20,13 @@
 
 import os
 import re
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pain001.exceptions import ConfigurationError
 from pain001.security import validate_path
 
-if TYPE_CHECKING:  # pragma: no cover - typing only
-    import sqlite3
 
-
-def _connect_sqlite_read_only(safe_path: str) -> "sqlite3.Connection":
+def _connect_sqlite_read_only(safe_path: str) -> Any:
     """Open an SQLite database in read-only mode."""
     import sqlite3  # noqa: PLC0415 - loaded only when a database is read
 
