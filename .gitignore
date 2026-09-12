@@ -164,13 +164,14 @@ pain001/tmp/
 /pain.0*.xml
 /migrated*.csv
 
-# Restricted material downloaded from swift.com / MyStandards (HSBC Direct
-# Channels, CBPR+, CGI-MP usage guidelines). It lives in iCloud, never here;
-# tests/test_no_restricted_material.py fails the build if any slips in.
+# Restricted material downloaded from swift.com / MyStandards (bank usage
+# guidelines, CBPR+, CGI-MP). It stays in the maintainer's own storage, never
+# here; tests/test_no_restricted_material.py fails the build if any slips in.
+# Exports are named <publisher>_<message>_..., which no bundled file is.
 *MyStandards*
-HSBC_pain*
-HSBC_pacs*
-HSBC_camt*
+*_pain.[0-9]*
+*_pacs.[0-9]*
+*_camt.[0-9]*
 *swift.cbprplus*
 *CGI-MP*
 *_externalcodesets_*.xlsx
