@@ -127,8 +127,6 @@ website and in the MCP and LSP tools. Entries are added as work lands.
   name.
 
 ## [0.0.67] - 2026-09-12
-||||||| 287dd9a
-## [0.0.67] - Unreleased
 
 The first of the three example-corpus releases
 ([ADR-0003](docs/adr/0003-example-corpus-two-corpora-one-engine.md)):
