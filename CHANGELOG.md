@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Rail rules read the CSV pipeline's column names.** The rail profiles
+  looked for `creditor_account_id`, `creditor_town` and `creditor_country`;
+  rows produced by the records twin and documented in `docs/input-columns.md`
+  carry `creditor_account_number`, `creditor_town_name` and
+  `creditor_country_code`. Both spellings now satisfy the account and
+  address rules (`--scheme` on a pipeline CSV no longer reports a missing
+  account number or address that is present).
 - **Optional dependencies load when used, not on import.** `import pain001`
   no longer loads the CLI (and with it `rich`), the corpus builder no
   longer imports `lxml` at module level, and the SQLite loader imports

@@ -501,3 +501,33 @@ def test_composition_with_the_sepa_profiles_and_helpers() -> None:
         "1000000.00"
     )
     assert "UK-FPS-CCY" in REMEDIATIONS
+
+
+def test_rails_read_the_csv_pipeline_column_names_too() -> None:
+    """The records twin writes *_account_number, *_town_name and *_country_code.
+
+    The rails first read the short names the CLI documented before 0.0.69;
+    both vocabularies must satisfy the same rule.
+    """
+    pipeline_row = {
+        **GB_ROW,
+        "creditor_account_IBAN": "",
+        "creditor_account_number": "12345678",
+        "creditor_agent_member_id": "040004",
+        "creditor_town_name": "London",
+        "creditor_country_code": "GB",
+        "debtor_town_name": "Leeds",
+        "debtor_country_code": "GB",
+    }
+    for key in ("creditor_account_id", "creditor_town", "creditor_country"):
+        pipeline_row.pop(key, None)
+    result = validate_scheme([pipeline_row], "uk-fps")
+    assert not [v for v in result.violations if v.rule.endswith("ACCT")], (
+        result.violations
+    )
+    chaps = validate_scheme(
+        [{**pipeline_row, "payment_amount": "100.00"}], "uk-chaps"
+    )
+    assert not [v for v in chaps.violations if v.rule.endswith("ADDR")], (
+        chaps.violations
+    )

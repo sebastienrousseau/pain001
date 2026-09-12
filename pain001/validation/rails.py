@@ -264,7 +264,7 @@ class _RowContext:
             member=_text(row, f"{side}_agent_member_id"),
             clearing=_text(row, f"{side}_agent_clearing_system"),
             iban=_text(row, f"{side}_account_IBAN"),
-            other=_text(row, f"{side}_account_id"),
+            other=_text(row, f"{side}_account_id", f"{side}_account_number"),
         )
 
 
@@ -706,8 +706,8 @@ class RailProfile(ValidationProfile):
             )
             for party in parties:
                 if not (
-                    _text(row, f"{party}_town")
-                    and _text(row, f"{party}_country")
+                    _text(row, f"{party}_town", f"{party}_town_name")
+                    and _text(row, f"{party}_country", f"{party}_country_code")
                 ):
                     self._flag(
                         result,
