@@ -21,12 +21,21 @@ def test_main_resolves_lazily_and_unknown_names_do_not() -> None:
 
 
 def test_import_does_not_load_optional_modules() -> None:
-    """A fresh interpreter, so this test's own imports cannot mask the result."""
+    """A fresh interpreter, so this test's own imports cannot mask the result.
+
+    lxml is blocked outright: xmlschema imports it opportunistically when
+    it is installed, which is not the library pulling it in. The library's
+    own modules must import cleanly without it, and rich and sqlite3 must
+    never be loaded on import.
+    """
     code = (
         "import sys\n"
+        "sys.modules['lxml'] = None\n"
+        "sys.modules['lxml.etree'] = None\n"
         "import pain001, pain001.twins, pain001.corpus\n"
         "from pain001.xml.generate_xml import generate_xml_string\n"
-        "print(sorted(m for m in ('rich', 'lxml', 'sqlite3', 'pygments') if m in sys.modules))\n"
+        "from pain001.validation.schema_validator import SchemaValidator\n"
+        "print(sorted(m for m in ('rich', 'sqlite3', 'pygments') if m in sys.modules))\n"
     )
     out = subprocess.run(
         [sys.executable, "-c", code],
