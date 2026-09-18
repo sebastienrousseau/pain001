@@ -188,3 +188,12 @@ The single highest-impact item on this entire page.
 *Roadmap is indicative, not a commitment; the maintainer prioritises.
 Subsequent versions of this document will live at
 [ROADMAP.md](https://github.com/sebastienrousseau/pain001/blob/main/ROADMAP.md).*
+
+## Quality debt, recorded 2026-09-18
+
+- **Mutation-score variance.** Two runs of the fast mutation tier on
+  identical code scored 87.1% and 83.2%: about 120 of 2,941 mutants
+  change verdict between runs. Find the tests whose outcome depends on
+  time, ordering or unseeded data, pin them, and raise `MUTATION_FLOOR`
+  in the Makefile to two points under the stable score. Until then the
+  floor is 80.
