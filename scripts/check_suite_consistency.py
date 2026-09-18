@@ -15,6 +15,10 @@ Two failures it catches, both of which have already happened:
 * A **member claiming a release it predates.** `pain001-loader-xlsx`
   was published as 0.0.54 while requiring `pain001>=0.0.56`, so its own
   number described a suite version older than the core it demands.
+* A **floor nobody decided.** The two loaders declared `>=0.0.55` and
+  `>=0.0.56`, the wrappers `>=0.0.70`, and no rule said which was right.
+  :mod:`pain001.suite` now records the intended floor per member, and a
+  published floor that differs from it is reported.
 
 Exits non-zero when the suite disagrees with itself, so the schedule
 turns into a notification rather than a report nobody opens.
@@ -32,7 +36,7 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from pain001.suite import CORE, SUITE
+from pain001.suite import CORE, LOCKSTEP, SUITE
 
 #: PyPI JSON API. Documented, cacheable, and needs no credentials.
 _PYPI = "https://pypi.org/pypi/{distribution}/json"
@@ -131,6 +135,42 @@ def _as_tuple(version: str) -> tuple[int, ...]:
     return tuple(parts)
 
 
+def floor_problems(member: Any, version: str, floor: str | None) -> list[str]:
+    """Compare a member's published ``pain001`` floor with the policy.
+
+    Args:
+        member: The :class:`~pain001.suite.SuiteMember` being checked.
+        version: The member's published version.
+        floor: The floor it publishes, from :func:`core_floor`.
+
+    Returns:
+        Zero or one problem strings.
+
+    Example:
+        >>> from pain001.suite import SUITE
+        >>> floor_problems(SUITE["pain001-mcp"], "0.0.60", "0.0.60")
+        []
+        >>> floor_problems(SUITE["pain001-mcp"], "0.0.60", "0.0.55")[0][:38]
+        'pain001-mcp 0.0.60 requires pain001>=0'
+    """
+    policy = member.floor
+    if policy is None:
+        return []
+    expected = version if policy == LOCKSTEP else policy
+    if floor == expected:
+        return []
+    why = (
+        "wrappers use the core's API, so the floor is the release itself"
+        if policy == LOCKSTEP
+        else "loaders keep the floor recorded in pain001.suite; change it "
+        "there first"
+    )
+    return [
+        f"{member.distribution} {version} requires {CORE}>="
+        f"{floor or '(none)'}, but the suite policy is >={expected}: {why}."
+    ]
+
+
 def audit() -> tuple[list[str], dict[str, Any]]:
     """Compare published versions against the suite policy.
 
@@ -175,6 +215,8 @@ def audit() -> tuple[list[str], dict[str, Any]]:
                 f"newest published {CORE} is {core_version}. Nobody can "
                 f"install this combination."
             )
+
+        problems.extend(floor_problems(member, version, floor))
 
     return problems, report
 
