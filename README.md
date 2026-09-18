@@ -580,8 +580,10 @@ Every package in the suite — `pain001`, `pain001-mcp`, `pain001-lsp`,
 `pain001-loader-xlsx`, `pain001-loader-mt101` — ships the **same version
 number**. If the core is at `0.0.60` then so is everything else, so
 there is never a compatibility table to consult. Versions advance in
-`0.0.1` steps along the `0.0.x` line; `0.1.0` follows `0.0.999`. See
-`pain001.suite`, which a daily job checks against PyPI.
+`0.0.1` steps along the `0.0.x` line; `0.1.0` follows `0.0.999`. The
+MCP and LSP servers require the core at their own number; each loader
+requires the oldest core whose plugin contract it needs and states which
+in `pain001.suite`, which a daily job checks against PyPI.
 
 ### MCP server
 

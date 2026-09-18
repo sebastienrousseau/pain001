@@ -41,18 +41,32 @@ occasional no-change release. The contract generation in
 registry still enforces it at load time — it is a safety net, not the
 versioning policy.
 
-Two rules follow, and both are checked by
+Three rules follow, and all are checked by
 ``scripts/check_suite_consistency.py``:
 
 1. Every member's published version must equal the core's.
 2. Every member's declared ``pain001`` floor must be a version that
    actually exists, or the combination is uninstallable.
+3. Every member's declared ``pain001`` floor follows the policy recorded
+   here (:attr:`SuiteMember.floor`). The wrappers (``pain001-mcp``,
+   ``pain001-lsp``) are :data:`LOCKSTEP`: they call the core's own API,
+   so each release requires the core at the same number. The loaders
+   implement the published plugin contract, so each declares the oldest
+   core whose contract it needs and keeps it; raising it is a deliberate
+   change made in this table, not a side effect of a release. Before
+   this rule the floors drifted silently (``>=0.0.55`` on one loader,
+   ``>=0.0.56`` on the other, ``>=0.0.70`` on the wrappers) with nothing
+   saying which was intended.
 """
 
 from __future__ import annotations
 
 from types import MappingProxyType
 from typing import Final, NamedTuple
+
+#: Floor policy for a member whose declared ``pain001`` floor must equal
+#: its own version: it uses the core's API, not only the plugin contract.
+LOCKSTEP: Final[str] = "lockstep"
 
 
 class SuiteMember(NamedTuple):
@@ -62,11 +76,16 @@ class SuiteMember(NamedTuple):
         distribution: The name on PyPI.
         repository: The GitHub repository, ``owner/name``.
         summary: One line, for the README table and error messages.
+        floor: The ``pain001`` floor this member must declare:
+            :data:`LOCKSTEP` (equal to its own version), an explicit
+            version (the oldest core whose plugin contract it needs), or
+            ``None`` for the core itself.
     """
 
     distribution: str
     repository: str
     summary: str
+    floor: str | None = LOCKSTEP
 
 
 #: The core distribution every other member depends on.
@@ -84,26 +103,31 @@ SUITE: Final[MappingProxyType[str, SuiteMember]] = MappingProxyType(
                 distribution="pain001",
                 repository="sebastienrousseau/pain001",
                 summary="Core library and CLI.",
+                floor=None,
             ),
             SuiteMember(
                 distribution="pain001-mcp",
                 repository="sebastienrousseau/pain001-mcp",
                 summary="Model Context Protocol server.",
+                floor=LOCKSTEP,
             ),
             SuiteMember(
                 distribution="pain001-lsp",
                 repository="sebastienrousseau/pain001-lsp",
                 summary="Language server for payment data files.",
+                floor=LOCKSTEP,
             ),
             SuiteMember(
                 distribution="pain001-loader-xlsx",
                 repository="sebastienrousseau/pain001-loader-xlsx",
                 summary="Excel (.xlsx/.xlsm) loader plugin.",
+                floor="0.0.56",
             ),
             SuiteMember(
                 distribution="pain001-loader-mt101",
                 repository="sebastienrousseau/pain001-loader-mt101",
                 summary="SWIFT MT101 loader plugin.",
+                floor="0.0.55",
             ),
         )
     }

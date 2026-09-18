@@ -45,6 +45,12 @@ section of the README).
 - `pain001/suite.py` lists the members; `scripts/check_suite_consistency.py`
   queries PyPI daily and fails when any member lags the core or declares
   a floor the core has not published.
+- The same table records each member's `pain001` floor policy (added
+  2026-09-18): the MCP and LSP wrappers are lockstep, requiring the core
+  at their own number; each loader records the oldest core whose plugin
+  contract it needs (`0.0.55` for MT101, `0.0.56` for xlsx) and keeps it
+  until a contract change moves it, in the table first. The daily check
+  fails when a published floor differs from the table.
 - `tests/test_suite_conformance.py`, a byte-identical file vendored in
   every repository, checks that the version is restated consistently and
   that the CHANGELOG's newest heading is the declared version.

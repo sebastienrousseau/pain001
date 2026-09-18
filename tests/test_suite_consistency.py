@@ -19,7 +19,7 @@ from typing import Any
 
 import pytest
 
-from pain001.suite import CORE, SUITE, members
+from pain001.suite import CORE, LOCKSTEP, SUITE, members
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
@@ -27,6 +27,7 @@ from check_suite_consistency import (  # noqa: E402
     _as_tuple,
     audit,
     core_floor,
+    floor_problems,
     main,
 )
 
@@ -64,6 +65,23 @@ class TestPolicy:
         for member in SUITE.values():
             assert member.repository.startswith("sebastienrousseau/")
             assert member.summary.endswith(".")
+
+    def test_every_member_declares_its_floor_policy(self) -> None:
+        """The floor rule is written down once, here, per member.
+
+        The wrappers call the core's API and track it release for
+        release; the loaders implement the plugin contract and record
+        the oldest core whose contract they need. Before this table the
+        loaders sat at ``>=0.0.55`` and ``>=0.0.56`` with nothing saying
+        whether that was intent or neglect.
+        """
+        assert SUITE[CORE].floor is None
+        assert SUITE["pain001-mcp"].floor == LOCKSTEP
+        assert SUITE["pain001-lsp"].floor == LOCKSTEP
+        for name in ("pain001-loader-xlsx", "pain001-loader-mt101"):
+            floor = SUITE[name].floor
+            assert floor is not None and floor != LOCKSTEP
+            assert _as_tuple(floor) < _as_tuple("0.0.999")
 
 
 class TestCoreFloor:
@@ -156,8 +174,8 @@ class TestAudit:
             monkeypatch,
             {
                 "pain001": _member("0.0.60"),
-                "pain001-mcp": _member("0.0.60", "0.0.55"),
-                "pain001-lsp": _member("0.0.60", "0.0.55"),
+                "pain001-mcp": _member("0.0.60", "0.0.60"),
+                "pain001-lsp": _member("0.0.60", "0.0.60"),
                 "pain001-loader-xlsx": _member("0.0.60", "0.0.56"),
                 "pain001-loader-mt101": _member("0.0.60", "0.0.55"),
             },
@@ -222,6 +240,60 @@ class TestAudit:
         problems, _ = audit()
 
         assert any("Nobody can install" in p for p in problems)
+
+    def test_a_wrapper_floor_below_its_release_is_reported(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The MCP server at 0.0.60 must require the core at 0.0.60.
+
+        It calls the core's API, so an older floor promises a
+        combination nobody tested: 0.0.60 tools on a 0.0.55 core.
+        """
+        _stub(
+            monkeypatch,
+            {
+                "pain001": _member("0.0.60"),
+                "pain001-mcp": _member("0.0.60", "0.0.55"),
+            },
+        )
+
+        problems, _ = audit()
+
+        assert any(
+            "pain001-mcp 0.0.60 requires pain001>=0.0.55" in p
+            and ">=0.0.60" in p
+            for p in problems
+        )
+
+    def test_a_loader_floor_that_left_the_policy_is_reported(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A loader's floor moves in pain001.suite first, then in its
+        pyproject; a pyproject that moved alone is the drift."""
+        _stub(
+            monkeypatch,
+            {
+                "pain001": _member("0.0.60"),
+                "pain001-loader-mt101": _member("0.0.60", "0.0.58"),
+            },
+        )
+
+        problems, _ = audit()
+
+        assert any(
+            "pain001-loader-mt101 0.0.60 requires pain001>=0.0.58" in p
+            and ">=0.0.55" in p
+            for p in problems
+        )
+
+    def test_a_member_with_no_floor_at_all_is_reported(self) -> None:
+        """No lower bound is not a floor; it is the absence of one."""
+        (problem,) = floor_problems(SUITE["pain001-lsp"], "0.0.60", None)
+        assert "requires pain001>=(none)" in problem
+
+    def test_the_core_has_no_floor_to_check(self) -> None:
+        """The core does not depend on itself."""
+        assert floor_problems(SUITE[CORE], "0.0.60", None) == []
 
     def test_an_unpublished_member_is_recorded_not_flagged(
         self, monkeypatch: pytest.MonkeyPatch
