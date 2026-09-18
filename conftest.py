@@ -12,6 +12,25 @@ import pytest
 
 from pain001.constants import BASE_DIR
 
+# Hypothesis under mutation testing. mutmut runs the stats pass and the
+# clean pass as two pytest sessions in one process, so every property
+# test is called from two executors; Hypothesis flags that as a health
+# check because it can make database replay non-reproducible. Under
+# mutmut the database is disposable and the seed is fixed, so the check
+# says nothing about the property. Selected with --hypothesis-profile=mutation
+# from [tool.mutmut] in pyproject.toml; never the default.
+try:
+    from hypothesis import HealthCheck as _HealthCheck
+    from hypothesis import settings as _hypothesis_settings
+except ImportError:  # pragma: no cover - hypothesis is a dev dependency
+    pass
+else:
+    _hypothesis_settings.register_profile(
+        "mutation",
+        derandomize=True,
+        suppress_health_check=[_HealthCheck.differing_executors],
+    )
+
 
 class SLOMonitor:
     """Tracks execution time and enforces SLOs."""

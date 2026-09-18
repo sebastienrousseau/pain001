@@ -317,3 +317,36 @@ arg-type-hints-in-docstring = false
 skip-checking-short-docstrings = true
 check-return-types = false
 exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/)"
+
+[tool.mutmut]
+# Mutation testing (mutmut 3). The fast tier on every pull request runs
+# the mutants of the modules a wrong answer costs the most (see the
+# Makefile's mutate-fast target, which filters by mutant name); the weekly
+# job runs everything. mutmut 3 configures itself from this table only:
+# the mutmut 2 flags the Makefile used to pass were rejected by 3.x, and
+# the job swallowed that error for months (fixed 2026-09-18).
+source_paths = ["pain001"]
+# Two files describe the real checkout, not the working copy: the lazy
+# import test sees mutmut's trampoline module, and the example scripts
+# spawn the installed entry point and run as subprocesses outside the
+# trampoline. Both are exercised by the ordinary test run; neither tests
+# the logic a mutant changes. Every other test runs inside the copy.
+pytest_add_cli_args = [
+    "-q", "-p", "no:cacheprovider", "--no-cov", "-x",
+    # Deterministic examples and no "differing executors" health check:
+    # see the profile in conftest.py.
+    "--hypothesis-profile=mutation",
+    "--ignore=tests/test_lazy_imports.py",
+    "--ignore=tests/test_examples.py",
+]
+# The example scripts and the corpus data are read by tests by path.
+# mutmut runs the tests inside its working copy (mutants/), which holds
+# only the source, tests and lock files. The tests here also import from
+# scripts/, read the workflows, the docs and the governance files, and the
+# root conftest pins the temp directory, so all of that is copied too.
+also_copy = [
+    "conftest.py", ".gitignore", "README.md", "CHANGELOG.md", "CONTRIBUTING.md",
+    "SECURITY.md", "SCHEMES.md", "OPERATIONS.md", "LICENSE", "LICENSE-APACHE",
+    "LICENSE-MIT", "Makefile", "Dockerfile", ".safety-policy.yml", ".github",
+    "docs", "examples", "scenarios", "scripts", "benches",
+]

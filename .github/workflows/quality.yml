@@ -24,15 +24,16 @@ jobs:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
-      - run: poetry run make mutate-fast || true  # Continue on failure, upload results
+      # No `|| true`: for months this step failed on a removed mutmut flag
+      # and nobody saw it. The gate in the Makefile is the point of the job.
+      - run: poetry run make mutate-fast
+        timeout-minutes: 45
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: mutation-fast-results
-          path: |
-            .mutmut-cache/
-            .coverage
-            htmlcov/
+          path: mutants/mutmut-cicd-stats.json
+          if-no-files-found: warn
 
   # Job 2: Full Mutation Testing (Scheduled Weekly)
   mutation-full:
@@ -46,15 +47,14 @@ jobs:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
-      - run: poetry run make mutate || true  # Continue on failure
+      - run: poetry run make mutate
+        timeout-minutes: 300
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: mutation-full-results
-          path: |
-            .mutmut-cache/
-            .coverage
-            htmlcov/
+          path: mutants/mutmut-cicd-stats.json
+          if-no-files-found: warn
 
   # Job 3: Performance Benchmarks
   benchmarks:
