@@ -115,17 +115,28 @@ complex:
 	@poetry run radon cc pain001 -a -s
 	@poetry run radon mi pain001
 
+# mutmut 3 reads [tool.mutmut] in pyproject.toml; it takes no path flags.
+# The fast tier filters mutants by name: the modules a wrong answer costs
+# the most. The floor is the score the tests must reach on that tier.
+# 70 is the initial floor, set on 2026-09-18 when the job was repaired after
+# months of silently failing; the security module alone scored 92% (69 of
+# 75). Raise it to just under the first full fast-tier result CI reports.
+MUTATION_FLOOR ?= 70
+MUTATION_FAST_TIER = "pain001.xml.*" "pain001.security.*" "pain001.config.*" "pain001.templates.*"
+
 mutate:
-	@echo "$(YELLOW)Running mutation testing...$(NC)"
-	@poetry run mutmut run --paths-to-mutate=pain001 --tests-dir=tests --runner="python -m pytest -x --no-cov -q" --use-coverage
+	@echo "$(YELLOW)Running mutation testing (every module)...$(NC)"
+	@rm -rf mutants
+	@poetry run mutmut run
+	@poetry run mutmut export-cicd-stats
+	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
 
 mutate-fast:
-	@echo "$(YELLOW)Running fast mutation testing (core modules only)...$(NC)"
-	@poetry run mutmut run \
-		--paths-to-mutate=pain001/core,pain001/xml \
-		--tests-dir=tests \
-		--runner="python -m pytest -x --no-cov -q" \
-		--use-coverage
+	@echo "$(YELLOW)Running fast mutation testing (xml, security, config, templates)...$(NC)"
+	@rm -rf mutants
+	@poetry run mutmut run $(MUTATION_FAST_TIER)
+	@poetry run mutmut export-cicd-stats
+	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
 
 docs:
 	@echo "$(YELLOW)Building documentation...$(NC)"
