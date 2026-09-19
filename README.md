@@ -812,7 +812,9 @@ Contributions are welcome — see the
 [contributing instructions](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md),
 how the project is run in [GOVERNANCE.md](GOVERNANCE.md), the
 [architecture map](ARCHITECTURE.md), and where the project is headed in
-the [ROADMAP.md](ROADMAP.md). Need help? See [SUPPORT.md](SUPPORT.md).
+the [ROADMAP.md](ROADMAP.md). Need help? See [SUPPORT.md](SUPPORT.md), which also
+states the supported channel and private profile work offered around the free
+software.
 Unless you explicitly state otherwise, any contribution you submit is
 dual-licensed as below, without additional terms or conditions.
 

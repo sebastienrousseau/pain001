@@ -22,6 +22,22 @@ Thanks for using Pain001. Here's the fastest way to get help, by need.
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — module map and extension
   points.
 
+## Supported channel and private profile work
+
+The software is free and stays free, at any scale. Around it, three
+things are offered to organisations that need them, and disclosed here
+so nobody has to guess:
+
+| Offer | What it is | What it is not |
+| :--- | :--- | :--- |
+| **Supported release channel** | A named contact, a response target, and fixes backported to a long-term line for the suite versions you run | A different product; the packages on PyPI are the supported ones |
+| **Private profile derivation** | Your bank's own usage guideline applied as a validation overlay with the library's `derive_overlay` tooling, under NDA; the guideline never enters a public repository | A bank-specific fork; overlays sit on the public rulebooks |
+| **Integration help** | Recipes for the ERP or treasury system you name, and a review of your first files against your bank's checks | Hosting or processing your payments; everything runs on your machines |
+
+Terms are per engagement and start from the [enterprise page](https://pain001.com/enterprise/),
+which has the form. The [governance page](https://pain001.com/governance/)
+discloses how the project is funded. Nothing here gates a feature.
+
 ## Questions & how-to
 
 Open a [GitHub Discussion](https://github.com/sebastienrousseau/pain001/discussions)
