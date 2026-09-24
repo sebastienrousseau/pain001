@@ -37,6 +37,11 @@ myst_heading_anchors = 3
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
+# Stub pages at the URLs of viewcode pages for modules removed in
+# d39ccd7 (create_xml_v3..v11, create_common_elements). GitHub Pages
+# cannot issue server redirects, so each stub meta-refreshes to the
+# module that replaced it. Copied verbatim into the output root.
+html_extra_path = ["_extra"]
 
 # PyData theme configuration
 html_theme_options = {
