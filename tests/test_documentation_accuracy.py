@@ -16,6 +16,19 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_deployment_build_uses_locked_extras_and_runs_on_prs() -> None:
+    """Exercise the deployment build before merging, with importable APIs."""
+    workflow = (ROOT / ".github/workflows/docs.yml").read_text()
+    assert "  pull_request:\n    branches: [main]" in workflow
+    assert (
+        "poetry install --no-interaction --only main,docs --all-extras"
+        in workflow
+    )
+    assert "poetry run sphinx-build -W --keep-going" in workflow
+    assert "github.event_name != 'pull_request'" in workflow
+    assert "github.ref == 'refs/heads/main'" in workflow
+
+
 def test_readme_is_current_and_has_canonical_headings() -> None:
     """Generated output retains the mandatory canonical section ordering."""
     text = (ROOT / "README.md").read_text()

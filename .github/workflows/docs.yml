@@ -2,6 +2,8 @@
 name: 📚 Deploy Documentation
 
 on:
+  pull_request:
+    branches: [main]
   push:
     branches:
       - main
@@ -10,6 +12,7 @@ on:
       - '.github/workflows/docs.yml'
       - 'pain001/__init__.py'
       - 'pyproject.toml'
+      - 'poetry.lock'
   workflow_dispatch:
   workflow_call:
 
@@ -31,29 +34,21 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: ❯ Install dependencies 📦
-        run: |
-          pip install --require-hashes -r requirements.txt
-          pip install --require-hashes -r .github/requirements/docs.txt
-          pip install --require-hashes -r .github/requirements/api.txt
-          pip install --require-hashes -r .github/requirements/bootstrap.txt
-          # The api extra's deps come from the pinned file above,
-          # so no local install resolves fastapi/uvicorn unpinned.
-          # Build and install only local bytes with preinstalled backends.
-          # Neither step resolves or downloads dependencies.
-          PIP_NO_INDEX=1 python -m build --wheel --no-isolation
-          python -m installer dist/*.whl
-          pip check
+      - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
+
+      - name: ❯ Install locked documentation and optional runtime dependencies 📦
+        # Autodoc imports LSP, MCP, transport and policy modules too.
+        # Poetry verifies the committed lock's artifact hashes, as in quality.yml.
+        run: poetry install --no-interaction --only main,docs --all-extras
 
       - name: ❯ Export OpenAPI schema for the Scalar reference 📜
         run: |
           mkdir -p docs/_static
-          python scripts/export_openapi.py docs/_static/openapi.json
+          poetry run python scripts/export_openapi.py docs/_static/openapi.json
 
       - name: ❯ Build Sphinx documentation 🔨
         run: |
-          cd docs
-          make html SPHINXOPTS="-W --keep-going"
+          poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
 
       - name: ❯ Stage Scalar interactive reference 📚
         run: |
@@ -71,6 +66,7 @@ jobs:
           path: 'docs/_build/html'
 
   deploy:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
