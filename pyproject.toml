@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.70"
+version = "0.0.71"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -36,6 +36,7 @@ homepage = "https://pain001.com"
 packages = [
     { include = "pain001" },
 ]
+exclude = ["pain001/tmp", "pain001/tmp/**"]
 include = [
     "pain001/py.typed",
     "pain001/schemas/*",

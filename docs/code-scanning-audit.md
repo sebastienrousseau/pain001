@@ -77,12 +77,20 @@ evidence above on 2026-09-25. No directory or query was excluded.
   separate policy choices. The earlier Scorecard run raised the score from 3 to 8,
   but still requests two approvals and misreports administrator enforcement;
   the authenticated protection API confirms enforcement is enabled. The alert
-  remains open; that earlier score does not describe the relaxed policy.
+  was subsequently dismissed with explicit maintainer risk acceptance;
+  that earlier score does not describe the relaxed policy.
 - **#199:** historical changesets lack independent approving reviews. A new
   workflow, a self-review, or a bot dismissal cannot create that evidence.
   Improving this finding requires genuine independent approval; historical
   review cannot be retroactively fabricated. The solo-maintainer policy does
-  not satisfy that security criterion.
+  not satisfy that security criterion. This alert was subsequently dismissed
+  with explicit maintainer risk acceptance, not marked fixed.
+
+All four accepted exceptions above have owner `sebastienrousseau`, a review
+deadline of **2026-10-25** and an expiry of **2026-12-24**, following acceptance
+on 2026-09-25. The [machine-readable registry](security-exceptions.json) is
+enforced in CI and release preflight. Renewal requires a new explicit
+maintainer decision; neither governance finding is represented as remediated.
 
 No versions, release tags, public API signatures, generated payment XML or
 main-branch content are changed by this remediation.

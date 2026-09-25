@@ -35,7 +35,8 @@ A release is ready only when **all** of the following hold on `main`:
 5. `CHANGELOG.md` has a dated section for the new version describing the
    change set (this is the single source of truth for the release).
 6. The version is identical in `pyproject.toml`, `pain001/__init__.py`,
-   and `pain001/constants.py` (enforced by the `version-sync` CI check).
+   `pain001/constants.py`, `CITATION.cff` and the `SECURITY.md` support table
+   (enforced by release preflight and suite conformance checks).
 7. A `releases/vX.Y.Z.md` note exists (used as the GitHub release body).
 
 The checklist above is **executable** — do not eyeball it:
@@ -51,14 +52,14 @@ locally and on the remote before you can retry.
 
 ## Cutting the release
 
-1. Bump the version in the three files above and add the `CHANGELOG.md`
+1. Bump the version in the five sources above and add the `CHANGELOG.md`
    section and `releases/vX.Y.Z.md` note in a single PR.
 2. Merge the PR to `main` once CI is green.
 3. Pre-flight, then tag:
 
    ```bash
    make release-check FULL=1
-   python3 scripts/preflight_release.py --tag   # re-checks, then signs the tag
+   python3 scripts/preflight_release.py --full --tag
    git push origin vX.Y.Z
    ```
 
@@ -74,3 +75,37 @@ locally and on the remote before you can retry.
   [PyPI](https://pypi.org/project/pain001/) and the GitHub release is
   published (not draft).
 - Verify a clean install: `pip install pain001==X.Y.Z`.
+
+## Coordinated release ordering and evidence
+
+Prepare release PRs for core, MCP, LSP, XLSX and MT101. Mockbank and the
+plugin template have independent version lines. MCP and LSP require the
+matching core release; their Poetry locks must be regenerated from the
+published core distributions before their release gates can pass. Do not
+invent registry hashes or lower their declared dependency floor to bypass
+this ordering constraint. Publish and audit core first, then finalize the
+dependent PRs. The loaders retain their documented older plugin floors.
+
+The maintainer must explicitly approve each named PR before merge. Passing
+candidate tests on a feature branch is not a full release preflight: the
+release commit must be on main, clean, and equal to a freshly fetched
+origin/main. Run full preflight again on that merged commit.
+
+`scripts/check_security_exceptions.py` enforces the review and expiry dates
+in `docs/security-exceptions.json`. Acceptance in this repository does not
+authorize dismissing findings in companion repositories. Review all five
+security dashboards before declaring the coordinated release ready.
+
+`scripts/inspect_release.py` inspects wheel and source-archive metadata,
+runtime versions, licences, README contents and source manifests, then writes
+`.release/SHA256SUMS` and a substantive checksum-bearing release body. These
+outputs are excluded from their own source archive. With `--tag`, it also
+verifies the cryptographic signature, exact annotation and intended commit.
+`--tag` in the release preflight requires `--full` and runs that verification
+after creating the local signed tag; any failure blocks pushing it.
+
+The tag workflow generates fresh checksums from its actual build, not from
+the earlier local candidate. After publishing, independently fetch and verify
+the remote tag object, download the GitHub and PyPI distributions, compare
+their SHA-256 hashes with the release body and manifest, and inspect their
+contents. A green workflow alone is not a completed published-release audit.

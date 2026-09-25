@@ -30,8 +30,8 @@ Install the extra for the integration you need, for example:
 
 Other extras are declared in pyproject.toml. Development and documentation
 dependencies are Poetry groups, not pip extras named dev, docs or all.
-The rules and upload extras on feat/v0.0.71 are unreleased: a source guide
-does not imply that the published package contains those additions.
+Version 0.0.71 adds the rules and upload extras. Until that release is
+published, use the source checkout below for those additions.
 
 Development checkout
 ====================

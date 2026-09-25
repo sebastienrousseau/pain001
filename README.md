@@ -62,8 +62,8 @@ python -m pip install pain001
 ```
 
 Optional extras include `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, and `otel`.
-The unreleased feature branch also provides `rules` (CEL policies) and `upload`
-(SFTP). Do not assume branch additions are available from PyPI yet.
+Version 0.0.71 adds `rules` (CEL policies) and `upload` (SFTP).
+Until that release is published, install these additions from source.
 
 ```bash
 # Development checkout, including unreleased features
@@ -133,8 +133,8 @@ released packages. Companion packages are independently installed.
 | XML output | pain.001.001.03–13 and pain.008.001.02 / .08 | Bundled XSD and golden-file tests |
 | Input | CSV, SQLite, JSON, JSONL, Python records; optional Parquet and plugins | Tested loaders |
 | Validation | XSD, scheme profiles including anti-duplicate, rail rules and optional CEL | Policies do not replace bank certification |
-| Delivery | Explicit SFTP upload with pinned host trust | Unreleased `upload` extra |
-| Corrections | Deterministic review-only suggestions; no financial-field correction | Unreleased core and companion MCP tool |
+| Delivery | Explicit SFTP upload with pinned host trust | `upload` extra, added in 0.0.71 |
+| Corrections | Deterministic review-only suggestions; no financial-field correction | Core and companion MCP tool, added in 0.0.71 |
 
 ---
 
@@ -172,7 +172,7 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
   with `pain001 inspect`. Inputs, templates and schemas are described in the
   [user guide](docs/usage.rst) and [input-column reference](docs/input-columns.md).
 - Compose scheme profiles, including `anti-duplicate`; see [SCHEMES.md](SCHEMES.md).
-  Unreleased [CEL rules](docs/custom-rules.md) apply before generation through CLI
+  [CEL rules](docs/custom-rules.md) (added in 0.0.71) apply before generation through CLI
   and REST. Account currency is never inferred from an IBAN.
 - Extend loaders, validators, schemes and writers through the
   [plugin contract and XLSX worked example](docs/plugins.md). Plugins run with
@@ -289,8 +289,8 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 ## Stability guarantees
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
-`0.0.999`; only the maintainer opens a release. This branch has not bumped the
-package version or published a release.
+`0.0.999`; only the maintainer opens a release. This branch prepares
+0.0.71; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

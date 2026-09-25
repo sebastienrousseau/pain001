@@ -182,3 +182,6 @@ scenarios/**/*.zip
 
 # mutmut 3 working copy and results
 mutants/
+
+# Generated release evidence, never part of its own source archive.
+.release/

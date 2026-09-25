@@ -9,8 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.71] - 2026-09-25
+
 ### Added
 
+- Inspect wheel and source-archive contents before release, generate
+  checksum-bearing release notes, and verify signed tag targets before push.
 - Request-local CEL policy rules for CLI and REST validation and generation,
   including background jobs, through the optional `rules` extra (#184).
 - Deterministic, review-only record correction suggestions that never modify
@@ -20,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Exclude runtime scratch files from distributions, preventing payment/test
+  data leakage and post-test builds hanging on named-pipe fixtures.
 - Build deployable documentation on pull requests with all optional runtime
   dependencies from the committed Poetry lock, preserving strict autodoc.
 - Render the manual's examples directly from exercised scripts, replacing
@@ -49,6 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
+- Assign the four accepted security exceptions a 2026-10-25 review deadline
+  and 2026-12-24 expiry, enforced by CI and release preflight. Solo-maintainer
+  governance limitations and supported SLSA tags remain accepted risks.
 - Hash-lock CI/container build backends, spelling tools and generated SDK
   dependencies; install reviewed local sources offline without build isolation.
 - Regenerate base/API runtime locks from package metadata and check installed
