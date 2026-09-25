@@ -81,11 +81,9 @@ def load_payment_data(
     file-based workflows.
 
     Args:
-        data_source: The payment data source. Supports:
-            - str: File path to CSV (.csv), SQLite (.db), JSON (.json/.jsonl),
-                   or Parquet (.parquet) file
-            - list: List of dictionaries with payment data
-            - dict: Single payment transaction as dictionary
+        data_source: File path to CSV, SQLite, JSON, JSONL, Parquet or a
+            registered plugin format; a list of payment dictionaries; or
+            one payment transaction dictionary.
 
     Returns:
         List[Dict[str, Any]]: List of payment data dictionaries

@@ -145,7 +145,7 @@ mutate-fast:
 docs:
 	@echo "$(YELLOW)Building documentation...$(NC)"
 	@poetry install --with docs -q
-	@poetry run sphinx-build -b html docs docs/_build/html
+	@poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
 	@echo "$(GREEN)✓ Docs built to docs/_build/html$(NC)"
 
 clean:
@@ -246,4 +246,3 @@ slos: lint type test perf
 # --- Full quality gate (blocking) ---
 check: lint cov sec corpus-coverage
 	@echo "$(GREEN)✓ Full quality gate passed$(NC)"
-

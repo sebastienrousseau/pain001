@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Regenerate the README from the canonical layout, document branch-only
+  features and companion acceptance, and align contributor/security guidance
+  with current gates and the approved solo-maintainer review policy.
 - Remove a stale YAML typing suppression and include the runtime lock in
   mutation-test workspaces so PR-only quality gates can run.
 - Break the built-in/GPG registry dependency cycle and keep decrypted-loader

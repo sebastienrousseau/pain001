@@ -64,21 +64,25 @@ evidence above on 2026-09-25. No directory or query was excluded.
   2026-09-25). Both alerts are dismissed as "won't fix", not false positives
   or an untested switch that breaks release provenance.
 - **#194:** branch protection is repository state, not branch content.
-  With explicit maintainer approval on 2026-09-25, main now requires one
-  approving review and CODEOWNERS approval, with administrator enforcement.
+  The initial 2026-09-25 approval required one approving review and
+  CODEOWNERS approval, with administrator enforcement. Later that day the
+  maintainer explicitly approved a solo-maintainer policy: PRs remain
+  required, approving-review count is zero, and CODEOWNER approval is no
+  longer mandatory. Administrator enforcement remains enabled.
   Read-back verified that existing status checks, conversation resolution,
-  force-push prohibition and deletion prohibition were preserved. Another
-  eligible CODEOWNER is needed for the sole maintainer's own PRs: authors
-  cannot approve their own changes. This is not a claim of maximum Scorecard
+  force-push prohibition and deletion prohibition were preserved. Authors
+  cannot approve their own changes; this is not independent review or a claim
+  of maximum Scorecard
   protection: stricter review freshness and up-to-date requirements remain
-  separate policy choices. A fresh Scorecard run raised the score from 3 to 8,
+  separate policy choices. The earlier Scorecard run raised the score from 3 to 8,
   but still requests two approvals and misreports administrator enforcement;
   the authenticated protection API confirms enforcement is enabled. The alert
-  remains open rather than accepting the remaining governance tradeoff.
+  remains open; that earlier score does not describe the relaxed policy.
 - **#199:** historical changesets lack independent approving reviews. A new
   workflow, a self-review, or a bot dismissal cannot create that evidence.
-  Future changes need genuine independent approval; historical review cannot
-  be retroactively fabricated.
+  Improving this finding requires genuine independent approval; historical
+  review cannot be retroactively fabricated. The solo-maintainer policy does
+  not satisfy that security criterion.
 
 No versions, release tags, public API signatures, generated payment XML or
 main-branch content are changed by this remediation.

@@ -7,7 +7,7 @@ This guide walks you from "I have payment data in a spreadsheet" to
 five short steps. No prior ISO 20022 knowledge required.
 
 If you already know what pain.001 is and just want the CLI flags,
-skip to the [README](../README.md#quick-start).
+skip to the [README](https://github.com/sebastienrousseau/pain001/blob/main/README.md#quick-start).
 
 ---
 
@@ -195,14 +195,14 @@ That's 80% of the surface for 90% of users.
 
 | If you want to... | Read |
 | :--- | :--- |
-| Load data from JSON / SQLite / Parquet instead of CSV | [Input formats](../README.md#input-formats) |
-| Run pain001 as a REST service | [REST API](../README.md#usage) (collapsed section) |
-| Stream large batches (millions of rows) | [`examples/09_streaming_large_batch.py`](../examples/09_streaming_large_batch.py) |
+| Load data from JSON / SQLite / Parquet instead of CSV | [Input formats](https://github.com/sebastienrousseau/pain001/blob/main/README.md#features) |
+| Run pain001 as a REST service | [REST API](https://github.com/sebastienrousseau/pain001/blob/main/README.md#features) (collapsed section) |
+| Stream large batches (millions of rows) | [`examples/09_streaming_large_batch.py`](https://github.com/sebastienrousseau/pain001/blob/main/examples/09_streaming_large_batch.py) |
 | Pass an Excel `.xlsx` directly | `pip install pain001-loader-xlsx` |
 | Wire pain001 into an AI assistant (Claude Desktop, etc.) | `pip install pain001-mcp` |
-| Migrate data between pain.001 versions (e.g. 03 → 09) | [`examples/08_version_migration.py`](../examples/08_version_migration.py) |
-| Read the full scheme rulebook catalogue | [SCHEMES.md](../SCHEMES.md) |
-| Deploy the REST API to production | [OPERATIONS.md](../OPERATIONS.md) |
+| Migrate data between pain.001 versions (e.g. 03 → 09) | [`examples/08_version_migration.py`](https://github.com/sebastienrousseau/pain001/blob/main/examples/08_version_migration.py) |
+| Read the full scheme rulebook catalogue | [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md) |
+| Deploy the REST API to production | [OPERATIONS.md](https://github.com/sebastienrousseau/pain001/blob/main/OPERATIONS.md) |
 
 ## Troubleshooting
 
@@ -212,7 +212,7 @@ That's 80% of the surface for 90% of users.
 | `Invalid XML message type` | Typo in the `-t` flag | Run `pain001 versions` and copy-paste exactly |
 | `invalid IBAN` for a known-good IBAN | Hidden whitespace or smart quotes | Re-type by hand, or pipe through `pain001 sanitize-to-charset` |
 | `validation failed` but the schema is the one pain001 ships | Stale `pyproject.toml`-installed pain001 vs CLI-installed one | `pip install --upgrade pain001` |
-| `pain.008.xxxx` only generates SEPA Direct Debits, not Credit Transfers | Different message type | pain.001 = Credit Transfer, pain.008 = Direct Debit. See [Supported messages](../README.md#supported-messages) |
+| `pain.008.xxxx` only generates SEPA Direct Debits, not Credit Transfers | Different message type | pain.001 = Credit Transfer, pain.008 = Direct Debit. See [Supported messages](https://github.com/sebastienrousseau/pain001/blob/main/README.md#features) |
 
 ## Stuck?
 
@@ -220,7 +220,7 @@ That's 80% of the surface for 90% of users.
   with the CLI invocation that failed + the error output.
 - [Open an issue](https://github.com/sebastienrousseau/pain001/issues/new/choose)
   if you've found a bug.
-- See [SUPPORT.md](../SUPPORT.md) for the full support matrix.
+- See [SUPPORT.md](https://github.com/sebastienrousseau/pain001/blob/main/SUPPORT.md) for the full support matrix.
 
 ---
 

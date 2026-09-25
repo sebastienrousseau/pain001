@@ -1,6 +1,8 @@
 pain001.corpus.rules package
 ============================
 
+.. automodule:: pain001.corpus.rules
+
 Submodules
 ----------
 
@@ -40,14 +42,6 @@ pain001.corpus.rules.projection module
 --------------------------------------
 
 .. automodule:: pain001.corpus.rules.projection
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.corpus.rules
    :members:
    :undoc-members:
    :show-inheritance:

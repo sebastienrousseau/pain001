@@ -24,13 +24,14 @@ class Context:
     Instantiating the class directly raises RuntimeError once the
     singleton exists; use get_instance() instead.
 
-    Methods:
-        __init__(self): Initializes the class and creates a logger.
-        get_instance(): Returns the singleton instance of the class.
-        get_logger(self): Returns the logger.
-        init_logger(self): Initializes the logger.
-        set_log_level(self, log_level): Sets the log level of the logger.
-        set_name(self, name): Sets the name of the logger.
+    Lifecycle overview (method details are documented below):
+
+    - ``__init__`` initializes the class and creates a logger.
+    - ``get_instance`` returns the singleton instance.
+    - ``get_logger`` returns the logger.
+    - ``init_logger`` initializes the logger.
+    - ``set_log_level`` sets the logger's level.
+    - ``set_name`` sets the logger's name.
     """
 
     instance: Optional["Context"] = None

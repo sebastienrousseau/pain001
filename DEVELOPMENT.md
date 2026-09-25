@@ -4,7 +4,7 @@
 
 The single entry point for working on `pain001`: toolchain, how to
 reproduce every CI gate locally, where tests live, and how a release
-happens. [CONTRIBUTING.md](CONTRIBUTING.md) covers the etiquette (DCO,
+happens. [CONTRIBUTING.md](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md) covers the etiquette (DCO,
 commit format, review); this file covers the mechanics.
 
 ## Toolchain
@@ -24,7 +24,7 @@ poetry install --all-extras --with dev,docs
 poetry run pre-commit install   # optional: runs ruff, codespell, hygiene hooks on commit
 ```
 
-A [devcontainer](.devcontainer/devcontainer.json) does the same in a
+A [devcontainer](https://github.com/sebastienrousseau/pain001/blob/main/.devcontainer/devcontainer.json) does the same in a
 Codespace or VS Code container and boots to a working `make`.
 
 ## Reproducing every CI gate
@@ -45,10 +45,10 @@ reproduced without reading YAML.
 | Fuzzing (Atheris harness in `fuzz/`) | `python fuzz/fuzz_validation.py -max_total_time=60` | `nightly.yml` |
 | Suite conformance (this repo against the family rules) | `poetry run pytest tests/test_suite_conformance.py` | `ci.yml` |
 | Suite consistency (published versions across the family) | `python3 scripts/check_suite_consistency.py` | `suite-consistency.yml` (daily) |
-| Everything blocking | `make check` | — |
+| Combined local gate (types separately) | `make check` and `make type` | — |
 
 The coverage floor is 100 % and deliberately so: the rationale is in
-[CONTRIBUTING.md](CONTRIBUTING.md#quality-gates-the-pysentinel-zero-trust-model).
+[CONTRIBUTING.md](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md#quality-gates-the-pysentinel-zero-trust-model).
 `# pragma: no cover` is reserved for entry-point guards and defensive
 barriers that cannot be reached by a test.
 
@@ -82,7 +82,13 @@ Sphinx with MyST under `docs/`; `make docs` builds to
 `docs/_build/html`. Root Markdown files (`ARCHITECTURE.md`, this file,
 `SCHEMES.md`, …) are included into the rendered manual by thin chapter
 files under `docs/`, so they are edited in one place. Architecture
-decisions live in [`docs/adr/`](docs/adr/README.md).
+decisions live in [`docs/adr/`](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/README.md).
+
+README is generated from the canonical `docs/readme-template.md` and reviewed
+`docs/readme-values.json`. Run `poetry run python scripts/render_readme.py`
+after editing its values; CI checks the output, headings, local links and
+executes its Quick Start. Run documentation lint and a warnings-as-errors
+Sphinx build before claiming documentation is ready.
 
 ## Versioning and release
 
@@ -91,10 +97,10 @@ decisions live in [`docs/adr/`](docs/adr/README.md).
   table; `scripts/preflight_release.py` refuses to proceed when they
   disagree.
 - The line is `0.0.x` and every release is one step up; every member of
-  the suite ships the same number ([ADR-0001](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
+  the suite ships the same number ([ADR-0001](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
 - Releases are cut by tag; the tag is SSH-signed; `ci.yml` builds,
   attests and publishes to PyPI with trusted publishing.
-  [RELEASING.md](RELEASING.md) is the checklist, `make release-check`
+  [RELEASING.md](https://github.com/sebastienrousseau/pain001/blob/main/RELEASING.md) is the checklist, `make release-check`
   its executable form.
 - Commits need a `Signed-off-by` trailer (DCO) and are expected to be
-  signed; see [KEYS.asc](KEYS.asc) for the maintainer key.
+  signed; see [KEYS.asc](https://github.com/sebastienrousseau/pain001/blob/main/KEYS.asc) for the maintainer key.

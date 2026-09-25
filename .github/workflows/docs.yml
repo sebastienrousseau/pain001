@@ -53,7 +53,7 @@ jobs:
       - name: ❯ Build Sphinx documentation 🔨
         run: |
           cd docs
-          make html
+          make html SPHINXOPTS="-W --keep-going"
 
       - name: ❯ Stage Scalar interactive reference 📚
         run: |

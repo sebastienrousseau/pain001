@@ -1,6 +1,8 @@
 pain001.corpus package
 ======================
 
+.. automodule:: pain001.corpus
+
 Subpackages
 -----------
 
@@ -56,14 +58,6 @@ pain001.corpus.registry module
 ------------------------------
 
 .. automodule:: pain001.corpus.registry
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.corpus
    :members:
    :undoc-members:
    :show-inheritance:

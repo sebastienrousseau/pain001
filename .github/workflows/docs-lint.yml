@@ -33,6 +33,9 @@ jobs:
           python -m pip install --quiet --require-hashes -r .github/requirements/docs-lint.txt
           codespell
 
+      - name: Check canonical README generation
+        run: python scripts/render_readme.py --check
+
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "22"

@@ -284,5 +284,5 @@ suite that moves real money, see
 
 ---
 
-*Comments / corrections welcome on the [companion Hacker News
-thread](#) (link added once posted) or as a GitHub issue.*
+*Comments / corrections welcome as a GitHub issue. A companion Hacker News
+thread has not been linked yet.*

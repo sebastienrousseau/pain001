@@ -1,6 +1,8 @@
 pain001.lsp package
 ===================
 
+.. automodule:: pain001.lsp
+
 Submodules
 ----------
 
@@ -16,14 +18,6 @@ pain001.lsp.server module
 -------------------------
 
 .. automodule:: pain001.lsp.server
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.lsp
    :members:
    :undoc-members:
    :show-inheritance:

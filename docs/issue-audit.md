@@ -42,3 +42,23 @@ Companion implementation branches:
 The authorized mockbank destination is
 `ghcr.io/sebastienrousseau/pain001-mockbank`, using `edge` and
 `sha-<full-commit-id>` development tags, not versioned releases.
+
+## Acceptance and closure checklist
+
+This is an implementation inventory, not a statement that all issues are
+closed or released. All six issues were still open at the 2026-09-25 audit.
+PR #297 contains core changes; companion commits cannot appear in its diff.
+
+| Issue | Evidence | Remaining before closure |
+| :--- | :--- | :--- |
+| #179 | Protocols/discovery, dispatch and structured-error tests; plugin CLI; worked guide and separate Cookiecutter repository; ten-plugin discovery benchmark | Independent external contributor validation is not available. Do not lock a v1.0 contract or close the issue on the strength of maintainer-authored tests. |
+| #180 | Companion workbook cleanup and installed-plugin CSV/XLSX XML equivalence tests; core ecosystem README now lists the loader and safety limitations | Merge the companion and core integration changes after green checks and explicit authorization; retain the documented numeric-cell interpretation rather than claiming every General-format text cell is rejected. |
+| #184 | tests/test_custom_policy.py and tests/test_policy_interfaces.py cover CLI/REST composition and fail-closed policy handling | Merge core; document that currency_of_iban cannot infer account currency and is deliberately refused. This deviation is explicit, not an implemented helper. |
+| #185 | tests/test_record_corrections.py and companion MCP tests cover suggestions and the hard financial-field refusal | Merge core and MCP companion; the contradictory IBAN-WHITESPACE request is not implemented because the issue also explicitly forbids financial-field patches. |
+| #186 | CLI/unit tests and real localhost SFTP round-trip, retry and changed-host tests | Merge core; no real-bank certification is claimed. Unique staging names preserve atomic/no-clobber delivery instead of a shared fixed temporary name. |
+| #187 | Published multi-architecture development image; exact-image ACCP/RJCT-NARR round-trip smoke evidence | Verify the latest published image after companion documentation pushes; no core merge can merge this separate repository. |
+
+For the latest state, consult each PR's checks rather than interpreting a
+historical test count as current verification. Issue closing comments must
+name the actual implementation commits and acceptance evidence. The approved
+solo-maintainer branch policy does not waive #179's external-author criterion.

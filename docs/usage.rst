@@ -1,352 +1,94 @@
-============================
-Usage Guide
-============================
+.. SPDX-License-Identifier: Apache-2.0 OR MIT
 
-This guide covers the main use cases and features of Pain001.
+=============
+Using Pain001
+=============
 
-Quick Start
-===========
+CLI workflow
+============
 
-The simplest way to use Pain001 is through the `main()` function:
-
-.. code-block:: python
-
-    from pain001 import main
-
-    main(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='schema.xsd',
-        data_file_path='payments.csv'
-    )
-
-This will:
-1. Load payment data from the CSV file
-2. Validate all data against the template requirements
-3. Generate an ISO 20022-compliant XML file
-4. Validate the XML against the XSD schema
-
-Working with CSV Files
-======================
-
-CSV Format
-----------
-
-Pain001 expects CSV files with specific columns depending on the ISO 20022 version. For example, pain.001.001.03 requires:
-
-.. csv-table::
-   :header: Column Name, Type, Required, Example
-
-   InitiatingParty, string, Yes, Company XYZ
-   InitiatingPartyId, string, Yes, INITIATOR001
-   PaymentInformationId, string, Yes, PMT001
-   BatchBooking, boolean, No, false
-   NumberOfTransactions, integer, No, 100
-   PaymentBatchAmount, decimal, No, 50000.00
-   DebtorName, string, Yes, Acme Corp
-   DebtorId, string, Yes, DEBTOR001
-   DebtorAccountNumber, string, Yes, IBAN
-
-**Example CSV Structure:**
-
-.. code-block:: text
-
-    InitiatingParty,InitiatingPartyId,PaymentInformationId,DebtorName,DebtorId,...
-    Company XYZ,INITIATOR001,PMT001,Acme Corp,DEBTOR001,...
-    Company XYZ,INITIATOR001,PMT002,Tech Solutions,DEBTOR002,...
-
-Loading CSV Data
-----------------
-
-.. code-block:: python
-
-    from pain001 import main
-
-    main(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='schema.xsd',
-        data_file_path='payments.csv'
-    )
-
-Working with SQLite Databases
-==============================
-
-Pain001 also supports loading payment data directly from SQLite databases.
-
-Loading Data from SQLite
-------------------------
-
-.. code-block:: python
-
-    from pain001 import main
-
-    main(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='schema.xsd',
-        data_file_path='payments.db'  # SQLite database file
-    )
-
-Working with Python Data Structures
-====================================
-
-You can also work directly with Python dictionaries and lists:
-
-.. code-block:: python
-
-    from pain001.core import Pain001
-
-    payment_data = {
-        'InitiatingParty': 'Company XYZ',
-        'Transactions': [
-            {
-                'DebtorName': 'Acme Corp',
-                'CreditorName': 'Supplier ABC',
-                'Amount': 1000.00,
-                # ... other required fields
-            },
-            # ... more transactions
-        ]
-    }
-
-    processor = Pain001(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='schema.xsd'
-    )
-
-    result = processor.process(payment_data)
-
-Safe Validation (Dry-Run Mode)
-===============================
-
-You can validate your data against the ISO 20022 schema **without generating an output file** using the ``--dry-run`` flag. This is ideal for:
-
-- **CI/CD Pipelines:** Pre-flight validation in automated builds
-- **Data Quality Checks:** Verify payment data before batch processing
-- **Template Development:** Test XML templates and schemas without file clutter
-- **Pre-Commit Hooks:** Validate data before committing to version control
-
-Command-Line Usage
-------------------
+Run this in a fresh writable directory using synthetic bundled data:
 
 .. code-block:: bash
 
-    python3 -m pain001 \\
-        -t pain.001.001.03 \\
-        -m templates/pain.001.001.03/template.xml \\
-        -s templates/pain.001.001.03/pain.001.001.03.xsd \\
-        -d data/payments.csv \\
-        --dry-run
+   pain001 init pain.001.001.03 -o payments.csv
+   pain001 validate -t pain.001.001.03 -d payments.csv
+   pain001 generate -t pain.001.001.03 -d payments.csv -o output
 
-**Exit Codes:**
+The generate command's -o flag names an output directory. Template and schema
+paths resolve from the bundled registry unless explicitly overridden.
+Exit codes are 0 for success, 1 for processing/validation failure, and 2 for
+invalid arguments or configuration. Dry-run validates data without writing
+XML; it is not a bank-acceptance guarantee.
 
-- ``0`` - Validation succeeded (safe to proceed)
-- ``1`` - Validation failed (data or schema errors detected)
+Use generated help rather than a duplicate flag table:
 
-**What Gets Validated:**
+.. code-block:: bash
 
-- ✓ XML template structure and syntax
-- ✓ XSD schema compliance
-- ✓ Payment data integrity (required fields, data types, formats)
-- ✓ Business rules (amounts > 0, valid IBANs/BICs, etc.)
+   pain001 generate --help
+   pain001 versions
+   pain001 inspect pain.001.001.03
 
-Programmatic Dry-Run
---------------------
-
-.. code-block:: python
-
-    from pain001 import process_files
-
-    # Validate without generating XML
-    try:
-        result = process_files(
-            message_type='pain.001.001.03',
-            payment_data=my_data,
-            xml_template_file_path='template.xml',
-            xsd_schema_file_path='schema.xsd',
-            dry_run=True  # Validation-only mode
-        )
-        print("✅ Validation passed")
-    except ValueError as e:
-        print(f"❌ Validation failed: {e}")
-
-Data Validation
-===============
-
-Pain001 automatically validates all data:
-
-**CSV Validation**
-- Checks required columns are present (the target version's list from
-  the bundled JSON schema, or the 22 columns every version shares)
-- Validates data types (strings, numbers, dates)
-- Verifies IBAN/BIC formats
-- Checks business rules (e.g., amounts > 0)
-
-**Database Validation**
-- Validates schema compliance
-- Checks data integrity
-- Verifies required fields
-
-**XML Validation**
-- XSD schema validation
-- Business rule validation
-- ISO 20022 compliance checks
-
-Validation Example
-------------------
-
-.. code-block:: python
-
-    from pain001 import main
-    from pain001.exceptions import ValidationError
-
-    try:
-        main(
-            xml_message_type='pain.001.001.03',
-            xml_template_file_path='template.xml',
-            xsd_schema_file_path='schema.xsd',
-            data_file_path='payments.csv'
-        )
-        print("✅ Payment file generated successfully!")
-    except ValidationError as e:
-        print(f"❌ Validation error: {e}")
-        print(f"   Details: {e.details}")
-
-Supported ISO 20022 Versions
-=============================
-
-Pain001 supports all major pain.001 versions:
-
-.. code-block:: python
-
-    versions = [
-        'pain.001.001.03',  # SEPA v3
-        'pain.001.001.04',  # Non-SEPA v4
-        'pain.001.001.05',  # v5
-        'pain.001.001.06',  # Instant payments
-        'pain.001.001.07',  # RLP/RTP support
-        'pain.001.001.08',  # TISS support
-        'pain.001.001.09',  # Simplified
-        'pain.001.001.10',  # Enhanced
-        'pain.001.001.11',  # Latest
-    ]
-
-Each version supports different fields and business rules. Ensure your template and data match your chosen version.
-
-Advanced Configuration
-======================
-
-Control batch booking and payment information handling:
-
-.. code-block:: python
-
-    from pain001 import main
-
-    main(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='schema.xsd',
-        data_file_path='payments.csv',
-        # Optional parameters can be configured in the template
-    )
-
-Error Handling
-==============
-
-Pain001 provides specific exception types for different error scenarios:
-
-.. code-block:: python
-
-    from pain001.exceptions import (
-        ValidationError,
-        XMLGenerationError,
-        SchemaValidationError,
-        DataLoadError
-    )
-
-    try:
-        main(
-            xml_message_type='pain.001.001.03',
-            xml_template_file_path='template.xml',
-            xsd_schema_file_path='schema.xsd',
-            data_file_path='payments.csv'
-        )
-    except ValidationError as e:
-        print(f"Data validation failed: {e}")
-    except XMLGenerationError as e:
-        print(f"XML generation failed: {e}")
-    except SchemaValidationError as e:
-        print(f"XSD validation failed: {e}")
-    except DataLoadError as e:
-        print(f"Could not load data: {e}")
-
-Common Workflows
-================
-
-**Processing Daily Payments**
-
-.. code-block:: python
-
-    from pathlib import Path
-    from pain001 import main
-    from datetime import datetime
-
-    # Process all CSV files in a directory
-    data_dir = Path('payments')
-    for csv_file in data_dir.glob('*.csv'):
-        output_file = f"payment_{datetime.now().isoformat()}.xml"
-        main(
-            xml_message_type='pain.001.001.03',
-            xml_template_file_path='template.xml',
-            xsd_schema_file_path='schema.xsd',
-            data_file_path=str(csv_file)
-        )
-        print(f"✅ Generated: {output_file}")
-
-**Batch Processing from Database**
-
-.. code-block:: python
-
-    from pain001 import main
-
-    # Process payments from multiple database sources
-    databases = ['payments_2024.db', 'pending_payments.db']
-
-    for db_file in databases:
-        main(
-            xml_message_type='pain.001.001.03',
-            xml_template_file_path='template.xml',
-            xsd_schema_file_path='schema.xsd',
-            data_file_path=db_file
-        )
-
-Logging and Debugging
+Inputs and validation
 =====================
 
-Enable detailed logging to diagnose issues:
+CSV, SQLite, JSON and JSONL are supported, as are Python records and optional
+Parquet input. Installed plugins can add formats such as XLSX. See
+:doc:`plugins` for privileges, discovery and disable controls, and
+:doc:`input-columns` for schema-derived field mappings.
+
+Generation recomputes control totals and validates rendered XML against the
+bundled XSD before writing. Scheme validation, including anti-duplicate,
+adds domain rules but does not certify compliance with a bank's private rules.
+Streaming creates one output per chunk.
+
+Python: in-memory output
+========================
+
+This example reads synthetic data shipped in the installed package:
 
 .. code-block:: python
 
-    import logging
+   from pain001 import generate_xml_string
+   from pain001.constants import TEMPLATES_DIR
+   from pain001.csv.load_csv_data import load_csv_data
 
-    # Set up logging
-    logging.basicConfig(level=logging.DEBUG)
-    logger = logging.getLogger('pain001')
+   message_type = "pain.001.001.03"
+   bundle = TEMPLATES_DIR / message_type
+   rows = load_csv_data(str(bundle / "template.csv"))
+   xml = generate_xml_string(
+       rows,
+       message_type,
+       str(bundle / "template.xml"),
+       str(bundle / f"{message_type}.xsd"),
+   )
 
-    from pain001 import main
+Python: explicit file output
+============================
 
-    main(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='schema.xsd',
-        data_file_path='payments.csv'
-    )
+.. code-block:: python
 
-Next Steps
-==========
+   from pain001.core.core import process_files
+   from pain001.constants import TEMPLATES_DIR
 
-- Learn about `Configuration <configuration.html>`_
-- See `Examples <examples.html>`_
-- Check the `API Reference <modules.html>`_
+   message_type = "pain.001.001.03"
+   bundle = TEMPLATES_DIR / message_type
+   output = process_files(
+       xml_message_type=message_type,
+       xml_template_file_path=str(bundle / "template.xml"),
+       xsd_schema_file_path=str(bundle / f"{message_type}.xsd"),
+       data_file_path=str(bundle / "template.csv"),
+       output_path="payment.xml",
+   )
+
+Unlike the CLI directory flag, the Python output_path argument names a file.
+Always provide it so an installed template directory is not used as output.
+
+Optional and unreleased integrations
+====================================
+
+REST is started with pain001 serve after installing the api extra.
+The feature branch also supports :doc:`custom-rules` through CLI and REST,
+review-only MCP corrections, and explicit :doc:`sftp-upload`. Generation
+never uploads a payment automatically. See :doc:`issue-audit` for branch
+availability, companion work and unmet acceptance criteria.

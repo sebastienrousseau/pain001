@@ -1,4 +1,4 @@
-name: 🧪 CI Regression & Enterprise Release
+name: ci
 
 on:
   pull_request:

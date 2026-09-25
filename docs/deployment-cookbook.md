@@ -10,7 +10,7 @@ pain001 reliably and don't want to make a hundred small decisions,
 start here.
 
 For the *reference* (every env var, every endpoint, every metric),
-see [OPERATIONS.md](../OPERATIONS.md). This document is the recipe;
+see [OPERATIONS.md](https://github.com/sebastienrousseau/pain001/blob/main/OPERATIONS.md). This document is the recipe;
 that one is the spec.
 
 ## Contents
@@ -563,7 +563,7 @@ not the line item to optimise.
   yet and this compose file is the best reference until it is).
 - **You're processing payments at FAANG scale.** > 10k req/s,
   multi-region, multi-bank-corridor: this is a different conversation;
-  see [SUPPORT.md](../SUPPORT.md#support-tiers).
+  see [SUPPORT.md](https://github.com/sebastienrousseau/pain001/blob/main/SUPPORT.md#support-tiers).
 
 ---
 
@@ -575,8 +575,8 @@ can get — far more than feature requests.
 
 See also:
 
-- [OPERATIONS.md](../OPERATIONS.md) — the reference (every env var,
+- [OPERATIONS.md](https://github.com/sebastienrousseau/pain001/blob/main/OPERATIONS.md) — the reference (every env var,
   every metric, every endpoint)
-- [SECURITY.md](../SECURITY.md) — threat model + reporting
+- [SECURITY.md](https://github.com/sebastienrousseau/pain001/blob/main/SECURITY.md) — threat model + reporting
 - [docs/quickstart.md](quickstart.md) — for users who haven't
   deployed pain001 anywhere yet

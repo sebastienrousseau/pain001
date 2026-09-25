@@ -1,6 +1,8 @@
 pain001.plugins package
 =======================
 
+.. automodule:: pain001.plugins
+
 Submodules
 ----------
 
@@ -32,14 +34,6 @@ pain001.plugins.registry module
 -------------------------------
 
 .. automodule:: pain001.plugins.registry
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.plugins
    :members:
    :undoc-members:
    :show-inheritance:
