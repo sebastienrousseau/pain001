@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 SCHEMA_PATH = Path(__file__).resolve().parent / "schema" / "corpus.schema.json"
 #: The source-of-truth directory in a checkout (absent from the wheel).

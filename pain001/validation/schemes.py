@@ -939,7 +939,10 @@ def _split_profile_spec(profile: str) -> list[str]:
 
 @traced("pain001.validate.scheme")
 def validate_scheme(
-    data: list[dict[str, Any]], profile: str = "sepa-sct"
+    data: list[dict[str, Any]],
+    profile: str = "sepa-sct",
+    *,
+    message_type: str = "pain.001.001.03",
 ) -> SchemeValidationResult:
     """Validate payment rows against a named scheme profile.
 
@@ -950,6 +953,7 @@ def validate_scheme(
             to run several rulebooks and report the union of their
             findings. The combined result's ``profile`` joins the names
             with commas and its violations are ordered by row.
+        message_type: Message type passed to registered scheme plugins.
 
     Returns:
         A :class:`SchemeValidationResult` listing every violation.
@@ -973,27 +977,46 @@ def validate_scheme(
         >>> both.profile
         'sepa-sct,anti-duplicate'
     """
+    from pain001.plugins._builtins import _ProfileScheme
+    from pain001.plugins.registry import registry as plugin_registry
+
     names = _split_profile_spec(profile)
-    unknown = [name for name in names if name not in PROFILES]
+    registered = {
+        name: plugin
+        for name in names
+        if (plugin := plugin_registry.get_scheme(name)) is not None
+    }
+    unknown = [name for name in names if name not in registered]
     if not names or unknown:
-        available = ", ".join(sorted(PROFILES))
+        available = ", ".join(
+            info.meta.name for info in plugin_registry.list_plugins("scheme")
+        )
         offending = unknown[0] if unknown else profile
         raise ValueError(
             f"Unknown scheme profile '{offending}'. Available: {available}"
         )
-    profiles = [PROFILES[name] for name in names]
     set_span_attributes(
         **{
-            "pain001.scheme": ",".join(chosen.name for chosen in profiles),
+            "pain001.scheme": ",".join(names),
             "pain001.row_count": len(data),
         }
     )
-    if len(profiles) == 1:
-        return profiles[0].validate(data)
-    combined = SchemeValidationResult(
-        profile=",".join(chosen.name for chosen in profiles)
-    )
-    for chosen in profiles:
-        combined.violations.extend(chosen.validate(data).violations)
+    combined = SchemeValidationResult(profile=",".join(names))
+    for chosen in registered.values():
+        if isinstance(chosen, _ProfileScheme):
+            # Retain legacy punctuation while using the registered adapter.
+            combined.violations.extend(chosen.validate_legacy(data).violations)
+        else:
+            result = chosen.validate(data, message_type=message_type)
+            combined.violations.extend(
+                SchemeViolation(
+                    index=f.row_index,
+                    field=f.field,
+                    rule=f.rule,
+                    message=f.message,
+                    severity=f.severity,
+                )
+                for f in result.findings
+            )
     combined.violations.sort(key=lambda v: v.index)
     return combined

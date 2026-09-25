@@ -15,7 +15,7 @@
 """Universal data loader supporting multiple input sources."""
 
 from collections.abc import Generator
-from typing import Any, cast
+from typing import Any
 
 # pylint: disable=duplicate-code
 from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
@@ -158,12 +158,9 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     # supported set is the union of the built-in dispatch table and any
     # extension a plugin has registered for - so installing
     # `pain001-loader-xlsx` makes `.xlsx` immediately accepted here.
-    ext = os.path.splitext(file_path)[1]
-    builtin_extensions = set(_get_file_loaders().keys())
-    plugin_handles_ext = (
-        plugin_registry.get_loader_for_extension(ext) is not None
-    )
-    if ext not in builtin_extensions and not plugin_handles_ext:
+    ext = os.path.splitext(file_path)[1].lower()
+    plugin_loader = plugin_registry.get_loader_for_extension(ext)
+    if plugin_loader is None:
         from pain001.plugins.companions import install_hint
 
         hint = install_hint(ext)
@@ -197,29 +194,16 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
             f"Data file validation failed: {file_path}\nError: {e}"
         ) from e
 
-    # Built-in dispatch path (unchanged behaviour - validator runs post-load).
+    # Every loader uses the contract; retain the built-in post-load gate.
+    data = plugin_loader.load(safe_path).rows
     entry = _get_file_loaders().get(ext)
     if entry is not None:
-        loader_fn, validator_fn, format_name = entry
-        data = cast(list[dict[str, Any]], loader_fn(safe_path))
+        _, validator_fn, format_name = entry
         if not validator_fn(data):
             raise PaymentValidationError(
                 f"{format_name} data validation failed for {file_path}"
             )
-        return data
-
-    # Plugin path: an external loader registered for this extension.
-    plugin_loader = plugin_registry.get_loader_for_extension(ext)
-    if plugin_loader is None:  # pragma: no cover - guarded by early check
-        # Belt-and-braces: the early extension check above already
-        # confirmed a plugin claims this ext, so this is unreachable
-        # unless the registry mutated between the two calls.
-        raise DataSourceError(
-            f"Unsupported file type: {file_path}. "
-            f"Install a plugin that registers the {ext!r} extension."
-        )
-    result = plugin_loader.load(safe_path)
-    return result.rows
+    return data
 
 
 def _load_from_list(data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -336,19 +320,22 @@ def _load_from_file_streaming(
     """
     import os
 
-    ext = os.path.splitext(file_path)[1]
+    from pain001.plugins.registry import registry as plugin_registry
+
+    ext = os.path.splitext(file_path)[1].lower()
+    plugin_loader = plugin_registry.get_loader_for_extension(ext)
     entry = _get_file_stream_loaders().get(ext)
-    if entry is None:
+    if plugin_loader is None:
         raise DataSourceError(
             f"Unsupported file type: {file_path}. "
             f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
 
-    stream_loader_fn, validator_fn, format_name = entry
-    for chunk in stream_loader_fn(file_path, chunk_size):
-        if validate and not validator_fn(chunk):
+    for result in plugin_loader.load_streaming(file_path, chunk_size):
+        chunk = result.rows
+        if validate and entry is not None and not entry[1](chunk):
             raise PaymentValidationError(
-                f"{format_name} data validation failed for chunk in {file_path}"
+                f"{entry[2]} data validation failed for chunk in {file_path}"
             )
         yield chunk
 

@@ -57,6 +57,7 @@ from pain001.security.path_validator import (
 )
 from pain001.validation import validate_scheme
 from pain001.validation.schema_validator import SchemaValidator
+from pain001.validation.schemes import SchemeValidationResult
 from pain001.xml.generate_xml import generate_xml
 
 logger = logging.getLogger(__name__)
@@ -65,6 +66,44 @@ logger = logging.getLogger(__name__)
 # references to tasks, so without this set a running job could be
 # garbage-collected mid-flight.
 _background_tasks: set[asyncio.Task[None]] = set()
+
+
+def _request_scheme_result(
+    data: list[dict[str, Any]],
+    request: ValidationRequest | GenerateXMLRequest,
+) -> SchemeValidationResult:
+    """Evaluate request-local policy and scheme rules before any XML write.
+
+    Args:
+        data: Loaded payment records.
+        request: Request carrying an optional scheme and inline policy.
+
+    Returns:
+        Combined structured validation findings.
+
+    Raises:
+        HTTPException: If policy dependencies, syntax or inputs are invalid.
+        ValueError: Raised internally for missing policy dependencies and
+            converted to HTTPException before returning to the caller.
+    """
+    try:
+        if request.rules is not None:
+            try:
+                from pain001.validation.policy import validate_policy
+            except ImportError as exc:
+                raise ValueError(
+                    "Custom rules require 'pain001[rules]'."
+                ) from exc
+            return validate_policy(
+                data, request.rules, request.scheme, request.message_type.value
+            )
+        return validate_scheme(
+            data, request.scheme or "", message_type=request.message_type.value
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)
+        ) from exc
 
 
 def _validate_safe_path(user_path: str, base_dir: Path | None = None) -> Path:
@@ -388,14 +427,8 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
 
         scheme_violations: list[dict[str, Any]] = []
         is_valid = len(errors) == 0
-        if request.scheme:
-            try:
-                scheme_result = validate_scheme(data, request.scheme)
-            except ValueError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=str(exc),
-                ) from exc
+        if request.scheme or request.rules is not None:
+            scheme_result = _request_scheme_result(data, request)
             scheme_violations = [v.as_dict() for v in scheme_result.violations]
             is_valid = is_valid and scheme_result.is_valid
 
@@ -474,18 +507,14 @@ async def generate_xml_sync(
             )
 
         # Scheme rulebook validation (when requested)
-        if request.scheme:
-            try:
-                scheme_result = validate_scheme(data, request.scheme)
-            except ValueError as exc:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=str(exc),
-                ) from exc
+        if request.scheme or request.rules is not None:
+            scheme_result = _request_scheme_result(data, request)
             if not scheme_result.is_valid:
                 return GenerateXMLResponse(
                     success=False,
-                    message=(f"Scheme '{request.scheme}' validation failed"),
+                    message=(
+                        f"Scheme '{scheme_result.profile}' validation failed"
+                    ),
                     file_path=None,
                     scheme_violations=[
                         v.as_dict() for v in scheme_result.violations
@@ -770,6 +799,38 @@ async def _process_generation_job(
                 JobStatus.FAILED,
                 progress=100,
                 error=f"Validation failed: {valid}/{total} rows valid",
+            )
+            return
+
+        if request.scheme or request.rules is not None:
+            scheme_result = _request_scheme_result(data, request)
+            if not scheme_result.is_valid:
+                job_manager.update_status(
+                    job_id,
+                    JobStatus.FAILED,
+                    progress=100,
+                    error="Scheme validation failed: "
+                    + ", ".join(v.rule for v in scheme_result.violations),
+                    result={
+                        "success": False,
+                        "message": "Scheme validation failed",
+                        "scheme_violations": [
+                            v.as_dict() for v in scheme_result.violations
+                        ],
+                    },
+                )
+                return
+
+        if request.validate_only:
+            job_manager.update_status(
+                job_id,
+                JobStatus.SUCCESS,
+                progress=100,
+                result={
+                    "success": True,
+                    "message": f"All {valid} rows are valid",
+                    "file_path": None,
+                },
             )
             return
 

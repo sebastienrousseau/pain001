@@ -60,7 +60,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 from defusedxml import ElementTree as defused_et
 
 from pain001.validation.charset import find_invalid_characters

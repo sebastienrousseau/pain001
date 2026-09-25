@@ -163,6 +163,9 @@ Contents
    installation
    usage
    configuration
+   plugins
+   custom-rules
+   sftp-upload
    template_registry
    version_migration
    security

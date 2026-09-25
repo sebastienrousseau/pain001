@@ -43,6 +43,7 @@ from pain001.plugins.contracts import (
 
 if TYPE_CHECKING:
     from pain001.plugins.registry import PluginRegistry
+    from pain001.validation.schemes import SchemeValidationResult
 
 
 def _pain001_version() -> str:
@@ -292,7 +293,7 @@ class _ProfileScheme:
             remediation_for,
         )
 
-        legacy = self._profile.validate(rows)
+        legacy = self.validate_legacy(rows)
         findings = [
             SchemeFinding(
                 row_index=v.index,
@@ -305,6 +306,14 @@ class _ProfileScheme:
             for v in legacy.violations
         ]
         return SchemeResult(is_valid=legacy.is_valid, findings=findings)
+
+    def validate_legacy(
+        self, rows: list[dict[str, Any]]
+    ) -> SchemeValidationResult:
+        """Preserve legacy findings for callers of ``validate_scheme``."""
+        from typing import cast
+
+        return cast("SchemeValidationResult", self._profile.validate(rows))
 
 
 # ---------------------------------------------------------------------------

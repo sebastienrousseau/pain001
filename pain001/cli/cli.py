@@ -58,6 +58,7 @@ from pain001.observability import (
 from pain001.observability.otel import init_otel
 from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
+from pain001.transport.cli import upload_cmd
 from pain001.validation import validate_scheme
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
@@ -128,6 +129,8 @@ def _run_scheme_check(
     scheme: str,
     explain: bool = False,
     output_format: str = "text",
+    rules: str | None = None,
+    message_type: str = "pain.001.001.03",
 ) -> None:
     """Validate loaded rows against a payment-scheme rulebook.
 
@@ -137,17 +140,35 @@ def _run_scheme_check(
         explain: If True, print a remediation hint under each violation.
         output_format: ``'text'`` for human output or ``'json'`` for a
             machine-readable result object.
+        rules: Optional path to a private YAML policy file.
+        message_type: Schema used for policy numeric types.
 
     Raises:
         SystemExit: 2 if the scheme name is unknown, 1 if rows violate it.
+        ValueError: Raised internally for missing policy dependencies and
+            converted to SystemExit before returning to the caller.
     """
     try:
-        result = validate_scheme(data, scheme)
+        if rules is not None:
+            try:
+                from pain001.validation.policy import (
+                    MAX_POLICY_BYTES,
+                    validate_policy,
+                )
+            except ImportError as exc:
+                raise ValueError(
+                    "Custom rules require 'pain001[rules]'."
+                ) from exc
+            with Path(rules).open(encoding="utf-8") as policy_file:
+                source = policy_file.read(MAX_POLICY_BYTES + 1)
+            result = validate_policy(data, source, scheme, message_type)
+        else:
+            result = validate_scheme(data, scheme, message_type=message_type)
     except ValueError as exc:
         if output_format == "json":
             print(json.dumps({"error": str(exc)}))
         else:
-            console.print(f"[bold red]✗ {exc}[/bold red]", style="red")
+            console.print(f"✗ {exc}", style="bold red", markup=False)
         raise SystemExit(2) from exc
 
     if output_format == "json":
@@ -215,6 +236,7 @@ def _validate_payment_data(
     scheme: str | None = None,
     explain: bool = False,
     scheme_format: str = "text",
+    rules: str | None = None,
 ) -> int:
     """Validate payment data and return record count.
 
@@ -225,6 +247,7 @@ def _validate_payment_data(
         scheme: Optional payment-scheme rulebook to validate against.
         explain: If True, print remediation hints for scheme violations.
         scheme_format: Output format for scheme results ('text' or 'json').
+        rules: Optional private YAML policy file.
 
     Returns:
         Number of valid payment records.
@@ -243,8 +266,15 @@ def _validate_payment_data(
             f"[bold green]✓ Data validation passed[/bold green] "
             f"({record_count} payment records)"
         )
-        if scheme:
-            _run_scheme_check(data, scheme, explain, scheme_format)
+        if scheme or rules is not None:
+            _run_scheme_check(
+                data,
+                scheme or "custom",
+                explain,
+                scheme_format,
+                rules,
+                xml_message_type,
+            )
         return record_count
     except (FileNotFoundError, ValueError, Exception) as e:
         log_validation_event(
@@ -569,6 +599,12 @@ def _generate_xml_files(
         "appears on the command line)."
     ),
 )
+@click.option(
+    "--rules",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="Private YAML CEL policy to enforce before generation (requires pain001[rules]).",
+)
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -590,6 +626,7 @@ def main(
     scheme_format: str,
     decrypt_key: str | None = None,
     decrypt_passphrase_env: str | None = None,
+    rules: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -621,6 +658,7 @@ def main(
             ``.gpg`` / ``.asc`` data file is decrypted.
         decrypt_passphrase_env: Name of the environment variable that
             holds the passphrase for that key.
+        rules: Optional path to private YAML CEL policy rules.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -744,6 +782,7 @@ def main(
             scheme=scheme,
             explain=explain,
             scheme_format=scheme_format,
+            rules=rules,
         )
         log_event(
             logger,
@@ -761,7 +800,7 @@ def main(
         )
         return
 
-    if scheme:
+    if scheme or rules is not None:
         _validate_payment_data(
             logger,
             data_file_path,
@@ -769,6 +808,7 @@ def main(
             scheme=scheme,
             explain=explain,
             scheme_format=scheme_format,
+            rules=rules,
         )
 
     _generate_xml_files(
@@ -835,6 +875,9 @@ def cli() -> None:
 
 cli.add_command(main, name="generate")
 
+# This adapter imports Paramiko only when the user requests an upload.
+cli.add_command(upload_cmd)
+
 
 @cli.command("validate")
 @click.option(
@@ -899,6 +942,12 @@ cli.add_command(main, name="generate")
     help="Environment variable holding the GPG passphrase.",
 )
 @click.option("-v", "--verbose", is_flag=True, default=False)
+@click.option(
+    "--rules",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="Private YAML CEL policy (requires pain001[rules]).",
+)
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -912,6 +961,7 @@ def validate_cmd(
     decrypt_key: str | None,
     decrypt_passphrase_env: str | None,
     verbose: bool,
+    rules: str | None,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -931,6 +981,7 @@ def validate_cmd(
         decrypt_key: Optional GPG private-key file for ``.gpg`` inputs.
         decrypt_passphrase_env: Environment variable holding its passphrase.
         verbose: If True, enable detailed logging output.
+        rules: Optional path to private YAML CEL policy rules.
     """
     ctx.invoke(
         main,
@@ -945,6 +996,7 @@ def validate_cmd(
         decrypt_passphrase_env=decrypt_passphrase_env,
         verbose=verbose,
         dry_run=True,
+        rules=rules,
     )
 
 
@@ -1208,13 +1260,26 @@ def plugins_show_cmd(name: str, kind: str | None) -> None:
 
 
 @plugins_group.command("disable")
-def plugins_disable_cmd() -> None:
+@click.argument("name", required=False)
+def plugins_disable_cmd(name: str | None = None) -> None:
     """Show how to disable plugins via ``PAIN001_DISABLE_PLUGINS``.
 
     Documentation-only command: the environment variable is the
     canonical disable mechanism because it persists for the lifetime
     of a process and survives CLI flag bypass.
     """
+    if name is not None:
+        import re
+
+        if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]*", name) is None:
+            raise click.BadParameter(
+                "Use a plugin name, not a shell expression."
+            )
+        click.echo(f"export PAIN001_DISABLE_PLUGINS={name}")
+        click.echo(
+            "Run this in your shell before starting pain001; no settings were changed."
+        )
+        return
     console.print(
         "[bold]Disable plugins via the [cyan]PAIN001_DISABLE_PLUGINS[/cyan] "
         "environment variable.[/bold]\n\n"

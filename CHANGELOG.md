@@ -9,6 +9,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Request-local CEL policy rules for CLI and REST validation and generation,
+  including background jobs, through the optional `rules` extra (#184).
+- Deterministic, review-only record correction suggestions that never modify
+  account identifiers, amounts or currencies (#185).
+- Explicit SFTP upload with trusted host keys, staged publication, hash-based
+  retry reuse and optional `upload` dependencies (#186).
+
+### Fixed
+
+- Honor registered loaders in whole-file and streaming dispatch, registered
+  scheme overrides and the XML writer; report safe structured plugin-load
+  failure diagnostics (#179).
+
 ### Changed
 
 - Update Hypothesis to 6.168.0, Twine to 7.0.0, Sphinx autodoc type hints

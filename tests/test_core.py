@@ -271,7 +271,7 @@ class TestProcessFiles(unittest.TestCase):
     def test_valid_sqlite_data(self) -> None:
         with (
             patch(
-                "pain001.data.loader.load_db_data",
+                "pain001.db.load_db_data.load_db_data",
                 autospec=True,
                 return_value=[{}],
             ),
@@ -295,7 +295,7 @@ class TestProcessFiles(unittest.TestCase):
     def test_invalid_sqlite_data(self) -> None:
         with (
             patch(
-                "pain001.data.loader.load_db_data",
+                "pain001.db.load_db_data.load_db_data",
                 autospec=True,
                 return_value=[{}],
             ),
