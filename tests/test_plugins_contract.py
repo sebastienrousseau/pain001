@@ -209,6 +209,7 @@ def test_register_overrides_built_in_with_log(fresh_registry, caplog):
     fresh_registry._populated = True
     assert fresh_registry.get_loader("ok") is second
     assert any("overrides existing" in r.getMessage() for r in caplog.records)
+    assert any(r.levelname == "WARNING" for r in caplog.records)
 
 
 def test_disabled_plugin_skipped(monkeypatch, fresh_registry):

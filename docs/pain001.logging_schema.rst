@@ -1,6 +1,8 @@
 pain001.logging\_schema package
 ===============================
 
+.. automodule:: pain001.logging_schema
+
 Submodules
 ----------
 
@@ -56,14 +58,6 @@ pain001.logging\_schema.tracker module
 --------------------------------------
 
 .. automodule:: pain001.logging_schema.tracker
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.logging_schema
    :members:
    :undoc-members:
    :show-inheritance:

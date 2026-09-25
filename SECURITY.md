@@ -12,12 +12,16 @@ While the project is pre-`1.0`, that means **the latest released
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
 | `0.0.70` (latest) | Current | ✅ Yes |
-| `0.0.68` | Prior | ✅ Yes |
+| `0.0.69` | Prior | ✅ Yes |
+| `0.0.68` | Transitional legacy support | ✅ Yes — existing support retained pending announced withdrawal |
 | `≤ 0.0.67` | Old | ❌ No — upgrade |
 
 Pre-1.0 deprecation runway: at least 6 weeks between announcing
 end-of-support for a 0.0.x release and the next coordinated release.
 1.0+ runway: at least 6 months.
+
+The transitional row preserves the previous support commitment; correcting
+the omitted prior release does not silently withdraw support.
 
 ## Reporting a vulnerability
 

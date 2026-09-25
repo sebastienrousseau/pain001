@@ -135,20 +135,11 @@ def encrypted_csv(tmp_path):
 
 
 @pytest.fixture
-def isolated_registry(monkeypatch):
-    """A pristine registry exposed to the GPG loader's dispatch.
-
-    The GPG loader resolves the inner loader via the *global*
-    singleton, so we patch the singleton's storage with a registry
-    populated only with the built-in loaders we want to exercise.
-    Restored after the test runs.
-    """
-    from pain001.plugins.registry import registry as global_registry
-
-    global_registry.reset()
-    global_registry._ensure_populated()
-    yield global_registry
-    global_registry.reset()
+def isolated_registry():
+    """A genuinely isolated owner for the GPG loader's inner dispatch."""
+    reg = PluginRegistry(PAIN001_API_VERSION)
+    reg._ensure_populated()
+    return reg
 
 
 def test_gpg_loader_decrypts_and_dispatches_csv(
@@ -164,7 +155,7 @@ def test_gpg_loader_decrypts_and_dispatches_csv(
         "pain001.plugins.builtins_gpg._secure_tempfile_dir",
         lambda: str(tmp_path),
     )
-    result = _GpgDecryptingLoader().load(encrypted_csv)
+    result = _GpgDecryptingLoader(isolated_registry).load(encrypted_csv)
     assert isinstance(result, LoaderResult)
     assert len(result.rows) == 2
     # source_hint is rewritten to the encrypted-file path so findings
@@ -185,18 +176,18 @@ def test_gpg_loader_dispatches_json(tmp_path, isolated_registry, monkeypatch):
         "pain001.plugins.builtins_gpg._secure_tempfile_dir",
         lambda: str(tmp_path),
     )
-    result = _GpgDecryptingLoader().load(str(enc))
+    result = _GpgDecryptingLoader(isolated_registry).load(str(enc))
     assert [row["id"] for row in result.rows] == ["A", "B"]
 
 
 def test_gpg_loader_rejects_filename_without_inner_extension(
-    tmp_path, monkeypatch
+    tmp_path, isolated_registry, monkeypatch
 ):
     """`sealed.gpg` alone is rejected with a clear DataSourceError."""
     enc = tmp_path / "sealed.gpg"
     enc.write_bytes(b"ciphertext")
     with pytest.raises(DataSourceError, match="Cannot infer inner format"):
-        _GpgDecryptingLoader().load(str(enc))
+        _GpgDecryptingLoader(isolated_registry).load(str(enc))
 
 
 def test_gpg_loader_rejects_when_inner_loader_missing(
@@ -210,7 +201,7 @@ def test_gpg_loader_rejects_when_inner_loader_missing(
         lambda ciphertext: b"any plaintext",
     )
     with pytest.raises(DataSourceError, match="no inner loader registered"):
-        _GpgDecryptingLoader().load(str(enc))
+        _GpgDecryptingLoader(isolated_registry).load(str(enc))
 
 
 def test_gpg_loader_streaming_passes_chunks_through(
@@ -227,7 +218,9 @@ def test_gpg_loader_streaming_passes_chunks_through(
         lambda: str(tmp_path),
     )
     chunks = list(
-        _GpgDecryptingLoader().load_streaming(encrypted_csv, chunk_size=1)
+        _GpgDecryptingLoader(isolated_registry).load_streaming(
+            encrypted_csv, chunk_size=1
+        )
     )
     assert chunks
     assert all(c.source_hint == encrypted_csv for c in chunks)
@@ -235,12 +228,17 @@ def test_gpg_loader_streaming_passes_chunks_through(
 
 def test_gpg_loader_streaming_rejects_filename_without_inner_extension(
     tmp_path,
+    isolated_registry,
 ):
     """Streaming variant also enforces the `<name>.<inner>.gpg` shape."""
     enc = tmp_path / "sealed.gpg"
     enc.write_bytes(b"ciphertext")
     with pytest.raises(DataSourceError, match="Cannot infer inner format"):
-        list(_GpgDecryptingLoader().load_streaming(str(enc), chunk_size=10))
+        list(
+            _GpgDecryptingLoader(isolated_registry).load_streaming(
+                str(enc), chunk_size=10
+            )
+        )
 
 
 def test_gpg_loader_streaming_rejects_when_inner_loader_missing(
@@ -254,7 +252,11 @@ def test_gpg_loader_streaming_rejects_when_inner_loader_missing(
         lambda ciphertext: b"any plaintext",
     )
     with pytest.raises(DataSourceError, match="no inner loader registered"):
-        list(_GpgDecryptingLoader().load_streaming(str(enc), chunk_size=10))
+        list(
+            _GpgDecryptingLoader(isolated_registry).load_streaming(
+                str(enc), chunk_size=10
+            )
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -326,9 +328,9 @@ def test_gpg_module_returns_imported_module_when_present(monkeypatch):
 # ---------------------------------------------------------------------------
 # Plugin metadata + conditional registration
 # ---------------------------------------------------------------------------
-def test_loader_meta_is_well_formed():
+def test_loader_meta_is_well_formed(isolated_registry):
     """meta carries the expected name, source, api_version, extensions."""
-    loader = _GpgDecryptingLoader()
+    loader = _GpgDecryptingLoader(isolated_registry)
     assert loader.meta.name == "gpg"
     assert loader.meta.source == "built-in"
     assert loader.meta.api_version == PAIN001_API_VERSION
@@ -352,3 +354,34 @@ def test_maybe_register_adds_loader_when_gnupg_present(monkeypatch):
     maybe_register(reg)
     reg._populated = True
     assert reg.get_loader("gpg") is not None
+
+
+@pytest.mark.parametrize("streaming", [False, True])
+def test_gpg_dispatch_stays_with_owning_registry(
+    monkeypatch, encrypted_csv, streaming
+):
+    """Independent registries cannot leak inner-loader selection to each other."""
+    monkeypatch.setitem(sys.modules, "gnupg", MagicMock())
+    monkeypatch.setattr(
+        "pain001.plugins.builtins_gpg._decrypt_to_bytes",
+        lambda _: b"synthetic",
+    )
+    for owner in ("first", "second"):
+        reg = PluginRegistry(PAIN001_API_VERSION)
+        reg._populated = True
+        inner = MagicMock()
+        inner.extensions = (".csv",)
+        result = LoaderResult(rows=[{"owner": owner}])
+        inner.load.return_value = result
+        inner.load_streaming.return_value = [result]
+        reg._loaders["csv"] = inner
+        maybe_register(reg)
+        loader = reg.get_loader("gpg")
+        assert loader is not None
+        if streaming:
+            actual = list(loader.load_streaming(encrypted_csv, 1))
+        else:
+            actual = [loader.load(encrypted_csv)]
+        assert actual == [
+            LoaderResult(rows=[{"owner": owner}], source_hint=encrypted_csv)
+        ]

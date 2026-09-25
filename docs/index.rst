@@ -1,157 +1,40 @@
-.. Pain001 documentation master file
+.. SPDX-License-Identifier: Apache-2.0 OR MIT
 
-========================================
+=============================================
 Pain001: ISO 20022-Compliant Payment Files
-========================================
+=============================================
 
-Welcome to **Pain001** — a powerful Python library for automating ISO 20022-compliant payment file creation.
+Pain001 generates and validates payment XML from tabular data. The bundled
+templates cover pain.001.001.03 through pain.001.001.13, pain.008.001.02 and
+pain.008.001.08. List the exact registry with ``pain001 versions``; field
+mappings are generated in :doc:`input-columns`, not duplicated here.
 
-Pain001 simplifies payment processing by generating standardized payment initiation files (pain.001) from CSV files, SQLite databases, or Python data structures, with mandatory validation and enterprise-grade reliability.
+Generation validates rendered XML against the bundled XSD before writing.
+Schema validity is not proof of bank acceptance or regulatory compliance.
+Scenario confidence and evidence are documented in :doc:`corpus`.
 
-.. grid:: 2
-   :gutter: 2
+Quality and availability
+========================
 
-   .. grid-item-card:: 🚀 Quick Start
-      :link: installation
-      :link-type: doc
+CI enforces 100% line and branch coverage, lint, types and security checks.
+Python 3.10–3.14 is tested on Linux; development uses Python 3.12.
+Branch-only features and remaining acceptance criteria are recorded in
+:doc:`issue-audit`; source documentation is not a release announcement.
 
-      Get up and running in minutes with pip install and a simple example.
+Getting started
+===============
 
-   .. grid-item-card:: 📚 User Guide
-      :link: usage
-      :link-type: doc
+Install the package, then run these commands in a fresh writable directory:
 
-      Learn how to use Pain001 with CSV data, databases, and custom configurations.
+.. code-block:: bash
 
-   .. grid-item-card:: ⚙️ API Reference
-      :link: modules
-      :link-type: doc
+   pain001 init pain.001.001.03 -o payments.csv
+   pain001 validate -t pain.001.001.03 -d payments.csv
+   pain001 generate -t pain.001.001.03 -d payments.csv -o output
 
-      Complete API documentation with all classes, functions, and methods.
-
-   .. grid-item-card:: 🔧 Configuration
-      :link: configuration
-      :link-type: doc
-
-      Configure Pain001 for your specific payment processing needs.
-
-Key Features
-============
-
-.. rst-class:: feature-grid
-
-* **🏦 ISO 20022 Compliance** — Generate files compliant with pain.001.001.03 through pain.001.001.13, pain.008.001.02 and pain.008.001.08
-* **📊 Multiple Data Sources** — Support for CSV files, SQLite databases, and Python data structures
-* **✅ Automatic Validation** — Built-in XSD schema validation for generated XML files
-* **🔒 Secure by Design** — Uses defusedxml to prevent XXE attacks and SQL injection protection
-* **🧪 Fully Tested** — over 1,000 tests with a 95% branch-coverage floor enforced in CI
-* **📦 Type-Safe** — Full type hints for better IDE support and mypy compatibility
-* **🚀 Production-Ready** — Used in production for SEPA and international payments
-* **💼 Enterprise Grade** — Robust error handling, comprehensive logging, and detailed reporting
-
-Supported ISO 20022 Versions
-=============================
-
-.. list-table::
-   :header-rows: 1
-   :widths: 20 15 20 45
-
-   * - Version
-     - Status
-     - CSV Fields
-     - Primary Use Case
-   * - pain.001.001.03
-     - ✅ Stable
-     - 42
-     - SEPA credit transfers
-   * - pain.001.001.04
-     - ✅ Stable
-     - 47
-     - Non-SEPA international payments
-   * - pain.001.001.05
-     - ✅ Stable
-     - 47
-     - Enhanced global payments
-   * - pain.001.001.06
-     - ✅ Stable
-     - 44
-     - Instant SEPA payments
-   * - pain.001.001.07
-     - ✅ Stable
-     - 44
-     - Extended optional elements for regional requirements
-   * - pain.001.001.08
-     - ✅ Stable
-     - 44
-     - Enhanced validation and optional elements
-   * - pain.001.001.09
-     - ✅ Stable
-     - 23
-     - Modern simplified structure
-   * - pain.001.001.10
-     - ✅ Stable
-     - 23
-     - Enhanced compliance & validation
-   * - pain.001.001.11
-     - ✅ Latest
-     - 23
-     - Advanced features & future-proof
-   * - pain.001.001.12
-     - ✅ New
-     - 23
-     - Current credit transfer pilot support
-   * - pain.008.001.02
-     - ✅ Stable
-     - 26
-     - SEPA direct debit initiation, legacy files
-   * - pain.008.001.08
-     - ✅ New
-     - 26
-     - SEPA direct debit initiation, EPC 2025 rulebooks and CBPR+
-
-Why Pain001?
-============
-
-**Reduce Complexity**
-    Payment processing involves complex ISO 20022 standards and multiple validation steps. Pain001 handles all of this automatically.
-
-**Ensure Compliance**
-    Every generated file is validated against official XSD schemas, ensuring 100% compliance with payment networks.
-
-**Save Time**
-    Automated generation eliminates manual file creation and validation, reducing processing time from hours to minutes.
-
-**Improve Reliability**
-    With enterprise-grade error handling and comprehensive testing, Pain001 ensures consistent, reliable payment processing.
-
-**Scale with Confidence**
-    Process thousands of payments with the same confidence and reliability as a single payment.
-
-Getting Started in 3 Steps
-==========================
-
-1. **Install**
-
-   .. code-block:: bash
-
-      pip install pain001
-
-2. **Load Your Data**
-
-   .. code-block:: python
-
-      from pain001 import main
-
-      main(
-          xml_message_type='pain.001.001.03',
-          xml_template_file_path='template.xml',
-          xsd_schema_file_path='schema.xsd',
-          data_file_path='payments.csv'
-      )
-
-3. **Get Validated Payment Files**
-
-   Your ISO 20022-compliant XML payment file is generated and validated automatically.
+The scaffold is synthetic sample data. The output flag names a directory,
+not a filename. See :doc:`installation`, :doc:`usage`, :doc:`configuration`
+and :doc:`modules` for the supported surfaces.
 
 Contents
 ========
@@ -163,6 +46,9 @@ Contents
    installation
    usage
    configuration
+   plugins
+   custom-rules
+   sftp-upload
    template_registry
    version_migration
    security
@@ -196,6 +82,24 @@ Contents
    development
    packaging
    adr/README
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Assurance and policies
+   :glob:
+
+   POLICIES
+   COMPARISON
+   BENCHMARKS
+   verification-coverage
+   issue-audit
+   code-scanning-audit
+   assurance-case
+   deployment-cookbook
+   quickstart
+   custom_validation
+   adr/000[1-7]*
+   posts/*
 
 Indices and Tables
 ==================

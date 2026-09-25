@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 # Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,13 +25,12 @@ Run from the repository root::
     python examples/12_mcp_tools.py
 """
 
-import sys
-
 try:
     from pain001.mcp import server
-except ImportError:
-    print("mcp not installed; run `pip install pain001[mcp]`. Skipping.")
-    sys.exit(0)
+except ImportError as error:
+    raise SystemExit(
+        "mcp not installed; run `pip install pain001[mcp]`."
+    ) from error
 
 from pain001.constants import TEMPLATES_DIR
 from pain001.csv.load_csv_data import load_csv_data

@@ -54,14 +54,12 @@ import sys
 import tempfile
 from collections.abc import Iterable
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pain001.exceptions import DataSourceError
+from pain001.plugins._registration import BuiltinRegistry
 from pain001.plugins._version import PAIN001_API_VERSION
 from pain001.plugins.contracts import LoaderResult, PluginMeta
-
-if TYPE_CHECKING:
-    from pain001.plugins.registry import PluginRegistry
 
 logger = logging.getLogger(__name__)
 
@@ -220,6 +218,9 @@ class _GpgDecryptingLoader:
     )
     extensions: tuple[str, ...] = (".gpg", ".asc")
 
+    def __init__(self, registry: BuiltinRegistry) -> None:
+        self._registry = registry
+
     def load(self, path: str) -> LoaderResult:
         """Decrypt ``path`` and delegate to the inner loader.
 
@@ -286,12 +287,8 @@ class _GpgDecryptingLoader:
         self, plaintext: bytes, inner_ext: str, source_hint: str
     ) -> LoaderResult:
         """Hand decrypted bytes to the inner loader via a secure temp file."""
-        # Lazy import to avoid a circular dep with the registry.
-        from pain001.plugins.registry import (  # noqa: PLC0415
-            registry as plugin_registry,
-        )
-
-        inner = plugin_registry.get_loader_for_extension(inner_ext)
+        # Use the owner passed at registration, never a global back-import.
+        inner = self._registry.get_loader_for_extension(inner_ext)
         if inner is None:
             raise DataSourceError(
                 f"GPG loader: no inner loader registered for "
@@ -313,11 +310,7 @@ class _GpgDecryptingLoader:
         chunk_size: int,
     ) -> Iterable[LoaderResult]:
         """Streaming dispatch variant of :meth:`_dispatch`."""
-        from pain001.plugins.registry import (  # noqa: PLC0415
-            registry as plugin_registry,
-        )
-
-        inner = plugin_registry.get_loader_for_extension(inner_ext)
+        inner = self._registry.get_loader_for_extension(inner_ext)
         if inner is None:
             raise DataSourceError(
                 f"GPG loader: no inner loader registered for "
@@ -372,7 +365,7 @@ class _secure_tempfile:
                 pass
 
 
-def maybe_register(reg: PluginRegistry) -> None:
+def maybe_register(reg: BuiltinRegistry) -> None:
     """Register the GPG loader iff the ``python-gnupg`` extra is installed.
 
     Called by ``pain001.plugins._builtins.register_all`` so the GPG
@@ -388,4 +381,4 @@ def maybe_register(reg: PluginRegistry) -> None:
             "pain001[gpg] extra not installed; .gpg / .asc loader unavailable"
         )
         return
-    reg.register_loader(_GpgDecryptingLoader())
+    reg.register_loader(_GpgDecryptingLoader(reg))

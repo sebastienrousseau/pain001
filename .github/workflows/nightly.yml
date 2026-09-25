@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 name: 🌙 Nightly Quality
 
 on:
@@ -19,7 +20,7 @@ jobs:
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
       - run: make check
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./coverage.xml
           flags: unittests
@@ -45,5 +46,9 @@ jobs:
       - name: Run atheris harness
         run: |
           pip install --quiet --require-hashes -r .github/requirements/fuzz.txt
-          pip install --quiet --no-deps .
+          pip install --quiet --require-hashes -r .github/requirements/bootstrap.txt
+          pip install --quiet --require-hashes -r requirements.txt
+          PIP_NO_INDEX=1 python -m build --wheel --no-isolation
+          python -m installer dist/*.whl
+          pip check
           python fuzz/fuzz_validation.py -max_total_time=120

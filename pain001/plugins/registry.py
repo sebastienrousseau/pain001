@@ -33,8 +33,10 @@ and built-ins share one code path.
 
 from __future__ import annotations
 
+import hashlib
 import logging
 import os
+import traceback
 from collections.abc import Iterable
 from importlib import metadata
 from typing import Any, cast
@@ -222,7 +224,7 @@ class PluginRegistry:
             return
         self._check_api_compatibility(meta, kind=kind)
         if meta.name in store and store[meta.name] is not plugin:
-            logger.info(
+            logger.warning(
                 "%s plugin %s from %s overrides existing %s",
                 kind,
                 meta.name,
@@ -287,12 +289,27 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
                 # Stamp the source so list_plugins shows the dist name.
                 _stamp_source(plugin, entry)
                 _register_by_kind(reg, plugin, kind)
-            except Exception as exc:  # pragma: no cover - defensive log
+            except Exception as exc:
+                # Exception messages can contain payment data or credentials.
+                # Identify the failure by type and stack hash without logging
+                # the message, local variables, or the raw traceback.
+                exception_class = type(exc).__name__
+                traceback_hash = hashlib.sha256(
+                    "".join(traceback.format_tb(exc.__traceback__)).encode()
+                ).hexdigest()
                 logger.warning(
-                    "skipping %s plugin from entry-point %s: %s",
+                    "skipping %s plugin from entry-point %s: %s "
+                    "(traceback_sha256=%s)",
                     kind,
                     entry.name,
-                    exc,
+                    exception_class,
+                    traceback_hash,
+                    extra={
+                        "plugin_name": entry.name,
+                        "plugin_kind": kind,
+                        "exception_class": exception_class,
+                        "traceback_hash": traceback_hash,
+                    },
                 )
 
 

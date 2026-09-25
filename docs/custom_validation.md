@@ -60,9 +60,10 @@ Each schema file defines:
    - Enum validation (allowed values)
 
 Example schema excerpt:
+
 ```json
 {
-  "required": ["id", "date", "debtor_name", ...],
+  "required": ["id", "date", "debtor_name"],
   "properties": {
     "id": {
       "type": "string",
@@ -89,6 +90,7 @@ Validation errors include:
 - **value**: The invalid value
 
 Example error:
+
 ```
 $.debtor_account_IBAN: 'INVALID123' does not match '^[A-Z]{2}[0-9]{2}[A-Z0-9]+$'
 ```
@@ -137,6 +139,7 @@ Create custom schemas in `pain001/schemas/custom/`:
 ```
 
 Usage:
+
 ```python
 validator = SchemaValidator(
     "pain.001.001.03",
@@ -206,6 +209,7 @@ else:
 ### From Hardcoded Validation
 
 **Old approach** (hardcoded in Python):
+
 ```python
 required_columns = ["id", "date", "nb_of_txs", ...]  # Hardcoded
 
@@ -217,6 +221,7 @@ def validate_csv_data(data):
 ```
 
 **New approach** (schema-based):
+
 ```python
 from pain001.validation.schema_validator import SchemaValidator
 
@@ -262,6 +267,7 @@ json.JSONDecodeError: Invalid JSON in schema file
 ```
 
 **Solution**: Validate schema file syntax:
+
 ```bash
 python -m json.tool pain001/schemas/custom/my_schema.json
 ```
@@ -269,6 +275,7 @@ python -m json.tool pain001/schemas/custom/my_schema.json
 ### Unexpected Validation Failures
 
 Enable detailed error reporting:
+
 ```python
 for error in errors:
     print(f"Path: {error.path}")

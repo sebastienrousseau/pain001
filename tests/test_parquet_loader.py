@@ -19,6 +19,7 @@ Tests load_parquet_data and load_parquet_data_streaming functions,
 including optional pyarrow dependency handling.
 """
 
+import importlib
 from pathlib import Path
 
 import pytest
@@ -453,11 +454,10 @@ def test_parquet_support_flag():
     assert isinstance(HAS_PARQUET_SUPPORT, bool)
 
 
-@pytest.mark.skipif(
-    HAS_PARQUET_SUPPORT, reason="Test requires pyarrow NOT installed"
-)
-def test_load_parquet_data_without_pyarrow():
+def test_load_parquet_data_without_pyarrow(monkeypatch):
     """Test DataSourceError when pyarrow not installed."""
+    module = importlib.import_module("pain001.parquet.load_parquet_data")
+    monkeypatch.setattr(module, "HAS_PARQUET_SUPPORT", False)
     with pytest.raises(DataSourceError) as exc_info:
         load_parquet_data("dummy.parquet")
 
@@ -466,11 +466,10 @@ def test_load_parquet_data_without_pyarrow():
     assert "pip install pyarrow" in error_msg
 
 
-@pytest.mark.skipif(
-    HAS_PARQUET_SUPPORT, reason="Test requires pyarrow NOT installed"
-)
-def test_load_parquet_data_streaming_without_pyarrow():
+def test_load_parquet_data_streaming_without_pyarrow(monkeypatch):
     """Test DataSourceError when pyarrow not installed (streaming)."""
+    module = importlib.import_module("pain001.parquet.load_parquet_data")
+    monkeypatch.setattr(module, "HAS_PARQUET_SUPPORT", False)
     with pytest.raises(DataSourceError) as exc_info:
         list(load_parquet_data_streaming("dummy.parquet"))
 
@@ -564,7 +563,6 @@ def test_parquet_path_validation_failure_is_a_file_not_found(tmp_path) -> None:
 
 def test_parquet_support_check_when_pyarrow_is_absent(monkeypatch) -> None:
     """Without pyarrow the loaders explain how to install it."""
-    import importlib
 
     import pytest
 

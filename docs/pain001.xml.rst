@@ -1,6 +1,8 @@
 pain001.xml package
 ===================
 
+.. automodule:: pain001.xml
+
 Submodules
 ----------
 
@@ -72,14 +74,6 @@ pain001.xml.xml\_to\_string module
 ----------------------------------
 
 .. automodule:: pain001.xml.xml_to_string
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.xml
    :members:
    :undoc-members:
    :show-inheritance:

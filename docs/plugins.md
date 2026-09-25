@@ -327,17 +327,34 @@ Shipped under this contract so far:
 - The `anti-duplicate` scheme — cross-record duplicate detection, built
   in and composable with every other scheme (#183).
 
-Still to come, tracked as its own roadmap issue:
+The optional `pain001[rules]` extra supplies request-local CEL policies
+through `AbstractScheme`; see [custom rules](custom-rules.md). Policies are
+not installed into the global registry and do not leak across REST requests.
 
-- `pain001-scheme-cel` — custom YAML rules over CEL (#184).
+Whole-file and streaming loaders use registered instances, including overrides
+of built-in names. Schema batch validation runs registered validator plugins
+after its schema checks; errors block the batch. `validate_data` remains the
+schema-only primitive for plugin implementations. `validate_scheme` accepts
+registered profiles and forwards the selected message type. The default
+file-generation path uses the registered `xml-file` writer without rewriting
+the rendered XML.
+
+Discovery failures emit a structured warning with `plugin_name`, `plugin_kind`,
+`exception_class` and `traceback_hash`; exception messages and raw tracebacks
+are not logged because they can contain payment data. Overrides emit a warning
+visible on stderr. `pain001 plugins disable NAME` prints the shell instruction
+for the existing environment-variable escape hatch; it does not edit settings
+or claim to change its parent shell's environment.
 
 ---
 
 ## Going further
 
-- **Cookiecutter template:** `sebastienrousseau/pain001-plugin-template`
+- **Cookiecutter template:**
+  [`pain001-plugin-template`](https://github.com/sebastienrousseau/pain001-plugin-template)
   scaffolds a plugin repo with CI, test harness, and the entry-point
-  declaration pre-wired *(in progress)*.
+  declaration pre-wired. Its tests render, install and discover a real package.
+  Independent external contributor review remains required before locking v1.0.
 - **Reference plugin:** any of the five built-in adapters in
   [`pain001/plugins/_builtins.py`](../pain001/plugins/_builtins.py).
 - **Contract source:**

@@ -514,8 +514,12 @@ def generate_xml(
                 f"Output path outside working directory: {safe_xml_path}"
             )
 
-    with open(safe_xml_path, "w", encoding="utf-8") as xml_file:  # nosec B108
-        xml_file.write(xml_content)
+    from pain001.plugins.registry import registry as plugin_registry
+
+    writer = plugin_registry.get_writer("xml-file")
+    if writer is None:
+        raise ValueError("The xml-file writer plugin is disabled")
+    safe_xml_path = writer.write(xml_content, safe_xml_path)
 
     emit_metric_event(
         "xml_generated",

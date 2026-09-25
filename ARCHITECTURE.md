@@ -81,8 +81,8 @@ input file / list[dict]
 
 ## Where to look first
 
-- Runnable, per-feature examples: [`examples/`](examples/).
-- Editor extension client: [`editors/vscode/`](editors/vscode/).
-- Scheme rule catalogue: [`SCHEMES.md`](SCHEMES.md).
-- Release process: [`RELEASING.md`](RELEASING.md).
-- Contributing: [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- Runnable, per-feature examples: [`examples/`](https://github.com/sebastienrousseau/pain001/blob/main/examples/).
+- Editor extension client: [`editors/vscode/`](https://github.com/sebastienrousseau/pain001/blob/main/editors/vscode/).
+- Scheme rule catalogue: [`SCHEMES.md`](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md).
+- Release process: [`RELEASING.md`](https://github.com/sebastienrousseau/pain001/blob/main/RELEASING.md).
+- Contributing: [`CONTRIBUTING.md`](https://github.com/sebastienrousseau/pain001/blob/main/CONTRIBUTING.md).

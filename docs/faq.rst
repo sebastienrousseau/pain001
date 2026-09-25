@@ -20,19 +20,14 @@ Pain001 is designed for:
 
 **Is Pain001 production-ready?**
 
-Yes! Pain001 has:
-- 98.55% test coverage with 568 tests
-- Enterprise-grade error handling
-- Security best practices (XXE protection, SQL injection prevention)
-- Used in production payment systems
+CI enforces 100% line and branch coverage and security checks. Passing
+those gates is not certification for a bank or production deployment;
+validate your bank-specific requirements and operational controls.
 
 **What Python versions are supported?**
 
-Pain001 requires Python 3.9 or higher. It's tested on:
-- Python 3.9
-- Python 3.10
-- Python 3.11
-- Python 3.12
+Pain001 requires Python 3.10 or higher. CI tests Python 3.10–3.14 on Linux;
+development uses Python 3.12. See the toolchain policy for floor changes.
 
 **How much does Pain001 cost?**
 

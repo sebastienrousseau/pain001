@@ -33,6 +33,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pain001.plugins._registration import BuiltinRegistry
 from pain001.plugins._version import PAIN001_API_VERSION
 from pain001.plugins.contracts import (
     LoaderResult,
@@ -42,7 +43,7 @@ from pain001.plugins.contracts import (
 )
 
 if TYPE_CHECKING:
-    from pain001.plugins.registry import PluginRegistry
+    from pain001.validation._scheme_rules import SchemeValidationResult
 
 
 def _pain001_version() -> str:
@@ -288,11 +289,11 @@ class _ProfileScheme:
         and apply the same rules to every message type they support.
         """
         del message_type  # Contract parameter; profiles are name-selected.
-        from pain001.validation.schemes import (  # noqa: PLC0415
+        from pain001.validation._scheme_rules import (  # noqa: PLC0415
             remediation_for,
         )
 
-        legacy = self._profile.validate(rows)
+        legacy = self.validate_legacy(rows)
         findings = [
             SchemeFinding(
                 row_index=v.index,
@@ -305,6 +306,14 @@ class _ProfileScheme:
             for v in legacy.violations
         ]
         return SchemeResult(is_valid=legacy.is_valid, findings=findings)
+
+    def validate_legacy(
+        self, rows: list[dict[str, Any]]
+    ) -> SchemeValidationResult:
+        """Preserve legacy findings for callers of ``validate_scheme``."""
+        from typing import cast
+
+        return cast("SchemeValidationResult", self._profile.validate(rows))
 
 
 # ---------------------------------------------------------------------------
@@ -345,7 +354,7 @@ _BUILTIN_LOADERS = (
 )
 
 
-def register_all(reg: PluginRegistry) -> None:
+def register_all(reg: BuiltinRegistry) -> None:
     """Register every built-in plugin with ``reg``.
 
     Called by the registry on first lookup so plugin discovery happens
@@ -365,8 +374,8 @@ def register_all(reg: PluginRegistry) -> None:
     # Scheme profiles. Imported here rather than at module scope so the
     # rulebook module (and its Decimal/regex tables) is only paid for by
     # processes that actually look a plugin up.
+    from pain001.validation._scheme_rules import PROFILES  # noqa: PLC0415
     from pain001.validation.rails import DESCRIPTIONS  # noqa: PLC0415
-    from pain001.validation.schemes import PROFILES  # noqa: PLC0415
 
     for name, profile in PROFILES.items():
         reg.register_scheme(

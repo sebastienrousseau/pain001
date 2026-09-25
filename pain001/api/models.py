@@ -59,6 +59,13 @@ class MessageType(str, Enum):
 class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
     """Request model for data validation."""
 
+    rules: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=65536,
+        description="Inline YAML CEL policy; requires pain001[rules]. Never a server-side file path.",
+    )
+
     data_source: DataSourceType = Field(
         ..., description="Type of data source (csv, sqlite, json, etc.)"
     )
@@ -95,6 +102,13 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
 
 class GenerateXMLRequest(BaseModel):
     """Request model for XML generation."""
+
+    rules: str | None = Field(
+        default=None,
+        min_length=1,
+        max_length=65536,
+        description="Inline YAML CEL policy enforced before generation; requires pain001[rules].",
+    )
 
     data_source: DataSourceType = Field(..., description="Type of data source")
     file_path: str = Field(..., description="Path to the data file")

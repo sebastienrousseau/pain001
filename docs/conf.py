@@ -25,7 +25,20 @@ extensions = [
 ]
 
 templates_path = ["_templates"]
-exclude_patterns = ["_build", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "_build",
+    "Thumbs.db",
+    ".DS_Store",
+    "readme-template.md",
+    "adr/template.md",
+]
+
+# Document definitions in their owning modules rather than indexing every
+# public re-export again through package __all__ declarations.
+autodoc_default_options = {"ignore-module-all": True}
+# Attribute prose remains visible as fields; autodoc owns the indexed member
+# declarations, avoiding duplicate targets for dataclass fields.
+napoleon_use_ivar = True
 
 # MyST Parser configuration
 myst_enable_checkboxes = True
@@ -50,7 +63,8 @@ html_theme_options = {
     "navbar_end": ["navbar-icon-links"],
     "navbar_persistent": [],
     "primary_sidebar_end": ["indices"],
-    "footer_items": ["copyright", "sphinx-version"],
+    "footer_start": ["copyright"],
+    "footer_end": ["sphinx-version"],
     "icon_links": [
         {
             "name": "GitHub",

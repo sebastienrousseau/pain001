@@ -18,14 +18,25 @@
 
 import sys
 import uuid
+from pathlib import Path
 
+import pytest
 from fastapi.testclient import TestClient
 
 from pain001 import __version__
 from pain001.api.app import app
 from pain001.api.job_manager import JobStatus, job_manager
+from pain001.constants import TEMPLATES_DIR
 
 client = TestClient(app)
+
+
+@pytest.fixture
+def valid_payment_file():
+    """Use the checked-in synthetic fixture; missing data is a failure."""
+    source = TEMPLATES_DIR / "pain.001.001.03" / "template.csv"
+    assert source.is_file()
+    return str(source)
 
 
 class TestHealthEndpoint:
@@ -190,59 +201,37 @@ class TestSyncGenerationEndpoint:
         else:
             assert "detail" in data
 
-    def test_generate_successful_xml(self):
+    def test_generate_successful_xml(self, valid_payment_file, tmp_path):
         """Test successful XML generation with existing test data."""
-        # Use existing test file that we know is valid
-        import os
-
-        test_data_path = os.path.join(
-            os.path.dirname(__file__), "data", "valid_data_unique.csv"
-        )
-
-        if not os.path.exists(test_data_path):
-            # Skip if test data doesn't exist
-            import pytest
-
-            pytest.skip("Test data file not found")
-
         response = client.post(
             "/api/generate",
             json={
-                "file_path": test_data_path,
+                "file_path": valid_payment_file,
                 "data_source": "csv",
                 "message_type": "pain.001.001.03",
+                "output_dir": str(tmp_path),
             },
         )
         assert response.status_code == 200
         data = response.json()
-        # With valid test data, this should succeed
-        if data["success"]:
-            assert "successfully" in data["message"].lower()
-            assert data["file_path"] is not None
-        else:
-            # If it fails, it should have validation errors
-            assert "validation_errors" in data
+        assert data["success"] is True, data
+        assert "successfully" in data["message"].lower()
+        output = Path(data["file_path"])
+        assert output.is_relative_to(tmp_path)
+        assert "pain.001.001.03" in output.read_text(encoding="utf-8")
 
-    def test_generate_with_validate_only_real_data(self):
+    def test_generate_with_validate_only_real_data(
+        self, valid_payment_file, tmp_path
+    ):
         """Test validate-only mode with real valid data."""
-        import os
-
-        test_data_path = os.path.join(
-            os.path.dirname(__file__), "data", "valid_data_unique.csv"
-        )
-
-        if not os.path.exists(test_data_path):
-            import pytest
-
-            pytest.skip("Test data file not found")
-
         response = client.post(
             "/api/generate",
             json={
-                "file_path": test_data_path,
+                "file_path": valid_payment_file,
                 "data_source": "csv",
                 "message_type": "pain.001.001.03",
                 "validate_only": True,
+                "output_dir": str(tmp_path),
             },
         )
         assert response.status_code == 200
@@ -250,8 +239,8 @@ class TestSyncGenerationEndpoint:
         assert (
             data["file_path"] is None
         )  # No XML generated in validate-only mode
-        # Either success (validated) or validation errors
-        assert "success" in data
+        assert data["success"] is True, data
+        assert list(tmp_path.iterdir()) == []
 
 
 class TestValidateEndpoint:
@@ -299,36 +288,21 @@ class TestValidateEndpoint:
             # CSV validation error is also valid
             assert "detail" in data
 
-    def test_validate_success(self):
+    def test_validate_success(self, valid_payment_file):
         """Test successful validation with existing test data."""
-        # Use existing test file
-        import os
-
-        test_data_path = os.path.join(
-            os.path.dirname(__file__), "data", "valid_data_unique.csv"
-        )
-
-        if not os.path.exists(test_data_path):
-            # Skip if test data doesn't exist
-            import pytest
-
-            pytest.skip("Test data file not found")
-
         response = client.post(
             "/api/validate",
             json={
-                "file_path": test_data_path,
+                "file_path": valid_payment_file,
                 "data_source": "csv",
                 "message_type": "pain.001.001.03",
             },
         )
         assert response.status_code == 200
         data = response.json()
-        # Valid or invalid doesn't matter - testing endpoint works
-        assert "is_valid" in data
-        assert "total_rows" in data
+        assert data["is_valid"] is True, data
         assert data["total_rows"] > 0
-        assert "errors" in data
+        assert data["errors"] == []
 
 
 class TestJobStatusEndpoint:
@@ -574,53 +548,40 @@ class TestAsyncGenerationEndpoint:
         assert job.status == JobStatus.FAILED
         assert job.error is not None
 
-    def test_async_generation_with_valid_data(self):
+    def test_async_generation_with_valid_data(
+        self, valid_payment_file, tmp_path
+    ):
         """Test async generation processes successfully with valid data."""
-        # Use existing test file
-        import os
-
-        test_data_path = os.path.join(
-            os.path.dirname(__file__), "data", "valid_data_unique.csv"
-        )
-
-        if not os.path.exists(test_data_path):
-            import pytest
-
-            pytest.skip("Test data file not found")
-
-        response = client.post(
-            "/api/generate/async",
-            json={
-                "file_path": test_data_path,
-                "data_source": "csv",
-                "message_type": "pain.001.001.03",
-            },
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "job_id" in data
-        assert data["status"] == "accepted"
-
-        job_id = data["job_id"]
-
-        # Wait for async processing
         import time
 
-        for _ in range(20):  # Wait up to 2 seconds
-            job = job_manager.get_job(job_id)
-            assert job is not None
-            if job.status in [JobStatus.SUCCESS, JobStatus.FAILED]:
-                break
-            time.sleep(0.1)
-
-        # Check final status
-        job = job_manager.get_job(job_id)
-        assert job is not None
-        # May succeed or fail depending on schema validation
-        assert job.status in [JobStatus.SUCCESS, JobStatus.FAILED]
-
-        # Cleanup
-        job_manager.cancel_job(job_id)
+        # Keep the event loop alive between requests, like a running server.
+        with TestClient(app) as running_client:
+            response = running_client.post(
+                "/api/generate/async",
+                json={
+                    "file_path": valid_payment_file,
+                    "data_source": "csv",
+                    "message_type": "pain.001.001.03",
+                    "output_dir": str(tmp_path),
+                },
+            )
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "accepted"
+            job_id = data["job_id"]
+            try:
+                for _ in range(50):  # Wait up to five seconds.
+                    job = job_manager.get_job(job_id)
+                    assert job is not None
+                    if job.status in [JobStatus.SUCCESS, JobStatus.FAILED]:
+                        break
+                    time.sleep(0.1)
+                assert job.status == JobStatus.SUCCESS, job.error
+                download = running_client.get(f"/api/download/{job_id}")
+                assert download.status_code == 200
+                assert b"pain.001.001.03" in download.content
+            finally:
+                job_manager.cancel_job(job_id)
 
     def test_async_generation_with_invalid_data(self, tmp_path):
         """Test async generation fails validation with invalid data."""

@@ -32,6 +32,9 @@ from mcp.server.mcpserver import MCPServer
 
 from pain001 import generate_xml_string, validate_scheme
 from pain001.constants import TEMPLATES_DIR, valid_xml_types
+from pain001.validation.corrections import (
+    suggest_record_fix as _suggest_record_fix,
+)
 from pain001.validation.schema_validator import SchemaValidator
 
 mcp = MCPServer("pain001")
@@ -170,6 +173,26 @@ def validate_payment_scheme(
         "is_valid": result.is_valid,
         "violations": [v.as_dict() for v in result.violations],
     }
+
+
+@mcp.tool()
+def suggest_record_fix(
+    record: dict[str, Any],
+    validation_error: dict[str, Any],
+    message_type: str = "pain.001.001.03",
+) -> dict[str, Any]:
+    """Suggest deterministic, review-only patches to non-financial fields.
+
+    Args:
+        record: One payment record, which is never mutated.
+        validation_error: A structured error with field and rule keys.
+        message_type: Bundled schema used for authoritative field limits.
+
+    Returns:
+        Candidate patches, or a structured cannot_autofix reason. Never
+        proposes IBAN, BIC, account, amount or currency changes.
+    """
+    return _suggest_record_fix(record, validation_error, message_type)
 
 
 @mcp.resource("pain001://schema/{message_type}")

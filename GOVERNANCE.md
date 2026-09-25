@@ -40,7 +40,23 @@ Every change must pass the full quality gate (tests at the coverage floor,
 `mypy --strict`, ruff, interrogate, pydoclint, bandit, and the security
 scanners) before merge — this is enforced in CI, not by trust.
 
-## Releases
+## Solo-maintainer review policy
+
+On 2026-09-25 the maintainer approved a solo-maintainer workflow for `main`:
+PRs remain mandatory, with zero required approving reviews and no mandatory
+CODEOWNER review. Administrator enforcement, existing required status checks,
+conversation resolution, and prohibitions on force pushes and deletion remain
+enabled. CODEOWNERS still routes optional reviews.
+
+This supersedes the earlier same-day one-review/CODEOWNER requirement. It
+does not provide independent review or resolve historical CodeReview findings.
+Governance alerts remain open. Independent external plugin-author validation
+in issue #179 remains outstanding before a v1.0 plugin-contract lock.
+
+Agents need explicit authorization naming a particular PR before merging into
+main; green checks alone do not authorize a merge.
+
+## Release process
 
 Releases follow [`RELEASING.md`](RELEASING.md). The project uses a
 monotonic pre-1.0 version line (`0.0.x`, advancing to `0.1.0` only after

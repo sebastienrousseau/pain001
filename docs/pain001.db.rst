@@ -1,6 +1,8 @@
 pain001.db package
 ==================
 
+.. automodule:: pain001.db
+
 Submodules
 ----------
 
@@ -24,14 +26,6 @@ pain001.db.validate\_db\_data module
 ------------------------------------
 
 .. automodule:: pain001.db.validate_db_data
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.db
    :members:
    :undoc-members:
    :show-inheritance:

@@ -28,7 +28,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 DATA_ROOT = Path(__file__).resolve().parent / "data"
 MARKET_ROOT = DATA_ROOT / "market"

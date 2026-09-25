@@ -368,6 +368,18 @@ def test_load_entry_point_plugins_skips_broken_plugin(caplog):
         "skipping loader plugin from entry-point boom" in r.getMessage()
         for r in caplog.records
     )
+    record = next(r for r in caplog.records if r.plugin_name == "boom")
+    assert record.plugin_kind == "loader"
+    assert record.exception_class == "RuntimeError"
+    assert len(record.traceback_hash) == 64
+    assert int(record.traceback_hash, 16) >= 0
+    assert "broken plugin" not in record.getMessage()
+    from pain001.logging_schema.formatter import JSONFormatter
+
+    payload = json.loads(JSONFormatter().format(record))
+    assert payload["plugin_name"] == "boom"
+    assert payload["exception_class"] == "RuntimeError"
+    assert payload["traceback_hash"] == record.traceback_hash
 
 
 def test_load_entry_point_plugins_registers_a_working_plugin():

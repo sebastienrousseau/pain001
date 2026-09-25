@@ -12,6 +12,21 @@ permissions:
   contents: read
 
 jobs:
+  documentation:
+    name: Documentation build (warnings as errors)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
+      - run: poetry install --no-interaction --all-extras --with docs
+      - run: poetry run python scripts/render_readme.py --check
+      - run: poetry run python scripts/generate_api_docs.py
+      - run: git diff --exit-code -- docs
+      - run: poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
+
   # Job 1: Mutation Testing (Fast on PR/Push, Full on Schedule)
   mutation-fast:
     runs-on: ubuntu-latest
@@ -68,6 +83,8 @@ jobs:
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make perf
+      - name: Time every self-checking feature example
+        run: poetry run python benches/bench_features.py > .benchmarks/features.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmarks
@@ -86,7 +103,7 @@ jobs:
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make cov
-      - uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+      - uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./coverage.xml
           fail_ci_if_error: false
@@ -113,6 +130,8 @@ jobs:
         run: poetry run python benches/bench_generate.py --quick
       - name: Run the corpus benchmark
         run: poetry run python benches/bench_corpus.py --quick
+      - name: Discover ten synthetic installed plugins
+        run: poetry run python benches/bench_plugin_discovery.py
 
   typecheck:
     runs-on: ubuntu-latest

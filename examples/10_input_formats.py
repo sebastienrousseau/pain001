@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 # Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,8 +17,8 @@
 """Load payment data from every supported input format.
 
 CSV, SQLite, JSON, and JSON Lines all normalise into the same rows, so
-the rest of the pipeline is identical regardless of source. (Parquet
-works the same way when the ``pain001[parquet]`` extra is installed.)
+the rest of the pipeline is identical regardless of source. Parquet
+is exercised too; install the ``pain001[parquet]`` extra to run this example.
 
 Run from the repository root::
 
@@ -30,16 +31,19 @@ import shutil
 import tempfile
 from pathlib import Path
 
+import pyarrow as pa
+import pyarrow.parquet as pq
+
 from pain001.constants import TEMPLATES_DIR
 from pain001.csv.load_csv_data import load_csv_data
-from pain001.data.loader import load_payment_data
+from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.db.load_db_data import load_db_data
 
 TEMPLATE_DIR = TEMPLATES_DIR / "pain.001.001.03"
 
 
 def main() -> None:
-    """Load the bundled sample through CSV, SQLite, JSON, and JSONL."""
+    """Load the bundled sample through CSV, SQLite, JSON, JSONL and Parquet."""
     csv_rows = load_payment_data(str(TEMPLATE_DIR / "template.csv"))
     print(f"CSV:    {len(csv_rows)} rows")
 
@@ -60,11 +64,24 @@ def main() -> None:
         jsonl_file.write_text("\n".join(json.dumps(r) for r in rows))
         jsonl_rows = load_payment_data(str(jsonl_file))
         print(f"JSONL:  {len(jsonl_rows)} rows")
+
+        parquet_file = Path(work) / "data.parquet"
+        pq.write_table(pa.Table.from_pylist(rows), parquet_file)
+        parquet_rows = load_payment_data(str(parquet_file))
+        streamed = [
+            row
+            for batch in load_payment_data_streaming(
+                str(parquet_file), chunk_size=1
+            )
+            for row in batch
+        ]
+        assert parquet_rows == streamed == rows
+        print(f"Parquet: {len(parquet_rows)} rows (eager and streaming agree)")
     finally:
         shutil.rmtree(work, ignore_errors=True)
 
     # Every format yields the same number of payment rows.
-    assert len({len(csv_rows), len(json_rows), len(jsonl_rows)}) == 1
+    assert csv_rows == json_rows == jsonl_rows == parquet_rows
     assert db_rows
 
     print("Input-formats example completed.")

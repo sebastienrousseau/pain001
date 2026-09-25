@@ -67,10 +67,10 @@ needs real files).
 
 ## Signature and provenance verification
 
-Release tags are SSH-signed with the key in [KEYS.asc](../KEYS.asc).
+Release tags are SSH-signed with the key in [KEYS.asc](https://github.com/sebastienrousseau/pain001/blob/main/KEYS.asc).
 Release assets on GitHub carry SHA-256 sums, a CycloneDX SBOM and SLSA
 provenance; the container image on GHCR carries a build attestation.
-Commands are in [pkg/VERIFY.md](../pkg/VERIFY.md).
+Commands are in [pkg/VERIFY.md](https://github.com/sebastienrousseau/pain001/blob/main/pkg/VERIFY.md).
 
 ## What is not shipped
 

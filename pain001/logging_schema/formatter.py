@@ -73,6 +73,17 @@ class JSONFormatter(logging.Formatter):
             if record.exc_info:
                 log_data["exception"] = self.formatException(record.exc_info)
 
+        # Only these diagnostic fields are accepted from plugin log extras.
+        # Arbitrary extras may contain credentials or payment record values.
+        for name in (
+            "plugin_name",
+            "plugin_kind",
+            "exception_class",
+            "traceback_hash",
+        ):
+            if hasattr(record, name):
+                log_data[name] = getattr(record, name)
+
         return json.dumps(log_data, sort_keys=True)
 
 

@@ -103,6 +103,7 @@ class SchemaValidator:
         # Validate message_type to prevent path traversal (CodeQL)
         if message_type not in valid_xml_types:
             raise ValueError(f"Invalid message type: {message_type}")
+        self.message_type = message_type
 
         # Validate path to prevent traversal attacks
         schema_file = schema_dir / f"{message_type}.schema.json"
@@ -281,16 +282,48 @@ class SchemaValidator:
         Returns:
             Tuple of (total_rows, valid_rows, errors).
             errors is a list of (row_index, error_list) tuples for invalid rows.
+
+
+        Raises:
+            ValueError: If a registered validator returns an inconsistent
+                validity flag or a finding outside the input batch.
         """
         total_rows = len(rows)
-        valid_rows = 0
         errors: list[tuple[int, list[ValidationError]]] = []
 
         for row_idx, row in enumerate(rows):
             row_errors = self.validate_data(row)
             if row_errors:
                 errors.append((row_idx, row_errors))
-            else:
-                valid_rows += 1
 
-        return total_rows, valid_rows, errors
+        from pain001.plugins.registry import registry as plugin_registry
+
+        by_row = dict(errors)
+        for info in plugin_registry.list_plugins("validator"):
+            plugin = plugin_registry.get_validator(info.meta.name)
+            if plugin is None:
+                raise ValueError(
+                    "Validator registry changed during validation"
+                )
+            result = plugin.validate(rows, message_type=self.message_type)
+            if result.is_valid != all(
+                f.severity != "error" for f in result.findings
+            ):
+                raise ValueError(
+                    f"Validator plugin {info.meta.name!r} returned an inconsistent result"
+                )
+            for finding in result.findings:
+                if not 0 <= finding.row_index < total_rows:
+                    raise ValueError(
+                        f"Validator plugin {info.meta.name!r} returned an invalid row index"
+                    )
+                if finding.severity == "error":
+                    by_row.setdefault(finding.row_index, []).append(
+                        ValidationError(
+                            finding.message,
+                            f"$.{finding.field}" if finding.field else "$",
+                            None,
+                            finding.rule,
+                        )
+                    )
+        return total_rows, total_rows - len(by_row), sorted(by_row.items())

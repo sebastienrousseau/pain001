@@ -1,9 +1,69 @@
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+
+- Request-local CEL policy rules for CLI and REST validation and generation,
+  including background jobs, through the optional `rules` extra (#184).
+- Deterministic, review-only record correction suggestions that never modify
+  account identifiers, amounts or currencies (#185).
+- Explicit SFTP upload with trusted host keys, staged publication, hash-based
+  retry reuse and optional `upload` dependencies (#186).
+
+### Fixed
+
+- Render the manual's examples directly from exercised scripts, replacing
+  obsolete field names, nonexistent exceptions and unsafe database sketches.
+- Replace four missing-fixture API skips with required successful generation,
+  validation and async-download assertions; exercise missing-Parquet support
+  deterministically even when the extra is installed.
+- Extend executable examples to CEL policies, review-only corrections, plugin
+  dispatch, Parquet streaming and async parity; smoke-run every benchmark and
+  assert generation/corpus outcomes rather than timing unchecked workloads.
+- Document feature-to-regression evidence and coverage limits, preserving the
+  100% line/branch gate and valid synthetic BICs in performance fixtures.
+- Copy every README-linked root guide into mutation workspaces and enforce
+  that inventory alongside the live-link check.
+- Regenerate the README from the canonical layout, document branch-only
+  features and companion acceptance, and align contributor/security guidance
+  with current gates and the approved solo-maintainer review policy.
+- Remove a stale YAML typing suppression and include the runtime lock in
+  mutation-test workspaces so PR-only quality gates can run.
+- Break the built-in/GPG registry dependency cycle and keep decrypted-loader
+  dispatch within its owning registry (code-scanning alerts #189–#192).
+- Separate pure scheme rules from registry-backed dispatch while preserving
+  public imports and qualified class names; resolve fresh branch-scan findings.
+- Honor registered loaders in whole-file and streaming dispatch, registered
+  scheme overrides and the XML writer; report safe structured plugin-load
+  failure diagnostics (#179).
+
+### Security
+
+- Hash-lock CI/container build backends, spelling tools and generated SDK
+  dependencies; install reviewed local sources offline without build isolation.
+- Regenerate base/API runtime locks from package metadata and check installed
+  dependency compatibility, correcting stale Click, Rich and Uvicorn pins.
+- Pin the suite-consistency actions and scan feature branches with CodeQL.
+- Add executable code-scanning triage evidence and supply-chain regression
+  checks. See `docs/code-scanning-audit.md` for findings requiring a main-branch
+  merge, independent review or an explicitly accepted upstream exception.
+
+### Changed
+
+- Update Hypothesis to 6.168.0, Twine to 7.0.0, Sphinx autodoc type hints
+  to 3.0.1, fakeredis to 2.38.0, lxml to 6.1.3, PyData Sphinx theme to
+  0.19.0, mutmut to 3.8.0, Ruff to 0.16.8 and Uvicorn to 0.53.0
+  (#280–#285, #293–#295).
+- Refresh the pinned GitHub Actions for coverage, CodeQL, Docker builds
+  and Java setup (#292).
 
 ## [0.0.70] - 2026-09-13
 

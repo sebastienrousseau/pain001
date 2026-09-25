@@ -12,910 +12,53 @@
 # implied. See the applicable Licence for the specific language
 # governing permissions and limitations.
 
-"""Payment-scheme rulebook validation, layered on top of XSD validation.
+"""Stable scheme API and plugin dispatch, separate from pure built-in rules."""
 
-XSD validation proves a message is *well-formed*; it does not prove the
-payment obeys the rules of the scheme it will be cleared through. A SEPA
-Credit Transfer, for example, must be in EUR, carry valid IBANs, and keep
-text inside the ISO 20022 character set — none of which the XSD enforces.
-
-This module adds that layer. A :class:`ValidationProfile` inspects the
-loaded payment rows and returns structured :class:`SchemeViolation`
-objects, so callers get machine-readable, row-addressable diagnostics
-instead of an opaque pass/fail. Each rule id maps to a remediation hint
-in :data:`REMEDIATIONS`.
-"""
-
-from abc import ABC, abstractmethod
-from collections.abc import Mapping
-from dataclasses import dataclass, field
-from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 from pain001.observability.otel import set_span_attributes, traced
-from pain001.validation.bic_validator import validate_bic_safe
-from pain001.validation.charset import find_invalid_characters
-from pain001.validation.iban_validator import validate_iban_safe
-
-# Shared SEPA rulebook limits.
-_SEPA_MAX_AMOUNT = Decimal("999999999.99")
-# SEPA Instant Credit Transfer (SCT Inst) per-transaction ceiling.
-_SCT_INST_MAX_AMOUNT = Decimal("100000.00")
-_SEPA_NAME_MAX_LEN = 70
-_SEPA_REMITTANCE_MAX_LEN = 140
-_SEPA_TEXT_FIELDS = (
-    "initiator_name",
-    "debtor_name",
-    "creditor_name",
-    "remittance_information",
+from pain001.validation._scheme_rules import (
+    PROFILES as PROFILES,
 )
-_SDD_SEQUENCE_TYPES = frozenset({"FRST", "RCUR", "OOFF", "FNAL"})
-_B2B_SEQUENCE_TYPES = frozenset({"FRST", "RCUR"})
-
-#: Remediation hint for each rule id, surfaced by the CLI ``--explain`` flag.
-REMEDIATIONS: dict[str, str] = {
-    "SEPA-CCY": "Set payment_currency to 'EUR'; SEPA clears euro only.",
-    "SEPA-DBTR-IBAN": "Provide a valid debtor IBAN (correct length and "
-    "mod-97 check digits for the country).",
-    "SEPA-CDTR-IBAN": "Provide a valid creditor IBAN (correct length and "
-    "mod-97 check digits for the country).",
-    "SEPA-BIC": "Supply a valid 8- or 11-character BIC, or omit it "
-    "entirely (SEPA is IBAN-only since 2016).",
-    "SEPA-AMT": "Use a positive amount with at most 2 decimal places, "
-    "not exceeding 999,999,999.99 EUR.",
-    "SEPA-INST-AMT": "SEPA Instant caps a single transfer at 100,000.00 "
-    "EUR; split larger amounts or use a standard SCT.",
-    "XB-CCY": "Provide a 3-letter ISO 4217 currency code (any currency).",
-    "XB-BIC": "Cross-border transfers require a valid creditor agent BIC "
-    "for routing.",
-    "SEPA-CHARSET": "Limit text to the ISO 20022 Latin set; use "
-    "sanitize_to_charset() to transliterate accents and symbols.",
-    "SEPA-LEN": "Shorten the field to its scheme maximum (70 for names, "
-    "140 for remittance information).",
-    "SEPA-SVCLVL": "Set service_level_code to 'SEPA' for a SEPA payment.",
-    "SDD-MNDT": "Provide mandate_id; a SEPA Direct Debit requires the "
-    "mandate reference agreed with the debtor.",
-    "SDD-SEQTP": "Set sequence_type to one of FRST, RCUR, OOFF, or FNAL.",
-    "B2B-SEQTP": (
-        "SEPA B2B accepts only FRST or RCUR sequence types "
-        "(OOFF and FNAL are CORE-only)."
-    ),
-    "B2B-CDTR-ID": (
-        "Provide creditor_id; the SEPA B2B rulebook requires the "
-        "Creditor Identifier (CI) issued in the creditor's country."
-    ),
-    "DUP-CREDITOR-DATE": (
-        "Remove or merge the duplicate rows. If both payments are "
-        "intended, give them distinct amounts or execution dates, or "
-        "split them across batches."
-    ),
-}
-
-
-def remediation_for(rule: str) -> str:
-    """Return the remediation hint for a rule id.
-
-    Args:
-        rule: The rule identifier (e.g. ``"SEPA-CCY"``).
-
-    Returns:
-        The remediation hint, or an empty string if the rule is unknown.
-    """
-    return REMEDIATIONS.get(rule, "")
-
-
-@dataclass(frozen=True)
-class SchemeViolation:
-    """A single scheme-rule breach found in a payment row.
-
-    Attributes:
-        rule: Stable identifier of the rule (e.g. ``"SEPA-CCY"``).
-        message: Human-readable description of the breach.
-        index: Zero-based index of the offending payment row.
-        field: Name of the offending field, when applicable.
-        severity: ``"error"`` (scheme would reject) or ``"warning"``.
-    """
-
-    rule: str
-    message: str
-    index: int
-    field: str | None = None
-    severity: str = "error"
-
-    @property
-    def remediation(self) -> str:
-        """Return the remediation hint for this violation's rule.
-
-        Returns:
-            The remediation hint, or an empty string if none is defined.
-        """
-        return remediation_for(self.rule)
-
-    def as_dict(self) -> dict[str, Any]:
-        """Return a JSON-serialisable representation of the violation.
-
-        Returns:
-            A dict with the rule, message, index, field, severity, and
-            remediation hint.
-        """
-        return {
-            "rule": self.rule,
-            "message": self.message,
-            "index": self.index,
-            "field": self.field,
-            "severity": self.severity,
-            "remediation": self.remediation,
-        }
-
-
-@dataclass
-class SchemeValidationResult:
-    """Outcome of validating payment rows against a scheme profile.
-
-    Attributes:
-        profile: Name of the profile that produced this result.
-        violations: All violations found, in row order.
-    """
-
-    profile: str
-    violations: list[SchemeViolation] = field(default_factory=list)
-
-    @property
-    def is_valid(self) -> bool:
-        """Whether the rows are free of error-severity violations.
-
-        Returns:
-            ``True`` when no ``"error"`` violations were found (warnings
-            are allowed), ``False`` otherwise.
-        """
-        return not any(v.severity == "error" for v in self.violations)
-
-    def __bool__(self) -> bool:
-        """Allow truthiness checks to mirror :attr:`is_valid`.
-
-        Returns:
-            The value of :attr:`is_valid`.
-        """
-        return self.is_valid
-
-
-def _check_currency(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require the payment currency to be EUR.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    currency = str(row.get("payment_currency", "")).upper()
-    if currency != "EUR":
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-CCY",
-                message=(
-                    f"SEPA requires EUR currency (got {currency or 'empty'})"
-                ),
-                index=index,
-                field="payment_currency",
-            )
-        )
-
-
-def _check_ibans(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require valid debtor and creditor IBANs.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    for field_name, rule in (
-        ("debtor_account_IBAN", "SEPA-DBTR-IBAN"),
-        ("creditor_account_IBAN", "SEPA-CDTR-IBAN"),
-    ):
-        iban = str(row.get(field_name, "")).strip()
-        if not iban or not validate_iban_safe(iban):
-            result.violations.append(
-                SchemeViolation(
-                    rule=rule,
-                    message=(
-                        f"{field_name} must be a valid IBAN "
-                        "(ISO 13616 / mod-97)"
-                    ),
-                    index=index,
-                    field=field_name,
-                )
-            )
-
-
-def _check_bic(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Validate the creditor agent BIC when one is supplied.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    bic = str(row.get("creditor_agent_BIC", "")).strip()
-    if bic and not validate_bic_safe(bic):
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-BIC",
-                message=f"creditor_agent_BIC '{bic}' is not a valid BIC",
-                index=index,
-                field="creditor_agent_BIC",
-            )
-        )
-
-
-def _check_currency_iso(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require a well-formed ISO 4217 currency (any currency, not just EUR).
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    currency = str(row.get("payment_currency", "")).strip()
-    if not (len(currency) == 3 and currency.isalpha()):
-        result.violations.append(
-            SchemeViolation(
-                rule="XB-CCY",
-                message=(
-                    "payment_currency must be a 3-letter ISO 4217 code "
-                    f"(got {currency or 'empty'})"
-                ),
-                index=index,
-                field="payment_currency",
-            )
-        )
-
-
-def _check_bic_required(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require a valid creditor agent BIC (mandatory for cross-border).
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    bic = str(row.get("creditor_agent_BIC", "")).strip()
-    if not bic or not validate_bic_safe(bic):
-        result.violations.append(
-            SchemeViolation(
-                rule="XB-BIC",
-                message=(
-                    "creditor_agent_BIC is required and must be a valid BIC "
-                    "for a cross-border transfer"
-                ),
-                index=index,
-                field="creditor_agent_BIC",
-            )
-        )
-
-
-def _check_service_level(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Warn when the service level is not declared as SEPA.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    svc = str(row.get("service_level_code", "SEPA")).upper()
-    if svc != "SEPA":
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-SVCLVL",
-                message=(f"service_level_code should be 'SEPA' (got {svc})"),
-                index=index,
-                field="service_level_code",
-                severity="warning",
-            )
-        )
-
-
-def _check_amount(
-    row: dict[str, Any],
-    index: int,
-    result: SchemeValidationResult,
-    max_amount: Decimal = _SEPA_MAX_AMOUNT,
-    cap_rule: str = "SEPA-AMT",
-) -> None:
-    """Enforce a positive amount within a scheme's per-transaction ceiling.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-        max_amount: The inclusive per-transaction ceiling for this scheme.
-        cap_rule: Rule id raised when the amount exceeds ``max_amount``
-            (lets stricter schemes, e.g. SCT Inst, flag their own cap).
-    """
-    raw = row.get("payment_amount")
-    amount: Decimal | None
-    try:
-        amount = Decimal(str(raw))
-    except (InvalidOperation, ValueError, TypeError):
-        amount = None
-    if amount is None or not amount.is_finite():
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-AMT",
-                message=f"payment_amount '{raw}' is not a valid amount",
-                index=index,
-                field="payment_amount",
-            )
-        )
-        return
-    if amount <= 0:
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-AMT",
-                message=f"payment_amount must be > 0 (got {amount})",
-                index=index,
-                field="payment_amount",
-            )
-        )
-        return
-    if amount > max_amount:
-        result.violations.append(
-            SchemeViolation(
-                rule=cap_rule,
-                message=(
-                    f"payment_amount must be <= {max_amount} EUR "
-                    f"(got {amount})"
-                ),
-                index=index,
-                field="payment_amount",
-            )
-        )
-        return
-    exponent = amount.as_tuple().exponent
-    if isinstance(exponent, int) and exponent < -2:
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-AMT",
-                message=(
-                    "payment_amount must have at most 2 decimal places "
-                    f"(got {amount})"
-                ),
-                index=index,
-                field="payment_amount",
-            )
-        )
-
-
-def _check_text_fields(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Enforce ISO 20022 charset and length on text fields.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    for field_name in _SEPA_TEXT_FIELDS:
-        value = str(row.get(field_name, ""))
-        if not value:
-            continue
-        invalid = find_invalid_characters(value)
-        if invalid:
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-CHARSET",
-                    message=(
-                        f"{field_name} contains characters outside the "
-                        f"ISO 20022 set: {' '.join(invalid)}"
-                    ),
-                    index=index,
-                    field=field_name,
-                )
-            )
-        max_len = (
-            _SEPA_REMITTANCE_MAX_LEN
-            if field_name == "remittance_information"
-            else _SEPA_NAME_MAX_LEN
-        )
-        if len(value) > max_len:
-            result.violations.append(
-                SchemeViolation(
-                    rule="SEPA-LEN",
-                    message=(
-                        f"{field_name} exceeds {max_len} characters "
-                        f"(got {len(value)})"
-                    ),
-                    index=index,
-                    field=field_name,
-                )
-            )
-
-
-def _check_mandate(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require a mandate id for a direct debit.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    if not str(row.get("mandate_id", "")).strip():
-        result.violations.append(
-            SchemeViolation(
-                rule="SDD-MNDT",
-                message="mandate_id is required for a SEPA Direct Debit",
-                index=index,
-                field="mandate_id",
-            )
-        )
-
-
-def _check_sequence_type(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require a valid direct-debit sequence type.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    seq = str(row.get("sequence_type", "")).upper()
-    if seq not in _SDD_SEQUENCE_TYPES:
-        result.violations.append(
-            SchemeViolation(
-                rule="SDD-SEQTP",
-                message=(
-                    "sequence_type must be one of "
-                    f"{', '.join(sorted(_SDD_SEQUENCE_TYPES))} (got "
-                    f"{seq or 'empty'})"
-                ),
-                index=index,
-                field="sequence_type",
-            )
-        )
-
-
-def _check_b2b_sequence_type(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require a B2B-allowed sequence type (FRST or RCUR only).
-
-    The SEPA Business-to-Business Direct Debit rulebook deliberately
-    omits ``OOFF`` and ``FNAL`` (which exist in CORE) because B2B
-    mandates are always part of a recurring relationship under a
-    mandate the debtor has actively countersigned through their bank.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    seq = str(row.get("sequence_type", "")).upper()
-    if seq not in _B2B_SEQUENCE_TYPES:
-        result.violations.append(
-            SchemeViolation(
-                rule="B2B-SEQTP",
-                message=(
-                    "sequence_type must be one of "
-                    f"{', '.join(sorted(_B2B_SEQUENCE_TYPES))} for "
-                    f"SEPA B2B (got {seq or 'empty'})"
-                ),
-                index=index,
-                field="sequence_type",
-            )
-        )
-
-
-def _check_creditor_identifier(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require the SEPA Creditor Identifier (CI) for a B2B collection.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    if not str(row.get("creditor_id", "")).strip():
-        result.violations.append(
-            SchemeViolation(
-                rule="B2B-CDTR-ID",
-                message=(
-                    "creditor_id is required for a SEPA B2B Direct "
-                    "Debit; provide the Creditor Identifier issued in "
-                    "the creditor's country"
-                ),
-                index=index,
-                field="creditor_id",
-            )
-        )
-
-
-class ValidationProfile(ABC):
-    """Base class for a payment-scheme rulebook validator."""
-
-    #: Stable, lowercase profile identifier (e.g. ``"sepa-sct"``).
-    name: str = ""
-
-    @abstractmethod
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against this scheme's rulebook.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-
-
-class SepaCreditTransferProfile(ValidationProfile):
-    """SEPA Credit Transfer (SCT) rulebook checks.
-
-    Enforces the core, machine-checkable SCT constraints that the XSD
-    cannot: EUR currency, valid debtor/creditor IBANs, optional but
-    well-formed BIC, the EUR amount ceiling, and ISO 20022 character-set
-    and length limits on text fields.
-    """
-
-    name = "sepa-sct"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the SEPA SCT rulebook.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        for index, row in enumerate(data):
-            _check_currency(row, index, result)
-            _check_ibans(row, index, result)
-            _check_bic(row, index, result)
-            _check_service_level(row, index, result)
-            _check_amount(row, index, result)
-            _check_text_fields(row, index, result)
-        return result
-
-
-class SepaDirectDebitProfile(ValidationProfile):
-    """SEPA Direct Debit (SDD) rulebook checks.
-
-    Adds the direct-debit-specific constraints — a mandate reference and a
-    valid sequence type — on top of the shared SEPA rules (EUR currency,
-    IBANs, BIC, amount ceiling, charset, and length).
-    """
-
-    name = "sepa-sdd"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the SEPA SDD rulebook.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        for index, row in enumerate(data):
-            _check_currency(row, index, result)
-            _check_ibans(row, index, result)
-            _check_bic(row, index, result)
-            _check_service_level(row, index, result)
-            _check_amount(row, index, result)
-            _check_text_fields(row, index, result)
-            _check_mandate(row, index, result)
-            _check_sequence_type(row, index, result)
-        return result
-
-
-class SepaB2BDirectDebitProfile(ValidationProfile):
-    """SEPA Business-to-Business Direct Debit (B2B) rulebook checks.
-
-    Adds the B2B-specific constraints - a creditor identifier and the
-    stricter B2B sequence-type set (FRST / RCUR only) - on top of the
-    shared SDD rules (mandate id, EUR, IBANs, BIC, amount ceiling,
-    charset, length). Use this profile when collecting from corporate
-    debtors under a B2B mandate; the consumer CORE rules
-    (``sepa-sdd``) are too permissive for B2B.
-    """
-
-    name = "sepa-b2b"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the SEPA B2B SDD rulebook.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        for index, row in enumerate(data):
-            _check_currency(row, index, result)
-            _check_ibans(row, index, result)
-            _check_bic(row, index, result)
-            _check_service_level(row, index, result)
-            _check_amount(row, index, result)
-            _check_text_fields(row, index, result)
-            _check_mandate(row, index, result)
-            _check_b2b_sequence_type(row, index, result)
-            _check_creditor_identifier(row, index, result)
-        return result
-
-
-class SepaInstantCreditTransferProfile(ValidationProfile):
-    """SEPA Instant Credit Transfer (SCT Inst) rulebook checks.
-
-    Identical to SEPA SCT but enforces the instant scheme's stricter
-    per-transaction ceiling of 100,000.00 EUR (rule ``SEPA-INST-AMT``).
-    """
-
-    name = "sepa-inst"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the SEPA SCT Inst rulebook.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        for index, row in enumerate(data):
-            _check_currency(row, index, result)
-            _check_ibans(row, index, result)
-            _check_bic(row, index, result)
-            _check_service_level(row, index, result)
-            _check_amount(
-                row,
-                index,
-                result,
-                max_amount=_SCT_INST_MAX_AMOUNT,
-                cap_rule="SEPA-INST-AMT",
-            )
-            _check_text_fields(row, index, result)
-        return result
-
-
-class CrossBorderCreditTransferProfile(ValidationProfile):
-    """Generic cross-border credit transfer checks (beyond SEPA).
-
-    A pragmatic, multi-currency rulebook for international credit transfers:
-    valid debtor/creditor IBANs, a well-formed ISO 4217 currency (any
-    currency, not only EUR), a **mandatory** creditor agent BIC (cross-border
-    routing needs it), a positive amount within the ISO ceiling, and ISO
-    20022 charset/length limits. It is intentionally generic rather than a
-    full CBPR+ implementation.
-    """
-
-    name = "xborder-ct"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the cross-border rulebook.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        for index, row in enumerate(data):
-            _check_currency_iso(row, index, result)
-            _check_ibans(row, index, result)
-            _check_bic_required(row, index, result)
-            _check_amount(row, index, result)
-            _check_text_fields(row, index, result)
-        return result
-
-
-#: ISO 4217 minor-unit exponents that differ from the default of two.
-#: Used to bucket amounts before comparing them for duplicates, so
-#: ``100`` and ``100.00`` collide while ``100.00`` and ``100.01`` do not.
-_CURRENCY_MINOR_UNITS: dict[str, int] = {
-    "BIF": 0,
-    "CLP": 0,
-    "DJF": 0,
-    "GNF": 0,
-    "ISK": 0,
-    "JPY": 0,
-    "KMF": 0,
-    "KRW": 0,
-    "PYG": 0,
-    "RWF": 0,
-    "UGX": 0,
-    "VND": 0,
-    "VUV": 0,
-    "XAF": 0,
-    "XOF": 0,
-    "XPF": 0,
-    "BHD": 3,
-    "IQD": 3,
-    "JOD": 3,
-    "KWD": 3,
-    "LYD": 3,
-    "OMR": 3,
-    "TND": 3,
-}
-_DEFAULT_MINOR_UNITS = 2
-
-
-def _minor_units(currency: str, overrides: Mapping[str, int]) -> int:
-    """Return the number of decimal places used to bucket ``currency``.
-
-    Args:
-        currency: Upper-cased ISO 4217 code (may be empty).
-        overrides: Caller-supplied precision overrides, keyed by code.
-
-    Returns:
-        The override when present, else the ISO 4217 minor unit for the
-        code, else the default of two.
-    """
-    if currency in overrides:
-        return overrides[currency]
-    return _CURRENCY_MINOR_UNITS.get(currency, _DEFAULT_MINOR_UNITS)
-
-
-def _duplicate_key(
-    row: dict[str, Any], overrides: Mapping[str, int]
-) -> tuple[str, str, str, str] | None:
-    """Build the exact-match key the anti-duplicate profile groups on.
-
-    The key is ``(creditor IBAN, bucketed amount, currency, execution
-    date)``. The IBAN is whitespace-stripped and upper-cased so
-    ``"de89 3704..."`` and ``"DE893704..."`` collide; the amount is
-    quantised to the currency's minor unit so ``100`` and ``100.00``
-    collide; the date is compared as its trimmed string form.
-
-    Args:
-        row: The payment row.
-        overrides: Per-currency precision overrides.
-
-    Returns:
-        The key, or ``None`` when the row lacks any of the three fields
-        or carries an unparsable amount (such rows cannot be duplicates
-        of anything and are left to the intra-record profiles to flag).
-    """
-    iban = "".join(str(row.get("creditor_account_IBAN") or "").split())
-    date = str(row.get("requested_execution_date") or "").strip()
-    raw_amount = row.get("payment_amount")
-    if not iban or not date or raw_amount is None or raw_amount == "":
-        return None
-    try:
-        amount = Decimal(str(raw_amount))
-    except (InvalidOperation, ValueError, TypeError):
-        return None
-    if not amount.is_finite():
-        return None
-    currency = (
-        str(row.get("payment_currency") or row.get("currency") or "")
-        .strip()
-        .upper()
-    )
-    places = _minor_units(currency, overrides)
-    bucketed = amount.quantize(
-        Decimal(1).scaleb(-places), rounding=ROUND_HALF_UP
-    )
-    return iban.upper(), str(bucketed), currency, date
-
-
-class AntiDuplicateProfile(ValidationProfile):
-    """Cross-record duplicate detection within a single batch.
-
-    Flags every group of two or more rows that share the same creditor
-    IBAN, the same amount, and the same requested execution date: the
-    signature of a payment that was keyed in (or exported) twice. Each
-    row in a group is reported once, with the row indices of its
-    partners in the message, so an operator can see both sides.
-
-    Unlike the SEPA and cross-border profiles this rulebook looks
-    *across* rows rather than at each row on its own, which is why it
-    is designed to compose: ``--scheme sepa-sct,anti-duplicate`` runs
-    both and reports the union of findings.
-
-    Matching is exact-key only. Amounts are bucketed to the currency's
-    ISO 4217 minor unit (two places for EUR, none for JPY, three for
-    KWD) so formatting noise does not hide a duplicate, but a one-cent
-    difference is a different payment. Rows missing any key field are
-    skipped; the intra-record profiles report those. The engine has no
-    memory between runs, so cross-batch deduplication is out of scope.
-
-    Attributes:
-        name: Stable profile identifier, ``"anti-duplicate"``.
-        rule: Rule id raised for every row in a duplicate group,
-            ``"DUP-CREDITOR-DATE"``.
-
-    Args:
-        precision_overrides: Optional mapping of ISO 4217 code to the
-            number of decimal places used to bucket amounts in that
-            currency, overriding the built-in minor-unit table.
-    """
-
-    name: str = "anti-duplicate"
-    rule: str = "DUP-CREDITOR-DATE"
-
-    def __init__(
-        self, precision_overrides: Mapping[str, int] | None = None
-    ) -> None:
-        self._precision_overrides: dict[str, int] = {
-            code.upper(): places
-            for code, places in (precision_overrides or {}).items()
-        }
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Group rows by their duplicate key and flag every group of two+.
-
-        Args:
-            data: Loaded payment rows (the normalised internal form).
-
-        Returns:
-            A :class:`SchemeValidationResult` with one
-            ``DUP-CREDITOR-DATE`` violation per row that has at least
-            one duplicate, in row order.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        groups: dict[tuple[str, str, str, str], list[int]] = {}
-        for index, row in enumerate(data):
-            key = _duplicate_key(row, self._precision_overrides)
-            if key is not None:
-                groups.setdefault(key, []).append(index)
-        for (iban, amount, currency, date), indices in groups.items():
-            if len(indices) < 2:
-                continue
-            amount_text = f"{amount} {currency}".strip()
-            for index in indices:
-                partners = ", ".join(str(i) for i in indices if i != index)
-                result.violations.append(
-                    SchemeViolation(
-                        rule=self.rule,
-                        message=(
-                            f"duplicate of row(s) {partners}: same "
-                            f"creditor IBAN {iban}, amount {amount_text} "
-                            f"and execution date {date}"
-                        ),
-                        index=index,
-                        field="creditor_account_IBAN",
-                    )
-                )
-        result.violations.sort(key=lambda v: v.index)
-        return result
-
-
-#: Registry of available scheme profiles, keyed by their ``name``.
-PROFILES: dict[str, ValidationProfile] = {
-    SepaCreditTransferProfile.name: SepaCreditTransferProfile(),
-    SepaDirectDebitProfile.name: SepaDirectDebitProfile(),
-    SepaB2BDirectDebitProfile.name: SepaB2BDirectDebitProfile(),
-    SepaInstantCreditTransferProfile.name: (
-        SepaInstantCreditTransferProfile()
-    ),
-    CrossBorderCreditTransferProfile.name: (
-        CrossBorderCreditTransferProfile()
-    ),
-    AntiDuplicateProfile.name: AntiDuplicateProfile(),
-}
+from pain001.validation._scheme_rules import (
+    REMEDIATIONS as REMEDIATIONS,
+)
+from pain001.validation._scheme_rules import (
+    AntiDuplicateProfile as AntiDuplicateProfile,
+)
+from pain001.validation._scheme_rules import (
+    CrossBorderCreditTransferProfile as CrossBorderCreditTransferProfile,
+)
+from pain001.validation._scheme_rules import (
+    SchemeValidationResult as SchemeValidationResult,
+)
+from pain001.validation._scheme_rules import (
+    SchemeViolation as SchemeViolation,
+)
+from pain001.validation._scheme_rules import (
+    SepaB2BDirectDebitProfile as SepaB2BDirectDebitProfile,
+)
+from pain001.validation._scheme_rules import (
+    SepaCreditTransferProfile as SepaCreditTransferProfile,
+)
+from pain001.validation._scheme_rules import (
+    SepaDirectDebitProfile as SepaDirectDebitProfile,
+)
+from pain001.validation._scheme_rules import (
+    SepaInstantCreditTransferProfile as SepaInstantCreditTransferProfile,
+)
+from pain001.validation._scheme_rules import (
+    ValidationProfile as ValidationProfile,
+)
+from pain001.validation._scheme_rules import (
+    _duplicate_key as _duplicate_key,
+)
+from pain001.validation._scheme_rules import (
+    _minor_units as _minor_units,
+)
+from pain001.validation._scheme_rules import (
+    remediation_for as remediation_for,
+)
 
 
 def _split_profile_spec(profile: str) -> list[str]:
@@ -939,7 +82,10 @@ def _split_profile_spec(profile: str) -> list[str]:
 
 @traced("pain001.validate.scheme")
 def validate_scheme(
-    data: list[dict[str, Any]], profile: str = "sepa-sct"
+    data: list[dict[str, Any]],
+    profile: str = "sepa-sct",
+    *,
+    message_type: str = "pain.001.001.03",
 ) -> SchemeValidationResult:
     """Validate payment rows against a named scheme profile.
 
@@ -950,6 +96,7 @@ def validate_scheme(
             to run several rulebooks and report the union of their
             findings. The combined result's ``profile`` joins the names
             with commas and its violations are ordered by row.
+        message_type: Message type passed to registered scheme plugins.
 
     Returns:
         A :class:`SchemeValidationResult` listing every violation.
@@ -973,27 +120,46 @@ def validate_scheme(
         >>> both.profile
         'sepa-sct,anti-duplicate'
     """
+    from pain001.plugins._builtins import _ProfileScheme
+    from pain001.plugins.registry import registry as plugin_registry
+
     names = _split_profile_spec(profile)
-    unknown = [name for name in names if name not in PROFILES]
+    registered = {
+        name: plugin
+        for name in names
+        if (plugin := plugin_registry.get_scheme(name)) is not None
+    }
+    unknown = [name for name in names if name not in registered]
     if not names or unknown:
-        available = ", ".join(sorted(PROFILES))
+        available = ", ".join(
+            info.meta.name for info in plugin_registry.list_plugins("scheme")
+        )
         offending = unknown[0] if unknown else profile
         raise ValueError(
             f"Unknown scheme profile '{offending}'. Available: {available}"
         )
-    profiles = [PROFILES[name] for name in names]
     set_span_attributes(
         **{
-            "pain001.scheme": ",".join(chosen.name for chosen in profiles),
+            "pain001.scheme": ",".join(names),
             "pain001.row_count": len(data),
         }
     )
-    if len(profiles) == 1:
-        return profiles[0].validate(data)
-    combined = SchemeValidationResult(
-        profile=",".join(chosen.name for chosen in profiles)
-    )
-    for chosen in profiles:
-        combined.violations.extend(chosen.validate(data).violations)
+    combined = SchemeValidationResult(profile=",".join(names))
+    for chosen in registered.values():
+        if isinstance(chosen, _ProfileScheme):
+            # Retain legacy punctuation while using the registered adapter.
+            combined.violations.extend(chosen.validate_legacy(data).violations)
+        else:
+            result = chosen.validate(data, message_type=message_type)
+            combined.violations.extend(
+                SchemeViolation(
+                    index=f.row_index,
+                    field=f.field,
+                    rule=f.rule,
+                    message=f.message,
+                    severity=f.severity,
+                )
+                for f in result.findings
+            )
     combined.violations.sort(key=lambda v: v.index)
     return combined

@@ -1,6 +1,8 @@
 pain001.api package
 ===================
 
+.. automodule:: pain001.api
+
 Submodules
 ----------
 
@@ -72,14 +74,6 @@ pain001.api.ui module
 ---------------------
 
 .. automodule:: pain001.api.ui
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.api
    :members:
    :undoc-members:
    :show-inheritance:

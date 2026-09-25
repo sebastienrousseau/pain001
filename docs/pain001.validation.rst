@@ -1,6 +1,8 @@
 pain001.validation package
 ==========================
 
+.. automodule:: pain001.validation
+
 Submodules
 ----------
 
@@ -20,10 +22,26 @@ pain001.validation.charset module
    :undoc-members:
    :show-inheritance:
 
+pain001.validation.corrections module
+-------------------------------------
+
+.. automodule:: pain001.validation.corrections
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pain001.validation.iban\_validator module
 -----------------------------------------
 
 .. automodule:: pain001.validation.iban_validator
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pain001.validation.policy module
+--------------------------------
+
+.. automodule:: pain001.validation.policy
    :members:
    :undoc-members:
    :show-inheritance:
@@ -56,14 +74,6 @@ pain001.validation.service module
 ---------------------------------
 
 .. automodule:: pain001.validation.service
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.validation
    :members:
    :undoc-members:
    :show-inheritance:

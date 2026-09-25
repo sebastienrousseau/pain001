@@ -14,11 +14,11 @@ Pain001 uses Hypothesis to fuzz:
 Mutation Testing
 ================
 
-Use ``mutmut`` with the repository ``mutmut.ini`` to focus on critical paths:
+Use mutmut 3 with ``[tool.mutmut]`` in ``pyproject.toml``:
 
 .. code-block:: bash
 
-   poetry run mutmut run
+   poetry run make mutate-fast
 
 Type Checking
 =============
@@ -27,5 +27,4 @@ Run mypy locally before pushing:
 
 .. code-block:: bash
 
-   poetry run mypy pain001 tests
-
+   poetry run make type

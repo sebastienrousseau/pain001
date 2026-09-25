@@ -16,6 +16,7 @@
     "MD050": false
   },
   "ignores": [
+    "docs/readme-template.md",
     "node_modules/**",
     ".venv/**",
     "docs/_build/**",

@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Build backends for offline, non-isolated installs of reviewed local source.
+-c build-test.txt
+build
+installer
+poetry-core
+setuptools
+wheel

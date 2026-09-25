@@ -1,6 +1,8 @@
 pain001 package
 ===============
 
+.. automodule:: pain001
+
 Subpackages
 -----------
 
@@ -29,6 +31,8 @@ Subpackages
    pain001.schemas
    pain001.security
    pain001.templates
+   pain001.test_fixtures
+   pain001.transport
    pain001.twins
    pain001.validation
    pain001.xml
@@ -72,14 +76,6 @@ pain001.suite module
 --------------------
 
 .. automodule:: pain001.suite
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001
    :members:
    :undoc-members:
    :show-inheritance:

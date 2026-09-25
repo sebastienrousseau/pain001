@@ -1,6 +1,8 @@
 pain001.twins package
 =====================
 
+.. automodule:: pain001.twins
+
 Submodules
 ----------
 
@@ -24,14 +26,6 @@ pain001.twins.schema module
 ---------------------------
 
 .. automodule:: pain001.twins.schema
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Module contents
----------------
-
-.. automodule:: pain001.twins
    :members:
    :undoc-members:
    :show-inheritance:
