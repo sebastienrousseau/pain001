@@ -14,14 +14,14 @@
 
 """Feature-matrix regression suite.
 
-One end-to-end regression guard per documented Pain001 feature, mapped to
-the README feature set. This complements the focused unit suite: it pins
-the *behaviour* of every user-facing capability so a future change cannot
-silently break a feature.
+End-to-end guards for the feature families listed below. This complements
+the focused unit suites, which cover further features and error cases;
+docs/verification-coverage.md maps the broader evidence without claiming
+exhaustive coverage of every possible input or feature combination.
 
 Coverage map (feature -> test class):
 
-- XML generation, all 11 message types ...... TestGenerationMatrix
+- XML generation, discovered message types .. TestGenerationMatrix
 - Input formats (CSV/SQLite/JSON/JSONL/Parquet) TestInputFormats
 - Library API (process_files, string, streaming) TestLibraryApi
 - CLI (generate, dry-run, streaming, discovery) TestCliFeatures
@@ -75,7 +75,7 @@ class TestGenerationMatrix:
     """Every supported message type generates valid ISO 20022 XML."""
 
     def test_all_message_types_are_present(self) -> None:
-        """The matrix covers all ten pain.001 versions plus pain.008."""
+        """The matrix includes all eleven pain.001 editions plus pain.008."""
         assert "pain.008.001.02" in ALL_MESSAGE_TYPES
         assert len([m for m in ALL_MESSAGE_TYPES if "pain.001" in m]) == 11
 

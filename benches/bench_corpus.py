@@ -115,6 +115,7 @@ def run(quick: bool) -> dict:
             if quick and edition not in ("pain.001.001.03", "pain.008.001.02"):
                 continue
             result = build(scenario, edition)
+            assert result.xml, (scenario.id, edition)
             seconds = _best(partial(build, scenario, edition), repeats)
             results["build"].append(
                 {
@@ -136,6 +137,10 @@ def run(quick: bool) -> dict:
             )
             if edition.startswith("pain.001."):
                 twin = to_iso_json(result.xml, edition)
+                assert validate_iso_json(twin, edition) == []
+                assert (
+                    to_iso_json(from_iso_json(twin, edition), edition) == twin
+                )
                 results["twin"].append(
                     {
                         "scenario": scenario.id,
@@ -162,6 +167,7 @@ def run(quick: bool) -> dict:
     for edition in editions:
         start = time.perf_counter()
         generated = build_coverage_set(edition)
+        assert generated.files and generated.report.complete, edition
         results["coverage_set"].append(
             {
                 "edition": edition,

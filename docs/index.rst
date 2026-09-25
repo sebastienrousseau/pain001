@@ -91,6 +91,7 @@ Contents
    POLICIES
    COMPARISON
    BENCHMARKS
+   verification-coverage
    issue-audit
    code-scanning-audit
    assurance-case

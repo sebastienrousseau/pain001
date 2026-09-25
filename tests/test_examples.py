@@ -31,14 +31,42 @@ EXAMPLES = sorted((REPO_ROOT / "examples").glob("[0-9]*.py"))
 
 def test_examples_discovered() -> None:
     """The glob must find the example scripts (guards against renames)."""
-    assert len(EXAMPLES) >= 16
+    assert len(EXAMPLES) >= 20
+
+
+def test_every_example_is_documented() -> None:
+    """A newly discovered workflow must have a runnable-guide entry."""
+    guide = (REPO_ROOT / "examples" / "README.md").read_text(encoding="utf-8")
+    for example in EXAMPLES:
+        assert f"`{example.name}`" in guide
+
+
+@pytest.mark.parametrize(
+    "benchmark_script",
+    sorted((REPO_ROOT / "benches").glob("bench_*.py")),
+    ids=lambda p: p.name,
+)
+def test_benchmark_smoke(benchmark_script: Path) -> None:
+    """Every benchmark executes real work and its semantic assertions."""
+    arguments = [sys.executable, str(benchmark_script)]
+    if benchmark_script.name in {"bench_generate.py", "bench_corpus.py"}:
+        arguments.append("--quick")
+    result = subprocess.run(
+        arguments,
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=300,
+        check=False,
+    )
+    assert result.returncode == 0, (
+        f"{benchmark_script.name}:\n{result.stdout}\n{result.stderr}"
+    )
 
 
 @pytest.mark.parametrize("example", EXAMPLES, ids=lambda p: p.name)
 def test_example_runs_cleanly(example: Path) -> None:
     """Each example exits 0 when run from the repository root."""
-    if "api" in example.name:
-        pytest.importorskip("fastapi")
     result = subprocess.run(  # nosec B603
         [sys.executable, str(example)],
         cwd=REPO_ROOT,

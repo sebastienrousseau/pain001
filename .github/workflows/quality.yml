@@ -83,6 +83,8 @@ jobs:
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make perf
+      - name: Time every self-checking feature example
+        run: poetry run python benches/bench_features.py > .benchmarks/features.json
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: benchmarks

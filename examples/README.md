@@ -1,6 +1,8 @@
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
 # Pain001 Examples
 
-Runnable, self-checking examples covering **every Pain001 feature**. Each
+Runnable, self-checking examples of the workflows listed below. Each
 script exits `0` on success and is executed in CI by
 `tests/test_examples.py`, so they cannot silently drift out of date.
 
@@ -21,19 +23,23 @@ python examples/01_generate_xml_file.py
 | `07_parse_bank_responses.py` | Parsing the messages banks send back (`pain.002` status reports, `camt.053` statements) and **building** a pain.002 that round-trips back through the parser |
 | `08_version_migration.py` | Mapping payment data between pain.001 versions with `VersionMapper` |
 | `09_streaming_large_batch.py` | Streaming generation: one validated XML file per input chunk |
-| `10_input_formats.py` | Loading the same data from CSV, SQLite, JSON, and JSON Lines |
+| `10_input_formats.py` | Loading the same data from CSV, SQLite, JSON, JSON Lines and Parquet, including streaming Parquet parity (`parquet` extra) |
 | `11_observability_metrics.py` | Metric callbacks (`register_metrics_callback`) for Prometheus/OpenTelemetry/log forwarding |
 | `12_mcp_tools.py` | The MCP server's tools called directly (run the server with `pain001-mcp`; requires `pip install pain001[mcp]`) |
 | `13_lsp_diagnostics.py` | The LSP diagnostic engine linting a CSV for bad IBAN/BIC/currency/charset and missing columns (editor server: `pain001-lsp`, `pip install pain001[lsp]`) |
 | `14_redis_distributed.py` | v0.0.53 Redis-backed durable job store (`RedisJobStore`) + cross-replica rate limiter (`RedisFixedWindowBackend`); fakeredis-driven so the script runs without a Redis daemon (requires `pip install pain001[redis]`) |
 | `15_example_corpus.py` | The example corpus: read API and coverage manifest, schema inventory and coverage of your own file, synthetic identifiers, building a scenario with an illustrative private overlay, the four-rung ladder and rail projection, ISO external code sets, the guideline derive tool on a synthetic guideline outside the repository, and `pain.008.001.08` generation |
 | `16_iso_json_twins.py` | The ISO JSON twin of a corpus file (RA 2025 convention), validation against the per-edition JSON Schema, editing in JSON and encoding back through the XSD, the schema rejecting a bad decimal, and the records twin with its measured gap and regeneration through the CSV pipeline |
+| `17_custom_policies.py` | Request-local CEL policies, exact decimal boundaries, warning severity and fail-closed errors (`rules` extra) |
+| `18_review_only_corrections.py` | Deterministic text suggestions, unchanged inputs and protected financial fields |
+| `19_plugin_dispatch.py` | A registered synthetic loader actually selected by eager and streaming input dispatch |
+| `20_async_generation.py` | Async loading/generation with byte-exact synchronous XML parity |
 
-Together these scripts exercise generation (all message types), every
-input format, the CLI suite, the REST API, scheme validation, the parsers,
-version migration, streaming, observability, the MCP tools, the LSP
-diagnostic engine, and the example corpus engine — i.e. the full public
-feature surface.
+Install the development environment with `poetry install --all-extras --with dev`
+before running the complete suite. Examples illustrate workflows; they do not
+prove every input, failure mode or feature combination. Focused regression
+tests cover additional negative paths. See [verification coverage](../docs/verification-coverage.md)
+for the evidence map and its limits.
 
 Sample inputs live in `data/`: `payments.csv` (a copy of the bundled
 `pain001/templates/pain.001.001.03/template.csv`, used by the CLI and

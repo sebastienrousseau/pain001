@@ -7,6 +7,12 @@ to produce `.benchmarks/results.json` with pytest-benchmark measurements and
 environment metadata. The quality workflow uploads benchmark artefacts.
 `benches/` also exercises generation and corpus operations.
 
+`poetry run python benches/bench_features.py` times every numbered example in
+a fresh process, failing on unsuccessful workloads. CI saves its environment
+metadata and measurements to `.benchmarks/features.json`. The full test gate
+smoke-runs every benchmark script. See [verification coverage](verification-coverage.md)
+for functional evidence and the distinction between timing and correctness.
+
 Compare runs only with recorded Python, dependency and hardware versions,
 equivalent synthetic inputs, and the same warm-up/iteration configuration.
 Passing a benchmark smoke test means it executes, not that a latency service

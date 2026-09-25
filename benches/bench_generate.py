@@ -53,6 +53,8 @@ import time
 import tracemalloc
 from pathlib import Path
 
+from defusedxml.ElementTree import parse
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pain001.core.core import (  # noqa: E402
@@ -120,6 +122,11 @@ def measure(rows: int, directory: Path) -> dict:
     start = time.perf_counter()
     written = streaming()
     streaming_seconds = time.perf_counter() - start
+    assert len(written) == (rows + CHUNK - 1) // CHUNK
+    assert (
+        sum(len(parse(path).findall(".//{*}CdtTrfTxInf")) for path in written)
+        == rows
+    ), "Streaming benchmark must preserve every transaction"
 
     return {
         "rows": rows,

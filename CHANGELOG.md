@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Render the manual's examples directly from exercised scripts, replacing
+  obsolete field names, nonexistent exceptions and unsafe database sketches.
+- Replace four missing-fixture API skips with required successful generation,
+  validation and async-download assertions; exercise missing-Parquet support
+  deterministically even when the extra is installed.
+- Extend executable examples to CEL policies, review-only corrections, plugin
+  dispatch, Parquet streaming and async parity; smoke-run every benchmark and
+  assert generation/corpus outcomes rather than timing unchecked workloads.
+- Document feature-to-regression evidence and coverage limits, preserving the
+  100% line/branch gate and valid synthetic BICs in performance fixtures.
 - Copy every README-linked root guide into mutation workspaces and enforce
   that inventory alongside the live-link check.
 - Regenerate the README from the canonical layout, document branch-only
