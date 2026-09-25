@@ -356,4 +356,6 @@ also_copy = [
     "SECURITY.md", "SCHEMES.md", "OPERATIONS.md", "LICENSE", "LICENSE-APACHE",
     "LICENSE-MIT", "Makefile", "Dockerfile", ".safety-policy.yml", ".github",
     "docs", "examples", "scenarios", "scripts", "benches", "requirements.txt",
+    "DEVELOPMENT.md", "GOVERNANCE.md", "ARCHITECTURE.md", "SUPPORT.md",
+    "RELEASING.md",
 ]

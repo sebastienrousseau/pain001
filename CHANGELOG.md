@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Copy every README-linked root guide into mutation workspaces and enforce
+  that inventory alongside the live-link check.
 - Regenerate the README from the canonical layout, document branch-only
   features and companion acceptance, and align contributor/security guidance
   with current gates and the approved solo-maintainer review policy.

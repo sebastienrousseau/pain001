@@ -8,6 +8,11 @@ from pathlib import Path
 
 from scripts.render_readme import render
 
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -38,6 +43,9 @@ def test_readme_is_current_and_has_canonical_headings() -> None:
     for link in re.findall(r"\]\(([^)]+)\)", text):
         if "://" not in link and not link.startswith("#"):
             assert (ROOT / link.split("#")[0]).exists(), link
+            with (ROOT / "pyproject.toml").open("rb") as source:
+                copied = tomllib.load(source)["tool"]["mutmut"]["also_copy"]
+            assert link.split("#")[0].split("/")[0] in copied, link
 
 
 def test_readme_quick_start_runs_verbatim(tmp_path: Path) -> None:
