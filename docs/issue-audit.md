@@ -14,7 +14,7 @@ pre-1.0 plugin contract. No issue is closed solely because code exists.
 | [#184](https://github.com/sebastienrousseau/pain001/issues/184) | CEL policy gates were missing from CLI and REST. | Bounded CEL policies implement request-local AbstractScheme composition across CLI, validation and synchronous/background generation. An IBAN cannot supply account currency; callers must use the explicit currency field. |
 | [#185](https://github.com/sebastienrousseau/pain001/issues/185) | The tool was absent; IBAN whitespace edits conflicted with the explicit hard-refusal criterion. | Core and companion MCP expose deterministic, review-only suggestions. Financial fields are always refused; lengths come from schemas, ambiguous dates are refused, and missing values receive marked placeholders. |
 | [#186](https://github.com/sebastienrousseau/pain001/issues/186) | Explicit SFTP delivery was absent. | Optional upload extra provides pre-authentication known-host/pin checks, exclusive staging, no-clobber rename, hash-based retry reuse and cleanup. Unit and real localhost SFTP tests cover byte-exact delivery and wrong-key refusal. |
-| [#187](https://github.com/sebastienrousseau/pain001/issues/187) | The requested mockbank repository was absent. | Separate service and local container are implemented. Real SFTP tests produce matching ACCP or RJCT/NARR within one second. Local gates pass with 100% coverage. Recurring GHCR publication requires explicit approval after automatic review blocked the publishing workflow. |
+| [#187](https://github.com/sebastienrousseau/pain001/issues/187) | The requested mockbank repository was absent. | Separate service and local container are implemented. Real SFTP tests produce matching ACCP or RJCT/NARR within one second. Local gates pass with 100% coverage. The maintainer explicitly approved recurring GHCR publication; the companion workflow now builds amd64 and arm64 images and publishes on main and feature-branch pushes after quality gates. |
 
 The literal demand in #180 to reject every General-format cell is narrower
 than its stated data-loss concern: text-valued IBANs retain their characters
@@ -31,3 +31,14 @@ Existing companion changes use `feat/v0.0.71`; new repositories start at
 unreleased `0.0.1` on `feat/v0.0.1`, following the portfolio's initial-version
 rule. Existing local companion edits were preserved through isolated clones.
 No release tags, public version bumps or merges into main are part of this work.
+
+Companion implementation branches:
+
+- [pain001-loader-xlsx](https://github.com/sebastienrousseau/pain001-loader-xlsx/tree/feat/v0.0.71)
+- [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp/tree/feat/v0.0.71)
+- [pain001-plugin-template](https://github.com/sebastienrousseau/pain001-plugin-template/tree/feat/v0.0.1)
+- [pain001-mockbank](https://github.com/sebastienrousseau/pain001-mockbank/tree/feat/v0.0.1)
+
+The authorized mockbank destination is
+`ghcr.io/sebastienrousseau/pain001-mockbank`, using `edge` and
+`sha-<full-commit-id>` development tags, not versioned releases.
