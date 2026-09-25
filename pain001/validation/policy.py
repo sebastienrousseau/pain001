@@ -202,10 +202,10 @@ def _load_rules(source: str) -> list[_Rule]:
             _check_expression(tree)
             # CEL supports custom scalar values at runtime. Decimal is kept
             # exact instead of being coerced to the library's binary double.
-            program = environment.program(
-                tree,
-                functions=cast("dict[str, CELFunction]", _FUNCTIONS),
+            functions: dict[str, CELFunction] = cast(
+                "dict[str, CELFunction]", _FUNCTIONS
             )
+            program = environment.program(tree, functions=functions)
         except (
             ValueError,
             TypeError,

@@ -374,8 +374,6 @@ def test_load_entry_point_plugins_skips_broken_plugin(caplog):
     assert len(record.traceback_hash) == 64
     assert int(record.traceback_hash, 16) >= 0
     assert "broken plugin" not in record.getMessage()
-    import json
-
     from pain001.logging_schema.formatter import JSONFormatter
 
     payload = json.loads(JSONFormatter().format(record))

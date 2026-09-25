@@ -23,6 +23,15 @@ workflow install policy and action references. GPG tests exercise distinct
 registries for whole-file and streaming dispatch. CodeQL now also runs on
 feature-branch pushes, using the existing query suite without exclusions.
 
+The first fresh branch analysis also exposed a scheme-dispatch cycle
+(#245–#251 and #192), a redundant test import (#252), a type-only import the
+scanner did not recognize inside a quoted cast (#253), and unparenthesized
+test-script concatenation (#254). The follow-up separates pure scheme rules
+from dispatch, preserves public aliases and qualified class names, removes the
+redundant import, makes the CEL function type explicit in an annotation, and
+makes the intended string joining explicit. No findings are hidden with query
+exclusions; see [ADR-0007](adr/0007-built-in-plugin-dependency-direction.md).
+
 Generated dependency locks live beside their `.in` inputs in
 `.github/requirements/`. Regenerate with Python 3.12 and
 `pip-compile --allow-unsafe --generate-hashes --strip-extras --output-file=NAME.txt NAME.in`.

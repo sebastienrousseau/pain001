@@ -43,7 +43,7 @@ from pain001.plugins.contracts import (
 )
 
 if TYPE_CHECKING:
-    from pain001.validation.schemes import SchemeValidationResult
+    from pain001.validation._scheme_rules import SchemeValidationResult
 
 
 def _pain001_version() -> str:
@@ -289,7 +289,7 @@ class _ProfileScheme:
         and apply the same rules to every message type they support.
         """
         del message_type  # Contract parameter; profiles are name-selected.
-        from pain001.validation.schemes import (  # noqa: PLC0415
+        from pain001.validation._scheme_rules import (  # noqa: PLC0415
             remediation_for,
         )
 
@@ -374,8 +374,8 @@ def register_all(reg: BuiltinRegistry) -> None:
     # Scheme profiles. Imported here rather than at module scope so the
     # rulebook module (and its Decimal/regex tables) is only paid for by
     # processes that actually look a plugin up.
+    from pain001.validation._scheme_rules import PROFILES  # noqa: PLC0415
     from pain001.validation.rails import DESCRIPTIONS  # noqa: PLC0415
-    from pain001.validation.schemes import PROFILES  # noqa: PLC0415
 
     for name, profile in PROFILES.items():
         reg.register_scheme(

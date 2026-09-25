@@ -1,6 +1,8 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 """Executable evidence for code-scanning triage and supply-chain fixes."""
 
+import ast
+import importlib
 import re
 import subprocess
 import sys
@@ -16,6 +18,55 @@ except ImportError:
     import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def test_scheme_exports_preserve_identity_and_qualified_names() -> None:
+    """Internal rule extraction preserves public objects and pickle paths."""
+    from pain001.validation import _scheme_rules, schemes
+
+    assert schemes.PROFILES is _scheme_rules.PROFILES
+    assert schemes.REMEDIATIONS is _scheme_rules.REMEDIATIONS
+    for name in (
+        "SchemeViolation",
+        "SchemeValidationResult",
+        "ValidationProfile",
+        "SepaCreditTransferProfile",
+        "SepaDirectDebitProfile",
+        "SepaB2BDirectDebitProfile",
+        "SepaInstantCreditTransferProfile",
+        "CrossBorderCreditTransferProfile",
+        "AntiDuplicateProfile",
+        "remediation_for",
+    ):
+        exported = getattr(schemes, name)
+        assert exported is getattr(_scheme_rules, name)
+        assert exported.__module__ == "pain001.validation.schemes"
+        assert (
+            getattr(importlib.import_module(exported.__module__), name)
+            is exported
+        )
+
+
+@pytest.mark.parametrize(
+    "relative",
+    [
+        "plugins/_builtins.py",
+        "plugins/builtins_gpg.py",
+        "validation/_scheme_rules.py",
+        "validation/rails.py",
+    ],
+)
+def test_builtin_rules_do_not_import_registry_dispatch(relative: str) -> None:
+    """Registration dependencies never point back at the dispatch facade."""
+    tree = ast.parse((ROOT / "pain001" / relative).read_text())
+    forbidden = {"pain001.plugins.registry", "pain001.validation.schemes"}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            assert node.module not in forbidden
+        elif isinstance(node, ast.Import):
+            assert not forbidden.intersection(
+                alias.name for alias in node.names
+            )
 
 
 @pytest.mark.parametrize("extra", [None, "api"])
@@ -53,17 +104,18 @@ def test_runtime_locks_satisfy_package_metadata(extra: str | None) -> None:
 
 def test_public_exports_resolve_without_eager_cli_import() -> None:
     """The PEP 562 main export resolves while ordinary imports stay lazy."""
-    subprocess.run(
+    script = "\n".join(
         [
-            sys.executable,
-            "-c",
-            "import sys, pain001; "
-            "assert 'pain001.__main__' not in sys.modules; "
-            "assert 'pain001.cli.cli' not in sys.modules; "
-            "assert all(hasattr(pain001, name) for name in pain001.__all__); "
-            "from pain001.__main__ import main; "
+            "import sys, pain001",
+            "assert 'pain001.__main__' not in sys.modules",
+            "assert 'pain001.cli.cli' not in sys.modules",
+            "assert all(hasattr(pain001, name) for name in pain001.__all__)",
+            "from pain001.__main__ import main",
             "assert pain001.main is main",
-        ],
+        ]
+    )
+    subprocess.run(
+        [sys.executable, "-c", script],
         check=True,
         capture_output=True,
         text=True,

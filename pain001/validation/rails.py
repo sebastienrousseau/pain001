@@ -40,15 +40,15 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from pain001.validation.bic_validator import validate_bic_safe
-from pain001.validation.iban_validator import validate_iban_safe
-from pain001.validation.schemes import (
+from pain001.validation._scheme_rules import (
     PROFILES,
     REMEDIATIONS,
     SchemeValidationResult,
     SchemeViolation,
     ValidationProfile,
 )
+from pain001.validation.bic_validator import validate_bic_safe
+from pain001.validation.iban_validator import validate_iban_safe
 
 #: Nacha Standard Entry Class codes a pain.001 may carry in LclInstrm/Cd.
 SEC_CODES: frozenset[str] = frozenset(

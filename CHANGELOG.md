@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Break the built-in/GPG registry dependency cycle and keep decrypted-loader
   dispatch within its owning registry (code-scanning alerts #189–#192).
+- Separate pure scheme rules from registry-backed dispatch while preserving
+  public imports and qualified class names; resolve fresh branch-scan findings.
 - Honor registered loaders in whole-file and streaming dispatch, registered
   scheme overrides and the XML writer; report safe structured plugin-load
   failure diagnostics (#179).
