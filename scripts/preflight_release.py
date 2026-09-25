@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 """Executable form of the RELEASING.md pre-flight checklist.
 
 Prose checklists get skipped; this one fails loudly. Run before tagging:
@@ -78,8 +79,19 @@ def main() -> int:
         help="also run the test suite, build and pip-audit (slow)",
     )
     args = ap.parse_args()
+    if args.tag and not args.full:
+        ap.error(
+            "--tag requires --full; publishing without full preflight is forbidden"
+        )
 
     print("Pre-flight checks (RELEASING.md):\n")
+
+    exceptions = run(sys.executable, "scripts/check_security_exceptions.py")
+    check(
+        "security exceptions are current (item 4)",
+        exceptions.returncode == 0,
+        exceptions.stdout.strip() or exceptions.stderr.strip(),
+    )
 
     # 6. version identical in the three files
     vs = versions()
@@ -176,10 +188,18 @@ def main() -> int:
     # tag must not already exist (locally or remotely)
     existing = run("git", "tag", "-l", f"v{version}").stdout.strip()
     check(f"tag v{version} does not exist locally", not existing)
-    remote_tag = run(
+    remote_tags = run(
         "git", "ls-remote", "--tags", "origin", f"refs/tags/v{version}"
-    ).stdout.strip()
-    check(f"tag v{version} does not exist on origin", not remote_tag)
+    )
+    check(
+        "remote tag inventory is reachable",
+        remote_tags.returncode == 0,
+        remote_tags.stderr.strip() if remote_tags.returncode else "",
+    )
+    check(
+        f"tag v{version} does not exist on origin",
+        not remote_tags.stdout.strip(),
+    )
 
     # signing configured — the workflow expects signed tags
     signing = run("git", "config", "--get", "user.signingkey").stdout.strip()
@@ -195,6 +215,25 @@ def main() -> int:
         )
         r = run("poetry", "build")
         check("package builds", r.returncode == 0)
+        r = run(
+            sys.executable,
+            "scripts/inspect_release.py",
+            "--name",
+            "pain001",
+            "--project",
+            "Pain001",
+            "--version",
+            version,
+            "--dist",
+            "dist",
+            "--output",
+            ".release",
+        )
+        check(
+            "built artifacts and checksum-bearing notes are current",
+            r.returncode == 0,
+            r.stdout.strip() or r.stderr.strip(),
+        )
         r = run(
             "poetry", "run", "pip-audit", "-r", "requirements.txt", "--no-deps"
         )
@@ -222,10 +261,32 @@ def main() -> int:
         if r.returncode != 0:
             print(f"{FAIL} tag creation failed: {r.stderr.strip()}")
             return 1
+        r = run(
+            sys.executable,
+            "scripts/inspect_release.py",
+            "--name",
+            "pain001",
+            "--project",
+            "Pain001",
+            "--version",
+            version,
+            "--dist",
+            "dist",
+            "--output",
+            ".release",
+            "--tag",
+            f"v{version}",
+        )
+        if r.returncode != 0:
+            print(f"{FAIL} signed-tag preflight failed: {r.stderr.strip()}")
+            print("The local tag was retained for inspection. Do not push it.")
+            return 1
         print(f"{OK} created signed tag v{version}")
         print(f"    push it with:  git push origin v{version}")
     else:
-        print(f"Next:  python3 scripts/preflight_release.py {version} --tag")
+        print(
+            f"Next:  python3 scripts/preflight_release.py {version} --full --tag"
+        )
     return 0
 
 

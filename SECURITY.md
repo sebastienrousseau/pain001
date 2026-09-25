@@ -11,8 +11,9 @@ While the project is pre-`1.0`, that means **the latest released
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.70` (latest) | Current | ✅ Yes |
-| `0.0.69` | Prior | ✅ Yes |
+| `0.0.71` (latest) | Current | ✅ Yes |
+| `0.0.70` | Prior | ✅ Yes |
+| `0.0.69` | Transitional legacy support | ✅ Yes — existing support retained pending announced withdrawal |
 | `0.0.68` | Transitional legacy support | ✅ Yes — existing support retained pending announced withdrawal |
 | `≤ 0.0.67` | Old | ❌ No — upgrade |
 
@@ -22,6 +23,14 @@ end-of-support for a 0.0.x release and the next coordinated release.
 
 The transitional row preserves the previous support commitment; correcting
 the omitted prior release does not silently withdraw support.
+
+## Accepted security exceptions
+
+Accepted risks are recorded in [the exception registry](docs/security-exceptions.json).
+Alerts #194, #199, #205 and #221 were accepted by the maintainer on
+2026-09-25, require review by **2026-10-25**, and expire on **2026-12-24**.
+CI and release preflight fail on a missed review or expiry. Renewal requires
+explicit maintainer acceptance; passing tests does not resolve these risks.
 
 ## Reporting a vulnerability
 
@@ -127,7 +136,7 @@ get the same signal CI does.
 ### Supply chain
 
 - **PyPI Trusted Publishing** (OIDC, no long-lived tokens) for all
-  four packages in the suite.
+  five packages in the coordinated suite.
 - **Sigstore attestations** generated for every wheel + sdist
   uploaded via `pypa/gh-action-pypi-publish`.
 - **Multi-arch Docker image** at `ghcr.io/sebastienrousseau/pain001`
@@ -168,10 +177,10 @@ Release tags additionally fire:
 
 - **Not a HSM substitute.** Don't store unencrypted IBANs or
   account numbers on disk for longer than the validation pass.
-- **Not a transport.** pain001 produces and validates files; it
-  does not send them. Use your bank's EBICS/SFTP/API channel; the
-  v0.0.56 roadmap's `pain001 upload --sftp` is the planned
-  closest-to-built-in path.
+- **Not a bank connectivity service.** The optional `upload` extra provides
+  explicit SFTP delivery with trusted host keys and staged publication.
+  Operators supply credentials and the bank's endpoint; delivery does not
+  prove bank acceptance or settlement. EBICS and bank APIs are not provided.
 - **Not a settlement engine.** XSD-valid does not mean the bank
   will accept the file (different settlement systems have different
   business rules; the `--scheme` rulebook flag covers the major

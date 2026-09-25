@@ -44,6 +44,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Verify security exception deadlines
+        run: python3 scripts/check_security_exceptions.py
       - name: ❯ Verify Version Sync
         run: |
           # Extract versions without executing code (no dependencies required)
@@ -165,6 +167,8 @@ jobs:
         run: |
           poetry build
           poetry run twine check dist/*
+          python scripts/inspect_release.py --name pain001 --project Pain001 \
+            --version "${GITHUB_REF_NAME#v}" --dist dist --output .release
 
       - name: ❯ Generate SBOM (CycloneDX + SPDX)
         # Enterprise vulnerability-management tools (Snyk, Black Duck,
@@ -198,6 +202,9 @@ jobs:
         # exactly the bug being fixed here. set -e makes that loud.
         run: |
           set -euo pipefail
+          python scripts/inspect_release.py --name pain001 --project Pain001 \
+            --version "${GITHUB_REF_NAME#v}" --dist dist --output .release \
+            --extra-artifacts sbom
           hashes=$( (cd dist && sha256sum -- *) ; (cd sbom && sha256sum -- *) )
           echo "$hashes"
           echo "hashes=$(printf '%s\n' "$hashes" | base64 -w0)" >> "$GITHUB_OUTPUT"
@@ -205,10 +212,11 @@ jobs:
       - name: ❯ Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
-          body_path: ${{ steps.release_notes.outputs.path }}
+          body_path: .release/release-notes.md
           files: |
             dist/*
             sbom/*
+            .release/SHA256SUMS
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

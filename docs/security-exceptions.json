@@ -1,0 +1,25 @@
+{
+  "license": "Apache-2.0 OR MIT",
+  "exceptions": [
+    {
+      "alerts": [194, 199],
+      "owner": "sebastienrousseau",
+      "accepted": "2026-09-25",
+      "review_due": "2026-10-25",
+      "expires": "2026-12-24",
+      "reason": "Maintainer-approved solo-maintainer workflow cannot provide independent approving reviews. These governance findings are accepted risks, not fixed defects.",
+      "controls": "Pull requests, required status checks, conversation resolution and administrator enforcement remain enabled; force pushes and branch deletion remain prohibited.",
+      "exit_condition": "Introduce an independent reviewer and reassess branch protection, or obtain a new explicit, time-bounded maintainer acceptance."
+    },
+    {
+      "alerts": [205, 221],
+      "owner": "sebastienrousseau",
+      "accepted": "2026-09-25",
+      "review_due": "2026-10-25",
+      "expires": "2026-12-24",
+      "reason": "Maintainer-approved SLSA generator v2.1.0 tag references are required by upstream provenance verification, which rejects SHA references.",
+      "controls": "Keep the exact supported version tag, review upstream security changes and verify release provenance; other actions remain SHA-pinned.",
+      "exit_condition": "Adopt upstream-supported immutable references when available, or obtain a new explicit, time-bounded maintainer acceptance."
+    }
+  ]
+}
