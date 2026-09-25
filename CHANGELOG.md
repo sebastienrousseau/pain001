@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Remove a stale YAML typing suppression and include the runtime lock in
+  mutation-test workspaces so PR-only quality gates can run.
 - Break the built-in/GPG registry dependency cycle and keep decrypted-loader
   dispatch within its owning registry (code-scanning alerts #189–#192).
 - Separate pure scheme rules from registry-backed dispatch while preserving

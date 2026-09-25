@@ -355,5 +355,5 @@ also_copy = [
     "conftest.py", ".gitignore", "README.md", "CHANGELOG.md", "CONTRIBUTING.md",
     "SECURITY.md", "SCHEMES.md", "OPERATIONS.md", "LICENSE", "LICENSE-APACHE",
     "LICENSE-MIT", "Makefile", "Dockerfile", ".safety-policy.yml", ".github",
-    "docs", "examples", "scenarios", "scripts", "benches",
+    "docs", "examples", "scenarios", "scripts", "benches", "requirements.txt",
 ]
