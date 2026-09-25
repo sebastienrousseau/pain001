@@ -20,9 +20,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Break the built-in/GPG registry dependency cycle and keep decrypted-loader
+  dispatch within its owning registry (code-scanning alerts #189–#192).
 - Honor registered loaders in whole-file and streaming dispatch, registered
   scheme overrides and the XML writer; report safe structured plugin-load
   failure diagnostics (#179).
+
+### Security
+
+- Hash-lock CI/container build backends, spelling tools and generated SDK
+  dependencies; install reviewed local sources offline without build isolation.
+- Regenerate base/API runtime locks from package metadata and check installed
+  dependency compatibility, correcting stale Click, Rich and Uvicorn pins.
+- Pin the suite-consistency actions and scan feature branches with CodeQL.
+- Add executable code-scanning triage evidence and supply-chain regression
+  checks. See `docs/code-scanning-audit.md` for findings requiring a main-branch
+  merge, independent review or an explicitly accepted upstream exception.
 
 ### Changed
 

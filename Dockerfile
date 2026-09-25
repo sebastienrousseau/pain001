@@ -1,4 +1,5 @@
 # syntax=docker/dockerfile:1.6
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 # Multi-stage build for a minimal pain001 image.
 #
 # The image ships the CLI (`pain001`) and, via the `api` extra, the
@@ -23,19 +24,24 @@ COPY LICENSE LICENSE-APACHE LICENSE-MIT ./
 COPY pain001 ./pain001
 COPY requirements.txt ./
 COPY .github/requirements/api.txt ./api-requirements.txt
+COPY .github/requirements/bootstrap.txt ./bootstrap-requirements.txt
 
 # Self-contained virtualenv; install the package plus the `api`
 # extra so `pain001 serve` works out of the box.
 #
 # Every third-party dependency comes from a hash-pinned file, then the
-# package itself is installed with --no-deps. Previously this was a bare
+# locally built wheel is installed without dependency resolution.
+# Previously this was a bare
 # `pip install ".[api]"`, which resolved fastapi and uvicorn unpinned at
 # image build time — the published image's web stack was whatever PyPI
 # served that day.
 RUN python -m venv /opt/venv \
     && /opt/venv/bin/pip install --require-hashes -r requirements.txt \
     && /opt/venv/bin/pip install --require-hashes -r api-requirements.txt \
-    && /opt/venv/bin/pip install --no-deps ".[api]"
+    && /opt/venv/bin/pip install --require-hashes -r bootstrap-requirements.txt \
+    && PIP_NO_INDEX=1 /opt/venv/bin/python -m build --wheel --no-isolation \
+    && /opt/venv/bin/python -m installer dist/*.whl \
+    && /opt/venv/bin/pip check
 
 
 FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de

@@ -33,6 +33,7 @@ from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+from pain001.plugins._registration import BuiltinRegistry
 from pain001.plugins._version import PAIN001_API_VERSION
 from pain001.plugins.contracts import (
     LoaderResult,
@@ -42,7 +43,6 @@ from pain001.plugins.contracts import (
 )
 
 if TYPE_CHECKING:
-    from pain001.plugins.registry import PluginRegistry
     from pain001.validation.schemes import SchemeValidationResult
 
 
@@ -354,7 +354,7 @@ _BUILTIN_LOADERS = (
 )
 
 
-def register_all(reg: PluginRegistry) -> None:
+def register_all(reg: BuiltinRegistry) -> None:
     """Register every built-in plugin with ``reg``.
 
     Called by the registry on first lookup so plugin discovery happens
