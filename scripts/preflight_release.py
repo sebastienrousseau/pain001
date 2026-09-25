@@ -93,11 +93,11 @@ def main() -> int:
         exceptions.stdout.strip() or exceptions.stderr.strip(),
     )
 
-    # 6. version identical in the three files
+    # 6. version identical in every declared version source
     vs = versions()
     unique = set(vs.values())
     check(
-        "version is identical in all three files (item 6)",
+        "version is identical in all version sources (item 6)",
         len(unique) == 1 and None not in unique,
         ", ".join(f"{k}={v}" for k, v in vs.items())
         if len(unique) != 1
@@ -180,7 +180,7 @@ def main() -> int:
         # before pre-flight, but running the checks on an unpushed
         # release commit is an easy order to fall into, and a bare
         # failure here reads like something is wrong with the release.
-        f"{ahead} unpushed commit(s) — push them before tagging"
+        f"{ahead} commit(s) ahead of origin/main — merge the approved release PR before tagging"
         if ahead and ahead != "0"
         else "",
     )

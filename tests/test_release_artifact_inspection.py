@@ -84,6 +84,29 @@ def test_wrong_release_version_fails(artifacts: tuple[Path, Path]) -> None:
         INSPECTION.inspect(dist, root, "sample", "0.0.72")
 
 
+def test_runtime_scratch_data_is_not_distributed(
+    artifacts: tuple[Path, Path],
+) -> None:
+    """Test outputs can contain payment data and must never enter a wheel."""
+    root, dist = artifacts
+    with zipfile.ZipFile(next(dist.glob("*.whl")), "a") as archive:
+        archive.writestr("sample/tmp/pytest/records.csv", "synthetic scratch")
+    with pytest.raises(ValueError, match="runtime scratch data leaked"):
+        INSPECTION.inspect(dist, root, "sample", "0.0.71")
+
+
+def test_poetry_explicitly_excludes_runtime_scratch() -> None:
+    """Poetry must not open test-created FIFOs while building a wheel."""
+    try:
+        import tomllib
+    except ImportError:
+        import tomli as tomllib
+
+    root = Path(__file__).resolve().parents[1]
+    config = tomllib.loads((root / "pyproject.toml").read_text())
+    assert "pain001/tmp/**" in config["tool"]["poetry"]["exclude"]
+
+
 def test_missing_artifacts_fail(tmp_path: Path) -> None:
     """An empty output directory cannot pass a vacuous checksum check."""
     with pytest.raises(ValueError, match="exactly one"):

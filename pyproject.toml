@@ -36,6 +36,7 @@ homepage = "https://pain001.com"
 packages = [
     { include = "pain001" },
 ]
+exclude = ["pain001/tmp", "pain001/tmp/**"]
 include = [
     "pain001/py.typed",
     "pain001/schemas/*",

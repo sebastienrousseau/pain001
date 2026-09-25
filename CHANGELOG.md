@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Exclude runtime scratch files from distributions, preventing payment/test
+  data leakage and post-test builds hanging on named-pipe fixtures.
 - Build deployable documentation on pull requests with all optional runtime
   dependencies from the committed Poetry lock, preserving strict autodoc.
 - Render the manual's examples directly from exercised scripts, replacing

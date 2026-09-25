@@ -35,7 +35,8 @@ A release is ready only when **all** of the following hold on `main`:
 5. `CHANGELOG.md` has a dated section for the new version describing the
    change set (this is the single source of truth for the release).
 6. The version is identical in `pyproject.toml`, `pain001/__init__.py`,
-   and `pain001/constants.py` (enforced by the `version-sync` CI check).
+   `pain001/constants.py`, `CITATION.cff` and the `SECURITY.md` support table
+   (enforced by release preflight and suite conformance checks).
 7. A `releases/vX.Y.Z.md` note exists (used as the GitHub release body).
 
 The checklist above is **executable** — do not eyeball it:
@@ -51,7 +52,7 @@ locally and on the remote before you can retry.
 
 ## Cutting the release
 
-1. Bump the version in the three files above and add the `CHANGELOG.md`
+1. Bump the version in the five sources above and add the `CHANGELOG.md`
    section and `releases/vX.Y.Z.md` note in a single PR.
 2. Merge the PR to `main` once CI is green.
 3. Pre-flight, then tag:

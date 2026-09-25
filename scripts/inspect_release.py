@@ -59,6 +59,10 @@ def inspect(dist: Path, root: Path, name: str, version: str) -> list[str]:
             for filename in ("pyproject.toml", "README.md"):
                 if files[prefix + filename] != (root / filename).read_bytes():
                     raise ValueError(f"stale packaged {filename}")
+        if any(key.startswith(prefix + package + "/tmp/") for key in files):
+            raise ValueError(
+                f"runtime scratch data leaked into {artifact.name}"
+            )
         if len(metadata) != 1:
             raise ValueError(
                 "expected exactly one distribution metadata record"
