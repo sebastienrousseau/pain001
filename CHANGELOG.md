@@ -1,9 +1,22 @@
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
 # Changelog
 
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Changed
+
+- Update Hypothesis to 6.168.0, Twine to 7.0.0, Sphinx autodoc type hints
+  to 3.0.1, fakeredis to 2.38.0, lxml to 6.1.3, PyData Sphinx theme to
+  0.19.0, mutmut to 3.8.0, Ruff to 0.16.8 and Uvicorn to 0.53.0
+  (#280–#285, #293–#295).
+- Refresh the pinned GitHub Actions for coverage, CodeQL, Docker builds
+  and Java setup (#292).
 
 ## [0.0.70] - 2026-09-13
 
