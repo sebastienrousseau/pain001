@@ -563,7 +563,6 @@ def test_parquet_path_validation_failure_is_a_file_not_found(tmp_path) -> None:
 
 def test_parquet_support_check_when_pyarrow_is_absent(monkeypatch) -> None:
     """Without pyarrow the loaders explain how to install it."""
-    import importlib
 
     import pytest
 
