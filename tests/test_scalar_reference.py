@@ -1,5 +1,5 @@
-# Copyright (C) 2023-2026 Pain001. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0 OR MIT
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
 #
 # Licensed under either of the Apache License, Version 2.0 or the MIT
 # License, at your option. See LICENSE-APACHE and LICENSE-MIT.
@@ -78,7 +78,7 @@ def test_static_reference_page_present_and_embeds_scalar() -> None:
 def test_docs_workflow_exports_openapi_and_stages_scalar() -> None:
     """docs.yml must export openapi.json and stage the Scalar page.
 
-    Criteria 1, 5 + 6 of issue #174: the deploy job runs on tag /
+    Criteria 1, 5 + 6 of issue #174: the deploy job runs on
     `main` only (not fork PRs), exports the schema, and stages the
     Scalar HTML into the published site.
     """
@@ -87,11 +87,14 @@ def test_docs_workflow_exports_openapi_and_stages_scalar() -> None:
     assert "scripts/export_openapi.py docs/_static/openapi.json" in text
     # Scalar staging.
     assert "api-reference.html" in text
-    # Trigger: main + manual only (not pull_request, which would mean
-    # fork PRs could touch the deploy).
+    # PRs build the deployable artifact, but cannot enter the deploy job.
     assert "branches:" in text
     assert "- main" in text
-    assert "pull_request" not in text
+    deploy = text.split("\n  deploy:\n", 1)[1]
+    assert (
+        "if: github.event_name != 'pull_request' "
+        "&& github.ref == 'refs/heads/main'" in deploy
+    )
 
 
 def test_documented_public_url_is_well_formed() -> None:

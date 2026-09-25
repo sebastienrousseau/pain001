@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Build deployable documentation on pull requests with all optional runtime
+  dependencies from the committed Poetry lock, preserving strict autodoc.
 - Render the manual's examples directly from exercised scripts, replacing
   obsolete field names, nonexistent exceptions and unsafe database sketches.
 - Replace four missing-fixture API skips with required successful generation,
