@@ -39,7 +39,12 @@ from pain001.observability import (
     set_span_attributes,
     traced,
 )
+from pain001.security.dsig import sign_xml_document
 from pain001.security.path_validator import sanitize_for_log, validate_path
+from pain001.xml.envelope import (
+    BusinessApplicationHeader,
+    envelop_iso20022_message,
+)
 
 # Library code: no handlers, no level overrides — the host
 # application controls logging configuration.
@@ -253,9 +258,13 @@ def process_files(
     xsd_schema_file_path: str,
     data_file_path: str | list[dict[str, Any]] | dict[str, Any],
     output_path: str | None = None,
+    envelop_bah: bool = False,
+    bah_header: BusinessApplicationHeader | None = None,
+    xml_sign_key: str | bytes | None = None,
+    xml_sign_cert: str | bytes | None = None,
+    xml_sign_passphrase: str | bytes | None = None,
 ) -> str:
-    """
-    Generate an ISO 20022 payment message from various data sources.
+    """Generate an ISO 20022 payment message from various data sources.
 
     Args:
         xml_message_type: XML message type (e.g., 'pain.001.001.03').
@@ -265,6 +274,11 @@ def process_files(
         output_path: Explicit path for the generated XML file. When omitted,
             the file is written next to the template (deprecated; requires
             the template to live under the current working directory).
+        envelop_bah: If True, wrap generated XML in an ISO 20022 BAH envelope.
+        bah_header: Optional customized BusinessApplicationHeader instance.
+        xml_sign_key: Optional RSA private key in PEM format to sign the XML.
+        xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
+        xml_sign_passphrase: Optional passphrase for the private key.
 
     Returns:
         The path the generated XML file was written to.
@@ -277,7 +291,6 @@ def process_files(
             files, PaymentValidationError for bad amounts) is logged and
             re-raised unchanged.
     """
-
     context_logger = Context.get_instance().get_logger()
 
     data_source_kind = _determine_data_source_type(data_file_path)
@@ -308,6 +321,26 @@ def process_files(
         )
 
         if os.path.exists(written_path):
+            if (
+                envelop_bah
+                or bah_header is not None
+                or xml_sign_key is not None
+            ):
+                with open(written_path, encoding="utf-8") as handle:
+                    file_xml = handle.read()
+                if envelop_bah or bah_header is not None:
+                    hdr = bah_header or BusinessApplicationHeader()
+                    file_xml = envelop_iso20022_message(file_xml, hdr)
+                if xml_sign_key is not None:
+                    file_xml = sign_xml_document(
+                        file_xml,
+                        private_key_pem=xml_sign_key,
+                        cert_pem=xml_sign_cert,
+                        passphrase=xml_sign_passphrase,
+                    )
+                with open(written_path, "w", encoding="utf-8") as handle:
+                    handle.write(file_xml)
+
             context_logger.info(
                 f"Successfully generated XML file '{written_path}'".replace(
                     "\n", ""
@@ -352,6 +385,11 @@ def process_files_streaming(
     data_file_path: str,
     chunk_size: int = 1000,
     output_dir: str | None = None,
+    envelop_bah: bool = False,
+    bah_header: BusinessApplicationHeader | None = None,
+    xml_sign_key: str | bytes | None = None,
+    xml_sign_cert: str | bytes | None = None,
+    xml_sign_passphrase: str | bytes | None = None,
 ) -> list[str]:
     """Generate multiple XML files from streamed input chunks.
 
@@ -363,6 +401,11 @@ def process_files_streaming(
         chunk_size: Rows per chunk; each chunk becomes one XML file.
         output_dir: Directory to write chunked XML files to. When
             omitted, files are written next to the data file.
+        envelop_bah: If True, wrap each chunk XML in an ISO 20022 BAH envelope.
+        bah_header: Optional customized BusinessApplicationHeader instance.
+        xml_sign_key: Optional RSA private key in PEM format to sign each chunk.
+        xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
+        xml_sign_passphrase: Optional passphrase for the private key.
 
     Returns:
         Paths of the generated chunk XML files, in chunk order.
@@ -387,6 +430,16 @@ def process_files_streaming(
             safe_template_path,
             safe_schema_path,
         )
+        if envelop_bah or bah_header is not None:
+            hdr = bah_header or BusinessApplicationHeader()
+            xml_content = envelop_iso20022_message(xml_content, hdr)
+        if xml_sign_key is not None:
+            xml_content = sign_xml_document(
+                xml_content,
+                private_key_pem=xml_sign_key,
+                cert_pem=xml_sign_cert,
+                passphrase=xml_sign_passphrase,
+            )
         chunked_path = _chunk_output_path(
             os.path.join(output_dir, f"{xml_message_type}.xml"), chunk_index
         )
