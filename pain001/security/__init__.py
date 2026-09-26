@@ -14,6 +14,15 @@
 
 """Security utilities for Pain001."""
 
+from pain001.security.formula import (
+    FORMULA_PREFIXES,
+    sanitize_formula_injection,
+)
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
-__all__ = ["validate_path", "sanitize_for_log"]
+__all__ = [
+    "FORMULA_PREFIXES",
+    "sanitize_for_log",
+    "sanitize_formula_injection",
+    "validate_path",
+]

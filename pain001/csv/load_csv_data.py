@@ -21,7 +21,11 @@ from collections.abc import Generator
 from typing import Any
 
 from pain001.exceptions import DataSourceError
-from pain001.security import sanitize_for_log, validate_path  # noqa: PYI100
+from pain001.security import (
+    sanitize_for_log,
+    sanitize_formula_injection,
+    validate_path,
+)  # noqa: PYI100
 
 logger = logging.getLogger(__name__)
 
@@ -75,10 +79,17 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
 
     data: list[dict[str, Any]] = []
     try:
-        with open(safe_path, encoding="utf-8") as file:  # nosec B108
+        with open(safe_path, newline="", encoding="utf-8") as file:  # nosec B108
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
-                data.append(row)
+                data.append(
+                    {
+                        k: sanitize_formula_injection(v)
+                        if isinstance(v, str)
+                        else v
+                        for k, v in row.items()
+                    }
+                )
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logger.error(
@@ -150,10 +161,17 @@ def load_csv_data_streaming(
         raise
 
     try:
-        with open(safe_path, encoding="utf-8") as file:
+        with open(safe_path, newline="", encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
-                chunk.append(row)
+                chunk.append(
+                    {
+                        k: sanitize_formula_injection(v)
+                        if isinstance(v, str)
+                        else v
+                        for k, v in row.items()
+                    }
+                )
                 row_count += 1
                 if len(chunk) >= chunk_size:
                     yield chunk
