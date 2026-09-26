@@ -36,6 +36,8 @@ Standards:
     - ISO 9362:2022 - Banking — Banking telecommunication messages — Business identifier code (BIC)
 """
 
+import functools
+
 from pain001.exceptions import InvalidBICError
 
 # ISO 3166-1 alpha-2 country codes (SEPA + major financial centers)
@@ -137,6 +139,7 @@ VALID_COUNTRY_CODES = {
 }
 
 
+@functools.lru_cache(maxsize=16384)
 def validate_bic_format(
     bic: str,
 ) -> tuple[bool, str]:

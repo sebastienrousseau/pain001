@@ -258,3 +258,39 @@ class TestIBANEdgeCases:
         """Test validate_iban_safe with field parameter (unused but API compatible)."""
         # Field parameter is accepted but not used
         assert validate_iban_safe("DE89370400440532013000", field="test_field")
+
+
+class TestIBANValidatorCaching:
+    """Test memoization / LRU caching in IBAN validation."""
+
+    def test_validate_iban_format_caching(self):
+        """Test that validate_iban_format hits cache on repeated calls."""
+        validate_iban_format.cache_clear()
+        iban = "DE89370400440532013000"
+
+        # First call: cache miss
+        res1 = validate_iban_format(iban)
+        info1 = validate_iban_format.cache_info()
+        assert info1.misses >= 1
+
+        # Second call: cache hit
+        res2 = validate_iban_format(iban)
+        info2 = validate_iban_format.cache_info()
+        assert info2.hits == info1.hits + 1
+        assert res1 == res2
+
+    def test_validate_iban_checksum_caching(self):
+        """Test that validate_iban_checksum hits cache on repeated calls."""
+        validate_iban_checksum.cache_clear()
+        iban = "DE89370400440532013000"
+
+        # First call: cache miss
+        res1 = validate_iban_checksum(iban)
+        info1 = validate_iban_checksum.cache_info()
+        assert info1.misses >= 1
+
+        # Second call: cache hit
+        res2 = validate_iban_checksum(iban)
+        info2 = validate_iban_checksum.cache_info()
+        assert info2.hits == info1.hits + 1
+        assert res1 == res2
