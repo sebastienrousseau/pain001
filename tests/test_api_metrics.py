@@ -135,3 +135,149 @@ class TestMetricsEndpoint:
         mw = MetricsMiddleware(downstream)
         asyncio.run(mw({"type": "lifespan"}, None, None))
         assert seen["type"] == "lifespan"
+
+
+class TestPrometheusObservabilityEngine:
+    """Tests for the standard Prometheus observability engine."""
+
+    def test_observe_and_render_summaries(self) -> None:
+        """Summaries calculate quantiles, count, and sum correctly."""
+        reg = MetricsRegistry()
+        for i in range(1, 101):
+            reg.observe(
+                "pain001_processing_seconds",
+                i / 100.0,
+                {"message_type": "pain.001.001.03"},
+            )
+
+        lines = reg.render_summaries("pain001_processing_seconds")
+        assert any('quantile="0.5"' in ln for ln in lines)
+        assert any('quantile="0.95"' in ln for ln in lines)
+        assert any('quantile="0.99"' in ln for ln in lines)
+        assert any("pain001_processing_seconds_count{" in ln for ln in lines)
+        assert any("pain001_processing_seconds_sum{" in ln for ln in lines)
+
+        # Filter by different metric name returns empty
+        assert reg.render_summaries("non_existent") == []
+
+    def test_summary_single_sample(self) -> None:
+        """Single sample sets all quantiles to that sample value."""
+        reg = MetricsRegistry()
+        reg.observe("latency", 0.042)
+        lines = reg.render_summaries("latency")
+        assert 'latency{quantile="0.5"} 0.042' in lines
+        assert 'latency{quantile="0.95"} 0.042' in lines
+        assert 'latency{quantile="0.99"} 0.042' in lines
+        assert "latency_count 1" in lines
+        assert "latency_sum 0.042" in lines
+
+    def test_summary_max_samples_cap(self) -> None:
+        """Samples list is bounded to 10000 items."""
+        reg = MetricsRegistry()
+        for _ in range(10005):
+            reg.observe("latency", 1.0)
+        key = ("latency", ())
+        assert len(reg._summaries[key]) == 10000
+        assert reg._summary_counts[key] == 10005
+
+    def test_record_file_processed_and_payment_volume(self) -> None:
+        """Convenience helpers record appropriate labels and values."""
+        reg = MetricsRegistry()
+        reg.record_file_processed("success", "pain.001.001.03")
+        reg.record_payment_volume("EUR", 125050)
+        reg.record_processing_seconds(0.123)
+
+        assert (
+            'pain001_files_processed_total{message_type="pain.001.001.03",status="success"} 1.0'
+            in reg.render("pain001_files_processed_total")
+        )
+        assert (
+            'pain001_payment_volume_cents_total{currency="EUR"} 125050.0'
+            in reg.render("pain001_payment_volume_cents_total")
+        )
+
+    def test_record_data_volumes_aggregation(self) -> None:
+        """Volume aggregation extracts cents across currencies and skips bad rows."""
+        reg = MetricsRegistry()
+        data = [
+            {"payment_amount": "100.50", "currency": "EUR"},
+            {"amount": "250.25", "currency": "USD"},
+            {"instructed_amount": "50.00"},  # defaults to EUR
+            {"payment_amount": ""},  # empty skipped
+            {"payment_amount": "invalid"},  # invalid skipped
+            {"payment_amount": "-10.00"},  # non-positive skipped
+        ]
+        reg.record_data_volumes(data)
+
+        lines = reg.render("pain001_payment_volume_cents_total")
+        assert (
+            'pain001_payment_volume_cents_total{currency="EUR"} 15050.0'
+            in lines
+        )
+        assert (
+            'pain001_payment_volume_cents_total{currency="USD"} 25025.0'
+            in lines
+        )
+
+    def test_render_prometheus_full_exposition(self) -> None:
+        """render_prometheus emits standard headers and series."""
+        registry.reset()
+        registry.record_file_processed("success", "pain.001.001.03")
+        registry.record_payment_volume("EUR", 50000)
+        registry.record_processing_seconds(0.05)
+        registry.inc("custom_counter", {"tag": "val"}, 3.0)
+
+        body = render_prometheus("0.0.72")
+        assert "# HELP pain001_files_processed_total" in body
+        assert "# TYPE pain001_files_processed_total counter" in body
+        assert "# HELP pain001_payment_volume_cents_total" in body
+        assert "# TYPE pain001_payment_volume_cents_total counter" in body
+        assert "# HELP pain001_processing_seconds" in body
+        assert "# TYPE pain001_processing_seconds summary" in body
+        assert "# TYPE custom_counter counter" in body
+        assert 'custom_counter{tag="val"} 3.0' in body
+
+    def test_generate_endpoint_records_metrics(self) -> None:
+        """Calling /api/generate updates processed files, volume, and latency."""
+        import os
+
+        registry.reset()
+        res = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": "pain001/templates/pain.001.001.03/template.csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["success"] is True
+        if data["file_path"] and os.path.exists(data["file_path"]):
+            os.remove(data["file_path"])
+
+        body = client.get("/metrics").text
+        assert (
+            'pain001_files_processed_total{message_type="pain.001.001.03",status="success"} 1.0'
+            in body
+        )
+        assert 'pain001_payment_volume_cents_total{currency="EUR"}' in body
+        assert "pain001_processing_seconds_count" in body
+
+    def test_generate_endpoint_failure_records_metric(self) -> None:
+        """Failed generation increments pain001_files_processed_total with status=failure."""
+        registry.reset()
+        res = client.post(
+            "/api/generate",
+            json={
+                "data_source": "csv",
+                "file_path": "non_existent_file.csv",
+                "message_type": "pain.001.001.03",
+            },
+        )
+        assert res.status_code == 404
+        body = client.get("/metrics").text
+        assert (
+            'pain001_files_processed_total{message_type="pain.001.001.03",status="failure"} 1.0'
+            in body
+        )

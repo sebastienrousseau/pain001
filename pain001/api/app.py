@@ -20,6 +20,7 @@ import asyncio
 import logging
 import os
 import tempfile
+import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -32,7 +33,11 @@ from pain001 import __version__
 from pain001.api.auth import require_api_key as _require_api_key
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import JobStatus, job_manager
-from pain001.api.metrics import MetricsMiddleware, render_prometheus
+from pain001.api.metrics import (
+    MetricsMiddleware,
+    registry,
+    render_prometheus,
+)
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
@@ -476,6 +481,8 @@ async def generate_xml_sync(
     Raises:
         HTTPException: If generation fails.
     """
+    start_time = time.perf_counter()
+    msg_type = request.message_type.value
     try:
         # Validate file path (secure path)
         file_path = str(_validate_safe_path(request.file_path))
@@ -497,6 +504,10 @@ async def generate_xml_sync(
         total, valid, errors = validator.validate_batch(data)
 
         if errors:
+            registry.record_file_processed("failure", msg_type)
+            registry.record_processing_seconds(
+                time.perf_counter() - start_time
+            )
             error_models = _format_validation_errors(errors)
 
             return GenerateXMLResponse(
@@ -510,6 +521,10 @@ async def generate_xml_sync(
         if request.scheme or request.rules is not None:
             scheme_result = _request_scheme_result(data, request)
             if not scheme_result.is_valid:
+                registry.record_file_processed("failure", msg_type)
+                registry.record_processing_seconds(
+                    time.perf_counter() - start_time
+                )
                 return GenerateXMLResponse(
                     success=False,
                     message=(
@@ -545,6 +560,10 @@ async def generate_xml_sync(
             output_file_path,
         )
 
+        registry.record_file_processed("success", msg_type)
+        registry.record_data_volumes(data)
+        registry.record_processing_seconds(time.perf_counter() - start_time)
+
         return GenerateXMLResponse(
             success=True,
             message="XML generated successfully",
@@ -552,13 +571,19 @@ async def generate_xml_sync(
         )
 
     except HTTPException:
+        registry.record_file_processed("failure", msg_type)
+        registry.record_processing_seconds(time.perf_counter() - start_time)
         raise
     except PaymentValidationError as e:
+        registry.record_file_processed("failure", msg_type)
+        registry.record_processing_seconds(time.perf_counter() - start_time)
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         ) from e
     except Exception as e:
+        registry.record_file_processed("failure", msg_type)
+        registry.record_processing_seconds(time.perf_counter() - start_time)
         logger.exception("Synchronous XML generation failed")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -763,6 +788,8 @@ async def _process_generation_job(
         job_id: Job identifier.
         request: Generation request.
     """
+    start_time = time.perf_counter()
+    msg_type = request.message_type.value
     try:
         job_manager.update_status(
             job_id,
@@ -774,11 +801,19 @@ async def _process_generation_job(
         file_path = str(_validate_safe_path(request.file_path))
         # CodeQL CWE-22 guard: same variable for guard and sink
         if not file_path.startswith(str(Path.cwd().resolve()) + os.sep):
+            registry.record_file_processed("failure", msg_type)
+            registry.record_processing_seconds(
+                time.perf_counter() - start_time
+            )
             job_manager.update_status(
                 job_id, JobStatus.FAILED, error="Access denied"
             )
             return
         if not os.path.exists(file_path):
+            registry.record_file_processed("failure", msg_type)
+            registry.record_processing_seconds(
+                time.perf_counter() - start_time
+            )
             job_manager.update_status(
                 job_id,
                 JobStatus.FAILED,
@@ -794,6 +829,10 @@ async def _process_generation_job(
         total, valid, errors = validator.validate_batch(data)
 
         if errors:
+            registry.record_file_processed("failure", msg_type)
+            registry.record_processing_seconds(
+                time.perf_counter() - start_time
+            )
             job_manager.update_status(
                 job_id,
                 JobStatus.FAILED,
@@ -805,6 +844,10 @@ async def _process_generation_job(
         if request.scheme or request.rules is not None:
             scheme_result = _request_scheme_result(data, request)
             if not scheme_result.is_valid:
+                registry.record_file_processed("failure", msg_type)
+                registry.record_processing_seconds(
+                    time.perf_counter() - start_time
+                )
                 job_manager.update_status(
                     job_id,
                     JobStatus.FAILED,
@@ -852,6 +895,10 @@ async def _process_generation_job(
             output_file_path,
         )
 
+        registry.record_file_processed("success", msg_type)
+        registry.record_data_volumes(data)
+        registry.record_processing_seconds(time.perf_counter() - start_time)
+
         job_manager.update_status(
             job_id,
             JobStatus.SUCCESS,
@@ -865,6 +912,8 @@ async def _process_generation_job(
         )
 
     except Exception:
+        registry.record_file_processed("failure", msg_type)
+        registry.record_processing_seconds(time.perf_counter() - start_time)
         logger.exception("Job %s failed", job_id)
         job_manager.update_status(
             job_id,

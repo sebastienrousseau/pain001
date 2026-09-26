@@ -895,6 +895,62 @@ class TestAsyncWorkerErrorPaths:
         finally:
             os.remove(bad_csv)
 
+    def test_worker_scheme_failure(self):
+        """Worker fails the job when scheme validation fails."""
+        import asyncio
+        from unittest.mock import MagicMock, patch
+
+        from pain001.api.app import _process_generation_job
+        from pain001.api.job_manager import JobStatus, job_manager
+        from pain001.api.models import GenerateXMLRequest
+
+        job_id = job_manager.create_job()
+        request = GenerateXMLRequest(
+            data_source="csv",
+            file_path="pain001/templates/pain.001.001.03/template.csv",
+            message_type="pain.001.001.03",
+            scheme="sepa",
+        )
+        mock_violation = MagicMock()
+        mock_violation.rule = "RULE-1"
+        mock_violation.as_dict.return_value = {"rule": "RULE-1"}
+        mock_res = MagicMock()
+        mock_res.is_valid = False
+        mock_res.violations = [mock_violation]
+
+        import sys
+
+        app_module = sys.modules["pain001.api.app"]
+        with patch.object(
+            app_module, "_request_scheme_result", return_value=mock_res
+        ):
+            asyncio.run(_process_generation_job(job_id, request))
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == JobStatus.FAILED
+        assert "Scheme validation failed" in str(job.error)
+
+    def test_worker_validate_only(self):
+        """Worker completes with SUCCESS and no file when validate_only is True."""
+        import asyncio
+
+        from pain001.api.app import _process_generation_job
+        from pain001.api.job_manager import JobStatus, job_manager
+        from pain001.api.models import GenerateXMLRequest
+
+        job_id = job_manager.create_job()
+        request = GenerateXMLRequest(
+            data_source="csv",
+            file_path="pain001/templates/pain.001.001.03/template.csv",
+            message_type="pain.001.001.03",
+            validate_only=True,
+        )
+        asyncio.run(_process_generation_job(job_id, request))
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == JobStatus.SUCCESS
+        assert job.result["file_path"] is None
+
 
 class TestGenerateUnknownScheme:
     """Generate endpoint rejects an unknown scheme with HTTP 400."""
