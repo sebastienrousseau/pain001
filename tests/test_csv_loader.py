@@ -713,6 +713,47 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
         if chunks:
             self.assertLessEqual(len(chunks[-1]), 2)
 
+    def test_load_csv_data_formula_injection_sanitization(self) -> None:
+        """Test that cells with formula characters are sanitized with a leading single quote."""
+        csv_file = "pain001/test_fixtures/formula_data.csv"
+        try:
+            with open(csv_file, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(
+                    ["id", "cmd", "calc", "minus", "at", "tab", "cr"]
+                )
+                writer.writerow(
+                    [
+                        "1",
+                        "=cmd|' /C calc'!A0",
+                        "+123",
+                        "-456",
+                        "@SUM(A1)",
+                        "\t=evil",
+                        "\r=evil",
+                    ]
+                )
+
+            data = load_csv_data(csv_file)
+            self.assertEqual(data[0]["id"], "1")
+            self.assertEqual(data[0]["cmd"], "'=cmd|' /C calc'!A0")
+            self.assertEqual(data[0]["calc"], "'+123")
+            self.assertEqual(data[0]["minus"], "'-456")
+            self.assertEqual(data[0]["at"], "'@SUM(A1)")
+            self.assertEqual(data[0]["tab"], "'\t=evil")
+            self.assertEqual(data[0]["cr"], "'\r=evil")
+
+            chunks = list(load_csv_data_streaming(csv_file, chunk_size=10))
+            self.assertEqual(chunks[0][0]["cmd"], "'=cmd|' /C calc'!A0")
+            self.assertEqual(chunks[0][0]["calc"], "'+123")
+            self.assertEqual(chunks[0][0]["minus"], "'-456")
+            self.assertEqual(chunks[0][0]["at"], "'@SUM(A1)")
+            self.assertEqual(chunks[0][0]["tab"], "'\t=evil")
+            self.assertEqual(chunks[0][0]["cr"], "'\r=evil")
+        finally:
+            if os.path.exists(csv_file):
+                os.remove(csv_file)
+
 
 if __name__ == "__main__":
     unittest.main()

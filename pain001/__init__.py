@@ -41,6 +41,11 @@ from pain001.observability import (
     register_metrics_callback,
 )
 from pain001.pain002 import build_pain002_report, parse_pain002_report
+from pain001.security.dsig import (
+    XmlSignatureError,
+    sign_xml_document,
+    verify_xml_signature,
+)
 from pain001.templates import (
     DEFAULT_TEMPLATE_REGISTRY,
     TemplateRegistry,
@@ -51,6 +56,11 @@ from pain001.validation import (
     SchemeViolation,
     sanitize_to_charset,
     validate_scheme,
+)
+from pain001.xml.envelope import (
+    BusinessApplicationHeader,
+    envelop_iso20022_message,
+    unpack_iso20022_message,
 )
 from pain001.xml.generate_xml import (
     canonicalize_payment_record,
@@ -89,6 +99,12 @@ __all__ = [
     "sanitize_to_charset",
     "PaymentValidationError",
     "DataSourceError",
+    "BusinessApplicationHeader",
+    "envelop_iso20022_message",
+    "unpack_iso20022_message",
+    "sign_xml_document",
+    "verify_xml_signature",
+    "XmlSignatureError",
     "__version__",
 ]
 

@@ -22,6 +22,14 @@ pain001.xml.create\_xml\_element module
    :undoc-members:
    :show-inheritance:
 
+pain001.xml.envelope module
+---------------------------
+
+.. automodule:: pain001.xml.envelope
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pain001.xml.generate\_updated\_xml\_file\_path module
 -----------------------------------------------------
 
