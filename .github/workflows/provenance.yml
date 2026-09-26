@@ -1,0 +1,47 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
+
+# SLSA Build Level 3 provenance attestation — MANUAL / BACKFILL path.
+#
+# Generates GitHub artifact attestations (actions/attest-build-provenance)
+# for the distributions of a released version, cryptographically binding
+# PyPI wheels and source archives to the commit SHA and repository.
+#
+# Verify with:
+#   gh attestation verify pain001-<version>-py3-none-any.whl --owner sebastienrousseau
+
+name: SLSA build provenance
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to attest, e.g. v0.0.71"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  attest:
+    name: Attest build provenance
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - name: Download release distributions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          mkdir -p dist
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir dist --pattern "*.whl" --pattern "*.tar.gz"
+          ls -la dist/
+
+      - name: Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/*"

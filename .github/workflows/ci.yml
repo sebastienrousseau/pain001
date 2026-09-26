@@ -127,6 +127,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      attestations: write
     outputs:
       hashes: ${{ steps.dist_hashes.outputs.hashes }}
     steps:
@@ -169,6 +170,14 @@ jobs:
           poetry run twine check dist/*
           python scripts/inspect_release.py --name pain001 --project Pain001 \
             --version "${GITHUB_REF_NAME#v}" --dist dist --output .release
+
+      # SLSA Build Level 3 provenance for every distribution file, bound to
+      # the exact bytes just built and signed with the workflow's OIDC
+      # identity. Verify with: gh attestation verify <file> --owner sebastienrousseau
+      - name: ❯ Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/*"
 
       - name: ❯ Generate SBOM (CycloneDX + SPDX)
         # Enterprise vulnerability-management tools (Snyk, Black Duck,
@@ -222,6 +231,8 @@ jobs:
 
       - name: ❯ Publish to PyPI
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          attestations: true
 
       # The website regenerates its corpus pages, demo samples and version
       # stamps from each release and opens a pull request there. Needs a
