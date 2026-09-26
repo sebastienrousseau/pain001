@@ -257,3 +257,23 @@ class TestBICComparison:
         assert validate_bic_safe("DEUTDEFF500")
         assert validate_bic_safe("DEUTDEFF600")
         assert validate_bic_safe("DEUTDEFFABC")
+
+
+class TestBICValidatorCaching:
+    """Test memoization / LRU caching in BIC validation."""
+
+    def test_validate_bic_format_caching(self):
+        """Test that validate_bic_format hits cache on repeated calls."""
+        validate_bic_format.cache_clear()
+        bic = "DEUTDEFF"
+
+        # First call: cache miss
+        res1 = validate_bic_format(bic)
+        info1 = validate_bic_format.cache_info()
+        assert info1.misses >= 1
+
+        # Second call: cache hit
+        res2 = validate_bic_format(bic)
+        info2 = validate_bic_format.cache_info()
+        assert info2.hits == info1.hits + 1
+        assert res1 == res2

@@ -35,6 +35,8 @@ Standards:
     - ISO 7064 - Check digit mod-97-10 algorithm
 """
 
+import functools
+
 from pain001.exceptions import InvalidIBANError
 
 # SEPA IBAN lengths by country code (ISO 13616)
@@ -115,6 +117,7 @@ IBAN_LENGTHS = {
 }
 
 
+@functools.lru_cache(maxsize=16384)
 def validate_iban_format(
     iban: str,
 ) -> tuple[bool, str]:
@@ -186,6 +189,7 @@ def validate_iban_format(
     return True, ""
 
 
+@functools.lru_cache(maxsize=16384)
 def validate_iban_checksum(iban: str) -> tuple[bool, str]:
     """Validate IBAN checksum using ISO 7064 mod-97-10 algorithm.
 
