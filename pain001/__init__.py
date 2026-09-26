@@ -56,6 +56,8 @@ from pain001.xml.generate_xml import (
     canonicalize_payment_record,
     generate_xml_string,
     normalize_payment_records,
+    stream_xml_chunks,
+    stream_xml_to_file,
 )
 
 __all__ = [
@@ -67,6 +69,8 @@ __all__ = [
     "generate_xml_string",
     "generate_xml_string_async",
     "normalize_payment_records",
+    "stream_xml_chunks",
+    "stream_xml_to_file",
     "parse_pain002_report",
     "build_pain002_report",
     "parse_camt053_statement",

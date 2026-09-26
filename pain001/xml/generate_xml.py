@@ -21,10 +21,11 @@ import os
 import re
 import time
 import warnings
+from collections.abc import Iterator
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from jinja2 import select_autoescape
+from jinja2 import Template, select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
 
 from pain001.exceptions import PaymentValidationError
@@ -305,9 +306,192 @@ def _load_trusted_template_source(xml_template_path: str) -> str:
     return template_source
 
 
+def _validate_generation_inputs(
+    data: list[dict[str, Any]],
+    payment_initiation_message_type: str,
+    xml_template_path: str,
+) -> str:
+    """Validate message type, data presence, and template path.
+
+    Args:
+        data: List of dictionaries containing payment data.
+        payment_initiation_message_type: Message type (e.g., "pain.001.001.03").
+        xml_template_path: Path to the Jinja2 XML template file.
+
+    Returns:
+        The validated template path.
+
+    Raises:
+        ValueError: If message type is invalid, data is empty, or the
+            template path fails validation.
+    """
+    if payment_initiation_message_type not in MESSAGE_REGISTRY:
+        raise ValueError(
+            f"Invalid XML message type: {payment_initiation_message_type}"
+        )
+
+    if not data:
+        raise ValueError("No data to process - data list is empty")
+
+    try:
+        return str(validate_path(xml_template_path, must_exist=True))
+    except Exception as e:
+        raise ValueError(f"Invalid template path: {e}") from e
+
+
+def _prepare_template_and_data(
+    data: list[dict[str, Any]],
+    payment_initiation_message_type: str,
+    safe_template_path: str,
+) -> tuple[Template, dict[str, Any], int]:
+    """Prepare normalized XML template and data dictionary.
+
+    Args:
+        data: List of dictionaries containing payment data.
+        payment_initiation_message_type: Message type (e.g., "pain.001.001.03").
+        safe_template_path: Pre-validated path to XML template file.
+
+    Returns:
+        A tuple of (compiled Jinja2 template, prepared XML data dict, row count).
+    """
+    # Normalize amounts (Decimal, 2dp) and compute batch totals from the
+    # rows themselves — header fields like NbOfTxs/CtrlSum must never be
+    # trusted from input or the message becomes internally inconsistent.
+    normalized_data, nb_of_txs, ctrl_sum = _normalize_financial_fields(data)
+
+    # Prepare XML data using the registry-driven pipeline
+    prepare_started = time.time()
+    xml_data = prepare_xml_data(
+        normalized_data, payment_initiation_message_type
+    )
+    xml_data["nb_of_txs"] = nb_of_txs
+    if "payment_nb_of_txs" in xml_data:
+        xml_data["payment_nb_of_txs"] = nb_of_txs
+    if "ctrl_sum" in xml_data:
+        xml_data["ctrl_sum"] = ctrl_sum
+    emit_metric_event(
+        "xml_prepared",
+        message_type=payment_initiation_message_type,
+        record_count=len(normalized_data),
+        duration_ms=int((time.time() - prepare_started) * 1000),
+    )
+
+    template_source = _load_trusted_template_source(safe_template_path)
+    env = SandboxedEnvironment(
+        autoescape=select_autoescape(
+            enabled_extensions=("xml",),
+            default_for_string=True,
+        ),
+    )
+    template = env.from_string(template_source)
+    return template, xml_data, len(normalized_data)
+
+
+@traced("pain001.stream")
+def stream_xml_chunks(
+    data: list[dict[str, Any]],
+    payment_initiation_message_type: str,
+    xml_template_path: str,
+    buffer_size: int = 10,
+) -> Iterator[str]:
+    """Stream ISO 20022 pain.001 XML content as string chunks (generator).
+
+    Provides an iterator of string chunks with constant memory overhead,
+    enabling O(1) memory serialization of large payment batches directly
+    to disk or network sockets without materializing the full XML document
+    in memory.
+
+    Args:
+        data: List of dictionaries containing payment data.
+        payment_initiation_message_type: Message type (e.g., "pain.001.001.03").
+        xml_template_path: Path to the Jinja2 XML template file.
+        buffer_size: Buffer size for Jinja template streaming (default 10).
+
+    Yields:
+        str: Successive string chunks of the rendered XML document.
+
+    A ``ValueError`` from invalid message type, empty data, or invalid
+    template path propagates unchanged.
+    """
+    safe_template_path = _validate_generation_inputs(
+        data, payment_initiation_message_type, xml_template_path
+    )
+    template, xml_data, row_count = _prepare_template_and_data(
+        data, payment_initiation_message_type, safe_template_path
+    )
+
+    set_span_attributes(
+        **{
+            "pain001.message_type": payment_initiation_message_type,
+            "pain001.row_count": row_count,
+            "pain001.streaming": True,
+        }
+    )
+    render_started = time.time()
+    stream = template.stream(**xml_data)
+    if buffer_size >= 5:
+        stream.enable_buffering(buffer_size)
+    yield from stream
+    emit_metric_event(
+        "xml_stream_rendered",
+        message_type=payment_initiation_message_type,
+        duration_ms=int((time.time() - render_started) * 1000),
+    )
+
+
+@traced("pain001.write.stream")
+def stream_xml_to_file(
+    data: list[dict[str, Any]],
+    payment_initiation_message_type: str,
+    xml_template_path: str,
+    output_path: str,
+    buffer_size: int = 10,
+) -> str:
+    """Stream ISO 20022 pain.001 XML directly to a file with constant memory.
+
+    Args:
+        data: List of dictionaries containing payment data.
+        payment_initiation_message_type: Message type identifier.
+        xml_template_path: Path to the Jinja2 XML template file.
+        output_path: Destination filesystem path for the XML file.
+        buffer_size: Buffer size for streaming chunks (default 10).
+
+    Returns:
+        The canonical path the XML file was written to.
+
+    A ``ValueError`` from invalid message type, empty data, or invalid
+    template path propagates unchanged.
+    """
+    safe_xml_path = os.path.realpath(str(output_path))
+    os.makedirs(os.path.dirname(safe_xml_path) or ".", exist_ok=True)
+    chunks = stream_xml_chunks(
+        data,
+        payment_initiation_message_type,
+        xml_template_path,
+        buffer_size=buffer_size,
+    )
+    total_bytes = 0
+    with open(safe_xml_path, "w", encoding="utf-8") as handle:
+        for chunk in chunks:
+            handle.write(chunk)
+            total_bytes += len(chunk.encode("utf-8"))
+
+    emit_metric_event(
+        "xml_generated",
+        message_type=payment_initiation_message_type,
+        output_path=str(safe_xml_path),
+        file_size_bytes=total_bytes,
+        streaming=True,
+    )
+    logger.info(
+        "XML file streamed to %s (%d bytes)", safe_xml_path, total_bytes
+    )
+    return safe_xml_path
+
+
 @traced("pain001.render")
 def generate_xml_string(
-    data: list[dict[str, object]],
+    data: list[dict[str, Any]],
     payment_initiation_message_type: str,
     xml_template_path: str,
     xsd_schema_path: str,
@@ -347,21 +531,11 @@ def generate_xml_string(
         >>> xml_str.startswith('<?xml')
         True
     """
-    # Validate message type first so caller errors stay stable.
-    if payment_initiation_message_type not in MESSAGE_REGISTRY:
-        raise ValueError(
-            f"Invalid XML message type: {payment_initiation_message_type}"
-        )
-
-    # Check if data is not empty before touching the filesystem.
-    if not data:
-        raise ValueError("No data to process - data list is empty")
-
-    # Validate template path
-    try:
-        xml_template_path = validate_path(xml_template_path, must_exist=True)
-    except Exception as e:
-        raise ValueError(f"Invalid template path: {e}") from e
+    safe_template_path = _validate_generation_inputs(
+        data,
+        payment_initiation_message_type,
+        xml_template_path,
+    )
 
     # Validate schema path
     try:
@@ -369,39 +543,16 @@ def generate_xml_string(
     except Exception as e:
         raise ValueError(f"Invalid schema path: {e}") from e
 
-    # Normalize amounts (Decimal, 2dp) and compute batch totals from the
-    # rows themselves — header fields like NbOfTxs/CtrlSum must never be
-    # trusted from input or the message becomes internally inconsistent.
-    data, nb_of_txs, ctrl_sum = _normalize_financial_fields(data)
-
-    # Prepare XML data using the registry-driven pipeline
-    prepare_started = time.time()
-    xml_data = prepare_xml_data(data, payment_initiation_message_type)
-    xml_data["nb_of_txs"] = nb_of_txs
-    if "payment_nb_of_txs" in xml_data:
-        xml_data["payment_nb_of_txs"] = nb_of_txs
-    if "ctrl_sum" in xml_data:
-        xml_data["ctrl_sum"] = ctrl_sum
-    emit_metric_event(
-        "xml_prepared",
-        message_type=payment_initiation_message_type,
-        record_count=len(data),
-        duration_ms=int((time.time() - prepare_started) * 1000),
+    template, xml_data, row_count = _prepare_template_and_data(
+        data,
+        payment_initiation_message_type,
+        safe_template_path,
     )
-
-    template_source = _load_trusted_template_source(str(xml_template_path))
-    env = SandboxedEnvironment(
-        autoescape=select_autoescape(
-            enabled_extensions=("xml",),
-            default_for_string=True,
-        ),
-    )
-    template = env.from_string(template_source)
 
     set_span_attributes(
         **{
             "pain001.message_type": payment_initiation_message_type,
-            "pain001.row_count": len(data),
+            "pain001.row_count": row_count,
         }
     )
     # Render the template to string
@@ -440,7 +591,7 @@ def generate_xml_string(
         duration_ms=int((time.time() - validation_started) * 1000),
     )
 
-    return xml_content
+    return str(xml_content)
 
 
 @traced("pain001.write")
