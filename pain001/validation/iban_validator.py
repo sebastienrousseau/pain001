@@ -37,6 +37,14 @@ Standards:
 
 import functools
 
+try:
+    import pain001_fast as _fast
+
+    _FAST_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _fast = None  # type: ignore[assignment]
+    _FAST_AVAILABLE = False
+
 from pain001.exceptions import InvalidIBANError
 
 # SEPA IBAN lengths by country code (ISO 13616)
@@ -308,6 +316,7 @@ def validate_iban_safe(iban: str, field: str | None = None) -> bool:
 
     This is a convenience wrapper for validate_iban with strict=False.
     Useful when you only need a boolean result without error details.
+    When ``pain001-fast`` is available, delegates to zero-allocation native mod-97.
 
     Args:
         iban: IBAN string to validate.
@@ -320,5 +329,7 @@ def validate_iban_safe(iban: str, field: str | None = None) -> bool:
         >>> if validate_iban_safe("DE89370400440532013000"):
         ...     print("Valid IBAN")
     """
+    if _FAST_AVAILABLE and _fast is not None:
+        return _fast.validate_iban(iban)
     is_valid, _ = validate_iban(iban, field=field, strict=False)
     return is_valid

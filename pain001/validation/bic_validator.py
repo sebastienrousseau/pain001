@@ -38,6 +38,14 @@ Standards:
 
 import functools
 
+try:
+    import pain001_fast as _fast
+
+    _FAST_AVAILABLE = True
+except ImportError:  # pragma: no cover
+    _fast = None  # type: ignore[assignment]
+    _FAST_AVAILABLE = False
+
 from pain001.exceptions import InvalidBICError
 
 # ISO 3166-1 alpha-2 country codes (SEPA + major financial centers)
@@ -268,6 +276,7 @@ def validate_bic_safe(bic: str, field: str | None = None) -> bool:
 
     This is a convenience wrapper for validate_bic with strict=False.
     Useful when you only need a boolean result without error details.
+    When ``pain001-fast`` is available, delegates to fast structural native check.
 
     Args:
         bic: BIC/SWIFT code to validate.
@@ -280,5 +289,7 @@ def validate_bic_safe(bic: str, field: str | None = None) -> bool:
         >>> if validate_bic_safe("DEUTDEFF"):
         ...     print("Valid BIC")
     """
+    if _FAST_AVAILABLE and _fast is not None:
+        return _fast.validate_bic(bic)
     is_valid, _ = validate_bic(bic, field=field, strict=False)
     return is_valid
