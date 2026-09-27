@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The README and the documentation index link
+  [What is pain.001?](https://pain001.com/pain-001/), an explainer of the
+  message's structure, versions and a schema-valid example.
+
 ## [0.0.71] - 2026-09-25
 
 ### Added

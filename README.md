@@ -275,6 +275,7 @@ Report vulnerabilities according to [`SECURITY.md`](SECURITY.md).
 
 ## Documentation
 
+[What is pain.001?](https://pain001.com/pain-001/) ·
 [User manual](https://docs.pain001.com) ·
 [API reference](https://sebastienrousseau.github.io/pain001/api-reference.html) ·
 [Developer guide](DEVELOPMENT.md) ·

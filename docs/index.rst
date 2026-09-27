@@ -9,6 +9,9 @@ templates cover pain.001.001.03 through pain.001.001.13, pain.008.001.02 and
 pain.008.001.08. List the exact registry with ``pain001 versions``; field
 mappings are generated in :doc:`input-columns`, not duplicated here.
 
+New to the message format? `What is pain.001? <https://pain001.com/pain-001/>`_
+explains its structure, versions and a complete, schema-valid example.
+
 Generation validates rendered XML against the bundled XSD before writing.
 Schema validity is not proof of bank acceptance or regulatory compliance.
 Scenario confidence and evidence are documented in :doc:`corpus`.
