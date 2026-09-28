@@ -373,6 +373,7 @@ def _generate_xml_files(
     xml_sign_key: str | None = None,
     xml_sign_cert: str | None = None,
     xml_sign_passphrase_env: str | None = None,
+    schematron: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Generate XML payment files, exiting with code 1 on failure.
@@ -396,6 +397,7 @@ def _generate_xml_files(
         xml_sign_key: Path to RSA private key PEM file to sign generated XML.
         xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
+        schematron: Optional Schematron rulebook preset or path.
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
@@ -445,6 +447,7 @@ def _generate_xml_files(
                 xml_sign_key=sign_key_bytes,
                 xml_sign_cert=sign_cert_bytes,
                 xml_sign_passphrase=sign_passphrase,
+                schematron=schematron,
             )
         else:
             process_files(
@@ -460,6 +463,7 @@ def _generate_xml_files(
                 xml_sign_key=sign_key_bytes,
                 xml_sign_cert=sign_cert_bytes,
                 xml_sign_passphrase=sign_passphrase,
+                schematron=schematron,
             )
 
         console.print(
@@ -700,6 +704,12 @@ def _generate_xml_files(
     metavar="VAR",
     help="Environment variable holding the passphrase for --xml-sign-key.",
 )
+@click.option(
+    "--schematron",
+    type=str,
+    default=None,
+    help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
+)
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -729,6 +739,7 @@ def main(
     xml_sign_key: str | None = None,
     xml_sign_cert: str | None = None,
     xml_sign_passphrase_env: str | None = None,
+    schematron: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -768,6 +779,8 @@ def main(
         xml_sign_key: Path to RSA private key PEM file to sign generated XML.
         xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
+        schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
+            or filesystem path to a .sch rulebook file.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -893,6 +906,30 @@ def main(
             scheme_format=scheme_format,
             rules=rules,
         )
+        if schematron:
+            from pain001.data.loader import load_payment_data
+            from pain001.schematron import validate_schematron
+            from pain001.xml.generate_xml import generate_xml_string
+
+            payment_data = load_payment_data(data_file_path)
+            xml_str = generate_xml_string(
+                payment_data,
+                xml_message_type,
+                xml_template_file_path,
+                xsd_schema_file_path,
+            )
+            sch_result = validate_schematron(xml_str, rulebook=schematron)
+            if not sch_result.is_valid:
+                console.print(
+                    f"\n[bold red]✗ Schematron rulebook '{schematron}' failed:[/bold red]\n"
+                    f"{sch_result.format_report()}"
+                )
+                sys.exit(1)
+            console.print(
+                f"[bold green]✓ Schematron rulebook '{schematron}' passed[/bold green] "
+                f"({sch_result.rules_passed}/{sch_result.rules_evaluated} rules)"
+            )
+
         log_event(
             logger,
             logging.INFO,
@@ -937,6 +974,7 @@ def main(
         xml_sign_key=xml_sign_key,
         xml_sign_cert=xml_sign_cert,
         xml_sign_passphrase_env=xml_sign_passphrase_env,
+        schematron=schematron,
     )
 
     clear_metrics_callbacks()
@@ -1064,6 +1102,12 @@ cli.add_command(upload_cmd)
     default=None,
     help="Private YAML CEL policy (requires pain001[rules]).",
 )
+@click.option(
+    "--schematron",
+    type=str,
+    default=None,
+    help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
+)
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -1078,6 +1122,7 @@ def validate_cmd(
     decrypt_passphrase_env: str | None,
     verbose: bool,
     rules: str | None,
+    schematron: str | None = None,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -1098,6 +1143,7 @@ def validate_cmd(
         decrypt_passphrase_env: Environment variable holding its passphrase.
         verbose: If True, enable detailed logging output.
         rules: Optional path to private YAML CEL policy rules.
+        schematron: Optional Schematron rulebook preset or path.
     """
     ctx.invoke(
         main,
@@ -1113,6 +1159,7 @@ def validate_cmd(
         verbose=verbose,
         dry_run=True,
         rules=rules,
+        schematron=schematron,
     )
 
 

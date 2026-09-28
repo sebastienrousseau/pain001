@@ -263,6 +263,7 @@ def process_files(
     xml_sign_key: str | bytes | None = None,
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
+    schematron: str | Any | None = None,
 ) -> str:
     """Generate an ISO 20022 payment message from various data sources.
 
@@ -279,6 +280,7 @@ def process_files(
         xml_sign_key: Optional RSA private key in PEM format to sign the XML.
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
+        schematron: Optional Schematron rulebook preset or .sch path to validate.
 
     Returns:
         The path the generated XML file was written to.
@@ -341,6 +343,23 @@ def process_files(
                 with open(written_path, "w", encoding="utf-8") as handle:
                     handle.write(file_xml)
 
+            if schematron is not None:
+                from pain001.schematron import validate_schematron
+
+                sch_res = validate_schematron(
+                    written_path, rulebook=schematron
+                )
+                if not sch_res.is_valid:
+                    error_msg = (
+                        f"Schematron rulebook validation failed for '{written_path}' "
+                        f"using '{schematron}': {sch_res.error_count} error(s).\n"
+                        f"{sch_res.format_report()}"
+                    )
+                    context_logger.error(
+                        f"{sanitize_for_log(error_msg)}".replace("\n", "")
+                    )
+                    raise XMLGenerationError(error_msg)
+
             context_logger.info(
                 f"Successfully generated XML file '{written_path}'".replace(
                     "\n", ""
@@ -390,6 +409,7 @@ def process_files_streaming(
     xml_sign_key: str | bytes | None = None,
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
+    schematron: str | Any | None = None,
 ) -> list[str]:
     """Generate multiple XML files from streamed input chunks.
 
@@ -406,9 +426,13 @@ def process_files_streaming(
         xml_sign_key: Optional RSA private key in PEM format to sign each chunk.
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
+        schematron: Optional Schematron rulebook preset or .sch path to validate.
 
     Returns:
         Paths of the generated chunk XML files, in chunk order.
+
+    Raises:
+        XMLGenerationError: If Schematron rulebook validation fails for any chunk.
     """
     safe_template_path, safe_schema_path = _validate_inputs(
         xml_message_type, xml_template_file_path, xsd_schema_file_path
@@ -445,6 +469,19 @@ def process_files_streaming(
         )
         with open(chunked_path, "w", encoding="utf-8") as handle:
             handle.write(xml_content)
+
+        if schematron is not None:
+            from pain001.schematron import validate_schematron
+
+            sch_res = validate_schematron(chunked_path, rulebook=schematron)
+            if not sch_res.is_valid:
+                error_msg = (
+                    f"Schematron validation failed for chunk '{chunked_path}' "
+                    f"using '{schematron}': {sch_res.error_count} error(s).\n"
+                    f"{sch_res.format_report()}"
+                )
+                raise XMLGenerationError(error_msg)
+
         emit_metric_event(
             "xml_generated",
             message_type=xml_message_type,

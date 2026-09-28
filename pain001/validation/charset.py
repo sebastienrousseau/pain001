@@ -28,12 +28,12 @@ The permitted set is::
 
 import unicodedata
 
-try:
-    import pain001_fast as _fast
+try:  # pragma: no cover - presence depends on the install
+    import pain001_fast as _fast  # type: ignore[import-not-found]
 
     _FAST_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    _fast = None  # type: ignore[assignment]
+except ImportError:  # pragma: no cover - presence depends on the install
+    _fast = None
     _FAST_AVAILABLE = False
 
 #: The ISO 20022 "Latin character set" permitted in restricted text fields.
@@ -77,7 +77,7 @@ def is_valid_charset(value: str) -> bool:
         False
     """
     if _FAST_AVAILABLE and _fast is not None:
-        return _fast.is_valid_charset(value)
+        return bool(_fast.is_valid_charset(value))
     return not find_invalid_characters(value)
 
 

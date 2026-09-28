@@ -46,6 +46,7 @@ include = [
     "pain001/corpus/data/**/*",
     "pain001/corpus/schema/*.json",
     "pain001/migration/mappings/*.yaml",
+    "pain001/schematron/rules/*.sch",
     "pain001/test_fixtures/**/*",
 ]
 

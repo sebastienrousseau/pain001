@@ -38,12 +38,12 @@ Standards:
 
 import functools
 
-try:
-    import pain001_fast as _fast
+try:  # pragma: no cover - presence depends on the install
+    import pain001_fast as _fast  # type: ignore[import-not-found]
 
     _FAST_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    _fast = None  # type: ignore[assignment]
+except ImportError:  # pragma: no cover - presence depends on the install
+    _fast = None
     _FAST_AVAILABLE = False
 
 from pain001.exceptions import InvalidBICError
@@ -290,6 +290,6 @@ def validate_bic_safe(bic: str, field: str | None = None) -> bool:
         ...     print("Valid BIC")
     """
     if _FAST_AVAILABLE and _fast is not None:
-        return _fast.validate_bic(bic)
+        return bool(_fast.validate_bic(bic))
     is_valid, _ = validate_bic(bic, field=field, strict=False)
     return is_valid

@@ -37,12 +37,12 @@ Standards:
 
 import functools
 
-try:
-    import pain001_fast as _fast
+try:  # pragma: no cover - presence depends on the install
+    import pain001_fast as _fast  # type: ignore[import-not-found]
 
     _FAST_AVAILABLE = True
-except ImportError:  # pragma: no cover
-    _fast = None  # type: ignore[assignment]
+except ImportError:  # pragma: no cover - presence depends on the install
+    _fast = None
     _FAST_AVAILABLE = False
 
 from pain001.exceptions import InvalidIBANError
@@ -330,6 +330,6 @@ def validate_iban_safe(iban: str, field: str | None = None) -> bool:
         ...     print("Valid IBAN")
     """
     if _FAST_AVAILABLE and _fast is not None:
-        return _fast.validate_iban(iban)
+        return bool(_fast.validate_iban(iban))
     is_valid, _ = validate_iban(iban, field=field, strict=False)
     return is_valid
