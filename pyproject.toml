@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.71"
+version = "0.0.72"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -46,6 +46,7 @@ include = [
     "pain001/corpus/data/**/*",
     "pain001/corpus/schema/*.json",
     "pain001/migration/mappings/*.yaml",
+    "pain001/schematron/rules/*.sch",
     "pain001/test_fixtures/**/*",
 ]
 
@@ -114,11 +115,11 @@ pytest-xdist = "^3.0.0"
 mypy = "^2.3.1"
 bandit = "^1.9.4"
 pip-audit = ">=2.7,<3.0"
-ruff = "^0.16.8"
+ruff = "^0.16.9"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.0.0.20260724"
 types-pyyaml = "^6.0.12"
-diff-cover = "^10.5.1"
+diff-cover = "^10.6.0"
 types-setuptools = "^84.0.0"
 radon = "^6.0.1"
 mutmut = "^3.8.0"

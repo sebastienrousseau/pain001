@@ -6,6 +6,22 @@ pain001.security package
 Submodules
 ----------
 
+pain001.security.dsig module
+----------------------------
+
+.. automodule:: pain001.security.dsig
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+pain001.security.formula module
+-------------------------------
+
+.. automodule:: pain001.security.formula
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 pain001.security.path\_validator module
 ---------------------------------------
 

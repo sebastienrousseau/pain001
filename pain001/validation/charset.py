@@ -28,6 +28,14 @@ The permitted set is::
 
 import unicodedata
 
+try:  # pragma: no cover - presence depends on the install
+    import pain001_fast as _fast  # type: ignore[import-not-found]
+
+    _FAST_AVAILABLE = True
+except ImportError:  # pragma: no cover - presence depends on the install
+    _fast = None
+    _FAST_AVAILABLE = False
+
 #: The ISO 20022 "Latin character set" permitted in restricted text fields.
 ISO20022_ALLOWED_CHARACTERS = frozenset(
     "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-?:().,'+ "
@@ -68,6 +76,8 @@ def is_valid_charset(value: str) -> bool:
         >>> is_valid_charset("Café")
         False
     """
+    if _FAST_AVAILABLE and _fast is not None:
+        return bool(_fast.is_valid_charset(value))
     return not find_invalid_characters(value)
 
 

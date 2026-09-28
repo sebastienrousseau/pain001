@@ -14,6 +14,27 @@
 
 """Security utilities for Pain001."""
 
+from pain001.security.dsig import (
+    XmlSignatureError,
+    canonicalize_xml,
+    compute_sha256_digest,
+    sign_xml_document,
+    verify_xml_signature,
+)
+from pain001.security.formula import (
+    FORMULA_PREFIXES,
+    sanitize_formula_injection,
+)
 from pain001.security.path_validator import sanitize_for_log, validate_path
 
-__all__ = ["validate_path", "sanitize_for_log"]
+__all__ = [
+    "FORMULA_PREFIXES",
+    "XmlSignatureError",
+    "canonicalize_xml",
+    "compute_sha256_digest",
+    "sanitize_for_log",
+    "sanitize_formula_injection",
+    "sign_xml_document",
+    "validate_path",
+    "verify_xml_signature",
+]

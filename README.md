@@ -67,7 +67,7 @@ Until that release is published, install these additions from source.
 
 ```bash
 # Development checkout, including unreleased features
-git clone --branch feat/v0.0.71 https://github.com/sebastienrousseau/pain001.git
+git clone --branch feat/v0.0.72 https://github.com/sebastienrousseau/pain001.git
 cd pain001
 poetry install --all-extras --with dev,docs
 
@@ -275,6 +275,7 @@ Report vulnerabilities according to [`SECURITY.md`](SECURITY.md).
 
 ## Documentation
 
+[What is pain.001?](https://pain001.com/pain-001/) ·
 [User manual](https://docs.pain001.com) ·
 [API reference](https://sebastienrousseau.github.io/pain001/api-reference.html) ·
 [Developer guide](DEVELOPMENT.md) ·
@@ -290,7 +291,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. This branch prepares
-0.0.71; publication requires approved release PRs and signed release tags.
+0.0.72; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced
