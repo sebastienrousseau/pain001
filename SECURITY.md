@@ -11,7 +11,8 @@ While the project is pre-`1.0`, that means **the latest released
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.71` (latest) | Current | ✅ Yes |
+| `0.0.72` (latest) | Current | ✅ Yes |
+| `0.0.71` | Prior | ✅ Yes |
 | `0.0.70` | Prior | ✅ Yes |
 | `0.0.69` | Transitional legacy support | ✅ Yes — existing support retained pending announced withdrawal |
 | `0.0.68` | Transitional legacy support | ✅ Yes — existing support retained pending announced withdrawal |
