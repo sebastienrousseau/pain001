@@ -19,6 +19,10 @@ templates, schemas, and data sources.
 """
 
 from pain001.schemas.required_columns import required_columns
+from pain001.schematron import (
+    SchematronValidator,
+    validate_schematron,
+)
 from pain001.validation.bic_validator import (
     validate_bic,
     validate_bic_format,
@@ -97,6 +101,9 @@ __all__ = [
     "PROFILES",
     "REMEDIATIONS",
     "remediation_for",
+    # Schematron business rules
+    "SchematronValidator",
+    "validate_schematron",
     # Rail rulebooks
     "RAILS",
     "PURPOSE_MANDATES",
