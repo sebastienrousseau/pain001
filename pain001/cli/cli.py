@@ -60,6 +60,7 @@ from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.transport.cli import upload_cmd
 from pain001.validation import validate_scheme
+from pain001.xml.envelope import BusinessApplicationHeader
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
@@ -365,6 +366,14 @@ def _generate_xml_files(
     streaming: bool,
     chunk_size: int,
     verbose: bool,
+    envelop_bah: bool = False,
+    bah_sender: str | None = None,
+    bah_receiver: str | None = None,
+    bah_msg_id: str | None = None,
+    xml_sign_key: str | None = None,
+    xml_sign_cert: str | None = None,
+    xml_sign_passphrase_env: str | None = None,
+    schematron: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Generate XML payment files, exiting with code 1 on failure.
@@ -381,6 +390,14 @@ def _generate_xml_files(
             XML file per chunk.
         chunk_size: Rows per chunk in streaming mode.
         verbose: If True, show detailed error traceback.
+        envelop_bah: If True, wrap generated XML in an ISO 20022 BAH envelope.
+        bah_sender: Sender BIC or Org ID for the Business Application Header.
+        bah_receiver: Receiver BIC or Org ID for the Business Application Header.
+        bah_msg_id: Business Message Identifier for the Business Application Header.
+        xml_sign_key: Path to RSA private key PEM file to sign generated XML.
+        xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
+        xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
+        schematron: Optional Schematron rulebook preset or path.
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
@@ -392,6 +409,30 @@ def _generate_xml_files(
         os.path.realpath(output_dir) if output_dir else os.getcwd()
     )
 
+    bah_header = None
+    if envelop_bah or bah_sender or bah_receiver or bah_msg_id:
+        bah_header = BusinessApplicationHeader(
+            from_bic=bah_sender,
+            to_bic=bah_receiver,
+            biz_msg_idr=bah_msg_id,
+        )
+
+    sign_key_bytes: str | None = None
+    if xml_sign_key:
+        with open(xml_sign_key, encoding="utf-8") as f:
+            sign_key_bytes = f.read()
+
+    sign_cert_bytes: str | None = None
+    if xml_sign_cert:
+        with open(xml_sign_cert, encoding="utf-8") as f:
+            sign_cert_bytes = f.read()
+
+    sign_passphrase = (
+        os.environ.get(xml_sign_passphrase_env)
+        if xml_sign_passphrase_env
+        else None
+    )
+
     try:
         if streaming:
             process_files_streaming(
@@ -401,6 +442,12 @@ def _generate_xml_files(
                 data_file_path,
                 chunk_size=chunk_size,
                 output_dir=resolved_output_dir,
+                envelop_bah=envelop_bah,
+                bah_header=bah_header,
+                xml_sign_key=sign_key_bytes,
+                xml_sign_cert=sign_cert_bytes,
+                xml_sign_passphrase=sign_passphrase,
+                schematron=schematron,
             )
         else:
             process_files(
@@ -411,6 +458,12 @@ def _generate_xml_files(
                 output_path=os.path.join(
                     resolved_output_dir, f"{xml_message_type}.xml"
                 ),
+                envelop_bah=envelop_bah,
+                bah_header=bah_header,
+                xml_sign_key=sign_key_bytes,
+                xml_sign_cert=sign_cert_bytes,
+                xml_sign_passphrase=sign_passphrase,
+                schematron=schematron,
             )
 
         console.print(
@@ -605,6 +658,58 @@ def _generate_xml_files(
     default=None,
     help="Private YAML CEL policy to enforce before generation (requires pain001[rules]).",
 )
+@click.option(
+    "--envelop-bah",
+    is_flag=True,
+    default=False,
+    help=(
+        "Encapsulate generated payment in an ISO 20022 Business Application "
+        "Header (head.001.001.03) envelope."
+    ),
+)
+@click.option(
+    "--bah-sender",
+    type=str,
+    default=None,
+    help="Sender BIC or Org ID for the Business Application Header.",
+)
+@click.option(
+    "--bah-receiver",
+    type=str,
+    default=None,
+    help="Receiver BIC or Org ID for the Business Application Header.",
+)
+@click.option(
+    "--bah-msg-id",
+    type=str,
+    default=None,
+    help="Business Message Identifier for the Business Application Header.",
+)
+@click.option(
+    "--xml-sign-key",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="RSA private key PEM file to cryptographically sign generated XML via W3C XML-DSig.",
+)
+@click.option(
+    "--xml-sign-cert",
+    type=click.Path(exists=True, dir_okay=False, readable=True),
+    default=None,
+    help="Optional X.509 certificate PEM file to embed in XML-DSig <KeyInfo>.",
+)
+@click.option(
+    "--xml-sign-passphrase-env",
+    type=str,
+    default=None,
+    metavar="VAR",
+    help="Environment variable holding the passphrase for --xml-sign-key.",
+)
+@click.option(
+    "--schematron",
+    type=str,
+    default=None,
+    help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
+)
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -627,6 +732,14 @@ def main(
     decrypt_key: str | None = None,
     decrypt_passphrase_env: str | None = None,
     rules: str | None = None,
+    envelop_bah: bool = False,
+    bah_sender: str | None = None,
+    bah_receiver: str | None = None,
+    bah_msg_id: str | None = None,
+    xml_sign_key: str | None = None,
+    xml_sign_cert: str | None = None,
+    xml_sign_passphrase_env: str | None = None,
+    schematron: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -659,6 +772,15 @@ def main(
         decrypt_passphrase_env: Name of the environment variable that
             holds the passphrase for that key.
         rules: Optional path to private YAML CEL policy rules.
+        envelop_bah: If True, wrap generated XML in an ISO 20022 BAH envelope.
+        bah_sender: Sender BIC or Org ID for the Business Application Header.
+        bah_receiver: Receiver BIC or Org ID for the Business Application Header.
+        bah_msg_id: Business Message Identifier for the Business Application Header.
+        xml_sign_key: Path to RSA private key PEM file to sign generated XML.
+        xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
+        xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
+        schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
+            or filesystem path to a .sch rulebook file.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -784,6 +906,30 @@ def main(
             scheme_format=scheme_format,
             rules=rules,
         )
+        if schematron:
+            from pain001.data.loader import load_payment_data
+            from pain001.schematron import validate_schematron
+            from pain001.xml.generate_xml import generate_xml_string
+
+            payment_data = load_payment_data(data_file_path)
+            xml_str = generate_xml_string(
+                payment_data,
+                xml_message_type,
+                xml_template_file_path,
+                xsd_schema_file_path,
+            )
+            sch_result = validate_schematron(xml_str, rulebook=schematron)
+            if not sch_result.is_valid:
+                console.print(
+                    f"\n[bold red]✗ Schematron rulebook '{schematron}' failed:[/bold red]\n"
+                    f"{sch_result.format_report()}"
+                )
+                sys.exit(1)
+            console.print(
+                f"[bold green]✓ Schematron rulebook '{schematron}' passed[/bold green] "
+                f"({sch_result.rules_passed}/{sch_result.rules_evaluated} rules)"
+            )
+
         log_event(
             logger,
             logging.INFO,
@@ -821,6 +967,14 @@ def main(
         resolved_config["streaming"],
         resolved_config["chunk_size"],
         verbose,
+        envelop_bah=envelop_bah,
+        bah_sender=bah_sender,
+        bah_receiver=bah_receiver,
+        bah_msg_id=bah_msg_id,
+        xml_sign_key=xml_sign_key,
+        xml_sign_cert=xml_sign_cert,
+        xml_sign_passphrase_env=xml_sign_passphrase_env,
+        schematron=schematron,
     )
 
     clear_metrics_callbacks()
@@ -948,6 +1102,12 @@ cli.add_command(upload_cmd)
     default=None,
     help="Private YAML CEL policy (requires pain001[rules]).",
 )
+@click.option(
+    "--schematron",
+    type=str,
+    default=None,
+    help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
+)
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -962,6 +1122,7 @@ def validate_cmd(
     decrypt_passphrase_env: str | None,
     verbose: bool,
     rules: str | None,
+    schematron: str | None = None,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -982,6 +1143,7 @@ def validate_cmd(
         decrypt_passphrase_env: Environment variable holding its passphrase.
         verbose: If True, enable detailed logging output.
         rules: Optional path to private YAML CEL policy rules.
+        schematron: Optional Schematron rulebook preset or path.
     """
     ctx.invoke(
         main,
@@ -997,6 +1159,7 @@ def validate_cmd(
         verbose=verbose,
         dry_run=True,
         rules=rules,
+        schematron=schematron,
     )
 
 

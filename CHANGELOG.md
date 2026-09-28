@@ -9,6 +9,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.72] - 2026-09-28
+
+### Added
+
+- ISO 20022 Schematron business rule evaluator supporting EPC/SEPA, CBPR+, and FedNow rulebooks.
+- Formula injection shielding across batch and streaming CSV ingestion mitigating CWE-1236.
+- ISO 20022 Business Application Header (BAH head.001.001.03 / head.003.001.01) and XML Digital Signatures (XML-DSig RSA-SHA256).
+- Prometheus metrics engine on `/metrics` emitting standard transaction and latency quantiles.
+- SLSA Level 3 attestations and provenance generation workflow for release artifacts.
+- Native acceleration hooks integrating `pain001-fast` for sub-25ns financial validation.
+
+### Changed
+
+- Updated dependencies: diff-cover to 10.6.0, ruff to 0.16.9, hypothesis to 6.168.3, and CodeQL actions to 4.38.2.
+- The README and documentation index link [What is pain.001?](https://pain001.com/pain-001/).
+
 ## [0.0.71] - 2026-09-25
 
 ### Added
