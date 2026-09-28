@@ -29,6 +29,7 @@ Subpackages
    pain001.parquet
    pain001.plugins
    pain001.schemas
+   pain001.schematron
    pain001.security
    pain001.templates
    pain001.test_fixtures
