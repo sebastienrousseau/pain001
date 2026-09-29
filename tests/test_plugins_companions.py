@@ -59,8 +59,11 @@ def test_companion_table_is_read_only() -> None:
         COMPANION_LOADERS[".doc"] = "pain001-loader-word"  # type: ignore[index]
 
 
-def test_xlsx_error_names_the_package(tmp_path) -> None:
+def test_xlsx_error_names_the_package(monkeypatch, tmp_path) -> None:
     """The acceptance criterion, as a test."""
+    from pain001.plugins import registry
+
+    monkeypatch.setattr(registry, "get_loader_for_extension", lambda ext: None)
     target = tmp_path / "payments.xlsx"
     target.write_bytes(b"not really xlsx")
 
@@ -73,6 +76,7 @@ def test_xlsx_error_names_the_package(tmp_path) -> None:
 
 
 def test_xlsx_error_does_not_fall_back_to_the_generic_text(
+    monkeypatch,
     tmp_path,
 ) -> None:
     """A named hint replaces the "install a plugin" text, not adds to it.
@@ -80,6 +84,9 @@ def test_xlsx_error_does_not_fall_back_to_the_generic_text(
     Emitting both would leave the user reading two competing
     instructions in one message.
     """
+    from pain001.plugins import registry
+
+    monkeypatch.setattr(registry, "get_loader_for_extension", lambda ext: None)
     target = tmp_path / "payments.xlsx"
     target.write_bytes(b"not really xlsx")
 
