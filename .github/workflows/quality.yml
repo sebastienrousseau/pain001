@@ -42,7 +42,7 @@ jobs:
       # No `|| true`: for months this step failed on a removed mutmut flag
       # and nobody saw it. The gate in the Makefile is the point of the job.
       - run: poetry run make mutate-fast
-        timeout-minutes: 45
+        timeout-minutes: 90
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:

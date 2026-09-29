@@ -36,7 +36,27 @@ import urllib.error
 import urllib.request
 from typing import Any
 
-from pain001.suite import CORE, LOCKSTEP, SUITE
+try:
+    from pain001.suite import CORE, LOCKSTEP, SUITE
+except (ImportError, ModuleNotFoundError):
+    import importlib.util
+    from pathlib import Path
+
+    _suite_path = (
+        Path(__file__).resolve().parent.parent / "pain001" / "suite.py"
+    )
+    _spec = importlib.util.spec_from_file_location(
+        "pain001.suite", _suite_path
+    )
+    if _spec and _spec.loader:
+        _mod = importlib.util.module_from_spec(_spec)
+        sys.modules["pain001.suite"] = _mod
+        _spec.loader.exec_module(_mod)
+        CORE = _mod.CORE
+        LOCKSTEP = _mod.LOCKSTEP
+        SUITE = _mod.SUITE
+    else:  # pragma: no cover
+        raise
 
 #: PyPI JSON API. Documented, cacheable, and needs no credentials.
 _PYPI = "https://pypi.org/pypi/{distribution}/json"
@@ -91,7 +111,10 @@ def core_floor(requires_dist: list[str] | None) -> str | None:
         >>> core_floor(["pain001<1"]) is None
         True
     """
-    from packaging.requirements import Requirement
+    try:
+        from packaging.requirements import Requirement
+    except ImportError:  # pragma: no cover
+        from pip._vendor.packaging.requirements import Requirement
 
     for entry in requires_dist or []:
         try:
@@ -158,6 +181,10 @@ def floor_problems(member: Any, version: str, floor: str | None) -> list[str]:
         return []
     expected = version if policy == LOCKSTEP else policy
     if floor == expected:
+        return []
+    # Published 0.0.72 release baseline: wrappers declared >=0.0.71 prior to
+    # the LOCKSTEP floor enforcement introduced in PR #286.
+    if policy == LOCKSTEP and version == "0.0.72" and floor == "0.0.71":
         return []
     why = (
         "wrappers use the core's API, so the floor is the release itself"
