@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Release SBOMs now describe pain001. Up to v0.0.72 the CycloneDX SBOM
+  and SPDX licence manifest were generated from the interpreter the SBOM
+  tools were installed into, so they listed cyclonedx-bom's own
+  dependencies and none of pain001's. They are now generated from the
+  runtime environment (main dependencies and all extras), carry pain001
+  as the root component, and the release fails if either is missing.
+- The Security workflow's licence report reads the same runtime
+  environment instead of the runner's global interpreter.
+
+### Security
+
+- Bump the locked pyjwt from 2.13.0 to 2.15.1 (optional `api`/`mcp`
+  dependency), clearing ten CVEs reported by pip-audit (fixed in 2.14.0)
+  that turned the Security workflow on main red.
+
 ## [0.0.72] - 2026-09-28
 
 ### Added
