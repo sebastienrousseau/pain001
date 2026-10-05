@@ -134,7 +134,7 @@ types-jsonschema = "^4.26.0.20260518"
 pandas = "^2.3.3"
 wheel = ">=0.48.0"
 interrogate = "^1.7.0"
-pydoclint = "^0.9.1"
+pydoclint = "^0.10.1"
 
 [tool.poetry.group.docs]
 optional = true
