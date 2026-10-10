@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Updated dependencies: `fakeredis` to 2.39.0, `mypy` to 2.4.0, `pydoclint` to 0.10.1, `python-gnupg` to 0.5.7, `ruff` to 0.16.10, and `uvicorn` to 0.54.0.
+
 ### Fixed
 
 - Release SBOMs now describe pain001. Up to v0.0.72 the CycloneDX SBOM
@@ -25,6 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump the locked pyjwt from 2.13.0 to 2.15.1 (optional `api`/`mcp`
   dependency), clearing ten CVEs reported by pip-audit (fixed in 2.14.0)
   that turned the Security workflow on main red.
+- Bump `urllib3` from 2.7.0 to 2.8.0 across `.github/requirements/docs.txt`,
+  `.github/requirements/sdk-runtime.in`, and `poetry.lock`, clearing three CVEs
+  reported by pip-audit (`PYSEC-2026-4175`, `PYSEC-2026-4176`, `PYSEC-2026-4177`).
 
 ## [0.0.72] - 2026-09-28
 
