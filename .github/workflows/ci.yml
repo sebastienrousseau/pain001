@@ -184,15 +184,43 @@ jobs:
         # Trivy) ingest SBOMs as a procurement checkbox. Attaching them
         # to each release means consumers can audit transitive deps
         # without re-resolving the lockfile.
+        #
+        # The SBOM describes pain001's runtime environment, not the tool's.
+        # Up to v0.0.72 the tools were installed into the interpreter they
+        # scanned, so the SBOM listed cyclonedx-bom's own dependency tree
+        # and none of pain001's. The tools now live in their own venv and
+        # scan the Poetry env synced to runtime deps (main + all extras).
+        # `cyclonedx-py poetry` cannot be used: it reads the name from
+        # [tool.poetry], which this PEP 621 layout leaves to [project], so
+        # the root component comes from a minimal generated descriptor.
         run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          tools="$RUNNER_TEMP/sbom-tools"
+          python -m venv "$tools"
+          "$tools/bin/pip" install --quiet --require-hashes -r .github/requirements/sbom.txt
+          poetry install --no-interaction --only main --all-extras --sync
+          project_python="$(poetry env info --executable)"
+          root="$RUNNER_TEMP/sbom-root.toml"
+          printf '[project]\nname = "pain001"\nversion = "%s"\nlicense = "Apache-2.0 OR MIT"\n' \
+            "$(poetry version -s)" > "$root"
           mkdir -p sbom
-          pip install --quiet --require-hashes -r .github/requirements/sbom.txt
           # CycloneDX (JSON + XML) - the industry default.
-          cyclonedx-py environment --output-file sbom/pain001-${GITHUB_REF_NAME#v}.cdx.json
-          cyclonedx-py environment --output-format xml --output-file sbom/pain001-${GITHUB_REF_NAME#v}.cdx.xml
-          # SPDX manifest of installed packages with licences.
-          pip-licenses --format=json --with-license-file --no-license-path \
-            --output-file=sbom/pain001-${GITHUB_REF_NAME#v}.spdx-licenses.json
+          for format in JSON XML; do
+            ext=$(printf '%s' "$format" | tr '[:upper:]' '[:lower:]')
+            "$tools/bin/cyclonedx-py" environment --pyproject "$root" --mc-type library \
+              --output-reproducible --output-format "$format" \
+              --output-file "sbom/pain001-${version}.cdx.${ext}" "$project_python"
+          done
+          # Fail rather than ship an SBOM without the root or a runtime dep.
+          jq -e '.metadata.component.name == "pain001"
+                 and ([.components[].name | ascii_downcase] | index("xmlschema"))
+                 and ([.components[].name] | index("cyclonedx-bom") | not)' \
+            "sbom/pain001-${version}.cdx.json" > /dev/null
+          # SPDX manifest of the runtime packages with licences.
+          "$tools/bin/pip-licenses" --python "$project_python" --format=json \
+            --with-license-file --no-license-path \
+            --output-file="sbom/pain001-${version}.spdx-licenses.json"
           ls -la sbom/
 
       # Every file attached to the release must be hashed here, not just

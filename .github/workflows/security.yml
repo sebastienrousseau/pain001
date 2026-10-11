@@ -44,10 +44,16 @@ jobs:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
+      # Report the licences of pain001's runtime environment, not of the
+      # interpreter pip-licenses happens to be installed into.
       - run: |
-          pip install --require-hashes -r .github/requirements/sbom.txt
-          pip-licenses --format=json > licenses.json
-          pip-licenses --format=markdown > LICENSES_REPORT.md
+          set -euo pipefail
+          python -m venv "$RUNNER_TEMP/licence-tools"
+          "$RUNNER_TEMP/licence-tools/bin/pip" install --require-hashes -r .github/requirements/sbom.txt
+          poetry install --no-interaction --only main --all-extras --sync
+          project_python="$(poetry env info --executable)"
+          "$RUNNER_TEMP/licence-tools/bin/pip-licenses" --python "$project_python" --format=json > licenses.json
+          "$RUNNER_TEMP/licence-tools/bin/pip-licenses" --python "$project_python" --format=markdown > LICENSES_REPORT.md
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: licenses
