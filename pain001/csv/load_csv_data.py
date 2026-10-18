@@ -30,11 +30,17 @@ from pain001.security import (
 logger = logging.getLogger(__name__)
 
 
-def load_csv_data(file_path: str) -> list[dict[str, Any]]:
+def load_csv_data(
+    file_path: str, sanitize_formula: bool = False
+) -> list[dict[str, Any]]:
     """Load CSV data from a file.
 
     Args:
         file_path: The path to the CSV file.
+        sanitize_formula: If True, neutralize spreadsheet formula injection
+            characters ('=', '+', '-', '@', '\\t', '\\r', '\\n') by prefixing
+            cells with a single quote. Defaults to False to prevent corruption
+            of legitimate financial identifiers and contact strings.
 
     Returns:
         list: A list of dictionaries containing the CSV data.
@@ -82,14 +88,17 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
         with open(safe_path, newline="", encoding="utf-8") as file:  # nosec B108
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
-                data.append(
-                    {
-                        k: sanitize_formula_injection(v)
-                        if isinstance(v, str)
-                        else v
-                        for k, v in row.items()
-                    }
-                )
+                if sanitize_formula:
+                    data.append(
+                        {
+                            k: sanitize_formula_injection(v)
+                            if isinstance(v, str)
+                            else v
+                            for k, v in row.items()
+                        }
+                    )
+                else:
+                    data.append(dict(row))
     except OSError:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logger.error(
@@ -110,7 +119,7 @@ def load_csv_data(file_path: str) -> list[dict[str, Any]]:
 
 
 def load_csv_data_streaming(
-    file_path: str, chunk_size: int = 1000
+    file_path: str, chunk_size: int = 1000, sanitize_formula: bool = False
 ) -> Generator[list[dict[str, Any]], None, None]:
     """Load CSV data from a file in chunks for memory-efficient processing.
 
@@ -120,6 +129,10 @@ def load_csv_data_streaming(
     Args:
         file_path: The path to the CSV file.
         chunk_size: Number of rows to yield per chunk. Default is 1000.
+        sanitize_formula: If True, neutralize spreadsheet formula injection
+            characters ('=', '+', '-', '@', '\\t', '\\r', '\\n') by prefixing
+            cells with a single quote. Defaults to False to prevent corruption
+            of legitimate financial identifiers and contact strings.
 
     Yields:
         list[dict[str, Any]]: Up to chunk_size rows of CSV data.
@@ -164,14 +177,17 @@ def load_csv_data_streaming(
         with open(safe_path, newline="", encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
-                chunk.append(
-                    {
-                        k: sanitize_formula_injection(v)
-                        if isinstance(v, str)
-                        else v
-                        for k, v in row.items()
-                    }
-                )
+                if sanitize_formula:
+                    chunk.append(
+                        {
+                            k: sanitize_formula_injection(v)
+                            if isinstance(v, str)
+                            else v
+                            for k, v in row.items()
+                        }
+                    )
+                else:
+                    chunk.append(dict(row))
                 row_count += 1
                 if len(chunk) >= chunk_size:
                     yield chunk

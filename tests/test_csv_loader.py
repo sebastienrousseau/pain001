@@ -714,7 +714,7 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
             self.assertLessEqual(len(chunks[-1]), 2)
 
     def test_load_csv_data_formula_injection_sanitization(self) -> None:
-        """Test that cells with formula characters are sanitized with a leading single quote."""
+        """Test that cells with formula characters are preserved by default and sanitized when enabled."""
         csv_file = "pain001/test_fixtures/formula_data.csv"
         try:
             with open(csv_file, "w", newline="", encoding="utf-8") as f:
@@ -734,7 +734,22 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
                     ]
                 )
 
-            data = load_csv_data(csv_file)
+            # Default: raw values preserved to avoid financial data corruption
+            raw_data = load_csv_data(csv_file)
+            self.assertEqual(raw_data[0]["id"], "1")
+            self.assertEqual(raw_data[0]["cmd"], "=cmd|' /C calc'!A0")
+            self.assertEqual(raw_data[0]["calc"], "+123")
+            self.assertEqual(raw_data[0]["minus"], "-456")
+            self.assertEqual(raw_data[0]["at"], "@SUM(A1)")
+            self.assertEqual(raw_data[0]["tab"], "\t=evil")
+            self.assertEqual(raw_data[0]["cr"], "\r=evil")
+
+            raw_chunks = list(load_csv_data_streaming(csv_file, chunk_size=10))
+            self.assertEqual(raw_chunks[0][0]["cmd"], "=cmd|' /C calc'!A0")
+            self.assertEqual(raw_chunks[0][0]["calc"], "+123")
+
+            # Opt-in: formula characters prefixed with a single quote
+            data = load_csv_data(csv_file, sanitize_formula=True)
             self.assertEqual(data[0]["id"], "1")
             self.assertEqual(data[0]["cmd"], "'=cmd|' /C calc'!A0")
             self.assertEqual(data[0]["calc"], "'+123")
@@ -743,7 +758,11 @@ class TestLoadCsvDataStreaming(unittest.TestCase):
             self.assertEqual(data[0]["tab"], "'\t=evil")
             self.assertEqual(data[0]["cr"], "'\r=evil")
 
-            chunks = list(load_csv_data_streaming(csv_file, chunk_size=10))
+            chunks = list(
+                load_csv_data_streaming(
+                    csv_file, chunk_size=10, sanitize_formula=True
+                )
+            )
             self.assertEqual(chunks[0][0]["cmd"], "'=cmd|' /C calc'!A0")
             self.assertEqual(chunks[0][0]["calc"], "'+123")
             self.assertEqual(chunks[0][0]["minus"], "'-456")

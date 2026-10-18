@@ -113,6 +113,24 @@ class TestContext(unittest.TestCase):
             "Logger should have at least one handler",
         )
 
+    def test_concurrent_get_instance(self) -> None:
+        """Test that get_instance is safe under concurrent execution across threads."""
+        from concurrent.futures import ThreadPoolExecutor
+
+        Context.instance = None
+
+        def worker() -> Context:
+            return Context.get_instance()
+
+        with ThreadPoolExecutor(max_workers=8) as executor:
+            futures = [executor.submit(worker) for _ in range(32)]
+            results = [f.result() for f in futures]
+
+        self.assertEqual(len(results), 32)
+        first = results[0]
+        for item in results:
+            self.assertIs(item, first)
+
 
 if __name__ == "__main__":
     unittest.main()
