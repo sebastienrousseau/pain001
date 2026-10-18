@@ -601,6 +601,11 @@ def generate_xml(
     xml_file_path: str,
     xsd_file_path: str,
     output_path: str | None = None,
+    envelop_bah: bool = False,
+    bah_header: Any | None = None,
+    xml_sign_key: str | bytes | None = None,
+    xml_sign_cert: str | bytes | None = None,
+    xml_sign_passphrase: str | bytes | None = None,
 ) -> str:
     """Generates an ISO 20022 pain.001 XML file from input data.
 
@@ -619,6 +624,11 @@ def generate_xml(
             file is written next to the template (deprecated behavior
             that only works when the template lives under the current
             working directory).
+        envelop_bah: If True, wrap generated XML in an ISO 20022 BAH envelope.
+        bah_header: Optional customized BusinessApplicationHeader instance.
+        xml_sign_key: Optional RSA private key in PEM format to sign the XML.
+        xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
+        xml_sign_passphrase: Optional passphrase for the private key.
 
     Returns:
         The path the XML file was written to.
@@ -632,6 +642,25 @@ def generate_xml(
     xml_content = generate_xml_string(
         data, payment_initiation_message_type, xml_file_path, xsd_file_path
     )
+
+    if envelop_bah or bah_header is not None:
+        from pain001.xml.envelope import (
+            BusinessApplicationHeader,
+            envelop_iso20022_message,
+        )
+
+        hdr = bah_header or BusinessApplicationHeader()
+        xml_content = envelop_iso20022_message(xml_content, hdr)
+
+    if xml_sign_key is not None:
+        from pain001.security.dsig import sign_xml_document
+
+        xml_content = sign_xml_document(
+            xml_content,
+            private_key_pem=xml_sign_key,
+            cert_pem=xml_sign_cert,
+            passphrase=xml_sign_passphrase,
+        )
 
     if output_path is not None:
         safe_xml_path = os.path.realpath(str(output_path))
