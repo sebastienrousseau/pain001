@@ -50,7 +50,7 @@ jobs:
 
       # Initializes the CodeQL tools for scanning
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v3
+        uses: github/codeql-action/init@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v3
         with:
           languages: ${{ matrix.language }}
           # Use custom config that registers validate_path as a sanitizer
@@ -63,11 +63,11 @@ jobs:
       # Autobuild attempts to build any compiled languages (C/C++, C#, Go, or Java)
       # For Python, this step is typically not needed, but we include it for completeness
       - name: Autobuild
-        uses: github/codeql-action/autobuild@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v3
+        uses: github/codeql-action/autobuild@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v3
 
       # Perform CodeQL Analysis
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v3
+        uses: github/codeql-action/analyze@6f2ac81f5cd81fe351a197ba0b00d91d03cd2aee # v3
         with:
           category: "/language:${{ matrix.language }}"
           # Upload results to GitHub Security tab
@@ -78,7 +78,7 @@ jobs:
 
       # Generate SARIF report summary
       - name: Upload SARIF as artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: codeql-results-${{ matrix.language }}
