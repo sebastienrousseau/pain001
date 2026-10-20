@@ -14,6 +14,7 @@
 
 """Job management for async XML generation."""
 
+import threading
 import uuid
 from datetime import datetime, timezone
 from enum import Enum
@@ -111,6 +112,7 @@ class JobManager:
     """
 
     def __init__(self, max_jobs: int = 1000, store: JobStore | None = None):
+        self._lock = threading.RLock()
         self.jobs: dict[str, JobResult] = {}
         self.max_jobs = max_jobs
         self.store = store
@@ -133,15 +135,16 @@ class JobManager:
         Returns:
             Job ID.
         """
-        if len(self.jobs) >= self.max_jobs:
-            self.cleanup_old_jobs()
-        job_id = str(uuid.uuid4())
-        self.jobs[job_id] = JobResult(
-            job_id=job_id,
-            status=JobStatus.PENDING,
-        )
-        self._persist(job_id)
-        return job_id
+        with self._lock:
+            if len(self.jobs) >= self.max_jobs:
+                self.cleanup_old_jobs()
+            job_id = str(uuid.uuid4())
+            self.jobs[job_id] = JobResult(
+                job_id=job_id,
+                status=JobStatus.PENDING,
+            )
+            self._persist(job_id)
+            return job_id
 
     def get_job(self, job_id: str) -> JobResult | None:
         """Get job by ID.
@@ -152,7 +155,8 @@ class JobManager:
         Returns:
             JobResult or None if not found.
         """
-        return self.jobs.get(job_id)
+        with self._lock:
+            return self.jobs.get(job_id)
 
     def update_status(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         self,
@@ -175,18 +179,19 @@ class JobManager:
         late-arriving update (e.g. a worker finishing after the user
         cancelled the job) must not resurrect or overwrite them.
         """
-        if job_id in self.jobs:
-            job = self.jobs[job_id]
-            if job.status in TERMINAL_STATUSES:
-                return
-            job.status = status
-            job.progress_percent = min(100, max(0, progress))
-            job.updated_at = datetime.now(timezone.utc)
-            if result:
-                job.result = result
-            if error:
-                job.error = error
-            self._persist(job_id)
+        with self._lock:
+            if job_id in self.jobs:
+                job = self.jobs[job_id]
+                if job.status in TERMINAL_STATUSES:
+                    return
+                job.status = status
+                job.progress_percent = min(100, max(0, progress))
+                job.updated_at = datetime.now(timezone.utc)
+                if result:
+                    job.result = result
+                if error:
+                    job.error = error
+                self._persist(job_id)
 
     def cancel_job(self, job_id: str) -> bool:
         """Cancel a job.
@@ -197,14 +202,15 @@ class JobManager:
         Returns:
             True if cancelled, False if not found.
         """
-        if job_id in self.jobs:
-            job = self.jobs[job_id]
-            if job.status not in TERMINAL_STATUSES:
-                job.status = JobStatus.CANCELLED
-                job.updated_at = datetime.now(timezone.utc)
-                self._persist(job_id)
-                return True
-        return False
+        with self._lock:
+            if job_id in self.jobs:
+                job = self.jobs[job_id]
+                if job.status not in TERMINAL_STATUSES:
+                    job.status = JobStatus.CANCELLED
+                    job.updated_at = datetime.now(timezone.utc)
+                    self._persist(job_id)
+                    return True
+            return False
 
     def cleanup_old_jobs(self, keep_count: int = 100) -> None:
         """Remove old completed jobs to free memory.
@@ -212,17 +218,18 @@ class JobManager:
         Args:
             keep_count: Number of recent jobs to keep.
         """
-        completed_jobs = [
-            (job_id, job)
-            for job_id, job in self.jobs.items()
-            if job.status in TERMINAL_STATUSES
-        ]
+        with self._lock:
+            completed_jobs = [
+                (job_id, job)
+                for job_id, job in self.jobs.items()
+                if job.status in TERMINAL_STATUSES
+            ]
 
-        # Sort by updated_at and remove oldest
-        if len(completed_jobs) > keep_count:
-            completed_jobs.sort(key=lambda x: x[1].updated_at)
-            for job_id, _ in completed_jobs[:-keep_count]:
-                del self.jobs[job_id]
+            # Sort by updated_at and remove oldest
+            if len(completed_jobs) > keep_count:
+                completed_jobs.sort(key=lambda x: x[1].updated_at)
+                for job_id, _ in completed_jobs[:-keep_count]:
+                    del self.jobs[job_id]
 
 
 # Global job manager instance. Persistence activates only when

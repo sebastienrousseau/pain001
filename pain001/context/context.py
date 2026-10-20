@@ -15,6 +15,7 @@
 """Singleton application context that owns the shared pain001 logger."""
 
 import logging
+import threading
 from typing import Optional
 
 
@@ -35,6 +36,7 @@ class Context:
     """
 
     instance: Optional["Context"] = None
+    _lock: threading.RLock = threading.RLock()
 
     @staticmethod
     def get_instance() -> "Context":
@@ -48,7 +50,9 @@ class Context:
                 (defensive check; unreachable in practice).
         """
         if Context.instance is None:
-            Context()
+            with Context._lock:
+                if Context.instance is None:
+                    Context()
         if (
             Context.instance is None
         ):  # pragma: no cover - Context() always sets it
@@ -56,9 +60,9 @@ class Context:
         return Context.instance
 
     def __init__(self) -> None:
-        if Context.instance is not None:
-            raise RuntimeError("This class is a singleton!")
-        else:
+        with Context._lock:
+            if Context.instance is not None and Context.instance is not self:
+                raise RuntimeError("This class is a singleton!")
             Context.instance = self
             # Never use the root logger ("") — a library must not
             # reconfigure the host application's logging.

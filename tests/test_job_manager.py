@@ -50,3 +50,27 @@ def test_terminal_status_is_not_overwritten() -> None:
     job = manager.get_job(job_id)
     assert job is not None and job.status == "failed" and job.error == "boom"
     manager.update_status("no-such-job", "running", 1)  # silently ignored
+
+
+def test_concurrent_job_manager_operations() -> None:
+    """JobManager remains consistent under concurrent multi-threaded operations."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    manager = JobManager(max_jobs=100)
+
+    def worker(idx: int) -> str:
+        job_id = manager.create_job()
+        manager.update_status(job_id, "processing", progress=50)
+        if idx % 2 == 0:
+            manager.update_status(job_id, "success", progress=100)
+        else:
+            manager.cancel_job(job_id)
+        assert manager.get_job(job_id) is not None
+        return job_id
+
+    with ThreadPoolExecutor(max_workers=8) as executor:
+        job_ids = list(executor.map(worker, range(40)))
+
+    assert len(job_ids) == 40
+    manager.cleanup_old_jobs(keep_count=10)
+    assert len(manager.jobs) <= 10

@@ -12,9 +12,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Updated dependencies: `fakeredis` to 2.39.0, `mypy` to 2.4.0, `pydoclint` to 0.10.1, `python-gnupg` to 0.5.7, `ruff` to 0.16.10, and `uvicorn` to 0.54.0.
+- CSV formula injection sanitization (`sanitize_formula`) now defaults to `False` on ingress to preserve legitimate financial strings (such as phone numbers with `+` or references with `-`), and is configurable via the `sanitize_formula` parameter.
+- Streamlined ISO 20022 Business Application Header (BAH) envelopment and XML-DSig signing in-memory before disk write, eliminating redundant full-document disk re-reads and re-writes in `pain001.core.process_files`.
 
 ### Fixed
 
+- Thread-safe concurrency synchronization using `threading.RLock()` for `pain001.context.Context` singleton to prevent race conditions during concurrent initialization.
+- Thread-safe synchronization using `threading.RLock()` for `pain001.api.job_manager.JobManager` across asynchronous worker operations and background polling.
 - Release SBOMs now describe pain001. Up to v0.0.72 the CycloneDX SBOM
   and SPDX licence manifest were generated from the interpreter the SBOM
   tools were installed into, so they listed cyclonedx-bom's own

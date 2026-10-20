@@ -289,6 +289,12 @@ class ValidationService:
     ) -> ValidationResult:
         """Validate that the XML template conforms to the XSD schema.
 
+        Note:
+            Raw Jinja2 XML templates containing unrendered directives
+            ({% for ... %}, {{ date }}) are not strictly schema-valid XML
+            until rendered with payment data. Schema validation is therefore
+            authoritatively enforced during document generation.
+
         Args:
             template_path: Path to XML template file.
             schema_path: Path to XSD schema file.
@@ -424,25 +430,11 @@ class ValidationService:
                 result.error or "Data source validation failed"
             )
 
-        # Only proceed with content validation if files exist
-        # SKIP template-schema validation here because the template contains
-        # Jinja2 variables ({{date}}, {{id}}, etc.) which are not valid XML.
-        # The generated XML (after rendering with data) will be validated
-        # in the generate_xml_string() function instead.
-        # if (
-        #     report.results["template"].is_valid
-        #     and report.results["schema"].is_valid
-        # ):
-        #     result = self.validate_template_schema_compatibility(
-        #         config.xml_template_file_path, config.xsd_schema_file_path
-        #     )
-        #     report.results["template_schema_compatibility"] = result
-        #     if not result.is_valid:
-        #         report.is_valid = False
-        #         report.errors.append(
-        #             result.error
-        #             or "Template/schema compatibility check failed"
-        #         )
+        # Only proceed with content validation if files exist.
+        # Template-schema compatibility is not evaluated pre-rendering because
+        # Jinja2 templates contain dynamic expressions ({{date}}, {{id}}, etc.)
+        # that are only schema-valid XML after data interpolation. The rendered
+        # document is authoritatively validated during XML generation.
 
         if report.results["data_source"].is_valid:
             result = self.validate_data_content(config.data_file_path)

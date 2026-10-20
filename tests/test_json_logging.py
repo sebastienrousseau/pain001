@@ -248,6 +248,12 @@ class TestConfigureJSONLogging(unittest.TestCase):
     def test_configure_clears_existing_handlers(self) -> None:
         """Test that configure_json_logging clears existing handlers."""
         logger = logging.getLogger("test_clear")
+        # Loggers are process-global. mutmut 3 calls pytest.main() more
+        # than once in one interpreter, so a previous run's handler is
+        # still attached here unless the test starts and ends clean.
+        saved_handlers = logger.handlers[:]
+        logger.handlers = []
+        self.addCleanup(setattr, logger, "handlers", saved_handlers)
         # Add a dummy handler
         logger.addHandler(logging.StreamHandler())
         self.assertEqual(len(logger.handlers), 1)

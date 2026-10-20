@@ -227,6 +227,11 @@ def _generate_and_log(
     xml_template_file_path: str,
     xsd_schema_file_path: str,
     output_path: str | None = None,
+    envelop_bah: bool = False,
+    bah_header: BusinessApplicationHeader | None = None,
+    xml_sign_key: str | bytes | None = None,
+    xml_sign_cert: str | bytes | None = None,
+    xml_sign_passphrase: str | bytes | None = None,
 ) -> tuple[str, int]:
     """Generate the XML, returning (output file path, duration in ms)."""
     gen_start = time.time()
@@ -246,6 +251,11 @@ def _generate_and_log(
         xml_template_file_path,
         xsd_schema_file_path,
         output_path=output_path,
+        envelop_bah=envelop_bah,
+        bah_header=bah_header,
+        xml_sign_key=xml_sign_key,
+        xml_sign_cert=xml_sign_cert,
+        xml_sign_passphrase=xml_sign_passphrase,
     )
 
     return written_path, int((time.time() - gen_start) * 1000)
@@ -320,29 +330,14 @@ def process_files(
             safe_template_path,
             safe_schema_path,
             output_path=output_path,
+            envelop_bah=envelop_bah,
+            bah_header=bah_header,
+            xml_sign_key=xml_sign_key,
+            xml_sign_cert=xml_sign_cert,
+            xml_sign_passphrase=xml_sign_passphrase,
         )
 
         if os.path.exists(written_path):
-            if (
-                envelop_bah
-                or bah_header is not None
-                or xml_sign_key is not None
-            ):
-                with open(written_path, encoding="utf-8") as handle:
-                    file_xml = handle.read()
-                if envelop_bah or bah_header is not None:
-                    hdr = bah_header or BusinessApplicationHeader()
-                    file_xml = envelop_iso20022_message(file_xml, hdr)
-                if xml_sign_key is not None:
-                    file_xml = sign_xml_document(
-                        file_xml,
-                        private_key_pem=xml_sign_key,
-                        cert_pem=xml_sign_cert,
-                        passphrase=xml_sign_passphrase,
-                    )
-                with open(written_path, "w", encoding="utf-8") as handle:
-                    handle.write(file_xml)
-
             if schematron is not None:
                 from pain001.schematron import validate_schematron
 
