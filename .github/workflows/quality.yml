@@ -43,7 +43,7 @@ jobs:
       # and nobody saw it. The gate in the Makefile is the point of the job.
       - run: poetry run make mutate-fast
         timeout-minutes: 90
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: mutation-fast-results
@@ -64,7 +64,7 @@ jobs:
       - run: poetry install --no-interaction --all-extras
       - run: poetry run make mutate
         timeout-minutes: 300
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: mutation-full-results
@@ -85,7 +85,7 @@ jobs:
       - run: poetry run make perf
       - name: Time every self-checking feature example
         run: poetry run python benches/bench_features.py > .benchmarks/features.json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: benchmarks
           path: |

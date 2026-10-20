@@ -24,7 +24,7 @@ jobs:
       - run: poetry install --no-interaction --all-extras
       - name: Generate pip-audit JSON report artifact
         run: poetry run pip-audit --format json --output pip-audit-report.json || true
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: vulnerability-report
           path: pip-audit-report.json
@@ -54,7 +54,7 @@ jobs:
           project_python="$(poetry env info --executable)"
           "$RUNNER_TEMP/licence-tools/bin/pip-licenses" --python "$project_python" --format=json > licenses.json
           "$RUNNER_TEMP/licence-tools/bin/pip-licenses" --python "$project_python" --format=markdown > LICENSES_REPORT.md
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: licenses
           path: |
