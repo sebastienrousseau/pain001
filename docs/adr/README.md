@@ -17,6 +17,7 @@ ADR that supersedes the old one.
 | [0005](0005-twins-and-faces.md) | Twins preserve pain.001; faces express it for a compatible standard | Accepted |
 | [0006](0006-local-policies-and-safe-corrections.md) | Local policies and review-only corrections | Proposed |
 | [0007](0007-built-in-plugin-dependency-direction.md) | Built-in rules do not depend on registry dispatch | Proposed |
+| [0008](0008-csv-ingress-preserves-raw-values.md) | Preserve raw CSV values on ingress; formula neutralisation is opt-in | Proposed |
 
 Template: copy [`template.md`](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/template.md), number it next, add a row
 here, and open it in the pull request that implements the decision.

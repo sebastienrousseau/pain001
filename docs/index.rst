@@ -101,7 +101,7 @@ Contents
    deployment-cookbook
    quickstart
    custom_validation
-   adr/000[1-7]*
+   adr/[0-9][0-9][0-9][0-9]-*
    posts/*
 
 Indices and Tables
