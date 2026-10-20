@@ -64,6 +64,21 @@ _PYPI = "https://pypi.org/pypi/{distribution}/json"
 #: Give up rather than hang a scheduled job on a slow mirror.
 _TIMEOUT_SECONDS = 20
 
+#: Published releases whose floor predates the policy. PyPI metadata is
+#: immutable, so these can never be corrected, only outlived; each entry
+#: names the exact (distribution, version) and the floor it shipped with,
+#: and nothing else is waived. A *new* release must follow the policy.
+#:
+#: * ``0.0.72`` wrappers declared ``>=0.0.71``: they shipped before the
+#:   LOCKSTEP floor rule (PR #286).
+#: * ``pain001-mcp 0.0.73`` declared ``>=0.0.71``: an out-of-band pyjwt
+#:   security release (pain001-mcp #109) that went out before core 0.0.73.
+_PUBLISHED_FLOOR_EXCEPTIONS: dict[tuple[str, str], str] = {
+    ("pain001-lsp", "0.0.72"): "0.0.71",
+    ("pain001-mcp", "0.0.72"): "0.0.71",
+    ("pain001-mcp", "0.0.73"): "0.0.71",
+}
+
 
 def fetch_metadata(distribution: str) -> dict[str, Any] | None:
     """Return the PyPI metadata for ``distribution``.
@@ -182,9 +197,8 @@ def floor_problems(member: Any, version: str, floor: str | None) -> list[str]:
     expected = version if policy == LOCKSTEP else policy
     if floor == expected:
         return []
-    # Published 0.0.72 release baseline: wrappers declared >=0.0.71 prior to
-    # the LOCKSTEP floor enforcement introduced in PR #286.
-    if policy == LOCKSTEP and version == "0.0.72" and floor == "0.0.71":
+    excepted = _PUBLISHED_FLOOR_EXCEPTIONS.get((member.distribution, version))
+    if excepted is not None and excepted == floor:
         return []
     why = (
         "wrappers use the core's API, so the floor is the release itself"

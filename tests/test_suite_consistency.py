@@ -286,6 +286,41 @@ class TestAudit:
             for p in problems
         )
 
+    @pytest.mark.parametrize(
+        ("distribution", "version"),
+        [
+            ("pain001-lsp", "0.0.72"),
+            ("pain001-mcp", "0.0.72"),
+            ("pain001-mcp", "0.0.73"),
+        ],
+    )
+    def test_an_immutable_published_floor_is_excepted(
+        self, distribution: str, version: str
+    ) -> None:
+        """Releases already on PyPI with >=0.0.71 cannot be corrected.
+
+        Flagging them forever would keep the nightly red with nothing
+        anyone can do about it, which teaches people to ignore it.
+        """
+        assert floor_problems(SUITE[distribution], version, "0.0.71") == []
+
+    @pytest.mark.parametrize(
+        ("distribution", "version", "floor"),
+        [
+            # The same floor on the next release is new drift.
+            ("pain001-mcp", "0.0.74", "0.0.71"),
+            ("pain001-lsp", "0.0.73", "0.0.71"),
+            # An excepted release with a different floor is not excepted.
+            ("pain001-mcp", "0.0.73", "0.0.70"),
+        ],
+    )
+    def test_the_exceptions_waive_nothing_else(
+        self, distribution: str, version: str, floor: str
+    ) -> None:
+        """Only the exact (distribution, version, floor) is waived."""
+        (problem,) = floor_problems(SUITE[distribution], version, floor)
+        assert f"{distribution} {version} requires pain001>={floor}" in problem
+
     def test_a_member_with_no_floor_at_all_is_reported(self) -> None:
         """No lower bound is not a floor; it is the absence of one."""
         (problem,) = floor_problems(SUITE["pain001-lsp"], "0.0.60", None)
