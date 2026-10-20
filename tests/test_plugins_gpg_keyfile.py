@@ -40,6 +40,24 @@ from pain001.plugins.builtins_gpg import (
 
 _TPL = TEMPLATES_DIR / "pain.001.001.03"
 
+#: Variables the ``--decrypt-*`` CLI flags write straight into os.environ.
+_GPG_FLAG_ENV = ("PAIN001_GPG_KEYFILE", "PAIN001_GPG_PASSPHRASE_ENV")
+
+
+@pytest.fixture(autouse=True)
+def _restore_gpg_flag_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Start each test without the GPG flag variables and restore them after.
+
+    ``monkeypatch.delenv(..., raising=False)`` on an unset variable records
+    nothing to undo, so the CLI's own ``os.environ[...] = ...`` outlived the
+    test and broke tests/test_plugins_gpg.py whenever both ran in one
+    interpreter (mutmut 3 calls pytest.main() repeatedly). Setting first
+    makes monkeypatch remember the original state.
+    """
+    for name in _GPG_FLAG_ENV:
+        monkeypatch.setenv(name, "")
+        monkeypatch.delenv(name)
+
 
 def _fake_gpg_module(imported: int = 1) -> tuple[MagicMock, MagicMock]:
     """Build a fake ``gnupg`` module whose GPG() decrypts and imports."""
