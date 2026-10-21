@@ -259,6 +259,7 @@ class XPathEvaluator:
             if op == ">=":
                 return left_num >= right_num
         except (ValueError, TypeError):
+            # Either side is not a number: compare them as strings below.
             pass
 
         if op == "=":

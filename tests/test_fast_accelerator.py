@@ -10,9 +10,6 @@ import pytest
 import pain001.validation.bic_validator as bic_module
 import pain001.validation.charset as charset_module
 import pain001.validation.iban_validator as iban_module
-from pain001.validation.bic_validator import validate_bic_safe
-from pain001.validation.charset import is_valid_charset
-from pain001.validation.iban_validator import validate_iban_safe
 
 
 class DummyFast:
@@ -36,8 +33,10 @@ def test_validate_iban_safe_fast_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(iban_module, "_FAST_AVAILABLE", True)
     monkeypatch.setattr(iban_module, "_fast", DummyFast)
 
-    assert validate_iban_safe("DE89370400440532013000") is True
-    assert validate_iban_safe("FR1420041010050500013M02606") is False
+    assert iban_module.validate_iban_safe("DE89370400440532013000") is True
+    assert (
+        iban_module.validate_iban_safe("FR1420041010050500013M02606") is False
+    )
 
 
 def test_validate_iban_safe_pure_python_fallback(
@@ -47,8 +46,8 @@ def test_validate_iban_safe_pure_python_fallback(
     monkeypatch.setattr(iban_module, "_FAST_AVAILABLE", False)
     monkeypatch.setattr(iban_module, "_fast", None)
 
-    assert validate_iban_safe("DE89370400440532013000") is True
-    assert validate_iban_safe("INVALID_IBAN") is False
+    assert iban_module.validate_iban_safe("DE89370400440532013000") is True
+    assert iban_module.validate_iban_safe("INVALID_IBAN") is False
 
 
 def test_validate_bic_safe_fast_path(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -56,8 +55,8 @@ def test_validate_bic_safe_fast_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(bic_module, "_FAST_AVAILABLE", True)
     monkeypatch.setattr(bic_module, "_fast", DummyFast)
 
-    assert validate_bic_safe("DEUTDEFF") is True
-    assert validate_bic_safe("BNPAFRPP") is False
+    assert bic_module.validate_bic_safe("DEUTDEFF") is True
+    assert bic_module.validate_bic_safe("BNPAFRPP") is False
 
 
 def test_validate_bic_safe_pure_python_fallback(
@@ -67,8 +66,8 @@ def test_validate_bic_safe_pure_python_fallback(
     monkeypatch.setattr(bic_module, "_FAST_AVAILABLE", False)
     monkeypatch.setattr(bic_module, "_fast", None)
 
-    assert validate_bic_safe("DEUTDEFF") is True
-    assert validate_bic_safe("INVALID_BIC") is False
+    assert bic_module.validate_bic_safe("DEUTDEFF") is True
+    assert bic_module.validate_bic_safe("INVALID_BIC") is False
 
 
 def test_is_valid_charset_fast_path(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -76,8 +75,8 @@ def test_is_valid_charset_fast_path(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(charset_module, "_FAST_AVAILABLE", True)
     monkeypatch.setattr(charset_module, "_fast", DummyFast)
 
-    assert is_valid_charset("Invoice 12345") is True
-    assert is_valid_charset("Café") is False
+    assert charset_module.is_valid_charset("Invoice 12345") is True
+    assert charset_module.is_valid_charset("Café") is False
 
 
 def test_is_valid_charset_pure_python_fallback(
@@ -87,5 +86,5 @@ def test_is_valid_charset_pure_python_fallback(
     monkeypatch.setattr(charset_module, "_FAST_AVAILABLE", False)
     monkeypatch.setattr(charset_module, "_fast", None)
 
-    assert is_valid_charset("Invoice 12345") is True
-    assert is_valid_charset("Café") is False
+    assert charset_module.is_valid_charset("Invoice 12345") is True
+    assert charset_module.is_valid_charset("Café") is False
