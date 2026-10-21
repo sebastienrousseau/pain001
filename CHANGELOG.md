@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Every suite member is lockstep, loaders included.** `pain001/suite.py` records `LOCKSTEP` for `pain001-loader-xlsx` and `pain001-loader-mt101`, which previously kept the plugin-contract floors `>=0.0.56` and `>=0.0.55`: from 0.0.74 each member at `0.0.N` requires `pain001>=0.0.N`, as in the camt053 family. The published 0.0.72 loader floors join the immutable exceptions in `scripts/check_suite_consistency.py`. ADR-0001 is amended.
+- `scripts/preflight_release.py` refuses the release while any floor recorded in `pain001/suite.py` resolves to something other than the release version.
+- `scripts/check_suite_consistency.py` now compares the tree with this package's own PyPI release and reports a version bumped and never released (`pain001: tree is 0.0.74 but PyPI has 0.0.72`). The workflow already claimed it did; the script did not.
+
 ### Security
 
 - `certifi` is floored at 2026.10.19 (GHSA-6q48-6c7w-9gw2, PYSEC-2026-4320, affecting every earlier release). It reaches a runtime install only through the `otel` extra (the exporter's `requests`), so the floor is declared there: `pain001[otel]` can no longer resolve an affected release. The lock moves from 2026.1.4 and `.github/requirements/docs.txt` from 2026.7.22; `tests/test_advisory_floors.py` holds the declared range, the lock and every hash-pinned requirements file past the fix, and the Security workflow now audits each hash-pinned file, which it never did.

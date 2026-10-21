@@ -16,10 +16,13 @@ common case stays fast enough to actually get used.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 FAIL = "\033[31m✗\033[0m"
@@ -63,6 +66,43 @@ def versions() -> dict[str, str | None]:
         "CITATION.cff": grab("CITATION.cff", r'^version: "?([^"\n]+)"?'),
         "SECURITY.md": grab("SECURITY.md", r"^\| `([0-9.]+)` \(latest\)"),
     }
+
+
+def _suite() -> Any:
+    """Load ``pain001/suite.py`` by path: it is stdlib-only, and this
+    script runs on a bare interpreter with no project installed."""
+    spec = importlib.util.spec_from_file_location(
+        "_preflight_suite", ROOT / "pain001" / "suite.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def suite_floor_problems(
+    version: str, members: Iterable[Any] | None = None
+) -> list[str]:
+    """Every member's ``pain001`` floor must be the release itself.
+
+    The family releases in lockstep, core first: a member published at
+    ``version`` requires ``pain001>=version``. A floor recorded in
+    ``pain001/suite.py`` that resolves to anything else would ship a
+    member promising a pairing with an older core nobody tested, so it
+    blocks the core's release before any member follows.
+    """
+    suite = _suite()
+    out = []
+    for member in suite.SUITE.values() if members is None else members:
+        if member.floor is None:
+            continue
+        expected = version if member.floor == suite.LOCKSTEP else member.floor
+        if expected != version:
+            out.append(
+                f"{member.distribution} floor is >={expected}, "
+                f"not the release {version}"
+            )
+    return out
 
 
 def main() -> int:
@@ -120,6 +160,14 @@ def main() -> int:
             f"files say {next(iter(unique))}",
         )
     print(f"\n  release candidate: v{version}\n")
+
+    # The suite releases in lockstep: every member's floor is this release.
+    floors = suite_floor_problems(version)
+    check(
+        f"every suite member's pain001 floor is {version}",
+        not floors,
+        "; ".join(floors),
+    )
 
     # 7. releases/vX.Y.Z.md exists and is non-trivial — the gate that
     #    actually broke the v0.0.57 tag build.
