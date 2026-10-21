@@ -81,11 +81,11 @@ version numbers.
 
 | Package | Role | Latest |
 | :--- | :--- | :--- |
-| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.72 |
-| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (16 tools) | 0.0.72 |
-| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.72 |
-| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.72 |
-| [`pain001-loader-mt101`](https://pypi.org/project/pain001-loader-mt101/) | SWIFT MT101 loader plugin | 0.0.72 |
+| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.73 |
+| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (16 tools) | 0.0.73 |
+| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.73 |
+| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.73 |
+| [`pain001-loader-mt101`](https://pypi.org/project/pain001-loader-mt101/) | SWIFT MT101 loader plugin | 0.0.73 |
 | [`pain001-plugin-template`](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter scaffold for external plugins | 0.0.1 (unreleased) |
 | [`pain001-mockbank`](https://github.com/sebastienrousseau/pain001-mockbank) | Synthetic SFTP bank response test service | 0.0.1 (edge image) |
 

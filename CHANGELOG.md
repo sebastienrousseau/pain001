@@ -9,14 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.0.73] - 2026-10-20
+
 ### Changed
 
-- Updated dependencies: `fakeredis` to 2.39.0, `mypy` to 2.4.0, `pydoclint` to 0.10.1, `python-gnupg` to 0.5.7, `ruff` to 0.16.10, and `uvicorn` to 0.54.0.
-- CSV formula injection sanitization (`sanitize_formula`) now defaults to `False` on ingress to preserve legitimate financial strings (such as phone numbers with `+` or references with `-`), and is configurable via the `sanitize_formula` parameter.
+- Updated dependencies: `fakeredis` to 2.40.0, `holidays` to 0.107, `hypothesis` to 6.170.5 (6.168.5 on Python 3.10), `mcp` to 2.3.0, `mypy` to 2.4.0, `pydoclint` to 0.11.1, `python-gnupg` to 0.5.7, `ruff` to 0.17.1, `uvicorn` to 0.54.0, and the `types-jsonschema`, `types-paramiko` and `types-setuptools` stubs.
+- `scripts/check_suite_consistency.py` lists the published releases whose `pain001` floor predates the suite policy (`pain001-lsp`/`pain001-mcp` 0.0.72 and `pain001-mcp` 0.0.73, all `>=0.0.71`) in one table. PyPI metadata cannot be corrected, so only those exact releases are excepted; any new release must follow the policy.
+- CSV formula injection sanitization (`sanitize_formula`) now defaults to `False` on ingress to preserve legitimate financial strings (such as phone numbers with `+` or references with `-`), and is configurable via the `sanitize_formula` parameter. **Generated XML changes** for CSV cells that start with `=`, `+`, `-` or `@`: they are emitted as supplied again (v0.0.71 behaviour) instead of with a leading `'`. See [ADR-0008](docs/adr/0008-csv-ingress-preserves-raw-values.md).
 - Streamlined ISO 20022 Business Application Header (BAH) envelopment and XML-DSig signing in-memory before disk write, eliminating redundant full-document disk re-reads and re-writes in `pain001.core.process_files`.
 
 ### Fixed
 
+- The weekly full mutation run failed its clean baseline: mutmut 3 runs pytest more than once in one interpreter, and two tests leaked process-global state (a logger handler, and the GPG environment variables the `--decrypt-*` flags set) into the second pass. Both now start and end clean.
 - Thread-safe concurrency synchronization using `threading.RLock()` for `pain001.context.Context` singleton to prevent race conditions during concurrent initialization.
 - Thread-safe synchronization using `threading.RLock()` for `pain001.api.job_manager.JobManager` across asynchronous worker operations and background polling.
 - Release SBOMs now describe pain001. Up to v0.0.72 the CycloneDX SBOM
