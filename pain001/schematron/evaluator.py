@@ -14,11 +14,23 @@
 
 """XPath expression evaluator for Schematron assertions in ISO 20022 messages."""
 
+import operator
+from collections.abc import Callable
 from typing import Any
 from xml.etree.ElementTree import Element  # nosec B405
 
 from pain001.schematron.models import SchematronViolation
 from pain001.schematron.parser import SchematronAssertion
+
+#: The relational operators Schematron tests use, by token.
+_COMPARATORS: dict[str, Callable[[Any, Any], bool]] = {
+    "=": operator.eq,
+    "!=": operator.ne,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">": operator.gt,
+    ">=": operator.ge,
+}
 
 
 def _local_tag(tag: str) -> str:
@@ -237,44 +249,21 @@ class XPathEvaluator:
         return left, idx
 
     def _apply_comparison(self, left: Any, op: str, right: Any) -> bool:
-        """Apply comparison operator to left and right operands."""
-        # String comparison
-        left_str = str(left) if left is not None else ""
-        right_str = str(right) if right is not None else ""
+        """Apply comparison operator to left and right operands.
 
-        # Check numeric comparison
+        Numbers compare numerically; anything else compares as strings,
+        with ``None`` as the empty string. An unknown operator is false.
+        """
+        compare = _COMPARATORS.get(op)
+        if compare is None:
+            return False
         try:
-            left_num = float(left)
-            right_num = float(right)
-            if op == "=":
-                return left_num == right_num
-            if op == "!=":
-                return left_num != right_num
-            if op == "<":
-                return left_num < right_num
-            if op == "<=":
-                return left_num <= right_num
-            if op == ">":
-                return left_num > right_num
-            if op == ">=":
-                return left_num >= right_num
+            return bool(compare(float(left), float(right)))
         except (ValueError, TypeError):
-            # Either side is not a number: compare them as strings below.
-            pass
-
-        if op == "=":
-            return left_str == right_str
-        if op == "!=":
-            return left_str != right_str
-        if op == "<":
-            return left_str < right_str
-        if op == "<=":
-            return left_str <= right_str
-        if op == ">":
-            return left_str > right_str
-        if op == ">=":
-            return left_str >= right_str
-        return False
+            # Either side is not a number: compare them as strings.
+            left_str = str(left) if left is not None else ""
+            right_str = str(right) if right is not None else ""
+            return bool(compare(left_str, right_str))
 
     def _eval_primary(self, tokens: list[str], idx: int) -> tuple[Any, int]:
         """Evaluate primary token, literal, subexpression, or function call."""
