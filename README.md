@@ -11,12 +11,16 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/sebastienrousseau/pain001/actions"><img src="https://github.com/sebastienrousseau/pain001/workflows/ci/badge.svg?style=for-the-badge&logo=github" alt="Build" /></a>
-  <a href="https://pypi.org/project/pain001/"><img src="https://img.shields.io/pypi/v/pain001?style=for-the-badge&color=fc8d62&logo=python" alt="Registry" /></a>
-  <a href="https://sebastienrousseau.github.io/pain001/api-reference.html"><img src="https://img.shields.io/badge/docs-API?style=for-the-badge&labelColor=555555&logo=readthedocs" alt="Docs" /></a>
-  <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pain001"><img src="https://img.shields.io/ossf-scorecard/github.com/sebastienrousseau/pain001?style=for-the-badge&label=OpenSSF%20Scorecard&logo=openssf" alt="OpenSSF Scorecard" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg?style=for-the-badge" alt="License: Apache-2.0 OR MIT" /></a>
-  <a href="https://github.com/sebastienrousseau/pain001/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.10%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.10 or newer" /></a>
+  <a href="https://github.com/sebastienrousseau/pain001/actions"><img src="https://img.shields.io/github/actions/workflow/status/sebastienrousseau/pain001/ci.yml?style=for-the-badge&logo=github" alt="Build" height="28" /></a>
+  <a href="https://pypi.org/project/pain001/"><img src="https://img.shields.io/pypi/v/pain001?style=for-the-badge&color=fc8d62&logo=python" alt="Registry" height="28" /></a>
+  <a href="https://sebastienrousseau.github.io/pain001/api-reference.html"><img src="https://img.shields.io/badge/docs-API?style=for-the-badge&labelColor=555555&logo=readthedocs" alt="Docs" height="28" /></a>
+  <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pain001"><img src="https://img.shields.io/ossf-scorecard/github.com/sebastienrousseau/pain001?style=for-the-badge&label=OpenSSF%20Scorecard&logo=openssf" alt="OpenSSF Scorecard" height="28" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg?style=for-the-badge" alt="License: Apache-2.0 OR MIT" height="28" /></a>
+  <a href="https://github.com/sebastienrousseau/pain001/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.10%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.10 or newer" height="28" /></a>
+</p>
+
+<p align="center">
+  <img src=".github/demo.gif" alt="pain001 demo: write the starter payments.csv, validate it, generate an XSD-validated pain.001.001.03 file and show its group header" width="100%" />
 </p>
 
 ---
@@ -61,13 +65,18 @@
 python -m pip install pain001
 ```
 
-Optional extras include `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, and `otel`.
-Version 0.0.71 adds `rules` (CEL policies) and `upload` (SFTP).
-Until that release is published, install these additions from source.
+> **Latest release: v0.0.74**: ISO 20022 pain.001 and pain.008 files generated
+> from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
+> official XSD, for Python 3.10+, released with the whole pain001 suite at one
+> version.
+
+Optional extras: `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, `otel`,
+`fast` (libxml2 validation), `upload` (SFTP) and `rules` (CEL policies), for
+example `python -m pip install "pain001[rules,upload]"`.
 
 ```bash
-# Development checkout, including unreleased features
-git clone --branch feat/v0.0.72 https://github.com/sebastienrousseau/pain001.git
+# Development checkout
+git clone https://github.com/sebastienrousseau/pain001.git
 cd pain001
 poetry install --all-extras --with dev,docs
 
@@ -242,7 +251,7 @@ poetry run make docs
 ```
 
 The coverage floor is **100% line and branch**. `make check` runs lint,
-coverage, security and corpus checks; `make type` is a separate required gate.
+coverage, security, complexity ceilings and corpus checks; `make type` is a separate required gate.
 Pull requests also run mutation testing, benchmarks, SDK and container checks.
 See [DEVELOPMENT.md](DEVELOPMENT.md) for the complete gate map and
 [CONTRIBUTING.md](CONTRIBUTING.md) for signed commits and DCO.
@@ -290,8 +299,8 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 ## Stability guarantees
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
-`0.0.999`; only the maintainer opens a release. This branch prepares
-0.0.72; publication requires approved release PRs and signed release tags.
+`0.0.999`; only the maintainer opens a release. The current release
+is 0.0.74; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

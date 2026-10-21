@@ -51,6 +51,15 @@ section of the README).
   contract it needs (`0.0.55` for MT101, `0.0.56` for xlsx) and keeps it
   until a contract change moves it, in the table first. The daily check
   fails when a published floor differs from the table.
+- **Amended 2026-10-21 (0.0.74):** the loaders are lockstep too. Every
+  member at `0.0.N` requires `pain001>=0.0.N`, as in the camt053 family:
+  one suite number is one tested combination, and a loader floor below it
+  promised pairings with cores nobody ran it against. The published
+  0.0.72 loader floors stay recorded as immutable exceptions in
+  `scripts/check_suite_consistency.py`. `scripts/preflight_release.py`
+  refuses the core's release while any floor in the table resolves to
+  something other than the release, and the daily check also fails when
+  the tree on `main` is not the version this repository last published.
 - `tests/test_suite_conformance.py`, a byte-identical file vendored in
   every repository, checks that the version is restated consistently and
   that the CHANGELOG's newest heading is the declared version.

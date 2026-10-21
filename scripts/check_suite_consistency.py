@@ -8,7 +8,7 @@ Run in CI on a schedule. It answers one question a user cannot answer
 for themselves: do the versions currently on PyPI agree with the
 policy in :mod:`pain001.suite`?
 
-Two failures it catches, both of which have already happened:
+The failures it catches, all of which have already happened:
 
 * A **member left behind.** `pain001-lsp` sat at 0.0.54 while the core
   reached 0.0.59. Nothing broke, so nothing said anything.
@@ -19,6 +19,10 @@ Two failures it catches, both of which have already happened:
   `>=0.0.56`, the wrappers `>=0.0.70`, and no rule said which was right.
   :mod:`pain001.suite` now records the intended floor per member, and a
   published floor that differs from it is reported.
+* A **version bumped in the tree and never released.** The tree on
+  ``main`` must be the version this repository last published; a bump
+  that was never tagged strands whatever it carried (in this family,
+  more than once, a security floor) and nothing else notices.
 
 Exits non-zero when the suite disagrees with itself, so the schedule
 turns into a notification rather than a report nobody opens.
@@ -31,16 +35,17 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any
 
 try:
     from pain001.suite import CORE, LOCKSTEP, SUITE
 except (ImportError, ModuleNotFoundError):
     import importlib.util
-    from pathlib import Path
 
     _suite_path = (
         Path(__file__).resolve().parent.parent / "pain001" / "suite.py"
@@ -63,6 +68,76 @@ _PYPI = "https://pypi.org/pypi/{distribution}/json"
 
 #: Give up rather than hang a scheduled job on a slow mirror.
 _TIMEOUT_SECONDS = 20
+
+#: The checkout this script belongs to: the core's own tree.
+_ROOT = Path(__file__).resolve().parent.parent
+
+#: Published releases whose floor predates the policy. PyPI metadata is
+#: immutable, so these can never be corrected, only outlived; each entry
+#: names the exact (distribution, version) and the floor it shipped with,
+#: and nothing else is waived. A *new* release must follow the policy.
+#:
+#: * ``0.0.72`` wrappers declared ``>=0.0.71``: they shipped before the
+#:   LOCKSTEP floor rule (PR #286).
+#: * ``pain001-mcp 0.0.73`` declared ``>=0.0.71``: an out-of-band pyjwt
+#:   security release (pain001-mcp #109) that went out before core 0.0.73.
+#: * The ``0.0.72`` loaders declared the plugin-contract floors the table
+#:   recorded then (``>=0.0.56`` xlsx, ``>=0.0.55`` MT101); every member
+#:   is lockstep from 0.0.74.
+_PUBLISHED_FLOOR_EXCEPTIONS: dict[tuple[str, str], str] = {
+    ("pain001-lsp", "0.0.72"): "0.0.71",
+    ("pain001-mcp", "0.0.72"): "0.0.71",
+    ("pain001-mcp", "0.0.73"): "0.0.71",
+    ("pain001-loader-xlsx", "0.0.72"): "0.0.56",
+    ("pain001-loader-mt101", "0.0.72"): "0.0.55",
+}
+
+
+def tree_version(root: Path = _ROOT) -> str:
+    """Return the version this checkout declares.
+
+    Read from ``[tool.poetry].version``, the single source of truth, by
+    the same one-line match the version-sync CI job uses, so this needs
+    no TOML parser on the 3.10 floor.
+
+    Args:
+        root: The repository root holding ``pyproject.toml``.
+
+    Returns:
+        The declared version string.
+
+    Raises:
+        SystemExit: When ``pyproject.toml`` declares no version.
+    """
+    text = (root / "pyproject.toml").read_text(encoding="utf-8")
+    match = re.search(r'^version = "([^"]+)"', text, re.MULTILINE)
+    if match is None:
+        raise SystemExit("pyproject.toml declares no version")
+    return match.group(1)
+
+
+def tree_problems(tree: str, published: str) -> list[str]:
+    """Compare this checkout's version with the core's PyPI release.
+
+    Args:
+        tree: The version the tree declares, from :func:`tree_version`.
+        published: The newest ``pain001`` on PyPI.
+
+    Returns:
+        Zero or one problem strings.
+
+    Example:
+        >>> tree_problems("0.0.74", "0.0.74")
+        []
+        >>> tree_problems("0.0.74", "0.0.72")[0][:40]
+        'pain001: tree is 0.0.74 but PyPI has 0.0'
+    """
+    if tree == published:
+        return []
+    return [
+        f"{CORE}: tree is {tree} but PyPI has {published}. Either the "
+        f"release was never tagged, or the tree is behind."
+    ]
 
 
 def fetch_metadata(distribution: str) -> dict[str, Any] | None:
@@ -182,15 +257,14 @@ def floor_problems(member: Any, version: str, floor: str | None) -> list[str]:
     expected = version if policy == LOCKSTEP else policy
     if floor == expected:
         return []
-    # Published 0.0.72 release baseline: wrappers declared >=0.0.71 prior to
-    # the LOCKSTEP floor enforcement introduced in PR #286.
-    if policy == LOCKSTEP and version == "0.0.72" and floor == "0.0.71":
+    excepted = _PUBLISHED_FLOOR_EXCEPTIONS.get((member.distribution, version))
+    if excepted is not None and excepted == floor:
         return []
     why = (
-        "wrappers use the core's API, so the floor is the release itself"
+        "every member is lockstep, so the floor is the release itself"
         if policy == LOCKSTEP
-        else "loaders keep the floor recorded in pain001.suite; change it "
-        "there first"
+        else "this member keeps the floor recorded in pain001.suite; "
+        "change it there first"
     )
     return [
         f"{member.distribution} {version} requires {CORE}>="
@@ -205,7 +279,7 @@ def audit() -> tuple[list[str], dict[str, Any]]:
         A tuple of (problems, report). ``problems`` is empty when the
         suite agrees with itself.
     """
-    report: dict[str, Any] = {"core": None, "members": {}}
+    report: dict[str, Any] = {"core": None, "tree": None, "members": {}}
     problems: list[str] = []
 
     core_info = fetch_metadata(CORE)
@@ -213,6 +287,9 @@ def audit() -> tuple[list[str], dict[str, Any]]:
         return ([f"{CORE} is not published"], report)
     core_version = core_info["version"]
     report["core"] = core_version
+    tree = tree_version()
+    report["tree"] = tree
+    problems.extend(tree_problems(tree, core_version))
 
     for member in SUITE.values():
         info = fetch_metadata(member.distribution)
@@ -271,7 +348,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(report, indent=2, sort_keys=True))
         return 1 if problems else 0
 
-    print(f"core: {CORE} {report['core']}")
+    print(f"core: {CORE} {report['core']} (tree {report['tree']})")
     for name, data in sorted(report["members"].items()):
         published = data.get("published") or "unpublished"
         floor = data.get("core_floor")

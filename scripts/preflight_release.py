@@ -16,10 +16,13 @@ common case stays fast enough to actually get used.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import re
 import subprocess
 import sys
+from collections.abc import Iterable
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 FAIL = "\033[31m✗\033[0m"
@@ -65,7 +68,44 @@ def versions() -> dict[str, str | None]:
     }
 
 
-def main() -> int:
+def _suite() -> Any:
+    """Load ``pain001/suite.py`` by path: it is stdlib-only, and this
+    script runs on a bare interpreter with no project installed."""
+    spec = importlib.util.spec_from_file_location(
+        "_preflight_suite", ROOT / "pain001" / "suite.py"
+    )
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def suite_floor_problems(
+    version: str, members: Iterable[Any] | None = None
+) -> list[str]:
+    """Every member's ``pain001`` floor must be the release itself.
+
+    The family releases in lockstep, core first: a member published at
+    ``version`` requires ``pain001>=version``. A floor recorded in
+    ``pain001/suite.py`` that resolves to anything else would ship a
+    member promising a pairing with an older core nobody tested, so it
+    blocks the core's release before any member follows.
+    """
+    suite = _suite()
+    out = []
+    for member in suite.SUITE.values() if members is None else members:
+        if member.floor is None:
+            continue
+        expected = version if member.floor == suite.LOCKSTEP else member.floor
+        if expected != version:
+            out.append(
+                f"{member.distribution} floor is >={expected}, "
+                f"not the release {version}"
+            )
+    return out
+
+
+def _parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
     ap.add_argument("version", nargs="?", help="expected version, e.g. 0.0.58")
     ap.add_argument(
@@ -83,17 +123,11 @@ def main() -> int:
         ap.error(
             "--tag requires --full; publishing without full preflight is forbidden"
         )
+    return args
 
-    print("Pre-flight checks (RELEASING.md):\n")
 
-    exceptions = run(sys.executable, "scripts/check_security_exceptions.py")
-    check(
-        "security exceptions are current (item 4)",
-        exceptions.returncode == 0,
-        exceptions.stdout.strip() or exceptions.stderr.strip(),
-    )
-
-    # 6. version identical in every declared version source
+def _check_version_sources(requested: str | None) -> str | None:
+    """Item 6: one version everywhere. Returns the release candidate."""
     vs = versions()
     unique = set(vs.values())
     check(
@@ -103,23 +137,30 @@ def main() -> int:
         if len(unique) != 1
         else str(next(iter(unique))),
     )
-    version = args.version or (
-        next(iter(unique)) if len(unique) == 1 else None
-    )
+    single = len(unique) == 1
+    found = next(iter(unique)) if single else None
+    version = requested or found
     if not version:
         print("\nCannot determine the version; fix the mismatch first.")
-        return 1
-    if (
-        args.version
-        and len(unique) == 1
-        and args.version != next(iter(unique))
-    ):
+        return None
+    if requested and single and requested != found:
         check(
-            f"version matches the requested {args.version}",
+            f"version matches the requested {requested}",
             False,
-            f"files say {next(iter(unique))}",
+            f"files say {found}",
         )
-    print(f"\n  release candidate: v{version}\n")
+    return version
+
+
+def _check_release_documents(version: str) -> None:
+    """Item 7, item 5 and the suite floors, from the tree alone."""
+    # The suite releases in lockstep: every member's floor is this release.
+    floors = suite_floor_problems(version)
+    check(
+        f"every suite member's pain001 floor is {version}",
+        not floors,
+        "; ".join(floors),
+    )
 
     # 7. releases/vX.Y.Z.md exists and is non-trivial — the gate that
     #    actually broke the v0.0.57 tag build.
@@ -147,6 +188,9 @@ def main() -> int:
         m.group(1) if m else "missing or undated",
     )
 
+
+def _check_lock_and_tree() -> None:
+    """A current lock, a clean tree, and HEAD at origin/main."""
     # poetry.lock must match pyproject.toml. The publish job installs
     # with poetry, so a stale lock fails the release — but only after the
     # tag is pushed and public. Editing pyproject and re-locking are one
@@ -185,6 +229,9 @@ def main() -> int:
         else "",
     )
 
+
+def _check_tag_absent_and_signing(version: str) -> None:
+    """The tag is new locally and on origin, and a signing key is set."""
     # tag must not already exist (locally or remotely)
     existing = run("git", "tag", "-l", f"v{version}").stdout.strip()
     check(f"tag v{version} does not exist locally", not existing)
@@ -205,43 +252,90 @@ def main() -> int:
     signing = run("git", "config", "--get", "user.signingkey").stdout.strip()
     check("tag signing key configured", bool(signing), signing or "unset")
 
+
+def _inspect_release(version: str, *extra: str) -> subprocess.CompletedProcess:
+    return run(
+        sys.executable,
+        "scripts/inspect_release.py",
+        "--name",
+        "pain001",
+        "--project",
+        "pain001",
+        "--version",
+        version,
+        "--dist",
+        "dist",
+        "--output",
+        ".release",
+        *extra,
+    )
+
+
+def _run_slow_checks(version: str) -> None:
+    """Items 1-4: tests, build, artifact inspection and pip-audit."""
+    print("\n  running slow checks…")
+    r = run("poetry", "run", "pytest", "-q")
+    check(
+        "test suite passes",
+        r.returncode == 0,
+        (r.stdout.strip().splitlines() or ["no output"])[-1],
+    )
+    r = run("poetry", "build")
+    check("package builds", r.returncode == 0)
+    r = _inspect_release(version)
+    check(
+        "built artifacts and checksum-bearing notes are current",
+        r.returncode == 0,
+        r.stdout.strip() or r.stderr.strip(),
+    )
+    r = run(
+        "poetry", "run", "pip-audit", "-r", "requirements.txt", "--no-deps"
+    )
+    check(
+        "pip-audit clean",
+        r.returncode == 0,
+        (r.stdout.strip().splitlines() or [""])[-1],
+    )
+
+
+def _create_tag(version: str) -> int:
+    """Sign the tag, then verify it with inspect_release.py."""
+    msg = f"pain001 v{version}"
+    r = run("git", "tag", "-s", f"v{version}", "-m", msg)
+    if r.returncode != 0:
+        print(f"{FAIL} tag creation failed: {r.stderr.strip()}")
+        return 1
+    r = _inspect_release(version, "--tag", f"v{version}")
+    if r.returncode != 0:
+        print(f"{FAIL} signed-tag preflight failed: {r.stderr.strip()}")
+        print("The local tag was retained for inspection. Do not push it.")
+        return 1
+    print(f"{OK} created signed tag v{version}")
+    print(f"    push it with:  git push origin v{version}")
+    return 0
+
+
+def main() -> int:
+    args = _parse_args()
+    print("Pre-flight checks (RELEASING.md):\n")
+
+    exceptions = run(sys.executable, "scripts/check_security_exceptions.py")
+    check(
+        "security exceptions are current (item 4)",
+        exceptions.returncode == 0,
+        exceptions.stdout.strip() or exceptions.stderr.strip(),
+    )
+
+    version = _check_version_sources(args.version)
+    if not version:
+        return 1
+    print(f"\n  release candidate: v{version}\n")
+
+    _check_release_documents(version)
+    _check_lock_and_tree()
+    _check_tag_absent_and_signing(version)
     if args.full:
-        print("\n  running slow checks…")
-        r = run("poetry", "run", "pytest", "-q")
-        check(
-            "test suite passes",
-            r.returncode == 0,
-            (r.stdout.strip().splitlines() or ["no output"])[-1],
-        )
-        r = run("poetry", "build")
-        check("package builds", r.returncode == 0)
-        r = run(
-            sys.executable,
-            "scripts/inspect_release.py",
-            "--name",
-            "pain001",
-            "--project",
-            "Pain001",
-            "--version",
-            version,
-            "--dist",
-            "dist",
-            "--output",
-            ".release",
-        )
-        check(
-            "built artifacts and checksum-bearing notes are current",
-            r.returncode == 0,
-            r.stdout.strip() or r.stderr.strip(),
-        )
-        r = run(
-            "poetry", "run", "pip-audit", "-r", "requirements.txt", "--no-deps"
-        )
-        check(
-            "pip-audit clean",
-            r.returncode == 0,
-            (r.stdout.strip().splitlines() or [""])[-1],
-        )
+        _run_slow_checks(version)
     else:
         skip(
             "test suite / build / pip-audit (items 1-4)", "pass --full to run"
@@ -256,37 +350,10 @@ def main() -> int:
 
     print("All pre-flight checks passed.")
     if args.tag:
-        msg = f"Pain001 v{version}"
-        r = run("git", "tag", "-s", f"v{version}", "-m", msg)
-        if r.returncode != 0:
-            print(f"{FAIL} tag creation failed: {r.stderr.strip()}")
-            return 1
-        r = run(
-            sys.executable,
-            "scripts/inspect_release.py",
-            "--name",
-            "pain001",
-            "--project",
-            "Pain001",
-            "--version",
-            version,
-            "--dist",
-            "dist",
-            "--output",
-            ".release",
-            "--tag",
-            f"v{version}",
-        )
-        if r.returncode != 0:
-            print(f"{FAIL} signed-tag preflight failed: {r.stderr.strip()}")
-            print("The local tag was retained for inspection. Do not push it.")
-            return 1
-        print(f"{OK} created signed tag v{version}")
-        print(f"    push it with:  git push origin v{version}")
-    else:
-        print(
-            f"Next:  python3 scripts/preflight_release.py {version} --full --tag"
-        )
+        return _create_tag(version)
+    print(
+        f"Next:  python3 scripts/preflight_release.py {version} --full --tag"
+    )
     return 0
 
 

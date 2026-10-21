@@ -48,15 +48,20 @@ Three rules follow, and all are checked by
 2. Every member's declared ``pain001`` floor must be a version that
    actually exists, or the combination is uninstallable.
 3. Every member's declared ``pain001`` floor follows the policy recorded
-   here (:attr:`SuiteMember.floor`). The wrappers (``pain001-mcp``,
-   ``pain001-lsp``) are :data:`LOCKSTEP`: they call the core's own API,
-   so each release requires the core at the same number. The loaders
-   implement the published plugin contract, so each declares the oldest
-   core whose contract it needs and keeps it; raising it is a deliberate
-   change made in this table, not a side effect of a release. Before
-   this rule the floors drifted silently (``>=0.0.55`` on one loader,
-   ``>=0.0.56`` on the other, ``>=0.0.70`` on the wrappers) with nothing
-   saying which was intended.
+   here (:attr:`SuiteMember.floor`). Every member is :data:`LOCKSTEP`:
+   each release requires the core at its own number, so ``pain001-mcp
+   0.0.74`` requires ``pain001>=0.0.74`` and so does each loader. The
+   wrappers (``pain001-mcp``, ``pain001-lsp``) call the core's own API;
+   the loaders were held at the oldest core whose plugin contract they
+   needed (``>=0.0.55`` for MT101, ``>=0.0.56`` for xlsx) until 0.0.74,
+   when the family moved them to lockstep too, as the camt053 family's
+   loaders already are: one suite version is then one tested
+   combination, and a floor below it promises a pairing nobody ran.
+   Before any rule the floors drifted silently (``>=0.0.55`` on one
+   loader, ``>=0.0.56`` on the other, ``>=0.0.70`` on the wrappers)
+   with nothing saying which was intended. An explicit version is still
+   accepted here for a member that genuinely needs one; it is a
+   decision made in this table, never a side effect of a release.
 """
 
 from __future__ import annotations
@@ -121,13 +126,13 @@ SUITE: Final[MappingProxyType[str, SuiteMember]] = MappingProxyType(
                 distribution="pain001-loader-xlsx",
                 repository="sebastienrousseau/pain001-loader-xlsx",
                 summary="Excel (.xlsx/.xlsm) loader plugin.",
-                floor="0.0.56",
+                floor=LOCKSTEP,
             ),
             SuiteMember(
                 distribution="pain001-loader-mt101",
                 repository="sebastienrousseau/pain001-loader-mt101",
                 summary="SWIFT MT101 loader plugin.",
-                floor="0.0.55",
+                floor=LOCKSTEP,
             ),
         )
     }

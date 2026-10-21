@@ -1,0 +1,88 @@
+# Copyright (C) 2023-2026 Pain001. All rights reserved.
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Licensed under either of the Apache License, Version 2.0 or the MIT
+# License, at your option. See LICENSE-APACHE and LICENSE-MIT.
+
+"""The release preflight refuses a suite whose floors left the release.
+
+The core releases first and every member follows at the same version,
+each requiring ``pain001>=<that version>``. A floor recorded in
+``pain001/suite.py`` that resolves to anything else must stop the core
+before its tag exists, not surface in the nightly after a member ships.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+
+import preflight_release  # noqa: E402
+
+from pain001.suite import LOCKSTEP, SUITE, SuiteMember  # noqa: E402
+
+
+def test_the_suite_floors_are_the_release() -> None:
+    """Every member of the real suite is lockstep with this release."""
+    assert preflight_release.suite_floor_problems("0.0.74") == []
+
+
+def test_a_floor_below_the_release_blocks_it() -> None:
+    """A recorded floor of 0.0.56 is not a 0.0.74 release."""
+    members = [
+        SUITE["pain001"],
+        SUITE["pain001-mcp"],
+        SuiteMember("pain001-loader-xlsx", "o/r", "Loader.", "0.0.56"),
+    ]
+    (problem,) = preflight_release.suite_floor_problems("0.0.74", members)
+    assert problem == (
+        "pain001-loader-xlsx floor is >=0.0.56, not the release 0.0.74"
+    )
+
+
+def test_an_explicit_floor_equal_to_the_release_passes() -> None:
+    """The rule is the release version, however it is written down."""
+    members = [SuiteMember("pain001-lsp", "o/r", "Server.", "0.0.74")]
+    assert preflight_release.suite_floor_problems("0.0.74", members) == []
+
+
+def test_the_core_has_no_floor_to_check() -> None:
+    """The core does not depend on itself."""
+    assert SUITE["pain001"].floor is None
+    assert SUITE["pain001-mcp"].floor == LOCKSTEP
+    assert (
+        preflight_release.suite_floor_problems("0.0.74", [SUITE["pain001"]])
+        == []
+    )
+
+
+def test_the_tag_message_is_the_lowercase_project_name() -> None:
+    """The family's tags read ``pain001 v<version>``, not ``Pain001``.
+
+    The preflight creates the tag with ``--tag`` and inspect_release
+    verifies it against ``--project``; both must spell the project the
+    way the release invariants do, or the check would pass a tag the
+    release page then contradicts.
+    """
+    source = Path(preflight_release.__file__).read_text(encoding="utf-8")
+    assert 'msg = f"pain001 v{version}"' in source
+    assert '"Pain001"' not in source
+
+
+def test_the_release_workflow_titles_the_release_by_project() -> None:
+    """A GitHub release is titled ``pain001 <version>``, not ``v<version>``.
+
+    softprops/action-gh-release titles a release after its tag unless
+    ``name`` is set, which produced exactly the title the family's
+    release invariants forbid.
+    """
+    workflow = (
+        Path(__file__).resolve().parent.parent / ".github/workflows/ci.yml"
+    ).read_text(encoding="utf-8")
+    assert "name: pain001 ${{ steps.release_notes.outputs.version }}" in (
+        workflow
+    )
+    assert '"version=$TAG_VERSION" >> "$GITHUB_OUTPUT"' in workflow
+    assert "--project Pain001" not in workflow

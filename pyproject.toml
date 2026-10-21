@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.72"
+version = "0.0.74"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -91,6 +91,11 @@ python-gnupg = {version = ">=0.5.7,<1", optional = true}
 opentelemetry-api = {version = ">=1.27,<2", optional = true}
 opentelemetry-sdk = {version = ">=1.27,<2", optional = true}
 opentelemetry-exporter-otlp-proto-http = {version = ">=1.27,<2", optional = true}
+# Advisory floor, not a direct import: the otel exporter pulls certifi in
+# through requests, and every certifi before 2026.10.19 is affected by
+# GHSA-6q48-6c7w-9gw2. Declared in the `otel` extra so pain001[otel]
+# cannot resolve an affected release. Calendar-versioned, so no cap.
+certifi = {version = ">=2026.10.19", optional = true}
 
 [tool.poetry.extras]
 api = ["fastapi", "uvicorn"]
@@ -99,7 +104,7 @@ mcp = ["mcp"]
 lsp = ["pygls"]
 redis = ["redis"]
 gpg = ["python-gnupg"]
-otel = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp-proto-http"]
+otel = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp-proto-http", "certifi"]
 fast = ["lxml"]
 upload = ["paramiko"]
 rules = ["cel-python", "holidays"]
@@ -122,6 +127,7 @@ types-pyyaml = "^6.0.12"
 diff-cover = "^10.6.0"
 types-setuptools = "^84.0.0"
 radon = "^6.0.1"
+complexipy = {version = "^8.1.0", python = "<3.16"}
 mutmut = "^3.8.0"
 hypothesis = "^6.168.5"
 memory-profiler = "^0.61.0"
@@ -347,6 +353,10 @@ pytest_add_cli_args = [
     "--hypothesis-profile=mutation",
     "--ignore=tests/test_lazy_imports.py",
     "--ignore=tests/test_examples.py",
+    # The complexity gate measures the real tree against its baseline;
+    # inside the copy every function is a mutmut trampoline, so the
+    # measurement differs. The ordinary test run and CI job cover it.
+    "--deselect=tests/test_check_complexity.py::test_the_tree_matches_its_baseline",
 ]
 # The example scripts and the corpus data are read by tests by path.
 # mutmut runs the tests inside its working copy (mutants/), which holds
@@ -359,5 +369,5 @@ also_copy = [
     "LICENSE-MIT", "Makefile", "Dockerfile", ".safety-policy.yml", ".github",
     "docs", "examples", "scenarios", "scripts", "benches", "requirements.txt",
     "DEVELOPMENT.md", "GOVERNANCE.md", "ARCHITECTURE.md", "SUPPORT.md",
-    "RELEASING.md",
+    "RELEASING.md", "CITATION.cff",
 ]

@@ -33,6 +33,19 @@ jobs:
         # PyPI between commits and the release tag's publish step;
         # the post-publish nightly run audits the released artefact.
         run: poetry run pip-audit --progress-spinner off
+      - name: Fail on known vulnerabilities in the hash-pinned tool sets
+        # The docs, SBOM, fuzz and SDK jobs install from these files, not
+        # from poetry.lock, so the environment audit above never sees
+        # them: docs.txt pinned an affected certifi (GHSA-6q48-6c7w-9gw2)
+        # with nothing reporting it. Every file is fully pinned and
+        # hashed, so --no-deps --disable-pip audits exactly what installs.
+        run: |
+          set -euo pipefail
+          for file in requirements.txt .github/requirements/*.txt; do
+            echo "::group::$file"
+            poetry run pip-audit --progress-spinner off --no-deps --disable-pip -r "$file"
+            echo "::endgroup::"
+          done
 
   licenses:
     runs-on: ubuntu-latest

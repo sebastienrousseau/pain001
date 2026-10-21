@@ -1,0 +1,14 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# Release preflight tooling: build the wheel and sdist from a clean
+# `git archive` of the release commit and check their metadata before a
+# tag exists. Constrained to the bootstrap build backends so the
+# preflight builds with the same pins as the offline SDK build.
+# Compiled with hashes:
+#   pip-compile --allow-unsafe --generate-hashes --output-file=release.txt --strip-extras release.in
+-c bootstrap.txt
+build
+poetry-core
+twine
+# Advisory floor: GHSA-6q48-6c7w-9gw2 affects certifi before 2026.10.19
+# (pulled in by twine's requests).
+certifi>=2026.10.19

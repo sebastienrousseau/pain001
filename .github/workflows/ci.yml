@@ -64,6 +64,26 @@ jobs:
           fi
           echo "✅ Version Sync Verified."
 
+  # 1b. COMPLEXITY (Fast Fail - stdlib + two hash-pinned tools)
+  #
+  # Per-function ceilings (cyclomatic 10, cognitive 15, Halstead 30,
+  # 60 lines; 500 lines per file) against complexity-baseline.json,
+  # which may only shrink. `make check` runs the same script.
+  complexity:
+    name: Complexity ceilings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install radon and complexipy (hash-pinned)
+        run: python -m pip install --require-hashes -r .github/requirements/complexity.txt
+      - name: Check complexity against the baseline
+        run: python scripts/check_complexity.py
+
   # 2. TOLLGATES (Blocking - Latest Python)
   tollgates:
     needs: version-sync
@@ -150,7 +170,8 @@ jobs:
           TAG_VERSION=${GITHUB_REF#refs/tags/v}
           NOTE_PATH="releases/v${TAG_VERSION}.md"
           if [ -f "$NOTE_PATH" ]; then
-            echo "path=$NOTE_PATH" >> $GITHUB_OUTPUT
+            echo "path=$NOTE_PATH" >> "$GITHUB_OUTPUT"
+            echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
           else
             echo "❌ Release notes missing: $NOTE_PATH"
             exit 1
@@ -168,7 +189,7 @@ jobs:
         run: |
           poetry build
           poetry run twine check dist/*
-          python scripts/inspect_release.py --name pain001 --project Pain001 \
+          python scripts/inspect_release.py --name pain001 --project pain001 \
             --version "${GITHUB_REF_NAME#v}" --dist dist --output .release
 
       # SLSA Build Level 3 provenance for every distribution file, bound to
@@ -239,7 +260,7 @@ jobs:
         # exactly the bug being fixed here. set -e makes that loud.
         run: |
           set -euo pipefail
-          python scripts/inspect_release.py --name pain001 --project Pain001 \
+          python scripts/inspect_release.py --name pain001 --project pain001 \
             --version "${GITHUB_REF_NAME#v}" --dist dist --output .release \
             --extra-artifacts sbom
           hashes=$( (cd dist && sha256sum -- *) ; (cd sbom && sha256sum -- *) )
@@ -249,6 +270,9 @@ jobs:
       - name: ❯ Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
+          # The family's release title is "<project> <version>", never the
+          # bare tag: without `name` the action titles it "v0.0.N".
+          name: pain001 ${{ steps.release_notes.outputs.version }}
           body_path: .release/release-notes.md
           files: |
             dist/*

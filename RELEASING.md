@@ -50,6 +50,19 @@ Item 7 is the one that bites: the publish job enforces it too, but only
 *after* a tag has been pushed, and a rejected tag then has to be deleted
 locally and on the remote before you can retry.
 
+The registry dry run builds from a clean `git archive` of the release
+commit with the hash-pinned tools in `.github/requirements/release.txt`
+(`build`, `poetry-core`, `twine`), so what is inspected is what the tag
+contains, not the working tree:
+
+```bash
+git archive origin/main | tar -x -C /tmp/pain001-dry-run
+python3 -m venv /tmp/pain001-dry-run/.venv
+/tmp/pain001-dry-run/.venv/bin/pip install --require-hashes -r .github/requirements/release.txt
+cd /tmp/pain001-dry-run && PIP_NO_INDEX=1 .venv/bin/python -m build --no-isolation \
+  && .venv/bin/twine check --strict dist/*
+```
+
 ## Cutting the release
 
 1. Bump the version in the five sources above and add the `CHANGELOG.md`

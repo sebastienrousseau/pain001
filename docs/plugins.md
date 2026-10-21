@@ -260,6 +260,17 @@ We will bump the major (and break the contract) only when there is
 no compatible path forward — and the next major's first release will
 provide a `pain001 plugins migrate <plugin>` helper.
 
+### Locking the contract at v1.0
+
+The contract stays at major `0` until an independent external
+contributor has built a plugin against the documented Protocols and
+their compatibility and usability feedback is recorded here
+(issue #179). Maintainer-authored plugins and tests do not count. The line
+below is the record; `tests/test_plugin_contract_lock.py` fails the
+suite if `PAIN001_API_VERSION` reaches major `1` while it says none.
+
+External review: none yet
+
 ---
 
 ## Built-in plugins

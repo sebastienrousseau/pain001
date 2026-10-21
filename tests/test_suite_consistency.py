@@ -29,6 +29,8 @@ from check_suite_consistency import (  # noqa: E402
     core_floor,
     floor_problems,
     main,
+    tree_problems,
+    tree_version,
 )
 
 
@@ -66,22 +68,17 @@ class TestPolicy:
             assert member.repository.startswith("sebastienrousseau/")
             assert member.summary.endswith(".")
 
-    def test_every_member_declares_its_floor_policy(self) -> None:
-        """The floor rule is written down once, here, per member.
+    def test_every_member_is_lockstep(self) -> None:
+        """Every member requires the core at its own version.
 
-        The wrappers call the core's API and track it release for
-        release; the loaders implement the plugin contract and record
-        the oldest core whose contract they need. Before this table the
-        loaders sat at ``>=0.0.55`` and ``>=0.0.56`` with nothing saying
-        whether that was intent or neglect.
+        Up to 0.0.73 the loaders recorded the oldest core whose plugin
+        contract they needed (``>=0.0.55``, ``>=0.0.56``). From 0.0.74
+        the whole family is lockstep, as the camt053 family is: one
+        suite version is one tested combination.
         """
         assert SUITE[CORE].floor is None
-        assert SUITE["pain001-mcp"].floor == LOCKSTEP
-        assert SUITE["pain001-lsp"].floor == LOCKSTEP
-        for name in ("pain001-loader-xlsx", "pain001-loader-mt101"):
-            floor = SUITE[name].floor
-            assert floor is not None and floor != LOCKSTEP
-            assert _as_tuple(floor) < _as_tuple("0.0.999")
+        for member in members()[1:]:
+            assert member.floor == LOCKSTEP, member.distribution
 
 
 class TestCoreFloor:
@@ -144,11 +141,22 @@ class TestVersionOrdering:
         assert _as_tuple("0.0.60") > _as_tuple("0.0.9")
 
 
-def _stub(monkeypatch: pytest.MonkeyPatch, table: dict[str, Any]) -> None:
-    """Point the checker at fixed metadata instead of PyPI."""
+def _stub(
+    monkeypatch: pytest.MonkeyPatch,
+    table: dict[str, Any],
+    tree: str | None = None,
+) -> None:
+    """Point the checker at fixed metadata instead of PyPI.
+
+    The tree version defaults to the stubbed core release, so a test
+    about the published suite is not also a test about this checkout.
+    """
     import check_suite_consistency as mod
 
     monkeypatch.setattr(mod, "fetch_metadata", lambda name: table.get(name))
+    core = table.get("pain001")
+    declared = tree or (core["version"] if core else "0.0.0")
+    monkeypatch.setattr(mod, "tree_version", lambda: declared)
 
 
 def _member(version: str, floor: str | None = None) -> dict[str, Any]:
@@ -176,8 +184,8 @@ class TestAudit:
                 "pain001": _member("0.0.60"),
                 "pain001-mcp": _member("0.0.60", "0.0.60"),
                 "pain001-lsp": _member("0.0.60", "0.0.60"),
-                "pain001-loader-xlsx": _member("0.0.60", "0.0.56"),
-                "pain001-loader-mt101": _member("0.0.60", "0.0.55"),
+                "pain001-loader-xlsx": _member("0.0.60", "0.0.60"),
+                "pain001-loader-mt101": _member("0.0.60", "0.0.60"),
             },
         )
 
@@ -185,6 +193,7 @@ class TestAudit:
 
         assert problems == []
         assert report["core"] == "0.0.60"
+        assert report["tree"] == "0.0.60"
 
     def test_a_member_left_behind_is_reported(
         self, monkeypatch: pytest.MonkeyPatch
@@ -265,11 +274,10 @@ class TestAudit:
             for p in problems
         )
 
-    def test_a_loader_floor_that_left_the_policy_is_reported(
+    def test_a_loader_floor_below_its_release_is_reported(
         self, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """A loader's floor moves in pain001.suite first, then in its
-        pyproject; a pyproject that moved alone is the drift."""
+        """A loader is lockstep too: 0.0.60 must require 0.0.60."""
         _stub(
             monkeypatch,
             {
@@ -282,9 +290,67 @@ class TestAudit:
 
         assert any(
             "pain001-loader-mt101 0.0.60 requires pain001>=0.0.58" in p
-            and ">=0.0.55" in p
+            and ">=0.0.60" in p
             for p in problems
         )
+
+    def test_a_tree_ahead_of_its_release_is_reported(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A version bumped in the tree and never released.
+
+        Nothing inside the repository fails when that happens; only
+        PyPI disagrees, and only if somebody compares.
+        """
+        _stub(monkeypatch, {"pain001": _member("0.0.72")}, tree="0.0.74")
+
+        problems, report = audit()
+
+        assert report["tree"] == "0.0.74"
+        assert any(
+            "pain001: tree is 0.0.74 but PyPI has 0.0.72" in p
+            for p in problems
+        )
+
+    @pytest.mark.parametrize(
+        ("distribution", "version", "floor"),
+        [
+            ("pain001-lsp", "0.0.72", "0.0.71"),
+            ("pain001-mcp", "0.0.72", "0.0.71"),
+            ("pain001-mcp", "0.0.73", "0.0.71"),
+            ("pain001-loader-xlsx", "0.0.72", "0.0.56"),
+            ("pain001-loader-mt101", "0.0.72", "0.0.55"),
+        ],
+    )
+    def test_an_immutable_published_floor_is_excepted(
+        self, distribution: str, version: str, floor: str
+    ) -> None:
+        """Releases already on PyPI with an older floor cannot be corrected.
+
+        Flagging them forever would keep the nightly red with nothing
+        anyone can do about it, which teaches people to ignore it.
+        """
+        assert floor_problems(SUITE[distribution], version, floor) == []
+
+    @pytest.mark.parametrize(
+        ("distribution", "version", "floor"),
+        [
+            # The same floor on the next release is new drift.
+            ("pain001-mcp", "0.0.74", "0.0.71"),
+            ("pain001-lsp", "0.0.73", "0.0.71"),
+            # An excepted release with a different floor is not excepted.
+            ("pain001-mcp", "0.0.73", "0.0.70"),
+            # The loaders' old contract floors are drift from 0.0.74.
+            ("pain001-loader-xlsx", "0.0.74", "0.0.56"),
+            ("pain001-loader-mt101", "0.0.74", "0.0.55"),
+        ],
+    )
+    def test_the_exceptions_waive_nothing_else(
+        self, distribution: str, version: str, floor: str
+    ) -> None:
+        """Only the exact (distribution, version, floor) is waived."""
+        (problem,) = floor_problems(SUITE[distribution], version, floor)
+        assert f"{distribution} {version} requires pain001>={floor}" in problem
 
     def test_a_member_with_no_floor_at_all_is_reported(self) -> None:
         """No lower bound is not a floor; it is the absence of one."""
@@ -308,6 +374,33 @@ class TestAudit:
 
         assert problems == []
         assert report["members"]["pain001-mcp"] == {"published": None}
+
+
+class TestTreeVersion:
+    """This checkout against this package's own PyPI release."""
+
+    def test_the_tree_version_is_read_from_pyproject(self) -> None:
+        """The same single source the version-sync job reads."""
+        import pain001
+
+        assert tree_version() == pain001.__version__
+
+    def test_a_pyproject_without_a_version_is_an_error(
+        self, tmp_path: Path
+    ) -> None:
+        """No version is not "0.0.0"; it is a broken tree."""
+        (tmp_path / "pyproject.toml").write_text("[tool.poetry]\n")
+        with pytest.raises(SystemExit, match="declares no version"):
+            tree_version(tmp_path)
+
+    def test_a_released_tree_is_consistent(self) -> None:
+        """Tree and index agree once the tag has published."""
+        assert tree_problems("0.0.74", "0.0.74") == []
+
+    def test_a_tree_behind_its_release_is_reported(self) -> None:
+        """A stale checkout is as wrong as an unreleased bump."""
+        (problem,) = tree_problems("0.0.72", "0.0.74")
+        assert "tree is 0.0.72 but PyPI has 0.0.74" in problem
 
 
 class TestExitCode:
