@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: release-check format lint type test cov sec complexity pr check perf slos clean help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
+.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
 
 # Color output
 RED := \033[0;31m
@@ -42,6 +42,7 @@ help:
 	@echo "  complexity    - Complexity ceilings against complexity-baseline.json (gate)"
 	@echo "  mutate        - Mutation testing"
 	@echo "  docs          - Build documentation"
+	@echo "  demo          - Render .github/demo.gif from .github/demo.tape (needs vhs)"
 	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors
 	@echo "  corpus-build  - Render scenarios/ and the coverage sets into pain001/corpus/data (deterministic)"
 	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)"
@@ -156,6 +157,10 @@ docs:
 	@poetry install --with docs -q
 	@poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
 	@echo "$(GREEN)✓ Docs built to docs/_build/html$(NC)"
+
+# The README demo: the Quick Start, recorded in a throwaway directory.
+demo:
+	@poetry run vhs .github/demo.tape
 
 clean:
 	@echo "$(YELLOW)Cleaning build artifacts...$(NC)"
