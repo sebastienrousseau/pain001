@@ -1,0 +1,5 @@
+# Complexity ceilings for the CI "Complexity ceilings" job
+# (scripts/check_complexity.py). Compiled with hashes:
+#   pip-compile --allow-unsafe --generate-hashes --output-file=complexity.txt --strip-extras complexity.in
+radon==6.0.1
+complexipy==8.1.0

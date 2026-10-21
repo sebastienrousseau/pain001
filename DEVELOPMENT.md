@@ -38,6 +38,7 @@ reproduced without reading YAML.
 | Types (mypy `--strict`) | `make type` | `quality.yml` |
 | Tests with the 100 % line + branch coverage floor | `make test` | `ci.yml` (matrix) |
 | Security (bandit, pip-audit) | `make sec` | `security.yml` |
+| Complexity ceilings (cyclomatic 10, cognitive 15, Halstead 30, 60 lines per function, 500 per file) against `complexity-baseline.json`, which only shrinks | `make complexity` | `ci.yml` |
 | Docs lint (codespell, markdownlint) | `uvx codespell` · `npx markdownlint-cli2 "**/*.md"` | `docs-lint.yml` |
 | Docs build | `make docs` | `docs.yml` |
 | Tollgates (dependency, XSD, idempotency, env parity) | `make tollgates` | `ci.yml` |

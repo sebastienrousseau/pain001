@@ -1,0 +1,504 @@
+{
+  "benches/bench_corpus.py::run": {
+    "cognitive": 16,
+    "cyclomatic": 15,
+    "lines": 104
+  },
+  "benches/bench_plugin_discovery.py::main": {
+    "lines": 65
+  },
+  "examples/03_cli_workflows.py::main": {
+    "cyclomatic": 11,
+    "lines": 63
+  },
+  "examples/05_api_job_lifecycle.py::run": {
+    "lines": 61
+  },
+  "examples/07_parse_bank_responses.py::main": {
+    "lines": 69
+  },
+  "examples/17_custom_policies.py::main": {
+    "cyclomatic": 12
+  },
+  "pain001/__main__.py::main": {
+    "lines": 71
+  },
+  "pain001/api/app.py": {
+    "file_lines": 990
+  },
+  "pain001/api/app.py::_process_generation_job": {
+    "cyclomatic": 11,
+    "lines": 143
+  },
+  "pain001/api/app.py::generate_xml_sync": {
+    "cyclomatic": 12,
+    "lines": 122
+  },
+  "pain001/api/app.py::validate_data": {
+    "lines": 62
+  },
+  "pain001/api/job_store.py::RedisJobStore.load_all": {
+    "cognitive": 17
+  },
+  "pain001/api/metrics.py::render_prometheus": {
+    "lines": 73
+  },
+  "pain001/api/ui.py": {
+    "file_lines": 601
+  },
+  "pain001/api/ui.py::_parse_rows": {
+    "cognitive": 22,
+    "cyclomatic": 16,
+    "lines": 80
+  },
+  "pain001/camt053/generator.py::build_camt053_statement": {
+    "lines": 63
+  },
+  "pain001/camt053/parser.py::parse_camt053_statement": {
+    "cyclomatic": 13,
+    "lines": 64
+  },
+  "pain001/cli/cli.py": {
+    "file_lines": 1461
+  },
+  "pain001/cli/cli.py::_generate_xml_files": {
+    "cyclomatic": 12,
+    "lines": 124
+  },
+  "pain001/cli/cli.py::_run_scheme_check": {
+    "cognitive": 21,
+    "cyclomatic": 14,
+    "lines": 78
+  },
+  "pain001/cli/cli.py::_validate_payment_data": {
+    "lines": 68
+  },
+  "pain001/cli/cli.py::main": {
+    "cyclomatic": 17,
+    "lines": 268
+  },
+  "pain001/core/core.py": {
+    "file_lines": 513
+  },
+  "pain001/core/core.py::_validate_inputs": {
+    "lines": 82
+  },
+  "pain001/core/core.py::process_files": {
+    "lines": 127
+  },
+  "pain001/core/core.py::process_files_streaming": {
+    "lines": 95
+  },
+  "pain001/corpus/builder.py": {
+    "file_lines": 946
+  },
+  "pain001/corpus/builder.py::_Composer.address": {
+    "cyclomatic": 16
+  },
+  "pain001/corpus/builder.py::_Composer.compose": {
+    "cyclomatic": 11,
+    "lines": 96
+  },
+  "pain001/corpus/builder.py::_Composer.structured_remittance": {
+    "cyclomatic": 14
+  },
+  "pain001/corpus/builder.py::_Composer.transaction": {
+    "cognitive": 17,
+    "cyclomatic": 12,
+    "lines": 95
+  },
+  "pain001/corpus/builder.py::_Fitter.tree": {
+    "cognitive": 20,
+    "cyclomatic": 14
+  },
+  "pain001/corpus/builder.py::_Fitter.value": {
+    "cognitive": 48,
+    "cyclomatic": 29
+  },
+  "pain001/corpus/builder.py::_fill": {
+    "cognitive": 17
+  },
+  "pain001/corpus/builder.py::deep_merge": {
+    "cognitive": 16
+  },
+  "pain001/corpus/coverage_sets.py": {
+    "file_lines": 669
+  },
+  "pain001/corpus/coverage_sets.py::_Planner._chosen": {
+    "cognitive": 17,
+    "cyclomatic": 11
+  },
+  "pain001/corpus/coverage_sets.py::_Planner.emit": {
+    "cognitive": 24,
+    "cyclomatic": 24,
+    "lines": 69
+  },
+  "pain001/corpus/coverage_sets.py::_Planner.pick_branches": {
+    "cognitive": 24
+  },
+  "pain001/corpus/coverage_sets.py::_focus": {
+    "cognitive": 23,
+    "cyclomatic": 20
+  },
+  "pain001/corpus/coverage_sets.py::build_coverage_set": {
+    "cognitive": 21,
+    "cyclomatic": 13,
+    "lines": 76
+  },
+  "pain001/corpus/identifiers.py": {
+    "file_lines": 552
+  },
+  "pain001/corpus/inventory.py": {
+    "file_lines": 518
+  },
+  "pain001/corpus/inventory.py::_Walker.element": {
+    "cognitive": 16,
+    "cyclomatic": 16
+  },
+  "pain001/corpus/inventory.py::_simple_facets": {
+    "cyclomatic": 11
+  },
+  "pain001/corpus/inventory.py::coverage": {
+    "cognitive": 25,
+    "cyclomatic": 17,
+    "lines": 62
+  },
+  "pain001/corpus/rules/ladder.py::run_ladder": {
+    "cognitive": 18,
+    "cyclomatic": 13
+  },
+  "pain001/corpus/rules/mdr.py": {
+    "file_lines": 588
+  },
+  "pain001/corpus/rules/mdr.py::_cheque_rules": {
+    "cognitive": 34,
+    "cyclomatic": 21,
+    "lines": 78
+  },
+  "pain001/corpus/rules/overlays.py": {
+    "file_lines": 547
+  },
+  "pain001/corpus/rules/overlays.py::_parse_assertion": {
+    "cognitive": 29,
+    "cyclomatic": 20
+  },
+  "pain001/corpus/rules/overlays.py::evaluate_rules": {
+    "cognitive": 21,
+    "cyclomatic": 11
+  },
+  "pain001/corpus/rules/overlays.py::overlay_from": {
+    "cognitive": 16,
+    "cyclomatic": 19
+  },
+  "pain001/corpus/rules/projection.py::_amount": {
+    "cyclomatic": 12
+  },
+  "pain001/corpus/rules/projection.py::rows_from_xml": {
+    "cognitive": 54,
+    "cyclomatic": 23,
+    "lines": 129
+  },
+  "pain001/csv/load_csv_data.py::load_csv_data": {
+    "cognitive": 16,
+    "lines": 86
+  },
+  "pain001/csv/load_csv_data.py::load_csv_data_streaming": {
+    "cognitive": 19,
+    "cyclomatic": 12,
+    "lines": 103
+  },
+  "pain001/data/loader.py::_load_from_file": {
+    "lines": 65
+  },
+  "pain001/data/loader.py::load_payment_data": {
+    "lines": 65
+  },
+  "pain001/data/loader.py::load_payment_data_streaming": {
+    "lines": 65
+  },
+  "pain001/db/load_db_data.py::load_db_data": {
+    "lines": 79
+  },
+  "pain001/db/load_db_data_streaming.py::load_db_data_streaming": {
+    "lines": 101
+  },
+  "pain001/json/load_json_data.py::load_json_data": {
+    "lines": 73
+  },
+  "pain001/json/load_json_data.py::load_jsonl_data": {
+    "lines": 69
+  },
+  "pain001/json/load_json_data.py::load_jsonl_data_streaming": {
+    "cyclomatic": 11,
+    "lines": 79
+  },
+  "pain001/logging_schema/formatter.py::configure_json_logging": {
+    "lines": 90
+  },
+  "pain001/logging_schema/redaction.py::_redact_pii_from_dict": {
+    "cognitive": 24,
+    "cyclomatic": 15
+  },
+  "pain001/lsp/diagnostics.py::_validate_cell": {
+    "lines": 65
+  },
+  "pain001/lsp/diagnostics.py::diagnostics_for_csv": {
+    "cognitive": 24,
+    "cyclomatic": 18,
+    "lines": 78
+  },
+  "pain001/migration/version_mapper.py::VersionMapper.migrate_rows": {
+    "cognitive": 21
+  },
+  "pain001/observability/otel.py::init_otel": {
+    "lines": 67
+  },
+  "pain001/observability/otel.py::traced": {
+    "lines": 62
+  },
+  "pain001/pain002/generator.py::build_pain002_report": {
+    "lines": 74
+  },
+  "pain001/pain002/parser.py::parse_pain002_report": {
+    "cyclomatic": 11,
+    "lines": 93
+  },
+  "pain001/parquet/load_parquet_data.py::load_parquet_data_streaming": {
+    "lines": 63
+  },
+  "pain001/schematron/evaluator.py::XPathEvaluator._eval_function": {
+    "cognitive": 50,
+    "cyclomatic": 34
+  },
+  "pain001/schematron/evaluator.py::XPathEvaluator._eval_primary": {
+    "cyclomatic": 11
+  },
+  "pain001/schematron/evaluator.py::_tokenize": {
+    "cognitive": 18,
+    "cyclomatic": 12
+  },
+  "pain001/schematron/evaluator.py::find_context_elements": {
+    "cognitive": 22,
+    "cyclomatic": 14
+  },
+  "pain001/schematron/evaluator.py::resolve_xpath_value": {
+    "cognitive": 25,
+    "cyclomatic": 15
+  },
+  "pain001/schematron/parser.py::parse_schematron": {
+    "cognitive": 48,
+    "cyclomatic": 22,
+    "lines": 109
+  },
+  "pain001/schematron/validator.py::SchematronValidator.validate": {
+    "cyclomatic": 12,
+    "lines": 75
+  },
+  "pain001/security/dsig.py::sign_xml_document": {
+    "lines": 108
+  },
+  "pain001/security/dsig.py::verify_xml_signature": {
+    "cognitive": 30,
+    "cyclomatic": 25,
+    "lines": 122
+  },
+  "pain001/security/path_validator.py::_resolve_within_allowed_bases": {
+    "lines": 74
+  },
+  "pain001/transport/cli.py::upload_cmd": {
+    "lines": 62
+  },
+  "pain001/transport/sftp.py::parse_target": {
+    "cyclomatic": 15
+  },
+  "pain001/transport/sftp.py::upload_sftp": {
+    "cognitive": 16,
+    "cyclomatic": 16,
+    "lines": 107
+  },
+  "pain001/twins/iso_json.py::_decode_node": {
+    "cognitive": 20,
+    "cyclomatic": 12
+  },
+  "pain001/twins/iso_json.py::_encode_node": {
+    "cognitive": 34,
+    "cyclomatic": 18
+  },
+  "pain001/twins/records.py::_leaf_paths": {
+    "cognitive": 17
+  },
+  "pain001/twins/records.py::_read": {
+    "cognitive": 20,
+    "cyclomatic": 13
+  },
+  "pain001/twins/records.py::column_paths": {
+    "cyclomatic": 35,
+    "lines": 74
+  },
+  "pain001/twins/records.py::to_records": {
+    "cognitive": 21,
+    "cyclomatic": 16
+  },
+  "pain001/validation/_scheme_rules.py": {
+    "file_lines": 933
+  },
+  "pain001/validation/_scheme_rules.py::_check_amount": {
+    "lines": 69
+  },
+  "pain001/validation/_scheme_rules.py::_duplicate_key": {
+    "cyclomatic": 11
+  },
+  "pain001/validation/bic_validator.py::validate_bic_format": {
+    "cyclomatic": 14,
+    "lines": 76
+  },
+  "pain001/validation/corrections.py::suggest_record_fix": {
+    "cognitive": 23,
+    "cyclomatic": 22,
+    "lines": 78
+  },
+  "pain001/validation/iban_validator.py::validate_iban_format": {
+    "cyclomatic": 11,
+    "lines": 69
+  },
+  "pain001/validation/policy.py::CustomRuleScheme.validate": {
+    "cognitive": 17
+  },
+  "pain001/validation/policy.py::_activation": {
+    "cognitive": 16,
+    "cyclomatic": 12
+  },
+  "pain001/validation/policy.py::_check_expression": {
+    "cognitive": 16,
+    "cyclomatic": 11
+  },
+  "pain001/validation/policy.py::_load_rules": {
+    "cognitive": 26,
+    "cyclomatic": 20,
+    "lines": 84
+  },
+  "pain001/validation/rails.py": {
+    "file_lines": 1388
+  },
+  "pain001/validation/rails.py::PurposeMandate.validate": {
+    "cyclomatic": 11
+  },
+  "pain001/validation/rails.py::RailProfile._check_creditor_reference": {
+    "cognitive": 24,
+    "cyclomatic": 14,
+    "lines": 68
+  },
+  "pain001/validation/rails.py::RailProfile._check_domestic": {
+    "cognitive": 16,
+    "cyclomatic": 17,
+    "lines": 78
+  },
+  "pain001/validation/rails.py::RailProfile._check_payment_type": {
+    "cyclomatic": 14
+  },
+  "pain001/validation/schema_validator.py::SchemaValidator.validate_batch": {
+    "cognitive": 22,
+    "cyclomatic": 11
+  },
+  "pain001/validation/schemes.py::validate_scheme": {
+    "cyclomatic": 12,
+    "lines": 82
+  },
+  "pain001/validation/service.py::ValidationService.validate_all": {
+    "cyclomatic": 13,
+    "lines": 81
+  },
+  "pain001/xml/envelope.py::BusinessApplicationHeader.to_element": {
+    "cognitive": 20,
+    "cyclomatic": 16,
+    "lines": 97
+  },
+  "pain001/xml/envelope.py::_parse_app_hdr_element": {
+    "cognitive": 54,
+    "cyclomatic": 27,
+    "lines": 87
+  },
+  "pain001/xml/generate_xml.py": {
+    "file_lines": 712
+  },
+  "pain001/xml/generate_xml.py::_coerce_temporal_and_boolean": {
+    "cognitive": 17,
+    "cyclomatic": 11
+  },
+  "pain001/xml/generate_xml.py::generate_xml": {
+    "lines": 115
+  },
+  "pain001/xml/generate_xml.py::generate_xml_string": {
+    "lines": 102
+  },
+  "pain001/xml/message_registry.py": {
+    "file_lines": 645
+  },
+  "pain001/xml/message_registry.py::_prepare_xml_data_v04": {
+    "lines": 80
+  },
+  "pain001/xml/message_registry.py::_prepare_xml_data_v05_to_v08": {
+    "lines": 76
+  },
+  "pain001/xml/message_registry.py::_prepare_xml_data_v09_to_v12": {
+    "lines": 119
+  },
+  "pain001/xml/write_xml_to_file.py::indent_xml": {
+    "cognitive": 18,
+    "cyclomatic": 12
+  },
+  "scripts/build_corpus.py::main": {
+    "cognitive": 75,
+    "cyclomatic": 34,
+    "lines": 143
+  },
+  "scripts/build_corpus.py::provenance_for": {
+    "lines": 66
+  },
+  "scripts/check_security_exceptions.py::main": {
+    "cognitive": 20,
+    "cyclomatic": 16
+  },
+  "scripts/corpus_coverage.py::main": {
+    "cognitive": 22,
+    "cyclomatic": 13
+  },
+  "scripts/derive_overlay.py::diff": {
+    "cognitive": 22,
+    "cyclomatic": 29,
+    "lines": 65
+  },
+  "scripts/generate_message_deltas.py::compute": {
+    "cyclomatic": 14
+  },
+  "scripts/generate_message_deltas.py::render": {
+    "cognitive": 39,
+    "cyclomatic": 27,
+    "lines": 104
+  },
+  "scripts/inspect_release.py::inspect": {
+    "cognitive": 54,
+    "cyclomatic": 25,
+    "lines": 69
+  },
+  "scripts/inspect_release.py::main": {
+    "cognitive": 16,
+    "cyclomatic": 14,
+    "lines": 66
+  },
+  "scripts/refresh_external_codes.py::main": {
+    "cyclomatic": 12,
+    "lines": 65
+  },
+  "scripts/smoke_generate_all_versions.py::test_all_versions": {
+    "lines": 78
+  },
+  "scripts/test_input_sources.py::run_matrix_test": {
+    "cognitive": 23,
+    "cyclomatic": 12,
+    "lines": 90
+  },
+  "scripts/validate_readme_examples.py::validate_readme_examples": {
+    "lines": 152
+  }
+}

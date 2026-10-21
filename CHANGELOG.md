@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Every suite member is lockstep, loaders included.** `pain001/suite.py` records `LOCKSTEP` for `pain001-loader-xlsx` and `pain001-loader-mt101`, which previously kept the plugin-contract floors `>=0.0.56` and `>=0.0.55`: from 0.0.74 each member at `0.0.N` requires `pain001>=0.0.N`, as in the camt053 family. The published 0.0.72 loader floors join the immutable exceptions in `scripts/check_suite_consistency.py`. ADR-0001 is amended.
+- A complexity gate: `scripts/check_complexity.py` holds every function to cyclomatic 10, cognitive 15, Halstead difficulty 30 and 60 lines, and every file to 500 lines, against `complexity-baseline.json` (136 pre-existing offenders, worst `pain001/twins/records.py::column_paths` at cyclomatic 35). The baseline may only shrink: `--update` records an improvement and refuses a regression. It runs in `make check` and as the `Complexity ceilings` CI job, from the hash-pinned `.github/requirements/complexity.txt`.
 - `scripts/preflight_release.py` refuses the release while any floor recorded in `pain001/suite.py` resolves to something other than the release version.
 - `scripts/check_suite_consistency.py` now compares the tree with this package's own PyPI release and reports a version bumped and never released (`pain001: tree is 0.0.74 but PyPI has 0.0.72`). The workflow already claimed it did; the script did not.
 

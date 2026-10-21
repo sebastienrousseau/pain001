@@ -64,6 +64,26 @@ jobs:
           fi
           echo "✅ Version Sync Verified."
 
+  # 1b. COMPLEXITY (Fast Fail - stdlib + two hash-pinned tools)
+  #
+  # Per-function ceilings (cyclomatic 10, cognitive 15, Halstead 30,
+  # 60 lines; 500 lines per file) against complexity-baseline.json,
+  # which may only shrink. `make check` runs the same script.
+  complexity:
+    name: Complexity ceilings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
+      - name: Install radon and complexipy (hash-pinned)
+        run: python -m pip install --require-hashes -r .github/requirements/complexity.txt
+      - name: Check complexity against the baseline
+        run: python scripts/check_complexity.py
+
   # 2. TOLLGATES (Blocking - Latest Python)
   tollgates:
     needs: version-sync
