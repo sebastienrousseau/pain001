@@ -6,6 +6,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 from types import ModuleType
 
@@ -15,19 +17,27 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 @pytest.fixture
-def gate(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> ModuleType:
-    """The gate as a module, measuring and writing under ``tmp_path``."""
+def gate(monkeypatch: pytest.MonkeyPatch) -> Iterator[ModuleType]:
+    """The gate as a module, measuring and writing in a scratch directory.
+
+    Not ``tmp_path``: pytest's basetemp is under ``pain001/tmp`` here,
+    and the deliberately complex, untyped Python these tests write
+    would then sit inside the package tree, where ``mypy pain001``
+    reads it.
+    """
     spec = importlib.util.spec_from_file_location(
         "check_complexity", ROOT / "scripts" / "check_complexity.py"
     )
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
-    monkeypatch.setattr(module, "ROOT", tmp_path)
-    monkeypatch.setattr(module, "PATHS", ("src",))
-    monkeypatch.setattr(module, "BASELINE", tmp_path / "baseline.json")
-    (tmp_path / "src").mkdir()
-    return module
+    with tempfile.TemporaryDirectory(prefix="pain001-complexity-") as raw:
+        scratch = Path(raw)
+        monkeypatch.setattr(module, "ROOT", scratch)
+        monkeypatch.setattr(module, "PATHS", ("src",))
+        monkeypatch.setattr(module, "BASELINE", scratch / "baseline.json")
+        (scratch / "src").mkdir()
+        yield module
 
 
 def _branchy() -> str:
