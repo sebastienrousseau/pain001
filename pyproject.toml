@@ -91,6 +91,11 @@ python-gnupg = {version = ">=0.5.7,<1", optional = true}
 opentelemetry-api = {version = ">=1.27,<2", optional = true}
 opentelemetry-sdk = {version = ">=1.27,<2", optional = true}
 opentelemetry-exporter-otlp-proto-http = {version = ">=1.27,<2", optional = true}
+# Advisory floor, not a direct import: the otel exporter pulls certifi in
+# through requests, and every certifi before 2026.10.19 is affected by
+# GHSA-6q48-6c7w-9gw2. Declared in the `otel` extra so pain001[otel]
+# cannot resolve an affected release. Calendar-versioned, so no cap.
+certifi = {version = ">=2026.10.19", optional = true}
 
 [tool.poetry.extras]
 api = ["fastapi", "uvicorn"]
@@ -99,7 +104,7 @@ mcp = ["mcp"]
 lsp = ["pygls"]
 redis = ["redis"]
 gpg = ["python-gnupg"]
-otel = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp-proto-http"]
+otel = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp-proto-http", "certifi"]
 fast = ["lxml"]
 upload = ["paramiko"]
 rules = ["cel-python", "holidays"]

@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Security
+
+- `certifi` is floored at 2026.10.19 (GHSA-6q48-6c7w-9gw2, PYSEC-2026-4320, affecting every earlier release). It reaches a runtime install only through the `otel` extra (the exporter's `requests`), so the floor is declared there: `pain001[otel]` can no longer resolve an affected release. The lock moves from 2026.1.4 and `.github/requirements/docs.txt` from 2026.7.22; `tests/test_advisory_floors.py` holds the declared range, the lock and every hash-pinned requirements file past the fix, and the Security workflow now audits each hash-pinned file, which it never did.
 
 ## [0.0.73] - 2026-10-20
 
