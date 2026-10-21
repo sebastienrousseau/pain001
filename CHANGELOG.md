@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/preflight_release.py` refuses the release while any floor recorded in `pain001/suite.py` resolves to something other than the release version.
 - `scripts/check_suite_consistency.py` now compares the tree with this package's own PyPI release and reports a version bumped and never released (`pain001: tree is 0.0.74 but PyPI has 0.0.72`). The workflow already claimed it did; the script did not.
 
+### Fixed
+
+- Release naming follows the family invariants. `scripts/preflight_release.py --tag` signed tags as `Pain001 v<version>` (v0.0.72's tag reads that way) and verified them against `--project Pain001`; it now writes and checks `pain001 v<version>`. The publish job created the GitHub release with no `name`, so it was titled after the bare tag (`v0.0.N`) until edited by hand; it is now created as `pain001 <version>`.
+
 ### Security
 
 - `certifi` is floored at 2026.10.19 (GHSA-6q48-6c7w-9gw2, PYSEC-2026-4320, affecting every earlier release). It reaches a runtime install only through the `otel` extra (the exporter's `requests`), so the floor is declared there: `pain001[otel]` can no longer resolve an affected release. The lock moves from 2026.1.4 and `.github/requirements/docs.txt` from 2026.7.22; `tests/test_advisory_floors.py` holds the declared range, the lock and every hash-pinned requirements file past the fix, and the Security workflow now audits each hash-pinned file, which it never did.

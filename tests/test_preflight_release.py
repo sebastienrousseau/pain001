@@ -56,3 +56,33 @@ def test_the_core_has_no_floor_to_check() -> None:
         preflight_release.suite_floor_problems("0.0.74", [SUITE["pain001"]])
         == []
     )
+
+
+def test_the_tag_message_is_the_lowercase_project_name() -> None:
+    """The family's tags read ``pain001 v<version>``, not ``Pain001``.
+
+    The preflight creates the tag with ``--tag`` and inspect_release
+    verifies it against ``--project``; both must spell the project the
+    way the release invariants do, or the check would pass a tag the
+    release page then contradicts.
+    """
+    source = Path(preflight_release.__file__).read_text(encoding="utf-8")
+    assert 'msg = f"pain001 v{version}"' in source
+    assert '"Pain001"' not in source
+
+
+def test_the_release_workflow_titles_the_release_by_project() -> None:
+    """A GitHub release is titled ``pain001 <version>``, not ``v<version>``.
+
+    softprops/action-gh-release titles a release after its tag unless
+    ``name`` is set, which produced exactly the title the family's
+    release invariants forbid.
+    """
+    workflow = (
+        Path(__file__).resolve().parent.parent / ".github/workflows/ci.yml"
+    ).read_text(encoding="utf-8")
+    assert "name: pain001 ${{ steps.release_notes.outputs.version }}" in (
+        workflow
+    )
+    assert '"version=$TAG_VERSION" >> "$GITHUB_OUTPUT"' in workflow
+    assert "--project Pain001" not in workflow

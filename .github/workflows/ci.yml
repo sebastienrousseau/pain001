@@ -150,7 +150,8 @@ jobs:
           TAG_VERSION=${GITHUB_REF#refs/tags/v}
           NOTE_PATH="releases/v${TAG_VERSION}.md"
           if [ -f "$NOTE_PATH" ]; then
-            echo "path=$NOTE_PATH" >> $GITHUB_OUTPUT
+            echo "path=$NOTE_PATH" >> "$GITHUB_OUTPUT"
+            echo "version=$TAG_VERSION" >> "$GITHUB_OUTPUT"
           else
             echo "❌ Release notes missing: $NOTE_PATH"
             exit 1
@@ -168,7 +169,7 @@ jobs:
         run: |
           poetry build
           poetry run twine check dist/*
-          python scripts/inspect_release.py --name pain001 --project Pain001 \
+          python scripts/inspect_release.py --name pain001 --project pain001 \
             --version "${GITHUB_REF_NAME#v}" --dist dist --output .release
 
       # SLSA Build Level 3 provenance for every distribution file, bound to
@@ -239,7 +240,7 @@ jobs:
         # exactly the bug being fixed here. set -e makes that loud.
         run: |
           set -euo pipefail
-          python scripts/inspect_release.py --name pain001 --project Pain001 \
+          python scripts/inspect_release.py --name pain001 --project pain001 \
             --version "${GITHUB_REF_NAME#v}" --dist dist --output .release \
             --extra-artifacts sbom
           hashes=$( (cd dist && sha256sum -- *) ; (cd sbom && sha256sum -- *) )
@@ -249,6 +250,9 @@ jobs:
       - name: ❯ Create GitHub Release
         uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3.0.3
         with:
+          # The family's release title is "<project> <version>", never the
+          # bare tag: without `name` the action titles it "v0.0.N".
+          name: pain001 ${{ steps.release_notes.outputs.version }}
           body_path: .release/release-notes.md
           files: |
             dist/*

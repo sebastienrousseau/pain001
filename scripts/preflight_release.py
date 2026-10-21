@@ -269,7 +269,7 @@ def main() -> int:
             "--name",
             "pain001",
             "--project",
-            "Pain001",
+            "pain001",
             "--version",
             version,
             "--dist",
@@ -304,7 +304,7 @@ def main() -> int:
 
     print("All pre-flight checks passed.")
     if args.tag:
-        msg = f"Pain001 v{version}"
+        msg = f"pain001 v{version}"
         r = run("git", "tag", "-s", f"v{version}", "-m", msg)
         if r.returncode != 0:
             print(f"{FAIL} tag creation failed: {r.stderr.strip()}")
@@ -315,7 +315,7 @@ def main() -> int:
             "--name",
             "pain001",
             "--project",
-            "Pain001",
+            "pain001",
             "--version",
             version,
             "--dist",
