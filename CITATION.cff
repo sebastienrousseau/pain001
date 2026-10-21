@@ -14,7 +14,11 @@ authors:
     email: sebastian.rousseau@gmail.com
 version: "0.0.73"
 date-released: "2026-10-20"
-license: "Apache-2.0 OR MIT"
+# Dual-licensed: Apache-2.0 OR MIT, at the user's option. CFF 1.2.0 takes
+# a list of SPDX identifiers here, not an SPDX expression.
+license:
+  - Apache-2.0
+  - MIT
 repository-code: "https://github.com/sebastienrousseau/pain001"
 url: "https://pain001.com"
 keywords:
