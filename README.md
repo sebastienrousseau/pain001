@@ -65,13 +65,18 @@
 python -m pip install pain001
 ```
 
-Optional extras include `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, and `otel`.
-Version 0.0.71 adds `rules` (CEL policies) and `upload` (SFTP).
-Until that release is published, install these additions from source.
+> **Latest release: v0.0.74**: ISO 20022 pain.001 and pain.008 files generated
+> from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
+> official XSD, for Python 3.10+, released with the whole pain001 suite at one
+> version.
+
+Optional extras: `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, `otel`,
+`fast` (libxml2 validation), `upload` (SFTP) and `rules` (CEL policies), for
+example `python -m pip install "pain001[rules,upload]"`.
 
 ```bash
-# Development checkout, including unreleased features
-git clone --branch feat/v0.0.73 https://github.com/sebastienrousseau/pain001.git
+# Development checkout
+git clone https://github.com/sebastienrousseau/pain001.git
 cd pain001
 poetry install --all-extras --with dev,docs
 
@@ -294,8 +299,8 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 ## Stability guarantees
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
-`0.0.999`; only the maintainer opens a release. This branch prepares
-0.0.73; publication requires approved release PRs and signed release tags.
+`0.0.999`; only the maintainer opens a release. The current release
+is 0.0.74; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

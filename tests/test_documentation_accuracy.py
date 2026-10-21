@@ -91,9 +91,19 @@ def test_current_guides_state_current_quality_floor() -> None:
 
 
 def test_security_lists_immediately_previous_release() -> None:
-    """Correcting version sync must also preserve the support window."""
+    """Correcting version sync must also preserve the support window.
+
+    The previous release is the one before this in the CHANGELOG, not
+    ``patch - 1``: the core skipped 0.0.73 (the suite converged at
+    0.0.74), so the release before 0.0.74 is 0.0.72.
+    """
     from pain001 import __version__
 
-    major, minor, patch = map(int, __version__.split("."))
-    previous = f"{major}.{minor}.{patch - 1}"
+    released = re.findall(
+        r"^## \[(\d+\.\d+\.\d+)\]",
+        (ROOT / "CHANGELOG.md").read_text(encoding="utf-8"),
+        re.MULTILINE,
+    )
+    assert released[0] == __version__
+    previous = released[1]
     assert f"| `{previous}` | Prior |" in (ROOT / "SECURITY.md").read_text()

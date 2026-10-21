@@ -9,24 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Changed
+Nothing yet.
 
-- **Every suite member is lockstep, loaders included.** `pain001/suite.py` records `LOCKSTEP` for `pain001-loader-xlsx` and `pain001-loader-mt101`, which previously kept the plugin-contract floors `>=0.0.56` and `>=0.0.55`: from 0.0.74 each member at `0.0.N` requires `pain001>=0.0.N`, as in the camt053 family. The published 0.0.72 loader floors join the immutable exceptions in `scripts/check_suite_consistency.py`. ADR-0001 is amended.
-- A complexity gate: `scripts/check_complexity.py` holds every function to cyclomatic 10, cognitive 15, Halstead difficulty 30 and 60 lines, and every file to 500 lines, against `complexity-baseline.json` (136 pre-existing offenders, worst `pain001/twins/records.py::column_paths` at cyclomatic 35). The baseline may only shrink: `--update` records an improvement and refuses a regression. It runs in `make check` and as the `Complexity ceilings` CI job, from the hash-pinned `.github/requirements/complexity.txt`.
-- `scripts/preflight_release.py` refuses the release while any floor recorded in `pain001/suite.py` resolves to something other than the release version.
-- `scripts/check_suite_consistency.py` now compares the tree with this package's own PyPI release and reports a version bumped and never released (`pain001: tree is 0.0.74 but PyPI has 0.0.72`). The workflow already claimed it did; the script did not.
+## [0.0.74] - 2026-10-21
 
-### Fixed
-
-- Release naming follows the family invariants. `scripts/preflight_release.py --tag` signed tags as `Pain001 v<version>` (v0.0.72's tag reads that way) and verified them against `--project Pain001`; it now writes and checks `pain001 v<version>`. The publish job created the GitHub release with no `name`, so it was titled after the bare tag (`v0.0.N`) until edited by hand; it is now created as `pain001 <version>`.
-
-- `CITATION.cff` validates against the CFF 1.2.0 schema. It gave the licence as the SPDX expression `Apache-2.0 OR MIT`, which the schema rejects; it is now the list `Apache-2.0`, `MIT`, the same grant as the package's `License-Expression`.
-
-### Security
-
-- `certifi` is floored at 2026.10.19 (GHSA-6q48-6c7w-9gw2, PYSEC-2026-4320, affecting every earlier release). It reaches a runtime install only through the `otel` extra (the exporter's `requests`), so the floor is declared there: `pain001[otel]` can no longer resolve an affected release. The lock moves from 2026.1.4 and `.github/requirements/docs.txt` from 2026.7.22; `tests/test_advisory_floors.py` holds the declared range, the lock and every hash-pinned requirements file past the fix, and the Security workflow now audits each hash-pinned file, which it never did.
-
-## [0.0.73] - 2026-10-20
+The core skips 0.0.73. `pain001-mcp` published 0.0.73 on its own (an
+out-of-band pyjwt security release), so the whole suite converges at 0.0.74,
+core first, then `pain001-lsp`, `pain001-loader-xlsx`, `pain001-loader-mt101`
+and `pain001-mcp`. This entry carries everything prepared for 0.0.73 in #333,
+plus the hygiene fixes and release gates added since.
 
 ### Changed
 
@@ -34,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `scripts/check_suite_consistency.py` lists the published releases whose `pain001` floor predates the suite policy (`pain001-lsp`/`pain001-mcp` 0.0.72 and `pain001-mcp` 0.0.73, all `>=0.0.71`) in one table. PyPI metadata cannot be corrected, so only those exact releases are excepted; any new release must follow the policy.
 - CSV formula injection sanitization (`sanitize_formula`) now defaults to `False` on ingress to preserve legitimate financial strings (such as phone numbers with `+` or references with `-`), and is configurable via the `sanitize_formula` parameter. **Generated XML changes** for CSV cells that start with `=`, `+`, `-` or `@`: they are emitted as supplied again (v0.0.71 behaviour) instead of with a leading `'`. See [ADR-0008](docs/adr/0008-csv-ingress-preserves-raw-values.md).
 - Streamlined ISO 20022 Business Application Header (BAH) envelopment and XML-DSig signing in-memory before disk write, eliminating redundant full-document disk re-reads and re-writes in `pain001.core.process_files`.
+- **Every suite member is lockstep, loaders included.** `pain001/suite.py` records `LOCKSTEP` for `pain001-loader-xlsx` and `pain001-loader-mt101`, which previously kept the plugin-contract floors `>=0.0.56` and `>=0.0.55`: from 0.0.74 each member at `0.0.N` requires `pain001>=0.0.N`, as in the camt053 family. The published 0.0.72 loader floors join the immutable exceptions in `scripts/check_suite_consistency.py`. ADR-0001 is amended.
+- A complexity gate: `scripts/check_complexity.py` holds every function to cyclomatic 10, cognitive 15, Halstead difficulty 30 and 60 lines, and every file to 500 lines, against `complexity-baseline.json` (136 pre-existing offenders, worst `pain001/twins/records.py::column_paths` at cyclomatic 35). The baseline may only shrink: `--update` records an improvement and refuses a regression. It runs in `make check` and as the `Complexity ceilings` CI job, from the hash-pinned `.github/requirements/complexity.txt`.
+- `scripts/preflight_release.py` refuses the release while any floor recorded in `pain001/suite.py` resolves to something other than the release version.
+- The README follows the portfolio template again: the badge row, a demo of the Quick Start rendered by `make demo` from `.github/demo.tape` (vhs), and a latest-release line in place of the stale `feat/v0.0.73` install note.
+- `scripts/check_suite_consistency.py` now compares the tree with this package's own PyPI release and reports a version bumped and never released (`pain001: tree is 0.0.74 but PyPI has 0.0.72`). The workflow already claimed it did; the script did not.
 
 ### Fixed
 
@@ -48,6 +44,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as the root component, and the release fails if either is missing.
 - The Security workflow's licence report reads the same runtime
   environment instead of the runner's global interpreter.
+- Release naming follows the family invariants. `scripts/preflight_release.py --tag` signed tags as `Pain001 v<version>` (v0.0.72's tag reads that way) and verified them against `--project Pain001`; it now writes and checks `pain001 v<version>`. The publish job created the GitHub release with no `name`, so it was titled after the bare tag (`v0.0.N`) until edited by hand; it is now created as `pain001 <version>`.
+- The four open CodeQL alerts: an `except` that passed without saying why in the Schematron evaluator (#271), and three modules imported both whole and by name in `tests/test_fast_accelerator.py` (#268, #269, #270).
+- `CITATION.cff` validates against the CFF 1.2.0 schema. It gave the licence as the SPDX expression `Apache-2.0 OR MIT`, which the schema rejects; it is now the list `Apache-2.0`, `MIT`, the same grant as the package's `License-Expression`.
 
 ### Security
 
@@ -57,6 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump `urllib3` from 2.7.0 to 2.8.0 across `.github/requirements/docs.txt`,
   `.github/requirements/sdk-runtime.in`, and `poetry.lock`, clearing three CVEs
   reported by pip-audit (`PYSEC-2026-4175`, `PYSEC-2026-4176`, `PYSEC-2026-4177`).
+- `certifi` is floored at 2026.10.19 (GHSA-6q48-6c7w-9gw2, PYSEC-2026-4320, affecting every earlier release). It reaches a runtime install only through the `otel` extra (the exporter's `requests`), so the floor is declared there: `pain001[otel]` can no longer resolve an affected release. The lock moves from 2026.1.4 and `.github/requirements/docs.txt` from 2026.7.22; `tests/test_advisory_floors.py` holds the declared range, the lock and every hash-pinned requirements file past the fix, and the Security workflow now audits each hash-pinned file, which it never did.
 
 ## [0.0.72] - 2026-09-28
 
