@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   GHSA-v4x8-3wr5-3wq8): its cachecontrol needs filelock, whose fix needs
   Python 3.11. `poetry.lock` moves filelock 3.29.4 to 4.2.4. On 3.10,
   `make sec` says it skips pip-audit; `security.yml` audits on 3.12.
+- `.github/requirements/bootstrap.txt` moves setuptools 84.0.0 to 84.1.0
+  (GHSA-xmj3-9gf7-h52w), which the Vulnerability Scan audits.
 - `docs/security-exceptions.json`: the maintainer re-accepted both
   exceptions (Scorecard alerts #194/#199 and #205/#221) on 2026-10-26,
   with the next review due 2026-12-23, before the unchanged 2026-12-24
