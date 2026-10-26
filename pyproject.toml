@@ -124,7 +124,7 @@ bandit = "^1.9.4"
 # needs Python 3.11, so pip-audit installs only there; security.yml runs it on 3.12.
 pip-audit = {version = ">=2.7,<3.0", python = ">=3.11"}
 filelock = {version = ">=4.2.1", python = ">=3.11"}
-ruff = "^0.17.1"
+ruff = "^0.17.2"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.0.0.20261006"
 types-pyyaml = "^6.0.12"
