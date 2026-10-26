@@ -21,6 +21,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with the next review due 2026-12-23, before the unchanged 2026-12-24
   expiry.
 
+### Changed
+
+- The `api` extra requires `fastapi >= 0.161.1` (was 0.141.1), in place
+  of Dependabot #341. fastapi 0.161 depends on `opentelemetry-api`, so
+  the hash-pinned `.github/requirements/api.txt` adds it (1.45.1) and
+  moves fastapi to 0.161.1 and markupsafe to the 3.0.4 that
+  `requirements.txt` already pins. Its header records the pip-tools 7
+  spelling of the compile command, `--no-emit-index-url`.
+
 ## [0.0.74] - 2026-10-21
 
 The core skips 0.0.73. `pain001-mcp` published 0.0.73 on its own (an
