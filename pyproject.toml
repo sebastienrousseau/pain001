@@ -119,7 +119,11 @@ pytest-benchmark = "^5.3.0"
 pytest-xdist = "^3.0.0"
 mypy = "^2.4.0"
 bandit = "^1.9.4"
-pip-audit = ">=2.7,<3.0"
+# pip-audit pulls in filelock (through cachecontrol). filelock <= 4.2.0 has
+# GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and GHSA-v4x8-3wr5-3wq8, and 4.2.1
+# needs Python 3.11, so pip-audit installs only there; security.yml runs it on 3.12.
+pip-audit = {version = ">=2.7,<3.0", python = ">=3.11"}
+filelock = {version = ">=4.2.1", python = ">=3.11"}
 ruff = "^0.17.1"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.0.0.20261006"

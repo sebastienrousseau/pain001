@@ -9,7 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Security
+
+- The dev group installs `pip-audit` only on Python 3.11 and later, with
+  `filelock >= 4.2.1` (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92,
+  GHSA-v4x8-3wr5-3wq8): its cachecontrol needs filelock, whose fix needs
+  Python 3.11. `poetry.lock` moves filelock 3.29.4 to 4.2.4. On 3.10,
+  `make sec` says it skips pip-audit; `security.yml` audits on 3.12.
 
 ## [0.0.74] - 2026-10-21
 
