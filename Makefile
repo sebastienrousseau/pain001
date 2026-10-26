@@ -100,7 +100,12 @@ cov:
 sec:
 	@echo "$(YELLOW)Running security checks...$(NC)"
 	@poetry run bandit -q -r pain001
-	@poetry run pip-audit --progress-spinner off
+	@# pip-audit installs only on Python 3.11+ (its filelock fix needs 3.11); security.yml audits on 3.12.
+	@if poetry run python -c 'import sys; sys.exit(sys.version_info < (3, 11))'; then \
+		poetry run pip-audit --progress-spinner off; \
+	else \
+		echo "$(YELLOW)pip-audit skipped: it needs Python 3.11+; security.yml audits on 3.12$(NC)"; \
+	fi
 	@echo "$(GREEN)✓ Security checks passed$(NC)"
 
 perf:
