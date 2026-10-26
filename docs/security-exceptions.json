@@ -4,8 +4,8 @@
     {
       "alerts": [194, 199],
       "owner": "sebastienrousseau",
-      "accepted": "2026-09-25",
-      "review_due": "2026-10-25",
+      "accepted": "2026-10-26",
+      "review_due": "2026-12-23",
       "expires": "2026-12-24",
       "reason": "Maintainer-approved solo-maintainer workflow cannot provide independent approving reviews. These governance findings are accepted risks, not fixed defects.",
       "controls": "Pull requests, required status checks, conversation resolution and administrator enforcement remain enabled; force pushes and branch deletion remain prohibited.",
@@ -14,8 +14,8 @@
     {
       "alerts": [205, 221],
       "owner": "sebastienrousseau",
-      "accepted": "2026-09-25",
-      "review_due": "2026-10-25",
+      "accepted": "2026-10-26",
+      "review_due": "2026-12-23",
       "expires": "2026-12-24",
       "reason": "Maintainer-approved SLSA generator v2.1.0 tag references are required by upstream provenance verification, which rejects SHA references.",
       "controls": "Keep the exact supported version tag, review upstream security changes and verify release provenance; other actions remain SHA-pinned.",
