@@ -67,7 +67,7 @@ click = ">=8.5.0,<9"
 defusedxml = ">=0.7.1,<1"
 jinja2 = ">=3.1.6,<4"
 pyyaml = ">=6.0,<7.0"
-paramiko = {version = ">=5.0,<6", optional = true}
+paramiko = {version = ">=5.1.0,<6", optional = true}
 cel-python = {version = ">=0.5,<0.6", optional = true}
 holidays = {version = ">=0.106,<1", optional = true}
 rich = ">=15.0.0,<16"
