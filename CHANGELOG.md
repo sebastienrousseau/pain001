@@ -9,7 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Security
+
+- The dev group installs `pip-audit` only on Python 3.11 and later, with
+  `filelock >= 4.2.1` (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92,
+  GHSA-v4x8-3wr5-3wq8): its cachecontrol needs filelock, whose fix needs
+  Python 3.11. `poetry.lock` moves filelock 3.29.4 to 4.2.4. On 3.10,
+  `make sec` says it skips pip-audit; `security.yml` audits on 3.12.
+- `.github/requirements/bootstrap.txt` moves setuptools 84.0.0 to 84.1.0
+  (GHSA-xmj3-9gf7-h52w), which the Vulnerability Scan audits.
+- `docs/security-exceptions.json`: the maintainer re-accepted both
+  exceptions (Scorecard alerts #194/#199 and #205/#221) on 2026-10-26,
+  with the next review due 2026-12-23, before the unchanged 2026-12-24
+  expiry.
+
+### Changed
+
+- The `api` extra requires `fastapi >= 0.161.1` (was 0.141.1), in place
+  of Dependabot #341. fastapi 0.161 depends on `opentelemetry-api`, so
+  the hash-pinned `.github/requirements/api.txt` adds it (1.45.1) and
+  moves fastapi to 0.161.1 and markupsafe to the 3.0.4 that
+  `requirements.txt` already pins. Its header records the pip-tools 7
+  spelling of the compile command, `--no-emit-index-url`.
 
 ## [0.0.74] - 2026-10-21
 

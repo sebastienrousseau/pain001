@@ -14,11 +14,11 @@ ROOT = Path(__file__).resolve().parents[1]
 @pytest.mark.parametrize(
     ("today", "returncode"),
     [
-        ("2026-09-25", 0),
-        ("2026-10-24", 0),
-        ("2026-10-25", 1),
+        ("2026-10-26", 0),
+        ("2026-12-22", 0),
+        ("2026-12-23", 1),
         ("2026-12-24", 1),
-        ("2026-09-24", 1),
+        ("2026-10-25", 1),
     ],
 )
 def test_review_and_expiry_deadlines(today: str, returncode: int) -> None:

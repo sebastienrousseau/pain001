@@ -68,9 +68,13 @@ def test_pip_audit_pin_present() -> None:
     to a version that supports non-interactive CI scanning.
     """
     pyproject = (ROOT / "pyproject.toml").read_text(encoding="utf-8")
-    match = re.search(r'^pip-audit\s*=\s*"([^"]+)"', pyproject, re.MULTILINE)
+    match = re.search(
+        r'^pip-audit\s*=\s*(?:"([^"]+)"|\{[^}]*\bversion\s*=\s*"([^"]+)")',
+        pyproject,
+        re.MULTILINE,
+    )
     assert match, "pip-audit pin missing from pyproject.toml"
-    pin = match.group(1)
+    pin = match.group(1) or match.group(2)
     assert ">=2" in pin or "^2" in pin or ">=3" in pin or "^3" in pin, (
         f"pip-audit pin {pin!r} does not require 2.x+"
     )
