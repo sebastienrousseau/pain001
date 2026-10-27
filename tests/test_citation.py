@@ -13,15 +13,10 @@ and citation tooling rejects the file. A dual licence is the list.
 
 from __future__ import annotations
 
-import sys
+import tomllib
 from pathlib import Path
 
 import yaml
-
-if sys.version_info >= (3, 11):  # pragma: no cover - version dependent
-    import tomllib
-else:  # pragma: no cover - version dependent
-    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parent.parent
 

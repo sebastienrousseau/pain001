@@ -9,7 +9,7 @@ and breaking changes with the maintainer before implementation.
 
 ## Development setup
 
-Python 3.10 is the supported floor; CI tests 3.10–3.14. Development uses 3.12.
+Python 3.11 is the supported floor; CI tests 3.11–3.14. Development uses 3.12.
 Use Poetry and the committed lockfile:
 
 ```bash

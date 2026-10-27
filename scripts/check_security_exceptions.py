@@ -20,7 +20,7 @@ def main() -> None:
     parser.add_argument(
         "--today",
         type=dt.date.fromisoformat,
-        default=dt.datetime.now(dt.timezone.utc).date(),
+        default=dt.datetime.now(dt.UTC).date(),
         help="UTC evaluation date (override only for regression tests)",
     )
     args = parser.parse_args()

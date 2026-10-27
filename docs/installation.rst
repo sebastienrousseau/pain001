@@ -14,7 +14,7 @@ Use a virtual environment and install from PyPI:
    python -m pip install pain001
    pain001 --version
 
-Python 3.10 or newer is required. Linux CI tests 3.10–3.14. No Conda default
+Python 3.11 or newer is required. Linux CI tests 3.11–3.14. No Conda default
 channel package, native binary, or distro-system-Python compatibility is
 claimed.
 

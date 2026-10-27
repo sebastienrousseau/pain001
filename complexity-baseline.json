@@ -257,7 +257,7 @@
     "lines": 62
   },
   "pain001/pain002/generator.py::build_pain002_report": {
-    "lines": 74
+    "lines": 72
   },
   "pain001/pain002/parser.py::parse_pain002_report": {
     "cyclomatic": 11,

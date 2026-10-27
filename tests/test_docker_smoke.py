@@ -57,7 +57,7 @@ def _docker_available() -> bool:
 def test_dockerfile_uses_supported_python() -> None:
     """Image base must be a currently-supported CPython slim variant.
 
-    Pain001 requires Python 3.10+; the image must agree.
+    Pain001 requires Python 3.11+; the image must agree.
     """
     text = DOCKERFILE.read_text(encoding="utf-8")
     match = re.search(r"FROM python:(\d+)\.(\d+)-slim", text)
@@ -65,8 +65,8 @@ def test_dockerfile_uses_supported_python() -> None:
     major, minor = int(match.group(1)), int(match.group(2))
     assert (major, minor) >= (
         3,
-        10,
-    ), f"Image Python {major}.{minor} is below 3.10"
+        11,
+    ), f"Image Python {major}.{minor} is below 3.11"
 
 
 def test_dockerfile_installs_api_extra() -> None:

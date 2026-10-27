@@ -15,7 +15,7 @@
 """Unit tests for W3C XML Digital Signature (XML-DSig) for ISO 20022 messages."""
 
 import xml.etree.ElementTree as et
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from cryptography import x509
@@ -63,7 +63,7 @@ def rsa_key_and_cert() -> tuple[bytes, bytes, bytes]:
             x509.NameAttribute(NameOID.COMMON_NAME, "test.bank.org"),
         ]
     )
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)

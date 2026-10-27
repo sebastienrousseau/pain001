@@ -9,7 +9,7 @@ small, well-tested core, first-class developer surfaces (library, CLI,
 REST, MCP, LSP), and a formal plugin contract so the ecosystem can
 extend it without forking.
 
-## Where we are (v0.0.74 shipped 2026-10-21 with the whole suite; the core skipped 0.0.73)
+## Where we are (v0.0.75 released 2026-10-27; the whole suite last shipped together at v0.0.74 on 2026-10-21)
 
 - **Generation:** pain.001.001.03 to .13, pain.008.001.02 and .08,
   registry-driven, `Decimal` end-to-end, mandatory XSD validation
@@ -81,7 +81,7 @@ version numbers.
 
 | Package | Role | Latest |
 | :--- | :--- | :--- |
-| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.74 |
+| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.75 |
 | [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (16 tools) | 0.0.74 |
 | [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.74 |
 | [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.74 |

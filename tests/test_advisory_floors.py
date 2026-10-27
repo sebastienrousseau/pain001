@@ -18,18 +18,13 @@ the declared range, the lock, and each hash-pinned requirements file.
 from __future__ import annotations
 
 import re
-import sys
+import tomllib
 from pathlib import Path
 
 import pytest
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 from packaging.version import Version
-
-if sys.version_info >= (3, 11):  # pragma: no cover - version dependent
-    import tomllib
-else:  # pragma: no cover - version dependent
-    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parent.parent
 

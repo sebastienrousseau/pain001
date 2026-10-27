@@ -107,7 +107,7 @@ maintained at submission time. Common targets:
 ### Suggested entry (for `pain001` itself, not just the MCP/LSP)
 
 ```markdown
-- [pain001](https://github.com/sebastienrousseau/pain001) — ISO 20022 payment-file (pain.001 / pain.008) generator with mandatory XSD validation, scheme rulebooks (SEPA SCT/SDD/INST/B2B + cross-border), every input format (CSV, SQLite, JSON, JSONL, Parquet, Excel via plugin), and CLI + REST + MCP + LSP surfaces. Python 3.10+, Apache-2.0, 100% test coverage.
+- [pain001](https://github.com/sebastienrousseau/pain001) — ISO 20022 payment-file (pain.001 / pain.008) generator with mandatory XSD validation, scheme rulebooks (SEPA SCT/SDD/INST/B2B + cross-border), every input format (CSV, SQLite, JSON, JSONL, Parquet, Excel via plugin), and CLI + REST + MCP + LSP surfaces. Python 3.11+, Apache-2.0, 100% test coverage.
 ```
 
 ---

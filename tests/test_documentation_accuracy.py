@@ -4,14 +4,10 @@
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 from scripts.render_readme import render
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 

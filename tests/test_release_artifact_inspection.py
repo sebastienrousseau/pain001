@@ -97,10 +97,7 @@ def test_runtime_scratch_data_is_not_distributed(
 
 def test_poetry_explicitly_excludes_runtime_scratch() -> None:
     """Poetry must not open test-created FIFOs while building a wheel."""
-    try:
-        import tomllib
-    except ImportError:
-        import tomli as tomllib
+    import tomllib
 
     root = Path(__file__).resolve().parents[1]
     config = tomllib.loads((root / "pyproject.toml").read_text())

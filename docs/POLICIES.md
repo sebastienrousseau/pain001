@@ -2,7 +2,7 @@
 
 # Toolchain and contribution policies
 
-Python 3.10 is the supported floor; CI tests 3.10–3.14 on Linux. Development
+Python 3.11 is the supported floor; CI tests 3.11–3.14 on Linux. Development
 uses Python 3.12 and Poetry with the committed lock. No distro-system-Python
 compatibility is claimed.
 
