@@ -29,8 +29,9 @@ the omitted prior release does not silently withdraw support.
 ## Accepted security exceptions
 
 Accepted risks are recorded in [the exception registry](docs/security-exceptions.json).
-Alerts #194, #199, #205 and #221 were accepted by the maintainer on
-2026-09-25, require review by **2026-10-25**, and expire on **2026-12-24**.
+Alerts #194, #199, #205 and #221 were first accepted by the maintainer on
+2026-09-25 and re-accepted on 2026-10-26. They require review by
+**2026-12-23**, and expire on **2026-12-24**.
 CI and release preflight fail on a missed review or expiry. Renewal requires
 explicit maintainer acceptance; passing tests does not resolve these risks.
 

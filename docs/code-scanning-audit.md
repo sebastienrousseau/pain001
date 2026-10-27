@@ -87,8 +87,8 @@ evidence above on 2026-09-25. No directory or query was excluded.
   with explicit maintainer risk acceptance, not marked fixed.
 
 All four accepted exceptions above have owner `sebastienrousseau`, a review
-deadline of **2026-10-25** and an expiry of **2026-12-24**, following acceptance
-on 2026-09-25. The [machine-readable registry](security-exceptions.json) is
+deadline of **2026-12-23** and an expiry of **2026-12-24**, following acceptance
+on 2026-09-25 and re-acceptance on 2026-10-26. The [machine-readable registry](security-exceptions.json) is
 enforced in CI and release preflight. Renewal requires a new explicit
 maintainer decision; neither governance finding is represented as remediated.
 
