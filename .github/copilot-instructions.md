@@ -458,7 +458,7 @@ pip install --upgrade pain001==X.Y.Z
 
 ## Testing
 All {CURRENT_TEST_COUNT} tests passing ({CURRENT_COVERAGE}% coverage).
-Tested on Python 3.9, 3.10, 3.11, 3.12.
+Tested on Python 3.11, 3.12, 3.13, 3.14.
 
 ## Migration Guide
 No migration needed. Install and use as normal.

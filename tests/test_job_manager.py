@@ -4,7 +4,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pain001.api.job_manager import TERMINAL_STATUSES, JobManager
 
@@ -18,7 +18,7 @@ def test_create_job_evicts_old_completed_jobs_at_capacity() -> None:
     """At max_jobs the oldest completed jobs are removed, running ones kept."""
     manager = JobManager(max_jobs=3)
     ids = [manager.create_job() for _ in range(3)]
-    base = datetime(2026, 9, 12, tzinfo=timezone.utc)
+    base = datetime(2026, 9, 12, tzinfo=UTC)
     _finish(manager, ids[0], base)
     _finish(manager, ids[1], base + timedelta(minutes=1))
     # the third job is still running and must survive any cleanup
@@ -35,7 +35,7 @@ def test_cleanup_keeps_everything_under_the_keep_count() -> None:
     """Fewer completed jobs than keep_count means nothing is removed."""
     manager = JobManager()
     job_id = manager.create_job()
-    _finish(manager, job_id, datetime.now(timezone.utc))
+    _finish(manager, job_id, datetime.now(UTC))
     manager.cleanup_old_jobs(keep_count=100)
     assert job_id in manager.jobs
 

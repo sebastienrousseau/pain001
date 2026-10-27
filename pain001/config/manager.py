@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import configparser
 import os
+import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
@@ -25,12 +26,6 @@ from typing import Any
 import yaml
 
 from pain001.constants import BASE_DIR
-
-try:
-    import tomllib  # type: ignore[import-not-found]
-except ModuleNotFoundError:  # pragma: no cover - Python < 3.11 only
-    import tomli as tomllib
-
 
 DEFAULT_CONFIG: dict[str, Any] = {
     "xml_message_type": None,

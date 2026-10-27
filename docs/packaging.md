@@ -17,7 +17,7 @@ use and are redistributed unchanged.
 
 ## Minimum toolchain
 
-Python 3.10 or later; policy in
+Python 3.11 or later; policy in
 [ADR-0004](adr/0004-python-floor-policy.md). Pure Python, no compiled
 extensions, no C dependencies. Optional extras pull in third-party
 packages (`fastapi`/`uvicorn`, `pyarrow`, `redis`, `mcp`, `pygls`,

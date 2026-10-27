@@ -16,7 +16,7 @@
   <a href="https://sebastienrousseau.github.io/pain001/api-reference.html"><img src="https://img.shields.io/badge/docs-API?style=for-the-badge&labelColor=555555&logo=readthedocs" alt="Docs" height="28" /></a>
   <a href="https://scorecard.dev/viewer/?uri=github.com/sebastienrousseau/pain001"><img src="https://img.shields.io/ossf-scorecard/github.com/sebastienrousseau/pain001?style=for-the-badge&label=OpenSSF%20Scorecard&logo=openssf" alt="OpenSSF Scorecard" height="28" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache--2.0%20OR%20MIT-blue.svg?style=for-the-badge" alt="License: Apache-2.0 OR MIT" height="28" /></a>
-  <a href="https://github.com/sebastienrousseau/pain001/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.10%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.10 or newer" height="28" /></a>
+  <a href="https://github.com/sebastienrousseau/pain001/blob/main/docs/POLICIES.md"><img src="https://img.shields.io/badge/Python-3.11%2B-93450a.svg?style=for-the-badge&logo=python" alt="Python 3.11 or newer" height="28" /></a>
 </p>
 
 <p align="center">
@@ -67,7 +67,7 @@ python -m pip install pain001
 
 > **Latest release: v0.0.74**: ISO 20022 pain.001 and pain.008 files generated
 > from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
-> official XSD, for Python 3.10+, released with the whole pain001 suite at one
+> official XSD, for Python 3.11+, released with the whole pain001 suite at one
 > version.
 
 Optional extras: `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, `otel`,
@@ -93,7 +93,7 @@ binary is claimed; see [packaging](docs/packaging.md).
 
 ## Requirements
 
-Python **3.10 or newer**; CI tests Python 3.10–3.14 on Linux. Development uses
+Python **3.11 or newer**; CI tests Python 3.11–3.14 on Linux. Development uses
 Python 3.12 and Poetry. Optional integrations require their extras and, for
 GPG, the system GnuPG executable. No distro-system-Python compatibility is
 claimed. See [toolchain policy](docs/POLICIES.md).

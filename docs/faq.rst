@@ -26,7 +26,7 @@ validate your bank-specific requirements and operational controls.
 
 **What Python versions are supported?**
 
-Pain001 requires Python 3.10 or higher. CI tests Python 3.10–3.14 on Linux;
+Pain001 requires Python 3.11 or higher. CI tests Python 3.11–3.14 on Linux;
 development uses Python 3.12. See the toolchain policy for floor changes.
 
 **How much does Pain001 cost?**

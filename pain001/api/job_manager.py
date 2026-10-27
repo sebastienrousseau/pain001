@@ -16,14 +16,14 @@
 
 import threading
 import uuid
-from datetime import datetime, timezone
-from enum import Enum
+from datetime import UTC, datetime
+from enum import StrEnum
 from typing import Any
 
 from pain001.api.job_store import JobStore, job_store_from_env
 
 
-class JobStatus(str, Enum):
+class JobStatus(StrEnum):
     """Job status enumeration."""
 
     PENDING = "pending"
@@ -59,8 +59,8 @@ class JobResult:  # pylint: disable=too-few-public-methods
         self.status = status
         self.result = result
         self.error = error
-        self.created_at = datetime.now(timezone.utc)
-        self.updated_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
+        self.updated_at = datetime.now(UTC)
         self.progress_percent = 0
 
     def to_dict(self) -> dict[str, Any]:
@@ -186,7 +186,7 @@ class JobManager:
                     return
                 job.status = status
                 job.progress_percent = min(100, max(0, progress))
-                job.updated_at = datetime.now(timezone.utc)
+                job.updated_at = datetime.now(UTC)
                 if result:
                     job.result = result
                 if error:
@@ -207,7 +207,7 @@ class JobManager:
                 job = self.jobs[job_id]
                 if job.status not in TERMINAL_STATUSES:
                     job.status = JobStatus.CANCELLED
-                    job.updated_at = datetime.now(timezone.utc)
+                    job.updated_at = datetime.now(UTC)
                     self._persist(job_id)
                     return True
             return False

@@ -62,7 +62,7 @@ pain001-mcp-builtin = "pain001.mcp.server:main"
 pain001-lsp-builtin = "pain001.lsp.server:main"
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.11"
 click = ">=8.5.0,<9"
 defusedxml = ">=0.7.1,<1"
 jinja2 = ">=3.1.6,<4"
@@ -120,10 +120,10 @@ pytest-xdist = "^3.0.0"
 mypy = "^2.4.0"
 bandit = "^1.9.4"
 # pip-audit pulls in filelock (through cachecontrol). filelock <= 4.2.0 has
-# GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and GHSA-v4x8-3wr5-3wq8, and 4.2.1
-# needs Python 3.11, so pip-audit installs only there; security.yml runs it on 3.12.
-pip-audit = {version = ">=2.7,<3.0", python = ">=3.11"}
-filelock = {version = ">=4.2.1", python = ">=3.11"}
+# GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and GHSA-v4x8-3wr5-3wq8; the
+# floor keeps every affected release from resolving.
+pip-audit = ">=2.7,<3.0"
+filelock = ">=4.2.1"
 ruff = "^0.17.2"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.0.0.20261021"
@@ -190,7 +190,7 @@ filterwarnings = [
     "ignore::DeprecationWarning:starlette.*",
     "ignore::DeprecationWarning:httpx.*",
     "ignore::pytest.PytestUnraisableExceptionWarning",
-    # opentelemetry on Python 3.10/3.11 (importlib.metadata entry points)
+    # opentelemetry on Python 3.11 (importlib.metadata entry points)
     "ignore:SelectableGroups dict interface is deprecated:DeprecationWarning",
     # pygls on Python 3.14
     "ignore:'asyncio.iscoroutinefunction' is deprecated:DeprecationWarning",
@@ -230,7 +230,7 @@ exclude_lines = [
 
 [tool.ruff]
 line-length = 79
-target-version = "py310"
+target-version = "py311"
 # tests/test_suite_conformance.py carries a sha256 of its own bytes, so
 # any reformatter rewriting it invalidates the check it exists to make.
 extend-exclude = [".github/*.md", "*.md", "docs/**/*.md", "releases/**/*.md", "tmp_env", ".venv", ".eggs", "tests/test_suite_conformance.py"]
@@ -261,7 +261,7 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 [tool.mypy]
-python_version = "3.10"
+python_version = "3.11"
 strict = true
 warn_return_any = true
 warn_unused_configs = true

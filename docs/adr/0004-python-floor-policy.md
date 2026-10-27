@@ -42,4 +42,5 @@ image.
 
 | Floor | From release | Reason |
 | :--- | :--- | :--- |
-| 3.10 | current | The oldest version in the CI matrix; 3.9 reached upstream end-of-life in October 2025. |
+| 3.10 | until 0.0.74 | The oldest version in the CI matrix; 3.9 reached upstream end-of-life in October 2025. |
+| 3.11 | 0.0.75 (current) | 3.10 reaches upstream end-of-life in October 2026, and current `hypothesis` releases require 3.11, so a lock that still admits 3.10 cannot take them. The maintainer dropped 3.10 in 0.0.75 across the suite without the one-release announcement this policy asks for; the 0.0.75 CHANGELOG records it as breaking for 3.10 users. |

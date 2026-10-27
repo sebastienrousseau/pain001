@@ -20,7 +20,7 @@ import re
 import uuid
 import xml.etree.ElementTree as et  # nosec B405
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import defusedxml.ElementTree as defused_et
 
@@ -132,7 +132,7 @@ class BusinessApplicationHeader:
             biz_svc_el.text = self.biz_svc
 
         # <CreDt>
-        cre_dt_val = self.cre_dt or datetime.now(timezone.utc).strftime(
+        cre_dt_val = self.cre_dt or datetime.now(UTC).strftime(
             "%Y-%m-%dT%H:%M:%SZ"
         )
         cre_dt_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}CreDt")

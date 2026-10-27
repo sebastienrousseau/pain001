@@ -21,7 +21,7 @@ ElementTree (output is fully under our control); the result round-trips
 cleanly back through the parser.
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from xml.etree import ElementTree as ET  # nosec B405 - generation only
 
@@ -111,9 +111,7 @@ def build_pain002_report(
         """
         return f"{{{ns}}}{tag}"
 
-    when = creation_datetime or datetime.now(timezone.utc).isoformat(
-        timespec="seconds"
-    )
+    when = creation_datetime or datetime.now(UTC).isoformat(timespec="seconds")
 
     document = ET.Element(q("Document"))
     report = _sub(document, q("CstmrPmtStsRpt"))

@@ -97,8 +97,7 @@ def tree_version(root: Path = _ROOT) -> str:
     """Return the version this checkout declares.
 
     Read from ``[tool.poetry].version``, the single source of truth, by
-    the same one-line match the version-sync CI job uses, so this needs
-    no TOML parser on the 3.10 floor.
+    the same one-line match the version-sync CI job uses.
 
     Args:
         root: The repository root holding ``pyproject.toml``.

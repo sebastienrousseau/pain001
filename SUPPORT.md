@@ -137,7 +137,7 @@ Issues that span multiple packages can be filed against
 
 Fixes land on the latest release line; see
 [SECURITY.md#supported-versions](SECURITY.md#supported-versions)
-for the exact policy. Pain001 requires **Python 3.10+**.
+for the exact policy. Pain001 requires **Python 3.11+**.
 
 | Version | Supported? |
 | :--- | :--- |

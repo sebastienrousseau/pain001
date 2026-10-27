@@ -11,11 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Security
 
-- The dev group installs `pip-audit` only on Python 3.11 and later, with
-  `filelock >= 4.2.1` (GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92,
-  GHSA-v4x8-3wr5-3wq8): its cachecontrol needs filelock, whose fix needs
-  Python 3.11. `poetry.lock` moves filelock 3.29.4 to 4.2.4. On 3.10,
-  `make sec` says it skips pip-audit; `security.yml` audits on 3.12.
+- The dev group requires `filelock >= 4.2.1` (GHSA-9vhv-jxww-xfm5,
+  GHSA-567q-5qvw-pf92, GHSA-v4x8-3wr5-3wq8), which `pip-audit` pulls in
+  through cachecontrol. `poetry.lock` moves filelock 3.29.4 to 4.2.4.
+  The fix needs Python 3.11, the new floor (see Removed), so `make sec`
+  runs pip-audit on every supported Python.
 - `.github/requirements/bootstrap.txt` moves setuptools 84.0.0 to 84.1.0
   (GHSA-xmj3-9gf7-h52w), which the Vulnerability Scan audits.
 - `docs/security-exceptions.json`: the maintainer re-accepted both
@@ -23,8 +23,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with the next review due 2026-12-23, before the unchanged 2026-12-24
   expiry.
 
+### Removed
+
+- **Python 3.10 support (breaking for 3.10 users).** The floor is now
+  Python 3.11 (`python = "^3.11"`), across the whole pain001 suite.
+  3.10 reaches upstream end-of-life in October 2026, and current
+  `hypothesis` releases require 3.11, so a lock that admits 3.10 cannot
+  take them. pip resolves pain001 0.0.74 for a 3.10 interpreter. This
+  rise was not announced a release ahead as
+  [ADR-0004](docs/adr/0004-python-floor-policy.md) asks; the ADR records
+  the exception. The CI matrix runs 3.11 to 3.14, the PR, nightly and
+  CodeQL jobs run on 3.11, and ruff and mypy target 3.11.
+- The `tomli` fallbacks for Python 3.10 in `pain001/config/manager.py`
+  and the tests: `tomllib` is always in the standard library now. The
+  `pip-audit`/`filelock` Python markers and the `make sec` version guard
+  go with them, and `poetry.lock` drops `exceptiongroup`, `toml`, numpy
+  2.0.2 and hypothesis 6.168.5, which only 3.10 resolved.
+
 ### Changed
 
+- With the 3.11 target, ruff's pyupgrade rules move the code to
+  `datetime.UTC` (the same object as `timezone.utc`) and the REST API's
+  `JobStatus`, `DataSourceType` and `MessageType` to `enum.StrEnum`.
+  Their values, equality and JSON form are unchanged; `str()` and
+  `format()` of a member now give its value on every Python instead of
+  `ClassName.MEMBER`. The code reads `.value` throughout.
 - The `api` extra requires `fastapi >= 0.161.1` (was 0.141.1), in place
   of Dependabot #341. fastapi 0.161 depends on `opentelemetry-api`, so
   the hash-pinned `.github/requirements/api.txt` adds it (1.45.1) and

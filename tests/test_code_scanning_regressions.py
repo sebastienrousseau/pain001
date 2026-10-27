@@ -6,16 +6,12 @@ import importlib
 import re
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 
 import pytest
 from packaging.requirements import Requirement
 from packaging.utils import canonicalize_name
-
-try:
-    import tomllib
-except ImportError:
-    import tomli as tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 

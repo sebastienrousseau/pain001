@@ -11,7 +11,7 @@ commit format, review); this file covers the mechanics.
 
 | Tool | Version | Where it is pinned |
 | :--- | :--- | :--- |
-| Python | 3.12 for development; 3.10 is the floor | `.mise.toml` (dev), `pyproject.toml` `python = "^3.10"` (floor), CI matrix 3.10–3.14 |
+| Python | 3.12 for development; 3.11 is the floor | `.mise.toml` (dev), `pyproject.toml` `python = "^3.11"` (floor), CI matrix 3.11–3.14 |
 | Poetry | 2.x | `poetry.lock` is committed; CI installs with the lock |
 | Node | any current LTS | only for `markdownlint-cli2` in the docs-lint job |
 | Docker | any | only for the image smoke test |

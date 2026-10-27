@@ -15,7 +15,7 @@
 """Integration tests for BAH enveloping and XML-DSig signing in core and CLI."""
 
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -51,7 +51,7 @@ def rsa_test_keys(tmp_path: Path) -> tuple[str, str, str]:
     subject = issuer = x509.Name(
         [x509.NameAttribute(NameOID.COMMON_NAME, "test")]
     )
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     cert = (
         x509.CertificateBuilder()
         .subject_name(subject)
