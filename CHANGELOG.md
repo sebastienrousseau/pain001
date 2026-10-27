@@ -31,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   moves fastapi to 0.161.1 and markupsafe to the 3.0.4 that
   `requirements.txt` already pins. Its header records the pip-tools 7
   spelling of the compile command, `--no-emit-index-url`.
+- `KEYS.asc` trusts a second maintainer signing key,
+  `SHA256:kIOPAavp1TCEauTr1tTIN3cv+tSs6F9m/4lZjuM9tqk`, so release tags can
+  be signed on either maintainer machine. Each key line now carries its
+  fingerprint for out-of-band checks.
 
 ## [0.0.74] - 2026-10-21
 
