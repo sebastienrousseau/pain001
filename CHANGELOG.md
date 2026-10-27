@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+Nothing yet.
+
+## [0.0.75] - 2026-10-27
+
 ### Security
 
 - The dev group requires `filelock >= 4.2.1` (GHSA-9vhv-jxww-xfm5,
@@ -18,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   runs pip-audit on every supported Python.
 - `.github/requirements/bootstrap.txt` moves setuptools 84.0.0 to 84.1.0
   (GHSA-xmj3-9gf7-h52w), which the Vulnerability Scan audits.
+- `poetry.lock` moves the OpenTelemetry packages from 1.42.1 to 1.45.1
+  (CVE-2026-114603 in `opentelemetry-api`), the semantic conventions
+  from 0.63b1 to 0.66b1, and adds the exporter common and HTTP transport
+  packages they now need (0.66b1). The `otel` extra's declared range
+  `>=1.27,<2` already admitted the fix.
 - `docs/security-exceptions.json`: the maintainer re-accepted both
   exceptions (Scorecard alerts #194/#199 and #205/#221) on 2026-10-26,
   with the next review due 2026-12-23, before the unchanged 2026-12-24
@@ -54,6 +63,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   moves fastapi to 0.161.1 and markupsafe to the 3.0.4 that
   `requirements.txt` already pins. Its header records the pip-tools 7
   spelling of the compile command, `--no-emit-index-url`.
+- Updated dependencies: the `upload` extra requires `paramiko >= 5.1.0`
+  (#339), `ruff` 0.17.2 (#342) and the `types-paramiko` stub (#340).
+  The GitHub Actions group moves `actions/setup-python` to 7.1.0,
+  `pypa/gh-action-pypi-publish` to 1.14.3, `github/codeql-action` to
+  4.39.1 and `docker/login-action` to 4.7.0 (#337).
 - `KEYS.asc` trusts a second maintainer signing key,
   `SHA256:kIOPAavp1TCEauTr1tTIN3cv+tSs6F9m/4lZjuM9tqk`, so release tags can
   be signed on either maintainer machine. Each key line now carries its
