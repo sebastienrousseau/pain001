@@ -80,9 +80,11 @@
                         <IBAN>{{tx.debtor_account_IBAN}}</IBAN>
                     </Id>
                 </DbtrAcct>
+                {% if tx.remittance_information %}
                 <RmtInf>
                     <Ustrd>{{tx.remittance_information}}</Ustrd>
                 </RmtInf>
+                {% endif %}
             </DrctDbtTxInf>
             {% endfor %}
         </PmtInf>
