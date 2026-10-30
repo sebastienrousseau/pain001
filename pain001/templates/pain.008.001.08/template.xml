@@ -33,11 +33,25 @@
                     <IBAN>{{creditor_account_IBAN}}</IBAN>
                 </Id>
             </CdtrAcct>
+            <CdtrSchmeId>
+                <Id>
+                    <PrvtId>
+                        <Othr>
+                            <Id>{{creditor_scheme_id}}</Id>
+                            <SchmeNm>
+                                <Prtry>SEPA</Prtry>
+                            </SchmeNm>
+                        </Othr>
+                    </PrvtId>
+                </Id>
+            </CdtrSchmeId>
+            {% if creditor_agent_BIC %}
             <CdtrAgt>
                 <FinInstnId>
                     <BICFI>{{creditor_agent_BIC}}</BICFI>
                 </FinInstnId>
             </CdtrAgt>
+            {% endif %}
             <ChrgBr>{{charge_bearer}}</ChrgBr>
             {% for tx in transactions %}
             <DrctDbtTxInf>
@@ -51,11 +65,13 @@
                         <DtOfSgntr>{{tx.date_of_signature}}</DtOfSgntr>
                     </MndtRltdInf>
                 </DrctDbtTx>
+                 {% if tx.debtor_agent_BIC %}
                 <DbtrAgt>
                     <FinInstnId>
                         <BICFI>{{tx.debtor_agent_BIC}}</BICFI>
                     </FinInstnId>
                 </DbtrAgt>
+                {% endif %}
                 <Dbtr>
                     <Nm>{{tx.debtor_name}}</Nm>
                 </Dbtr>
