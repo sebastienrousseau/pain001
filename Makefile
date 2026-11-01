@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
+.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean docs help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
 
 # Color output
 RED := \033[0;31m
@@ -156,6 +156,7 @@ docs:
 	@echo "$(YELLOW)Building documentation...$(NC)"
 	@poetry install --with docs -q
 	@poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
+	@poetry run python scripts/check_docs_sitemap.py docs/_build/html
 	@echo "$(GREEN)✓ Docs built to docs/_build/html$(NC)"
 
 # The README demo: the Quick Start, recorded in a throwaway directory.
