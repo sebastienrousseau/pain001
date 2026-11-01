@@ -124,6 +124,9 @@ bandit = "^1.9.4"
 # floor keeps every affected release from resolving.
 pip-audit = ">=2.7,<3.0"
 filelock = ">=4.2.1"
+# msgpack comes in through cachecontrol (pip-audit). CVE-2026-114613
+# affects msgpack < 1.2.3; the floor keeps every affected release from resolving.
+msgpack = ">=1.2.3"
 ruff = "^0.17.2"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.0.0.20261021"

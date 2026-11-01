@@ -137,6 +137,22 @@ jobs:
           files: ./coverage.xml
           fail_ci_if_error: false
 
+  quality-gate-all:
+    # Branch protection requires this check by name. It stands for every
+    # leg of the quality-gate matrix, so adding or dropping a version never
+    # renames a required check.
+    name: 🧬 Quality Gate (all)
+    if: always()
+    needs: quality-gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Every leg of the matrix passed
+        env:
+          RESULT: ${{ needs.quality-gate.result }}
+        run: test "$RESULT" = success
+
   # 4. RELEASE & PUBLISH (Only on Tags)
   publish:
     needs: quality-gate
