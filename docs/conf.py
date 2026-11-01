@@ -6,7 +6,12 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
+import sys
+from pathlib import Path
+
 import pain001
+
+sys.path.insert(0, str(Path(__file__).parent / "_ext"))
 
 project = "Pain001"
 copyright = "2023-2026, Pain001. All rights reserved."
@@ -22,6 +27,7 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx_design",
     "myst_parser",
+    "search_hygiene",
 ]
 
 templates_path = ["_templates"]
@@ -50,11 +56,41 @@ myst_heading_anchors = 3
 
 html_theme = "pydata_sphinx_theme"
 html_static_path = ["_static"]
-# Stub pages at the URLs of viewcode pages for modules removed in
-# d39ccd7 (create_xml_v3..v11, create_common_elements). GitHub Pages
-# cannot issue server redirects, so each stub meta-refreshes to the
-# module that replaced it. Copied verbatim into the output root.
+# Absolute site root: Sphinx emits <link rel="canonical"> from it, and
+# search_hygiene builds sitemap.xml and the redirect stubs against it.
+html_baseurl = "https://docs.pain001.com/"
+# robots.txt, copied verbatim into the output root.
 html_extra_path = ["_extra"]
+
+# Retired URLs and the page that replaced each. GitHub Pages cannot
+# issue server redirects, so search_hygiene writes a stub at every old
+# path that meta-refreshes to its target and names it as canonical.
+# Targets are indexable API pages, never the noindex _modules sources.
+# The build fails if a source is still built or a target is not.
+_TEMPLATE_PAGES = [
+    f"pain001.templates.{message}.html"
+    for message in (
+        *(f"pain.001.001.{n:02d}" for n in range(3, 14)),
+        "pain.008.001.02",
+        "pain.008.001.08",
+    )
+]
+_XML_SOURCES = "_modules/pain001/xml/"
+search_hygiene_redirects = {
+    # f129ebc folded these pages into their parent package pages.
+    "pain001.constants.html": "pain001.html#module-pain001.constants",
+    **dict.fromkeys(_TEMPLATE_PAGES, "pain001.templates.html"),
+    # d39ccd7 removed these modules; viewcode pages are noindex now.
+    **{
+        f"{_XML_SOURCES}create_xml_v{n}.html": (
+            "pain001.xml.html#module-pain001.xml.generate_xml"
+        )
+        for n in (3, 4, 5, 7, 8, 10, 11)
+    },
+    f"{_XML_SOURCES}create_common_elements.html": (
+        "pain001.xml.html#module-pain001.xml.create_xml_element"
+    ),
+}
 
 # PyData theme configuration
 html_theme_options = {

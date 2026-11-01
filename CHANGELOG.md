@@ -9,7 +9,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Fixed
+
+- docs.pain001.com: the retired `pain001.constants.html` and
+  `pain001.templates.pain.*.html` pages, which Search Console reported
+  as 404, now redirect to the package pages that replaced them. The
+  redirect map lives in `docs/conf.py` and the build fails if a source
+  is still built or a target is not.
+- docs.pain001.com: every page names its canonical URL
+  (`html_baseurl`); the viewcode `_modules` sources, search and index
+  pages are `noindex, follow`; a generated `sitemap.xml` lists only the
+  indexable pages and `robots.txt` points at it.
+  `scripts/check_docs_sitemap.py` checks the build in `docs.yml` and
+  `make docs`.
+
+### Security
+
+- The dev group requires `msgpack >= 1.2.3` (CVE-2026-114613), which
+  `pip-audit` pulls in through cachecontrol. `poetry.lock` moves
+  msgpack 1.2.1 to 1.2.4.
 
 ## [0.0.75] - 2026-10-27
 
