@@ -11,13 +11,13 @@ pain001.templates.guardrails module
 
 .. automodule:: pain001.templates.guardrails
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.templates.registry module
 ---------------------------------
 
 .. automodule:: pain001.templates.registry
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

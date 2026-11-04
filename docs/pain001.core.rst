@@ -11,5 +11,5 @@ pain001.core.core module
 
 .. automodule:: pain001.core.core
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

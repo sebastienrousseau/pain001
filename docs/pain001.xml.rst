@@ -11,77 +11,77 @@ pain001.xml.create\_root\_element module
 
 .. automodule:: pain001.xml.create_root_element
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.create\_xml\_element module
 ---------------------------------------
 
 .. automodule:: pain001.xml.create_xml_element
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.envelope module
 ---------------------------
 
 .. automodule:: pain001.xml.envelope
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.generate\_updated\_xml\_file\_path module
 -----------------------------------------------------
 
 .. automodule:: pain001.xml.generate_updated_xml_file_path
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.generate\_xml module
 --------------------------------
 
 .. automodule:: pain001.xml.generate_xml
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.message\_registry module
 ------------------------------------
 
 .. automodule:: pain001.xml.message_registry
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.register\_namespaces module
 ---------------------------------------
 
 .. automodule:: pain001.xml.register_namespaces
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.validate\_via\_xsd module
 -------------------------------------
 
 .. automodule:: pain001.xml.validate_via_xsd
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.write\_xml\_to\_file module
 ---------------------------------------
 
 .. automodule:: pain001.xml.write_xml_to_file
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.xml.xml\_to\_string module
 ----------------------------------
 
 .. automodule:: pain001.xml.xml_to_string
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

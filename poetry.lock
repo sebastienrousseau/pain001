@@ -410,7 +410,7 @@ files = [
 
 [package.dependencies]
 google-re2 = [
-    {version = ">=1.1.20240702", markers = "python_version != \"3.13\""},
+    {version = ">=1.1.20240702"},
     {version = ">=1.1.20250722", markers = "python_version == \"3.13\""},
 ]
 jmespath = ">=1.0.1"
@@ -1310,7 +1310,7 @@ description = "A minimal low-level HTTP client."
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "sys_platform != \"emscripten\" and extra == \"mcp\""
+markers = "extra == \"mcp\" and sys_platform != \"emscripten\""
 files = [
     {file = "httpcore2-2.12.0-py3-none-any.whl", hash = "sha256:7e04258ce01013d7d615e5b910a3b27fac937d7a95038227e79652b4ba3b4ceb"},
     {file = "httpcore2-2.12.0.tar.gz", hash = "sha256:9293522bba0aa7c4c8e9e3f040c16575bd8868e155a77fa30c7a9085a5eae648"},
@@ -1448,7 +1448,7 @@ description = "httpx2 transports for Emscripten/Pyodide, backed by the JavaScrip
 optional = true
 python-versions = ">=3.12"
 groups = ["main"]
-markers = "sys_platform == \"emscripten\" and python_version >= \"3.12\" and extra == \"mcp\""
+markers = "sys_platform == \"emscripten\" and extra == \"mcp\" and python_version >= \"3.12\""
 files = [
     {file = "httpx2_jsfetch-1.0-py3-none-any.whl", hash = "sha256:cb916b707601e69a07721aabc8f3f6659be3a6893bc1ff5c6f9e02241df2da32"},
     {file = "httpx2_jsfetch-1.0.tar.gz", hash = "sha256:70a0e3eabfef7cce5ad9c629f7d01ca05e418f586646f4ddf14782e4c1454c60"},
@@ -5172,7 +5172,7 @@ description = "Verify certificates using native system trust stores"
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "sys_platform != \"emscripten\" and extra == \"mcp\""
+markers = "extra == \"mcp\" and sys_platform != \"emscripten\""
 files = [
     {file = "truststore-0.10.4-py3-none-any.whl", hash = "sha256:adaeaecf1cbb5f4de3b1959b42d41f6fab57b2b1666adb59e89cb0b53361d981"},
     {file = "truststore-0.10.4.tar.gz", hash = "sha256:9d91bd436463ad5e4ee4aba766628dd6cd7010cf3e2461756b3303710eebc301"},
@@ -5353,7 +5353,7 @@ description = "The lightning-fast ASGI server."
 optional = true
 python-versions = ">=3.10"
 groups = ["main"]
-markers = "(extra == \"mcp\" or extra == \"api\") and (sys_platform != \"emscripten\" or extra == \"api\")"
+markers = "(extra == \"mcp\" or extra == \"api\") and sys_platform != \"emscripten\" or extra == \"api\""
 files = [
     {file = "uvicorn-0.54.0-py3-none-any.whl", hash = "sha256:505bdb0f318731d45f1f712071fc781a8981f6847a31c902c9f5e652d4f67faf"},
     {file = "uvicorn-0.54.0.tar.gz", hash = "sha256:a2e33cbfaa0306f8e6b0c13e0cb89d7d7a2da3e62b90c66e18c33d9807b28620"},
@@ -5715,4 +5715,4 @@ upload = ["paramiko"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "52837376a6c16ea4708ada4ce14bcda8b50c57e71437337e54b6acb407665277"
+content-hash = "e450f1bfdb60da8dc826bef18d2b45dfa076d00b0879575b39296c3c605c3b04"
