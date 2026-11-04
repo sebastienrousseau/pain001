@@ -11,4 +11,4 @@ poetry-core
 twine
 # Advisory floor: GHSA-6q48-6c7w-9gw2 affects certifi before 2026.10.19
 # (pulled in by twine's requests).
-certifi>=2026.10.19
+certifi>=2026.10.23

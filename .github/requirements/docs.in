@@ -6,4 +6,4 @@ sphinx-autodoc-typehints
 # Advisory floor: GHSA-6q48-6c7w-9gw2 (PYSEC-2026-4320) affects every
 # certifi before 2026.10.19. requests pulls it in; the floor keeps a
 # recompile from resolving an affected release.
-certifi>=2026.10.19
+certifi>=2026.10.23
