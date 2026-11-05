@@ -11,5 +11,5 @@ pain001.config.manager module
 
 .. automodule:: pain001.config.manager
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

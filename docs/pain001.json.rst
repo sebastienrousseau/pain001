@@ -11,5 +11,5 @@ pain001.json.load\_json\_data module
 
 .. automodule:: pain001.json.load_json_data
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

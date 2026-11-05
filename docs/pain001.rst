@@ -46,37 +46,37 @@ pain001.async\_adapter module
 
 .. automodule:: pain001.async_adapter
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.constants module
 ------------------------
 
 .. automodule:: pain001.constants
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.exceptions module
 -------------------------
 
 .. automodule:: pain001.exceptions
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.migrate module
 ----------------------
 
 .. automodule:: pain001.migrate
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.suite module
 --------------------
 
 .. automodule:: pain001.suite
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

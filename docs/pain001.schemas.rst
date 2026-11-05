@@ -11,5 +11,5 @@ pain001.schemas.required\_columns module
 
 .. automodule:: pain001.schemas.required_columns
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

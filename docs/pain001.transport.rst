@@ -11,13 +11,13 @@ pain001.transport.cli module
 
 .. automodule:: pain001.transport.cli
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.transport.sftp module
 -----------------------------
 
 .. automodule:: pain001.transport.sftp
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

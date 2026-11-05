@@ -11,21 +11,21 @@ pain001.security.dsig module
 
 .. automodule:: pain001.security.dsig
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.security.formula module
 -------------------------------
 
 .. automodule:: pain001.security.formula
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.security.path\_validator module
 ---------------------------------------
 
 .. automodule:: pain001.security.path_validator
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
