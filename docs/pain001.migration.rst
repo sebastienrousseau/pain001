@@ -11,5 +11,5 @@ pain001.migration.version\_mapper module
 
 .. automodule:: pain001.migration.version_mapper
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

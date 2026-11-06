@@ -11,5 +11,5 @@ pain001.data.loader module
 
 .. automodule:: pain001.data.loader
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

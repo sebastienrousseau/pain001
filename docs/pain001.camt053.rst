@@ -11,13 +11,13 @@ pain001.camt053.generator module
 
 .. automodule:: pain001.camt053.generator
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.camt053.parser module
 -----------------------------
 
 .. automodule:: pain001.camt053.parser
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

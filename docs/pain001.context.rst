@@ -11,5 +11,5 @@ pain001.context.context module
 
 .. automodule:: pain001.context.context
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

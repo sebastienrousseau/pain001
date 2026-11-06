@@ -11,5 +11,5 @@ pain001.cli.cli module
 
 .. automodule:: pain001.cli.cli
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

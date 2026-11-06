@@ -11,13 +11,13 @@ pain001.lsp.diagnostics module
 
 .. automodule:: pain001.lsp.diagnostics
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
 
 pain001.lsp.server module
 -------------------------
 
 .. automodule:: pain001.lsp.server
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:

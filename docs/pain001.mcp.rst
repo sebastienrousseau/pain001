@@ -11,5 +11,5 @@ pain001.mcp.server module
 
 .. automodule:: pain001.mcp.server
    :members:
-   :undoc-members:
    :show-inheritance:
+   :undoc-members:
