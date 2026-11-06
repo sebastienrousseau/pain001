@@ -7,6 +7,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.77] - 2026-11-06
+
+### Fixed
+
+- pain.008.001.02 and pain.008.001.08 had the creditor and the debtor
+  reversed: the batch-level `Cdtr`, `CdtrAcct` and `CdtrAgt` were
+  filled from the `debtor_*` columns and each transaction's `Dbtr`,
+  `DbtrAcct` and `DbtrAgt` from the `creditor_*` columns. The templates
+  and the direct-debit data preparation now read `creditor_*` once per
+  batch and `debtor_*` per transaction. The bundled sample CSV and
+  SQLite templates move their values to the matching columns, so the
+  rendered samples are unchanged. Input whose columns were swapped to
+  work around the bug must be swapped back. Reported in #346 by
+  mrestivill.
+
+### Changed
+
+- The `api` extra requires `fastapi >= 0.162.0`.
+- Development and docs tooling updates: ruff 0.17.3, complexipy 8.3.0,
+  mutmut 3.8.1, pydoclint 0.12.0, pandas 3.1.0 (dev only),
+  sphinx-autodoc-typehints 3.5.2, sphinx-design 0.7.0 and
+  pydata-sphinx-theme 0.23.0. The certifi advisory floor stays at the
+  fixing release, 2026.10.19; the lock carries 2026.10.23.
+
 ## [0.0.76] - 2026-11-01
 
 ### Fixed

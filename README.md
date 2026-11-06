@@ -65,9 +65,10 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.76**: ISO 20022 pain.001 and pain.008 files generated
+> **Latest release: v0.0.77**: ISO 20022 pain.001 and pain.008 files generated
 > from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
-> official XSD, for Python 3.11+.
+> official XSD, for Python 3.11+, released with the whole pain001 suite at one
+> version.
 
 Optional extras: `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, `otel`,
 `fast` (libxml2 validation), `upload` (SFTP) and `rules` (CEL policies), for
@@ -299,7 +300,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.76; publication requires approved release PRs and signed release tags.
+is 0.0.77; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced
