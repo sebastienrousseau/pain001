@@ -86,10 +86,11 @@ class Reader:
             The leaf's text, or ``None`` when any step is missing or the
             target is not a text leaf.
         """
-        for key in keys:
-            if not isinstance(node, dict) or key not in node:
+        for key in map(str, keys):
+            child = node.get(key) if isinstance(node, dict) else None
+            if child is None:
                 return None
-            node, path = node[key], join(path, key)
+            node, path = child, join(path, key)
         if not isinstance(node, str):
             return None
         self.mapped.add(path)
