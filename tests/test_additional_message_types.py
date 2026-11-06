@@ -63,6 +63,69 @@ def test_generate_pain008_string_from_template_fixture() -> None:
     assert "SeqTp" in xml
 
 
+@pytest.mark.parametrize("version", ["pain.008.001.02", "pain.008.001.08"])
+def test_pain008_columns_name_the_direct_debit_roles(version: str) -> None:
+    """creditor_* columns render as the collector, debtor_* as the payer (#346).
+
+    In a direct debit the creditor collects and the debtor pays, so the
+    ``creditor_*`` columns fill ``Cdtr``/``CdtrAcct``/``CdtrAgt`` and the
+    ``debtor_*`` columns fill ``Dbtr``/``DbtrAcct``/``DbtrAgt``.
+    """
+    from lxml import etree
+
+    row = {
+        "id": "DD-ROLES-1",
+        "date": "2026-01-15T10:30:00",
+        "nb_of_txs": "1",
+        "ctrl_sum": "100.00",
+        "initiator_name": "Landlord Ltd",
+        "payment_information_id": "PMT-ROLES-1",
+        "payment_method": "DD",
+        "batch_booking": "false",
+        "service_level_code": "SEPA",
+        "sequence_type": "RCUR",
+        "requested_execution_date": "2026-01-20",
+        "creditor_name": "Landlord Ltd",
+        "creditor_account_IBAN": "DE89370400440532013000",
+        "creditor_agent_BIC": "DEUTDEFFXXX",
+        "charge_bearer": "SLEV",
+        "payment_id": "E2E-ROLES-1",
+        "payment_amount": "100.00",
+        "currency": "EUR",
+        "payment_currency": "EUR",
+        "debtor_name": "Tenant One",
+        "debtor_account_IBAN": "FR1420041010050500013M02606",
+        "debtor_agent_BIC": "BNPAFRPPXXX",
+        "remittance_information": "Rent January",
+        "mandate_id": "MANDATE-ROLES-1",
+        "date_of_signature": "2025-11-15",
+        "forwarding_agent_BIC": "DEUTDEFFXXX",
+    }
+    xml = generate_xml_string(
+        [row],
+        version,
+        f"pain001/templates/{version}/template.xml",
+        f"pain001/templates/{version}/{version}.xsd",
+    )
+    ns = {"p": f"urn:iso:std:iso:20022:tech:xsd:{version}"}
+    root = etree.fromstring(xml.encode("utf-8"))
+    pmt = root.find("p:CstmrDrctDbtInitn/p:PmtInf", ns)
+    tx = pmt.find("p:DrctDbtTxInf", ns)
+
+    assert pmt.findtext("p:Cdtr/p:Nm", namespaces=ns) == "Landlord Ltd"
+    assert (
+        pmt.findtext("p:CdtrAcct/p:Id/p:IBAN", namespaces=ns)
+        == "DE89370400440532013000"
+    )
+    assert "DEUTDEFFXXX" in etree.tostring(pmt.find("p:CdtrAgt", ns)).decode()
+    assert tx.findtext("p:Dbtr/p:Nm", namespaces=ns) == "Tenant One"
+    assert (
+        tx.findtext("p:DbtrAcct/p:Id/p:IBAN", namespaces=ns)
+        == "FR1420041010050500013M02606"
+    )
+    assert "BNPAFRPPXXX" in etree.tostring(tx.find("p:DbtrAgt", ns)).decode()
+
+
 def test_parse_pain002_rejects_missing_xml_path(tmp_path: Path) -> None:
     with pytest.raises(DataSourceError, match="Invalid pain.002 XML path"):
         parse_pain002_report(str(tmp_path / "missing.xml"))
