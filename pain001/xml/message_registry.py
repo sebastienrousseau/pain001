@@ -539,9 +539,9 @@ def _prepare_xml_data_v08_direct_debit(
         "requested_execution_date": data[0].get(
             "requested_execution_date", ""
         ),
-        "debtor_name": data[0].get("debtor_name", ""),
-        "debtor_account_IBAN": data[0].get("debtor_account_IBAN", ""),
-        "debtor_agent_BIC": data[0].get("debtor_agent_BIC", ""),
+        "creditor_name": data[0].get("creditor_name", ""),
+        "creditor_account_IBAN": data[0].get("creditor_account_IBAN", ""),
+        "creditor_agent_BIC": data[0].get("creditor_agent_BIC", ""),
         "charge_bearer": data[0].get("charge_bearer", "SLEV"),
         "transactions": [
             {
@@ -550,9 +550,9 @@ def _prepare_xml_data_v08_direct_debit(
                 "payment_currency": row.get(
                     "payment_currency", row.get("currency", "EUR")
                 ),
-                "creditor_agent_BIC": row.get("creditor_agent_BIC", ""),
-                "creditor_name": row.get("creditor_name", ""),
-                "creditor_account_IBAN": row.get("creditor_account_IBAN", ""),
+                "debtor_agent_BIC": row.get("debtor_agent_BIC", ""),
+                "debtor_name": row.get("debtor_name", ""),
+                "debtor_account_IBAN": row.get("debtor_account_IBAN", ""),
                 "remittance_information": row.get(
                     "remittance_information", ""
                 ),

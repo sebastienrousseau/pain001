@@ -26,16 +26,16 @@
             </PmtTpInf>
             <ReqdColltnDt>{{requested_execution_date}}</ReqdColltnDt>
             <Cdtr>
-                <Nm>{{debtor_name}}</Nm>
+                <Nm>{{creditor_name}}</Nm>
             </Cdtr>
             <CdtrAcct>
                 <Id>
-                    <IBAN>{{debtor_account_IBAN}}</IBAN>
+                    <IBAN>{{creditor_account_IBAN}}</IBAN>
                 </Id>
             </CdtrAcct>
             <CdtrAgt>
                 <FinInstnId>
-                    <BICFI>{{debtor_agent_BIC}}</BICFI>
+                    <BICFI>{{creditor_agent_BIC}}</BICFI>
                 </FinInstnId>
             </CdtrAgt>
             <ChrgBr>{{charge_bearer}}</ChrgBr>
@@ -53,15 +53,15 @@
                 </DrctDbtTx>
                 <DbtrAgt>
                     <FinInstnId>
-                        <BICFI>{{tx.creditor_agent_BIC}}</BICFI>
+                        <BICFI>{{tx.debtor_agent_BIC}}</BICFI>
                     </FinInstnId>
                 </DbtrAgt>
                 <Dbtr>
-                    <Nm>{{tx.creditor_name}}</Nm>
+                    <Nm>{{tx.debtor_name}}</Nm>
                 </Dbtr>
                 <DbtrAcct>
                     <Id>
-                        <IBAN>{{tx.creditor_account_IBAN}}</IBAN>
+                        <IBAN>{{tx.debtor_account_IBAN}}</IBAN>
                     </Id>
                 </DbtrAcct>
                 <RmtInf>
