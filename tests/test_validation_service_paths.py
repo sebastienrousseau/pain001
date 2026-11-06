@@ -18,10 +18,17 @@ SCHEMA = Path("pain001/templates/pain.001.001.03/pain.001.001.03.xsd")
 
 @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="needs named pipes")
 def test_data_source_must_be_a_regular_file(tmp_path: Path) -> None:
-    """A named pipe exists and is not a directory, yet is not a data file."""
+    """A named pipe exists and is not a directory, yet is not a data file.
+
+    The pipe is removed afterwards: the basetemp sits under pain001/tmp,
+    and a pipe left there blocks ``poetry build`` when it opens the file.
+    """
     pipe = tmp_path / "rows.csv"
     os.mkfifo(pipe)
-    result = service_module.ValidationService().validate_data_source(pipe)
+    try:
+        result = service_module.ValidationService().validate_data_source(pipe)
+    finally:
+        pipe.unlink()
     assert result.is_valid is False
     assert "does not exist" in (result.error or "")
 
