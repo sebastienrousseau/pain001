@@ -104,6 +104,9 @@ jobs:
       - name: 🛡️ Run Enterprise Tollgates
         run: poetry run make tollgates
 
+      - name: Validate faces against their published schemas
+        run: poetry run make face-contracts
+
   # 3. QUALITY GATE MATRIX (Parallel Compatibility Check)
   quality-gate:
     needs: tollgates

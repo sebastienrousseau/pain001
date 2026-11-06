@@ -102,3 +102,29 @@ def test_gitignore_blocks_the_exports() -> None:
         "*CGI-MP*",
     ):
         assert pattern in text
+
+
+def test_no_face_bindings_file_is_tracked() -> None:
+    """Face bindings are private side inputs and never committed (ADR-0005).
+
+    They hold consent identifiers and similar per-customer values, so a
+    tracked JSON or YAML file named like a bindings file fails.
+    """
+    offenders = [
+        p.relative_to(REPO)
+        for p in _tracked_files()
+        if "binding" in p.name.lower()
+        and p.suffix.lower() in (".json", ".yaml", ".yml")
+    ]
+    assert offenders == [], f"face bindings tracked: {offenders}"
+
+
+def test_no_message_definition_report_is_tracked() -> None:
+    """The ISO name table is derived from the MDRs; the reports stay out."""
+    offenders = [
+        p.relative_to(REPO)
+        for p in _tracked_files()
+        if "mdr" in p.name.lower()
+        and p.suffix.lower() in (".pdf", ".xlsx", ".docx")
+    ]
+    assert offenders == [], f"Message Definition Report tracked: {offenders}"

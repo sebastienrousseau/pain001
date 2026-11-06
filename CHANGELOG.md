@@ -7,6 +7,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- Faces (ADR-0005): `pain001.faces.project_face` and `pain001 face`
+  project a pain.001 document into another standard's JSON shape with a
+  loss report of every source element not carried, by indexed path.
+  `uk_open_banking` targets the Open Banking Read/Write API v4.0.1
+  domestic payment (`OBWriteDomesticConsent4`, or `OBWriteDomestic2`
+  with a bound `ConsentId`); `berlin_group` targets NextGenPSD2 v1.3.16
+  single and bulk payment initiation; `iso_2018` renames every element to
+  its ISO 20022 name in snake_case. A face refuses a document that lacks
+  an element its target requires instead of inventing a value, and
+  refuses bindings it does not accept.
+- `pain001/faces/iso_names.json`, the ISO 2018 face's tag-to-name table,
+  derived from the Registration Authority's Message Definition Reports
+  (Part 2) with the reports and read date recorded, and
+  `scripts/build_iso_name_table.py` to rebuild or `--check` it.
+- `make face-contracts` (run in CI): validates every face payload the
+  corpus produces against the target's published request schema,
+  fetched at a pinned revision and SHA-256.
+- The compliance test fails on a tracked face bindings file or Message
+  Definition Report.
+
 ## [0.0.77] - 2026-11-06
 
 ### Fixed
