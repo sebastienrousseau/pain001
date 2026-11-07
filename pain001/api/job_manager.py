@@ -101,6 +101,22 @@ class JobResult:  # pylint: disable=too-few-public-methods
         return job
 
 
+def output_name(message_type: str) -> str:
+    """Return a fresh output filename for one generation.
+
+    Every generation gets its own file (GHSA-vv3x-jpvc-w468). A shared
+    ``<message_type>.xml`` let a later job overwrite an earlier one and
+    served the later caller's payments to the earlier job's download.
+
+    Args:
+        message_type: The sanitised message type, e.g. ``pain.001.001.03``.
+
+    Returns:
+        ``<message_type>-<32 hex characters>.xml``.
+    """
+    return f"{message_type}-{uuid.uuid4().hex}.xml"
+
+
 class JobManager:
     """Manages async job lifecycle.
 

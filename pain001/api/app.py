@@ -33,7 +33,7 @@ from pain001 import __version__
 from pain001.api.auth import require_api_key as _require_api_key
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
-from pain001.api.job_manager import JobStatus, job_manager
+from pain001.api.job_manager import JobStatus, job_manager, output_name
 from pain001.api.meta import API_DESCRIPTION, SCALAR_HTML, TAGS_METADATA
 from pain001.api.metrics import MetricsMiddleware, registry, render_prometheus
 from pain001.api.models import (
@@ -258,7 +258,7 @@ def _resolve_generation_paths(
     # that return value (not the original ``request.message_type.value``)
     # in every downstream path expression.
     safe_message_type = _sanitise_message_type(request.message_type.value)
-    output_file_path = str(safe_output_dir / f"{safe_message_type}.xml")
+    output_file_path = str(safe_output_dir / output_name(safe_message_type))
 
     # Bundled package data, resolved package-relative so the API works
     # regardless of the server's working directory.
