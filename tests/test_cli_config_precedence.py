@@ -96,8 +96,13 @@ def test_defaults_without_any_config(workdir):
             {"bad.yaml": "chunk_size: 0\n"},
             "chunk_size",
         ),
+        (
+            ["--config", "broken.yaml"],
+            {"broken.yaml": "streaming: [true\n"},
+            "broken.yaml",
+        ),
     ],
-    ids=["unknown-profile", "invalid-config"],
+    ids=["unknown-profile", "invalid-config", "malformed-yaml"],
 )
 def test_bad_configuration_is_a_usage_error(workdir, args, files, message):
     """An unknown profile or invalid config exits 2 without a traceback."""

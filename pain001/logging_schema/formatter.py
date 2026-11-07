@@ -108,7 +108,6 @@ def configure_json_logging(
     Environment Variables:
         PAIN001_LOG_LEVEL: Override log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         PAIN001_LOG_FILE: Override log file path
-        PAIN001_LOG_JSON: Enable JSON logging (true/false)
 
     Args:
         logger: Logger to configure (defaults to root logger).

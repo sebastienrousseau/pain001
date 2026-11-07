@@ -10,6 +10,7 @@ from collections.abc import Mapping
 from typing import Any
 
 import click
+import yaml
 
 from pain001.config import ConfigManager
 
@@ -27,11 +28,15 @@ def _resolve_config(
         The merged configuration.
 
     Raises:
-        click.UsageError: If the profile is unknown or the merged
-            configuration is invalid; these used to end in a traceback.
+        click.UsageError: If a config file is not valid YAML, the
+            profile is unknown or the merged configuration is invalid;
+            these used to end in a traceback.
     """
     try:
         return (manager or ConfigManager()).resolve(dict(cli_args))
+    except yaml.YAMLError as exc:
+        name = cli_args.get("config_file") or "the configuration file"
+        raise click.UsageError(f"{name} is not valid YAML: {exc}") from exc
     except (KeyError, ValueError) as exc:
         message = exc.args[0] if exc.args else str(exc)
         raise click.UsageError(str(message)) from exc
