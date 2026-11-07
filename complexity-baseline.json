@@ -54,10 +54,6 @@
   "pain001/camt053/generator.py::build_camt053_statement": {
     "lines": 63
   },
-  "pain001/camt053/parser.py::parse_camt053_statement": {
-    "cyclomatic": 13,
-    "lines": 64
-  },
   "pain001/cli/cli.py": {
     "file_lines": 1442
   },
@@ -260,8 +256,7 @@
     "lines": 72
   },
   "pain001/pain002/parser.py::parse_pain002_report": {
-    "cyclomatic": 11,
-    "lines": 93
+    "lines": 75
   },
   "pain001/parquet/load_parquet_data.py::load_parquet_data_streaming": {
     "lines": 63

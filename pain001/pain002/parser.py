@@ -105,28 +105,10 @@ def parse_pain002_report(
             "Input XML is not a pain.002 payment status report"
         )
 
-    statuses: list[dict[str, str]] = []
-    for payment_info in report.findall(f"{ns}OrgnlPmtInfAndSts"):
-        status_record = {
-            "original_payment_information_id": _find_text(
-                payment_info, ns, "OrgnlPmtInfId"
-            ),
-            "payment_information_status": _find_text(
-                payment_info, ns, "PmtInfSts"
-            ),
-        }
-        tx_status = payment_info.find(f"{ns}TxInfAndSts")
-        if tx_status is not None:
-            status_record["original_end_to_end_id"] = _find_text(
-                tx_status, ns, "OrgnlEndToEndId"
-            )
-            status_record["transaction_status"] = _find_text(
-                tx_status, ns, "TxSts"
-            )
-            status_record["status_reason"] = _find_text(
-                tx_status, ns, "StsRsnInf/Rsn/Cd"
-            )
-        statuses.append(status_record)
+    statuses = [
+        _payment_status(payment_info, ns)
+        for payment_info in report.findall(f"{ns}OrgnlPmtInfAndSts")
+    ]
 
     return {
         "message_id": _find_text(report, ns, "GrpHdr/MsgId"),
@@ -139,6 +121,54 @@ def parse_pain002_report(
         ),
         "group_status": _find_text(report, ns, "OrgnlGrpInfAndSts/GrpSts"),
         "payment_statuses": statuses,
+    }
+
+
+def _payment_status(payment_info: Any, ns: str) -> dict[str, Any]:
+    """Return one OrgnlPmtInfAndSts with every transaction status.
+
+    The first transaction's fields stay at the top level for existing
+    callers; every transaction is listed under ``transactions``.
+
+    Args:
+        payment_info: The OrgnlPmtInfAndSts element.
+        ns: The document namespace in ElementTree search form.
+
+    Returns:
+        The block's identifiers and status, and its transactions.
+    """
+    transactions = [
+        _transaction_status(tx, ns)
+        for tx in payment_info.findall(f"{ns}TxInfAndSts")
+    ]
+    record: dict[str, Any] = {
+        "original_payment_information_id": _find_text(
+            payment_info, ns, "OrgnlPmtInfId"
+        ),
+        "payment_information_status": _find_text(
+            payment_info, ns, "PmtInfSts"
+        ),
+    }
+    if transactions:
+        record.update(transactions[0])
+    record["transactions"] = transactions
+    return record
+
+
+def _transaction_status(tx_status: Any, ns: str) -> dict[str, str]:
+    """Return one TxInfAndSts as a flat record.
+
+    Args:
+        tx_status: The TxInfAndSts element.
+        ns: The document namespace in ElementTree search form.
+
+    Returns:
+        The original EndToEndId, the transaction status and its reason.
+    """
+    return {
+        "original_end_to_end_id": _find_text(tx_status, ns, "OrgnlEndToEndId"),
+        "transaction_status": _find_text(tx_status, ns, "TxSts"),
+        "status_reason": _find_text(tx_status, ns, "StsRsnInf/Rsn/Cd"),
     }
 
 

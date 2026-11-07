@@ -53,34 +53,26 @@ def parse_camt053_statement(
         raise DataSourceError("camt.053 XML document is empty")
 
     ns = _detect_namespace(root)
-    statement = root.find(f".//{ns}Stmt")
-    if statement is None:
+    statements = [
+        _statement(statement, ns) for statement in root.findall(f".//{ns}Stmt")
+    ]
+    if not statements:
         raise DataSourceError("Input XML is not a camt.053 statement")
+    # The first statement's fields stay at the top level for existing
+    # callers; every statement is in "statements".
+    return {**statements[0], "statements": statements}
 
-    entries: list[dict[str, str]] = []
-    for entry in statement.findall(f"{ns}Ntry"):
-        amount = entry.find(f"{ns}Amt")
-        entries.append(
-            {
-                "credit_debit_indicator": _find_text(entry, ns, "CdtDbtInd"),
-                "status": _find_text(entry, ns, "Sts"),
-                "booking_date": _find_text(entry, ns, "BookgDt/Dt"),
-                "value_date": _find_text(entry, ns, "ValDt/Dt"),
-                "amount": (amount.text or "").strip()
-                if amount is not None and amount.text
-                else "",
-                "currency": amount.attrib.get("Ccy", "")
-                if amount is not None
-                else "",
-                "entry_reference": _find_text(entry, ns, "AcctSvcrRef"),
-                "remittance_information": _find_text(
-                    entry,
-                    ns,
-                    "NtryDtls/TxDtls/RmtInf/Ustrd",
-                ),
-            }
-        )
 
+def _statement(statement: Any, ns: str) -> dict[str, Any]:
+    """Return one Stmt with its entries.
+
+    Args:
+        statement: The Stmt element.
+        ns: The document namespace in ElementTree search form.
+
+    Returns:
+        The statement's identifiers, account, currency and entries.
+    """
     return {
         "statement_id": _find_text(statement, ns, "Id"),
         "electronic_sequence_number": _find_text(
@@ -88,7 +80,48 @@ def parse_camt053_statement(
         ),
         "iban": _find_text(statement, ns, "Acct/Id/IBAN"),
         "currency": _find_text(statement, ns, "Acct/Ccy"),
-        "entries": entries,
+        "entries": [
+            _entry(entry, ns) for entry in statement.findall(f"{ns}Ntry")
+        ],
+    }
+
+
+def _entry(entry: Any, ns: str) -> dict[str, Any]:
+    """Return one Ntry as a flat record.
+
+    ``Sts`` is text up to camt.053.001.07 and ``Sts/Cd`` from .08 on;
+    both are read. Every ``TxDtls/Refs/EndToEndId`` is listed so a
+    booking can be matched to the payments it settles.
+
+    Args:
+        entry: The Ntry element.
+        ns: The document namespace in ElementTree search form.
+
+    Returns:
+        The entry's amount, dates, status, references and remittance.
+    """
+    amount = entry.find(f"{ns}Amt")
+    return {
+        "credit_debit_indicator": _find_text(entry, ns, "CdtDbtInd"),
+        "status": _find_text(entry, ns, "Sts")
+        or _find_text(entry, ns, "Sts/Cd"),
+        "booking_date": _find_text(entry, ns, "BookgDt/Dt"),
+        "value_date": _find_text(entry, ns, "ValDt/Dt"),
+        "amount": (amount.text or "").strip()
+        if amount is not None and amount.text
+        else "",
+        "currency": amount.attrib.get("Ccy", "") if amount is not None else "",
+        "entry_reference": _find_text(entry, ns, "AcctSvcrRef"),
+        "remittance_information": _find_text(
+            entry, ns, "NtryDtls/TxDtls/RmtInf/Ustrd"
+        ),
+        "end_to_end_ids": [
+            (ref.text or "").strip()
+            for ref in entry.findall(
+                f"{ns}NtryDtls/{ns}TxDtls/{ns}Refs/{ns}EndToEndId"
+            )
+            if ref.text
+        ],
     }
 
 

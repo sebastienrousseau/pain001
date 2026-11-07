@@ -54,6 +54,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is not an RSA, ECDSA or Ed25519 key. paramiko reported the last key
   type it tried, so a wrong passphrase read "encountered RSA key,
   expected OPENSSH key".
+- `parse_pain002_report` returns every transaction status. It read only
+  the first `TxInfAndSts` of each payment block, so in a partially
+  accepted report the other transactions, rejections included, were
+  dropped. Each block now has a `transactions` list; its existing
+  top-level fields still describe the first transaction.
+- `parse_camt053_statement` returns every statement under `statements`
+  (it read only the first), reads the entry status of camt.053.001.08
+  and later (`Sts/Cd`, which came back empty), and lists each entry's
+  `end_to_end_ids`. The existing top-level fields still describe the
+  first statement.
 - Config files, `PAIN001_STREAMING` / `PAIN001_CHUNK_SIZE` and
   `--profile` now set streaming, chunk size and metrics. The CLI passed
   its own defaults (off, 1000, off) as explicit values, so they
