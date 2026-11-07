@@ -57,6 +57,7 @@ from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import DataSourceError
+from pain001.plugins._builtins import _pain001_version
 from pain001.plugins._registration import BuiltinRegistry
 from pain001.plugins._version import PAIN001_API_VERSION
 from pain001.plugins.contracts import LoaderResult, PluginMeta
@@ -208,7 +209,7 @@ class _GpgDecryptingLoader:
 
     meta = PluginMeta(
         name="gpg",
-        version="0.0.57",  # synced with the pain001 build that ships it
+        version=_pain001_version(),
         description=(
             "Decrypt .gpg / .asc files in memory then dispatch to the "
             "inner-extension loader (pain001[gpg])."
