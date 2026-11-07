@@ -417,57 +417,27 @@ Must follow "Keep a Changelog" v1.0.0 format:
 
 ### Release Notes Template
 
-When bumping version, create `releases/vX.Y.Z.md`:
+When bumping version, create `releases/vX.Y.Z.md`. The release workflow's
+last job (`scripts/release_notes.py publish`) builds the GitHub release
+body from its `## Highlights` section; What's Changed, Checksums and the
+Full Changelog link are generated, so do not write them here. Two to four
+bullets, no em dash; `tests/test_release_notes.py` fails once the
+CHANGELOG dates the version and the note is missing or malformed.
 
 ```markdown
-# Pain001 Release vX.Y.Z
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
 
-**Release Date:** YYYY-MM-DD  
-**Tag:** vX.Y.Z  
-**Python:** 3.9+  
-**Status:** Stable
+# pain001 vX.Y.Z
 
-## Executive Summary
-Brief description (1-2 sentences) of what this release accomplishes.
+## Highlights ⭐️
 
-## New Features
-- **Feature Name** ([#123](link))
-  - Description
-  - Example code snippet
+* **<Headline>**: one or two plain sentences on what changed and why.
+* **In lockstep with the whole suite**: pain001-mcp, pain001-lsp,
+  pain001-loader-xlsx and pain001-loader-mt101 ship X.Y.Z too.
 
-## Bug Fixes
-- Fixed issue description ([#456](link))
+## Details
 
-## Breaking Changes
-None. Fully backward compatible with vX.Y.(Z-1).
-
-## Dependencies
-### Updated
-- package: X.Y.Z → X.Y.Z+1 (reason)
-
-### Added
-None.
-
-### Removed
-None.
-
-## Installation
-\`\`\`bash
-pip install --upgrade pain001==X.Y.Z
-\`\`\`
-
-## Testing
-All {CURRENT_TEST_COUNT} tests passing ({CURRENT_COVERAGE}% coverage).
-Tested on Python 3.11, 3.12, 3.13, 3.14.
-
-## Migration Guide
-No migration needed. Install and use as normal.
-
-## Contributors
-- [@username](link)
-
-## Known Issues
-None.
+Optional prose for the repository; it is not copied to the release page.
 ```
 
 ---

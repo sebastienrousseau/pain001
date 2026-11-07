@@ -7,6 +7,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.79] - Unreleased
+
+### Changed
+
+- The release page is written by the release workflow in the suite's
+  shape. A last `release-notes` job in `ci.yml`, after every asset is
+  attached, runs `scripts/release_notes.py publish`: the title is
+  `pain001 X.Y.Z`, the Highlights come from `releases/vX.Y.Z.md`,
+  What's Changed lists the pull requests merged since the previous
+  release, and Checksums gives the SHA-256 of every asset, including
+  the SLSA provenance and `SHA256SUMS` the old body left out. The
+  0.0.77 and 0.0.78 pages had to be rewritten by hand.
+- `tests/test_release_notes.py` fails a pull request whose CHANGELOG
+  dates the version while `releases/vX.Y.Z.md` is missing or has other
+  than 2 to 4 highlights. The script and its tests are vendored
+  byte-identical in every suite repository.
+- The release-note template in `.github/copilot-instructions.md`
+  follows the release shape; it described a layout nothing reads.
+
 ## [0.0.78] - 2026-11-07
 
 ### Added

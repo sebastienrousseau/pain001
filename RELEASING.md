@@ -37,7 +37,10 @@ A release is ready only when **all** of the following hold on `main`:
 6. The version is identical in `pyproject.toml`, `pain001/__init__.py`,
    `pain001/constants.py`, `CITATION.cff` and the `SECURITY.md` support table
    (enforced by release preflight and suite conformance checks).
-7. A `releases/vX.Y.Z.md` note exists (used as the GitHub release body).
+7. A `releases/vX.Y.Z.md` note exists with a `## Highlights` section of
+   two to four bullets; it supplies the Highlights of the GitHub release
+   body (`tests/test_release_notes.py` fails without it once the
+   CHANGELOG dates the version).
 
 The checklist above is **executable** — do not eyeball it:
 
@@ -80,7 +83,12 @@ cd /tmp/pain001-dry-run && PIP_NO_INDEX=1 .venv/bin/python -m build --no-isolati
    the tag does not match the package version or the `releases/vX.Y.Z.md`
    note is missing, then builds, runs `twine check`, creates the GitHub
    release from the note, and publishes to PyPI via OIDC trusted publishing
-   (no long-lived token).
+   (no long-lived token). After the provenance is attached, the
+   `release-notes` job runs `scripts/release_notes.py publish`, which sets
+   the title to `pain001 X.Y.Z` and rewrites the body from the live
+   release: the note's Highlights, the pull requests merged since the
+   previous release, the SHA-256 of every attached asset and the Full
+   Changelog link. Preview it with `--dry-run`.
 
 ## After releasing
 
