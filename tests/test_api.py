@@ -1263,3 +1263,42 @@ class TestUnexpectedFailures:
         )
         assert response.status_code == 500
         assert response.json()["detail"] == "Failed to create job"
+
+
+class TestGenerationOutputIsolation:
+    """Every generation writes its own file (GHSA-vv3x-jpvc-w468).
+
+    Output used to go to ``<output_dir>/<message_type>.xml`` for every
+    request, so a later job overwrote an earlier one and downloading the
+    earlier job returned the later caller's payment file.
+    """
+
+    @staticmethod
+    def _csv(tmp_path, name, debtor):
+        source = TEMPLATES_DIR / "pain.001.001.03" / "template.csv"
+        text = source.read_text(encoding="utf-8").replace("Acme Corp", debtor)
+        path = tmp_path / name
+        path.write_text(text, encoding="utf-8")
+        return str(path)
+
+    def test_two_generations_keep_their_own_files(self, tmp_path):
+        """Same message type and output directory, two distinct files."""
+        out = tmp_path / "out"
+        paths = []
+        for name, debtor in (("a.csv", "Tenant A"), ("b.csv", "Tenant B")):
+            response = client.post(
+                "/api/generate",
+                json={
+                    "file_path": self._csv(tmp_path, name, debtor),
+                    "data_source": "csv",
+                    "message_type": "pain.001.001.03",
+                    "output_dir": str(out),
+                },
+            )
+            assert response.status_code == 200, response.text
+            paths.append(Path(response.json()["file_path"]))
+        first, second = paths
+        assert first != second
+        assert "Tenant A" in first.read_text(encoding="utf-8")
+        assert "Tenant B" not in first.read_text(encoding="utf-8")
+        assert "Tenant B" in second.read_text(encoding="utf-8")
