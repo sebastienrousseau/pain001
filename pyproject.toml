@@ -286,6 +286,22 @@ exclude = [
     ".eggs/",
 ]
 
+# Used by the CI typecheck job (.github/workflows/quality.yml), which
+# type-checks four tests/ files. `make type` checks pain001/ only, so
+# mypy reports this section as unused there; it is not.
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+warn_unused_ignores = false
+disable_error_code = [
+    "arg-type",
+    "return-value",
+    "attr-defined",
+    "assignment",
+]
+
 [[tool.mypy.overrides]]
 module = "xmlschema.*"
 ignore_missing_imports = true
