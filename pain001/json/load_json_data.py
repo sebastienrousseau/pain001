@@ -70,7 +70,7 @@ def load_json_data(file_path: str) -> list[dict[str, Any]]:
         raise FileNotFoundError(f"JSON file not found: {file_path}")
 
     try:
-        with open(safe_path, encoding="utf-8") as f:  # nosec B108
+        with open(safe_path, encoding="utf-8") as f:
             data = json.load(f)
     except json.JSONDecodeError as e:
         raise DataSourceError(f"Invalid JSON: {e}") from e
@@ -170,7 +170,7 @@ def load_jsonl_data(file_path: str) -> list[dict[str, Any]]:
 
     data = []
     try:
-        with open(file_path_validated, encoding="utf-8") as f:  # nosec B108
+        with open(file_path_validated, encoding="utf-8") as f:
             for line_num, line in enumerate(f, start=1):
                 line = line.strip()
                 if not line:

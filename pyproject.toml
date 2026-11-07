@@ -287,19 +287,6 @@ exclude = [
 ]
 
 [[tool.mypy.overrides]]
-module = "tests.*"
-disallow_untyped_defs = false
-disallow_incomplete_defs = false
-disallow_untyped_calls = false
-warn_unused_ignores = false
-disable_error_code = [
-    "arg-type",
-    "return-value",
-    "attr-defined",
-    "assignment",
-]
-
-[[tool.mypy.overrides]]
 module = "xmlschema.*"
 ignore_missing_imports = true
 

@@ -85,7 +85,7 @@ def load_db_data_streaming(
 
         # Fetch column names from the table
         # Safe: table_name validated via regex to contain only [a-zA-Z0-9_]
-        cursor.execute(f"PRAGMA table_info({table_name})")  # nosec B608
+        cursor.execute(f"PRAGMA table_info({table_name})")
         columns_info = cursor.fetchall()
 
         if not columns_info:

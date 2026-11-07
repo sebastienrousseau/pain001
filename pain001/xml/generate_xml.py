@@ -296,7 +296,7 @@ def _load_trusted_template_source(xml_template_path: str) -> str:
     if not str(xml_template_path).endswith(".xml"):
         raise ValueError("Template path must point to an .xml file")
 
-    with open(xml_template_path, encoding="utf-8") as handle:  # nosec B108
+    with open(xml_template_path, encoding="utf-8") as handle:
         template_source = handle.read()
 
     if _TEMPLATE_DIRECTIVE_PATTERN.search(template_source):
@@ -679,7 +679,7 @@ def generate_xml(
         )
 
         try:
-            safe_xml_path = validate_path(updated_xml_file_path)  # nosec B108
+            safe_xml_path = validate_path(updated_xml_file_path)
         except (
             Exception
         ) as e:  # pragma: no cover - the template path was already validated

@@ -30,7 +30,7 @@ def _connect_sqlite_read_only(safe_path: str) -> Any:
     """Open an SQLite database in read-only mode."""
     import sqlite3  # noqa: PLC0415 - loaded only when a database is read
 
-    return sqlite3.connect(f"file:{safe_path}?mode=ro", uri=True)  # nosec B608
+    return sqlite3.connect(f"file:{safe_path}?mode=ro", uri=True)
 
 
 def sanitize_table_name(table_name: str) -> str:
@@ -120,7 +120,7 @@ def load_db_data(data_file_path: str, table_name: str) -> list[dict[str, Any]]:
 
         # Fetch column names from the table
         # Safe: table_name validated via regex to contain only [a-zA-Z0-9_]
-        cursor.execute(f"PRAGMA table_info({table_name})")  # nosec B608
+        cursor.execute(f"PRAGMA table_info({table_name})")
         columns = [column[1] for column in cursor.fetchall()]
 
         # Use parameterised query to prevent SQL injection

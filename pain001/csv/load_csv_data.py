@@ -85,7 +85,7 @@ def load_csv_data(
 
     data: list[dict[str, Any]] = []
     try:
-        with open(safe_path, newline="", encoding="utf-8") as file:  # nosec B108
+        with open(safe_path, newline="", encoding="utf-8") as file:
             csv_reader = csv.DictReader(file)
             for row in csv_reader:
                 if sanitize_formula:
@@ -165,7 +165,7 @@ def load_csv_data_streaming(
             file_path,
             must_exist=True,
             base_dir=base_dir,
-        )  # nosec B108
+        )
     except Exception as e:
         # Sanitize at sink (CWE-117: Log Injection prevention)
         logger.error(
