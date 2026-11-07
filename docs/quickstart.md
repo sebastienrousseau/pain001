@@ -141,7 +141,9 @@ Output:
 
 Six scheme profiles ship today: `sepa-sct`, `sepa-sdd`, `sepa-inst`,
 `sepa-b2b`, `xborder-ct`, and the cross-record `anti-duplicate`. Use the
-one that matches the clearing system your bank will route this through,
+one that matches the clearing system your bank will route this through
+(`xborder-ct` accepts any ISO currency but one per file, since every row goes
+into a single payment block),
 and add `anti-duplicate` (comma-separated: `--scheme sepa-sct,anti-duplicate`)
 to catch a payment keyed in twice before it reaches the bank.
 

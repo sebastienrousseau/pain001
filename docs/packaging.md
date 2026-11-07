@@ -21,8 +21,8 @@ Python 3.11 or later; policy in
 [ADR-0004](adr/0004-python-floor-policy.md). Pure Python, no compiled
 extensions, no C dependencies. Optional extras pull in third-party
 packages (`fastapi`/`uvicorn`, `pyarrow`, `redis`, `mcp`, `pygls`,
-`python-gnupg`, the OpenTelemetry SDK, `lxml`); the core installs without
-any of them.
+`python-gnupg`, the OpenTelemetry SDK, `lxml`, `paramiko`, `cel-python`
+and `holidays`, `cryptography`); the core installs without any of them.
 
 ## Dependency pin model
 

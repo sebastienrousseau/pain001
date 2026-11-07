@@ -65,14 +65,14 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.78**: ISO 20022 pain.001 and pain.008 files generated
+> **Latest release: v0.0.79**: ISO 20022 pain.001 and pain.008 files generated
 > from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
 > official XSD, for Python 3.11+, released with the whole pain001 suite at one
 > version.
 
 Optional extras: `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, `otel`,
-`fast` (libxml2 validation), `upload` (SFTP) and `rules` (CEL policies), for
-example `python -m pip install "pain001[rules,upload]"`.
+`fast` (libxml2 validation), `upload` (SFTP), `rules` (CEL policies) and `sign`
+(XML-DSig signing), for example `python -m pip install "pain001[rules,upload]"`.
 
 ```bash
 # Development checkout
@@ -187,7 +187,17 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
   [plugin contract and XLSX worked example](docs/plugins.md). Plugins run with
   the process's privileges; they are not sandboxed.
 - Use [SFTP upload](docs/sftp-upload.md) explicitly; generation never sends a
-  payment automatically. Host trust is checked before authentication.
+  payment automatically. Host trust is checked before authentication; keys,
+  OpenSSH certificates and ssh-agent keys are supported, and DSA and FIDO keys
+  are refused by name.
+- Wrap a document in a Business Application Header and sign it with XML-DSig
+  RSA-SHA256 (`pain001[sign]`); see the [security notes](docs/security.rst)
+  for what verification does and does not prove.
+- Project a pain.001 into UK Open Banking, Berlin Group NextGenPSD2 or ISO 2018
+  JSON with a loss report through [faces](docs/faces.md) (`pain001 face`).
+- Call the pipeline from `asyncio` code with `process_files_async`,
+  `generate_xml_string_async` and `validate_all_async`; see
+  [async adapters](docs/async_adapters.rst).
 - Request `suggest_record_fix` via MCP for review-only corrections. IBANs, BICs,
   amounts and currencies are refused, not guessed; see
   [correction decisions](docs/adr/0006-local-policies-and-safe-corrections.md).
@@ -220,8 +230,10 @@ Never commit keys, credentials or real payment data.
 
 ## Examples
 
-The [numbered examples](examples/) cover generation, input formats, REST, MCP,
-streaming, schemes, parsers and corpus access; CI executes them. The Quick Start
+The [numbered examples](examples/) cover generation, input formats, REST (in
+process and a running server), MCP, LSP, streaming, schemes, parsers, corpus
+access, faces, signing, SFTP upload and the plugin CLI; CI executes them and
+fails when a public API name or CLI command has no example. The Quick Start
 above is also exercised directly by a documentation regression test.
 
 ---
