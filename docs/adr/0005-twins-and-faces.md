@@ -70,3 +70,13 @@ a target; everything else is generated on demand.
 - Phases: A1 (0.0.69) the twin foundation; A2 and B (0.0.70) surfaces
   and the face engine with UK Open Banking and Berlin Group; C (0.0.71)
   gated faces; D import, after its own ADR.
+- **Amended 2026-11-06:** the e-Repository was not available, so the ISO
+  2018 face's name table is derived from the Message Definition Reports
+  generated from it (Part 2, Payments Initiation, ten releases), which
+  state each element with its XML tag; the reports and the read date are
+  recorded in the table and the reports are not vendored. Tags no report
+  names stay unresolved, with the reason, and go to the loss report. The
+  payment faces target pinned versions (UK Open Banking v4.0.1, Berlin
+  Group NextGenPSD2 v1.3.16), refuse rather than invent a required value,
+  report losses per occurrence, and are validated against the published
+  request schemas in CI without vendoring them.

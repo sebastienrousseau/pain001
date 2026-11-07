@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean docs help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates
+.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean docs help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates face-contracts
 
 # Color output
 RED := \033[0;31m
@@ -46,6 +46,7 @@ help:
 	@echo "  xml-examples  - Regenerate bundled <type>.xml examples and template.db mirrors
 	@echo "  corpus-build  - Render scenarios/ and the coverage sets into pain001/corpus/data (deterministic)"
 	@echo "  corpus-coverage - Measure coverage sets against the schema inventories (gate)"
+	@echo "  face-contracts - Validate face payloads against UK Open Banking and Berlin Group schemas"
 	@echo "  corpus-evidence - Print the external-validation checklist per scenario""
 	@echo ""
 	@echo "Advanced Tollgates (Enterprise Production):"
@@ -253,6 +254,13 @@ corpus-coverage:
 	@poetry run python scripts/corpus_coverage.py --strict
 	@echo "$(GREEN)✓ Corpus coverage gate passed$(NC)"
 	@poetry run python scripts/generate_iso_json_schemas.py --check
+	@poetry run python scripts/build_iso_name_table.py --check
+
+# --- Faces against their published targets (network: pinned spec files) ---
+face-contracts:
+	@echo "$(YELLOW)Validating face payloads against their target schemas...$(NC)"
+	@poetry run python scripts/check_face_contracts.py
+	@echo "$(GREEN)✓ Face contracts passed$(NC)"
 
 # --- SLO verification (recommended before commit) ---
 slos: lint type test perf

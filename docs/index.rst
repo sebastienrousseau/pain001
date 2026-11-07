@@ -80,6 +80,7 @@ Contents
    architecture
    corpus
    twins
+   faces
    input-columns
    message-deltas
    development

@@ -31,12 +31,8 @@ from rich.console import Console
 from rich.table import Table
 
 from pain001.config import ConfigManager
-from pain001.constants import (
-    APP_DESCRIPTION as description,
-)
-from pain001.constants import (
-    APP_NAME as title,
-)
+from pain001.constants import APP_DESCRIPTION as description
+from pain001.constants import APP_NAME as title
 from pain001.constants import (
     VERSION,
     valid_xml_types,
@@ -44,6 +40,7 @@ from pain001.constants import (
 from pain001.context.context import Context
 from pain001.core.core import process_files, process_files_streaming
 from pain001.data.loader import load_payment_data
+from pain001.faces.cli import face_cmd
 from pain001.logging_schema import (
     Events,
     Fields,
@@ -1031,6 +1028,7 @@ cli.add_command(main, name="generate")
 
 # This adapter imports Paramiko only when the user requests an upload.
 cli.add_command(upload_cmd)
+cli.add_command(face_cmd)
 
 
 @cli.command("validate")

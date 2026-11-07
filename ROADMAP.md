@@ -153,7 +153,7 @@ per country and rail with provenance and an evidence state.
 
 | Milestone | Scope | Effort | Status |
 | :--- | :--- | :--- | :--- |
-| **Faces engine (ADR-0005 Phase B & C)** | Outbound JSON projections of pain.001 to compatible standards: UK Open Banking Payment Initiation API and Berlin Group NextGenPSD2, plus the legacy ISO 2018 compatibility face backed by e-Repository name mappings, with explicit structured loss reports. | M | in progress |
+| **Faces engine (ADR-0005 Phase B & C)** | Outbound JSON projections of pain.001 to compatible standards: UK Open Banking Payment Initiation API and Berlin Group NextGenPSD2, plus the ISO 2018 compatibility face backed by a name table derived from the Message Definition Reports, with per-occurrence loss reports and CI validation against the published schemas. | M | ready for the next release |
 | **Mutation floor hardening** | Pin ordering and timing dependencies in the fast mutation tier tests to eliminate variance (2,941 mutants), raising `MUTATION_FLOOR` from 80% to >=85%. | M | planned |
 | **Twin import (ADR-0005 Phase D)** | Inbound deserialization: read ISO JSON twins and Open Banking / Berlin Group payloads back into canonical payment instruction models and validated XML documents. | L | planned |
 | **Ecosystem discovery** | Submit `pain001-mcp` to `awesome-mcp-servers` and `pain001-lsp` to `awesome-language-servers` per `scripts/awesome-list-submissions.md`. | S | ready |

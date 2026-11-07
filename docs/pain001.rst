@@ -19,6 +19,7 @@ Subpackages
    pain001.csv
    pain001.data
    pain001.db
+   pain001.faces
    pain001.json
    pain001.logging_schema
    pain001.lsp
