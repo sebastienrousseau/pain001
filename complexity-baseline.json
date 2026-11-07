@@ -340,7 +340,7 @@
     "cyclomatic": 16
   },
   "pain001/validation/_scheme_rules.py": {
-    "file_lines": 766
+    "file_lines": 718
   },
   "pain001/validation/_scheme_rules.py::_check_amount": {
     "lines": 69

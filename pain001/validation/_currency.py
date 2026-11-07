@@ -15,6 +15,12 @@
 """ISO 4217 currency helpers shared by the scheme profiles."""
 
 from collections.abc import Mapping
+from typing import Any
+
+from pain001.validation._scheme_types import (
+    SchemeValidationResult,
+    SchemeViolation,
+)
 
 #: ISO 4217 minor-unit exponents that differ from the default of two.
 #: Used to bucket amounts before comparing them for duplicates, so
@@ -61,3 +67,52 @@ def _minor_units(currency: str, overrides: Mapping[str, int]) -> int:
     if currency in overrides:
         return overrides[currency]
     return _CURRENCY_MINOR_UNITS.get(currency, _DEFAULT_MINOR_UNITS)
+
+
+def check_currency(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require the payment currency to be EUR.
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    currency = str(row.get("payment_currency", "")).upper()
+    if currency != "EUR":
+        result.violations.append(
+            SchemeViolation(
+                rule="SEPA-CCY",
+                message=(
+                    f"SEPA requires EUR currency (got {currency or 'empty'})"
+                ),
+                index=index,
+                field="payment_currency",
+            )
+        )
+
+
+def check_currency_iso(
+    row: dict[str, Any], index: int, result: SchemeValidationResult
+) -> None:
+    """Require a well-formed ISO 4217 currency (any currency, not just EUR).
+
+    Args:
+        row: The payment row.
+        index: Zero-based row index.
+        result: The result accumulator to append violations to.
+    """
+    currency = str(row.get("payment_currency", "")).strip()
+    if not (len(currency) == 3 and currency.isalpha()):
+        result.violations.append(
+            SchemeViolation(
+                rule="XB-CCY",
+                message=(
+                    "payment_currency must be a 3-letter ISO 4217 code "
+                    f"(got {currency or 'empty'})"
+                ),
+                index=index,
+                field="payment_currency",
+            )
+        )

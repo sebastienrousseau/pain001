@@ -31,6 +31,7 @@ from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
+from pain001.validation import _currency
 from pain001.validation._currency import _minor_units as _minor_units
 from pain001.validation._scheme_types import REMEDIATIONS as REMEDIATIONS
 from pain001.validation._scheme_types import (
@@ -56,30 +57,6 @@ _SEPA_TEXT_FIELDS = (
 )
 _SDD_SEQUENCE_TYPES = frozenset({"FRST", "RCUR", "OOFF", "FNAL"})
 _B2B_SEQUENCE_TYPES = frozenset({"FRST", "RCUR"})
-
-
-def _check_currency(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require the payment currency to be EUR.
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    currency = str(row.get("payment_currency", "")).upper()
-    if currency != "EUR":
-        result.violations.append(
-            SchemeViolation(
-                rule="SEPA-CCY",
-                message=(
-                    f"SEPA requires EUR currency (got {currency or 'empty'})"
-                ),
-                index=index,
-                field="payment_currency",
-            )
-        )
 
 
 def _check_ibans(
@@ -129,31 +106,6 @@ def _check_bic(
                 message=f"creditor_agent_BIC '{bic}' is not a valid BIC",
                 index=index,
                 field="creditor_agent_BIC",
-            )
-        )
-
-
-def _check_currency_iso(
-    row: dict[str, Any], index: int, result: SchemeValidationResult
-) -> None:
-    """Require a well-formed ISO 4217 currency (any currency, not just EUR).
-
-    Args:
-        row: The payment row.
-        index: Zero-based row index.
-        result: The result accumulator to append violations to.
-    """
-    currency = str(row.get("payment_currency", "")).strip()
-    if not (len(currency) == 3 and currency.isalpha()):
-        result.violations.append(
-            SchemeViolation(
-                rule="XB-CCY",
-                message=(
-                    "payment_currency must be a 3-letter ISO 4217 code "
-                    f"(got {currency or 'empty'})"
-                ),
-                index=index,
-                field="payment_currency",
             )
         )
 
@@ -466,7 +418,7 @@ class SepaCreditTransferProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            _check_currency(row, index, result)
+            _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
             _check_service_level(row, index, result)
@@ -496,7 +448,7 @@ class SepaDirectDebitProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            _check_currency(row, index, result)
+            _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
             _check_service_level(row, index, result)
@@ -531,7 +483,7 @@ class SepaB2BDirectDebitProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            _check_currency(row, index, result)
+            _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
             _check_service_level(row, index, result)
@@ -563,7 +515,7 @@ class SepaInstantCreditTransferProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            _check_currency(row, index, result)
+            _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
             _check_service_level(row, index, result)
@@ -602,7 +554,7 @@ class CrossBorderCreditTransferProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            _check_currency_iso(row, index, result)
+            _currency.check_currency_iso(row, index, result)
             _check_ibans(row, index, result)
             _check_bic_required(row, index, result)
             _check_amount(row, index, result)
