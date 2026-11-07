@@ -30,8 +30,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from pain001.cli._config import _resolve_config
 from pain001.cli._paths import _file_not_directory, _resolve_template_assets
-from pain001.config import ConfigManager
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
 from pain001.constants import (
@@ -550,15 +550,14 @@ def _generate_xml_files(
 )
 @click.option(
     "--streaming/--no-streaming",
-    default=False,
+    default=None,
     help="Process input in chunks and generate one XML file per chunk.",
 )
 @click.option(
     "--chunk-size",
-    default=1000,
-    show_default=True,
+    default=None,
     type=click.IntRange(min=1),
-    help="Number of payment rows per streaming chunk.",
+    help="Number of payment rows per streaming chunk (default: 1000).",
 )
 @click.option(
     "--profile",
@@ -585,7 +584,7 @@ def _generate_xml_files(
 @click.option(
     "--emit-metrics",
     is_flag=True,
-    default=False,
+    default=None,
     help="Emit lightweight timing and lifecycle metrics to stdout.",
 )
 @click.option(
@@ -700,13 +699,13 @@ def main(
     output_dir: str | None,
     dry_run: bool,
     verbose: bool,
-    streaming: bool,
-    chunk_size: int,
+    streaming: bool | None,
+    chunk_size: int | None,
     profile: str | None,
     show_config: bool,
     list_templates: bool,
     show_template: str | None,
-    emit_metrics: bool,
+    emit_metrics: bool | None,
     scheme: str | None,
     explain: bool,
     scheme_format: str,
@@ -785,8 +784,7 @@ def main(
         _print_template_details(show_template)
         return
 
-    config_manager = ConfigManager()
-    resolved_config = config_manager.resolve(
+    resolved_config = _resolve_config(
         {
             "xml_message_type": xml_message_type,
             "xml_template_file_path": (
@@ -808,7 +806,7 @@ def main(
             "chunk_size": chunk_size,
             "profile": profile,
             "emit_metrics": emit_metrics,
-        }
+        },
     )
 
     xml_message_type = resolved_config.get("xml_message_type")

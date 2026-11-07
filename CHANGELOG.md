@@ -54,6 +54,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is not an RSA, ECDSA or Ed25519 key. paramiko reported the last key
   type it tried, so a wrong passphrase read "encountered RSA key,
   expected OPENSSH key".
+- Config files, `PAIN001_STREAMING` / `PAIN001_CHUNK_SIZE` and
+  `--profile` now set streaming, chunk size and metrics. The CLI passed
+  its own defaults (off, 1000, off) as explicit values, so they
+  overrode every config layer; the `instant_credit_transfer` preset's
+  streaming settings, for example, never applied.
+- An unknown `--profile` or an invalid config file is a usage error
+  (exit 2) instead of a Python traceback.
+- `pain001 init TYPE -o work/` refuses a directory path; it used to
+  write a file named `work` and report success.
 - XML signing declares its dependency: `pip install pain001[sign]`
   installs `cryptography`, which `sign_xml_document`,
   `verify_xml_signature` and `--xml-sign-key` import at call time. It
