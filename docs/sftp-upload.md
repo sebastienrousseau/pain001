@@ -28,6 +28,40 @@ encrypted private key, use `--passphrase-env BANK_SFTP_PASSPHRASE`. The named
 variables must already contain secrets. Do not put passwords in URLs or
 command arguments. The URL requires a username and an absolute remote path.
 
+## Keys, certificates and ssh-agent
+
+`--identity-file` takes an RSA, ECDSA or Ed25519 private key, in PEM or
+OpenSSH format. The key is loaded before any connection opens, so a
+missing or wrong passphrase is reported as such, not as a failed login.
+
+If the server trusts a certificate authority instead of individual keys,
+pass the certificate it issued for your key:
+
+```sh
+pain001 upload payment.xml --sftp sftp://user@bank.example/inbox/ \
+  --accept-host-key SHA256:... --identity-file ./id_ed25519 \
+  --certificate ./id_ed25519-cert.pub --passphrase-env BANK_SFTP_PASSPHRASE
+```
+
+Before connecting, pain001 checks that the certificate was issued for that
+key and that the current time is inside its validity window, and says which
+check failed. Whether the certificate's authority, principals and options are
+accepted is decided by the server.
+
+With no `--identity-file` and no password, keys from ssh-agent and the
+default key files are offered. Giving either one turns those off, so only
+what you named is used. Add `--use-agent` to offer ssh-agent keys as well:
+this is how hardware-held keys that ssh-agent presents as RSA, ECDSA or
+Ed25519 keys (PIV smartcards, for example) are used.
+
+Some key files are refused by name before connecting:
+
+| Key type | Why |
+|---|---|
+| `ssh-dss` (DSA) | OpenSSH 10.0 removed DSA, and paramiko has no DSA support. Use Ed25519. |
+| `sk-ssh-ed25519@openssh.com`, `sk-ecdsa-sha2-nistp256@openssh.com` (FIDO) | paramiko cannot sign with FIDO security keys. |
+| Any other type paramiko does not implement | Named in the error, with the paramiko version. |
+
 The upload streams into an exclusively created, uniquely named `.tmp` file
 in the destination directory, then publishes using standard SFTP rename.
 The server must support same-directory atomic, no-clobber rename. An existing

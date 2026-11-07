@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import os
+from types import ModuleType
 
 import click
 
@@ -18,6 +19,26 @@ def _secret_from_env(name: str | None) -> str | None:
             f"Environment variable {name!r} is not set or is empty."
         )
     return value
+
+
+def _transport() -> ModuleType:
+    """Import the SFTP transport, or explain which extra provides it."""
+    try:
+        import pain001.transport.sftp as sftp  # noqa: PLC0415
+    except ImportError as exc:
+        raise click.ClickException(
+            "SFTP requires the optional dependencies; install 'pain001[upload]'."
+        ) from exc
+    return sftp
+
+
+def _print_host_key(transport: ModuleType, url: str, timeout: float) -> None:
+    """Print a server's unverified host-key fingerprint, with a warning."""
+    click.echo(transport.print_host_fingerprint(url, timeout))
+    click.echo(
+        "Unverified host key: compare this fingerprint with the bank's independently supplied value before trusting it.",
+        err=True,
+    )
 
 
 @click.command("upload")
@@ -45,6 +66,16 @@ def _secret_from_env(name: str | None) -> str | None:
     help="SSH private key; otherwise use the agent or default SSH keys.",
 )
 @click.option(
+    "--certificate",
+    type=click.Path(exists=True, dir_okay=False),
+    help="OpenSSH certificate (*-cert.pub) issued for --identity-file.",
+)
+@click.option(
+    "--use-agent",
+    is_flag=True,
+    help="Also offer ssh-agent keys (hardware keys) with a key or password.",
+)
+@click.option(
     "--password-env", help="Environment variable containing the SSH password."
 )
 @click.option(
@@ -69,6 +100,8 @@ def upload_cmd(
     known_hosts: str | None,
     accept_host_key: str | None,
     identity_file: str | None,
+    certificate: str | None,
+    use_agent: bool,
     password_env: str | None,
     passphrase_env: str | None,
     print_host_key: bool,
@@ -82,6 +115,8 @@ def upload_cmd(
         known_hosts: Optional trusted host-key file.
         accept_host_key: Independently verified SHA256 fingerprint.
         identity_file: Optional SSH private key.
+        certificate: Optional OpenSSH certificate for the private key.
+        use_agent: Offer ssh-agent keys alongside a key or password.
         password_env: Name of the SSH-password environment variable.
         passphrase_env: Name of the key-passphrase environment variable.
         print_host_key: Observe a host key without authentication.
@@ -91,27 +126,16 @@ def upload_cmd(
         click.ClickException: If dependencies, secrets or the transfer fail.
         click.UsageError: If no file was supplied for an upload.
     """
-    try:
-        from paramiko import SSHException
-
-        from pain001.transport.sftp import print_host_fingerprint, upload_sftp
-    except ImportError as exc:
-        raise click.ClickException(
-            "SFTP requires the optional dependencies; install 'pain001[upload]'."
-        ) from exc
+    transport = _transport()
     try:
         if print_host_key:
-            click.echo(print_host_fingerprint(url, timeout))
-            click.echo(
-                "Unverified host key: compare this fingerprint with the bank's independently supplied value before trusting it.",
-                err=True,
-            )
+            _print_host_key(transport, url, timeout)
             return
         if file_path is None:
             raise click.UsageError(
                 "FILE_PATH is required unless --print-host-key is used."
             )
-        result = upload_sftp(
+        result = transport.upload_sftp(
             file_path,
             url,
             known_hosts=known_hosts,
@@ -119,9 +143,11 @@ def upload_cmd(
             identity_file=identity_file,
             password=_secret_from_env(password_env),
             passphrase=_secret_from_env(passphrase_env),
+            certificate=certificate,
+            use_agent=use_agent,
             timeout=timeout,
         )
         action = "Already delivered" if result.reused else "Uploaded"
         click.echo(f"{action}: {result.destination} (SHA256 {result.sha256})")
-    except (OSError, ValueError, SSHException) as exc:
+    except (OSError, ValueError, transport.paramiko.SSHException) as exc:
         raise click.ClickException(str(exc)) from exc

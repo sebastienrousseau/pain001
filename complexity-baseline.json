@@ -305,16 +305,8 @@
   "pain001/security/path_validator.py::_resolve_within_allowed_bases": {
     "lines": 74
   },
-  "pain001/transport/cli.py::upload_cmd": {
-    "lines": 62
-  },
   "pain001/transport/sftp.py::parse_target": {
     "cyclomatic": 15
-  },
-  "pain001/transport/sftp.py::upload_sftp": {
-    "cognitive": 16,
-    "cyclomatic": 16,
-    "lines": 106
   },
   "pain001/twins/iso_json.py::_decode_node": {
     "cognitive": 20,

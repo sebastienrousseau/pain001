@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   when a name in `pain001.__all__` or a CLI command has no example,
   and every new example is in `docs/verification-coverage.md`.
 
+- `pain001 upload --certificate` logs in with an OpenSSH certificate
+  for the `--identity-file` key, after checking locally that it was
+  issued for that key and is inside its validity window. `upload_sftp`
+  takes `certificate=`.
+- `pain001 upload --use-agent` offers ssh-agent keys alongside an
+  identity file or password; before, either one turned the agent off.
+  `upload_sftp` takes `use_agent=`.
+- DSA keys, FIDO security keys (`sk-*`) and any other key type paramiko
+  cannot sign with are refused by name before connecting.
+
 ### Fixed
 
 - The `xborder-ct` profile reports `XB-CCY-MIX` for every row whose

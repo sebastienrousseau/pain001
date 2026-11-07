@@ -22,8 +22,9 @@ Demonstrates the CLI commands the other examples leave out:
   export; it changes no settings, which this script checks
 * ``upload`` - SFTP delivery: the local refusals (no network), then a
   real round trip against a throwaway SFTP server this script starts
-  on ``127.0.0.1`` with a fresh host key, logging in first with a
-  synthetic password and then with a passphrase-protected private key
+  on ``127.0.0.1`` with a fresh host key, logging in with a synthetic
+  password, a passphrase-protected private key, and that key with a
+  short-lived OpenSSH certificate (``--certificate``)
 * ``serve --help`` - the REST launcher's options (26_rest_server.py
   starts the server itself)
 
@@ -45,6 +46,7 @@ import socket
 import subprocess  # nosec B404
 import sys
 import tempfile
+import time
 from pathlib import Path
 from threading import Event, Thread
 
@@ -57,6 +59,8 @@ PASSWORD_ENV = "EXAMPLE_SFTP_PASSWORD"
 PASSWORD = "example-only"  # nosec B105 - synthetic loopback credential
 PASSPHRASE_ENV = "EXAMPLE_SFTP_KEY_PASSPHRASE"
 PASSPHRASE = "example-key-only"  # nosec B105 - synthetic loopback key
+#: Key types the loopback server was offered, to show a certificate.
+PRESENTED: list[str] = []
 
 
 def isolated_env(home: Path) -> dict[str, str]:
@@ -176,11 +180,11 @@ def _upload_local_checks(cwd: Path, env: dict[str, str]) -> None:
         print(f"upload refusal        -> exit {code} ({needle!r})")
 
 
-def _auth_class(client_key: object) -> type:
+def _auth_class(client_key: str) -> type:
     """Build the loopback server's credential checks (needs ``paramiko``).
 
     Args:
-        client_key: The only public key the ``ops`` account accepts.
+        client_key: Base64 of the only public key ``ops`` may use.
     """
     import paramiko
 
@@ -194,7 +198,9 @@ def _auth_class(client_key: object) -> type:
 
         def check_auth_publickey(self, username: str, key: object) -> int:
             """Accept the one generated client key for ``ops``."""
-            ok = username == "ops" and key == client_key
+            ok = username == "ops" and key.get_base64() == client_key
+            blob = key.public_blob
+            PRESENTED.append(blob.key_type if blob else key.get_name())
             return paramiko.AUTH_SUCCESSFUL if ok else paramiko.AUTH_FAILED
 
         def get_allowed_auths(self, username: str) -> str:
@@ -263,7 +269,7 @@ def _serve_one(
     key: object,
     root: Path,
     stop: Event,
-    client_key: object,
+    client_key: str,
 ) -> None:
     """Run one SSH session with an SFTP subsystem rooted at ``root``."""
     import paramiko
@@ -282,7 +288,7 @@ def _serve_one(
 
 
 def _start_sftp_server(
-    root: Path, stop: Event, client_key: object
+    root: Path, stop: Event, client_key: str
 ) -> tuple[int, str]:
     """Start a throwaway SFTP server on loopback.
 
@@ -321,18 +327,50 @@ def _start_sftp_server(
     return listener.getsockname()[1], fingerprint(key)
 
 
-def _client_key(work: Path) -> tuple[object, Path]:
-    """Generate the client's key pair and save it passphrase-protected.
+def _certificate(work: Path, user: object) -> Path:
+    """Issue a one-hour user certificate for ``ops`` from a fresh CA."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    now = int(time.time())
+    certificate = (
+        serialization.SSHCertificateBuilder()
+        .public_key(user.public_key())  # type: ignore[attr-defined]
+        .serial(1)
+        .type(serialization.SSHCertificateType.USER)
+        .key_id(b"example-ops")
+        .valid_principals([b"ops"])
+        .valid_after(now - 60)
+        .valid_before(now + 3600)
+        .sign(ed25519.Ed25519PrivateKey.generate())
+    )
+    path = work / "id_ed25519-cert.pub"
+    path.write_bytes(certificate.public_bytes())
+    return path
+
+
+def _client_key(work: Path) -> tuple[str, Path, Path]:
+    """Generate an Ed25519 key, save it encrypted, and certify it.
 
     Returns:
-        The key and the path of its encrypted private-key file.
+        The public key's base64, the private-key file and its certificate.
     """
-    import paramiko
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ed25519
 
-    key = paramiko.RSAKey.generate(2048)
-    path = work / "id_rsa"
-    key.write_private_key_file(str(path), password=PASSPHRASE)
-    return key, path
+    user = ed25519.Ed25519PrivateKey.generate()
+    path = work / "id_ed25519"
+    path.write_bytes(
+        user.private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.OpenSSH,
+            serialization.BestAvailableEncryption(PASSPHRASE.encode()),
+        )
+    )
+    public = user.public_key().public_bytes(
+        serialization.Encoding.OpenSSH, serialization.PublicFormat.OpenSSH
+    )
+    return public.split()[1].decode(), path, _certificate(work, user)
 
 
 def _upload_with_key(
@@ -355,14 +393,33 @@ def _upload_with_key(
     print("upload (bad passphrase) -> exit 1 (wrong passphrase, offline)")
 
 
+def _upload_with_certificate(
+    work: Path, env: dict[str, str], url: str, pin: str, files: tuple
+) -> None:
+    """Log in with the key plus its certificate; the server sees the cert."""
+    key_file, certificate = files
+    args = [str(SAMPLE_XML), "--sftp", url, "--accept-host-key", pin]
+    args += ["--identity-file", str(key_file), "--certificate"]
+    args += [str(certificate), "--passphrase-env", PASSPHRASE_ENV]
+    PRESENTED.clear()
+    result = run_cli(
+        ["upload", *args], work, env | {PASSPHRASE_ENV: PASSPHRASE}
+    )
+    assert result.returncode == 0, result.stdout + result.stderr
+    cert_type = "ssh-ed25519-cert-v01@openssh.com"
+    assert cert_type in PRESENTED, PRESENTED
+    print(f"upload (certificate)  -> exit 0 (server saw {cert_type})")
+
+
 def _upload_round_trip(work: Path, env: dict[str, str]) -> None:
     """Pin, upload, retry and reject a wrong pin against loopback SFTP."""
     remote = work / "remote"
     (remote / "inbox").mkdir(parents=True)
     (remote / "keyed").mkdir()
+    (remote / "certified").mkdir()
     known_hosts = work / "known_hosts"
     known_hosts.write_text("", encoding="utf-8")  # trust nothing by default
-    client_key, key_file = _client_key(work)
+    client_key, key_file, certificate = _client_key(work)
     stop = Event()
     port, pin = _start_sftp_server(remote.resolve(), stop, client_key)
     url = f"sftp://ops@127.0.0.1:{port}/inbox/"
@@ -397,6 +454,10 @@ def _upload_round_trip(work: Path, env: dict[str, str]) -> None:
         _upload_with_key(work, env, keyed_url, pin, key_file)
         keyed = remote / "keyed" / SAMPLE_XML.name
         assert keyed.read_bytes() == SAMPLE_XML.read_bytes()
+
+        certified_url = f"sftp://ops@127.0.0.1:{port}/certified/"
+        files = (key_file, certificate)
+        _upload_with_certificate(work, env, certified_url, pin, files)
     finally:
         stop.set()
     assert known_hosts.read_text(encoding="utf-8") == "", "trust not saved"
