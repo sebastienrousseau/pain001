@@ -22,6 +22,14 @@ pain001.api.auth module
    :show-inheritance:
    :undoc-members:
 
+pain001.api.faces module
+------------------------
+
+.. automodule:: pain001.api.faces
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.api.guards module
 -------------------------
 
@@ -42,6 +50,14 @@ pain001.api.job\_store module
 -----------------------------
 
 .. automodule:: pain001.api.job_store
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.api.meta module
+-----------------------
+
+.. automodule:: pain001.api.meta
    :members:
    :show-inheritance:
    :undoc-members:

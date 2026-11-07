@@ -31,13 +31,11 @@ from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
 
 from pain001 import __version__
 from pain001.api.auth import require_api_key as _require_api_key
+from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import JobStatus, job_manager
-from pain001.api.metrics import (
-    MetricsMiddleware,
-    registry,
-    render_prometheus,
-)
+from pain001.api.meta import API_DESCRIPTION, SCALAR_HTML, TAGS_METADATA
+from pain001.api.metrics import MetricsMiddleware, registry, render_prometheus
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
@@ -46,9 +44,7 @@ from pain001.api.models import (
     ValidationRequest,
     ValidationResponse,
 )
-from pain001.api.models import (
-    ValidationError as ValidationErrorModel,
-)
+from pain001.api.models import ValidationError as ValidationErrorModel
 from pain001.api.ratelimit import RateLimitMiddleware, parse_rate_limit
 from pain001.api.ui import ui_router
 from pain001.constants import TEMPLATES_DIR
@@ -270,58 +266,6 @@ def _resolve_generation_paths(
     xsd_file_path = str(template_base / f"{safe_message_type}.xsd")
     xml_template_path = str(template_base / "template.xml")
     return output_file_path, xsd_file_path, xml_template_path
-
-
-# OpenAPI tag metadata — drives the grouped, described sections in the
-# interactive docs and any generated SDKs.
-TAGS_METADATA = [
-    {
-        "name": "Health",
-        "description": "Liveness and version probe for load balancers.",
-    },
-    {
-        "name": "Validation",
-        "description": (
-            "Validate payment data against the XSD schema and, optionally, "
-            "a payment-scheme rulebook — without producing a file."
-        ),
-    },
-    {
-        "name": "Generation",
-        "description": (
-            "Generate ISO 20022 XML synchronously or as a background job, "
-            "and download the result."
-        ),
-    },
-    {
-        "name": "Job Management",
-        "description": "Poll, cancel, and manage asynchronous generation jobs.",
-    },
-    {
-        "name": "UI",
-        "description": (
-            "Backing endpoints for the hosted dashboard at `/api/v1/ui`: "
-            "the same validation and generation, fed with an uploaded "
-            "file's content instead of a server-side path."
-        ),
-    },
-]
-
-API_DESCRIPTION = """\
-RESTful API for ISO 20022 **pain.001** / **pain.008** XML generation and
-validation.
-
-* **Versioned** — all endpoints are served under `/api/v1`; the unversioned
-  `/api/*` paths remain as a backwards-compatible alias.
-* **Authenticated** — set `PAIN001_API_KEY` to require a
-  `Authorization: Bearer <key>` header (open in local development).
-* **Rate limited** — set `PAIN001_RATE_LIMIT` (e.g. `100/minute`) to cap
-  requests per client.
-
-Interactive reference: [`/api/reference`](/api/reference) ·
-OpenAPI document: [`/openapi.json`](/openapi.json) ·
-Dashboard: [`/api/v1/ui`](/api/v1/ui) (disable with `PAIN001_UI_DISABLED=1`)
-"""
 
 
 @asynccontextmanager
@@ -923,24 +867,6 @@ async def _process_generation_job(
         )
 
 
-_SCALAR_HTML = """\
-<!doctype html>
-<html>
-  <head>
-    <title>Pain001 REST API — Reference</title>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-  </head>
-  <body>
-    <script
-      id="api-reference"
-      data-url="/openapi.json"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
-  </body>
-</html>
-"""
-
-
 @app.get("/api/reference", include_in_schema=False)
 async def scalar_reference() -> HTMLResponse:
     """Serve an interactive Scalar API reference for the OpenAPI document.
@@ -948,7 +874,7 @@ async def scalar_reference() -> HTMLResponse:
     Returns:
         The Scalar reference UI as an HTML response.
     """
-    return HTMLResponse(_SCALAR_HTML)
+    return HTMLResponse(SCALAR_HTML)
 
 
 @app.get("/metrics", include_in_schema=False)
@@ -978,9 +904,11 @@ def _install_rate_limiting(application: FastAPI) -> None:
     )
 
 
-# The dashboard and its two JSON endpoints ride on the main router so
-# they are served under both prefixes and share its auth and metrics.
+# The dashboard and its two JSON endpoints, and the faces, ride on the
+# main router so they are served under both prefixes and share its auth
+# and metrics.
 router.include_router(ui_router)
+router.include_router(faces_router)
 
 # Mount the routes: canonical, documented ``/api/v1`` plus the legacy
 # ``/api`` alias (served but hidden from the OpenAPI schema).

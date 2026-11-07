@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.0.78] - 2026-11-07
 
 ### Added
 
@@ -30,6 +30,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fetched at a pinned revision and SHA-256.
 - The compliance test fails on a tracked face bindings file or Message
   Definition Report.
+- Faces over REST: `GET /api/v1/faces` lists the faces and the binding
+  keys each accepts; `POST /api/v1/faces/{face}` takes the document as
+  XML text with optional bindings and returns the payload and the loss
+  report, `422` with the face's reason when it refuses.
+- Faces from an agent or an editor: pain001-mcp 0.0.78 adds the
+  `list_faces` and `project_face` tools, and pain001-lsp 0.0.78 the
+  `pain001.faces.list` and `pain001.faces.project` commands, both through
+  `project_face_text`.
+- `pain001.faces.project_face_text`, the entry point for documents a
+  client sends: XML text only (a string naming a server file is
+  refused, not read), no entity declarations or external references,
+  at most 10 MiB, bindings a JSON object.
+
+### Changed
+
+- The REST API's OpenAPI tag groups, description and reference page
+  moved from `pain001/api/app.py` to `pain001/api/meta.py`; nothing
+  served changes.
 
 ## [0.0.77] - 2026-11-06
 

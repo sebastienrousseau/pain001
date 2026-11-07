@@ -37,6 +37,43 @@ pain001 face payment.xml --face berlin_group --loss-report
 pain001 face payment.xml --face uk_open_banking --bindings private/bindings.json -o body.json
 ```
 
+## Over REST
+
+`pain001 serve` exposes the same faces (install `pain001[api]`):
+
+* `GET /api/v1/faces` lists each face, its target and the binding keys
+  it accepts.
+* `POST /api/v1/faces/{face}` takes the document as XML text in a JSON
+  body, with an optional `version` and `bindings`, and returns the
+  `face`, the source `version`, the `payload` and the `loss_report`.
+
+```bash
+jq -n --rawfile xml payment.xml '{xml: $xml}' |
+  curl -s -X POST http://127.0.0.1:8000/api/v1/faces/berlin_group \
+    -H 'Content-Type: application/json' -d @-
+```
+
+A face that refuses the document, or a binding it does not accept,
+answers `422` with the face's reason; an unknown face answers `404`.
+The routes honour `PAIN001_API_KEY` like every other route.
+
+## From an agent or an editor
+
+* [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) has
+  two tools: `list_faces`, and `project_face` with `xml_content`,
+  `face`, and optional `version` and `bindings`. A refusal comes back
+  as an `{"error": ...}` payload.
+* [pain001-lsp](https://github.com/sebastienrousseau/pain001-lsp) has
+  two `workspace/executeCommand` commands: `pain001.faces.list`, and
+  `pain001.faces.project` with `{"xml", "face", "version"?,
+  "bindings"?}`. The editor sends the open buffer's text as `xml`.
+
+Every surface that takes a document from a client (REST, the MCP
+server, the language server) calls `project_face_text`, never
+`project_face`: it accepts XML text only, so a string naming a file on
+the server is refused rather than read; it refuses entity declarations
+and external references; and it caps the document at 10 MiB.
+
 ## Loss reports
 
 The loss report lists source leaves by **indexed path**, relative to
