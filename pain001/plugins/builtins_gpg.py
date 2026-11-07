@@ -52,7 +52,8 @@ import logging
 import os
 import sys
 import tempfile
-from collections.abc import Iterable
+from collections.abc import Iterable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -160,6 +161,33 @@ def _import_keyfile(gpg: Any, keyfile: str) -> None:
     logger.debug("imported %d key(s) from PAIN001_GPG_KEYFILE", imported)
 
 
+@contextmanager
+def _keyring(gnupg: Any, keyfile: str | None) -> Iterator[Any]:
+    """Yield the GnuPG instance to decrypt with, never changing ~/.gnupg.
+
+    ``PAIN001_GPG_HOMEDIR`` names the keyring to use. Without it, a key
+    file is imported into a throwaway keyring that is removed afterwards,
+    instead of into the user's default one. It lives under ``/tmp``
+    where that exists, because gpg-agent's socket path has a length
+    limit that long temporary directories exceed.
+
+    Args:
+        gnupg: The ``gnupg`` module.
+        keyfile: The key file to import, if any.
+
+    Yields:
+        Any: A ``gnupg.GPG`` instance.
+    """
+    homedir = os.environ.get("PAIN001_GPG_HOMEDIR") or None
+    if homedir or not keyfile:
+        yield gnupg.GPG(gnupghome=homedir) if homedir else gnupg.GPG()
+        return
+    # nosec B108 - parent of a private mkdtemp dir, short for the socket
+    short = "/tmp" if os.path.isdir("/tmp") else None  # nosec B108
+    with tempfile.TemporaryDirectory(prefix="p1g", dir=short) as home:
+        yield gnupg.GPG(gnupghome=home)
+
+
 def _decrypt_to_bytes(ciphertext: bytes) -> bytes:
     """Decrypt ``ciphertext`` to plaintext bytes via ``python-gnupg``.
 
@@ -175,15 +203,13 @@ def _decrypt_to_bytes(ciphertext: bytes) -> bytes:
             secret key in the keyring, wrong passphrase, bad
             signature, etc.
     """
-    gnupg = _gpg_module()
-    homedir = os.environ.get("PAIN001_GPG_HOMEDIR") or None
-    gpg = gnupg.GPG(gnupghome=homedir) if homedir else gnupg.GPG()
     keyfile = os.environ.get("PAIN001_GPG_KEYFILE")
-    if keyfile:
-        _import_keyfile(gpg, keyfile)
     passphrase_env = os.environ.get("PAIN001_GPG_PASSPHRASE_ENV")
     passphrase = os.environ.get(passphrase_env) if passphrase_env else None
-    result = gpg.decrypt(ciphertext, passphrase=passphrase)
+    with _keyring(_gpg_module(), keyfile) as gpg:
+        if keyfile:
+            _import_keyfile(gpg, keyfile)
+        result = gpg.decrypt(ciphertext, passphrase=passphrase)
     if not bool(result):
         # Don't echo ``str(result)`` directly - it can include the
         # tried-key fingerprint. The status / stderr surface a fixed

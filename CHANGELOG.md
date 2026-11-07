@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is not an RSA, ECDSA or Ed25519 key. paramiko reported the last key
   type it tried, so a wrong passphrase read "encountered RSA key,
   expected OPENSSH key".
+- `--decrypt-key` / `PAIN001_GPG_KEYFILE` no longer imports the key
+  into your default GnuPG keyring. Without `PAIN001_GPG_HOMEDIR` the key
+  goes into a throwaway keyring that is removed after decryption; with
+  it, the named keyring is used as before.
 - `parse_pain002_report` returns every transaction status. It read only
   the first `TxInfAndSts` of each payment block, so in a partially
   accepted report the other transactions, rejections included, were
