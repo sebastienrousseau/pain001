@@ -57,6 +57,17 @@ A face that refuses the document, or a binding it does not accept,
 answers `422` with the face's reason; an unknown face answers `404`.
 The routes honour `PAIN001_API_KEY` like every other route.
 
+## From an agent or an editor
+
+* [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) has
+  two tools: `list_faces`, and `project_face` with `xml_content`,
+  `face`, and optional `version` and `bindings`. A refusal comes back
+  as an `{"error": ...}` payload.
+* [pain001-lsp](https://github.com/sebastienrousseau/pain001-lsp) has
+  two `workspace/executeCommand` commands: `pain001.faces.list`, and
+  `pain001.faces.project` with `{"xml", "face", "version"?,
+  "bindings"?}`. The editor sends the open buffer's text as `xml`.
+
 Every surface that takes a document from a client (REST, the MCP
 server, the language server) calls `project_face_text`, never
 `project_face`: it accepts XML text only, so a string naming a file on

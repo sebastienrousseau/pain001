@@ -34,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   keys each accepts; `POST /api/v1/faces/{face}` takes the document as
   XML text with optional bindings and returns the payload and the loss
   report, `422` with the face's reason when it refuses.
+- Faces from an agent or an editor: pain001-mcp 0.0.78 adds the
+  `list_faces` and `project_face` tools, and pain001-lsp 0.0.78 the
+  `pain001.faces.list` and `pain001.faces.project` commands, both through
+  `project_face_text`.
 - `pain001.faces.project_face_text`, the entry point for documents a
   client sends: XML text only (a string naming a server file is
   refused, not read), no entity declarations or external references,
