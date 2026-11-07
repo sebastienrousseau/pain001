@@ -22,6 +22,7 @@ from typing import Any
 from pain001.core.core import process_files, process_files_streaming
 from pain001.data.loader import load_payment_data
 from pain001.validation.service import ValidationConfig, ValidationService
+from pain001.xml.envelope import BusinessApplicationHeader
 from pain001.xml.generate_xml import generate_xml_string
 
 
@@ -29,15 +30,33 @@ async def process_files_async(
     xml_message_type: str,
     xml_template_file_path: str,
     xsd_schema_file_path: str,
-    data_file_path: str,
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
+    output_path: str | None = None,
+    envelop_bah: bool = False,
+    bah_header: BusinessApplicationHeader | None = None,
+    xml_sign_key: str | bytes | None = None,
+    xml_sign_cert: str | bytes | None = None,
+    xml_sign_passphrase: str | bytes | None = None,
+    schematron: str | Any | None = None,
 ) -> str:
-    """Run process_files() in a worker thread."""
+    """Run process_files() in a worker thread.
+
+    Takes exactly the parameters of :func:`process_files` and forwards
+    every one of them.
+    """
     return await asyncio.to_thread(
         process_files,
         xml_message_type,
         xml_template_file_path,
         xsd_schema_file_path,
         data_file_path,
+        output_path=output_path,
+        envelop_bah=envelop_bah,
+        bah_header=bah_header,
+        xml_sign_key=xml_sign_key,
+        xml_sign_cert=xml_sign_cert,
+        xml_sign_passphrase=xml_sign_passphrase,
+        schematron=schematron,
     )
 
 
@@ -47,15 +66,33 @@ async def process_files_streaming_async(
     xsd_schema_file_path: str,
     data_file_path: str,
     chunk_size: int = 1000,
+    output_dir: str | None = None,
+    envelop_bah: bool = False,
+    bah_header: BusinessApplicationHeader | None = None,
+    xml_sign_key: str | bytes | None = None,
+    xml_sign_cert: str | bytes | None = None,
+    xml_sign_passphrase: str | bytes | None = None,
+    schematron: str | Any | None = None,
 ) -> list[str]:
-    """Run process_files_streaming() in a worker thread."""
+    """Run process_files_streaming() in a worker thread.
+
+    Takes exactly the parameters of :func:`process_files_streaming` and
+    forwards every one of them.
+    """
     return await asyncio.to_thread(
         process_files_streaming,
         xml_message_type,
         xml_template_file_path,
         xsd_schema_file_path,
         data_file_path,
-        chunk_size,
+        chunk_size=chunk_size,
+        output_dir=output_dir,
+        envelop_bah=envelop_bah,
+        bah_header=bah_header,
+        xml_sign_key=xml_sign_key,
+        xml_sign_cert=xml_sign_cert,
+        xml_sign_passphrase=xml_sign_passphrase,
+        schematron=schematron,
     )
 
 
