@@ -229,7 +229,7 @@
     "lines": 79
   },
   "pain001/logging_schema/formatter.py::configure_json_logging": {
-    "lines": 90
+    "lines": 89
   },
   "pain001/logging_schema/redaction.py::_redact_pii_from_dict": {
     "cognitive": 24,
