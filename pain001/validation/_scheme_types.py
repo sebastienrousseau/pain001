@@ -37,6 +37,8 @@ REMEDIATIONS: dict[str, str] = {
     "XB-CCY": "Provide a 3-letter ISO 4217 currency code (any currency).",
     "XB-BIC": "Cross-border transfers require a valid creditor agent BIC "
     "for routing.",
+    "XB-CCY-MIX": "Generate one file per currency; every row is written "
+    "into a single PmtInf, whose CtrlSum would add the currencies together.",
     "SEPA-CHARSET": "Limit text to the ISO 20022 Latin set; use "
     "sanitize_to_charset() to transliterate accents and symbols.",
     "SEPA-LEN": "Shorten the field to its scheme maximum (70 for names, "

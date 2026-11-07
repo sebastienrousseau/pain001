@@ -534,11 +534,10 @@ class CrossBorderCreditTransferProfile(ValidationProfile):
     """Generic cross-border credit transfer checks (beyond SEPA).
 
     A pragmatic, multi-currency rulebook for international credit transfers:
-    valid debtor/creditor IBANs, a well-formed ISO 4217 currency (any
-    currency, not only EUR), a **mandatory** creditor agent BIC (cross-border
-    routing needs it), a positive amount within the ISO ceiling, and ISO
-    20022 charset/length limits. It is intentionally generic rather than a
-    full CBPR+ implementation.
+    valid IBANs, one ISO 4217 currency per batch (any, not only EUR), a
+    **mandatory** creditor agent BIC (routing needs it), a positive amount
+    within the ISO ceiling, and ISO 20022 charset/length limits. It is
+    intentionally generic rather than a full CBPR+ implementation.
     """
 
     name = "xborder-ct"
@@ -559,6 +558,7 @@ class CrossBorderCreditTransferProfile(ValidationProfile):
             _check_bic_required(row, index, result)
             _check_amount(row, index, result)
             _check_text_fields(row, index, result)
+        _currency.check_single_currency(data, result)
         return result
 
 

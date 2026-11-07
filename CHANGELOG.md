@@ -9,6 +9,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.79] - Unreleased
 
+### Fixed
+
+- The `xborder-ct` profile reports `XB-CCY-MIX` for every row whose
+  currency differs from the batch's first row. The generator writes all
+  rows into one PmtInf, so a mixed EUR/USD batch produced a block
+  `CtrlSum` that added the two currencies together, and the profile,
+  which checked currency row by row, reported nothing. Generated XML is
+  unchanged; split such a batch into one file per currency. Reported
+  privately by Rumi.
+
 ### Changed
 
 - The release page is written by the release workflow in the suite's

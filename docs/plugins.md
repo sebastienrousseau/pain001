@@ -300,7 +300,7 @@ pipeline as `--decrypt-key <keyfile>` and `--decrypt-passphrase-env <VAR>`.
 | `sepa-sdd` | SEPA Direct Debit (mandate id, sequence type) |
 | `sepa-b2b` | SEPA B2B Direct Debit (B2B sequence types) |
 | `sepa-inst` | SEPA Instant Credit Transfer (amount ceiling) |
-| `xborder-ct` | Cross-border Credit Transfer (any ISO currency) |
+| `xborder-ct` | Cross-border Credit Transfer (any ISO currency, one per batch) |
 | `anti-duplicate` | Cross-record duplicate detection (same creditor IBAN, amount and execution date) |
 
 These wrap the profiles in `pain001.validation.schemes`, which predate

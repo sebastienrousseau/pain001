@@ -116,3 +116,38 @@ def check_currency_iso(
                 field="payment_currency",
             )
         )
+
+
+def check_single_currency(
+    data: list[dict[str, Any]], result: SchemeValidationResult
+) -> None:
+    """Require every row of the batch to share one currency.
+
+    The generator writes all rows into one PmtInf, so a mixed batch
+    produces a block CtrlSum that sums amounts across currencies. Rows
+    with a malformed currency are left to ``XB-CCY``.
+
+    Args:
+        data: All payment rows of the batch.
+        result: The result accumulator to append violations to.
+    """
+    first: str | None = None
+    for index, row in enumerate(data):
+        currency = str(row.get("payment_currency", "")).strip().upper()
+        if not (len(currency) == 3 and currency.isalpha()):
+            continue
+        if first is None:
+            first = currency
+        elif currency != first:
+            result.violations.append(
+                SchemeViolation(
+                    rule="XB-CCY-MIX",
+                    message=(
+                        f"payment_currency {currency} differs from the "
+                        f"batch currency {first}; one PmtInf cannot mix "
+                        "currencies"
+                    ),
+                    index=index,
+                    field="payment_currency",
+                )
+            )

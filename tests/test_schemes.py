@@ -324,7 +324,42 @@ class TestCrossBorderCreditTransferProfile:
         result = validate_scheme([row], profile="xborder-ct")
         assert any(v.rule == "SEPA-CDTR-IBAN" for v in result.violations)
 
+    def test_mixed_currency_batch_flagged(self) -> None:
+        """Rows in another currency than the first raise XB-CCY-MIX.
+
+        The generator writes every row into one PmtInf, so a mixed batch
+        yields a block CtrlSum that adds EUR and USD together.
+        """
+        rows = [
+            _valid_row() | {"payment_currency": "EUR"},
+            _valid_row() | {"payment_currency": "USD"},
+            _valid_row() | {"payment_currency": "eur"},
+        ]
+        result = validate_scheme(rows, profile="xborder-ct")
+        mixed = [v for v in result.violations if v.rule == "XB-CCY-MIX"]
+        assert [v.index for v in mixed] == [1]
+        assert mixed[0].field == "payment_currency"
+        assert "EUR" in mixed[0].message and "USD" in mixed[0].message
+        assert not result.is_valid
+
+    def test_single_currency_batch_passes(self) -> None:
+        """A batch in one non-EUR currency raises no XB-CCY-MIX."""
+        rows = [_valid_row() | {"payment_currency": "USD"}] * 3
+        result = validate_scheme(rows, profile="xborder-ct")
+        assert result.is_valid, [v.rule for v in result.violations]
+
+    def test_malformed_currency_not_double_reported(self) -> None:
+        """A malformed currency is XB-CCY only, never also XB-CCY-MIX."""
+        rows = [
+            _valid_row() | {"payment_currency": ""},
+            _valid_row() | {"payment_currency": "USD"},
+            _valid_row() | {"payment_currency": "US"},
+        ]
+        result = validate_scheme(rows, profile="xborder-ct")
+        assert not [v for v in result.violations if v.rule == "XB-CCY-MIX"]
+
     def test_remediations_present(self) -> None:
         """The cross-border rules carry remediation hints."""
         assert remediation_for("XB-BIC")
         assert remediation_for("XB-CCY")
+        assert remediation_for("XB-CCY-MIX")
