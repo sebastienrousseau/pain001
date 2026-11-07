@@ -90,7 +90,7 @@ def face_cmd(
 
     Faces are outbound only: UK Open Banking v4.0.1, Berlin Group
     NextGenPSD2 v1.3.16, or ISO 20022 element names in snake_case.
-
+    \f
     Args:
         source: The pain.001 XML file.
         face_name: The target face.

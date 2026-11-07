@@ -75,7 +75,7 @@ def upload_cmd(
     timeout: float,
 ) -> None:
     """Deliver FILE_PATH atomically to an explicitly trusted SFTP server.
-
+    \f
     Args:
         file_path: Local payment file; omitted only for host-key inspection.
         url: Destination SFTP URL.

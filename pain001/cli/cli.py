@@ -740,7 +740,7 @@ def main(
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
-
+    \f
     Args:
         xml_message_type: ISO 20022 message type (e.g., 'pain.001.001.03').
         xml_template_file_path: Path to Jinja2 XML template file.
@@ -1127,7 +1127,7 @@ def validate_cmd(
     A named alias for ``generate --dry-run`` that reuses the same template
     resolution and validation pipeline, so CI pre-flight checks read as a
     first-class command.
-
+    \f
     Args:
         ctx: The active Click context, used to invoke ``generate``.
         xml_message_type: ISO 20022 message type to validate against.
@@ -1171,7 +1171,7 @@ def validate_cmd(
 )
 def versions_cmd(as_json: bool) -> None:
     """List the ISO 20022 message types this build can generate.
-
+    \f
     Args:
         as_json: If True, print a JSON array instead of a table.
     """
@@ -1196,7 +1196,7 @@ def versions_cmd(as_json: bool) -> None:
 )
 def inspect_cmd(message_type: str, as_json: bool) -> None:
     """Show the bundled template, schema, and accepted formats for a type.
-
+    \f
     Args:
         message_type: ISO 20022 message type to inspect.
         as_json: If True, print a JSON object instead of formatted text.
@@ -1237,7 +1237,7 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
 )
 def init_cmd(message_type: str, output_path: str | None) -> None:
     """Scaffold a starter CSV for a message type from its bundled example.
-
+    \f
     Args:
         message_type: ISO 20022 message type to scaffold data for.
         output_path: Optional destination path for the starter CSV.
@@ -1276,7 +1276,7 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
 )
 def serve_cmd(host: str, port: int, reload: bool) -> None:
     """Launch the REST API with uvicorn (requires pain001[api]).
-
+    \f
     Args:
         host: Interface address to bind.
         port: TCP port to listen on.
@@ -1338,7 +1338,7 @@ def plugins_group() -> None:
 )
 def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
     """List every registered plugin (built-in + entry-point discovered).
-
+    \f
     Args:
         kind: Optional kind filter (loader / validator / scheme / writer).
         as_json: If True, print a JSON array instead of a table.
@@ -1388,7 +1388,7 @@ def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
 )
 def plugins_show_cmd(name: str, kind: str | None) -> None:
     """Print the metadata for a single plugin by name.
-
+    \f
     Args:
         name: Plugin's declared name (e.g. ``csv``, ``sepa-sct``).
         kind: Optional kind filter to disambiguate.
