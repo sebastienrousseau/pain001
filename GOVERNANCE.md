@@ -8,8 +8,9 @@ sustainable — and, candidly, to reduce its dependence on any single person.
 
 ## Mission and scope
 
-Pain001 generates and validates ISO 20022 payment files (pain.001 / pain.008)
-and parses the messages banks send back (pain.002 / camt.053), with a small,
+Pain001 generates and validates ISO 20022 payment files (pain.001 / pain.008),
+delivers them over an explicit SFTP upload, and parses the messages banks send
+back (pain.002 / camt.053, with synthetic builders for tests), with a small,
 well-tested core and first-class CLI, REST, MCP, and LSP surfaces. Changes
 are weighed against that scope: correctness, security, and clarity over
 feature breadth.

@@ -39,17 +39,17 @@ and `holidays`, `cryptography`); the core installs without any of them.
 ```bash
 git clone https://github.com/sebastienrousseau/pain001
 cd pain001
-git checkout v0.0.66            # a signed tag; see KEYS.asc
+git checkout v<version>         # a signed tag; see KEYS.asc
 python -m pip install build
 python -m build                 # produces dist/*.whl and dist/*.tar.gz
 ```
 
-The sdist contains everything needed to run the tests offline once the
-test dependencies are present:
+The sdist does not contain the tests. Run them from the tagged git
+checkout, with every extra and the development dependencies from the lock:
 
 ```bash
-python -m pip install "pain001[api,parquet,gpg,otel]" pytest pytest-cov hypothesis
-python -m pytest -q --no-cov      # the coverage gate is a repo policy, not a package requirement
+poetry install --all-extras --with dev
+poetry run pytest -q --no-cov     # the coverage gate is a repo policy, not a package requirement
 ```
 
 `tests/test_docker_smoke.py` needs a Docker daemon and skips otherwise;
@@ -59,11 +59,17 @@ PyPI and is not part of the test run.
 
 ## Runtime data
 
-The wheel bundles the templates, XSD schemas, JSON schemas and sample
-data under `pain001/templates/` and `pain001/schemas/`. They are read
-with package-relative paths, so the package works from any working
-directory and from zipped installs is not supported (the XSD loader
-needs real files).
+The wheel bundles the data files listed under `include` in
+`pyproject.toml`: the message templates, XSD schemas and sample data
+(`pain001/templates/`), the JSON schemas (`pain001/schemas/`), the
+pain.002 XSDs, the configuration presets, the example corpus and its
+schemas, the ISO 2018 name table, the migration mappings, the
+Schematron rule sets and the parser test fixtures.
+
+They are read with package-relative paths, so bundled assets resolve
+from any working directory. Zipped installs are not supported: the XSD
+loader needs real files. Your own data files must still be under the
+current working directory.
 
 ## Signature and provenance verification
 

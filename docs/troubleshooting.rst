@@ -16,7 +16,9 @@ Data validation failed
 ----------------------
 
 - Cause: missing required CSV columns, invalid IBAN/BIC fields, or bad dates.
-- Fix: run ``pain001 --dry-run`` first and inspect the validation error.
+- Fix: run ``pain001 validate -t <message type> -d <data file>`` first and
+  inspect the validation error; add ``--scheme <profile>`` for IBAN check
+  digits, currency and amount rules.
 
 Path validation failed
 ----------------------

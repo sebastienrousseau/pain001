@@ -85,6 +85,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The README, root documents and manual were checked claim by claim
+  against the code and corrected: XML signing, SFTP delivery and the
+  builders exist and are described with their limits; environment
+  variables, metrics, extras, CLI commands and config precedence match
+  the code; snippets that failed (data outside the working directory,
+  the deprecated write-beside-the-template path) now run; the compose
+  stack builds an image with the `redis` extra; and counts that drift
+  were removed.
 - The release page is written by the release workflow in the suite's
   shape. A last `release-notes` job in `ci.yml`, after every asset is
   attached, runs `scripts/release_notes.py publish`: the title is

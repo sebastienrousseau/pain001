@@ -12,8 +12,9 @@ Two corpora, one engine ([ADR-0003](adr/0003-example-corpus-two-corpora-one-engi
   rail, rendered into every edition it lists, validated on a four-rung ladder
   and shipped with a provenance record.
 
-Both ship in the wheel under `pain001/corpus/data/` (230 KB compressed of a
-400 KB budget) and are read through `pain001.corpus`:
+Both ship in the wheel under `pain001/corpus/data/`, within a 500 KB
+compressed budget that `scripts/build_corpus.py --check` enforces and reports,
+and are read through `pain001.corpus`:
 
 ```python
 from pain001.corpus import list_files, get_file, provenance, coverage_report

@@ -4,10 +4,8 @@
 
 ## Supported versions
 
-Security patches are issued for the latest minor of the latest major.
-While the project is pre-`1.0`, that means **the latest released
-0.0.x and the immediately prior 0.0.x** receive security fixes; older
-0.0.x versions do not.
+Security patches are issued for the releases marked as receiving fixes
+in the table below; older 0.0.x versions do not receive them.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
@@ -70,7 +68,7 @@ We publish a CVE through GitHub Security Advisories (the GitHub
 Advisory Database mirrors into OSV/PyPI) when the issue is fixed.
 Reporters are credited unless they ask to remain anonymous.
 
-## Security posture (current; items marked v0.0.53-NEW arrived in that release)
+## Security posture
 
 ### Input handling
 
@@ -79,8 +77,8 @@ Reporters are credited unless they ask to remain anonymous.
   billion-laughs, and external-entity resolution are rejected.
 - **Path handling** uses a path validator (`pain001.security.path_validator`)
   that blocks traversal outside permitted directories. The
-  v0.0.53-NEW REST API output directory is gated against the cwd
-  and the system tmpdir only.
+  REST API output directory is gated against the cwd and the system
+  tmpdir only.
 - **Schema validation** is mandatory. Output that does not validate
   against the official XSD is never written as a success.
 - **Amounts** are `decimal.Decimal` end-to-end. Control sums
@@ -117,8 +115,8 @@ The REST API ships with:
   the install assumption is "behind a reverse proxy that handles
   auth").
 - Configurable rate limiting (`PAIN001_RATE_LIMIT`) with both an
-  in-process default and a v0.0.53-NEW Redis-backed distributed
-  backend so caps survive multi-replica deployments.
+  in-process default and a Redis-backed distributed backend
+  (`pain001[redis]`) so caps survive multi-replica deployments.
 - A versioned `/api/v1/*` surface; the unversioned `/api/*` alias
   is retained for backwards compatibility but **will be deprecated
   in v0.1**.
@@ -136,7 +134,7 @@ The REST API ships with:
 | **CodeQL** | GitHub-managed semantic analysis | every push + PR |
 | **Dependabot** | Dependency PRs + advisory notifications | continuous |
 | **License audit** | `pip-licenses` SPDX manifest in CI | every push + PR + per release |
-| **SBOM** (v0.0.53-NEW) | CycloneDX (JSON + XML) attached to every GitHub Release | per tag |
+| **SBOM** | CycloneDX (JSON + XML) attached to every GitHub Release | per tag |
 
 The `make sec` target runs the same scanners locally so developers
 get the same signal CI does.
@@ -158,12 +156,21 @@ get the same signal CI does.
 
 ## Cryptography status
 
-The library uses `cryptography` only as a transitive package
-constraint. **pain001 does not implement payment signing,
-encryption, certificate validation, or password hashing itself.**
-Anyone signing or encrypting payment payloads should use a
-dedicated library (`python-gnupg` for OpenPGP, `cryptography` for
-X.509) outside pain001.
+Cryptography is optional and delegated to established libraries:
+
+- **XML signing**: `sign_xml_document` and `verify_xml_signature`
+  (`pain001.security.dsig`, CLI `--xml-sign-key`) apply and check a
+  W3C XML-DSig enveloped RSA-SHA256 signature through the `sign`
+  extra (`cryptography`). An embedded X.509 certificate is carried in
+  `<KeyInfo>`; its chain and validity are not checked.
+- **Encrypted input**: `.gpg` / `.asc` data files are decrypted with
+  the `gpg` extra (`python-gnupg` and the system GnuPG).
+- **SFTP authentication**: `pain001 upload` uses SSH keys, OpenSSH
+  certificates or the SSH agent through the `upload` extra
+  (`paramiko`).
+
+pain001 does not encrypt generated files, implement its own
+cryptographic primitives, or hash passwords.
 
 ## Continuous integration
 
@@ -178,7 +185,7 @@ Every push to `main` and every PR runs the full quality gate:
 Release tags additionally fire:
 
 - PyPI publish via OIDC trusted publishing
-- SBOM generation + upload as Release assets (v0.0.53-NEW)
+- SBOM generation + upload as Release assets
 - Sigstore attestations for sdist + wheel
 
 ## Threat model — what this library is *not*
@@ -191,13 +198,14 @@ Release tags additionally fire:
   prove bank acceptance or settlement. EBICS and bank APIs are not provided.
 - **Not a settlement engine.** XSD-valid does not mean the bank
   will accept the file (different settlement systems have different
-  business rules; the `--scheme` rulebook flag covers the major
-  SEPA ones).
+  business rules; the `--scheme` rulebook flag covers SEPA, a set of
+  domestic and cross-border rails, and purpose-code mandates, all
+  listed in [SCHEMES.md](SCHEMES.md)).
 
 ## Contact
 
 - **GitHub Private Vulnerability Reporting (preferred):**
   <https://github.com/sebastienrousseau/pain001/security/advisories/new>
 - **Email:** `security@pain001.com`
-- **GitHub Discussions (non-security questions):**
-  <https://github.com/sebastienrousseau/pain001/discussions>
+- **GitHub Issues (non-security questions):**
+  <https://github.com/sebastienrousseau/pain001/issues>

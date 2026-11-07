@@ -42,7 +42,7 @@ reproduced without reading YAML.
 | Docs lint (codespell, markdownlint) | `uvx codespell` · `npx markdownlint-cli2 "**/*.md"` | `docs-lint.yml` |
 | Docs build | `make docs` | `docs.yml` |
 | Tollgates (dependency, XSD, idempotency, env parity) | `make tollgates` | `ci.yml` |
-| Benchmarks (kept compiling, not asserted) | `make perf` | `nightly.yml` |
+| Benchmarks (kept compiling, not asserted) | `make perf` | `quality.yml` |
 | Fuzzing (Atheris harness in `fuzz/`) | `python fuzz/fuzz_validation.py -max_total_time=60` | `nightly.yml` |
 | Suite conformance (this repo against the family rules) | `poetry run pytest tests/test_suite_conformance.py` | `ci.yml` |
 | Suite consistency (published versions across the family) | `python3 scripts/check_suite_consistency.py` | `suite-consistency.yml` (daily) |

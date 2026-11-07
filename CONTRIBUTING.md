@@ -33,7 +33,7 @@ poetry run make lint
 poetry run make sec
 ```
 
-`make check` runs lint, coverage, security and corpus checks. It does not run
+`make check` runs lint, coverage, security, complexity and corpus checks. It does not run
 `make type`, so run that separately. `make test` runs the full suite with the
 **100% line and branch coverage floor**. Financial-data transformations need
 exercised success and failure paths. Coverage is necessary evidence, not proof

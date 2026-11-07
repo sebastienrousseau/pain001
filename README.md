@@ -120,8 +120,8 @@ checks data but is not a bank acceptance guarantee.
 Core, MCP, LSP, XLSX and MT101 packages follow the coordinated version policy;
 see [suite policy](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md).
 The new plugin scaffold and mockbank start separately at unreleased `0.0.1`.
-[Issue acceptance status](docs/issue-audit.md) distinguishes branch work from
-released packages. Companion packages are independently installed.
+The [issue acceptance audit](docs/issue-audit.md) is a historical 0.0.71
+record. Companion packages are independently installed.
 
 | Component | Purpose | Use case |
 | :--- | :--- | :--- |
@@ -201,8 +201,9 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
 - Request `suggest_record_fix` via MCP for review-only corrections. IBANs, BICs,
   amounts and currencies are refused, not guessed; see
   [correction decisions](docs/adr/0006-local-policies-and-safe-corrections.md).
-- Parse pain.002 status reports and camt.053 statements; build synthetic pain.002
-  reports. This is not a settlement engine.
+- Parse pain.002 status reports and camt.053 statements; build synthetic
+  pain.002 reports and camt.053 statements for tests. This is not a settlement
+  engine.
 - Run REST with `pain001 serve`, MCP with `pain001 mcp`, or the CSV language server
   with `pain001-lsp-builtin`, after installing the corresponding extras.
 - Generate typed clients from `openapi.json`; see the
@@ -244,8 +245,9 @@ above is also exercised directly by a documentation regression test.
   compliance, or settlement. Validate against your bank's authorized rules.
 - EBICS, AS2, SWIFT connectivity and real settlement simulation are not provided.
   Only the explicit SFTP adapter is implemented here.
-- camt.053 is a parser, not a statement generator; unrelated ISO families are
-  outside scope. Inputs must be row-shaped records or a supported plugin format.
+- The camt.053 builder produces synthetic test statements, not bank statements;
+  unrelated ISO families are outside scope. Inputs must be row-shaped records
+  or a supported plugin format.
 - Third-party plugins execute arbitrary Python with your process privileges.
 - The project has one maintainer; independent plugin-author validation for
   issue #179 remains outstanding. Development-branch changes are not releases.
@@ -312,7 +314,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.78; publication requires approved release PRs and signed release tags.
+is 0.0.79; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

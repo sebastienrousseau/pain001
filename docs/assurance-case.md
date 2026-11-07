@@ -55,7 +55,7 @@ it must withstand.
 
 | Threat | Concern |
 |---|---|
-| Malicious or malformed input file | A crafted CSV/XLSX/XML causing code execution, XXE, entity expansion, or resource exhaustion |
+| Malicious or malformed input file | A crafted CSV/JSON/XML file (or XLSX/MT101 through the companion loaders) causing code execution, XXE, entity expansion, or resource exhaustion |
 | Malicious template | A crafted Jinja template escaping into arbitrary execution (countered by `SandboxedEnvironment`, §5) |
 | Hostile dependency | A compromised or typosquatted package entering the build |
 | Tampered distribution | A modified wheel, sdist or image reaching a user |
@@ -71,9 +71,11 @@ it must withstand.
 - **Bank-side acceptance.** Schema validity is not settlement. The tool
   states this on every result surface; it is a correctness boundary,
   not a security one.
-- **Key management.** Pain001 holds no signing keys and performs no
-  payment authorisation. Channel credentials belong to the bank's
-  EBICS/SFTP/API client.
+- **Key management.** Pain001 stores no keys and performs no payment
+  authorisation. XML-DSig signing keys (`--xml-sign-key`) and SFTP
+  credentials (`pain001 upload --identity-file`, `--certificate`, the
+  SSH agent) are supplied by the operator for each run; keeping them
+  safe is the operator's responsibility.
 
 ---
 
@@ -81,7 +83,7 @@ it must withstand.
 
 ```
   ┌─ untrusted ─────────────────────────────────────────┐
-  │  input files (CSV, XLSX, MT101, JSON, XML)          │
+  │  input files (CSV, JSON, XML; XLSX/MT101 by plugin) │
   │  ISO schemas and templates supplied via --schema    │
   │  third-party plugins discovered via entry points    │
   │  REST API requests                                  │
@@ -100,17 +102,24 @@ it must withstand.
 **Boundary 1 — everything crossing it is untrusted.** Input files are
 parsed by hardened parsers, never `eval`-ed or executed. XML parsing
 uses `defusedxml`, so external entities and entity-expansion attacks are
-refused rather than mitigated after the fact. The project deliberately
-does not depend on `lxml`.
+refused rather than mitigated after the fact. `lxml` is optional (the
+`fast` extra) and used only as an XSD accept gate, with entity
+resolution, DTD loading and network access switched off; untrusted
+inbound XML is still parsed with `defusedxml`.
 
 **Boundary 2 — the process writes only where instructed.** `-o` is an
-output *directory*; the tool creates files there and nowhere else. It
-opens no outbound network connections: there is no `requests`, `httpx`,
-`urllib` or socket use anywhere in the package, which is what makes the
-"nothing leaves your machine" claim checkable rather than promised.
+output *directory*; the tool creates files there and nowhere else.
+Generation and validation open no outbound network connections. Only
+explicit, opt-in features do: `pain001 upload` (SFTP through `paramiko`,
+`upload` extra), the OpenTelemetry exporter (`otel` extra with
+`OTEL_ENABLED`), and the Redis job store and rate limiter (`redis`
+extra). Their code lives in `pain001/transport/`, `pain001/api/` and
+`pain001/observability/otel.py`,
+which keeps the "nothing leaves your machine unless you ask" claim
+checkable rather than promised.
 
 **Plugins sit outside the trust boundary by default.**
-`PAIN001_DISABLE_PLUGINS=1` disables discovery entirely, and
+`PAIN001_DISABLE_PLUGINS=name1,name2` disables the named plugins, and
 `pain001 plugins list` / `pain001 plugins show <name>` make every
 discovered plugin auditable before first use — the control that matters
 in a bank's locked-down environment.
@@ -119,7 +128,8 @@ in a bank's locked-down environment.
 
 ## 4. Secure design principles applied
 
-**Least privilege.** No network egress. No credential storage. No
+**Least privilege.** No network egress unless an opt-in feature above
+is used. No credential storage. No
 elevated permissions. The container runs as a non-root user. CI tokens
 are scoped `contents: read` by default, with write permissions granted
 per job only where a job publishes.
@@ -130,8 +140,9 @@ with a caveat. A `pain.002` response in a version whose schema is not
 bundled is refused explicitly instead of being silently skipped.
 
 **Economy of mechanism.** The XML path uses `xmlschema` and `defusedxml`
-only. Declining `lxml` removes a large C surface from a tool whose whole
-job is parsing hostile input.
+by default. `lxml` is an opt-in speed-up for XSD validation only: it can
+fast-path an accept, but a rejection is always re-checked by `xmlschema`,
+so installing it cannot turn a rejected document into an accepted one.
 
 **Complete mediation.** Every generated document is validated against
 the bundled ISO schema on the way out, not only on request.
@@ -153,8 +164,8 @@ provenance are all public.
 
 | Weakness | Countermeasure | Evidence |
 |---|---|---|
-| XXE / entity expansion (CWE-611, CWE-776) | `defusedxml` for all XML parsing; no `lxml` | `pain001/xml/`, dependency set |
-| Injection into generated XML (CWE-91) | Jinja `SandboxedEnvironment` with `select_autoescape`; values are data, never markup | `pain001/xml/generate_xml.py:394` |
+| XXE / entity expansion (CWE-611, CWE-776) | `defusedxml` for inbound XML parsing; the optional `lxml` gate runs with entities, DTDs and network off | `pain001/xml/validate_via_xsd.py`, dependency set |
+| Injection into generated XML (CWE-91) | Jinja `SandboxedEnvironment` with `select_autoescape`; values are data, never markup | `pain001/xml/generate_xml.py` (`SandboxedEnvironment`) |
 | Path traversal (CWE-22) | Output is a directory the operator names; no filename is taken from input data | CLI `-o` handling |
 | Deserialisation of untrusted data (CWE-502) | No `pickle`, `yaml.load`, or `eval` on input | `tests/`, CodeQL |
 | Uncontrolled resource consumption (CWE-400) | Streaming mode with `--chunk-size`; API rate limiting | `--streaming`, `PAIN001_RATE_LIMIT` |
@@ -195,8 +206,9 @@ not credible.
 ## 7. How to check these claims
 
 ```bash
-# No outbound network calls anywhere in the package
-grep -rE '\b(urlopen|requests\.|httpx\.|aiohttp)' pain001/   # expect: no matches
+# Network clients appear only in the opt-in transport and API backends
+grep -rlE 'import (socket|paramiko|redis)|from (paramiko|redis)|urlopen|httpx|aiohttp' pain001/
+# expect: only pain001/transport/ and pain001/api/ files
 
 # Release provenance covers every artefact and binds to the tag
 slsa-verifier verify-artifact pain001-<version>-py3-none-any.whl \

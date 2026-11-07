@@ -10,8 +10,9 @@ Large File Guidance
   ``1000`` or ``2000`` on developer machines.
 - Reuse bundled templates through the registry instead of repeatedly resolving
   custom paths.
-- Use ``scripts/benchmark_large_batches.py`` to measure the current branch on
-  representative data before changing chunk sizes.
+- Use ``benches/bench_generate.py`` (time and peak memory for eager and
+  streaming generation) to measure the current branch before changing chunk
+  sizes.
 
 CPU And Memory Trade-Offs
 =========================

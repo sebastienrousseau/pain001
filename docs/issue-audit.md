@@ -2,6 +2,11 @@
 
 # Open-issue audit for feat/v0.0.71
 
+> **Historical record.** This page is the 2026-09-25 audit and is kept as
+> written. All six issues have since been closed (#180, #184, #185, #186 and
+> #187 on 2026-09-25, #179 on 2026-10-21) and PR #297 was merged on
+> 2026-09-25. Check the issues themselves for their current state.
+
 Audit date: 2026-09-25. The six open issues were checked against core
 source, tests, the published companion source and their issue discussions.
 The implementation deliberately preserves the published version and the

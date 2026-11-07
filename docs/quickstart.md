@@ -3,7 +3,7 @@
 # Quickstart: from CSV to validated ISO 20022 in 10 minutes
 
 This guide walks you from "I have payment data in a spreadsheet" to
-"I have a validated `pain.001.001.03` XML the bank will accept" in
+"I have an XSD-validated `pain.001.001.03` XML file" in
 five short steps. No prior ISO 20022 knowledge required.
 
 If you already know what pain.001 is and just want the CLI flags,
@@ -31,7 +31,7 @@ Verify:
 
 ```bash
 pain001 --version
-# -> pain001 0.0.53
+# -> pain001, version <installed version>
 ```
 
 If you'd rather not pollute your global Python environment:
@@ -49,8 +49,9 @@ pip install pain001
 pain001 --help
 ```
 
-You'll see a command suite — `generate`, `validate`, `versions`,
-`inspect`, `init`, `serve`, `mcp`. We'll use four of them.
+You'll see the command suite (`generate`, `validate`, `versions`,
+`inspect`, `init` and the rest, each with its own `--help`). We'll use
+four of them.
 
 List the message types the library can generate:
 
@@ -94,14 +95,14 @@ Output:
 Edit it, then run: pain001 generate -t pain.001.001.03 -d my-payments.csv
 ```
 
-Open `my-payments.csv` in your editor. You'll see a single sample
-row with every column the schema needs (debtor IBAN, creditor IBAN,
-amount, etc.). Replace the values with your own.
+Open `my-payments.csv` in your editor. You'll see a few synthetic
+sample rows with every column the schema needs (debtor IBAN, creditor
+IBAN, amount, etc.). Replace the values with your own.
 
 > **Editor tip.** Install [`pain001-lsp`](https://pypi.org/project/pain001-lsp/)
 > if your editor speaks LSP — you'll get real-time IBAN / BIC
-> validation as you type. Or open the CSV in pain001's [REST API
-> Scalar viewer](https://sebastienrousseau.github.io/pain001/api-reference.html).
+> validation as you type. Or run `pain001 serve` (needs `pain001[api]`)
+> and use the browser dashboard at `/api/v1/ui` to validate a file.
 
 ## Step 4: Validate before generating
 
@@ -112,21 +113,17 @@ file would generate, *without* generating it. Use this in CI:
 pain001 validate -t pain.001.001.03 -d my-payments.csv
 ```
 
-Output (success):
+Output (success; the record count is the number of rows in your file):
 
 ```text
-✓ Data validation passed (1 payment records)
-```
+✓ Data validation passed (4 payment records)
 
-Output (failure):
-
-```text
-✗ Data validation failed: invalid IBAN at row 1, column
-  debtor_account_IBAN: DE89370400440532013ABC
+✓ All validations passed (--dry-run: no XML generated)
 ```
 
 Want to check it'll pass the SEPA Credit Transfer rulebook *as
-well as* the schema? Add `--scheme`:
+well as* the schema? Add `--scheme`. The scheme profiles are where
+IBAN check digits, currency and amount limits are enforced:
 
 ```bash
 pain001 validate -t pain.001.001.03 -d my-payments.csv --scheme sepa-sct
@@ -135,13 +132,23 @@ pain001 validate -t pain.001.001.03 -d my-payments.csv --scheme sepa-sct
 Output:
 
 ```text
-✓ Data validation passed (1 payment records)
+✓ Data validation passed (4 payment records)
+→ Validating against scheme 'sepa-sct'...
 ✓ Scheme 'sepa-sct' passed
 ```
 
-Six scheme profiles ship today: `sepa-sct`, `sepa-sdd`, `sepa-inst`,
-`sepa-b2b`, `xborder-ct`, and the cross-record `anti-duplicate`. Use the
-one that matches the clearing system your bank will route this through
+Output (failure, here a debtor IBAN with a broken check digit):
+
+```text
+  row 0 [SEPA-DBTR-IBAN] debtor_account_IBAN: debtor_account_IBAN must be a
+valid IBAN (ISO 13616 / mod-97)
+✗ Scheme 'sepa-sct' validation failed
+```
+
+Every scheme profile, from the SEPA rulebooks to domestic rails and the
+cross-record `anti-duplicate`, is listed in
+[SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md).
+Use the one that matches the clearing system your bank will route this through
 (`xborder-ct` accepts any ISO currency but one per file, since every row goes
 into a single payment block),
 and add `anti-duplicate` (comma-separated: `--scheme sepa-sct,anti-duplicate`)
@@ -157,9 +164,14 @@ Output:
 
 ```text
 ✓ Schema validation passed
-✓ Data validation passed (1 payment records)
-✓ XML generated and validated: outbox/pain.001.001.03.xml
+→ Generating XML payment files...
+
+✓ Success! XML files generated successfully.
+Message Type: pain.001.001.03
+Output Location: <your directory>/outbox
 ```
+
+The file is written as `outbox/pain.001.001.03.xml`.
 
 That file is **XSD-validated** — it conforms to the official ISO
 20022 schema. The amounts in it flow through `decimal.Decimal` end
@@ -169,20 +181,25 @@ totals are computed from the data (not echoed from input).
 Quick sanity-check the file:
 
 ```bash
-head -5 ./outbox/pain.001.001.03.xml
+head -7 ./outbox/pain.001.001.03.xml
 ```
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">
-  <CstmrCdtTrfInitn>
-    <GrpHdr>
-      <MsgId>MSG-0001</MsgId>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03 pain.001.001.03.xsd">
+    <CstmrCdtTrfInitn>
+        <GrpHdr>
+            <MsgId>1</MsgId>
 ```
 
-That XML is ready to send to your bank via whatever transport they
-prefer (SFTP, EBICS, web portal upload, etc.). pain001 does not
-transmit it — pair it with your bank channel of choice.
+XSD validity is not a guarantee that your bank will accept the file;
+check it against your bank's own rules. Generation never transmits the
+file. Send it through your bank's channel (SFTP, EBICS, web portal
+upload, etc.), or use `pain001 upload` (needs `pain001[upload]`) for an
+explicit SFTP delivery; see the
+[SFTP upload guide](https://github.com/sebastienrousseau/pain001/blob/main/docs/sftp-upload.md).
 
 ## What you just learned
 
@@ -197,8 +214,8 @@ That's 80% of the surface for 90% of users.
 
 | If you want to... | Read |
 | :--- | :--- |
-| Load data from JSON / SQLite / Parquet instead of CSV | [Input formats](https://github.com/sebastienrousseau/pain001/blob/main/README.md#features) |
-| Run pain001 as a REST service | [REST API](https://github.com/sebastienrousseau/pain001/blob/main/README.md#features) (collapsed section) |
+| Load data from JSON / SQLite / Parquet instead of CSV | [User guide](https://github.com/sebastienrousseau/pain001/blob/main/docs/usage.rst) and [input columns](https://github.com/sebastienrousseau/pain001/blob/main/docs/input-columns.md) |
+| Run pain001 as a REST service | [OPERATIONS.md](https://github.com/sebastienrousseau/pain001/blob/main/OPERATIONS.md) |
 | Stream large batches (millions of rows) | [`examples/09_streaming_large_batch.py`](https://github.com/sebastienrousseau/pain001/blob/main/examples/09_streaming_large_batch.py) |
 | Pass an Excel `.xlsx` directly | `pip install pain001-loader-xlsx` |
 | Wire pain001 into an AI assistant (Claude Desktop, etc.) | `pip install pain001-mcp` |
@@ -211,17 +228,16 @@ That's 80% of the surface for 90% of users.
 | Symptom | Likely cause | Fix |
 | :--- | :--- | :--- |
 | `pain001: command not found` | Install went to a directory not on `PATH` | Re-install in a venv (see Step 1) |
-| `Invalid XML message type` | Typo in the `-t` flag | Run `pain001 versions` and copy-paste exactly |
-| `invalid IBAN` for a known-good IBAN | Hidden whitespace or smart quotes | Re-type by hand, or pipe through `pain001 sanitize-to-charset` |
+| `Invalid value for '-t' / '--xml-message-type'` | Typo in the `-t` flag | Run `pain001 versions` and copy-paste exactly |
+| `must be a valid IBAN` for a known-good IBAN | Hidden whitespace or smart quotes | Re-type by hand, or clean the text with the `pain001.sanitize_to_charset` Python function |
 | `validation failed` but the schema is the one pain001 ships | Stale `pyproject.toml`-installed pain001 vs CLI-installed one | `pip install --upgrade pain001` |
-| `pain.008.xxxx` only generates SEPA Direct Debits, not Credit Transfers | Different message type | pain.001 = Credit Transfer, pain.008 = Direct Debit. See [Supported messages](https://github.com/sebastienrousseau/pain001/blob/main/README.md#features) |
+| `pain.008.xxxx` only generates SEPA Direct Debits, not Credit Transfers | Different message type | pain.001 = Credit Transfer, pain.008 = Direct Debit. Run `pain001 versions` for the bundled message types |
 
 ## Stuck?
 
-- [Open a GitHub Discussion](https://github.com/sebastienrousseau/pain001/discussions)
-  with the CLI invocation that failed + the error output.
 - [Open an issue](https://github.com/sebastienrousseau/pain001/issues/new/choose)
-  if you've found a bug.
+  with the CLI invocation that failed and the error output, whether
+  it is a question or a bug.
 - See [SUPPORT.md](https://github.com/sebastienrousseau/pain001/blob/main/SUPPORT.md) for the full support matrix.
 
 ---

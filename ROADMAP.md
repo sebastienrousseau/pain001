@@ -35,7 +35,7 @@ extend it without forking.
   companion service with multi-arch edge image on GHCR for sub-second
   ACCP/RJCT round-trip testing (#187).
 - **Example corpus & twins:** 100% schema coverage across all 13 bundled
-  XSDs (ADR-0003); 42 bank-ready market scenarios and 238 market files
+  XSDs (ADR-0003); bank-ready market scenarios and their market files
   with confidence chips; ISO JSON twins following ISO 20022 RA 2025
   conventions with byte-stable JSON Schema 2020-12 per edition; records
   twin with column gap analysis (ADR-0005).
@@ -51,10 +51,11 @@ extend it without forking.
   wrappers of any of them (`pain001[gpg]`, `--decrypt-key`); streaming
   for large batches; cross-version migration between pain.001 versions.
 - **Surfaces:** CLI command suite (`generate`, `validate`, `versions`,
-  `inspect`, `init`, `serve`, `mcp`, `upload`); REST `/api/v1`
+  `inspect`, `init`, `face`, `plugins`, `serve`, `mcp`, `upload`); REST `/api/v1`
   (auth, rate limiting, durable jobs, OpenAPI/Scalar, Prometheus
   `/metrics`) plus single-file browser dashboard at `/api/v1/ui`
-  (v0.0.66); MCP server (16 tools); LSP server with editor diagnostics.
+  (v0.0.66); in-tree MCP server (generation, validation, scheme checks
+  and review-only corrections); LSP server with editor diagnostics.
 - **Observability & Metrics:** Prometheus metrics engine on `/metrics`
   with transaction and latency quantiles; OpenTelemetry spans via
   `pain001[otel]` and `OTEL_ENABLED=true` for generator, scheme checks,
@@ -64,7 +65,7 @@ extend it without forking.
 - **Distribution & Provenance:** Official multi-arch Docker image at
   `ghcr.io/sebastienrousseau/pain001`, OpenAPI client SDK pipeline with
   drift-guard CI, SLSA Level 3 attestations, hash-locked dependencies.
-- **Quality:** **3,305 tests**, **100% line + branch coverage (100%
+- **Quality:** **100% line + branch coverage (100%
   enforced floor)**, `mypy --strict`, 100% docstring coverage,
   ruff + pydoclint + bandit clean, CodeQL + pip-audit clean, every
   example exercised in CI.
@@ -207,7 +208,7 @@ The single highest-impact item on this entire page.
      feedback from new users).
 4. Open an issue or discussion to claim one before starting.
 
-## Key metrics (current)
+## Key metrics (snapshot at v0.0.72)
 
 | Metric | v0.0.51 | v0.0.52 | v0.0.53 | **v0.0.72** |
 | :--- | :--- | :--- | :--- | :--- |

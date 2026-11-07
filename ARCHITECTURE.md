@@ -36,19 +36,23 @@ input file / list[dict]
 
 | Area | Module(s) | Responsibility |
 | :--- | :--- | :--- |
-| **Entry points** | `__main__.py`, `cli/cli.py`, `api/app.py`, `mcp/server.py`, `core/core.py` | CLI command group (`generate`/`validate`/`versions`/`inspect`/`init`/`serve`/`mcp`, with bare flags routed to `generate`), REST API, MCP server, and the `process_files` / `process_files_streaming` library API |
+| **Entry points** | `__main__.py`, `cli/cli.py`, `api/app.py`, `mcp/server.py`, `core/core.py` | CLI command group (`generate`/`validate`/`versions`/`inspect`/`init`/`face`/`plugins`/`upload`/`serve`/`mcp`, with bare flags routed to `generate`), REST API, MCP server, and the `process_files` / `process_files_streaming` library API |
 | **Input** | `data/loader.py` + `csv/`, `db/`, `json/`, `parquet/` | Unified extension-dispatch loader and per-format readers (batch + streaming) |
 | **Validation** | `validation/` | `schema_validator` (XSD-field types), `iban_validator`, `bic_validator`, `charset` (ISO 20022 Latin set), `schemes` (scheme rulebooks), `service` (orchestrator) |
-| **Generation** | `xml/` | `message_registry` (per-version data prep), `generate_xml`, `create_root_element`, `validate_via_xsd`, `write_xml_to_file` |
+| **Generation** | `xml/` | `message_registry` (per-version data prep), `generate_xml`, `create_root_element`, `validate_via_xsd`, `write_xml_to_file`, `envelope` (Business Application Header wrap and unwrap) |
 | **Templates** | `templates/` | `registry` (`TemplateMetadata`), `guardrails` (template/XSD drift checks); bundled assets under `templates/<message_type>/` |
 | **Migration** | `migration/version_mapper.py`, `migrate.py` | Map payment data between pain.001 versions via YAML mappings |
-| **Parsers / builders** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts; `pain002/generator.py` also *builds* pain.002 reports (round-trips with the parser) |
+| **Parsers / builders** | `pain002/`, `camt053/` | Read bank responses (status reports, statements) into dicts; `pain002/generator.py` and `camt053/generator.py` also *build* synthetic pain.002 reports and camt.053 statements (round-trip with the parsers) |
 | **API** | `api/app.py`, `api/models.py`, `api/job_manager.py`, `api/job_store.py`, `api/ratelimit.py`, `api/metrics.py` | FastAPI app (routes mounted under `/api/v1` with a hidden `/api` legacy alias), pydantic models, async job manager with an optional durable file store, an in-process rate-limit middleware, and a dependency-free Prometheus `/metrics` exporter |
 | **MCP** | `mcp/server.py` | FastMCP server (stdio) exposing generation/validation as tools, the XSD set as resources, and a guided prompt — thin adapters over the core, taking inline rows |
 | **LSP** | `lsp/diagnostics.py`, `lsp/server.py` | A dependency-free CSV diagnostic engine (IBAN/BIC/currency/charset, required columns) and a `pygls` stdio language server that feeds it to editors; VS Code client under `editors/vscode/` |
 | **Config** | `config/manager.py` | Layered configuration (CLI args, file, profiles) |
 | **Observability** | `logging_schema/` (package), `observability/` | Structured JSON logging with PII redaction; metric callbacks + OpenTelemetry trace context |
-| **Security** | `security/path_validator.py` | Path-traversal-safe path validation (CWE-22) |
+| **Security** | `security/path_validator.py`, `security/formula.py`, `security/dsig.py` | Path-traversal-safe path validation (CWE-22), CSV formula-injection shielding (CWE-1236), and XML-DSig RSA-SHA256 signing and verification (`sign` extra) |
+| **Plugins** | `plugins/` | Loader, validator, scheme and writer contracts, entry-point discovery, and the built-ins registered through them |
+| **Transport** | `transport/` | Explicit SFTP upload with trusted host keys and SSH identities (`upload` extra) |
+| **Rules** | `schematron/`, `validation/policy.py` | Schematron business-rule presets and private CEL policies (`rules` extra) |
+| **Corpus, twins and faces** | `corpus/`, `twins/`, `faces/` | Example corpus with provenance, ISO JSON twins and records twins, and JSON projections to other standards |
 | **Async** | `async_adapter.py` | `asyncio.to_thread` wrappers over the sync API |
 | **Shared** | `constants.py`, `exceptions.py` | Version, valid message types, paths; the exception hierarchy |
 
@@ -64,7 +68,7 @@ input file / list[dict]
   as a success.
 - **Scheme validation is a pluggable layer** on top of XSD: a
   `ValidationProfile` returns structured, per-row `SchemeViolation`s.
-- **Coverage is enforced at 98%**; only entry-point guards and genuinely
+- **Coverage is enforced at 100% line and branch**; only entry-point guards and genuinely
   defensive barriers are excluded (`# pragma: no cover`), never padded
   with fake tests.
 
