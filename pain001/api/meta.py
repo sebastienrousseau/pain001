@@ -46,6 +46,14 @@ TAGS_METADATA = [
         "description": "Poll, cancel, and manage asynchronous generation jobs.",
     },
     {
+        "name": "Faces",
+        "description": (
+            "Project a pain.001 document into another standard's JSON "
+            "shape (UK Open Banking, Berlin Group, ISO 20022 names) with a "
+            "loss report of every element not carried."
+        ),
+    },
+    {
         "name": "UI",
         "description": (
             "Backing endpoints for the hosted dashboard at `/api/v1/ui`: "

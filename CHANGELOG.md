@@ -30,6 +30,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   fetched at a pinned revision and SHA-256.
 - The compliance test fails on a tracked face bindings file or Message
   Definition Report.
+- Faces over REST: `GET /api/v1/faces` lists the faces and the binding
+  keys each accepts; `POST /api/v1/faces/{face}` takes the document as
+  XML text with optional bindings and returns the payload and the loss
+  report, `422` with the face's reason when it refuses.
+- `pain001.faces.project_face_text`, the entry point for documents a
+  client sends: XML text only (a string naming a server file is
+  refused, not read), no entity declarations or external references,
+  at most 10 MiB, bindings a JSON object.
+
+### Changed
+
+- The REST API's OpenAPI tag groups, description and reference page
+  moved from `pain001/api/app.py` to `pain001/api/meta.py`; nothing
+  served changes.
 
 ## [0.0.77] - 2026-11-06
 

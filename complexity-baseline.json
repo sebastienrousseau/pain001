@@ -24,7 +24,7 @@
     "lines": 71
   },
   "pain001/api/app.py": {
-    "file_lines": 921
+    "file_lines": 918
   },
   "pain001/api/app.py::_process_generation_job": {
     "cyclomatic": 11,
