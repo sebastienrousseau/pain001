@@ -40,12 +40,11 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
-from pain001.validation._scheme_rules import (
-    PROFILES,
+from pain001.validation._scheme_rules import PROFILES, ValidationProfile
+from pain001.validation._scheme_types import (
     REMEDIATIONS,
     SchemeValidationResult,
     SchemeViolation,
-    ValidationProfile,
 )
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.iban_validator import validate_iban_safe

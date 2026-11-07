@@ -58,9 +58,8 @@ from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import DataSourceError
-from pain001.plugins._builtins import _pain001_version
 from pain001.plugins._registration import BuiltinRegistry
-from pain001.plugins._version import PAIN001_API_VERSION
+from pain001.plugins._version import PAIN001_API_VERSION, _pain001_version
 from pain001.plugins.contracts import LoaderResult, PluginMeta
 
 logger = logging.getLogger(__name__)

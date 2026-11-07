@@ -20,5 +20,15 @@ Lives in its own module so both ``pain001.plugins`` and
 
 from __future__ import annotations
 
+from importlib import metadata
+
 PAIN001_API_VERSION: tuple[int, int] = (0, 54)
 """Bumped only when the public plugin Protocols change."""
+
+
+def _pain001_version() -> str:
+    """Return the running pain001's installed version (or ``\"0.0.0\"``)."""
+    try:
+        return metadata.version("pain001")
+    except metadata.PackageNotFoundError:  # pragma: no cover - dev install
+        return "0.0.0"

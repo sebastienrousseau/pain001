@@ -327,7 +327,7 @@
     "cyclomatic": 16
   },
   "pain001/validation/_scheme_rules.py": {
-    "file_lines": 718
+    "file_lines": 717
   },
   "pain001/validation/_scheme_rules.py::_check_amount": {
     "lines": 69
@@ -365,7 +365,7 @@
     "lines": 84
   },
   "pain001/validation/rails.py": {
-    "file_lines": 1388
+    "file_lines": 1387
   },
   "pain001/validation/rails.py::PurposeMandate.validate": {
     "cyclomatic": 11

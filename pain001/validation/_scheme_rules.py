@@ -33,7 +33,6 @@ from typing import Any
 
 from pain001.validation import _currency
 from pain001.validation._currency import _minor_units as _minor_units
-from pain001.validation._scheme_types import REMEDIATIONS as REMEDIATIONS
 from pain001.validation._scheme_types import (
     SchemeValidationResult as SchemeValidationResult,
 )

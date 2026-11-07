@@ -18,10 +18,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def test_scheme_exports_preserve_identity_and_qualified_names() -> None:
     """Internal rule extraction preserves public objects and pickle paths."""
-    from pain001.validation import _scheme_rules, schemes
+    from pain001.validation import _scheme_rules, _scheme_types, schemes
 
     assert schemes.PROFILES is _scheme_rules.PROFILES
-    assert schemes.REMEDIATIONS is _scheme_rules.REMEDIATIONS
+    assert schemes.REMEDIATIONS is _scheme_types.REMEDIATIONS
     for name in (
         "SchemeViolation",
         "SchemeValidationResult",

@@ -23,7 +23,7 @@ import pytest
 
 from pain001.exceptions import DataSourceError
 from pain001.plugins import PAIN001_API_VERSION, LoaderResult
-from pain001.plugins._builtins import _pain001_version
+from pain001.plugins._version import _pain001_version
 from pain001.plugins.builtins_gpg import (
     GpgDecryptError,
     _GpgDecryptingLoader,

@@ -21,9 +21,6 @@ from pain001.validation._scheme_rules import (
     PROFILES as PROFILES,
 )
 from pain001.validation._scheme_rules import (
-    REMEDIATIONS as REMEDIATIONS,
-)
-from pain001.validation._scheme_rules import (
     AntiDuplicateProfile as AntiDuplicateProfile,
 )
 from pain001.validation._scheme_rules import (
@@ -58,6 +55,9 @@ from pain001.validation._scheme_rules import (
 )
 from pain001.validation._scheme_rules import (
     remediation_for as remediation_for,
+)
+from pain001.validation._scheme_types import (
+    REMEDIATIONS as REMEDIATIONS,
 )
 
 
