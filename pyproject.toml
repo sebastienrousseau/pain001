@@ -385,4 +385,6 @@ also_copy = [
     "docs", "examples", "scenarios", "scripts", "benches", "requirements.txt",
     "DEVELOPMENT.md", "GOVERNANCE.md", "ARCHITECTURE.md", "SUPPORT.md",
     "RELEASING.md", "CITATION.cff",
+    # The release-notes test reads releases/vX.md once the version is dated.
+    "releases",
 ]
