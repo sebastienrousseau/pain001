@@ -202,6 +202,50 @@ def _remote_state(
     )
 
 
+_KEY_TYPES = (paramiko.RSAKey, paramiko.ECDSAKey, paramiko.Ed25519Key)
+# How paramiko reports a wrong passphrase: PEM keys, then OpenSSH keys.
+_WRONG_PASSPHRASE = ("Bad password", "checkints do not match")
+
+
+def _load_identity(
+    identity_file: str | None, passphrase: str | None
+) -> paramiko.PKey | None:
+    """Load the private key before any connection, naming what went wrong.
+
+    paramiko's own loading tries each key type and reports the last
+    failure, so a wrong passphrase reads as a key-format error.
+
+    Args:
+        identity_file: Private key filename, or None to use the defaults.
+        passphrase: Passphrase for an encrypted key, never logged.
+
+    Returns:
+        The loaded key, or None when no identity file was given.
+
+    Raises:
+        ValueError: If the key is encrypted and no passphrase was given,
+            the passphrase is wrong, or the file holds no supported key.
+    """
+    if identity_file is None:
+        return None
+    name = Path(identity_file).name
+    for key_type in _KEY_TYPES:
+        try:
+            return key_type.from_private_key_file(
+                identity_file, password=passphrase
+            )
+        except paramiko.PasswordRequiredException as exc:
+            raise ValueError(
+                f"Private key {name} is encrypted; supply its passphrase."
+            ) from exc
+        except paramiko.SSHException as exc:
+            if any(sign in str(exc) for sign in _WRONG_PASSPHRASE):
+                raise ValueError(
+                    f"Could not unlock private key {name}: wrong passphrase."
+                ) from exc
+    raise ValueError(f"{name} is not an RSA, ECDSA or Ed25519 private key.")
+
+
 def upload_sftp(
     file_path: str,
     url: str,
@@ -265,8 +309,7 @@ def upload_sftp(
             port=target.port,
             username=target.username,
             password=password,
-            key_filename=identity_file,
-            passphrase=passphrase,
+            pkey=_load_identity(identity_file, passphrase),
             allow_agent=identity_file is None and password is None,
             look_for_keys=identity_file is None and password is None,
             timeout=timeout,

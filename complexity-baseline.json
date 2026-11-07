@@ -314,7 +314,7 @@
   "pain001/transport/sftp.py::upload_sftp": {
     "cognitive": 16,
     "cyclomatic": 16,
-    "lines": 107
+    "lines": 106
   },
   "pain001/twins/iso_json.py::_decode_node": {
     "cognitive": 20,
