@@ -13,7 +13,7 @@ authors:
     given-names: Sebastien
     email: sebastian.rousseau@gmail.com
 version: "0.0.78"
-date-released: "2026-11-06"
+date-released: "2026-11-07"
 # Dual-licensed: Apache-2.0 OR MIT, at the user's option. CFF 1.2.0 takes
 # a list of SPDX identifiers here, not an SPDX expression.
 license:

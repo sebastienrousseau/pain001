@@ -9,7 +9,7 @@ small, well-tested core, first-class developer surfaces (library, CLI,
 REST, MCP, LSP), and a formal plugin contract so the ecosystem can
 extend it without forking.
 
-## Where we are (v0.0.77 shipped 2026-11-06 with the whole suite)
+## Where we are (v0.0.78 shipped 2026-11-07 with the whole suite)
 
 - **Generation:** pain.001.001.03 to .13, pain.008.001.02 and .08,
   registry-driven, `Decimal` end-to-end, mandatory XSD validation
@@ -81,11 +81,11 @@ version numbers.
 
 | Package | Role | Latest |
 | :--- | :--- | :--- |
-| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.77 |
-| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (26 tools) | 0.0.77 |
-| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.77 |
-| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.77 |
-| [`pain001-loader-mt101`](https://pypi.org/project/pain001-loader-mt101/) | SWIFT MT101 loader plugin | 0.0.77 |
+| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.78 |
+| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (28 tools) | 0.0.78 |
+| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.78 |
+| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.78 |
+| [`pain001-loader-mt101`](https://pypi.org/project/pain001-loader-mt101/) | SWIFT MT101 loader plugin | 0.0.78 |
 | [`pain001-plugin-template`](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter scaffold for external plugins | 0.0.1 (unreleased) |
 | [`pain001-mockbank`](https://github.com/sebastienrousseau/pain001-mockbank) | Synthetic SFTP bank response test service | 0.0.1 (edge image) |
 
@@ -149,11 +149,11 @@ per country and rail with provenance and an evidence state.
 | v0.0.68 | Tier-1 market packs (UK, SEPA core countries, US, CH, SE), overlay tooling to apply a bank's guideline privately, website corpus page, MCP and LSP corpus tools | ✅ v0.0.68 |
 | v0.0.69 | Tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence chips; CSV pipeline extension for the twelve most-used rails; the pain.001 twin foundation (ISO JSON twins, JSON Schema per edition, records twin, ADR-0005) | ✅ v0.0.69 |
 
-### Next releases *(v0.0.77+)*
+### Next releases *(v0.0.79+)*
 
 | Milestone | Scope | Effort | Status |
 | :--- | :--- | :--- | :--- |
-| **Faces engine (ADR-0005 Phase B & C)** | Outbound JSON projections of pain.001 to compatible standards: UK Open Banking Payment Initiation API and Berlin Group NextGenPSD2, plus the ISO 2018 compatibility face backed by a name table derived from the Message Definition Reports, with per-occurrence loss reports and CI validation against the published schemas, served by the library, the CLI, the REST API, pain001-mcp and pain001-lsp. | M | v0.0.78 (in progress) |
+| **Faces engine (ADR-0005 Phase B & C)** | Outbound JSON projections of pain.001 to compatible standards: UK Open Banking Payment Initiation API and Berlin Group NextGenPSD2, plus the ISO 2018 compatibility face backed by a name table derived from the Message Definition Reports, with per-occurrence loss reports and CI validation against the published schemas, served by the library, the CLI, the REST API, pain001-mcp and pain001-lsp. | M | ✅ v0.0.78 |
 | **Mutation floor hardening** | Pin ordering and timing dependencies in the fast mutation tier tests to eliminate variance (2,941 mutants), raising `MUTATION_FLOOR` from 80% to >=85%. | M | planned |
 | **Twin import (ADR-0005 Phase D)** | Inbound deserialization: read ISO JSON twins and Open Banking / Berlin Group payloads back into canonical payment instruction models and validated XML documents. | L | planned |
 | **Ecosystem discovery** | Submit `pain001-mcp` to `awesome-mcp-servers` and `pain001-lsp` to `awesome-language-servers` per `scripts/awesome-list-submissions.md`. | S | ready |
