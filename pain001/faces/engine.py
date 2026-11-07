@@ -28,6 +28,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from defusedxml import DefusedXmlException
+from defusedxml.ElementTree import ParseError
+from defusedxml.ElementTree import fromstring as _defused_fromstring
+
 from pain001.faces import berlin_group, iso_2018, uk_open_banking
 from pain001.faces.models import FaceError, FaceResult, LossReport
 from pain001.faces.paths import leaf_paths
@@ -67,6 +71,12 @@ _REGISTRY: dict[str, _Face] = {
         iso_2018.BINDINGS,
     ),
 }
+
+MAX_INLINE_BYTES = 10 * 1024 * 1024
+"""Largest document :func:`project_face_text` accepts, in UTF-8 bytes.
+
+The same 10 MiB the REST dashboard accepts for an upload.
+"""
 
 _VERSION_RE = re.compile(
     r"urn:iso:std:iso:20022:tech:xsd:(pain\.001\.001\.\d{2})"
@@ -196,3 +206,50 @@ def project_face(
             unmapped_paths=tuple(sorted(leaves - set(mapped))),
         ),
     )
+
+
+def project_face_text(
+    xml: str,
+    face: str = "uk_open_banking",
+    *,
+    version: str | None = None,
+    bindings: dict[str, Any] | None = None,
+) -> FaceResult:
+    """Project a document a client sent as text, never read from a path.
+
+    :func:`project_face` reads a string that names an existing file, a
+    convenience for the library and the command line. A surface that
+    takes the document from someone else (the REST API, the MCP
+    server, the language server) calls this instead: the text must be
+    XML, at most :data:`MAX_INLINE_BYTES`, with no entity declarations
+    or external references, and the bindings must be a JSON object.
+
+    Args:
+        xml: The pain.001 document as XML text.
+        face: The name of the target standard.
+        version: Optional explicit pain.001 edition (detected if omitted).
+        bindings: Optional private side inputs the face accepts.
+
+    Returns:
+        A :class:`FaceResult`, as :func:`project_face` returns it.
+
+    Raises:
+        FaceError: If the text is not XML, is too large, declares
+            entities or external references, the bindings are not an
+            object, or :func:`project_face` refuses the document.
+    """
+    if not isinstance(xml, str) or not xml.lstrip().startswith("<"):
+        raise FaceError("expected the pain.001 document as XML text")
+    if len(xml.encode("utf-8")) > MAX_INLINE_BYTES:
+        raise FaceError(
+            f"document exceeds {MAX_INLINE_BYTES // (1024 * 1024)} MiB"
+        )
+    if bindings is not None and not isinstance(bindings, dict):
+        raise FaceError("bindings must be a JSON object")
+    try:
+        _defused_fromstring(xml)
+    except DefusedXmlException as exc:
+        raise FaceError(f"refused XML: {exc}") from exc
+    except ParseError as exc:
+        raise FaceError(f"not well-formed XML: {exc}") from exc
+    return project_face(xml, face, version=version, bindings=bindings)

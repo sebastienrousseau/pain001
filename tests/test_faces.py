@@ -26,6 +26,7 @@ from click.testing import CliRunner
 from pain001.cli.cli import cli
 from pain001.corpus import get_file, list_files
 from pain001.faces import (
+    MAX_INLINE_BYTES,
     FaceError,
     FaceResult,
     LossReport,
@@ -34,6 +35,7 @@ from pain001.faces import (
     engine,
     list_supported_faces,
     project_face,
+    project_face_text,
     register_face,
 )
 from pain001.faces.berlin_group import project_berlin_group
@@ -512,6 +514,55 @@ def test_project_face_inputs_and_errors(tmp_path: Path) -> None:
         project_face(
             "<invalid>xml", face="iso_2018", version="pain.001.001.03"
         )
+
+
+def test_project_face_text_matches_project_face() -> None:
+    """Inline XML from a client gives the same result as the library call."""
+    expected = project_face(SALARY_09, face="berlin_group").to_dict()
+    assert (
+        project_face_text(SALARY_09, face="berlin_group").to_dict() == expected
+    )
+
+
+def test_project_face_text_never_reads_a_path(tmp_path: Path) -> None:
+    """A string naming a server file is refused, not read."""
+    xml_file = tmp_path / "p.xml"
+    xml_file.write_text(SALARY_09, encoding="utf-8")
+    with pytest.raises(FaceError, match="expected the pain.001 document"):
+        project_face_text(str(xml_file), face="berlin_group")
+    not_text: Any = xml_file
+    with pytest.raises(FaceError, match="expected the pain.001 document"):
+        project_face_text(not_text, face="berlin_group")
+
+
+@pytest.mark.parametrize(
+    "xml",
+    [
+        '<!DOCTYPE d [<!ENTITY a "aaaa">]><d>&a;</d>',
+        '<!DOCTYPE d [<!ENTITY x SYSTEM "file:///etc/passwd">]><d>&x;</d>',
+    ],
+    ids=["internal-entity", "external-entity"],
+)
+def test_project_face_text_refuses_entities(xml: str) -> None:
+    """Entity declarations (billion laughs, XXE) never reach the parser."""
+    with pytest.raises(FaceError, match="refused XML"):
+        project_face_text(xml, face="iso_2018")
+
+
+def test_project_face_text_refuses_bad_input() -> None:
+    """Malformed, oversized and wrongly typed input is refused."""
+    with pytest.raises(FaceError, match="not well-formed XML"):
+        project_face_text("<a><b></a>", face="iso_2018")
+    oversized = "<a>" + "x" * MAX_INLINE_BYTES + "</a>"
+    with pytest.raises(FaceError, match="exceeds 10 MiB"):
+        project_face_text(oversized, face="iso_2018")
+    not_an_object: Any = ["ConsentId"]
+    with pytest.raises(FaceError, match="bindings must be a JSON object"):
+        project_face_text(
+            SALARY_09, face="uk_open_banking", bindings=not_an_object
+        )
+    with pytest.raises(FaceError, match="unknown face 'nope'"):
+        project_face_text(SALARY_09, face="nope")
 
 
 @pytest.mark.parametrize(

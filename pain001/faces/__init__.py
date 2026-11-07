@@ -25,15 +25,18 @@ value the target requires, it refuses the document with a :class:`FaceError`.
 from __future__ import annotations
 
 from pain001.faces.engine import (
+    MAX_INLINE_BYTES,
     available_faces,
     detect_version,
     list_supported_faces,
     project_face,
+    project_face_text,
     register_face,
 )
 from pain001.faces.models import FaceError, FaceResult, LossReport
 
 __all__ = [
+    "MAX_INLINE_BYTES",
     "FaceError",
     "FaceResult",
     "LossReport",
@@ -41,5 +44,6 @@ __all__ = [
     "detect_version",
     "list_supported_faces",
     "project_face",
+    "project_face_text",
     "register_face",
 ]
