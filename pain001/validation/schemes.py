@@ -60,6 +60,24 @@ from pain001.validation._scheme_types import (
     REMEDIATIONS as REMEDIATIONS,
 )
 
+#: The stable scheme API. The rule classes live in private modules and are
+#: re-exported here; listing them marks the imports as public exports.
+__all__ = [
+    "PROFILES",
+    "REMEDIATIONS",
+    "AntiDuplicateProfile",
+    "CrossBorderCreditTransferProfile",
+    "SchemeValidationResult",
+    "SchemeViolation",
+    "SepaB2BDirectDebitProfile",
+    "SepaCreditTransferProfile",
+    "SepaDirectDebitProfile",
+    "SepaInstantCreditTransferProfile",
+    "ValidationProfile",
+    "remediation_for",
+    "validate_scheme",
+]
+
 
 def _split_profile_spec(profile: str) -> list[str]:
     """Split a profile spec into distinct names, first occurrence first.
