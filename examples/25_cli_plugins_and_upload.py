@@ -22,8 +22,10 @@ Demonstrates the CLI commands the other examples leave out:
   export; it changes no settings, which this script checks
 * ``upload`` - SFTP delivery: the local refusals (no network), then a
   real round trip against a throwaway SFTP server this script starts
-  on ``127.0.0.1`` with a fresh host key and a synthetic password
-* ``serve --help`` - the REST launcher's options (no server started)
+  on ``127.0.0.1`` with a fresh host key, logging in first with a
+  synthetic password and then with a passphrase-protected private key
+* ``serve --help`` - the REST launcher's options (26_rest_server.py
+  starts the server itself)
 
 Every subprocess runs with a temporary ``HOME`` and ``XDG_CONFIG_HOME``
 so nothing touches the user's real configuration or SSH trust files.
@@ -53,6 +55,8 @@ assert _SAMPLE.example_xml_path is not None, "bundle ships a sample XML"
 SAMPLE_XML: Path = _SAMPLE.example_xml_path
 PASSWORD_ENV = "EXAMPLE_SFTP_PASSWORD"
 PASSWORD = "example-only"  # nosec B105 - synthetic loopback credential
+PASSPHRASE_ENV = "EXAMPLE_SFTP_KEY_PASSPHRASE"
+PASSPHRASE = "example-key-only"  # nosec B105 - synthetic loopback key
 
 
 def isolated_env(home: Path) -> dict[str, str]:
@@ -172,21 +176,30 @@ def _upload_local_checks(cwd: Path, env: dict[str, str]) -> None:
         print(f"upload refusal        -> exit {code} ({needle!r})")
 
 
-def _auth_class() -> type:
-    """Build the loopback server's password check (needs ``paramiko``)."""
+def _auth_class(client_key: object) -> type:
+    """Build the loopback server's credential checks (needs ``paramiko``).
+
+    Args:
+        client_key: The only public key the ``ops`` account accepts.
+    """
     import paramiko
 
     class LoopbackAuth(paramiko.ServerInterface):
         """Accept only the synthetic ``ops`` account on session channels."""
 
         def check_auth_password(self, username: str, password: str) -> int:
-            """Validate the synthetic credentials."""
+            """Validate the synthetic password."""
             ok = (username, password) == ("ops", PASSWORD)
             return paramiko.AUTH_SUCCESSFUL if ok else paramiko.AUTH_FAILED
 
+        def check_auth_publickey(self, username: str, key: object) -> int:
+            """Accept the one generated client key for ``ops``."""
+            ok = username == "ops" and key == client_key
+            return paramiko.AUTH_SUCCESSFUL if ok else paramiko.AUTH_FAILED
+
         def get_allowed_auths(self, username: str) -> str:
-            """Advertise password authentication only."""
-            return "password"
+            """Advertise password and public-key authentication."""
+            return "password,publickey"
 
         def check_channel_request(self, kind: str, chanid: int) -> int:
             """Permit SSH session channels only."""
@@ -246,7 +259,11 @@ def _files_class() -> type:
 
 
 def _serve_one(
-    connection: socket.socket, key: object, root: Path, stop: Event
+    connection: socket.socket,
+    key: object,
+    root: Path,
+    stop: Event,
+    client_key: object,
 ) -> None:
     """Run one SSH session with an SFTP subsystem rooted at ``root``."""
     import paramiko
@@ -257,19 +274,22 @@ def _serve_one(
             transport.set_subsystem_handler(
                 "sftp", paramiko.SFTPServer, _files_class(), root=root
             )
-            transport.start_server(server=_auth_class()())
+            transport.start_server(server=_auth_class(client_key)())
             while transport.is_active() and not stop.wait(0.01):
                 pass
     except (EOFError, OSError, paramiko.SSHException):
         pass  # --print-host-key and a rejected pin hang up mid-handshake
 
 
-def _start_sftp_server(root: Path, stop: Event) -> tuple[int, str]:
+def _start_sftp_server(
+    root: Path, stop: Event, client_key: object
+) -> tuple[int, str]:
     """Start a throwaway SFTP server on loopback.
 
     Args:
         root: Directory the server exposes as its filesystem root.
         stop: Event that ends the server thread when set.
+        client_key: Public key accepted for the ``ops`` account.
 
     Returns:
         The bound port and the host key's SHA256 fingerprint.
@@ -295,20 +315,56 @@ def _start_sftp_server(root: Path, stop: Event) -> tuple[int, str]:
                     connection, _ = listener.accept()
                 except TimeoutError:
                     continue
-                _serve_one(connection, key, root, stop)
+                _serve_one(connection, key, root, stop, client_key)
 
     Thread(target=serve, daemon=True).start()
     return listener.getsockname()[1], fingerprint(key)
+
+
+def _client_key(work: Path) -> tuple[object, Path]:
+    """Generate the client's key pair and save it passphrase-protected.
+
+    Returns:
+        The key and the path of its encrypted private-key file.
+    """
+    import paramiko
+
+    key = paramiko.RSAKey.generate(2048)
+    path = work / "id_rsa"
+    key.write_private_key_file(str(path), password=PASSPHRASE)
+    return key, path
+
+
+def _upload_with_key(
+    work: Path, env: dict[str, str], url: str, pin: str, key_file: Path
+) -> None:
+    """Log in with the private key, then refuse a wrong passphrase."""
+    args = [str(SAMPLE_XML), "--sftp", url, "--accept-host-key", pin]
+    args += ["--identity-file", str(key_file), "--passphrase-env"]
+    args += [PASSPHRASE_ENV]
+    keyed_env = env | {PASSPHRASE_ENV: PASSPHRASE}
+    result = run_cli(["upload", *args], work, keyed_env)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert result.stdout.startswith("Uploaded"), result.stdout
+    print("upload (private key)  -> exit 0 (Uploaded, no password)")
+
+    wrong_env = env | {PASSPHRASE_ENV: "not-the-passphrase"}
+    result = run_cli(["upload", *args], work, wrong_env)
+    assert result.returncode == 1, result.stdout + result.stderr
+    assert "wrong passphrase" in result.stderr, result.stderr
+    print("upload (bad passphrase) -> exit 1 (wrong passphrase, offline)")
 
 
 def _upload_round_trip(work: Path, env: dict[str, str]) -> None:
     """Pin, upload, retry and reject a wrong pin against loopback SFTP."""
     remote = work / "remote"
     (remote / "inbox").mkdir(parents=True)
+    (remote / "keyed").mkdir()
     known_hosts = work / "known_hosts"
     known_hosts.write_text("", encoding="utf-8")  # trust nothing by default
+    client_key, key_file = _client_key(work)
     stop = Event()
-    port, pin = _start_sftp_server(remote.resolve(), stop)
+    port, pin = _start_sftp_server(remote.resolve(), stop, client_key)
     url = f"sftp://ops@127.0.0.1:{port}/inbox/"
     env = env | {PASSWORD_ENV: PASSWORD}
     try:
@@ -336,6 +392,11 @@ def _upload_round_trip(work: Path, env: dict[str, str]) -> None:
         )
         assert result.returncode == 1 and "Host key mismatch" in result.stderr
         print("upload (wrong pin)    -> exit 1 (refused before auth)")
+
+        keyed_url = f"sftp://ops@127.0.0.1:{port}/keyed/"
+        _upload_with_key(work, env, keyed_url, pin, key_file)
+        keyed = remote / "keyed" / SAMPLE_XML.name
+        assert keyed.read_bytes() == SAMPLE_XML.read_bytes()
     finally:
         stop.set()
     assert known_hosts.read_text(encoding="utf-8") == "", "trust not saved"
@@ -363,7 +424,7 @@ def main() -> None:
         result = run_cli(["serve", "--help"], work, env)
         assert result.returncode == 0, result.stdout + result.stderr
         assert "--host" in result.stdout and "127.0.0.1" in result.stdout
-        print("serve --help          -> exit 0 (no server started)")
+        print("serve --help          -> exit 0 (see 26_rest_server.py)")
         assert not any(home.rglob("*")), "nothing persisted under HOME"
 
 

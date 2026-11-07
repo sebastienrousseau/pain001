@@ -38,7 +38,8 @@ python examples/01_generate_xml_file.py
 | `22_envelope_and_signing.py` | Wrap a generated pain.001 in a Business Application Header, unpack it, sign it with XML-DSig RSA-SHA256, verify it, and see a changed amount rejected (`pip install pain001[sign]`) |
 | `23_streaming_output.py` | Stream XML as chunks and straight to a file with `stream_xml_chunks` / `stream_xml_to_file` (same bytes as `generate_xml_string`, XSD-valid), and what `normalize_payment_records` / `canonicalize_payment_record` do to a row |
 | `24_templates_and_errors.py` | Query and guard the template registry (`DEFAULT_TEMPLATE_REGISTRY`, `TemplateRegistry`, `validate_registry`), catch `DataSourceError` and `PaymentValidationError`, inspect `SchemeValidationResult` / `SchemeViolation`, and receive `MetricEvent`s |
-| `25_cli_plugins_and_upload.py` | `plugins list/show/disable`, `upload` (its offline refusals and an SFTP round trip against a throwaway loopback server, `upload` extra) and `serve --help`, with a temporary HOME |
+| `25_cli_plugins_and_upload.py` | `plugins list/show/disable`, `upload` (its offline refusals, then an SFTP round trip against a throwaway loopback server with password login and with a passphrase-protected private key, `upload` extra) and `serve --help`, with a temporary HOME |
+| `26_rest_server.py` | `pain001 serve` started for real on a free loopback port: health check, `PAIN001_API_KEY` bearer auth (401 without, 200 with), validation over HTTP, and a graceful SIGTERM shutdown (`api` extra) |
 
 Install the development environment with `poetry install --all-extras --with dev`
 before running the complete suite. Examples illustrate workflows; they do not

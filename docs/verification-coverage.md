@@ -36,7 +36,8 @@ are representative workflows. Paths in this table are repository-relative.
 | Business Application Header and XML-DSig | `tests/test_xml_envelope.py`, `tests/test_xml_dsig.py`, `tests/test_core_bah_dsig.py` | `examples/22_envelope_and_signing.py` |
 | Streamed output and record normalisation | `tests/test_xml_streaming.py`, `tests/test_streaming_pipeline.py` | `examples/23_streaming_output.py` |
 | Template registry, typed errors and metric events | `tests/test_template_registry.py`, `tests/test_schema_guardrails.py`, `tests/test_exceptions.py` | `examples/24_templates_and_errors.py` |
-| Plugin and upload CLI | `tests/test_plugins_cli.py`, `tests/test_sftp_cli.py`, `tests/test_sftp_roundtrip.py` | `examples/25_cli_plugins_and_upload.py` |
+| Plugin and upload CLI | `tests/test_plugins_cli.py`, `tests/test_sftp_cli.py`, `tests/test_sftp_roundtrip.py`, `tests/test_sftp_upload.py` | `examples/25_cli_plugins_and_upload.py` |
+| REST server launcher and API-key auth | `tests/test_api.py`, `tests/test_cli_subcommands.py` | `examples/26_rest_server.py` |
 | SFTP trust, atomic upload and retries | `tests/test_sftp_upload.py`, `tests/test_sftp_cli.py` | `tests/test_sftp_roundtrip.py` (real loopback SSH/SFTP, synthetic credentials) |
 | Encryption and security boundaries | `tests/test_plugins_gpg.py`, `tests/test_plugins_gpg_keyfile.py`, `tests/test_template_security.py`, `tests/test_code_scanning_regressions.py` | Focused regression fixtures; no real keys, bank accounts or external bank connection |
 

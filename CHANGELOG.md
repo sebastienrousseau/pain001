@@ -11,10 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Examples 21 to 25 cover faces, the Business Application Header and
+- Examples 21 to 26 cover faces, the Business Application Header and
   XML signing, streamed output and record normalisation, the template
-  registry, typed errors and metric events, and the `plugins`,
-  `upload` and `serve` commands. `tests/test_examples.py` now fails
+  registry, typed errors and metric events, the `plugins` and `upload`
+  commands (password and private-key login against a loopback SFTP
+  server), and `pain001 serve` started for real with API-key auth and a
+  graceful shutdown. `tests/test_examples.py` now fails
   when a name in `pain001.__all__` or a CLI command has no example,
   and every new example is in `docs/verification-coverage.md`.
 
@@ -37,6 +39,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `--help` for `upload`, `face`, `validate`, `versions`, `inspect`,
   `init`, `serve` and `plugins list/show` no longer prints the
   function's `Args:` and `Raises:` sections.
+- `pain001 upload --identity-file` loads the key before connecting and
+  names the problem: a missing passphrase, a wrong one, or a file that
+  is not an RSA, ECDSA or Ed25519 key. paramiko reported the last key
+  type it tried, so a wrong passphrase read "encountered RSA key,
+  expected OPENSSH key".
 - XML signing declares its dependency: `pip install pain001[sign]`
   installs `cryptography`, which `sign_xml_document`,
   `verify_xml_signature` and `--xml-sign-key` import at call time. It
