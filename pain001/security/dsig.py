@@ -79,7 +79,7 @@ def _get_cryptography_modules() -> tuple[Any, Any, Any, Any]:
     except ImportError as err:
         raise XmlSignatureError(
             "The 'cryptography' package is required for XML-DSig RSA signing. "
-            "Install it via `pip install cryptography`."
+            "Install it via `pip install pain001[sign]`."
         ) from err
     return serialization, hashes, padding, x509
 
