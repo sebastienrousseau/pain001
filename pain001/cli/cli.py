@@ -30,7 +30,8 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
-from pain001.config import ConfigManager
+from pain001.cli._config import _resolve_config
+from pain001.cli._paths import _file_not_directory, _resolve_template_assets
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
 from pain001.constants import (
@@ -336,23 +337,6 @@ def _print_template_details(message_type: str) -> None:
     )
 
 
-def _resolve_template_assets(
-    xml_message_type: str,
-    xml_template_file_path: str | None,
-    xsd_schema_file_path: str | None,
-) -> tuple[str, str]:
-    """Resolve template/schema from registry when paths are omitted."""
-    if xml_template_file_path and xsd_schema_file_path:
-        return xml_template_file_path, xsd_schema_file_path
-    template_path, schema_path = DEFAULT_TEMPLATE_REGISTRY.resolve_paths(
-        xml_message_type
-    )
-    return (
-        xml_template_file_path or template_path,
-        xsd_schema_file_path or schema_path,
-    )
-
-
 def _generate_xml_files(
     _logger: logging.Logger,
     xml_message_type: str,
@@ -566,15 +550,14 @@ def _generate_xml_files(
 )
 @click.option(
     "--streaming/--no-streaming",
-    default=False,
+    default=None,
     help="Process input in chunks and generate one XML file per chunk.",
 )
 @click.option(
     "--chunk-size",
-    default=1000,
-    show_default=True,
+    default=None,
     type=click.IntRange(min=1),
-    help="Number of payment rows per streaming chunk.",
+    help="Number of payment rows per streaming chunk (default: 1000).",
 )
 @click.option(
     "--profile",
@@ -601,7 +584,7 @@ def _generate_xml_files(
 @click.option(
     "--emit-metrics",
     is_flag=True,
-    default=False,
+    default=None,
     help="Emit lightweight timing and lifecycle metrics to stdout.",
 )
 @click.option(
@@ -716,13 +699,13 @@ def main(
     output_dir: str | None,
     dry_run: bool,
     verbose: bool,
-    streaming: bool,
-    chunk_size: int,
+    streaming: bool | None,
+    chunk_size: int | None,
     profile: str | None,
     show_config: bool,
     list_templates: bool,
     show_template: str | None,
-    emit_metrics: bool,
+    emit_metrics: bool | None,
     scheme: str | None,
     explain: bool,
     scheme_format: str,
@@ -740,7 +723,7 @@ def main(
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
-
+    \f
     Args:
         xml_message_type: ISO 20022 message type (e.g., 'pain.001.001.03').
         xml_template_file_path: Path to Jinja2 XML template file.
@@ -801,8 +784,7 @@ def main(
         _print_template_details(show_template)
         return
 
-    config_manager = ConfigManager()
-    resolved_config = config_manager.resolve(
+    resolved_config = _resolve_config(
         {
             "xml_message_type": xml_message_type,
             "xml_template_file_path": (
@@ -824,7 +806,7 @@ def main(
             "chunk_size": chunk_size,
             "profile": profile,
             "emit_metrics": emit_metrics,
-        }
+        },
     )
 
     xml_message_type = resolved_config.get("xml_message_type")
@@ -1127,7 +1109,7 @@ def validate_cmd(
     A named alias for ``generate --dry-run`` that reuses the same template
     resolution and validation pipeline, so CI pre-flight checks read as a
     first-class command.
-
+    \f
     Args:
         ctx: The active Click context, used to invoke ``generate``.
         xml_message_type: ISO 20022 message type to validate against.
@@ -1171,7 +1153,7 @@ def validate_cmd(
 )
 def versions_cmd(as_json: bool) -> None:
     """List the ISO 20022 message types this build can generate.
-
+    \f
     Args:
         as_json: If True, print a JSON array instead of a table.
     """
@@ -1196,7 +1178,7 @@ def versions_cmd(as_json: bool) -> None:
 )
 def inspect_cmd(message_type: str, as_json: bool) -> None:
     """Show the bundled template, schema, and accepted formats for a type.
-
+    \f
     Args:
         message_type: ISO 20022 message type to inspect.
         as_json: If True, print a JSON object instead of formatted text.
@@ -1232,12 +1214,13 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
     "--output",
     "output_path",
     type=click.Path(dir_okay=False, writable=True),
+    callback=_file_not_directory,
     default=None,
     help="Where to write the starter CSV (default: ./<message_type>.csv).",
 )
 def init_cmd(message_type: str, output_path: str | None) -> None:
     """Scaffold a starter CSV for a message type from its bundled example.
-
+    \f
     Args:
         message_type: ISO 20022 message type to scaffold data for.
         output_path: Optional destination path for the starter CSV.
@@ -1276,7 +1259,7 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
 )
 def serve_cmd(host: str, port: int, reload: bool) -> None:
     """Launch the REST API with uvicorn (requires pain001[api]).
-
+    \f
     Args:
         host: Interface address to bind.
         port: TCP port to listen on.
@@ -1338,7 +1321,7 @@ def plugins_group() -> None:
 )
 def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
     """List every registered plugin (built-in + entry-point discovered).
-
+    \f
     Args:
         kind: Optional kind filter (loader / validator / scheme / writer).
         as_json: If True, print a JSON array instead of a table.
@@ -1388,7 +1371,7 @@ def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
 )
 def plugins_show_cmd(name: str, kind: str | None) -> None:
     """Print the metadata for a single plugin by name.
-
+    \f
     Args:
         name: Plugin's declared name (e.g. ``csv``, ``sepa-sct``).
         kind: Optional kind filter to disambiguate.

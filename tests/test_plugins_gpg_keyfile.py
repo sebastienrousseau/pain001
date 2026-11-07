@@ -286,3 +286,46 @@ def test_help_documents_both_flags() -> None:
         assert result.exit_code == 0
         assert "--decrypt-key" in result.output
         assert "--decrypt-passphrase-env" in result.output
+
+
+def test_keyfile_without_homedir_never_touches_the_default_keyring(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A key file is imported into a throwaway keyring, then removed.
+
+    It used to go into the user's default ``~/.gnupg``, changing their
+    keyring for good.
+    """
+    keyfile = tmp_path / "ops.asc"
+    keyfile.write_bytes(b"key material")
+    module, _ = _fake_gpg_module(imported=1)
+    monkeypatch.setattr(
+        "pain001.plugins.builtins_gpg._gpg_module", lambda: module
+    )
+    monkeypatch.setenv("PAIN001_GPG_KEYFILE", str(keyfile))
+    monkeypatch.delenv("PAIN001_GPG_HOMEDIR", raising=False)
+    monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
+
+    assert _decrypt_to_bytes(b"ciphertext") == b"plaintext"
+
+    home = module.GPG.call_args.kwargs.get("gnupghome")
+    assert home, "a keyring directory must be named"
+    assert not Path(home).exists(), "the throwaway keyring is removed"
+
+
+def test_named_homedir_is_used_as_given(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """PAIN001_GPG_HOMEDIR is the operator's choice and is kept."""
+    keyfile = tmp_path / "ops.asc"
+    keyfile.write_bytes(b"key material")
+    module, _ = _fake_gpg_module(imported=1)
+    monkeypatch.setattr(
+        "pain001.plugins.builtins_gpg._gpg_module", lambda: module
+    )
+    monkeypatch.setenv("PAIN001_GPG_KEYFILE", str(keyfile))
+    monkeypatch.setenv("PAIN001_GPG_HOMEDIR", str(tmp_path / "gnupg"))
+    monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
+
+    assert _decrypt_to_bytes(b"ciphertext") == b"plaintext"
+    assert module.GPG.call_args.kwargs["gnupghome"] == str(tmp_path / "gnupg")

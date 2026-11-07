@@ -18,8 +18,13 @@ The migration command:
 * Validates the migrated rows by rendering target-version XML against the bundled XSD.
 * Writes migrated CSV output next to the source file by default.
 
-Supported migration paths in this branch:
+Supported migration paths:
 
-* Legacy pain.001.001.03-.08 to modern pain.001.001.09-.11
+* Legacy pain.001.001.03-.08 to modern pain.001.001.09-.13
+* Between modern versions (.09-.13), which share one field shape
 * Explicit YAML mapping assets for ``v03 -> v09`` and ``v05 -> v11``
+
+Migrating from a modern version back to a legacy one is refused: the older
+model cannot carry structured-address or UETR data, so a downgrade would
+lose information.
 

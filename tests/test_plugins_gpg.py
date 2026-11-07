@@ -23,6 +23,7 @@ import pytest
 
 from pain001.exceptions import DataSourceError
 from pain001.plugins import PAIN001_API_VERSION, LoaderResult
+from pain001.plugins._version import _pain001_version
 from pain001.plugins.builtins_gpg import (
     GpgDecryptError,
     _GpgDecryptingLoader,
@@ -335,6 +336,15 @@ def test_loader_meta_is_well_formed(isolated_registry):
     assert loader.meta.source == "built-in"
     assert loader.meta.api_version == PAIN001_API_VERSION
     assert loader.extensions == (".gpg", ".asc")
+
+
+def test_loader_version_is_the_running_pain001():
+    """The gpg loader reports the installed pain001 version.
+
+    It used to hardcode 0.0.57, so ``plugins show gpg`` reported a
+    version 22 releases old while every other built-in was current.
+    """
+    assert _GpgDecryptingLoader.meta.version == _pain001_version()
 
 
 def test_maybe_register_no_op_when_gnupg_missing(monkeypatch):

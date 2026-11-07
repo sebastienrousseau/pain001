@@ -45,9 +45,14 @@ Streaming creates one output per chunk.
 Python: in-memory output
 ========================
 
-This example reads synthetic data shipped in the installed package:
+Data files must be under the current working directory; a path outside it
+is refused with ``SecurityError``. This example copies the synthetic sample
+shipped in the installed package into the working directory first, and uses
+the bundled template and schema in place:
 
 .. code-block:: python
+
+   import shutil
 
    from pain001 import generate_xml_string
    from pain001.constants import TEMPLATES_DIR
@@ -55,7 +60,8 @@ This example reads synthetic data shipped in the installed package:
 
    message_type = "pain.001.001.03"
    bundle = TEMPLATES_DIR / message_type
-   rows = load_csv_data(str(bundle / "template.csv"))
+   shutil.copy(bundle / "template.csv", "payments.csv")
+   rows = load_csv_data("payments.csv")
    xml = generate_xml_string(
        rows,
        message_type,
@@ -68,27 +74,30 @@ Python: explicit file output
 
 .. code-block:: python
 
-   from pain001.core.core import process_files
+   import shutil
+
+   from pain001 import process_files
    from pain001.constants import TEMPLATES_DIR
 
    message_type = "pain.001.001.03"
    bundle = TEMPLATES_DIR / message_type
+   shutil.copy(bundle / "template.csv", "payments.csv")
    output = process_files(
        xml_message_type=message_type,
        xml_template_file_path=str(bundle / "template.xml"),
        xsd_schema_file_path=str(bundle / f"{message_type}.xsd"),
-       data_file_path=str(bundle / "template.csv"),
+       data_file_path="payments.csv",
        output_path="payment.xml",
    )
 
 Unlike the CLI directory flag, the Python output_path argument names a file.
 Always provide it so an installed template directory is not used as output.
 
-Optional and unreleased integrations
-====================================
+Optional integrations
+=====================
 
 REST is started with pain001 serve after installing the api extra.
-The feature branch also supports :doc:`custom-rules` through CLI and REST,
-review-only MCP corrections, and explicit :doc:`sftp-upload`. Generation
-never uploads a payment automatically. See :doc:`issue-audit` for branch
-availability, companion work and unmet acceptance criteria.
+:doc:`custom-rules` apply through CLI and REST (``rules`` extra), MCP offers
+review-only record corrections (``mcp`` extra), and :doc:`sftp-upload`
+delivers a file explicitly (``upload`` extra). Generation never uploads a
+payment automatically.

@@ -7,6 +7,107 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.79] - 2026-11-07
+
+### Added
+
+- Examples 21 to 26 cover faces, the Business Application Header and
+  XML signing, streamed output and record normalisation, the template
+  registry, typed errors and metric events, the `plugins` and `upload`
+  commands (password and private-key login against a loopback SFTP
+  server), and `pain001 serve` started for real with API-key auth and a
+  graceful shutdown. `tests/test_examples.py` now fails
+  when a name in `pain001.__all__` or a CLI command has no example,
+  and every new example is in `docs/verification-coverage.md`.
+
+- `pain001 upload --certificate` logs in with an OpenSSH certificate
+  for the `--identity-file` key, after checking locally that it was
+  issued for that key and is inside its validity window. `upload_sftp`
+  takes `certificate=`.
+- `pain001 upload --use-agent` offers ssh-agent keys alongside an
+  identity file or password; before, either one turned the agent off.
+  `upload_sftp` takes `use_agent=`.
+- DSA keys, FIDO security keys (`sk-*`) and any other key type paramiko
+  cannot sign with are refused by name before connecting.
+
+### Fixed
+
+- The `xborder-ct` profile reports `XB-CCY-MIX` for every row whose
+  currency differs from the batch's first row. The generator writes all
+  rows into one PmtInf, so a mixed EUR/USD batch produced a block
+  `CtrlSum` that added the two currencies together, and the profile,
+  which checked currency row by row, reported nothing. Generated XML is
+  unchanged; split such a batch into one file per currency. Reported
+  privately by Rumi.
+- `process_files_async` and `process_files_streaming_async` take every
+  option of their synchronous twins (`output_path` / `output_dir`, BAH
+  enveloping, signing, schematron). They stopped at the data path, so
+  `process_files_async` always wrote beside the template, inside the
+  installed package for the bundled templates.
+- `pain001 plugins show gpg` reports the running pain001 version; the
+  gpg loader hardcoded 0.0.57.
+- `--help` for `upload`, `face`, `validate`, `versions`, `inspect`,
+  `init`, `serve` and `plugins list/show` no longer prints the
+  function's `Args:` and `Raises:` sections.
+- `pain001 upload --identity-file` loads the key before connecting and
+  names the problem: a missing passphrase, a wrong one, or a file that
+  is not an RSA, ECDSA or Ed25519 key. paramiko reported the last key
+  type it tried, so a wrong passphrase read "encountered RSA key,
+  expected OPENSSH key".
+- `--decrypt-key` / `PAIN001_GPG_KEYFILE` no longer imports the key
+  into your default GnuPG keyring. Without `PAIN001_GPG_HOMEDIR` the key
+  goes into a throwaway keyring that is removed after decryption; with
+  it, the named keyring is used as before.
+- `parse_pain002_report` returns every transaction status. It read only
+  the first `TxInfAndSts` of each payment block, so in a partially
+  accepted report the other transactions, rejections included, were
+  dropped. Each block now has a `transactions` list; its existing
+  top-level fields still describe the first transaction.
+- `parse_camt053_statement` returns every statement under `statements`
+  (it read only the first), reads the entry status of camt.053.001.08
+  and later (`Sts/Cd`, which came back empty), and lists each entry's
+  `end_to_end_ids`. The existing top-level fields still describe the
+  first statement.
+- Config files, `PAIN001_STREAMING` / `PAIN001_CHUNK_SIZE` and
+  `--profile` now set streaming, chunk size and metrics. The CLI passed
+  its own defaults (off, 1000, off) as explicit values, so they
+  overrode every config layer; the `instant_credit_transfer` preset's
+  streaming settings, for example, never applied.
+- An unknown `--profile` or an invalid config file is a usage error
+  (exit 2) instead of a Python traceback.
+- `pain001 init TYPE -o work/` refuses a directory path; it used to
+  write a file named `work` and report success.
+- XML signing declares its dependency: `pip install pain001[sign]`
+  installs `cryptography`, which `sign_xml_document`,
+  `verify_xml_signature` and `--xml-sign-key` import at call time. It
+  was never declared, so a plain install could only fail at run time;
+  the error message now names the extra.
+
+### Changed
+
+- The README, root documents and manual were checked claim by claim
+  against the code and corrected: XML signing, SFTP delivery and the
+  builders exist and are described with their limits; environment
+  variables, metrics, extras, CLI commands and config precedence match
+  the code; snippets that failed (data outside the working directory,
+  the deprecated write-beside-the-template path) now run; the compose
+  stack builds an image with the `redis` extra; and counts that drift
+  were removed.
+- The release page is written by the release workflow in the suite's
+  shape. A last `release-notes` job in `ci.yml`, after every asset is
+  attached, runs `scripts/release_notes.py publish`: the title is
+  `pain001 X.Y.Z`, the Highlights come from `releases/vX.Y.Z.md`,
+  What's Changed lists the pull requests merged since the previous
+  release, and Checksums gives the SHA-256 of every asset, including
+  the SLSA provenance and `SHA256SUMS` the old body left out. The
+  0.0.77 and 0.0.78 pages had to be rewritten by hand.
+- `tests/test_release_notes.py` fails a pull request whose CHANGELOG
+  dates the version while `releases/vX.Y.Z.md` is missing or has other
+  than 2 to 4 highlights. The script and its tests are vendored
+  byte-identical in every suite repository.
+- The release-note template in `.github/copilot-instructions.md`
+  follows the release shape; it described a layout nothing reads.
+
 ## [0.0.78] - 2026-11-07
 
 ### Added

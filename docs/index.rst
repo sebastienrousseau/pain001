@@ -21,8 +21,8 @@ Quality and availability
 
 CI enforces 100% line and branch coverage, lint, types and security checks.
 Python 3.11–3.14 is tested on Linux; development uses Python 3.12.
-Branch-only features and remaining acceptance criteria are recorded in
-:doc:`issue-audit`; source documentation is not a release announcement.
+The 0.0.71 issue audit is kept as a historical record in :doc:`issue-audit`;
+the CHANGELOG records what each release shipped.
 
 Getting started
 ===============

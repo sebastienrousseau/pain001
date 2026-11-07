@@ -17,6 +17,8 @@ from uuid import uuid4
 
 import paramiko
 
+from pain001.transport.identity import load_identity
+
 _BLOCK_SIZE = 65536
 
 
@@ -202,6 +204,183 @@ def _remote_state(
     )
 
 
+@dataclass(frozen=True)
+class _Credentials:
+    """How the client authenticates; secrets are never logged."""
+
+    identity_file: str | None
+    certificate: str | None
+    password: str | None
+    passphrase: str | None
+    use_agent: bool
+
+
+def _prepare(
+    file_path: str, url: str, accept_host_key: str | None, timeout: float
+) -> tuple[SFTPTarget, Path, str]:
+    """Validate the inputs and return the target, local file and filename.
+
+    Args:
+        file_path: Local file to deliver.
+        url: Remote file URL, or a directory URL ending in a slash.
+        accept_host_key: Optional OpenSSH SHA256 fingerprint to validate.
+        timeout: Network timeout in seconds (validated by the caller).
+
+    Returns:
+        The parsed target, the local path and the remote filename.
+    """
+    target = parse_target(url)
+    _validate_fingerprint(accept_host_key)
+    local = Path(file_path)
+    return target, local, _destination(target, local)
+
+
+def _measure(source: BinaryIO) -> tuple[str, int]:
+    """Return the file's SHA256 and size, leaving it rewound."""
+    digest = _digest(source)
+    size = source.tell()
+    source.seek(0)
+    return digest, size
+
+
+def _destination(target: SFTPTarget, local: Path) -> str:
+    """Return the remote filename, refusing control characters."""
+    destination = (
+        target.path + local.name if target.path.endswith("/") else target.path
+    )
+    if any(ord(char) < 32 or ord(char) == 127 for char in destination):
+        raise ValueError(
+            "The destination filename must not contain control characters."
+        )
+    return destination
+
+
+def _pin_host(
+    client: paramiko.SSHClient,
+    known_hosts: str | None,
+    accept_host_key: str | None,
+) -> None:
+    """Install the host-key policy before any credentials are sent."""
+    # Keep SSHClient's own host-key stores empty so this policy checks
+    # both existing trust and the explicit pin before credentials leave.
+    client.set_missing_host_key_policy(
+        _PinnedHostPolicy(_load_known_hosts(known_hosts), accept_host_key)
+    )
+
+
+def _connect(
+    client: paramiko.SSHClient,
+    target: SFTPTarget,
+    credentials: _Credentials,
+    timeout: float,
+) -> None:
+    """Load the identity, then connect; the host check runs first.
+
+    The agent and default key files are used when nothing explicit is
+    given; ``use_agent`` keeps the agent in play alongside an identity
+    file or password (hardware-backed keys reach paramiko that way).
+    """
+    pkey = load_identity(
+        credentials.identity_file,
+        credentials.passphrase,
+        credentials.certificate,
+    )
+    unattended = (
+        credentials.identity_file is None and credentials.password is None
+    )
+    client.connect(
+        target.host,
+        port=target.port,
+        username=target.username,
+        password=credentials.password,
+        pkey=pkey,
+        allow_agent=credentials.use_agent or unattended,
+        look_for_keys=unattended,
+        timeout=timeout,
+        banner_timeout=timeout,
+        auth_timeout=timeout,
+    )
+
+
+def _open_sftp(
+    client: paramiko.SSHClient, timeout: float
+) -> paramiko.SFTPClient:
+    """Open the SFTP session and apply the network timeout to it."""
+    sftp = client.open_sftp()
+    channel = sftp.get_channel()
+    if channel is None:
+        sftp.close()
+        raise paramiko.SSHException("SFTP session has no active channel.")
+    channel.settimeout(timeout)
+    return sftp
+
+
+def _already_delivered(
+    sftp: paramiko.SFTPClient, destination: str, digest: str, size: int
+) -> bool:
+    """Return True for a byte-identical earlier upload, False if absent.
+
+    Args:
+        sftp: Open SFTP session.
+        destination: Remote filename.
+        digest: SHA256 of the local file.
+        size: Size of the local file in bytes.
+
+    Returns:
+        True when the destination already holds these exact bytes.
+
+    Raises:
+        FileExistsError: If different data already occupies the destination.
+    """
+    state = _remote_state(sftp, destination, digest, size)
+    if state is False:
+        raise FileExistsError(
+            "Remote destination already contains different data; choose a new filename."
+        )
+    return state is True
+
+
+def _publish(
+    sftp: paramiko.SFTPClient,
+    source: BinaryIO,
+    destination: str,
+    digest: str,
+) -> None:
+    """Write to an exclusive temporary file, then rename it into place.
+
+    Args:
+        sftp: Open SFTP session.
+        source: Local file, positioned at its start.
+        destination: Remote filename to publish.
+        digest: SHA256 the transferred bytes must match.
+
+    Raises:
+        OSError: If the local file changed during the transfer.
+        BaseException: Interruptions propagate after best-effort cleanup.
+    """
+    temporary = f"{destination}.{uuid4().hex}.tmp"
+    created = False
+    try:
+        with sftp.open(temporary, "wx") as remote:
+            created = True
+            transferred = hashlib.sha256()
+            for block in iter(lambda: source.read(_BLOCK_SIZE), b""):
+                remote.write(block)
+                transferred.update(block)
+            if transferred.hexdigest() != digest:
+                raise OSError(
+                    "Local file changed during upload; nothing was published."
+                )
+        sftp.rename(temporary, destination)
+    except BaseException:
+        if created:
+            try:
+                sftp.remove(temporary)
+            except OSError:
+                pass  # Cleanup must not hide the original transfer failure.
+        raise
+
+
 def upload_sftp(
     file_path: str,
     url: str,
@@ -211,6 +390,8 @@ def upload_sftp(
     identity_file: str | None = None,
     password: str | None = None,
     passphrase: str | None = None,
+    certificate: str | None = None,
+    use_agent: bool = False,
     timeout: float = 15,
 ) -> UploadResult:
     """Atomically publish a file, refusing to replace different remote data.
@@ -218,6 +399,11 @@ def upload_sftp(
     A matching remote SHA256 is a successful retry. New uploads use an
     exclusive temporary file in the same directory and a no-clobber SFTP
     rename. Authentication occurs only after host-key verification.
+
+    The helpers' errors propagate unchanged: FileExistsError if different
+    data already occupies the destination, OSError if local I/O or the
+    transfer fails, paramiko.SSHException if host verification or
+    authentication fails; interruptions propagate after cleanup.
 
     Args:
         file_path: Local file to deliver.
@@ -227,85 +413,30 @@ def upload_sftp(
         identity_file: Optional private key filename.
         password: Optional password supplied by the caller, never logged.
         passphrase: Optional private-key passphrase, never logged.
+        certificate: Optional OpenSSH certificate for ``identity_file``.
+        use_agent: Also offer ssh-agent keys with an identity or password.
         timeout: Network operation timeout in seconds.
 
     Returns:
         Destination, content hash and whether an earlier upload was reused.
 
     Raises:
-        ValueError: If the URL, pin, filename or timeout is invalid.
-        FileExistsError: If different data already occupies the destination.
-        OSError: If local I/O or the SFTP transfer fails.
-        paramiko.SSHException: If host verification or authentication fails.
-        BaseException: Interruptions propagate after best-effort cleanup.
+        ValueError: If the URL, pin, filename, timeout or identity is invalid.
     """
-    target = parse_target(url)
-    _validate_fingerprint(accept_host_key)
     if timeout <= 0:
         raise ValueError("Timeout must be positive.")
-    local = Path(file_path)
-    destination = (
-        target.path + local.name if target.path.endswith("/") else target.path
+    target, local, destination = _prepare(
+        file_path, url, accept_host_key, timeout
     )
-    if any(ord(char) < 32 or ord(char) == 127 for char in destination):
-        raise ValueError(
-            "The destination filename must not contain control characters."
-        )
+    credentials = _Credentials(
+        identity_file, certificate, password, passphrase, use_agent
+    )
     with local.open("rb") as source, paramiko.SSHClient() as client:
-        digest = _digest(source)
-        size = source.tell()
-        source.seek(0)
-        # Keep SSHClient's own host-key stores empty so this policy checks
-        # both existing trust and the explicit pin before credentials leave.
-        client.set_missing_host_key_policy(
-            _PinnedHostPolicy(_load_known_hosts(known_hosts), accept_host_key)
-        )
-        client.connect(
-            target.host,
-            port=target.port,
-            username=target.username,
-            password=password,
-            key_filename=identity_file,
-            passphrase=passphrase,
-            allow_agent=identity_file is None and password is None,
-            look_for_keys=identity_file is None and password is None,
-            timeout=timeout,
-            banner_timeout=timeout,
-            auth_timeout=timeout,
-        )
-        with client.open_sftp() as sftp:
-            channel = sftp.get_channel()
-            if channel is None:
-                raise paramiko.SSHException(
-                    "SFTP session has no active channel."
-                )
-            channel.settimeout(timeout)
-            state = _remote_state(sftp, destination, digest, size)
-            if state is True:
-                return UploadResult(destination, digest, True)
-            if state is False:
-                raise FileExistsError(
-                    "Remote destination already contains different data; choose a new filename."
-                )
-            temporary = f"{destination}.{uuid4().hex}.tmp"
-            created = False
-            try:
-                with sftp.open(temporary, "wx") as remote:
-                    created = True
-                    transferred = hashlib.sha256()
-                    for block in iter(lambda: source.read(_BLOCK_SIZE), b""):
-                        remote.write(block)
-                        transferred.update(block)
-                    if transferred.hexdigest() != digest:
-                        raise OSError(
-                            "Local file changed during upload; nothing was published."
-                        )
-                sftp.rename(temporary, destination)
-            except BaseException:
-                if created:
-                    try:
-                        sftp.remove(temporary)
-                    except OSError:
-                        pass  # Cleanup must not hide the original transfer failure.
-                raise
-    return UploadResult(destination, digest, False)
+        digest, size = _measure(source)
+        _pin_host(client, known_hosts, accept_host_key)
+        _connect(client, target, credentials, timeout)
+        with _open_sftp(client, timeout) as sftp:
+            reused = _already_delivered(sftp, destination, digest, size)
+            if not reused:
+                _publish(sftp, source, destination, digest)
+    return UploadResult(destination, digest, reused)

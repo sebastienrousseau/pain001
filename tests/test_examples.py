@@ -19,19 +19,86 @@ routes change, the corresponding example fails in CI instead of
 silently rotting.
 """
 
+import re
 import subprocess  # nosec B404
 import sys
 from pathlib import Path
 
+import click
 import pytest
+
+import pain001
+from pain001.cli.cli import cli
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 EXAMPLES = sorted((REPO_ROOT / "examples").glob("[0-9]*.py"))
 
+#: Public names no example needs to show, each with the reason.
+_API_NOT_DEMONSTRATED = {
+    "__version__": "a constant, not a workflow",
+    "main": "the CLI entry point; examples drive it as `pain001 ...`",
+}
+#: CLI commands no example runs, each with the reason.
+_CLI_NOT_DEMONSTRATED = {
+    "mcp": "blocks on stdio; 12_mcp_tools.py calls the same tools",
+}
+
+
+def _example_sources() -> str:
+    """Return the text of every example script, concatenated."""
+    return "\n".join(path.read_text(encoding="utf-8") for path in EXAMPLES)
+
+
+def _cli_command_paths() -> list[tuple[str, ...]]:
+    """Return every CLI command as its path of names from the root."""
+    paths: list[tuple[str, ...]] = []
+    for name, command in cli.commands.items():
+        if isinstance(command, click.Group):
+            paths.extend((name, sub) for sub in command.commands)
+        else:
+            paths.append((name,))
+    return paths
+
 
 def test_examples_discovered() -> None:
     """The glob must find the example scripts (guards against renames)."""
-    assert len(EXAMPLES) >= 20
+    assert len(EXAMPLES) >= 25
+
+
+def test_every_public_name_has_an_example() -> None:
+    """Every name in ``pain001.__all__`` is used by some example."""
+    sources = _example_sources()
+    missing = [
+        name
+        for name in pain001.__all__
+        if name not in _API_NOT_DEMONSTRATED
+        and not re.search(rf"\b{re.escape(name)}\b", sources)
+    ]
+    assert not missing, f"public API with no example: {missing}"
+
+
+def test_every_cli_command_has_an_example() -> None:
+    """Every CLI command and subcommand is run by some example."""
+    missing = []
+    for path in _cli_command_paths():
+        if path[0] in _CLI_NOT_DEMONSTRATED:
+            continue
+        shown = any(
+            all(
+                re.search(rf"[\"']{re.escape(part)}[\"']", text)
+                for part in path
+            )
+            for text in (p.read_text(encoding="utf-8") for p in EXAMPLES)
+        )
+        if not shown:
+            missing.append(" ".join(path))
+    assert not missing, f"CLI commands with no example: {missing}"
+
+
+def test_exemptions_name_real_things() -> None:
+    """An exemption for a removed name or command must be deleted."""
+    assert set(_API_NOT_DEMONSTRATED) <= set(pain001.__all__)
+    assert set(_CLI_NOT_DEMONSTRATED) <= set(cli.commands)
 
 
 def test_every_example_is_documented() -> None:

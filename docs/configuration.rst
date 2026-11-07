@@ -11,11 +11,17 @@ Precedence
 Lowest to highest:
 
 1. Built-in defaults
-2. ``~/.config/pain001/config.yaml`` or ``config.toml``
-3. ``./pain001.yaml`` or ``./pain001.toml``
-4. Environment variables
-5. ``--profile``
-6. Explicit CLI options
+2. ``~/.config/pain001/config.yaml``, ``config.yml`` or ``config.toml``
+3. ``./pain001.yaml``, ``./pain001.yml``, ``./pain001.toml`` or
+   ``./pain001.ini`` (the first one found)
+4. The file named by ``--config FILE``
+5. Environment variables
+6. ``--profile``
+7. Explicit CLI options
+
+An INI file supplies only the ``[Paths]`` keys ``xml_template_file_path``,
+``xsd_schema_file_path`` and ``data_file_path``. An unknown profile, an unknown
+key or a value of the wrong type exits with code 2.
 
 Supported Keys
 ==============

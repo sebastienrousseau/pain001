@@ -168,6 +168,7 @@ hint (shown by `--explain`).
 | `SEPA-INST-AMT` | error | `sepa-inst` | Amount ≤ 100,000.00 EUR (SCT Inst per-transaction cap) |
 | `XB-CCY` | error | `xborder-ct` | Currency is a valid 3-letter ISO 4217 code (any currency) |
 | `XB-BIC` | error | `xborder-ct` | Creditor agent BIC present and valid (mandatory cross-border) |
+| `XB-CCY-MIX` | error | `xborder-ct` | Every row shares the batch's currency (all rows are written into one PmtInf, whose CtrlSum would otherwise add currencies together) |
 | `SDD-MNDT` | error | `sepa-sdd`, `sepa-b2b` | Mandate id present |
 | `SDD-SEQTP` | error | `sepa-sdd` | Sequence type is one of `FRST`, `RCUR`, `OOFF`, `FNAL` |
 | `B2B-SEQTP` | error | `sepa-b2b` | Sequence type is one of `FRST`, `RCUR` (B2B excludes `OOFF` and `FNAL`) |

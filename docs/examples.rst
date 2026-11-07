@@ -13,6 +13,11 @@ Run them from the repository root after
 See :doc:`verification-coverage` for the feature-to-test evidence map and
 its limits. Passing an example does not certify a payment for a bank.
 
+This page walks through a selection. The full numbered set, including
+faces, XML signing, SFTP upload with keys and certificates, and a running
+REST server, is listed with what each one shows in
+`examples/README.md <https://github.com/sebastienrousseau/pain001/blob/main/examples/README.md>`_.
+
 Example 1: Basic SEPA Payment Processing
 ========================================
 

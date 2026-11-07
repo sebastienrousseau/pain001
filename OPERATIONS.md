@@ -18,19 +18,22 @@ uvicorn pain001.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 ### Container image (GHCR)
 
 ```bash
-# Pull a tagged release (or :latest from main).
-docker pull ghcr.io/sebastienrousseau/pain001:0.0.66
+# Pull a tagged release (or :latest from main); replace <version>.
+docker pull ghcr.io/sebastienrousseau/pain001:<version>
 
 # Run the REST API.
 docker run --rm -p 8000:8000 \
   -e PAIN001_API_KEY=$(openssl rand -hex 32) \
-  ghcr.io/sebastienrousseau/pain001:0.0.66 \
+  ghcr.io/sebastienrousseau/pain001:<version> \
   serve --host 0.0.0.0 --port 8000
 ```
 
 The image is multi-arch (`linux/amd64`, `linux/arm64`), runs as a
 non-root `pain001` user, declares a HEALTHCHECK, and ships the `[api]`
-extra preinstalled. Every release pushes a matching tag to GHCR.
+extra preinstalled. Every release pushes a matching tag to GHCR. The
+image does not include the `redis`, `otel` or other optional extras;
+build your own image from `pain001[api,redis]` (and so on) when you need
+them.
 
 ## Interactive API reference
 
@@ -41,19 +44,28 @@ The OpenAPI schema is hosted as an interactive
 
 The same page is reachable on a running server at `/api/reference`,
 and the raw OpenAPI document is at `/openapi.json`. The hosted page
-is refreshed by the `docs.yml` workflow on every push to `main`, so
-the schema never drifts from the released version.
+is rebuilt from `main` by the `docs.yml` workflow when the docs, the
+package version or the dependencies change, so it can lag an API
+change on `main`. A running server always serves its own schema.
 
 ## Configuration
 
-All operational controls are environment variables; all are **off by
-default** so local runs need no setup.
+All operational controls are environment variables. Unset, there is
+no authentication, no rate limit, an in-memory job store and the
+browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 
 | Variable | Effect | Example |
 | :--- | :--- | :--- |
-| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
-| `PAIN001_RATE_LIMIT` | Per-client request cap (in-process, fixed window) | `100/minute` |
+| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint except `/api/v1/health` | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
+| `PAIN001_RATE_LIMIT` | Per-client request cap (fixed window); unset means no limit | `100/minute` |
+| `PAIN001_RATE_LIMIT_BACKEND` | `redis` shares the rate-limit counters across replicas (`pain001[redis]`) | `redis` |
+| `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the rate limiter; falls back to `PAIN001_JOB_STORE_URL` | `redis://redis:6379/0` |
 | `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts | `/var/lib/pain001/jobs` |
+| `PAIN001_JOB_STORE_URL` | Store async jobs in Redis for multi-replica deployments (`pain001[redis]`); takes precedence over `PAIN001_JOB_STORE_DIR` | `redis://redis:6379/1` |
+| `PAIN001_JOB_STORE_NAMESPACE` | Key prefix for the Redis job store | `pain001:jobs` (default) |
+| `PAIN001_UI_DISABLED` | `1`, `true` or `yes` takes the `/api/v1/ui` dashboard offline | `1` |
+| `PAIN001_DISABLE_PLUGINS` | Comma-separated plugin names to skip | `xlsx,gpg` |
+| `OTEL_ENABLED` | Turn on OpenTelemetry tracing (`pain001[otel]`) | `true` |
 
 ## Health and readiness
 
@@ -78,6 +90,9 @@ livenessProbe:
 | `pain001_scheme_profiles` | gauge | Registered scheme rulebooks |
 | `pain001_jobs{status}` | gauge | Async jobs by status (pending/processing/success/failed/cancelled) |
 | `pain001_http_requests_total{method,status}` | counter | HTTP requests seen |
+| `pain001_files_processed_total{status,message_type}` | counter | Files processed, by outcome and message type |
+| `pain001_payment_volume_cents_total{currency}` | counter | Payment volume in minor units, by currency |
+| `pain001_processing_seconds` | summary | Generation processing latency |
 
 Scrape config:
 
@@ -108,10 +123,11 @@ Suggested alerts:
 
 ## Logs
 
-Structured JSON logging with PII redaction is built in
-(`pain001.logging_schema`). Ship stdout to your log pipeline; correlate with
-traces via the OpenTelemetry context attached to metric events when an OTel
-SDK is present.
+Structured JSON logging with PII redaction is available in
+`pain001.logging_schema`; the server does not turn it on by itself, so call
+`configure_json_logging()` from your own entry point when you want JSON.
+Ship stdout to your log pipeline; correlate with traces via the
+OpenTelemetry context attached to metric events when an OTel SDK is present.
 
 ## Scaling notes
 

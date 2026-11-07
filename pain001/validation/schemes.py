@@ -21,9 +21,6 @@ from pain001.validation._scheme_rules import (
     PROFILES as PROFILES,
 )
 from pain001.validation._scheme_rules import (
-    REMEDIATIONS as REMEDIATIONS,
-)
-from pain001.validation._scheme_rules import (
     AntiDuplicateProfile as AntiDuplicateProfile,
 )
 from pain001.validation._scheme_rules import (
@@ -59,6 +56,27 @@ from pain001.validation._scheme_rules import (
 from pain001.validation._scheme_rules import (
     remediation_for as remediation_for,
 )
+from pain001.validation._scheme_types import (
+    REMEDIATIONS as REMEDIATIONS,
+)
+
+#: The stable scheme API. The rule classes live in private modules and are
+#: re-exported here; listing them marks the imports as public exports.
+__all__ = [
+    "PROFILES",
+    "REMEDIATIONS",
+    "AntiDuplicateProfile",
+    "CrossBorderCreditTransferProfile",
+    "SchemeValidationResult",
+    "SchemeViolation",
+    "SepaB2BDirectDebitProfile",
+    "SepaCreditTransferProfile",
+    "SepaDirectDebitProfile",
+    "SepaInstantCreditTransferProfile",
+    "ValidationProfile",
+    "remediation_for",
+    "validate_scheme",
+]
 
 
 def _split_profile_spec(profile: str) -> list[str]:

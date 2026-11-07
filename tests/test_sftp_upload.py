@@ -201,13 +201,20 @@ def connection(tmp_path):
         yield local, client, sftp
 
 
-def test_atomic_upload(connection):
+def _key_file(tmp_path, key, passphrase="test-passphrase"):
+    """Write ``key`` to a passphrase-protected private-key file."""
+    path = tmp_path / "id_rsa"
+    key.write_private_key_file(str(path), password=passphrase)
+    return str(path)
+
+
+def test_atomic_upload(connection, key, tmp_path):
     """Data is written only to an exclusive temporary file, then renamed."""
     local, client, sftp = connection
     result = upload.upload_sftp(
         str(local),
         "sftp://ops@bank.example/inbox/",
-        identity_file="keyfile",
+        identity_file=_key_file(tmp_path, key),
         passphrase="test-passphrase",
     )
     assert result == upload.UploadResult(
@@ -224,7 +231,9 @@ def test_atomic_upload(connection):
     remote.write.assert_called_once_with(local.read_bytes())
     sftp.rename.assert_called_once_with(temporary, result.destination)
     assert client.connect.call_args.kwargs["allow_agent"] is False
-    assert client.connect.call_args.kwargs["passphrase"] == "test-passphrase"
+    pkey = client.connect.call_args.kwargs["pkey"]
+    assert pkey.get_base64() == key.get_base64()
+    assert client.connect.call_args.kwargs.get("key_filename") is None
     sftp.remove.assert_not_called()
     client.__exit__.assert_called_once()
 
@@ -306,3 +315,67 @@ def test_missing_sftp_channel(connection):
     with pytest.raises(paramiko.SSHException, match="active channel"):
         upload.upload_sftp(str(local), "sftp://ops@bank.example/inbox/")
     sftp.open.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("passphrase", "message"),
+    [
+        ("not-the-passphrase", "wrong passphrase"),
+        (None, "is encrypted"),
+    ],
+)
+def test_identity_problems_are_named_before_connecting(
+    connection, key, tmp_path, passphrase, message
+):
+    """A key that cannot be unlocked is reported as such, offline.
+
+    paramiko used to try each key type and surface the last failure, so
+    a wrong passphrase read "encountered RSA key, expected OPENSSH key".
+    """
+    local, client, _ = connection
+    with pytest.raises(ValueError, match=message):
+        upload.upload_sftp(
+            str(local),
+            "sftp://ops@bank.example/inbox/",
+            identity_file=_key_file(tmp_path, key),
+            passphrase=passphrase,
+        )
+    client.connect.assert_not_called()
+
+
+def test_identity_that_is_not_a_key(connection, tmp_path):
+    """A file that holds no supported private key is refused offline."""
+    local, client, _ = connection
+    not_a_key = tmp_path / "notes.txt"
+    not_a_key.write_text("not a key\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="not an RSA, ECDSA or Ed25519"):
+        upload.upload_sftp(
+            str(local),
+            "sftp://ops@bank.example/inbox/",
+            identity_file=str(not_a_key),
+        )
+    client.connect.assert_not_called()
+
+
+def test_wrong_passphrase_on_an_openssh_format_key(connection, tmp_path):
+    """OpenSSH-format keys (the ssh-keygen default) are named too."""
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ed25519
+
+    local, client, _ = connection
+    path = tmp_path / "id_ed25519"
+    path.write_bytes(
+        ed25519.Ed25519PrivateKey.generate().private_bytes(
+            serialization.Encoding.PEM,
+            serialization.PrivateFormat.OpenSSH,
+            serialization.BestAvailableEncryption(b"test-passphrase"),
+        )
+    )
+    with pytest.raises(ValueError, match="wrong passphrase"):
+        upload.upload_sftp(
+            str(local),
+            "sftp://ops@bank.example/inbox/",
+            identity_file=str(path),
+            passphrase="not-the-passphrase",
+        )
+    client.connect.assert_not_called()

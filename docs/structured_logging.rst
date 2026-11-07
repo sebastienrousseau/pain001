@@ -2,7 +2,7 @@
 Structured Logging
 ===================
 
-Pain001 uses structured logging to provide consistent, machine-parsable log output. All log entries are formatted as JSON for easy integration with log aggregation systems.
+Pain001 uses structured logging to provide consistent, machine-parsable log output. Events emitted through ``log_event`` are formatted as JSON once a handler with ``JSONFormatter`` is installed (``pain001.logging_schema.configure_json_logging()`` does this); the CLI's console output is human-readable text.
 
 Overview
 ========
@@ -28,7 +28,7 @@ All log entries follow this JSON structure:
         "logger": "pain001.core.core",
         "request_id": "req-e5ffe29b",
         "event": "process_start",
-        "version": "0.0.46",
+        "version": "<version>",
         "message_type": "pain.001.001.03",
         "data_source_type": "csv"
     }
@@ -44,8 +44,7 @@ Process Lifecycle Events
 
     Fields:
         - ``message_type``: ISO 20022 message type
-        - ``data_source_type``: csv | sqlite | list | dict
-        - ``timestamp``: Unix timestamp
+        - ``data_source_type``: csv | json | jsonl | parquet | sqlite | list | dict | file | unknown
 
 **process_success**
     Successful process completion
@@ -105,13 +104,13 @@ Data Loading Events
     Data loading initiated
 
     Fields:
-        - ``data_source_type``: csv | sqlite | list | dict
+        - ``data_source_type``: csv | json | jsonl | parquet | sqlite | list | dict | file | unknown
 
 **data_load_success**
     Data loaded successfully
 
     Fields:
-        - ``data_source_type``: csv | sqlite | list | dict
+        - ``data_source_type``: csv | json | jsonl | parquet | sqlite | list | dict | file | unknown
         - ``record_count``: Number of records loaded
         - ``duration_ms``: Loading time in milliseconds
 
@@ -119,7 +118,7 @@ Data Loading Events
     Data loading failed
 
     Fields:
-        - ``data_source_type``: csv | sqlite | list | dict
+        - ``data_source_type``: csv | json | jsonl | parquet | sqlite | list | dict | file | unknown
         - ``error_type``: Exception class name
         - ``error_message``: Error description
 
@@ -217,7 +216,7 @@ File Path Fields
 
 - ``template_path``: XML template file path
 - ``schema_path``: XSD schema file path
-- ``data_source_type``: csv | sqlite | list | dict
+- ``data_source_type``: csv | json | jsonl | parquet | sqlite | list | dict | file | unknown
 
 Statistics Fields
 -----------------
@@ -225,7 +224,7 @@ Statistics Fields
 - ``record_count``: Number of records
 - ``transaction_count``: Number of transactions
 - ``duration_ms``: Duration in milliseconds
-- ``size_bytes``: Size in bytes
+- ``file_size_bytes``: Size in bytes of the data file or generated XML
 
 Error Fields
 ------------
@@ -549,7 +548,7 @@ Automatically log comprehensive summary at process completion:
         "logger": "pain001.core.core",
         "request_id": "req-e5ffe29b",
         "event": "execution_summary",
-        "version": "0.0.46",
+        "version": "<version>",
         "message": "Execution Summary Report",
         "summary": {
             "status": "SUCCESS",

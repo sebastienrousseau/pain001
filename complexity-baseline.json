@@ -54,12 +54,8 @@
   "pain001/camt053/generator.py::build_camt053_statement": {
     "lines": 63
   },
-  "pain001/camt053/parser.py::parse_camt053_statement": {
-    "cyclomatic": 13,
-    "lines": 64
-  },
   "pain001/cli/cli.py": {
-    "file_lines": 1459
+    "file_lines": 1442
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "cyclomatic": 12,
@@ -75,7 +71,7 @@
   },
   "pain001/cli/cli.py::main": {
     "cyclomatic": 17,
-    "lines": 268
+    "lines": 267
   },
   "pain001/core/core.py": {
     "file_lines": 513
@@ -233,7 +229,7 @@
     "lines": 79
   },
   "pain001/logging_schema/formatter.py::configure_json_logging": {
-    "lines": 90
+    "lines": 89
   },
   "pain001/logging_schema/redaction.py::_redact_pii_from_dict": {
     "cognitive": 24,
@@ -260,8 +256,7 @@
     "lines": 72
   },
   "pain001/pain002/parser.py::parse_pain002_report": {
-    "cyclomatic": 11,
-    "lines": 93
+    "lines": 75
   },
   "pain001/parquet/load_parquet_data.py::load_parquet_data_streaming": {
     "lines": 63
@@ -305,16 +300,8 @@
   "pain001/security/path_validator.py::_resolve_within_allowed_bases": {
     "lines": 74
   },
-  "pain001/transport/cli.py::upload_cmd": {
-    "lines": 62
-  },
   "pain001/transport/sftp.py::parse_target": {
     "cyclomatic": 15
-  },
-  "pain001/transport/sftp.py::upload_sftp": {
-    "cognitive": 16,
-    "cyclomatic": 16,
-    "lines": 107
   },
   "pain001/twins/iso_json.py::_decode_node": {
     "cognitive": 20,
@@ -340,7 +327,7 @@
     "cyclomatic": 16
   },
   "pain001/validation/_scheme_rules.py": {
-    "file_lines": 933
+    "file_lines": 717
   },
   "pain001/validation/_scheme_rules.py::_check_amount": {
     "lines": 69
@@ -378,7 +365,7 @@
     "lines": 84
   },
   "pain001/validation/rails.py": {
-    "file_lines": 1388
+    "file_lines": 1387
   },
   "pain001/validation/rails.py::PurposeMandate.validate": {
     "cyclomatic": 11

@@ -8,15 +8,15 @@ Thanks for using Pain001. Here's the fastest way to get help, by need.
 
 90% of questions are answered in one of:
 
-- **[README.md](README.md)** — install, quick start, every CLI flag,
-  REST endpoint reference, env-var matrix.
+- **[README.md](README.md)**: install, quick start and the feature
+  map. Run `pain001 <command> --help` for the current flags.
 - **[docs/quickstart.md](docs/quickstart.md)** — 10-minute first-success
   tutorial (CSV → validated XML, no prior ISO 20022 knowledge).
-- **[`examples/`](examples/)** — 14 runnable, self-checking scripts,
-  one per feature. Every one is exercised in CI; they cannot rot.
-- **[SCHEMES.md](SCHEMES.md)** — the full scheme-validation
-  catalogue (`sepa-sct`, `sepa-sdd`, `sepa-inst`, `sepa-b2b`,
-  `xborder-ct`, `anti-duplicate`) with every rule id and its remediation.
+- **[`examples/`](examples/)**: the numbered, self-checking scripts,
+  one per feature. Every one is exercised in CI.
+- **[SCHEMES.md](SCHEMES.md)**: every scheme profile (SEPA, domestic
+  and cross-border rails, purpose-code mandates and `anti-duplicate`)
+  with its rule ids.
 - **[OPERATIONS.md](OPERATIONS.md)** — production runbook for the
   REST API (config, scrape, alerts, scaling, incident playbook).
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — module map and extension
@@ -40,15 +40,15 @@ discloses how the project is funded. Nothing here gates a feature.
 
 ## Questions & how-to
 
-Open a [GitHub Discussion](https://github.com/sebastienrousseau/pain001/discussions)
-in the **Q&A** category. Include:
+Open a [GitHub issue](https://github.com/sebastienrousseau/pain001/issues/new/choose)
+(GitHub Discussions are not enabled for this repository). Include:
 
 - Your Python version + OS
 - `pain001` version (`python -c "import pain001; print(pain001.__version__)"`)
 - A minimal reproducer (CLI invocation or short Python snippet)
 - The full error output
 
-Discussions are usually answered within a few business days.
+Questions are usually answered within a few business days.
 
 ## Bugs
 
@@ -59,7 +59,7 @@ with:
 - A failing input file (any sensitive values redacted with `XXXX…`)
 - The expected vs. actual behaviour
 
-If your bug also affects v0.0.64 or earlier, please mention so —
+Say which versions you have reproduced the bug on;
 backport eligibility depends on the supported-version window in
 [SECURITY.md](SECURITY.md#supported-versions).
 
@@ -93,7 +93,7 @@ private disclosure process in [SECURITY.md](SECURITY.md):
 Pain001 is open source under Apache-2.0 / MIT. There is **no paid
 support tier today**.
 
-- **Community support** (issues / discussions / PRs): best effort
+- **Community support** (issues / PRs): best effort
   by the maintainers and other contributors. Most questions get a
   response within a few business days; bugs are triaged within a
   week.
@@ -141,7 +141,8 @@ for the exact policy. Pain001 requires **Python 3.11+**.
 
 | Version | Supported? |
 | :--- | :--- |
-| 0.0.78 (latest) | ✅ |
+| 0.0.79 (latest) | ✅ |
+| 0.0.78 | ✅ |
 | 0.0.77 | ✅ |
 | 0.0.76 | ✅ |
 | 0.0.75 | ✅ |

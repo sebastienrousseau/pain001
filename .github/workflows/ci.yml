@@ -341,3 +341,31 @@ jobs:
     with:
       base64-subjects: ${{ needs.publish.outputs.hashes }}
       upload-assets: true
+
+  # 6. RELEASE BODY (Only on Tags)
+  #
+  # Runs last, once every asset is attached (dist, SBOMs, SHA256SUMS and
+  # the provenance above), and rewrites the release body from the live
+  # release in the suite's shape: Highlights from releases/v<version>.md,
+  # the pull requests merged since the previous release, the SHA-256 of
+  # every asset and the Full Changelog link. The publish job's own body
+  # cannot list the provenance, which is uploaded after it, and lacks
+  # the merged pull requests (0.0.77 and 0.0.78 were rewritten by hand).
+  release-notes:
+    needs: [publish, provenance]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    name: 📝 Release Notes
+    permissions:
+      contents: write # edit the release title and body
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ❯ Compose and publish the release body
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          python3 scripts/release_notes.py publish --repo "$REPO" \
+            --tag "$GITHUB_REF_NAME" --project pain001

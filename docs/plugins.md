@@ -6,8 +6,8 @@
 > version. The current contract version is `(0, 54)`; see
 > [Versioning](#versioning) for the upgrade policy.
 
-`pain001` v0.0.54 ships a formal plugin substrate so external packages
-can extend it without forking. Four kinds of plugins are supported:
+`pain001` ships a formal plugin substrate (since v0.0.54) so external
+packages can extend it without forking. Four kinds of plugins are supported:
 
 | Kind | Protocol | Use it when you want to … |
 | :--- | :--- | :--- |
@@ -121,9 +121,11 @@ class AbstractLoader(Protocol):
     ) -> Iterable[LoaderResult]: ...
 ```
 
-- `extensions` is the **dispatch key**. The first installed loader to
-  claim an extension wins on lookup; a later registration overrides
-  earlier ones (the registry logs the override).
+- `extensions` is the **dispatch key**. When several loaders claim an
+  extension, the earliest registered one wins on lookup. A later plugin
+  with the **same name** replaces the earlier one in place (the registry
+  logs the override), so to take over `.csv` register your loader as
+  `csv`.
 - `load_streaming` is required by `--streaming` mode. A loader that
   truly cannot stream may yield a single `LoaderResult` carrying every
   row.
@@ -228,7 +230,7 @@ pain001 plugins disable          # documentation-only; prints the env-var instru
 ```bash
 pain001 plugins list --json | jq '.[].name'
 pain001 plugins show csv
-# loader csv v0.0.54
+# loader csv v<installed version>
 #   source:      built-in
 #   api version: 0.54
 #   description: Read flat-record payment data from CSV files.
@@ -294,14 +296,10 @@ pipeline as `--decrypt-key <keyfile>` and `--decrypt-passphrase-env <VAR>`.
 
 ### Schemes
 
-| Name | Rulebook |
-| :--- | :--- |
-| `sepa-sct` | SEPA Credit Transfer (EUR, IBAN, charset limits) |
-| `sepa-sdd` | SEPA Direct Debit (mandate id, sequence type) |
-| `sepa-b2b` | SEPA B2B Direct Debit (B2B sequence types) |
-| `sepa-inst` | SEPA Instant Credit Transfer (amount ceiling) |
-| `xborder-ct` | Cross-border Credit Transfer (any ISO currency) |
-| `anti-duplicate` | Cross-record duplicate detection (same creditor IBAN, amount and execution date) |
+Every scheme profile listed in [SCHEMES.md](https://github.com/sebastienrousseau/pain001/blob/main/SCHEMES.md) is registered
+as a built-in scheme plugin under the same name: the SEPA rulebooks,
+`xborder-ct`, `anti-duplicate`, the rail profiles and the purpose-code
+mandates. `pain001 plugins list --kind scheme` shows them.
 
 These wrap the profiles in `pain001.validation.schemes`, which predate
 the contract: they take `data` positionally and return
@@ -311,7 +309,7 @@ because `SchemeFinding` requires a sentence and the legacy strings are
 phrased without one.
 
 `message_type` is accepted for contract conformance and is not used by
-these five — a bundled profile is selected by name, not by message
+the built-in schemes; a bundled profile is selected by name, not by message
 type. An external scheme is free to branch on it.
 
 ### Writers
@@ -366,7 +364,7 @@ or claim to change its parent shell's environment.
   scaffolds a plugin repo with CI, test harness, and the entry-point
   declaration pre-wired. Its tests render, install and discover a real package.
   Independent external contributor review remains required before locking v1.0.
-- **Reference plugin:** any of the five built-in adapters in
+- **Reference plugin:** any of the built-in adapters in
   [`pain001/plugins/_builtins.py`](../pain001/plugins/_builtins.py).
 - **Contract source:**
   [`pain001/plugins/contracts.py`](../pain001/plugins/contracts.py).

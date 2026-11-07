@@ -1,7 +1,7 @@
 Large-Batch Performance
 =======================
 
-Pain001 now ships with a concrete large-batch benchmark workflow and a
+Pain001 ships a large-batch benchmark (``benches/bench_generate.py``) and a
 streaming generation mode for chunked processing.
 
 Recommended approach for large input files:
@@ -15,7 +15,7 @@ Example:
 .. code-block:: bash
 
    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --streaming --chunk-size 1000
-   poetry run python scripts/benchmark_large_batches.py
+   poetry run python benches/bench_generate.py
 
 What to measure:
 

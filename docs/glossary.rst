@@ -107,7 +107,7 @@ Glossary
       ISO 20022 standard message type for Customer Credit Transfer Initiation.
 
    Pain.002
-      ISO 20022 standard message type for Customer Debit Transfer Initiation.
+      ISO 20022 standard message type for Customer Payment Status Report, the bank's reply to a pain.001 or pain.008.
 
    Pain.008
       ISO 20022 standard message type for Customer Direct Debit Initiation.
@@ -149,7 +149,7 @@ Glossary
       Single Euro Payments Area - Regional payment system for efficient euro transfers within European countries.
 
    Service Level
-      Indicator of processing speed (e.g., SEPA for standard processing, URGENT for expedited).
+      Code for the service the payment uses (e.g., ``SEPA`` for a SEPA credit transfer, ``URGP`` for urgent payment, ``NURG`` for non-urgent).
 
    Settlement
       The actual transfer of funds between debtor and creditor banks.

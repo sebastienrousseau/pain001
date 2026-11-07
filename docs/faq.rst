@@ -31,7 +31,7 @@ development uses Python 3.12. See the toolchain policy for floor changes.
 
 **How much does Pain001 cost?**
 
-Pain001 is open-source and completely free under the Apache 2.0 and MIT licences.
+Pain001 is open source and free, dual-licensed under Apache-2.0 OR MIT at your option.
 
 Installation & Setup
 ====================
@@ -69,9 +69,9 @@ Yes, use the `--user` flag:
 
 **Do I need the XSD schema files?**
 
-Yes, XSD schema files are required for validation. Download them from:
-- `ISO 20022 UNIFI <https://www.iso20022.org>`_
-- Or use the schemas included in your bank's documentation
+No. Every bundled message type ships with its XSD, and the CLI resolves it
+automatically. Pass ``-s`` / ``--schema`` only to validate against a
+different schema, such as one from your bank.
 
 Usage Questions
 ===============
@@ -79,10 +79,14 @@ Usage Questions
 **What data sources does Pain001 support?**
 
 Pain001 supports:
+
 - CSV files
 - SQLite databases
+- JSON and JSON Lines files
+- Parquet files (``parquet`` extra)
+- GPG-encrypted wrappers of these (``gpg`` extra)
 - Python dictionaries and lists
-- Custom data sources (with adapter)
+- Other formats through loader plugins, such as ``pain001-loader-xlsx``
 
 **Do I need to prepare my CSV file?**
 
@@ -96,24 +100,20 @@ See `Configuration <configuration.html>`_ for field specifications.
 
 **What ISO 20022 versions does Pain001 support?**
 
-Pain001 supports all major pain.001 versions:
-- pain.001.001.03 (SEPA v3)
-- pain.001.001.04 (Non-SEPA)
-- pain.001.001.05
-- pain.001.001.06 (Instant payments)
-- pain.001.001.07 (RLP/RTP)
-- pain.001.001.08 (TISS)
-- pain.001.001.09 (Simplified)
-- pain.001.001.10 (Enhanced)
-- pain.001.001.11 (Latest)
+Pain001 bundles pain.001.001.03 to pain.001.001.13 and the pain.008.001.02
+and pain.008.001.08 direct debits. Run ``pain001 versions`` for the list the
+installed build supports.
 
 **Can I process large payment files?**
 
-Yes! Pain001 can handle:
-- Batch processing with chunking
-- Parallel processing for independent batches
-- Streaming from databases
-- Memory-efficient processing
+Yes. Pain001 can:
+
+- Stream the input in chunks and write one XML file per chunk
+  (``--streaming --chunk-size``)
+- Write a large file with constant memory (``stream_xml_to_file``)
+
+There is no built-in parallelism; run independent batches in separate
+processes if you need it.
 
 See `Examples <examples.html>`_ for batch processing examples.
 
@@ -124,30 +124,41 @@ Use a loop or batch processing:
 .. code-block:: python
 
     from pathlib import Path
-    from pain001 import main
 
-    for csv_file in Path('payments').glob('*.csv'):
-        main(
-            xml_message_type='pain.001.001.03',
-            xml_template_file_path='template.xml',
-            xsd_schema_file_path='pain.001.001.03.xsd',
-            data_file_path=str(csv_file)
+    from pain001 import process_files
+    from pain001.constants import TEMPLATES_DIR
+
+    message_type = "pain.001.001.03"
+    bundle = TEMPLATES_DIR / message_type
+    Path("output").mkdir(exist_ok=True)
+
+    # Data files must be under the current working directory.
+    for csv_file in sorted(Path("payments").glob("*.csv")):
+        process_files(
+            xml_message_type=message_type,
+            xml_template_file_path=str(bundle / "template.xml"),
+            xsd_schema_file_path=str(bundle / f"{message_type}.xsd"),
+            data_file_path=str(csv_file),
+            output_path=f"output/{csv_file.stem}.xml",
         )
+
+Always pass ``output_path``: without it the file is written next to the
+template and a ``DeprecationWarning`` is raised.
 
 **Can I use Pain001 without templates?**
 
-No, templates are required. They define:
-- XML structure
-- Field mappings
-- Default values
-- Validation rules
+You do not need to supply one. Every bundled message type ships with a
+Jinja2 XML template that the CLI resolves automatically; pass ``-m`` /
+``--template`` only to use your own.
 
 Configuration & Templates
 =========================
 
 **How do I create a template?**
 
-Templates are XML files that define the structure. See `Configuration <configuration.html>`_ for examples.
+Templates are Jinja2 XML files that define the structure. Start from a
+bundled one (``pain001 inspect <message type>`` shows where it is) and see
+:doc:`template_registry`.
 
 **Can I use multiple templates?**
 
@@ -215,15 +226,12 @@ Check:
 
 **How do I debug validation errors?**
 
-Enable logging:
+Run the CLI with ``-v`` / ``--verbose`` for INFO and DEBUG output, and add
+``--scheme <profile> --explain`` for a remediation hint per violation:
 
-.. code-block:: python
+.. code-block:: bash
 
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
-
-    from pain001 import main
-    main(...)  # Detailed error messages will be printed
+    pain001 validate -v -t pain.001.001.03 -d payments.csv --scheme sepa-sct --explain
 
 **Can I skip validation?**
 
@@ -265,23 +273,19 @@ Troubleshooting
 **Pain001 is processing slowly**
 
 Solutions:
-- Process in smaller chunks (1000-2000 records)
-- Use parallel processing for independent batches
+- Process in smaller chunks (``--streaming --chunk-size 1000``)
+- Run independent batches in separate processes
 - Check system resources (CPU, disk)
 - Use SSD for database access
 
 **I get "Memory Error" on large files**
 
-Use chunked processing:
+Use streaming, which reads the input in chunks and writes one XML file per
+chunk with its own control totals:
 
-.. code-block:: python
+.. code-block:: bash
 
-    import pandas as pd
-
-    chunks = pd.read_csv('large_file.csv', chunksize=1000)
-    for chunk in chunks:
-        chunk.to_csv(f'chunk_{i}.csv')
-        main(...)  # Process each chunk
+    pain001 generate -t pain.001.001.03 -d large_file.csv -o output --streaming --chunk-size 1000
 
 **My bank rejects the generated file**
 
@@ -316,35 +320,58 @@ Yes! Pain001 is designed for integration:
 
 .. code-block:: python
 
-    from pain001 import main
+    from pain001 import process_files
+    from pain001.constants import TEMPLATES_DIR
 
-    # Works directly with SQLite
-    main(
-        xml_message_type='pain.001.001.03',
-        xml_template_file_path='template.xml',
-        xsd_schema_file_path='pain.001.001.03.xsd',
-        data_file_path='payments.db'
+    message_type = "pain.001.001.03"
+    bundle = TEMPLATES_DIR / message_type
+
+    # SQLite works directly; the file must be under the working directory.
+    process_files(
+        xml_message_type=message_type,
+        xml_template_file_path=str(bundle / "template.xml"),
+        xsd_schema_file_path=str(bundle / f"{message_type}.xsd"),
+        data_file_path="payments.db",
+        output_path="from-db.xml",
     )
 
 **Can I use Pain001 in a web application?**
 
-Yes! Example:
+Yes. Generate in memory with ``generate_xml_string`` so nothing is written
+to disk. Do not call ``pain001.main`` from a server: it is the command-line
+entry point and exits the process on error.
 
 .. code-block:: python
 
+    import csv
+    import io
+
     from flask import Flask, request
-    from pain001 import main
+
+    from pain001 import generate_xml_string
+    from pain001.constants import TEMPLATES_DIR
 
     app = Flask(__name__)
+    MESSAGE_TYPE = "pain.001.001.03"
+    BUNDLE = TEMPLATES_DIR / MESSAGE_TYPE
 
-    @app.route('/generate-payment', methods=['POST'])
+
+    @app.route("/generate-payment", methods=["POST"])
     def generate_payment():
-        csv_data = request.files['payments']
+        text = request.files["payments"].read().decode("utf-8")
+        rows = list(csv.DictReader(io.StringIO(text)))
         try:
-            main(...)
-            return {'status': 'success'}
+            xml = generate_xml_string(
+                rows,
+                MESSAGE_TYPE,
+                str(BUNDLE / "template.xml"),
+                str(BUNDLE / f"{MESSAGE_TYPE}.xsd"),
+            )
         except Exception as e:
-            return {'status': 'error', 'message': str(e)}, 400
+            return {"status": "error", "message": str(e)}, 400
+        return xml, 200, {"Content-Type": "application/xml"}
+
+For a ready-made service, ``pain001 serve`` (``api`` extra) runs the REST API.
 
 Security
 ========
@@ -356,7 +383,10 @@ Yes! Pain001 implements:
 - SQL injection protection (parameterised queries)
 - Input validation and sanitization
 - Secure error messages (no sensitive data)
-- Audit logging
+- Structured JSON logging with PII redaction (``pain001.logging_schema``)
+
+Pain001 has no dedicated audit log; record who generated and sent each file
+in your own system.
 
 **How is sensitive data handled?**
 
@@ -372,16 +402,16 @@ No! Never store sensitive credentials in code or templates. Use:
 - Secure vaults
 - Configuration management systems
 
-**How do I enable audit logging?**
+**How do I write pain001's logs to a file?**
+
+Install the JSON formatter on the ``pain001`` logger; IBAN, BIC and name
+fields are redacted:
 
 .. code-block:: python
 
-    import logging
+    from pain001.logging_schema import configure_json_logging
 
-    logging.basicConfig(
-        level=logging.INFO,
-        handlers=[logging.FileHandler('audit.log')]
-    )
+    configure_json_logging(log_file="pain001.log", console_output=False)
 
 Getting Help
 ============
@@ -390,7 +420,6 @@ Getting Help
 
 - `Documentation <https://docs.pain001.com/>`_
 - `GitHub Issues <https://github.com/sebastienrousseau/pain001/issues>`_
-- `GitHub Discussions <https://github.com/sebastienrousseau/pain001/discussions>`_
 - `Email <mailto:contact@pain001.com>`_
 
 **How do I report a bug?**

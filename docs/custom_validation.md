@@ -2,10 +2,10 @@
 
 ## Overview
 
-Pain001 v0.0.47 introduces **externalized JSON Schemas** for payment data validation. This enables:
+Pain001 validates payment data against **externalized JSON Schemas** (introduced in v0.0.47). This enables:
 
 - **Declarative validation rules** without code changes
-- **Multi-version support** (pain.001.001.03 through 11)
+- **Multi-version support** (every bundled pain.001 and pain.008 message type)
 - **Custom bank-specific validation** with schema extensions
 - **Clear error messages** with JSON path notation
 
@@ -97,76 +97,54 @@ $.debtor_account_IBAN: 'INVALID123' does not match '^[A-Z]{2}[0-9]{2}[A-Z0-9]+$'
 
 ## Supported ISO Versions
 
-Schemas are available for all pain.001 versions:
-
-| Version | File | Status |
-|---------|------|--------|
-| pain.001.001.03 | `pain.001.001.03.schema.json` | ✅ |
-| pain.001.001.04 | `pain.001.001.04.schema.json` | ✅ |
-| pain.001.001.05 | `pain.001.001.05.schema.json` | ✅ |
-| pain.001.001.06 | `pain.001.001.06.schema.json` | ✅ |
-| pain.001.001.07 | `pain.001.001.07.schema.json` | ✅ |
-| pain.001.001.08 | `pain.001.001.08.schema.json` | ✅ |
-| pain.001.001.09 | `pain.001.001.09.schema.json` | ✅ |
-| pain.001.001.10 | `pain.001.001.10.schema.json` | ✅ |
-| pain.001.001.11 | `pain.001.001.11.schema.json` | ✅ |
+A schema ships for every bundled message type, as
+`pain001/schemas/<message type>.schema.json`: pain.001.001.03 to
+pain.001.001.13, pain.008.001.02 and pain.008.001.08. Run `pain001 versions`
+for the list.
 
 ## Creating Custom Schemas
 
 ### Bank-Specific Validation
 
-Create custom schemas in `pain001/schemas/custom/`:
-
-```json
-{
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Raiffeisen Austria - pain.001.001.03",
-  "type": "object",
-  "allOf": [
-    { "$ref": "../pain.001.001.03.schema.json" }
-  ],
-  "properties": {
-    "debtor_agent_BIC": {
-      "pattern": "^RZBAATWW.*$",
-      "description": "Must be Raiffeisen Austria BIC"
-    },
-    "debtor_name": {
-      "minLength": 3,
-      "maxLength": 60
-    }
-  }
-}
-```
-
-Usage:
+A custom schema is a complete schema file named `<message type>.schema.json`
+in a directory you pass as `schema_dir`. `$ref` to the bundled schema is not
+resolved, so start from a copy of the bundled schema and tighten it:
 
 ```python
-validator = SchemaValidator(
-    "pain.001.001.03",
-    schema_dir=Path("pain001/schemas/custom")
-)
+import json
+from pathlib import Path
+
+import pain001.schemas
+from pain001.validation.schema_validator import SchemaValidator
+
+message_type = "pain.001.001.03"
+bundled = Path(pain001.schemas.__file__).parent / f"{message_type}.schema.json"
+schema = json.loads(bundled.read_text())
+
+# Tighten the bundled rules for one bank.
+schema["title"] = f"Example bank - {message_type}"
+schema["properties"]["debtor_agent_BIC"]["pattern"] = "^RZBAATWW.*$"
+schema["properties"]["debtor_name"].update(minLength=3, maxLength=60)
+
+# The file must be named <message type>.schema.json.
+custom_dir = Path("bank-schemas")
+custom_dir.mkdir(exist_ok=True)
+(custom_dir / f"{message_type}.schema.json").write_text(json.dumps(schema, indent=2))
+
+validator = SchemaValidator(message_type, schema_dir=custom_dir)
 ```
+
+Keep custom schemas in your own project, not inside the installed package,
+so an upgrade does not remove them.
 
 ### Regional Extensions
 
-```json
-{
-  "title": "SEPA Core - pain.001.001.03",
-  "type": "object",
-  "allOf": [
-    { "$ref": "../pain.001.001.03.schema.json" }
-  ],
-  "properties": {
-    "service_level_code": {
-      "const": "SEPA",
-      "description": "SEPA payments only"
-    },
-    "currency": {
-      "const": "EUR",
-      "description": "EUR currency only"
-    }
-  }
-}
+The same approach restricts a field to one value, for example SEPA-only
+payments:
+
+```python
+schema["properties"]["service_level_code"]["const"] = "SEPA"
+schema["properties"]["currency"]["const"] = "EUR"
 ```
 
 ## Advanced Usage
@@ -245,20 +223,21 @@ The original `validate_csv_data()` function still works and, since 0.0.67, reads
 
 Planned features:
 
-1. **pain.008 (Direct Debit)** - Drop in schema file
-2. **pain.002 (Status Reports)** - New schema set
-3. **Conditional validation** - Cross-field rules
-4. **Custom error messages** - Localization support
+1. **pain.002 (Status Reports)** - New schema set
+2. **Conditional validation** - Cross-field rules
+3. **Custom error messages** - Localization support
 
 ## Troubleshooting
 
 ### Schema File Not Found
 
 ```
-FileNotFoundError: Schema file not found: pain001/schemas/invalid.schema.json
+ValueError: Invalid message type: pain.001.001.99
+FileNotFoundError: Schema validation failed: Path does not exist: .../bank-schemas/pain.001.001.04.schema.json
 ```
 
-**Solution**: Check message type format is correct (e.g., `pain.001.001.03`)
+**Solution**: Use a bundled message type (`pain001 versions`), and name a
+custom schema `<message type>.schema.json` inside the `schema_dir` you pass.
 
 ### Invalid Schema JSON
 
@@ -269,7 +248,7 @@ json.JSONDecodeError: Invalid JSON in schema file
 **Solution**: Validate schema file syntax:
 
 ```bash
-python -m json.tool pain001/schemas/custom/my_schema.json
+python -m json.tool bank-schemas/pain.001.001.03.schema.json
 ```
 
 ### Unexpected Validation Failures

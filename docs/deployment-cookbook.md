@@ -3,8 +3,8 @@
 # Deployment cookbook: pain001 in production
 
 This is the **opinionated, copy-pasteable** deployment guide for
-running pain001's REST API in production with the v0.0.53 stack:
-distributed rate limiting, durable jobs, metrics, dashboards, TLS
+running pain001's REST API in production: distributed rate
+limiting, durable jobs, metrics, dashboards, TLS
 termination, log aggregation. If you want to know *how* to run
 pain001 reliably and don't want to make a hundred small decisions,
 start here.
@@ -76,6 +76,8 @@ single-instance until you genuinely need HA (see [HA + DR](#ha--dr)).
 /opt/pain001/
 ├── docker-compose.yml
 ├── .env                       # secrets, never commit
+├── image/
+│   └── Dockerfile             # pain001 with the api + redis extras
 ├── nginx/
 │   ├── nginx.conf
 │   └── tls/                   # certs from your ACME client
@@ -93,12 +95,38 @@ single-instance until you genuinely need HA (see [HA + DR](#ha--dr)).
     └── grafana/
 ```
 
+### `image/Dockerfile`
+
+The published image `ghcr.io/sebastienrousseau/pain001` ships only
+the `api` extra. The Redis rate limiter and job store below need the
+`redis` extra too, so this stack builds its own image. Pin
+`PAIN001_VERSION` to the release you run:
+
+```dockerfile
+FROM python:3.12-slim
+ARG PAIN001_VERSION
+RUN pip install --no-cache-dir "pain001[api,redis]==${PAIN001_VERSION}" \
+    && useradd --create-home --uid 10001 pain001
+USER pain001
+WORKDIR /home/pain001
+ENTRYPOINT ["pain001"]
+```
+
+To run without Redis, use the published image instead, drop the
+`PAIN001_RATE_LIMIT_BACKEND`, `PAIN001_RATE_LIMIT_REDIS_URL` and
+`PAIN001_JOB_STORE_URL` variables and the `redis` service, and set
+`PAIN001_JOB_STORE_DIR` on a volume for durable jobs.
+
 ### `docker-compose.yml`
 
 ```yaml
 services:
   pain001:
-    image: ghcr.io/sebastienrousseau/pain001:0.0.53
+    build:
+      context: ./image
+      args:
+        PAIN001_VERSION: "<version>"
+    image: pain001-redis:<version>
     restart: unless-stopped
     expose:
       - "8000"
@@ -282,7 +310,8 @@ datasources:
 
 ```bash
 cd /opt/pain001
-docker compose pull
+docker compose build pain001
+docker compose pull --ignore-buildable
 docker compose up -d
 docker compose ps
 ```
@@ -291,7 +320,7 @@ Wait for `pain001` to report `healthy`. Verify:
 
 ```bash
 curl -sS https://payments.example.com/api/v1/health
-# {"status":"ok","version":"0.0.53"}
+# {"status":"healthy","version":"<version>","message":"Pain001 API is running"}
 ```
 
 That's the production deployment. Five containers, one host, full
@@ -305,25 +334,24 @@ observability.
 
 | Variable | Purpose |
 | :--- | :--- |
-| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request. Generate with `openssl rand -hex 32`; rotate every 90 days. |
+| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health`. Generate with `openssl rand -hex 32`; rotate every 90 days. |
 
 ### Recommended env vars
 
 | Variable | Recommended value | Why |
 | :--- | :--- | :--- |
-| `PAIN001_RATE_LIMIT` | `100/minute` | Per-client cap. Tune to your traffic; the in-process default is too low for any real workload. |
-| `PAIN001_RATE_LIMIT_BACKEND` | `redis` | Shared across replicas. The in-process default protects one worker only. |
+| `PAIN001_RATE_LIMIT` | `100/minute` | Per-client cap. Unset means no rate limit. Tune to your traffic. |
+| `PAIN001_RATE_LIMIT_BACKEND` | `redis` | Shared across replicas (needs the `redis` extra). The in-process backend protects one worker only. |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | `redis://redis:6379/0` | Pointing at the compose-network Redis. |
-| `PAIN001_JOB_STORE_URL` | `redis://redis:6379/1` | Durable async-job state. Survives a pain001 restart. |
+| `PAIN001_JOB_STORE_URL` | `redis://redis:6379/1` | Durable async-job state (needs the `redis` extra). Survives a pain001 restart. |
 | `PAIN001_JOB_STORE_DIR` | _unset_ when using Redis | The file-backed store is an alternative, not an addition. |
 
 ### Optional / scenario env vars
 
 | Variable | When to set | Effect |
 | :--- | :--- | :--- |
-| `PAIN001_OUTPUT_DIR_ALLOWLIST` | If your callers specify `output_dir` per request | Comma-separated list of permitted output directories. Defaults to cwd + tmp. |
 | `PYTHONUNBUFFERED` | Always in containers | `print()` lines flush immediately. Critical for `docker logs` debugging. |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | OpenTelemetry traces ship to the named OTLP collector. (Tracing is opt-in in v0.0.54; see issue [#182](https://github.com/sebastienrousseau/pain001/issues/182).) |
+| `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
 
 ---
 
@@ -343,32 +371,36 @@ docker compose logs --since 1h
 ```
 
 For production, ship logs to an aggregator (Loki / Datadog / CloudWatch).
-Pain001 emits structured JSON when `PAIN001_LOG_JSON=1`.
+The server does not switch to JSON logs by itself: there is no
+environment variable for it. Call
+`pain001.logging_schema.configure_json_logging()` from your own entry
+point if you need structured JSON (`PAIN001_LOG_LEVEL` and
+`PAIN001_LOG_FILE` then set the level and an optional file).
 
-### Health + readiness
+### Health
 
 ```bash
 # Liveness (pain001 process is alive)
 curl -sS https://payments.example.com/api/v1/health
 
-# Readiness (Redis reachable, schema cache loaded)
-curl -sS https://payments.example.com/api/v1/ready
-
 # Metrics (only over docker network; not exposed via nginx)
-docker compose exec pain001 wget -qO- http://localhost:8000/metrics | head -40
+docker compose exec pain001 python -c \
+  "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000/metrics').read().decode())" | head -40
 ```
 
-Add the readiness probe to your load balancer health check.
+There is no separate readiness endpoint, and `/api/v1/health` does not
+check Redis. Use it as the load balancer health check and watch Redis
+with its own `redis-cli ping` healthcheck.
 
 ### Upgrades
 
 ```bash
 # 1. Pin the new version in docker-compose.yml.
-$EDITOR docker-compose.yml   # bump :0.0.53 -> :0.0.54
+$EDITOR docker-compose.yml   # bump PAIN001_VERSION and the image tag
 
-# 2. Pull + recreate in place. Zero downtime for a single replica
+# 2. Rebuild + recreate in place. Zero downtime for a single replica
 #    requires a second replica behind nginx; see Scaling out.
-docker compose pull pain001
+docker compose build pain001
 docker compose up -d pain001
 
 # 3. Verify.
@@ -379,14 +411,14 @@ docker compose logs --since 5m pain001 | grep -iE "error|warn"
 ### Rollback
 
 ```bash
-# Revert the image tag in docker-compose.yml and recreate.
-$EDITOR docker-compose.yml   # 0.0.54 -> 0.0.53
+# Revert PAIN001_VERSION and the image tag in docker-compose.yml, then recreate.
+$EDITOR docker-compose.yml
+docker compose build pain001
 docker compose up -d pain001
 ```
 
-Pain001 has been backwards-compatible on the v0.0.x line; rollback
-across a minor is always safe. Redis-stored job state is JSON, no
-schema migrations.
+Read the CHANGELOG entries between the two versions before rolling
+back. Redis-stored job state is JSON, with no schema migrations.
 
 ### Backup
 
@@ -407,8 +439,9 @@ already on) + ship the AOF file to S3 every 5 min via a sidecar.
 
 ## Scaling out
 
-The compose above handles ~50 req/s sustained on a 4 vCPU host.
-When you outgrow that:
+No throughput figure is published for this stack; measure your own
+workload (see [BENCHMARKS.md](BENCHMARKS.md)). When you outgrow one
+replica:
 
 ### Add pain001 replicas (single host)
 
@@ -436,8 +469,8 @@ Sentinel). Run nginx (or an ingress controller) in HA mode.
 1. **Network egress** (the XML you generate goes somewhere). Cap is
    usually your bank's API throughput, not yours.
 2. **Redis CPU** for high request volumes — the rate limiter is
-   write-heavy. Scale Redis vertically first, cluster only if you
-   exceed ~50k req/s.
+   write-heavy. Scale Redis vertically first, and cluster only when
+   one instance is saturated.
 3. **Pain001 CPU** (Jinja2 template rendering + XSD validation).
    Add replicas.
 4. **XSD validation memory** when batches > 100k rows. Use streaming
@@ -486,10 +519,10 @@ the runbook-prepared. Recovery point objective (RPO): 24 hours
 
 ### Auth
 
-- `PAIN001_API_KEY` is a single bearer token. Rotate every 90 days
-  (the API has no built-in rotation; rotate by deploying a new
-  token + the old in `PAIN001_API_KEY_FALLBACK`, then dropping the
-  fallback after migration).
+- `PAIN001_API_KEY` is a single bearer token. Rotate every 90 days.
+  The API has no built-in rotation and accepts one key at a time, so
+  rotate by redeploying with the new key at a moment your clients can
+  switch, or rotate at a gateway in front of pain001.
 - For per-customer auth, terminate at a gateway (Cloudflare, Kong,
   Tyk) that adds the Pain001 bearer post-auth.
 
@@ -507,8 +540,8 @@ the runbook-prepared. Recovery point objective (RPO): 24 hours
   else stays on the docker network.
 - Block egress from the pain001 container except to:
   - Redis (loopback / cluster IP)
-  - Your bank's API / SFTP endpoint (when v0.0.56 `pain001 upload`
-    ships)
+  - Your bank's SFTP endpoint, if you deliver files with
+    `pain001 upload` (`upload` extra)
   - Optional: OpenTelemetry collector endpoint
 
 ### Logging
@@ -521,9 +554,10 @@ the runbook-prepared. Recovery point objective (RPO): 24 hours
 
 ### Vulnerability scanning
 
-- Pin to a specific image digest (`pain001@sha256:...`), not just
-  `:0.0.53`. The sha256 is in every release's GitHub Release page.
-- Run `trivy image ghcr.io/sebastienrousseau/pain001:0.0.53` weekly.
+- Pin the base image and the published image to a digest
+  (`pain001@sha256:...`), not just a tag.
+- Run `trivy image pain001-redis:<version>` (or the published image)
+  weekly.
 - Subscribe to GitHub security advisories on
   `sebastienrousseau/pain001` (one-click in the repo's
   Security tab).
@@ -555,12 +589,9 @@ not the line item to optimise.
 
 - **You only need the CLI.** Don't deploy the REST API. `pip
   install pain001`, run from cron or your CI/CD, done.
-- **You're already on Kubernetes.** This compose stack is a useful
-  reference for the env vars + topology, but use the matching Helm
-  chart instead (community-maintained, see
-  [`pain001-helm`](https://github.com/sebastienrousseau/pain001#companion-packages)
-  status in the README; if it's not listed, the chart isn't ready
-  yet and this compose file is the best reference until it is).
+- **You're already on Kubernetes.** No Helm chart is published. This
+  compose stack is the reference for the env vars and topology;
+  translate it to your own manifests.
 - **You're processing payments at FAANG scale.** > 10k req/s,
   multi-region, multi-bank-corridor: this is a different conversation;
   see [SUPPORT.md](https://github.com/sebastienrousseau/pain001/blob/main/SUPPORT.md#support-tiers).

@@ -1,8 +1,7 @@
 Additional Message Types
 ========================
 
-Pain001 now includes incremental support for more ISO 20022 families beyond
-``pain.001``:
+Pain001 supports these ISO 20022 families beyond ``pain.001``:
 
 ``pain.008.001.02`` and ``pain.008.001.08``
     Direct debit initiation generation is supported through the same XML
@@ -21,11 +20,14 @@ Pain001 now includes incremental support for more ISO 20022 families beyond
 
 ``pain.002``
     Payment status reports can be parsed into Python dictionaries with
-    ``pain001.pain002.parse_pain002_report``.
+    ``pain001.pain002.parse_pain002_report``, and synthetic reports for
+    tests can be built with ``pain001.build_pain002_report``.
 
 ``camt.053``
     Bank statements can be parsed into Python dictionaries with
-    ``pain001.camt053.parse_camt053_statement``.
+    ``pain001.camt053.parse_camt053_statement``, and synthetic statements
+    for tests can be built with ``pain001.build_camt053_statement``. Neither
+    builder produces a real bank response.
 
 Examples:
 

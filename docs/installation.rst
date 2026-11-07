@@ -28,17 +28,18 @@ Install the extra for the integration you need, for example:
    python -m pip install 'pain001[api]'
    pain001 serve --host 127.0.0.1 --port 8000
 
-Other extras are declared in pyproject.toml. Development and documentation
-dependencies are Poetry groups, not pip extras named dev, docs or all.
-Version 0.0.71 adds the rules and upload extras. Until that release is
-published, use the source checkout below for those additions.
+The extras are ``api`` (REST server), ``parquet``, ``redis``, ``mcp``,
+``lsp``, ``gpg`` (encrypted inputs), ``otel`` (tracing), ``fast`` (libxml2
+validation), ``upload`` (SFTP), ``rules`` (CEL policies) and ``sign``
+(XML-DSig signing). Development and documentation dependencies are Poetry
+groups, not pip extras named dev, docs or all.
 
 Development checkout
 ====================
 
 .. code-block:: bash
 
-   git clone --branch feat/v0.0.71 https://github.com/sebastienrousseau/pain001.git
+   git clone https://github.com/sebastienrousseau/pain001.git
    cd pain001
    poetry install --all-extras --with dev,docs
    poetry run make check

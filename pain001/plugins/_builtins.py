@@ -29,12 +29,11 @@ built-ins before it can hurt a downstream package.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from importlib import metadata
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pain001.plugins._registration import BuiltinRegistry
-from pain001.plugins._version import PAIN001_API_VERSION
+from pain001.plugins._version import PAIN001_API_VERSION, _pain001_version
 from pain001.plugins.contracts import (
     LoaderResult,
     PluginMeta,
@@ -44,14 +43,6 @@ from pain001.plugins.contracts import (
 
 if TYPE_CHECKING:
     from pain001.validation._scheme_rules import SchemeValidationResult
-
-
-def _pain001_version() -> str:
-    """Return the running pain001's installed version (or ``\"0.0.0\"``)."""
-    try:
-        return metadata.version("pain001")
-    except metadata.PackageNotFoundError:  # pragma: no cover - dev install
-        return "0.0.0"
 
 
 def _make_meta(name: str, description: str) -> PluginMeta:

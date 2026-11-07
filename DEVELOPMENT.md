@@ -42,7 +42,7 @@ reproduced without reading YAML.
 | Docs lint (codespell, markdownlint) | `uvx codespell` · `npx markdownlint-cli2 "**/*.md"` | `docs-lint.yml` |
 | Docs build | `make docs` | `docs.yml` |
 | Tollgates (dependency, XSD, idempotency, env parity) | `make tollgates` | `ci.yml` |
-| Benchmarks (kept compiling, not asserted) | `make perf` | `nightly.yml` |
+| Benchmarks (kept compiling, not asserted) | `make perf` | `quality.yml` |
 | Fuzzing (Atheris harness in `fuzz/`) | `python fuzz/fuzz_validation.py -max_total_time=60` | `nightly.yml` |
 | Suite conformance (this repo against the family rules) | `poetry run pytest tests/test_suite_conformance.py` | `ci.yml` |
 | Suite consistency (published versions across the family) | `python3 scripts/check_suite_consistency.py` | `suite-consistency.yml` (daily) |
@@ -100,7 +100,9 @@ Sphinx build before claiming documentation is ready.
 - The line is `0.0.x` and every release is one step up; every member of
   the suite ships the same number ([ADR-0001](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
 - Releases are cut by tag; the tag is SSH-signed; `ci.yml` builds,
-  attests and publishes to PyPI with trusted publishing.
+  attests and publishes to PyPI with trusted publishing, then
+  `scripts/release_notes.py` writes the release page from
+  `releases/vX.Y.Z.md` and the live release's assets.
   [RELEASING.md](https://github.com/sebastienrousseau/pain001/blob/main/RELEASING.md) is the checklist, `make release-check`
   its executable form.
 - Commits need a `Signed-off-by` trailer (DCO) and are expected to be
