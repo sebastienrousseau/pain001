@@ -16,7 +16,7 @@
 
 import logging
 
-__version__ = "0.0.78"
+__version__ = "0.0.79"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
