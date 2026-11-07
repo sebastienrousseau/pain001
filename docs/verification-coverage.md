@@ -32,6 +32,11 @@ are representative workflows. Paths in this table are repository-relative.
 | Review-only corrections | `tests/test_record_corrections.py` | `examples/18_review_only_corrections.py` |
 | Plugin contracts and execution | `tests/test_plugins_contract.py`, `tests/test_plugin_dispatch.py`, `tests/test_plugins_builtin_schemes_writer.py` | `examples/19_plugin_dispatch.py` |
 | Async wrappers | `tests/test_async_adapter.py`, `tests/test_async_adapters.py` | `examples/20_async_generation.py` |
+| Faces (projection into other standards' JSON) | `tests/test_faces.py`, `tests/test_api_faces.py` | `examples/21_faces.py` |
+| Business Application Header and XML-DSig | `tests/test_xml_envelope.py`, `tests/test_xml_dsig.py`, `tests/test_core_bah_dsig.py` | `examples/22_envelope_and_signing.py` |
+| Streamed output and record normalisation | `tests/test_xml_streaming.py`, `tests/test_streaming_pipeline.py` | `examples/23_streaming_output.py` |
+| Template registry, typed errors and metric events | `tests/test_template_registry.py`, `tests/test_schema_guardrails.py`, `tests/test_exceptions.py` | `examples/24_templates_and_errors.py` |
+| Plugin and upload CLI | `tests/test_plugins_cli.py`, `tests/test_sftp_cli.py`, `tests/test_sftp_roundtrip.py` | `examples/25_cli_plugins_and_upload.py` |
 | SFTP trust, atomic upload and retries | `tests/test_sftp_upload.py`, `tests/test_sftp_cli.py` | `tests/test_sftp_roundtrip.py` (real loopback SSH/SFTP, synthetic credentials) |
 | Encryption and security boundaries | `tests/test_plugins_gpg.py`, `tests/test_plugins_gpg_keyfile.py`, `tests/test_template_security.py`, `tests/test_code_scanning_regressions.py` | Focused regression fixtures; no real keys, bank accounts or external bank connection |
 

@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.79] - Unreleased
 
+### Added
+
+- Examples 21 to 25 cover faces, the Business Application Header and
+  XML signing, streamed output and record normalisation, the template
+  registry, typed errors and metric events, and the `plugins`,
+  `upload` and `serve` commands. `tests/test_examples.py` now fails
+  when a name in `pain001.__all__` or a CLI command has no example,
+  and every new example is in `docs/verification-coverage.md`.
+
 ### Fixed
 
 - The `xborder-ct` profile reports `XB-CCY-MIX` for every row whose
@@ -18,6 +27,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   which checked currency row by row, reported nothing. Generated XML is
   unchanged; split such a batch into one file per currency. Reported
   privately by Rumi.
+- `process_files_async` and `process_files_streaming_async` take every
+  option of their synchronous twins (`output_path` / `output_dir`, BAH
+  enveloping, signing, schematron). They stopped at the data path, so
+  `process_files_async` always wrote beside the template, inside the
+  installed package for the bundled templates.
+- `pain001 plugins show gpg` reports the running pain001 version; the
+  gpg loader hardcoded 0.0.57.
+- `--help` for `upload`, `face`, `validate`, `versions`, `inspect`,
+  `init`, `serve` and `plugins list/show` no longer prints the
+  function's `Args:` and `Raises:` sections.
+- XML signing declares its dependency: `pip install pain001[sign]`
+  installs `cryptography`, which `sign_xml_document`,
+  `verify_xml_signature` and `--xml-sign-key` import at call time. It
+  was never declared, so a plain install could only fail at run time;
+  the error message now names the extra.
 
 ### Changed
 
