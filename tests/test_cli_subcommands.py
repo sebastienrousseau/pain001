@@ -145,6 +145,18 @@ class TestInitCommand:
         assert "Wrote starter CSV" in result.output
         assert (tmp_path / f"{MTYPE}.csv").is_file()
 
+    def test_init_refuses_a_directory_path(self, tmp_path) -> None:
+        """``-o work/`` names a directory; nothing is written.
+
+        The trailing slash used to be dropped, writing a file named
+        ``work`` and reporting success.
+        """
+        target = tmp_path / "work"
+        result = self.runner.invoke(cli, ["init", MTYPE, "-o", f"{target}/"])
+        assert result.exit_code == 2, result.output
+        assert "a file name" in result.output
+        assert not target.exists()
+
     def test_init_unknown_type(self) -> None:
         """An unknown type exits 2."""
         result = self.runner.invoke(cli, ["init", "pain.999.999.99"])

@@ -30,6 +30,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from pain001.cli._paths import _file_not_directory, _resolve_template_assets
 from pain001.config import ConfigManager
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
@@ -333,23 +334,6 @@ def _print_template_details(message_type: str) -> None:
         console.print(f"example xml: {metadata.example_xml_path}")
     console.print(
         f"input formats: {', '.join(metadata.supported_input_formats)}"
-    )
-
-
-def _resolve_template_assets(
-    xml_message_type: str,
-    xml_template_file_path: str | None,
-    xsd_schema_file_path: str | None,
-) -> tuple[str, str]:
-    """Resolve template/schema from registry when paths are omitted."""
-    if xml_template_file_path and xsd_schema_file_path:
-        return xml_template_file_path, xsd_schema_file_path
-    template_path, schema_path = DEFAULT_TEMPLATE_REGISTRY.resolve_paths(
-        xml_message_type
-    )
-    return (
-        xml_template_file_path or template_path,
-        xsd_schema_file_path or schema_path,
     )
 
 
@@ -1232,6 +1216,7 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
     "--output",
     "output_path",
     type=click.Path(dir_okay=False, writable=True),
+    callback=_file_not_directory,
     default=None,
     help="Where to write the starter CSV (default: ./<message_type>.csv).",
 )
