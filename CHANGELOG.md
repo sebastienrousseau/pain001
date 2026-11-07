@@ -7,6 +7,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.80] - 2026-11-07
+
+### Security
+
+- REST API: every generation now writes its own file,
+  `<message_type>-<random>.xml`, instead of a shared
+  `<message_type>.xml` (GHSA-vv3x-jpvc-w468). With the shared name, a
+  later job overwrote an earlier one, and downloading the earlier job
+  returned the later caller's payment file. Affected: 0.0.48 to 0.0.79.
+  The REST response and job result carry the new path; callers that
+  built `<message_type>.xml` themselves must read it from the response.
+
 ## [0.0.79] - 2026-11-07
 
 ### Added
