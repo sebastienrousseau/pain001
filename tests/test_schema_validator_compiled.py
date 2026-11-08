@@ -24,6 +24,7 @@ import jsonschema
 import pytest
 
 from pain001.constants import valid_xml_types
+from pain001.validation import schema_validator
 from pain001.validation.schema_validator import SchemaValidator
 
 _TEMPLATE_CSV = Path("pain001/templates/pain.001.001.09/template.csv")
@@ -106,7 +107,10 @@ def test_the_schema_is_checked_once_per_schema(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path
 ) -> None:
     """Many rows and many validators check the metaschema only once."""
-    # A schema path no earlier test has compiled, so the cache is cold.
+    # Start cold: the conftest pins pytest's temp root, so tmp_path can
+    # repeat across sessions in one process (mutmut runs several), and
+    # an earlier session may already have compiled this very path.
+    monkeypatch.setattr(schema_validator, "_COMPILED", {})
     name = "pain.001.001.03.schema.json"
     (tmp_path / name).write_bytes(
         (Path("pain001/schemas") / name).read_bytes()
