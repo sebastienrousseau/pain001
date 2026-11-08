@@ -51,19 +51,19 @@ def indent(
     Returns:
         The indented text, of the input's type.
     """
-    indention = width if isinstance(width, str) else " " * width
+    indent_text = width if isinstance(width, str) else " " * width
     text = str(s) + "\n"
     if blank:
-        rv = ("\n" + indention).join(text.splitlines())
+        rv = ("\n" + indent_text).join(text.splitlines())
     else:
         lines = text.splitlines()
         rv = lines.pop(0)
         if lines:
             rv += "\n" + "\n".join(
-                indention + line if line else line for line in lines
+                indent_text + line if line else line for line in lines
             )
     if first:
-        rv = indention + rv
+        rv = indent_text + rv
     if isinstance(s, Markup):
         # rv is s, which was already Markup (escaped), plus the template's
         # own indent: nothing untrusted is marked safe here, as in Jinja's

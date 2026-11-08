@@ -368,6 +368,10 @@ pytest_add_cli_args = [
     "--hypothesis-profile=mutation",
     "--ignore=tests/test_lazy_imports.py",
     "--ignore=tests/test_examples.py",
+    # Worker-process tests spawn fresh interpreters, which import
+    # mutmut's trampolined copy outside the runner and crash, breaking the
+    # pool; the ordinary test run covers them.
+    "--ignore=tests/test_parallel_chunks.py",
     # The complexity gate measures the real tree against its baseline;
     # inside the copy every function is a mutmut trampoline, so the
     # measurement differs. The ordinary test run and CI job cover it.
