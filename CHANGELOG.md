@@ -108,6 +108,12 @@ accepted before; each says how to opt out or fix it.
 - CI runs the fast mutation tier as two parallel shards and gates
   their summed score as one tier (`make mutate-shard`, `make
   mutate-gate`), keeping headroom in the 90 minute job as it grows.
+- Mutation scores are no longer inflated by false kills: each mutmut
+  child gets its own pytest temp directory, where a shared one let
+  children delete each other's files mid-test. The honest fast-tier
+  score was 78.4%; new tests pin the row-to-template mappings of
+  pain.001.001.04 to .08 and pain.008 (columns read, template variables
+  provided, scheme defaults), and the tier now scores about 89%.
 
 ## [0.0.80] - 2026-11-07
 
