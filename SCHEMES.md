@@ -173,6 +173,7 @@ hint (shown by `--explain`).
 | `SEPA-CHARSET` | error | both | Text fields use only the ISO 20022 Latin character set |
 | `SEPA-LEN` | error | both | Names ≤ 70 chars, remittance ≤ 140 chars |
 | `SEPA-SVCLVL` | warning | both | Service level declared as `SEPA` |
+| `SEPA-CHRGBR` | error | `sepa-sct`, `sepa-inst`, `sepa-sdd`, `sepa-b2b` | Charge bearer, when present, is `SLEV` (EPC C2PSP IGs 2025 v1.0: EPC132-08 and EPC121-16 pain.001 2.75/2.98, EPC130-08 and EPC131-08 pain.008 2.68/2.99, "Only "SLEV" is allowed") |
 | `SEPA-INST-AMT` | error | `sepa-inst` | Amount ≤ 100,000.00 EUR (SCT Inst per-transaction cap) |
 | `XB-CCY` | error | `xborder-ct` | Currency is a valid 3-letter ISO 4217 code (any currency) |
 | `XB-BIC` | error | `xborder-ct` | Creditor agent BIC present and valid (mandatory cross-border) |

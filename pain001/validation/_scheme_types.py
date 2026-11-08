@@ -44,6 +44,9 @@ REMEDIATIONS: dict[str, str] = {
     "SEPA-LEN": "Shorten the field to its scheme maximum (70 for names, "
     "140 for remittance information).",
     "SEPA-SVCLVL": "Set service_level_code to 'SEPA' for a SEPA payment.",
+    "SEPA-CHRGBR": "Set charge_bearer to 'SLEV' or leave it empty; the EPC "
+    "customer-to-PSP guidelines for SCT, SCT Inst, SDD Core and SDD B2B "
+    "allow only SLEV.",
     "SDD-MNDT": "Provide mandate_id; a SEPA Direct Debit requires the "
     "mandate reference agreed with the debtor.",
     "SDD-SEQTP": "Set sequence_type to one of FRST, RCUR, OOFF, or FNAL.",

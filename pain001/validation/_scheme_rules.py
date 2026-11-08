@@ -31,7 +31,7 @@ from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
-from pain001.validation import _currency
+from pain001.validation import _charge_bearer, _currency
 from pain001.validation._currency import _minor_units as _minor_units
 from pain001.validation._scheme_types import (
     SchemeValidationResult as SchemeValidationResult,
@@ -420,6 +420,7 @@ class SepaCreditTransferProfile(ValidationProfile):
             _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
+            _charge_bearer.check_charge_bearer(row, index, result)
             _check_service_level(row, index, result)
             _check_amount(row, index, result)
             _check_text_fields(row, index, result)
@@ -450,6 +451,7 @@ class SepaDirectDebitProfile(ValidationProfile):
             _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
+            _charge_bearer.check_charge_bearer(row, index, result)
             _check_service_level(row, index, result)
             _check_amount(row, index, result)
             _check_text_fields(row, index, result)
@@ -485,6 +487,7 @@ class SepaB2BDirectDebitProfile(ValidationProfile):
             _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
+            _charge_bearer.check_charge_bearer(row, index, result)
             _check_service_level(row, index, result)
             _check_amount(row, index, result)
             _check_text_fields(row, index, result)
@@ -517,13 +520,10 @@ class SepaInstantCreditTransferProfile(ValidationProfile):
             _currency.check_currency(row, index, result)
             _check_ibans(row, index, result)
             _check_bic(row, index, result)
+            _charge_bearer.check_charge_bearer(row, index, result)
             _check_service_level(row, index, result)
             _check_amount(
-                row,
-                index,
-                result,
-                max_amount=_SCT_INST_MAX_AMOUNT,
-                cap_rule="SEPA-INST-AMT",
+                row, index, result, _SCT_INST_MAX_AMOUNT, "SEPA-INST-AMT"
             )
             _check_text_fields(row, index, result)
         return result
