@@ -31,6 +31,12 @@ from rich.console import Console
 from rich.table import Table
 
 from pain001.cli._config import _resolve_config
+from pain001.cli._output import (
+    esc,
+    print_scheme_result,
+    print_template_details,
+    print_template_list,
+)
 from pain001.cli._paths import _file_not_directory, _resolve_template_assets
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
@@ -113,12 +119,12 @@ def _validate_schema(
             logger, "xsd_schema", False, e, message_type=xml_message_type
         )
         console.print(
-            f"[bold red]✗ Schema validation failed:[/bold red] {e}",
+            f"[bold red]✗ Schema validation failed:[/bold red] {esc(e)}",
             style="red",
         )
         console.print(
             f"\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
-            f"Expected: {xml_message_type}"
+            f"Expected: {esc(xml_message_type)}"
         )
         raise SystemExit(1) from e
 
@@ -184,22 +190,8 @@ def _run_scheme_check(
             raise SystemExit(1)
         return
 
-    console.print(f"[cyan]→ Validating against scheme '{scheme}'...[/cyan]")
-    for violation in result.violations:
-        colour = "red" if violation.severity == "error" else "yellow"
-        console.print(
-            f"[{colour}]  row {violation.index} [{violation.rule}] "
-            f"{violation.field or ''}: {violation.message}[/{colour}]"
-        )
-        if explain and violation.remediation:
-            console.print(f"[dim]    fix: {violation.remediation}[/dim]")
-    if result.is_valid:
-        console.print(f"[bold green]✓ Scheme '{scheme}' passed[/bold green]")
-    else:
-        console.print(
-            f"[bold red]✗ Scheme '{scheme}' validation failed[/bold red]",
-            style="red",
-        )
+    print_scheme_result(console, result, scheme, explain)
+    if not result.is_valid:
         raise SystemExit(1)
 
 
@@ -222,7 +214,7 @@ def _apply_gpg_options(
     if decrypt_key:
         os.environ["PAIN001_GPG_KEYFILE"] = decrypt_key
         console.print(
-            f"[cyan]ℹ GPG key file: {sanitize_for_log(decrypt_key)}[/cyan]"
+            f"[cyan]ℹ GPG key file: {esc(sanitize_for_log(decrypt_key))}[/cyan]"
         )
     if decrypt_passphrase_env:
         os.environ["PAIN001_GPG_PASSPHRASE_ENV"] = decrypt_passphrase_env
@@ -280,7 +272,7 @@ def _validate_payment_data(
             logger, "payment_data", False, e, message_type=xml_message_type
         )
         console.print(
-            f"[bold red]✗ Data validation failed:[/bold red] {e}",
+            f"[bold red]✗ Data validation failed:[/bold red] {esc(e)}",
             style="red",
         )
         # Provide helpful error messages based on file extension
@@ -301,39 +293,8 @@ def _validate_payment_data(
 def _console_metrics_callback(event: MetricEvent) -> None:
     """Render lightweight metrics to the terminal when requested."""
     console.print(
-        f"[dim]metric[/dim] {event.name} {event.attributes}",
+        f"[dim]metric[/dim] {esc(event.name)} {esc(event.attributes)}",
         highlight=False,
-    )
-
-
-def _print_template_list() -> None:
-    """Print all discovered bundled templates."""
-    table = Table(box=box.SIMPLE_HEAVY)
-    table.add_column("Message Type")
-    table.add_column("Category")
-    table.add_column("Deprecated")
-    for metadata in DEFAULT_TEMPLATE_REGISTRY.list_templates():
-        table.add_row(
-            metadata.message_type,
-            metadata.message_category,
-            "yes" if metadata.deprecated else "no",
-        )
-    console.print(table)
-
-
-def _print_template_details(message_type: str) -> None:
-    """Print metadata for a single template."""
-    metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
-    console.print(f"[bold]{metadata.message_type}[/bold]")
-    console.print(f"category: {metadata.message_category}")
-    console.print(f"template: {metadata.template_path}")
-    console.print(f"schema: {metadata.xsd_path}")
-    if metadata.example_data_path:
-        console.print(f"example data: {metadata.example_data_path}")
-    if metadata.example_xml_path:
-        console.print(f"example xml: {metadata.example_xml_path}")
-    console.print(
-        f"input formats: {', '.join(metadata.supported_input_formats)}"
     )
 
 
@@ -449,17 +410,17 @@ def _generate_xml_files(
 
         console.print(
             f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
-            f"[cyan]Message Type:[/cyan] {xml_message_type}\n"
-            f"[cyan]Output Location:[/cyan] {resolved_output_dir}"
+            f"[cyan]Message Type:[/cyan] {esc(xml_message_type)}\n"
+            f"[cyan]Output Location:[/cyan] {esc(resolved_output_dir)}"
         )
     except Exception as e:
         console.print(
-            f"[bold red]✗ Generation failed:[/bold red] {e}",
+            f"[bold red]✗ Generation failed:[/bold red] {esc(e)}",
             style="red",
         )
         if verbose:
             console.print("\n[yellow]Traceback:[/yellow]")
-            console.print(traceback.format_exc())
+            console.print(traceback.format_exc(), markup=False)
         sys.exit(1)
 
 
@@ -777,11 +738,11 @@ def main(
     logger = _configure_logging(verbose)
 
     if list_templates:
-        _print_template_list()
+        print_template_list(console)
         return
 
     if show_template:
-        _print_template_details(show_template)
+        print_template_details(console, show_template)
         return
 
     resolved_config = _resolve_config(
@@ -844,7 +805,7 @@ def main(
     output_dir = resolved_config.get("output_dir")
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-        console.print(f"[cyan]ℹ Output directory: {output_dir}[/cyan]")
+        console.print(f"[cyan]ℹ Output directory: {esc(output_dir)}[/cyan]")
 
     log_event(
         logger,
@@ -865,7 +826,7 @@ def main(
             message_type=xml_message_type,
         )
         console.print(
-            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{xml_message_type}[/yellow]\n"
+            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{esc(xml_message_type)}[/yellow]\n"
             f"[cyan]Valid types:[/cyan] {', '.join(valid_xml_types)}",
             style="red",
         )
@@ -900,12 +861,12 @@ def main(
             sch_result = validate_schematron(xml_str, rulebook=schematron)
             if not sch_result.is_valid:
                 console.print(
-                    f"\n[bold red]✗ Schematron rulebook '{schematron}' failed:[/bold red]\n"
-                    f"{sch_result.format_report()}"
+                    f"\n[bold red]✗ Schematron rulebook '{esc(schematron)}' failed:[/bold red]\n"
+                    f"{esc(sch_result.format_report())}"
                 )
                 sys.exit(1)
             console.print(
-                f"[bold green]✓ Schematron rulebook '{schematron}' passed[/bold green] "
+                f"[bold green]✓ Schematron rulebook '{esc(schematron)}' passed[/bold green] "
                 f"({sch_result.rules_passed}/{sch_result.rules_evaluated} rules)"
             )
 
@@ -1186,7 +1147,7 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
     if message_type not in valid_xml_types:
         console.print(
             f"[bold red]✗ Error:[/bold red] Unknown message type: "
-            f"[yellow]{message_type}[/yellow]"
+            f"[yellow]{esc(message_type)}[/yellow]"
         )
         sys.exit(2)
     if as_json:
@@ -1204,7 +1165,7 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
             )
         )
         return
-    _print_template_details(message_type)
+    print_template_details(console, message_type)
 
 
 @cli.command("init")
@@ -1228,7 +1189,7 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
     if message_type not in valid_xml_types:
         console.print(
             f"[bold red]✗ Error:[/bold red] Unknown message type: "
-            f"[yellow]{message_type}[/yellow]"
+            f"[yellow]{esc(message_type)}[/yellow]"
         )
         sys.exit(2)
     metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
@@ -1236,15 +1197,15 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
     if not source.is_file():  # pragma: no cover - bundled assets always ship
         console.print(
             f"[bold red]✗ Error:[/bold red] No starter CSV bundled for "
-            f"{message_type}."
+            f"{esc(message_type)}."
         )
         sys.exit(1)
     destination = Path(output_path or f"{message_type}.csv")
     shutil.copyfile(source, destination)
     console.print(
-        f"[bold green]✓ Wrote starter CSV:[/bold green] {destination}\n"
+        f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}\n"
         f"[dim]Edit it, then run:[/dim] pain001 generate -t {message_type} "
-        f"-d {destination}"
+        f"-d {esc(destination)}"
     )
 
 
@@ -1276,7 +1237,7 @@ def serve_cmd(host: str, port: int, reload: bool) -> None:
     # Bootstrap tracing once per process (no-op unless OTEL_ENABLED).
     init_otel()
     console.print(
-        f"[cyan]→ Serving pain001 REST API on http://{host}:{port}[/cyan]"
+        f"[cyan]→ Serving pain001 REST API on http://{esc(host)}:{port}[/cyan]"
     )
     uvicorn.run(  # pragma: no cover - long-running server process
         "pain001.api.app:app", host=host, port=port, reload=reload
@@ -1354,9 +1315,9 @@ def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
     for info in infos:
         table.add_row(
             info.kind,
-            info.meta.name,
-            info.meta.source,
-            info.meta.description,
+            esc(info.meta.name),
+            esc(info.meta.source),
+            esc(info.meta.description),
         )
     console.print(table)
 
@@ -1386,7 +1347,7 @@ def plugins_show_cmd(name: str, kind: str | None) -> None:
     if not matches:
         console.print(
             f"[bold red]✗ Error:[/bold red] No plugin named "
-            f"[yellow]{name}[/yellow]"
+            f"[yellow]{esc(name)}[/yellow]"
             + (f" of kind [yellow]{kind}[/yellow]" if kind else "")
             + "."
         )
@@ -1394,12 +1355,12 @@ def plugins_show_cmd(name: str, kind: str | None) -> None:
     for info in matches:
         console.print(
             f"[bold cyan]{info.kind}[/bold cyan] "
-            f"[bold]{info.meta.name}[/bold] "
-            f"[dim]v{info.meta.version}[/dim]\n"
-            f"  source:      {info.meta.source}\n"
+            f"[bold]{esc(info.meta.name)}[/bold] "
+            f"[dim]v{esc(info.meta.version)}[/dim]\n"
+            f"  source:      {esc(info.meta.source)}\n"
             f"  api version: "
             f"{info.meta.api_version[0]}.{info.meta.api_version[1]}\n"
-            f"  description: {info.meta.description}"
+            f"  description: {esc(info.meta.description)}"
         )
 
 

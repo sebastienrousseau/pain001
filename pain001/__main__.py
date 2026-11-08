@@ -12,6 +12,7 @@ import sys
 
 from rich.console import Console
 
+from pain001.cli._output import esc
 from pain001.cli.cli import cli
 from pain001.core.core import process_files
 from pain001.validation import ValidationConfig, ValidationService
@@ -72,7 +73,7 @@ def main(
         if not report.is_valid:
             console.print("\n[red]Validation Failed:[/red]")
             for error in report.errors:
-                console.print(f"  • {error}")
+                console.print(f"  • {esc(error)}")
             sys.exit(1)
 
         if dry_run:
@@ -88,7 +89,7 @@ def main(
             data_file_path,
         )
     except Exception as e:
-        console.print(f"[red]An error occurred: {e}[/red]")
+        console.print(f"[red]An error occurred: {esc(e)}[/red]")
         sys.exit(1)
 
 

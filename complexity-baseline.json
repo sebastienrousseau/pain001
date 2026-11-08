@@ -55,16 +55,14 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1442
+    "file_lines": 1403
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "cyclomatic": 12,
     "lines": 124
   },
   "pain001/cli/cli.py::_run_scheme_check": {
-    "cognitive": 21,
-    "cyclomatic": 14,
-    "lines": 78
+    "lines": 64
   },
   "pain001/cli/cli.py::_validate_payment_data": {
     "lines": 68
