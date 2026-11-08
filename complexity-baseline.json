@@ -44,7 +44,7 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1368
+    "file_lines": 1350
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "lines": 121
@@ -63,7 +63,7 @@
     "lines": 108
   },
   "pain001/core/core.py::process_files_streaming": {
-    "lines": 89
+    "lines": 85
   },
   "pain001/corpus/builder.py": {
     "file_lines": 946

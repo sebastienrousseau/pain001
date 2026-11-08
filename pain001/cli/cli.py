@@ -33,6 +33,7 @@ from rich.table import Table
 
 from pain001.cli._check import check_cmd
 from pain001.cli._config import _resolve_config
+from pain001.cli._gpg import _apply_gpg_options, _workers_option
 from pain001.cli._hints import print_data_tip, read_text
 from pain001.cli._output import (
     esc,
@@ -59,7 +60,6 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
-from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.transport.cli import upload_cmd
 from pain001.validation import validate_scheme
@@ -193,31 +193,6 @@ def _run_scheme_check(
     print_scheme_result(console, result, scheme, explain)
     if not result.is_valid:
         raise SystemExit(1)
-
-
-def _apply_gpg_options(
-    decrypt_key: str | None, decrypt_passphrase_env: str | None
-) -> None:
-    """Hand the ``--decrypt-*`` flags to the GPG loader via its env vars.
-
-    The loader (``pain001.plugins.builtins_gpg``) is configured through
-    the environment so the same knobs work for the CLI, the REST API
-    and library callers; the flags are sugar over those variables and
-    only apply for the lifetime of this process.
-
-    Args:
-        decrypt_key: Path to a GPG private-key file to import before
-            decrypting, or ``None`` to rely on the keyring.
-        decrypt_passphrase_env: Name of the environment variable that
-            holds the key's passphrase, or ``None`` when unprotected.
-    """
-    if decrypt_key:
-        os.environ["PAIN001_GPG_KEYFILE"] = decrypt_key
-        console.print(
-            f"[cyan]ℹ GPG key file: {esc(sanitize_for_log(decrypt_key))}[/cyan]"
-        )
-    if decrypt_passphrase_env:
-        os.environ["PAIN001_GPG_PASSPHRASE_ENV"] = decrypt_passphrase_env
 
 
 def _validate_payment_data(
@@ -514,6 +489,13 @@ _identifier_checks_option = click.option(
     default=None,
     type=click.IntRange(min=1),
     help="Number of payment rows per streaming chunk (default: 1000).",
+)
+@click.option(
+    "--workers",
+    type=click.IntRange(min=1),
+    expose_value=False,
+    callback=_workers_option,
+    help="Processes building streamed chunks at once (with --streaming).",
 )
 @click.option(
     "--profile",
