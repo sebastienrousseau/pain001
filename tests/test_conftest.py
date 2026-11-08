@@ -114,3 +114,40 @@ def test_pytest_addoption():
 
     # Just ensure it doesn't raise
     pytest_addoption(parser)
+
+
+def _configured_basetemp(monkeypatch, mutant: str | None) -> str:
+    """Run the root conftest's pytest_configure on a stand-in config."""
+    import os
+    import tempfile
+    from types import SimpleNamespace
+
+    import conftest
+
+    for name in ("TMPDIR", "TEMP", "TMP"):
+        monkeypatch.setenv(name, os.environ.get(name, ""))
+    monkeypatch.setattr(tempfile, "tempdir", tempfile.tempdir)
+    if mutant is None:
+        monkeypatch.delenv("MUTANT_UNDER_TEST", raising=False)
+    else:
+        monkeypatch.setenv("MUTANT_UNDER_TEST", mutant)
+    config = SimpleNamespace(
+        option=SimpleNamespace(basetemp=None), getoption=lambda _name: False
+    )
+    conftest.pytest_configure(config)
+    return config.option.basetemp
+
+
+def test_an_ordinary_run_keeps_the_shared_basetemp(monkeypatch):
+    assert _configured_basetemp(monkeypatch, None).endswith("/tmp/pytest")
+
+
+def test_each_mutmut_child_gets_its_own_basetemp(monkeypatch):
+    """mutmut runs a pytest session per mutant in parallel forked
+    children. pytest empties a pinned basetemp when a session starts, so
+    a shared one let each child delete its neighbours' files, and their
+    unrelated failures were counted as killed mutants."""
+    import os
+
+    basetemp = _configured_basetemp(monkeypatch, "pain001.x__f__mutmut_1")
+    assert basetemp.endswith(f"/tmp/pytest-mutant-{os.getpid()}")
