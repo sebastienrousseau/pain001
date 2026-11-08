@@ -296,9 +296,14 @@ def test_serve_host(runner, payload):
     pytest.importorskip("uvicorn")
     with (
         patch("uvicorn.run"),
-        patch.object(cli_mod, "init_otel"),
+        patch("pain001.cli._serve.init_otel"),
     ):
-        result = runner.invoke(cli, ["serve", "--host", f"h{payload}"])
+        # A non-loopback host needs a key since D9 (ADR 0009).
+        result = runner.invoke(
+            cli,
+            ["serve", "--host", f"h{payload}"],
+            env={"PAIN001_API_KEY": "test-key"},
+        )
     _assert_literal(result, f"h{payload}")
 
 

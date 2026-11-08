@@ -34,7 +34,6 @@ from pain001.api._pipeline import (
     InputRefused,
     generate_pipeline,
     job_update,
-    pipeline_limit,
     record_failure,
     record_outcome,
     reset_executor,
@@ -42,6 +41,7 @@ from pain001.api._pipeline import (
     sync_response,
     validate_pipeline,
 )
+from pain001.api._startup import startup_checks
 from pain001.api.auth import require_api_key as _require_api_key
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
@@ -245,9 +245,9 @@ async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
 
     Bootstraps the OpenTelemetry SDK (a no-op unless ``OTEL_ENABLED``
     is set and the ``pain001[otel]`` extra is installed) so the first
-    request does not pay for it. Reads ``PAIN001_API_CONCURRENCY`` now,
-    so a bad value stops the server at start-up rather than failing the
-    first request, and releases the pipeline pool on shutdown.
+    request does not pay for it. Runs the start-up checks (a bad
+    ``PAIN001_API_CONCURRENCY`` stops the server; a missing API key is
+    logged) and releases the pipeline pool on shutdown.
 
     Args:
         application: The FastAPI application being started.
@@ -257,7 +257,7 @@ async def _lifespan(application: FastAPI) -> AsyncIterator[None]:
     """
     del application  # The hook is process-wide; nothing app-specific.
     init_otel()
-    pipeline_limit()
+    startup_checks()
     yield
     reset_executor()
 

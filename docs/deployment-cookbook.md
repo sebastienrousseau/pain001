@@ -144,6 +144,8 @@ services:
 
       # Logging
       PYTHONUNBUFFERED: "1"
+    # `serve` refuses a non-loopback --host unless PAIN001_API_KEY is
+    # set (above), so a missing key stops the container at start-up.
     command: >
       serve --host 0.0.0.0 --port 8000
     depends_on:
@@ -334,7 +336,7 @@ observability.
 
 | Variable | Purpose |
 | :--- | :--- |
-| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health`. Generate with `openssl rand -hex 32`; rotate every 90 days. |
+| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health`. Generate with `openssl rand -hex 32`; rotate every 90 days. Without it, `pain001 serve --host 0.0.0.0` refuses to start. |
 
 ### Recommended env vars
 

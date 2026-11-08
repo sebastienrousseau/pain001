@@ -196,7 +196,9 @@ not credible.
 - **No independent security review** has been commissioned.
 - **TLS is out of scope for the API.** It expects a reverse proxy.
   Running `pain001 serve` directly on a public interface is not a
-  supported deployment.
+  supported deployment. Without `PAIN001_API_KEY` it refuses any
+  non-loopback address unless `--insecure` is given
+  ([ADR 0009](adr/0009-serve-refuses-open-unauthenticated-bind.md)).
 - **Bank acceptance is not assured.** Four layers govern whether a file
   is accepted — ISO schema, scheme rulebook, bank profile, and channel
   eligibility — and Pain001 checks the first two.

@@ -38,6 +38,7 @@ from pain001.cli._output import (
     print_template_list,
 )
 from pain001.cli._paths import _file_not_directory, _resolve_template_assets
+from pain001.cli._serve import serve_cmd
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
 from pain001.constants import (
@@ -59,7 +60,6 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
-from pain001.observability.otel import init_otel
 from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.transport.cli import upload_cmd
@@ -972,6 +972,7 @@ cli.add_command(main, name="generate")
 # This adapter imports Paramiko only when the user requests an upload.
 cli.add_command(upload_cmd)
 cli.add_command(face_cmd)
+cli.add_command(serve_cmd)
 
 
 @cli.command("validate")
@@ -1206,41 +1207,6 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
         f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}\n"
         f"[dim]Edit it, then run:[/dim] pain001 generate -t {message_type} "
         f"-d {esc(destination)}"
-    )
-
-
-@cli.command("serve")
-@click.option("--host", default="127.0.0.1", show_default=True)
-@click.option("--port", default=8000, show_default=True, type=int)
-@click.option(
-    "--reload",
-    is_flag=True,
-    default=False,
-    help="Enable auto-reload for local development.",
-)
-def serve_cmd(host: str, port: int, reload: bool) -> None:
-    """Launch the REST API with uvicorn (requires pain001[api]).
-    \f
-    Args:
-        host: Interface address to bind.
-        port: TCP port to listen on.
-        reload: If True, enable uvicorn auto-reload.
-    """
-    try:
-        import uvicorn
-    except ImportError:
-        console.print(
-            "[bold red]✗ Error:[/bold red] The REST API requires the 'api' "
-            "extra. Install it with: [cyan]pip install pain001[api][/cyan]"
-        )
-        sys.exit(2)
-    # Bootstrap tracing once per process (no-op unless OTEL_ENABLED).
-    init_otel()
-    console.print(
-        f"[cyan]→ Serving pain001 REST API on http://{esc(host)}:{port}[/cyan]"
-    )
-    uvicorn.run(  # pragma: no cover - long-running server process
-        "pain001.api.app:app", host=host, port=port, reload=reload
     )
 
 
