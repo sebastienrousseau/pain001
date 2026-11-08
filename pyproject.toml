@@ -391,4 +391,6 @@ also_copy = [
     "RELEASING.md", "CITATION.cff",
     # The release-notes test reads releases/vX.md once the version is dated.
     "releases",
+    # tests/test_ci_surfaces.py reads the Action and the pre-commit hooks.
+    "action.yml", ".pre-commit-hooks.yaml",
 ]
