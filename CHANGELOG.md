@@ -103,8 +103,9 @@ accepted before; each says how to opt out or fix it.
   only scheme rulebooks, central-bank and clearing-system publications
   and ISO 20022 artefacts are cited by name. `tests/test_no_bank_names.py`
   scans every file the wheel ships (decision D8).
-
-- Planned; filled in as each change lands.
+- CI runs the fast mutation tier as two parallel shards and gates
+  their summed score as one tier (`make mutate-shard`, `make
+  mutate-gate`); a single runner no longer finished it in 90 minutes.
 
 ## [0.0.80] - 2026-11-07
 

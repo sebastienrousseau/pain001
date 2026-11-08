@@ -137,7 +137,15 @@ complex:
 # flipping mutants are found and pinned (see ROADMAP), never lowered to
 # make a red run green.
 MUTATION_FLOOR ?= 80
-MUTATION_FAST_TIER = "pain001.xml.*" "pain001.security.*" "pain001.config.*" "pain001.templates.*"
+# CI runs the fast tier as two shards in parallel, because one runner
+# no longer finished it inside the job's 90 minutes (0.0.81: 4,148
+# mutants). message_registry holds about two thirds of the test time,
+# so it is a shard of its own; "[!m]*" is every other xml module.
+# tests/test_mutation_gate.py checks that each module of the tier falls
+# in exactly one shard. The gate scores the shards' sum, as one tier.
+MUTATION_SHARD_REGISTRY = "pain001.xml.message_registry.*"
+MUTATION_SHARD_REST = "pain001.xml.[!m]*" "pain001.security.*" "pain001.config.*" "pain001.templates.*"
+MUTATION_FAST_TIER = $(MUTATION_SHARD_REGISTRY) $(MUTATION_SHARD_REST)
 
 mutate:
 	@echo "$(YELLOW)Running mutation testing (every module)...$(NC)"
@@ -152,6 +160,19 @@ mutate-fast:
 	@poetry run mutmut run $(MUTATION_FAST_TIER)
 	@poetry run mutmut export-cicd-stats
 	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
+
+# One shard of the fast tier (SHARD=REGISTRY or SHARD=REST); CI gates
+# the shards together with mutate-gate.
+mutate-shard:
+	@test -n '$(MUTATION_SHARD_$(SHARD))' || { echo "SHARD must be REGISTRY or REST" >&2; exit 1; }
+	@rm -rf mutants
+	@poetry run mutmut run $(MUTATION_SHARD_$(SHARD))
+	@poetry run mutmut export-cicd-stats
+
+# Score several shards' stats as one tier: MUTATION_STATS="a.json b.json".
+# The script uses the standard library only, so no virtualenv is needed.
+mutate-gate:
+	@python3 scripts/mutation_gate.py --floor $(MUTATION_FLOOR) $(foreach s,$(MUTATION_STATS),--stats $(s))
 
 docs:
 	@echo "$(YELLOW)Building documentation...$(NC)"

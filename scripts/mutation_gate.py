@@ -2,13 +2,15 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 """Fail when the mutation score falls below the floor.
 
-Reads ``mutants/mutmut-cicd-stats.json`` (``mutmut export-cicd-stats``).
+Reads ``mutants/mutmut-cicd-stats.json`` (``mutmut export-cicd-stats``),
+or several such files: CI runs the fast tier as shards in parallel and
+gates their sum, so the floor applies to the tier, not to each shard.
 The score is killed over checked: mutants no test reached, skipped
 mutants and timeouts are reported but do not count either way, so the
 number answers one question only: of the mutants the tests saw, how
 many did they catch?
 
-Usage: mutation_gate.py --floor 80 [--stats mutants/mutmut-cicd-stats.json]
+Usage: mutation_gate.py --floor 80 [--stats FILE ...]
 """
 
 from __future__ import annotations
@@ -16,10 +18,12 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from collections import Counter
+from collections.abc import Mapping
 from pathlib import Path
 
 
-def score(stats: dict) -> tuple[float, int, int]:
+def score(stats: Mapping[str, int]) -> tuple[float, int, int]:
     """Return (percent killed of checked, killed, checked)."""
     killed = int(stats.get("killed", 0))
     survived = int(stats.get("survived", 0))
@@ -33,15 +37,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--floor", type=float, required=True, help="minimum percent"
     )
-    parser.add_argument("--stats", default="mutants/mutmut-cicd-stats.json")
+    parser.add_argument(
+        "--stats",
+        action="append",
+        help="a stats file; repeat to sum shards "
+        "(default mutants/mutmut-cicd-stats.json)",
+    )
     args = parser.parse_args(argv)
-    path = Path(args.stats)
-    if not path.exists():
-        print(
-            f"no mutation stats at {path}; run mutmut first", file=sys.stderr
-        )
-        return 1
-    stats = json.loads(path.read_text(encoding="utf-8"))
+    stats: Counter[str] = Counter()
+    for path in map(Path, args.stats or ["mutants/mutmut-cicd-stats.json"]):
+        if not path.exists():
+            print(
+                f"no mutation stats at {path}; run mutmut first",
+                file=sys.stderr,
+            )
+            return 1
+        stats.update(json.loads(path.read_text(encoding="utf-8")))
     pct, killed, checked = score(stats)
     print(
         f"mutation score {pct:.1f}% ({killed} of {checked} checked mutants killed; "

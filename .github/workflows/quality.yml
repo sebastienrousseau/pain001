@@ -28,10 +28,17 @@ jobs:
       - run: poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
 
   # Job 1: Mutation Testing (Fast on PR/Push, Full on Schedule)
-  mutation-fast:
+  # The fast tier runs as two shards in parallel (see the Makefile): one
+  # runner no longer finished it inside 90 minutes. Each shard uploads
+  # its stats; the required check below scores their sum as one tier.
+  mutation-fast-shard:
     runs-on: ubuntu-latest
-    name: 🧬 Mutation Testing (Fast)
+    name: 🧬 Mutation shard (${{ matrix.shard }})
     if: github.event_name != 'schedule'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [REGISTRY, REST]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -41,14 +48,41 @@ jobs:
       - run: poetry install --no-interaction --all-extras
       # No `|| true`: for months this step failed on a removed mutmut flag
       # and nobody saw it. The gate in the Makefile is the point of the job.
-      - run: poetry run make mutate-fast
+      - run: poetry run make mutate-shard SHARD=${{ matrix.shard }}
         timeout-minutes: 90
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: mutation-fast-results
+          name: mutation-fast-${{ matrix.shard }}
           path: mutants/mutmut-cicd-stats.json
           if-no-files-found: warn
+
+  # The required check. It runs even when a shard failed (a skipped
+  # required check would count as passing) and fails unless both shards
+  # finished and their summed score reaches the floor.
+  mutation-fast:
+    runs-on: ubuntu-latest
+    name: 🧬 Mutation Testing (Fast)
+    needs: mutation-fast-shard
+    if: always() && github.event_name != 'schedule'
+    steps:
+      - name: Both shards finished
+        env:
+          SHARDS: ${{ needs.mutation-fast-shard.result }}
+        run: |
+          test "$SHARDS" = success || { echo "mutation shards: $SHARDS" >&2; exit 1; }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mutation-fast-*
+          path: mutation-stats
+      - run: >-
+          make mutate-gate
+          MUTATION_STATS="mutation-stats/mutation-fast-REGISTRY/mutmut-cicd-stats.json
+          mutation-stats/mutation-fast-REST/mutmut-cicd-stats.json"
 
   # Job 2: Full Mutation Testing (Scheduled Weekly)
   mutation-full:
