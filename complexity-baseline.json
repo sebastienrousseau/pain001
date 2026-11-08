@@ -61,16 +61,16 @@
     "lines": 267
   },
   "pain001/core/core.py": {
-    "file_lines": 513
+    "file_lines": 502
   },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82
   },
   "pain001/core/core.py::process_files": {
-    "lines": 127
+    "lines": 121
   },
   "pain001/core/core.py::process_files_streaming": {
-    "lines": 95
+    "lines": 89
   },
   "pain001/corpus/builder.py": {
     "file_lines": 946

@@ -24,6 +24,7 @@ import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
+from pain001.core._schematron import schematron_failure
 from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.exceptions import XMLGenerationError
 from pain001.logging_schema import (
@@ -338,22 +339,16 @@ def process_files(
         )
 
         if os.path.exists(written_path):
-            if schematron is not None:
-                from pain001.schematron import validate_schematron
-
-                sch_res = validate_schematron(
-                    written_path, rulebook=schematron
+            sch_error = schematron_failure(
+                written_path,
+                schematron,
+                "Schematron rulebook validation failed for",
+            )
+            if sch_error:
+                context_logger.error(
+                    f"{sanitize_for_log(sch_error)}".replace("\n", "")
                 )
-                if not sch_res.is_valid:
-                    error_msg = (
-                        f"Schematron rulebook validation failed for '{written_path}' "
-                        f"using '{schematron}': {sch_res.error_count} error(s).\n"
-                        f"{sch_res.format_report()}"
-                    )
-                    context_logger.error(
-                        f"{sanitize_for_log(error_msg)}".replace("\n", "")
-                    )
-                    raise XMLGenerationError(error_msg)
+                raise XMLGenerationError(sch_error)
 
             context_logger.info(
                 f"Successfully generated XML file '{written_path}'".replace(
@@ -465,17 +460,11 @@ def process_files_streaming(
         with open(chunked_path, "w", encoding="utf-8") as handle:
             handle.write(xml_content)
 
-        if schematron is not None:
-            from pain001.schematron import validate_schematron
-
-            sch_res = validate_schematron(chunked_path, rulebook=schematron)
-            if not sch_res.is_valid:
-                error_msg = (
-                    f"Schematron validation failed for chunk '{chunked_path}' "
-                    f"using '{schematron}': {sch_res.error_count} error(s).\n"
-                    f"{sch_res.format_report()}"
-                )
-                raise XMLGenerationError(error_msg)
+        sch_error = schematron_failure(
+            chunked_path, schematron, "Schematron validation failed for chunk"
+        )
+        if sch_error:
+            raise XMLGenerationError(sch_error)
 
         emit_metric_event(
             "xml_generated",
