@@ -261,7 +261,7 @@
   },
   "pain001/schematron/validator.py::SchematronValidator.validate": {
     "cyclomatic": 12,
-    "lines": 75
+    "lines": 74
   },
   "pain001/security/dsig.py::sign_xml_document": {
     "lines": 108

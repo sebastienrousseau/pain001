@@ -78,6 +78,12 @@ exists, and the hot paths get faster.
   time. About 1 in 256 wrong passwords pass the PEM padding check and
   fail later as unparsable key data, which was reported as "not an RSA,
   ECDSA or Ed25519 private key".
+- Schematron rulebooks judge every pain.001 version. The bundled ones bind
+  `pain:` to pain.001.001.03, so on a .04 to .13 document they matched no
+  element, ran no rule and reported the file valid: a .09 file paying in
+  USD passed `--schematron sepa`. A rulebook prefix bound to the
+  document's message family now follows the document's version, and
+  `pain001 check` warns when a rulebook ran no rule at all.
 
 ## [0.0.81] - 2026-11-08
 

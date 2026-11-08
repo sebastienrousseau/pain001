@@ -192,6 +192,7 @@ def test_a_schematron_rulebook_runs_on_the_document(
                     "EPC-2", "meh", "/Document/b", "t", severity="WARNING"
                 ),
             ],
+            rules_evaluated=2,
         )
 
     monkeypatch.setattr("pain001.schematron.validate_schematron", fake)
@@ -289,3 +290,14 @@ def test_a_foreign_root_is_its_own_refusal() -> None:
     with pytest.raises(NotAPaymentDocument):
         detect_message_type("<project/>")
     assert issubclass(NotAPaymentDocument, ValueError)
+
+
+def test_a_rulebook_that_matches_nothing_is_a_warning() -> None:
+    pain008 = (
+        COVERAGE / "pain.008.001.08" / "01-collection-every-element.xml"
+    ).read_text(encoding="utf-8")
+    report = check_document(pain008, schematron="sepa")
+    (finding,) = [f for f in report.findings if f.rung == "schematron"]
+    assert finding.rule == "no-rules-evaluated"
+    assert finding.severity == "warning"
+    assert report.passed

@@ -219,7 +219,7 @@ def _schematron(xml: str, rulebook: str) -> list[CheckFinding]:
     from pain001.schematron import validate_schematron
 
     result = validate_schematron(xml, rulebook=rulebook)
-    return [
+    findings = [
         CheckFinding(
             "schematron",
             v.rule_id,
@@ -229,6 +229,18 @@ def _schematron(xml: str, rulebook: str) -> list[CheckFinding]:
         )
         for v in result.violations
     ]
+    if result.rules_evaluated == 0:
+        # A rulebook that matched nothing has not judged the document.
+        findings.append(
+            CheckFinding(
+                "schematron",
+                "no-rules-evaluated",
+                "warning",
+                f"rulebook {result.rulebook} matched no element of this "
+                "document, so none of its rules ran",
+            )
+        )
+    return findings
 
 
 def check_document(
