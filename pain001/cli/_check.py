@@ -21,7 +21,13 @@ from pathlib import Path
 
 import click
 
-from pain001.check import CheckReport, check_document, format_text, to_sarif
+from pain001.check import (
+    CheckReport,
+    NotAPaymentDocument,
+    check_document,
+    format_text,
+    to_sarif,
+)
 
 #: Exit status when a file is refused before any rung runs.
 EXIT_REFUSED = 2
@@ -50,8 +56,13 @@ def _check_one(
     scheme: str | None,
     policy: str | None,
     schematron: str | None,
-) -> CheckReport:
-    """Check one file; a file check cannot run on is refused (exit 2)."""
+    skip_other_xml: bool = False,
+) -> CheckReport | None:
+    """Check one file; a file check cannot run on is refused (exit 2).
+
+    With ``skip_other_xml``, well-formed XML that is not a pain.001 or
+    pain.008 Document is skipped (``None``) with a note on stderr.
+    """
     try:
         return check_document(
             path.read_bytes(),
@@ -59,7 +70,12 @@ def _check_one(
             policy=policy,
             schematron=schematron,
         )
-    except (ValueError, UnicodeDecodeError, FileNotFoundError) as exc:
+    except NotAPaymentDocument as exc:
+        if not skip_other_xml:
+            raise CheckRefused(f"{path}: {exc}") from exc
+        click.echo(f"skipped {path}: {exc}", err=True)
+        return None
+    except (ValueError, FileNotFoundError) as exc:
         raise CheckRefused(f"{path}: {exc}") from exc
 
 
@@ -107,6 +123,12 @@ def _render(checked: list[tuple[CheckReport, str]], output_format: str) -> str:
     help="Report format; sarif is for code-scanning uploads.",
 )
 @click.option(
+    "--skip-other-xml",
+    is_flag=True,
+    default=False,
+    help="Skip XML files that are not pain.001 or pain.008 (for globs).",
+)
+@click.option(
     "-o",
     "--output",
     type=click.Path(dir_okay=False, path_type=Path),
@@ -119,6 +141,7 @@ def check_cmd(
     rules: Path | None,
     schematron: str | None,
     output_format: str,
+    skip_other_xml: bool,
     output: Path | None,
 ) -> None:
     """Check existing pain.001 or pain.008 files (exit 0 = all pass).
@@ -135,6 +158,7 @@ def check_cmd(
         rules: Private CEL policy file.
         schematron: Schematron preset or path.
         output_format: ``text``, ``json`` or ``sarif``.
+        skip_other_xml: Skip well-formed XML that is not a payment.
         output: Optional report file.
 
     A file that is not a bundled pain.001 or pain.008 message, or an
@@ -146,8 +170,14 @@ def check_cmd(
     """
     policy = _read_policy(rules)
     checked = [
-        (_check_one(path, scheme, policy, schematron), str(path))
+        (report, str(path))
         for path in files
+        if (
+            report := _check_one(
+                path, scheme, policy, schematron, skip_other_xml
+            )
+        )
+        is not None
     ]
     rendered = _render(checked, output_format)
     if output is None:

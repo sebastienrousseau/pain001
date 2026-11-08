@@ -1,0 +1,137 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# pain001 check as a GitHub Action: run the validation ladder on payment
+# files in a repository and upload the findings to code scanning.
+#
+#   - uses: sebastienrousseau/pain001@v0.0.82
+#     with:
+#       files: "payments/**/*.xml"
+#       scheme: sepa-sct
+#
+# The action installs pain001 from its own checkout, so the version that
+# runs is the one the workflow pins. Uploading SARIF needs
+# "permissions: security-events: write" on the job.
+name: pain001 check
+description: >-
+  Check pain.001 and pain.008 files against their ISO 20022 schema, the
+  message definition rules and scheme profiles, and upload SARIF.
+author: Sebastien Rousseau
+branding:
+  icon: check-circle
+  color: blue
+
+inputs:
+  files:
+    description: Files or globs to check, separated by spaces or newlines (** recurses).
+    required: true
+  scheme:
+    description: Scheme profiles to apply, comma-separated (e.g. sepa-sct).
+    required: false
+    default: ""
+  schematron:
+    description: Schematron rulebook, a preset (sepa, fednow, cbpr) or a .sch path.
+    required: false
+    default: ""
+  rules:
+    description: Path of a private YAML CEL policy file (installs pain001[rules]).
+    required: false
+    default: ""
+  skip-other-xml:
+    description: Skip XML files that are not pain.001 or pain.008 ("true" or "false").
+    required: false
+    default: "true"
+  sarif-file:
+    description: Where to write the SARIF log.
+    required: false
+    default: pain001-check.sarif
+  upload-sarif:
+    description: Upload the SARIF log to code scanning ("true" or "false").
+    required: false
+    default: "true"
+  python-version:
+    description: Python to run pain001 on (3.11 or newer).
+    required: false
+    default: "3.12"
+
+outputs:
+  sarif-file:
+    description: The SARIF log written.
+    value: ${{ inputs.sarif-file }}
+  exit-code:
+    description: 0 when every file passed, 1 on an error finding, 2 when a file could not be checked.
+    value: ${{ steps.check.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install pain001 from this action's checkout
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        RULES: ${{ inputs.rules }}
+      run: |
+        set -euo pipefail
+        target="$ACTION_PATH"
+        if [ -n "$RULES" ]; then target="${ACTION_PATH}[rules]"; fi
+        python -m pip install --disable-pip-version-check --quiet "$target"
+
+    - name: Check the files
+      id: check
+      shell: bash
+      env:
+        FILES: ${{ inputs.files }}
+        SCHEME: ${{ inputs.scheme }}
+        SCHEMATRON: ${{ inputs.schematron }}
+        RULES: ${{ inputs.rules }}
+        SKIP_OTHER_XML: ${{ inputs.skip-other-xml }}
+        SARIF_FILE: ${{ inputs.sarif-file }}
+      run: |
+        set -uo pipefail
+        shopt -s globstar nullglob
+        options=()
+        if [ -n "$SCHEME" ]; then options+=(--scheme "$SCHEME"); fi
+        if [ -n "$SCHEMATRON" ]; then options+=(--schematron "$SCHEMATRON"); fi
+        if [ -n "$RULES" ]; then options+=(--rules "$RULES"); fi
+        if [ "$SKIP_OTHER_XML" = "true" ]; then options+=(--skip-other-xml); fi
+        # Split the input on whitespace with globbing off, then expand
+        # each pattern once (unquoted on purpose: the caller wrote a glob).
+        set -f
+        # shellcheck disable=SC2206
+        patterns=($FILES)
+        set +f
+        paths=()
+        for pattern in "${patterns[@]}"; do
+          # shellcheck disable=SC2206
+          matched=($pattern)
+          paths+=("${matched[@]}")
+        done
+        if [ "${#paths[@]}" -eq 0 ]; then
+          echo "::error::no file matches: $FILES"
+          echo "exit-code=2" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        pain001 check "${options[@]}" "${paths[@]}"
+        code=$?
+        pain001 check "${options[@]}" --format sarif -o "$SARIF_FILE" "${paths[@]}" >/dev/null 2>&1 || true
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+
+    - name: Upload SARIF to code scanning
+      if: inputs.upload-sarif == 'true' && hashFiles(inputs.sarif-file) != ''
+      uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+      with:
+        sarif_file: ${{ inputs.sarif-file }}
+        category: pain001-check
+
+    - name: Fail when a file did not pass
+      shell: bash
+      env:
+        CODE: ${{ steps.check.outputs.exit-code }}
+      run: |
+        if [ "$CODE" != "0" ]; then
+          echo "::error::pain001 check exited $CODE"
+          exit "$CODE"
+        fi

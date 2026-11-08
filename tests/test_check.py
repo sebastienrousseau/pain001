@@ -18,6 +18,7 @@ from pain001.check import (
     MAX_CHECK_BYTES,
     CheckFinding,
     CheckReport,
+    NotAPaymentDocument,
     check_document,
     detect_message_type,
     format_text,
@@ -282,3 +283,9 @@ def test_one_sarif_run_covers_every_file() -> None:
     ]
     assert uris == ["a.xml"] * 3 + ["c.xml"] * 3
     assert to_sarif([])["runs"][0]["results"] == []
+
+
+def test_a_foreign_root_is_its_own_refusal() -> None:
+    with pytest.raises(NotAPaymentDocument):
+        detect_message_type("<project/>")
+    assert issubclass(NotAPaymentDocument, ValueError)

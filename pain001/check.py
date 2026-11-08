@@ -58,6 +58,10 @@ _CLARK = re.compile(r"\{[^}]*\}")
 RUNGS = ("xsd", "mdr", "scheme", "schematron")
 
 
+class NotAPaymentDocument(ValueError):
+    """Well-formed XML whose root is not a pain.001 or pain.008 Document."""
+
+
 @dataclass(frozen=True)
 class CheckFinding:
     """One problem one rung found.
@@ -129,9 +133,10 @@ def detect_message_type(xml: str) -> str:
         The message type, for example ``pain.001.001.09``.
 
     Raises:
-        ValueError: If the document is not well-formed XML, is not a
-            pain.001 or pain.008 ``Document``, or names a version pain001
-            does not bundle.
+        NotAPaymentDocument: If the root is not a pain.001 or pain.008
+            ``Document``.
+        ValueError: If the document is not well-formed XML, carries a DTD,
+            or names a version pain001 does not bundle.
     """
     from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 
@@ -145,7 +150,7 @@ def detect_message_type(xml: str) -> str:
         ) from exc
     match = _NAMESPACE.match(root.tag)
     if match is None:
-        raise ValueError(
+        raise NotAPaymentDocument(
             f"not a pain.001 or pain.008 Document: the root is {root.tag}"
         )
     message_type = match[1]
@@ -360,6 +365,7 @@ __all__ = [
     "RUNGS",
     "CheckFinding",
     "CheckReport",
+    "NotAPaymentDocument",
     "check_document",
     "detect_message_type",
     "format_text",

@@ -26,6 +26,15 @@ exists, and the hot paths get faster.
   text, with `scheme` and a Schematron preset (never a server path), on
   the bounded pipeline pool: `200` with the report, `422` when the
   document cannot be checked.
+- `--skip-other-xml` makes `pain001 check` skip, with a note, well-formed
+  XML that is not a pain.001 or pain.008 Document, so a glob can match
+  other XML files; malformed XML and DTDs are still refused.
+- The repository is a GitHub Action (`action.yml`): it installs pain001
+  from the pinned tag, runs `pain001 check` on `files` (paths or globs),
+  uploads SARIF to code scanning and fails the job when a file does not
+  pass.
+- pre-commit hooks (`.pre-commit-hooks.yaml`): `pain001-check` on staged
+  XML files and `pain001-validate` on a payment data file.
 
 ### Fixed
 

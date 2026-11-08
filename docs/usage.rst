@@ -89,6 +89,43 @@ preset only (``sepa``, ``fednow``, ``cbpr``), never a server path. A
 failed rung is a ``200`` with ``"passed": false``; a document that
 cannot be checked is a ``422``.
 
+In CI
+-----
+
+The repository is also a GitHub Action. It installs pain001 from the
+tag you pin, checks the files, uploads the findings to code scanning
+and fails the job when a file does not pass. ``--skip-other-xml`` is
+on, so a glob may match XML that is not a payment:
+
+.. code-block:: yaml
+
+   permissions:
+     contents: read
+     security-events: write   # for the SARIF upload
+   steps:
+     - uses: actions/checkout@<sha>
+     - uses: sebastienrousseau/pain001@v0.0.82
+       with:
+         files: "payments/**/*.xml"
+         scheme: sepa-sct
+
+``files`` takes paths or globs (``**`` recurses); ``schematron``,
+``rules``, ``sarif-file``, ``upload-sarif: "false"`` and
+``python-version`` are optional.
+
+For pre-commit, ``pain001-check`` checks staged XML files and
+``pain001-validate`` validates a data file when it changes:
+
+.. code-block:: yaml
+
+   - repo: https://github.com/sebastienrousseau/pain001
+     rev: v0.0.82
+     hooks:
+       - id: pain001-check
+       - id: pain001-validate
+         args: [-t, pain.001.001.09, -d, payments.csv]
+         files: ^payments\.csv$
+
 Python: in-memory output
 ========================
 

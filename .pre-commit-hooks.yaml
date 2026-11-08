@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+# pre-commit hooks for repositories that keep payment files:
+#
+#   - repo: https://github.com/sebastienrousseau/pain001
+#     rev: v0.0.82
+#     hooks:
+#       - id: pain001-check
+#         args: [--scheme, sepa-sct]      # optional
+#       - id: pain001-validate
+#         args: [-t, pain.001.001.09, -d, payments.csv]
+#         files: ^payments\.csv$
+
+# Runs the validation ladder on every staged XML file; XML that is not a
+# pain.001 or pain.008 Document is skipped. Narrow it with "files:".
+- id: pain001-check
+  name: pain001 check
+  description: Check pain.001 and pain.008 files (XSD, MDR rules, schemes).
+  entry: pain001 check --skip-other-xml
+  language: python
+  types: [xml]
+
+# Validates a payment data file (CSV, JSON, JSONL, SQLite) without
+# generating XML. It takes no file names: give -t and -d in "args", and
+# set "files:" to the data file so it runs when that file changes.
+- id: pain001-validate
+  name: pain001 validate
+  description: Validate payment data against a message type's schema.
+  entry: pain001 validate
+  language: python
+  pass_filenames: false
+  files: \.(csv|json|jsonl|db|sqlite)$

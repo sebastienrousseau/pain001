@@ -153,3 +153,37 @@ def test_rules_without_the_extra_exits_two(
 def test_check_is_listed_in_the_cli_help() -> None:
     result = CliRunner().invoke(cli, ["--help"])
     assert "check" in result.output
+
+
+def test_skip_other_xml_skips_only_non_payment_xml(tmp_path: Path) -> None:
+    other = tmp_path / "pom.xml"
+    other.write_text("<project/>", encoding="utf-8")
+    result = _run(
+        "--skip-other-xml", "--format", "json", str(other), str(GOOD)
+    )
+    assert result.exit_code == 0, result.output
+    assert f"skipped {other}: not a pain.001 or pain.008 Document" in (
+        result.output
+    )
+    data = json.loads(result.output[result.output.index("[") :])
+    assert [entry["file"] for entry in data] == [str(GOOD)]
+
+
+@pytest.mark.parametrize(
+    "content",
+    ["<project", '<!DOCTYPE x [<!ENTITY a "b">]><x>&a;</x>'],
+    ids=["malformed", "dtd"],
+)
+def test_skip_other_xml_still_refuses_broken_xml(
+    tmp_path: Path, content: str
+) -> None:
+    path = tmp_path / "broken.xml"
+    path.write_text(content, encoding="utf-8")
+    assert _run("--skip-other-xml", str(path)).exit_code == 2
+
+
+def test_skipping_every_file_passes(tmp_path: Path) -> None:
+    other = tmp_path / "pom.xml"
+    other.write_text("<project/>", encoding="utf-8")
+    result = _run("--skip-other-xml", "--format", "sarif", str(other))
+    assert result.exit_code == 0
