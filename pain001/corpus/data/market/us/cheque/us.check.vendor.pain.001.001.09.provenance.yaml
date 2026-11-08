@@ -40,8 +40,8 @@ twins:
     - creditor_agent_BIC|creditor_agent_member_id
 provenance:
   sources:
-  - title: ISO 20022 MDR Payments Initiation 2020-2021, cheque rules; Cross River
-      pain.001.001.03 check sample (index)
+  - title: ISO 20022 MDR Payments Initiation 2020-2021, cheque rules; a US bank's
+      public pain.001.001.03 check sample (index)
     read: '2026-09-10'
   confidence: assumed
   evidence: []

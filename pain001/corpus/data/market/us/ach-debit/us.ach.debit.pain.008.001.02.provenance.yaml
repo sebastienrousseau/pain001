@@ -36,7 +36,7 @@ provenance:
   sources:
   - title: Nacha Operating Rules and Guidelines, debit entries and authorisation
     read: '2026-09-10'
-  - title: Citi and Bank of America pain.008 ACH debit formatting notes
+  - title: Two US banks' public pain.008 ACH debit formatting notes
     read: '2026-09-10'
   confidence: derived
   evidence: []

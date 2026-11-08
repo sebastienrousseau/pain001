@@ -39,7 +39,7 @@ twins:
     missing_required: []
 provenance:
   sources:
-  - title: 'Nordea, pain.001 examples and Corporate Access implementation guide (Jun
+  - title: 'A Swedish bank''s public pain.001 examples and implementation guide (Jun
       2026): Plusgiro payment'
     read: '2026-09-10'
   confidence: derived

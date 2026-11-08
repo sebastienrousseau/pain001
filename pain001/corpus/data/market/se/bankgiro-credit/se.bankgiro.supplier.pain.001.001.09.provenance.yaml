@@ -39,11 +39,11 @@ twins:
     missing_required: []
 provenance:
   sources:
-  - title: 'Nordea, pain.001 examples and Corporate Access implementation guide (Jun
+  - title: 'A Swedish bank''s public pain.001 examples and implementation guide (Jun
       2026): Bankgiro payment with OCR'
     read: '2026-09-10'
-  - title: Swedbank, Message Implementation Guide pain.001 v2.0; Bankgirot OCR reference
-      rules
+  - title: Bankgirot OCR reference rules; a second Swedish bank's public pain.001
+      message implementation guide v2.0
     read: '2026-09-10'
   confidence: derived
   evidence: []

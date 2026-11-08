@@ -43,7 +43,7 @@ provenance:
   sources:
   - title: DK DFUE-Abkommen Anlage 3 V26.11, order type CCU
     read: '2026-09-10'
-  - title: DZ BANK, CCU product description
+  - title: A German bank's public CCU product description
     read: '2026-09-10'
   confidence: derived
   evidence: []

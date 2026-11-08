@@ -41,8 +41,8 @@ provenance:
   sources:
   - title: Federal Reserve Fedwire Funds Service ISO 20022 quick reference
     read: '2026-09-10'
-  - title: Citi ISO 20022 FAQs (Feb 2026); Cross River pain.001.001.03 wire input
-      specification
+  - title: Two US banks' public ISO 20022 FAQs (Feb 2026) and pain.001.001.03 wire
+      input specification
     read: '2026-09-10'
   confidence: derived
   evidence: []
