@@ -320,3 +320,62 @@ def test_streaming_chunk_write_failure_leaves_no_partial_chunk(
             TYPE, TEMPLATE, XSD, str(data), 10, output_dir=str(out)
         )
     assert _listing(out) == []
+
+
+def test_publish_stream_reports_the_size_on_disk(tmp_path: Path) -> None:
+    """The size is the published file's, not a re-encoding of the text."""
+    chunks = ["<a>", "é€😀", "\n", "</a>\n"]
+    target = tmp_path / "out" / "x.xml"
+    path, size = publish.publish_stream(iter(chunks), str(target))
+    assert size == Path(path).stat().st_size
+    assert size == len("".join(chunks).encode("utf-8"))
+
+
+def test_publish_stream_does_not_encode_chunks_to_count_them(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    class Chunk(str):
+        encoded = 0
+
+        def encode(self, *args: object, **kwargs: object) -> bytes:
+            Chunk.encoded += 1
+            return super().encode(*args, **kwargs)  # type: ignore[arg-type]
+
+    publish.publish_stream(
+        iter([Chunk("<a>"), Chunk("</a>")]), str(tmp_path / "y.xml")
+    )
+    assert Chunk.encoded == 0
+
+
+def test_generate_xml_reports_the_written_size(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import csv
+
+    from pain001.constants import TEMPLATES_DIR
+    from pain001.xml import generate_xml as gx
+
+    monkeypatch.chdir(tmp_path)
+    events: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        gx, "emit_metric_event", lambda name, **f: events.append(f)
+    )
+    mt = "pain.001.001.09"
+    bundle = TEMPLATES_DIR / mt
+    with (bundle / "template.csv").open(encoding="utf-8") as handle:
+        rows = list(csv.DictReader(handle))
+    out = gx.generate_xml(
+        rows,
+        mt,
+        str(bundle / "template.xml"),
+        str(bundle / f"{mt}.xsd"),
+        output_path=str(tmp_path / "out.xml"),
+    )
+    (written,) = [e for e in events if "file_size_bytes" in e]
+    assert written["file_size_bytes"] == Path(out).stat().st_size
+
+
+def test_a_non_file_writer_still_reports_a_size() -> None:
+    from pain001.xml import generate_xml as gx
+
+    assert gx._written_size("s3://bucket/key.xml", "<a>é</a>") == 9

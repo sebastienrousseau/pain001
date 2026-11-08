@@ -62,6 +62,9 @@ exists, and the hot paths get faster.
   its public names on first use (about 20 ms instead of 260 ms), and
   xmlschema, pyarrow and the ISO JSON twins load when they are first
   needed, not at start-up.
+- Written files report their size from disk instead of encoding the
+  document a second time to count it; on Windows the count now includes
+  the CRLF line endings the file actually has.
 
 ### Fixed
 

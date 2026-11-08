@@ -17,6 +17,7 @@
 """Generate and XSD-validate ISO 20022 XML payment messages."""
 
 import logging
+import os
 import re
 import time
 from collections.abc import Iterator
@@ -399,6 +400,14 @@ def generate_xml_string(
     return str(xml_content)
 
 
+def _written_size(path: str, xml_content: str) -> int:
+    """The file's size on disk; the text's if a plugin wrote elsewhere."""
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return len(xml_content.encode("utf-8"))
+
+
 @traced("pain001.write")
 def generate_xml(
     data: list[dict[str, Any]],
@@ -481,7 +490,7 @@ def generate_xml(
         "xml_generated",
         message_type=payment_initiation_message_type,
         output_path=str(safe_xml_path),
-        file_size_bytes=len(xml_content.encode("utf-8")),
+        file_size_bytes=_written_size(safe_xml_path, xml_content),
     )
 
     logger.info("XML file created at %s", safe_xml_path)
