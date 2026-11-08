@@ -137,9 +137,9 @@ complex:
 # flipping mutants are found and pinned (see ROADMAP), never lowered to
 # make a red run green.
 MUTATION_FLOOR ?= 80
-# CI runs the fast tier as two shards in parallel, because one runner
-# no longer finished it inside the job's 90 minutes (0.0.81: 4,148
-# mutants). message_registry holds about two thirds of the test time,
+# CI runs the fast tier as two shards in parallel: 4,148 mutants in
+# 0.0.81, where the last single run on main took 43 of the job's 90
+# minutes. message_registry holds about two thirds of the test time,
 # so it is a shard of its own; "[!m]*" is every other xml module.
 # tests/test_mutation_gate.py checks that each module of the tier falls
 # in exactly one shard. The gate scores the shards' sum, as one tier.

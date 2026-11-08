@@ -124,6 +124,25 @@ def reset_executor() -> None:
         executor.shutdown(wait=False)
 
 
+def _forget_executor_in_child() -> None:
+    """Give a forked child its own pool and lock.
+
+    A child inherits the pool object but none of its threads. The pool
+    still counts the parent's idle workers, so it would start none and
+    the child's first pipeline would wait forever; the lock may also
+    have been held by a parent thread at the fork. The parent's pool is
+    not shut down here: its threads are not the child's to join.
+    """
+    global _executor, _executor_lock
+    _executor = None
+    _executor_lock = threading.Lock()
+
+
+# Every platform CI runs on is POSIX; Windows has no fork to guard.
+if hasattr(os, "register_at_fork"):  # pragma: no branch
+    os.register_at_fork(after_in_child=_forget_executor_in_child)
+
+
 async def run_pipeline(
     func: Callable[P, T], *args: P.args, **kwargs: P.kwargs
 ) -> T:

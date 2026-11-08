@@ -28,8 +28,8 @@ jobs:
       - run: poetry run sphinx-build -W --keep-going -b html docs docs/_build/html
 
   # Job 1: Mutation Testing (Fast on PR/Push, Full on Schedule)
-  # The fast tier runs as two shards in parallel (see the Makefile): one
-  # runner no longer finished it inside 90 minutes. Each shard uploads
+  # The fast tier runs as two shards in parallel (see the Makefile), so
+  # it keeps headroom inside 90 minutes as it grows. Each shard uploads
   # its stats; the required check below scores their sum as one tier.
   mutation-fast-shard:
     runs-on: ubuntu-latest

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import asyncio
 import importlib
+import os
 import threading
 from collections.abc import Callable
 from typing import Any
@@ -262,3 +263,51 @@ def test_reset_executor_is_idempotent():
     pipeline.reset_executor()
     pipeline.reset_executor()
     assert pipeline._executor is None
+
+
+@pytest.mark.skipif(not hasattr(os, "fork"), reason="POSIX fork only")
+@pytest.mark.filterwarnings("ignore:This process .* is multi-threaded")
+def test_a_forked_child_gets_a_working_pool():
+    """A child forked after the pool started still runs its pipelines.
+
+    The child inherits the pool object but none of its threads; the
+    pool still counts the parent's idle workers, starts none, and the
+    child's first pipeline waits forever. mutmut forks a child per
+    mutant after its stats run used the pool, which is how this was
+    found; a server or task runner that forks after a request is hit
+    the same way.
+    """
+    pipeline = importlib.import_module("pain001.api._pipeline")
+    pipeline.reset_executor()
+    try:
+        assert asyncio.run(pipeline.run_pipeline(int, "1")) == 1
+        pid = os.fork()
+        # The child is not traced by coverage; its exit code reports it.
+        if pid == 0:  # pragma: no cover
+            try:
+                job = pipeline.run_pipeline(int, "2")
+                result = asyncio.run(asyncio.wait_for(job, _WAIT))
+                os._exit(0 if result == 2 else 1)
+            except BaseException:
+                os._exit(2)
+        _, status = os.waitpid(pid, 0)
+        assert os.waitstatus_to_exitcode(status) == 0
+    finally:
+        pipeline.reset_executor()
+
+
+def test_the_fork_hook_drops_the_pool_and_replaces_the_lock():
+    """The hook itself, in this process: the child path above is not
+    traced by coverage, which follows only the parent."""
+    pipeline = importlib.import_module("pain001.api._pipeline")
+    pipeline.reset_executor()
+    pool = pipeline._get_executor()
+    lock = pipeline._executor_lock
+    try:
+        pipeline._forget_executor_in_child()
+        assert pipeline._executor is None
+        assert pipeline._executor_lock is not lock
+        assert pipeline._get_executor() is not pool
+    finally:
+        pool.shutdown(wait=True)
+        pipeline.reset_executor()

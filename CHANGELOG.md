@@ -65,7 +65,9 @@ accepted before; each says how to opt out or fix it.
   thread pool sized by `PAIN001_API_CONCURRENCY` (default: the CPU
   count) instead of the event loop. A 1,000-row `/validate` no longer
   stalls `/health` for five seconds, and a burst of async jobs queues
-  instead of running all at once.
+  instead of running all at once. A process forked after the pool
+  started gets a fresh pool rather than one with no threads that
+  never runs a job.
 - A failed async REST job reports which rows and columns failed
   validation instead of "Processing failed".
 - Concurrent first lookups on a fresh plugin registry no longer return
@@ -105,7 +107,7 @@ accepted before; each says how to opt out or fix it.
   scans every file the wheel ships (decision D8).
 - CI runs the fast mutation tier as two parallel shards and gates
   their summed score as one tier (`make mutate-shard`, `make
-  mutate-gate`); a single runner no longer finished it in 90 minutes.
+  mutate-gate`), keeping headroom in the 90 minute job as it grows.
 
 ## [0.0.80] - 2026-11-07
 
