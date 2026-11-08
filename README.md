@@ -177,6 +177,9 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
 
 - Generate validated XML to files or in memory through `generate_xml_string`.
   Streaming produces one file per chunk with recomputed control totals.
+- Check files that already exist with `pain001 check` (XSD, message rules,
+  schemes; text, JSON or SARIF), at `POST /api/v1/check`, in the GitHub Action
+  or as a pre-commit hook.
 - Discover bundled message types with `pain001 versions` and inspect metadata
   with `pain001 inspect`. Inputs, templates and schemas are described in the
   [user guide](docs/usage.rst) and [input-column reference](docs/input-columns.md).
