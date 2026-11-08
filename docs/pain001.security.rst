@@ -6,6 +6,14 @@ pain001.security package
 Submodules
 ----------
 
+pain001.security.api\_access module
+-----------------------------------
+
+.. automodule:: pain001.security.api_access
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.security.dsig module
 ----------------------------
 

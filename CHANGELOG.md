@@ -27,6 +27,15 @@ exists, and the hot paths get faster.
   the bounded pipeline pool: `200` with the report, `422` when the
   document cannot be checked.
 
+### Fixed
+
+- The CLI starts on a base install again. In 0.0.81, `pip install pain001`
+  without the `api` extra made every command, `pain001 --version`
+  included, fail with "The REST API requires the 'api' extra": the
+  `serve` refusal imported its settings from the FastAPI module. The
+  settings now live in `pain001.security.api_access` (re-exported by
+  `pain001.api.auth`), and a test runs the CLI with every extra blocked.
+
 ## [0.0.81] - 2026-11-08
 
 Correct output: every file pain001 writes is one valid batch, checked

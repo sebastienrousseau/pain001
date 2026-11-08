@@ -28,9 +28,13 @@ import sys
 import click
 from rich.console import Console
 
-from pain001.api.auth import API_KEY_ENV, INSECURE_ENV, insecure_allowed
 from pain001.cli._output import esc
 from pain001.observability.otel import init_otel
+from pain001.security.api_access import (
+    API_KEY_ENV,
+    INSECURE_ENV,
+    insecure_allowed,
+)
 
 console = Console()
 
