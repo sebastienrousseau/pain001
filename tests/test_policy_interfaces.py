@@ -67,7 +67,7 @@ def test_invalid_rest_rules(endpoint):
 )
 def test_async_rules_never_bypass_gate(monkeypatch, rules, expected):
     """Background validation-only jobs enforce policy and never render XML."""
-    module = importlib.import_module("pain001.api.app")
+    module = importlib.import_module("pain001.api._pipeline")
     generate = Mock(side_effect=AssertionError("must not render"))
     monkeypatch.setattr(module, "generate_xml", generate)
     request = GenerateXMLRequest(

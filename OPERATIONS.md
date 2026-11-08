@@ -15,6 +15,13 @@ pain001 serve --host 0.0.0.0 --port 8000      # dev
 uvicorn pain001.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 ```
 
+Validation and generation run in a thread pool, off the event loop, so
+`/health` and other requests stay responsive while a large file is
+processed. At most `PAIN001_API_CONCURRENCY` pipelines run at once per
+worker process (default: the CPU count); further requests and async
+jobs wait their turn (jobs show `pending` until they start). With
+`--workers N`, each worker has its own pool.
+
 ### Container image (GHCR)
 
 ```bash
@@ -57,6 +64,7 @@ browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 | Variable | Effect | Example |
 | :--- | :--- | :--- |
 | `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint except `/api/v1/health` | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
+| `PAIN001_API_CONCURRENCY` | Validation and generation pipelines run at once per worker process; extra requests and jobs queue. A positive integer; anything else stops the server at start-up | CPU count (default) |
 | `PAIN001_RATE_LIMIT` | Per-client request cap (fixed window); unset means no limit | `100/minute` |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` shares the rate-limit counters across replicas (`pain001[redis]`) | `redis` |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the rate limiter; falls back to `PAIN001_JOB_STORE_URL` | `redis://redis:6379/0` |

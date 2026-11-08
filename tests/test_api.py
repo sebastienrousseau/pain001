@@ -588,19 +588,19 @@ class TestAsyncGenerationEndpoint:
         csv_file = tmp_path / "invalid.csv"
         csv_file.write_text("id\n12345\n")
 
-        response = client.post(
-            "/api/generate/async",
-            json={
-                "file_path": str(csv_file),
-                "data_source": "csv",
-                "message_type": "pain.001.001.03",
-            },
-        )
-        assert response.status_code == 200 or response.status_code == 400
-        # If 200, async job was created
-        if response.status_code == 200:
-            data = response.json()
-            job_id = data["job_id"]
+        # The job runs on the server's event loop; keep it alive between
+        # requests, like a running server.
+        with TestClient(app) as running_client:
+            response = running_client.post(
+                "/api/generate/async",
+                json={
+                    "file_path": str(csv_file),
+                    "data_source": "csv",
+                    "message_type": "pain.001.001.03",
+                },
+            )
+            assert response.status_code == 200
+            job_id = response.json()["job_id"]
 
             # Job should fail due to CSV validation
             import time
@@ -611,10 +611,10 @@ class TestAsyncGenerationEndpoint:
                     break
                 time.sleep(0.1)
 
-            job = job_manager.get_job(job_id)
-            assert job is not None
-            assert job.status == JobStatus.FAILED
-            job_manager.cancel_job(job_id)
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == JobStatus.FAILED
+        job_manager.cancel_job(job_id)
 
     def test_validate_exception_handling(self, tmp_path):
         """Test validation endpoint exception handling."""
@@ -884,9 +884,11 @@ class TestAsyncWorkerErrorPaths:
             # submodule, so reach the module via sys.modules.
             import sys
 
-            app_module = sys.modules["pain001.api.app"]
+            pipeline_module = sys.modules["pain001.api._pipeline"]
             with patch.object(
-                app_module, "load_payment_data", return_value=[{"id": "1"}]
+                pipeline_module,
+                "load_payment_data",
+                return_value=[{"id": "1"}],
             ):
                 asyncio.run(_process_generation_job(job_id, request))
             job = job_manager.get_job(job_id)
@@ -920,9 +922,9 @@ class TestAsyncWorkerErrorPaths:
 
         import sys
 
-        app_module = sys.modules["pain001.api.app"]
+        pipeline_module = sys.modules["pain001.api._pipeline"]
         with patch.object(
-            app_module, "_request_scheme_result", return_value=mock_res
+            pipeline_module, "request_scheme_result", return_value=mock_res
         ):
             asyncio.run(_process_generation_job(job_id, request))
         job = job_manager.get_job(job_id)
@@ -1030,9 +1032,9 @@ class TestValidateSchemaErrors:
         import sys
         from unittest.mock import patch
 
-        app_module = sys.modules["pain001.api.app"]
+        pipeline_module = sys.modules["pain001.api._pipeline"]
         with patch.object(
-            app_module, "load_payment_data", return_value=[{"id": "1"}]
+            pipeline_module, "load_payment_data", return_value=[{"id": "1"}]
         ):
             response = client.post(
                 "/api/validate",
@@ -1225,8 +1227,8 @@ class TestUnexpectedFailures:
         raise RuntimeError("boom")
 
     def test_validate_endpoint_wraps_unexpected_errors(self, monkeypatch):
-        app_module = sys.modules["pain001.api.app"]
-        monkeypatch.setattr(app_module, "load_payment_data", self._boom)
+        pipeline_module = sys.modules["pain001.api._pipeline"]
+        monkeypatch.setattr(pipeline_module, "load_payment_data", self._boom)
         response = client.post(
             "/api/validate",
             json={
@@ -1239,8 +1241,8 @@ class TestUnexpectedFailures:
         assert "Validation failed" in response.json()["detail"]
 
     def test_generate_endpoint_wraps_unexpected_errors(self, monkeypatch):
-        app_module = sys.modules["pain001.api.app"]
-        monkeypatch.setattr(app_module, "load_payment_data", self._boom)
+        pipeline_module = sys.modules["pain001.api._pipeline"]
+        monkeypatch.setattr(pipeline_module, "load_payment_data", self._boom)
         response = client.post(
             "/api/generate",
             json={
