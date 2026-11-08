@@ -284,12 +284,13 @@ def test_a_forked_child_gets_a_working_pool():
         pid = os.fork()
         # The child is not traced by coverage; its exit code reports it.
         if pid == 0:  # pragma: no cover
+            code = 2  # what the parent sees if the pipeline raises
             try:
                 job = pipeline.run_pipeline(int, "2")
                 result = asyncio.run(asyncio.wait_for(job, _WAIT))
-                os._exit(0 if result == 2 else 1)
-            except BaseException:
-                os._exit(2)
+                code = 0 if result == 2 else 1
+            finally:
+                os._exit(code)
         _, status = os.waitpid(pid, 0)
         assert os.waitstatus_to_exitcode(status) == 0
     finally:
