@@ -84,6 +84,9 @@ accepted before; each says how to opt out or fix it.
   bearer `SLEV` on every row. The bundled golden and example XML
   files are unchanged.
 - `generate_xml` takes a `schematron` argument.
+- `TemplateMetadata.display_name` gives the ISO 20022 message name
+  (`Customer Credit Transfer Initiation V09`), for pain001-mcp and
+  other front ends.
 - Corpus scenarios, rail sources and `SCHEMES.md` describe bank
   documents by kind, edition and date instead of naming the bank;
   only scheme rulebooks, central-bank and clearing-system publications
