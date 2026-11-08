@@ -80,7 +80,7 @@ def envelope_round_trip(document: str) -> str:
     """Envelop the document, unpack it, and return the envelope."""
     header = BusinessApplicationHeader(
         from_bic="BANKDEFFXXX",
-        to_bic="SPUEDE2UXXX",
+        to_bic="ZFUMDE50XXX",
         biz_msg_idr="MSG-EXAMPLE-0001",
         cre_dt="2023-03-10T15:30:47Z",
     )
@@ -90,7 +90,7 @@ def envelope_round_trip(document: str) -> str:
     unpacked, inner = unpack_iso20022_message(envelope)
     assert unpacked is not None
     assert unpacked.from_bic == "BANKDEFFXXX"
-    assert unpacked.to_bic == "SPUEDE2UXXX"
+    assert unpacked.to_bic == "ZFUMDE50XXX"
     assert unpacked.biz_msg_idr == "MSG-EXAMPLE-0001"
     assert unpacked.msg_def_idr == MESSAGE_TYPE
     assert unpacked.cre_dt == "2023-03-10T15:30:47Z"

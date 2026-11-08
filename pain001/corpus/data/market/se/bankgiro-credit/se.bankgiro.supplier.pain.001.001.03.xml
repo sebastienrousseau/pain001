@@ -59,13 +59,13 @@
       </Dbtr>
       <DbtrAcct>
         <Id>
-          <IBAN>SE4256065723789397612318</IBAN>
+          <IBAN>SE5875997987360500338084</IBAN>
         </Id>
         <Ccy>SEK</Ccy>
       </DbtrAcct>
       <DbtrAgt>
         <FinInstnId>
-          <BIC>FURLSEN0</BIC>
+          <BIC>ZSWOSEF0</BIC>
         </FinInstnId>
       </DbtrAgt>
       <ChrgBr>SLEV</ChrgBr>
@@ -78,7 +78,7 @@
         </Amt>
         <CdtrAgt>
           <FinInstnId>
-            <BIC>BGABSESS</BIC>
+            <BIC>KXQISEF0</BIC>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>
@@ -121,7 +121,7 @@
         </Amt>
         <CdtrAgt>
           <FinInstnId>
-            <BIC>BGABSESS</BIC>
+            <BIC>FURLSEN0</BIC>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>

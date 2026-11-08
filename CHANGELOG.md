@@ -36,6 +36,18 @@ exists, and the hot paths get faster.
 - pre-commit hooks (`.pre-commit-hooks.yaml`): `pain001-check` on staged
   XML files and `pain001-validate` on a payment data file.
 
+### Changed
+
+- The bundled pain.001.001.09 to .13 samples use charge bearer `SLEV`, as
+  SEPA requires (EPC-PMT-003 in the bundled Schematron, `SEPA-CHRGBR` in
+  `sepa-sct`); they used `DEBT` and failed both. The samples, templates,
+  test fixtures and examples use synthetic test-form BICs (`0` as the
+  eighth character, which SWIFT reserves for test BICs) in place of real
+  banks' codes, and the Bankgiro and PlusGiro corpus scenarios use
+  `bic: auto`, as `docs/corpus.md` promises. The golden files and
+  bundled examples are regenerated with this input change, so the
+  output change is not a breaking change.
+
 ### Fixed
 
 - The CLI starts on a base install again. In 0.0.81, `pip install pain001`

@@ -36,7 +36,7 @@ COMPLIANT_B2B_ROW: dict = {
     "payment_currency": "EUR",
     "debtor_name": "Acme GmbH",
     "debtor_account_IBAN": "DE89370400440532013000",
-    "debtor_agent_BIC": "DEUTDEFF",
+    "debtor_agent_BIC": "RQKKDEF0",
     "creditor_name": "BBraun AG",
     "creditor_account_IBAN": "FR1420041010050500013M02606",
     "creditor_agent_BIC": "BNPAFRPP",

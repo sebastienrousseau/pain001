@@ -29,7 +29,7 @@ class TestBICFormatValidation:
 
     def test_valid_bic_8_characters(self):
         """Test valid BIC with 8 characters."""
-        is_valid, error = validate_bic_format("DEUTDEFF")
+        is_valid, error = validate_bic_format("RQKKDEF0")
         assert is_valid
         assert error == ""
 
@@ -103,7 +103,7 @@ class TestBICFormatValidation:
 
     def test_bic_invalid_branch_code_special_char(self):
         """Test BIC with special character in branch code."""
-        is_valid, error = validate_bic_format("DEUTDEFF@00")
+        is_valid, error = validate_bic_format("RQKKDEF0@00")
         assert not is_valid
         assert "branch code" in error.lower()
         assert "alphanumeric" in error
@@ -114,7 +114,7 @@ class TestBICFullValidation:
 
     def test_validate_bic_strict_mode_valid_8_chars(self):
         """Test BIC validation in strict mode with valid 8-char BIC."""
-        is_valid, error = validate_bic("DEUTDEFF", strict=True)
+        is_valid, error = validate_bic("RQKKDEF0", strict=True)
         assert is_valid
         assert error == ""
 
@@ -142,7 +142,7 @@ class TestBICFullValidation:
 
     def test_validate_bic_non_strict_mode_valid(self):
         """Test BIC validation in non-strict mode with valid BIC."""
-        is_valid, error = validate_bic("DEUTDEFF", strict=False)
+        is_valid, error = validate_bic("RQKKDEF0", strict=False)
         assert is_valid
         assert error == ""
 
@@ -160,7 +160,7 @@ class TestBICFullValidation:
 
     def test_validate_bic_safe_valid(self):
         """Test validate_bic_safe with valid BIC."""
-        assert validate_bic_safe("DEUTDEFF")
+        assert validate_bic_safe("RQKKDEF0")
         assert validate_bic_safe("DEUTDEFF500")
 
     def test_validate_bic_safe_invalid(self):
@@ -182,7 +182,7 @@ class TestBICCountryVariants:  # pylint: disable=too-few-public-methods
     @pytest.mark.parametrize(
         "bic",
         [
-            "DEUTDEFF",  # Germany (Deutsche Bank)
+            "RQKKDEF0",  # Germany (Deutsche Bank)
             "DEUTDEFF500",  # Germany with branch
             "RZBAATWW",  # Austria (Raiffeisen)
             "BNPAFRPP",  # France (BNP Paribas)
@@ -246,7 +246,7 @@ class TestBICComparison:
 
     def test_bic_8_vs_11_characters_same_bank(self):
         """Test that 8-char and 11-char BIC for same bank are both valid."""
-        bic_8 = "DEUTDEFF"
+        bic_8 = "RQKKDEF0"
         bic_11 = "DEUTDEFF500"
 
         assert validate_bic_safe(bic_8)
@@ -265,7 +265,7 @@ class TestBICValidatorCaching:
     def test_validate_bic_format_caching(self):
         """Test that validate_bic_format hits cache on repeated calls."""
         validate_bic_format.cache_clear()
-        bic = "DEUTDEFF"
+        bic = "RQKKDEF0"
 
         # First call: cache miss
         res1 = validate_bic_format(bic)

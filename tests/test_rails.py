@@ -187,7 +187,7 @@ def test_german_swiss_and_swedish_rails() -> None:
         "payment_currency": "EUR",
         "payment_amount": "10.00",
         "service_level_code": "URGP",
-        "creditor_agent_BIC": "DEUTDEFF",
+        "creditor_agent_BIC": "RQKKDEF0",
         "creditor_account_IBAN": "DE89370400440532013000",
         "charge_bearer": "SHAR",
     }
@@ -416,7 +416,7 @@ def test_cbpr_and_purpose_mandates() -> None:
     row = {
         "payment_currency": "USD",
         "payment_amount": "10.00",
-        "debtor_agent_BIC": "DEUTDEFF",
+        "debtor_agent_BIC": "RQKKDEF0",
         "creditor_agent_BIC": "CHASUS33",
         "debtor_town": "Berlin",
         "debtor_country": "DE",

@@ -44,13 +44,13 @@
           },
           "DbtrAcct": {
             "Id": {
-              "IBAN": "SE4407238474849977370614"
+              "IBAN": "SE2161468030701442852382"
             },
             "Ccy": "SEK"
           },
           "DbtrAgt": {
             "FinInstnId": {
-              "BIC": "MNWHSEA0"
+              "BIC": "EJWZSEW0"
             }
           },
           "ChrgBr": "SLEV",
@@ -67,7 +67,7 @@
               },
               "CdtrAgt": {
                 "FinInstnId": {
-                  "BIC": "NDEASESS"
+                  "BIC": "OCFGSEQ0"
                 }
               },
               "Cdtr": {

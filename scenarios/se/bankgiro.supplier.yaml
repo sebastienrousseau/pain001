@@ -36,7 +36,7 @@ payment:
 transactions:
   - end_to_end_id: NTA-2026-0921-001
     amount: {ccy: SEK, value: "18450.00"}
-    creditor_agent: {bic: BGABSESS}
+    creditor_agent: {bic: auto}
     creditor: {name: Sågverk Öster AB, address: {form: hybrid, post_code: "891 33", town: Örnsköldsvik, country: SE}}
     creditor_account: {other: {id: "50501055", proprietary_scheme: BGNR}}
     remittance:
@@ -44,7 +44,7 @@ transactions:
         - creditor_reference: {type: SCOR, reference: "20260911000000316"}
   - end_to_end_id: NTA-2026-0921-002
     amount: {ccy: SEK, value: "2990.00"}
-    creditor_agent: {bic: BGABSESS}
+    creditor_agent: {bic: auto}
     creditor: {name: Kontorsservice Nord, address: {form: hybrid, post_code: "972 32", town: Luleå, country: SE}}
     creditor_account: {other: {id: "50501055", proprietary_scheme: BGNR}}
     remittance:

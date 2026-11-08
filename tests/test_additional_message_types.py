@@ -87,7 +87,7 @@ def test_pain008_columns_name_the_direct_debit_roles(version: str) -> None:
         "requested_execution_date": "2026-01-20",
         "creditor_name": "Landlord Ltd",
         "creditor_account_IBAN": "DE89370400440532013000",
-        "creditor_agent_BIC": "DEUTDEFFXXX",
+        "creditor_agent_BIC": "RQKKDEF0XXX",
         "charge_bearer": "SLEV",
         "payment_id": "E2E-ROLES-1",
         "payment_amount": "100.00",
@@ -99,7 +99,7 @@ def test_pain008_columns_name_the_direct_debit_roles(version: str) -> None:
         "remittance_information": "Rent January",
         "mandate_id": "MANDATE-ROLES-1",
         "date_of_signature": "2025-11-15",
-        "forwarding_agent_BIC": "DEUTDEFFXXX",
+        "forwarding_agent_BIC": "RQKKDEF0XXX",
     }
     xml = generate_xml_string(
         [row],
@@ -117,7 +117,7 @@ def test_pain008_columns_name_the_direct_debit_roles(version: str) -> None:
         pmt.findtext("p:CdtrAcct/p:Id/p:IBAN", namespaces=ns)
         == "DE89370400440532013000"
     )
-    assert "DEUTDEFFXXX" in etree.tostring(pmt.find("p:CdtrAgt", ns)).decode()
+    assert "RQKKDEF0XXX" in etree.tostring(pmt.find("p:CdtrAgt", ns)).decode()
     assert tx.findtext("p:Dbtr/p:Nm", namespaces=ns) == "Tenant One"
     assert (
         tx.findtext("p:DbtrAcct/p:Id/p:IBAN", namespaces=ns)

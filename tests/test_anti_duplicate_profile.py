@@ -56,7 +56,7 @@ BASE_ROW: dict[str, object] = {
     "payment_currency": "EUR",
     "debtor_account_IBAN": "DE89370400440532013000",
     "creditor_account_IBAN": "FR1420041010050500013M02606",
-    "creditor_agent_BIC": "DEUTDEFF",
+    "creditor_agent_BIC": "RQKKDEF0",
     "service_level_code": "SEPA",
     "payment_amount": "100.00",
     "requested_execution_date": "2026-09-12",
