@@ -104,7 +104,7 @@ def test_cli_dry_run_flags_duplicates_and_exits_1() -> None:
     """``--scheme anti-duplicate --dry-run`` reports both rows and exits 1."""
     runner = CliRunner()
     with patch(
-        "pain001.cli.cli.load_payment_data",
+        "pain001.cli.cli.load_batch",
         return_value=[_row(), _row()],
     ):
         result = runner.invoke(
@@ -328,7 +328,7 @@ def test_cli_accepts_a_composed_scheme_spec() -> None:
     """``--scheme sepa-sct,anti-duplicate --scheme-format json`` round-trips."""
     runner = CliRunner()
     with patch(
-        "pain001.cli.cli.load_payment_data",
+        "pain001.cli.cli.load_batch",
         return_value=[_row(), _row()],
     ):
         result = runner.invoke(
