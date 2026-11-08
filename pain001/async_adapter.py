@@ -38,6 +38,7 @@ async def process_files_async(
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
+    identifier_checks: bool = True,
 ) -> str:
     """Run process_files() in a worker thread.
 
@@ -57,6 +58,7 @@ async def process_files_async(
         xml_sign_cert=xml_sign_cert,
         xml_sign_passphrase=xml_sign_passphrase,
         schematron=schematron,
+        identifier_checks=identifier_checks,
     )
 
 
@@ -73,6 +75,7 @@ async def process_files_streaming_async(
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
+    identifier_checks: bool = True,
 ) -> list[str]:
     """Run process_files_streaming() in a worker thread.
 
@@ -93,6 +96,7 @@ async def process_files_streaming_async(
         xml_sign_cert=xml_sign_cert,
         xml_sign_passphrase=xml_sign_passphrase,
         schematron=schematron,
+        identifier_checks=identifier_checks,
     )
 
 

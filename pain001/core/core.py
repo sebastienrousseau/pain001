@@ -25,6 +25,10 @@ import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
 from pain001.core._schematron import schematron_failure
+from pain001.core._support import (
+    determine_data_source_type as _determine_data_source_type,
+)
+from pain001.core._support import stamp_span
 from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.exceptions import XMLGenerationError
 from pain001.logging_schema import (
@@ -37,7 +41,6 @@ from pain001.logging_schema import (
 )
 from pain001.observability import (
     emit_metric_event,
-    set_span_attributes,
     traced,
 )
 from pain001.security.dsig import sign_xml_document
@@ -136,30 +139,10 @@ def _validate_inputs(
     return str(safe_template_path), str(safe_schema_path)
 
 
-def _determine_data_source_type(
-    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
-) -> str:
-    """Determine the type of the data source."""
-    if isinstance(data_file_path, list):
-        return "list"
-    if isinstance(data_file_path, dict):
-        return "dict"
-    if not isinstance(data_file_path, str):
-        return "unknown"
-
-    if data_file_path.endswith(".db") or "sqlite" in data_file_path:
-        return "sqlite"
-
-    for ext in [".csv", ".jsonl", ".json", ".parquet"]:
-        if data_file_path.endswith(ext):
-            return ext.lstrip(".")
-
-    return "file"
-
-
 def _load_data(
     data_file_path: str | list[dict[str, Any]] | dict[str, Any],
     start_time: float,
+    identifier_checks: bool = True,
 ) -> list[dict[str, Any]]:
     """Load and validate payment data from files or Python objects."""
     data_source_kind = _determine_data_source_type(data_file_path)
@@ -172,7 +155,7 @@ def _load_data(
     )
 
     try:
-        payment_data = load_payment_data(data_file_path)
+        payment_data = load_payment_data(data_file_path, identifier_checks)
         duration_ms = int((time.time() - start_time) * 1000)
         file_size_bytes = None
         if isinstance(data_file_path, str) and os.path.exists(data_file_path):
@@ -275,6 +258,7 @@ def process_files(
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
+    identifier_checks: bool = True,
 ) -> str:
     """Generate an ISO 20022 payment message from various data sources.
 
@@ -292,6 +276,7 @@ def process_files(
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
+        identifier_checks: If False, skip the IBAN and BIC checks.
 
     Returns:
         The path the generated XML file was written to.
@@ -314,16 +299,10 @@ def process_files(
         safe_template_path, safe_schema_path = _validate_inputs(
             xml_message_type, xml_template_file_path, xsd_schema_file_path
         )
-        payment_data = _load_data(data_file_path, start_time)
-        # Stamp the active OTel span (a no-op when OTEL_ENABLED is
-        # unset) so operators can pivot traces by message type +
-        # row count.
-        set_span_attributes(
-            **{
-                "pain001.message_type": xml_message_type,
-                "pain001.row_count": len(payment_data),
-            }
+        payment_data = _load_data(
+            data_file_path, start_time, identifier_checks
         )
+        stamp_span(xml_message_type, len(payment_data))
         _register_message_namespaces(xml_message_type)
         written_path, gen_duration = _generate_and_log(
             payment_data,
@@ -400,6 +379,7 @@ def process_files_streaming(
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
+    identifier_checks: bool = True,
 ) -> list[str]:
     """Generate multiple XML files from streamed input chunks.
 
@@ -417,6 +397,7 @@ def process_files_streaming(
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
+        identifier_checks: If False, skip the IBAN and BIC checks.
 
     Returns:
         Paths of the generated chunk XML files, in chunk order.
@@ -432,12 +413,10 @@ def process_files_streaming(
         output_dir = os.path.dirname(os.path.realpath(data_file_path))
 
     generated_paths: list[str] = []
-    for chunk_index, payment_chunk in enumerate(
-        load_payment_data_streaming(
-            data_file_path, chunk_size=chunk_size, validate=False
-        ),
-        start=1,
-    ):
+    chunks = load_payment_data_streaming(
+        data_file_path, chunk_size, False, identifier_checks
+    )
+    for chunk_index, payment_chunk in enumerate(chunks, start=1):
         xml_content = xml_generate.generate_xml_string(
             payment_chunk,
             xml_message_type,

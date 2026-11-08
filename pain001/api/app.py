@@ -609,14 +609,14 @@ async def _process_generation_job(
         record_failure(msg_type, start_time)
         job_manager.update_status(job_id, JobStatus.FAILED, error=exc.detail)
         return
-    except Exception:
+    except Exception as exc:
         record_failure(msg_type, start_time)
         logger.exception("Job %s failed", job_id)
         job_manager.update_status(
             job_id,
             JobStatus.FAILED,
             progress=100,
-            error="Processing failed",
+            error=job_manager.error_for(exc),
         )
         return
     record_outcome(outcome, msg_type, start_time)

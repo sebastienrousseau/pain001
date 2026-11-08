@@ -93,7 +93,7 @@ def test_process_files_missing_output_branch(
     # Mock os.path.exists to return False (simulating output file check failure)
     monkeypatch.setattr(core.os.path, "exists", lambda _path: False)
 
-    monkeypatch.setattr(core, "_load_data", lambda _path, _start: [])
+    monkeypatch.setattr(core, "_load_data", lambda *_args: [])
     monkeypatch.setattr(core, "_register_message_namespaces", lambda _t: None)
     monkeypatch.setattr(
         core,

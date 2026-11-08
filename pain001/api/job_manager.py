@@ -21,6 +21,7 @@ from enum import StrEnum
 from typing import Any
 
 from pain001.api.job_store import JobStore, job_store_from_env
+from pain001.exceptions import PaymentValidationError
 
 
 class JobStatus(StrEnum):
@@ -208,6 +209,24 @@ class JobManager:
                 if error:
                     job.error = error
                 self._persist(job_id)
+
+    @staticmethod
+    def error_for(exc: Exception) -> str:
+        """Return the error a job that raised ``exc`` reports.
+
+        A data validation failure says which rows and columns to fix,
+        the same detail ``POST /generate`` returns with a 400; anything
+        else stays generic so internals never reach the job record.
+
+        Args:
+            exc: The exception that ended the job.
+
+        Returns:
+            The message to store on the job.
+        """
+        if isinstance(exc, PaymentValidationError):
+            return str(exc)
+        return "Processing failed"
 
     def cancel_job(self, job_id: str) -> bool:
         """Cancel a job.

@@ -71,7 +71,7 @@ class InputRefused(HTTPException):
 
     A subclass so the background job can tell "access denied" and
     "file not found" (reported to the caller as such) from any other
-    failure (reported as ``Processing failed``).
+    failure (reported through ``JobManager.error_for``).
     """
 
 
@@ -220,7 +220,7 @@ def validate_pipeline(
     Returns:
         The validation response.
     """
-    data = load_payment_data(file_path)
+    data = load_payment_data(file_path, request.identifier_checks)
     validator = SchemaValidator(request.message_type.value)
     total, valid, errors = validator.validate_batch(data)
 
@@ -289,7 +289,7 @@ def generate_pipeline(
         The outcome, for the caller to turn into its response.
     """
     progress(10)
-    data = load_payment_data(file_path)
+    data = load_payment_data(file_path, request.identifier_checks)
     progress(40)
     validator = SchemaValidator(request.message_type.value)
     total, valid, errors = validator.validate_batch(data)

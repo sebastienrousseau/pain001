@@ -250,7 +250,7 @@ class TestCliModule(unittest.TestCase):
             "no XML generated" in result.output.lower()
             or "dry-run" in result.output.lower()
         )
-        mock_load.assert_called_once_with(self.csv_file)
+        mock_load.assert_called_once_with(self.csv_file, True)
         mock_process.assert_not_called()
 
     def test_cli_expanduser_paths(self) -> None:

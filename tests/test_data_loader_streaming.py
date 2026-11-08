@@ -34,7 +34,7 @@ class TestStreamPaymentData:
         ]
         for i in range(10):
             rows.append(
-                f"{i},2023-01-01,1,Init{i},PMT{i},TRF,false,SEPA,2023-01-15,Debtor{i},DE89370400440532013000,BICCODE,FWDBIC,DEBT,PAY{i},100.00,EUR,BICCODE,Creditor{i},DE89370400440532013000,Ref{i},100.00"
+                f"{i},2023-01-01,1,Init{i},PMT{i},TRF,false,SEPA,2023-01-15,Debtor{i},DE89370400440532013000,DEUTDEFF,FWDBIC,DEBT,PAY{i},100.00,EUR,DEUTDEFF,Creditor{i},DE89370400440532013000,Ref{i},100.00"
             )
         csv_file.write_text("\n".join(rows) + "\n")
 

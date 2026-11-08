@@ -76,7 +76,8 @@ class ValidationConfig:
         xml_template_file_path: Path to Jinja2 XML template file.
         xsd_schema_file_path: Path to XSD schema for validation.
         data_file_path: Path to CSV or SQLite data file.
-        pre_validate: Whether to run pre-validation (IBAN/BIC checksums).
+        pre_validate: Whether to check every IBAN (mod-97, country
+            length) and BIC (ISO 9362) column while loading the data.
     """
 
     xml_message_type: str
@@ -99,6 +100,21 @@ class ValidationReport:
     is_valid: bool
     errors: list[str] = field(default_factory=list)
     results: dict[str, ValidationResult] = field(default_factory=dict)
+
+    def record(
+        self, name: str, result: ValidationResult, fallback: str
+    ) -> None:
+        """Store one check's result, failing the report if it failed.
+
+        Args:
+            name: The check's key in :attr:`results`.
+            result: The check's result.
+            fallback: Error message to use when the result carries none.
+        """
+        self.results[name] = result
+        if not result.is_valid:
+            self.is_valid = False
+            self.errors.append(result.error or fallback)
 
 
 class ValidationService:
@@ -326,11 +342,14 @@ class ValidationService:
                 details=str(exc),
             )
 
-    def validate_data_content(self, data_path: str | Path) -> ValidationResult:
+    def validate_data_content(
+        self, data_path: str | Path, identifier_checks: bool = True
+    ) -> ValidationResult:
         """Validate that the data file can be loaded and parsed.
 
         Args:
             data_path: Path to CSV or SQLite data file.
+            identifier_checks: If False, skip the IBAN and BIC checks.
 
         Returns:
             ValidationResult indicating success or failure.
@@ -342,7 +361,7 @@ class ValidationService:
             ...     print(f"Data validation failed: {result.error}")
         """
         try:
-            load_payment_data(str(data_path))
+            load_payment_data(str(data_path), identifier_checks)
             return ValidationResult(is_valid=True)
         except (FileNotFoundError, ValueError) as exc:
             return ValidationResult(
@@ -399,36 +418,32 @@ class ValidationService:
         report = ValidationReport(is_valid=True)
 
         # Validate message type
-        result = self.validate_message_type(config.xml_message_type)
-        report.results["message_type"] = result
-        if not result.is_valid:
-            report.is_valid = False
-            report.errors.append(
-                result.error or "Message type validation failed"
-            )
+        report.record(
+            "message_type",
+            self.validate_message_type(config.xml_message_type),
+            "Message type validation failed",
+        )
 
         # Validate template file
-        result = self.validate_template(config.xml_template_file_path)
-        report.results["template"] = result
-        if not result.is_valid:
-            report.is_valid = False
-            report.errors.append(result.error or "Template validation failed")
+        report.record(
+            "template",
+            self.validate_template(config.xml_template_file_path),
+            "Template validation failed",
+        )
 
         # Validate schema file
-        result = self.validate_schema(config.xsd_schema_file_path)
-        report.results["schema"] = result
-        if not result.is_valid:
-            report.is_valid = False
-            report.errors.append(result.error or "Schema validation failed")
+        report.record(
+            "schema",
+            self.validate_schema(config.xsd_schema_file_path),
+            "Schema validation failed",
+        )
 
         # Validate data source file
-        result = self.validate_data_source(config.data_file_path)
-        report.results["data_source"] = result
-        if not result.is_valid:
-            report.is_valid = False
-            report.errors.append(
-                result.error or "Data source validation failed"
-            )
+        report.record(
+            "data_source",
+            self.validate_data_source(config.data_file_path),
+            "Data source validation failed",
+        )
 
         # Only proceed with content validation if files exist.
         # Template-schema compatibility is not evaluated pre-rendering because
@@ -437,12 +452,12 @@ class ValidationService:
         # document is authoritatively validated during XML generation.
 
         if report.results["data_source"].is_valid:
-            result = self.validate_data_content(config.data_file_path)
-            report.results["data_content"] = result
-            if not result.is_valid:
-                report.is_valid = False
-                report.errors.append(
-                    result.error or "Data content validation failed"
-                )
+            report.record(
+                "data_content",
+                self.validate_data_content(
+                    config.data_file_path, config.pre_validate
+                ),
+                "Data content validation failed",
+            )
 
         return report

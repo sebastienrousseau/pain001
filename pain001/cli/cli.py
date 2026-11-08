@@ -14,6 +14,7 @@
 
 """Click-based command-line interface for generating ISO 20022 payment files."""
 
+import functools
 import json
 import logging
 import os
@@ -31,6 +32,7 @@ from rich.console import Console
 from rich.table import Table
 
 from pain001.cli._config import _resolve_config
+from pain001.cli._hints import print_data_tip, read_text
 from pain001.cli._output import (
     esc,
     print_scheme_result,
@@ -228,6 +230,7 @@ def _validate_payment_data(
     explain: bool = False,
     scheme_format: str = "text",
     rules: str | None = None,
+    identifier_checks: bool = True,
 ) -> int:
     """Validate payment data and return record count.
 
@@ -239,6 +242,7 @@ def _validate_payment_data(
         explain: If True, print remediation hints for scheme violations.
         scheme_format: Output format for scheme results ('text' or 'json').
         rules: Optional private YAML policy file.
+        identifier_checks: If False, skip the IBAN and BIC checks.
 
     Returns:
         Number of valid payment records.
@@ -248,7 +252,7 @@ def _validate_payment_data(
     """
     console.print("[cyan]→ Validating payment data...[/cyan]")
     try:
-        data = load_payment_data(data_file_path)
+        data = load_payment_data(data_file_path, identifier_checks)
         record_count = len(data)
         log_validation_event(
             logger, "payment_data", True, message_type=xml_message_type
@@ -275,18 +279,7 @@ def _validate_payment_data(
             f"[bold red]✗ Data validation failed:[/bold red] {esc(e)}",
             style="red",
         )
-        # Provide helpful error messages based on file extension
-        file_ext = os.path.splitext(data_file_path)[1].lower()
-        if file_ext == ".parquet":
-            console.print(
-                "\n[yellow]Tip:[/yellow] Parquet files require pyarrow. "
-                "Install with: [cyan]pip install pyarrow[/cyan]"
-            )
-        elif file_ext in [".json", ".jsonl"]:
-            console.print(
-                "\n[yellow]Tip:[/yellow] Ensure JSON is valid. "
-                "Check for syntax errors or invalid structure."
-            )
+        print_data_tip(console, data_file_path)
         raise SystemExit(1) from e
 
 
@@ -316,6 +309,7 @@ def _generate_xml_files(
     xml_sign_cert: str | None = None,
     xml_sign_passphrase_env: str | None = None,
     schematron: str | None = None,
+    identifier_checks: bool = True,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Generate XML payment files, exiting with code 1 on failure.
@@ -340,6 +334,7 @@ def _generate_xml_files(
         xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
         schematron: Optional Schematron rulebook preset or path.
+        identifier_checks: If False, skip the IBAN and BIC checks.
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
@@ -359,15 +354,8 @@ def _generate_xml_files(
             biz_msg_idr=bah_msg_id,
         )
 
-    sign_key_bytes: str | None = None
-    if xml_sign_key:
-        with open(xml_sign_key, encoding="utf-8") as f:
-            sign_key_bytes = f.read()
-
-    sign_cert_bytes: str | None = None
-    if xml_sign_cert:
-        with open(xml_sign_cert, encoding="utf-8") as f:
-            sign_cert_bytes = f.read()
+    sign_key_bytes = read_text(xml_sign_key)
+    sign_cert_bytes = read_text(xml_sign_cert)
 
     sign_passphrase = (
         os.environ.get(xml_sign_passphrase_env)
@@ -390,6 +378,7 @@ def _generate_xml_files(
                 xml_sign_cert=sign_cert_bytes,
                 xml_sign_passphrase=sign_passphrase,
                 schematron=schematron,
+                identifier_checks=identifier_checks,
             )
         else:
             process_files(
@@ -406,6 +395,7 @@ def _generate_xml_files(
                 xml_sign_cert=sign_cert_bytes,
                 xml_sign_passphrase=sign_passphrase,
                 schematron=schematron,
+                identifier_checks=identifier_checks,
             )
 
         console.print(
@@ -422,6 +412,13 @@ def _generate_xml_files(
             console.print("\n[yellow]Traceback:[/yellow]")
             console.print(traceback.format_exc(), markup=False)
         sys.exit(1)
+
+
+_identifier_checks_option = click.option(
+    "--identifier-checks/--no-identifier-checks",
+    default=True,
+    help="Check each IBAN (mod-97) and BIC (ISO 9362); on by default.",
+)
 
 
 @click.command(
@@ -651,6 +648,7 @@ def _generate_xml_files(
     default=None,
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
+@_identifier_checks_option
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -681,6 +679,7 @@ def main(
     xml_sign_cert: str | None = None,
     xml_sign_passphrase_env: str | None = None,
     schematron: str | None = None,
+    identifier_checks: bool = True,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -722,6 +721,7 @@ def main(
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
         schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
             or filesystem path to a .sch rulebook file.
+        identifier_checks: If False, skip the IBAN and BIC checks.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -835,23 +835,26 @@ def main(
     _validate_schema(
         logger, xml_template_file_path, xsd_schema_file_path, xml_message_type
     )
+    validate_data = functools.partial(
+        _validate_payment_data,
+        logger,
+        data_file_path,
+        xml_message_type,
+        scheme=scheme,
+        explain=explain,
+        scheme_format=scheme_format,
+        rules=rules,
+        identifier_checks=identifier_checks,
+    )
 
     if dry_run:
-        record_count = _validate_payment_data(
-            logger,
-            data_file_path,
-            xml_message_type,
-            scheme=scheme,
-            explain=explain,
-            scheme_format=scheme_format,
-            rules=rules,
-        )
+        record_count = validate_data()
         if schematron:
             from pain001.data.loader import load_payment_data
             from pain001.schematron import validate_schematron
             from pain001.xml.generate_xml import generate_xml_string
 
-            payment_data = load_payment_data(data_file_path)
+            payment_data = load_payment_data(data_file_path, identifier_checks)
             xml_str = generate_xml_string(
                 payment_data,
                 xml_message_type,
@@ -887,15 +890,7 @@ def main(
         return
 
     if scheme or rules is not None:
-        _validate_payment_data(
-            logger,
-            data_file_path,
-            xml_message_type,
-            scheme=scheme,
-            explain=explain,
-            scheme_format=scheme_format,
-            rules=rules,
-        )
+        validate_data()
 
     _generate_xml_files(
         logger,
@@ -915,6 +910,7 @@ def main(
         xml_sign_cert=xml_sign_cert,
         xml_sign_passphrase_env=xml_sign_passphrase_env,
         schematron=schematron,
+        identifier_checks=identifier_checks,
     )
 
     clear_metrics_callbacks()
@@ -1050,6 +1046,7 @@ cli.add_command(serve_cmd)
     default=None,
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
+@_identifier_checks_option
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -1065,6 +1062,7 @@ def validate_cmd(
     verbose: bool,
     rules: str | None,
     schematron: str | None = None,
+    identifier_checks: bool = True,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -1086,6 +1084,7 @@ def validate_cmd(
         verbose: If True, enable detailed logging output.
         rules: Optional path to private YAML CEL policy rules.
         schematron: Optional Schematron rulebook preset or path.
+        identifier_checks: If False, skip the IBAN and BIC checks.
     """
     ctx.invoke(
         main,
@@ -1102,6 +1101,7 @@ def validate_cmd(
         dry_run=True,
         rules=rules,
         schematron=schematron,
+        identifier_checks=identifier_checks,
     )
 
 

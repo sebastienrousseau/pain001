@@ -47,27 +47,20 @@
     "file_lines": 1369
   },
   "pain001/cli/cli.py::_generate_xml_files": {
-    "cyclomatic": 12,
-    "lines": 124
+    "lines": 121
   },
   "pain001/cli/cli.py::_run_scheme_check": {
     "lines": 64
   },
-  "pain001/cli/cli.py::_validate_payment_data": {
-    "lines": 68
-  },
   "pain001/cli/cli.py::main": {
     "cyclomatic": 17,
-    "lines": 267
-  },
-  "pain001/core/core.py": {
-    "file_lines": 502
+    "lines": 265
   },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82
   },
   "pain001/core/core.py::process_files": {
-    "lines": 121
+    "lines": 117
   },
   "pain001/core/core.py::process_files_streaming": {
     "lines": 89
@@ -191,12 +184,6 @@
     "lines": 103
   },
   "pain001/data/loader.py::_load_from_file": {
-    "lines": 65
-  },
-  "pain001/data/loader.py::load_payment_data": {
-    "lines": 65
-  },
-  "pain001/data/loader.py::load_payment_data_streaming": {
     "lines": 65
   },
   "pain001/db/load_db_data.py::load_db_data": {
@@ -379,8 +366,7 @@
     "lines": 82
   },
   "pain001/validation/service.py::ValidationService.validate_all": {
-    "cyclomatic": 13,
-    "lines": 81
+    "lines": 77
   },
   "pain001/xml/envelope.py::BusinessApplicationHeader.to_element": {
     "cognitive": 20,
