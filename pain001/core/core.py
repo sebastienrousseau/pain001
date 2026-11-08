@@ -29,6 +29,7 @@ from pain001.core._support import (
     determine_data_source_type as _determine_data_source_type,
 )
 from pain001.core._support import stamp_span
+from pain001.core.chunks import numbered_chunks
 from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.exceptions import XMLGenerationError
 from pain001.logging_schema import (
@@ -414,9 +415,9 @@ def process_files_streaming(
 
     generated_paths: list[str] = []
     chunks = load_payment_data_streaming(
-        data_file_path, chunk_size, False, identifier_checks
+        data_file_path, chunk_size, identifier_checks=identifier_checks
     )
-    for chunk_index, payment_chunk in enumerate(chunks, start=1):
+    for chunk_index, payment_chunk in numbered_chunks(chunks):
         xml_content = xml_generate.generate_xml_string(
             payment_chunk,
             xml_message_type,

@@ -6,6 +6,14 @@ pain001.core package
 Submodules
 ----------
 
+pain001.core.chunks module
+--------------------------
+
+.. automodule:: pain001.core.chunks
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.core.core module
 ------------------------
 

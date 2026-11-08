@@ -60,9 +60,14 @@ def _rows() -> list[dict[str, Any]]:
         return list(csv.DictReader(handle))
 
 
+#: A per-transaction column: a broken debtor IBAN on one row would be
+#: refused first as a second payment information block.
+_BAD_COLUMN = "creditor_account_IBAN"
+
+
 def _bad_rows() -> list[dict[str, Any]]:
     rows = _rows()
-    rows[1]["debtor_account_IBAN"] = _BAD_IBAN
+    rows[1][_BAD_COLUMN] = _BAD_IBAN
     return rows
 
 
@@ -139,7 +144,7 @@ def test_the_error_lists_rows_and_columns_but_never_values() -> None:
     message = str(caught.value)
     assert "Invalid account identifiers (2)" in message
     _assert_names_row_not_value(message, 0, "creditor_agent_BIC")
-    _assert_names_row_not_value(message, 1, "debtor_account_IBAN")
+    _assert_names_row_not_value(message, 1, _BAD_COLUMN)
     assert "--no-identifier-checks" in message
     assert caught.value.field == "creditor_agent_BIC"
 
@@ -195,7 +200,7 @@ def test_load_payment_data_rejects_a_list_and_a_dict() -> None:
 def test_load_payment_data_rejects_a_file(bad_csv: Path) -> None:
     with pytest.raises(PaymentValidationError) as caught:
         load_payment_data(str(bad_csv))
-    _assert_names_row_not_value(str(caught.value), 1, "debtor_account_IBAN")
+    _assert_names_row_not_value(str(caught.value), 1, _BAD_COLUMN)
 
 
 def test_load_payment_data_opt_out(bad_csv: Path) -> None:
@@ -233,7 +238,7 @@ def _generate(data: Any, tmp_path: Path, **kwargs: Any) -> str:
 def test_process_files_refuses_then_honours_the_opt_out(
     bad_csv: Path, tmp_path: Path
 ) -> None:
-    with pytest.raises(PaymentValidationError, match="debtor_account_IBAN"):
+    with pytest.raises(PaymentValidationError, match=_BAD_COLUMN):
         _generate(str(bad_csv), tmp_path)
     assert not (tmp_path / "out.xml").exists()
     written = _generate(str(bad_csv), tmp_path, identifier_checks=False)
@@ -274,7 +279,7 @@ def test_validation_service_honours_pre_validate(bad_csv: Path) -> None:
     )
     report = ValidationService().validate_all(config)
     assert not report.is_valid
-    _assert_names_row_not_value(report.errors[0], 1, "debtor_account_IBAN")
+    _assert_names_row_not_value(report.errors[0], 1, _BAD_COLUMN)
     config.pre_validate = False
     assert ValidationService().validate_all(config).is_valid
 
@@ -291,7 +296,7 @@ def test_cli_refuses_a_broken_identifier(command: str, bad_csv: Path) -> None:
     result = _cli(command, "-t", _TYPE, "-d", str(bad_csv))
     assert result.exit_code == 1, result.output
     output = " ".join(result.output.split())
-    assert "row 1, column debtor_account_IBAN" in output
+    assert "row 1, column creditor_account_IBAN" in output
     assert _BAD_IBAN not in output
 
 
@@ -325,9 +330,7 @@ def test_rest_refuses_then_honours_the_opt_out(
 ) -> None:
     response = _post(route, bad_csv)
     assert response.status_code == 400
-    _assert_names_row_not_value(
-        response.json()["detail"], 1, "debtor_account_IBAN"
-    )
+    _assert_names_row_not_value(response.json()["detail"], 1, _BAD_COLUMN)
     response = _post(route, bad_csv, identifier_checks=False)
     assert response.status_code == 200
     assert response.json().get("is_valid", True) is True
@@ -351,7 +354,7 @@ def test_rest_async_job_reports_the_row(bad_csv: Path) -> None:
     with TestClient(app) as client:
         job = _job(_post("/api/generate/async", bad_csv, client))
         assert job.status == JobStatus.FAILED
-        _assert_names_row_not_value(job.error, 1, "debtor_account_IBAN")
+        _assert_names_row_not_value(job.error, 1, _BAD_COLUMN)
         job = _job(
             _post(
                 "/api/generate/async",

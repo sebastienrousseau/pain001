@@ -45,3 +45,11 @@ Library usage:
 ``output_dir`` must already exist. Without it, the chunk files are written
 next to the data file. The data file must be under the current working
 directory.
+
+Each chunk file is a message of its own. When a run writes more than
+one, chunk ``n`` carries ``GrpHdr/MsgId`` ``<id>-<n>`` and, when the
+rows name one, ``PmtInf/PmtInfId`` ``<payment_information_id>-<n>``;
+the base is shortened so the whole fits the schemas' 35 characters. A
+run that fits one chunk keeps its ids, and its file is identical to the
+one the batch path writes. Every chunk's rows get the batch path's
+validation, and a refused row stops the run (0.0.81).
