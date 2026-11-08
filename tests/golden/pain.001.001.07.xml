@@ -23,6 +23,11 @@
             <PmtInfId>Payment001</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
             <BtchBookg>true</BtchBookg>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
             <ReqdExctnDt>2023-01-04</ReqdExctnDt>
             <Dbtr>
                 <Nm>John Doe</Nm>

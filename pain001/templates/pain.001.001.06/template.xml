@@ -23,6 +23,13 @@
             <PmtInfId>{{payment_information_id}}</PmtInfId>
             <PmtMtd>{{payment_method}}</PmtMtd>
             <BtchBookg>{{batch_booking}}</BtchBookg>
+            {%- if service_level_code %}
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>{{service_level_code}}</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            {%- endif %}
             <ReqdExctnDt>{{requested_execution_date}}</ReqdExctnDt>
             <Dbtr>
                 <Nm>{{debtor_name}}</Nm>

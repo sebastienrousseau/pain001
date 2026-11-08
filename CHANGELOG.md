@@ -19,9 +19,14 @@ exists, and the hot paths get faster.
   and .09 to .13 already do: for the same input, those two elements
   change. `<Othr><Id>` carried no scheme name, so a bank or validator
   could not tell it was an IBAN (pain001's own SEPA checks missed it).
-  Any other value, such as an account number, renders as before. The
-  .04 to .08 golden files and bundled examples are regenerated
-  (ADR-0011).
+  Any other value, such as an account number, renders as before.
+  The same templates now write `service_level_code` as
+  `PmtTpInf/SvcLvl/Cd` on the payment batch, as .03 and .09 to .13 do;
+  they had no `PmtTpInf`, so the value was dropped and a SEPA file
+  failed EPC-PMT-002. Input without a service level renders as before,
+  and rows that disagree on it are refused, as in .03 and .09 to .13.
+  The .04 to .08 golden files and bundled examples are regenerated once
+  for both changes (ADR-0011).
 
 ### Added
 

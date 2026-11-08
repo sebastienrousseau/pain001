@@ -370,13 +370,7 @@
     "lines": 82
   },
   "pain001/xml/message_registry.py": {
-    "file_lines": 645
-  },
-  "pain001/xml/message_registry.py::_prepare_xml_data_v04": {
-    "lines": 80
-  },
-  "pain001/xml/message_registry.py::_prepare_xml_data_v05_to_v08": {
-    "lines": 76
+    "file_lines": 643
   },
   "pain001/xml/message_registry.py::_prepare_xml_data_v09_to_v12": {
     "lines": 119

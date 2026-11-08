@@ -109,10 +109,11 @@ _V09: tuple[Column, ...] = (
 )
 # pain.001.001.04: PmtInfId is row 1's payment_id (a per-transaction
 # column, so a fallback rather than a shared one); the charge bearer is
-# per transaction.
+# per transaction, the service level on the batch (PmtTpInf/SvcLvl).
 _V04: tuple[Column, ...] = (
     ("payment_method",),
     ("batch_booking",),
+    ("service_level_code",),
     ("requested_execution_date",),
     ("debtor_name",),
     ("debtor_street_name",),

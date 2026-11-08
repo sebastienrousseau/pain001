@@ -1,6 +1,6 @@
 <!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
 
-# 0011. Write an IBAN account as `<IBAN>` in every pain.001 version
+# 0011. Write IBAN accounts and the service level in .04 to .08
 
 - **Status:** Accepted
 - **Date:** 2026-11-08
@@ -17,6 +17,12 @@ IBAN: pain001's own SEPA checks (the `sepa-sct` profile's
 `SEPA-DBTR-IBAN` and `SEPA-CDTR-IBAN`, Schematron EPC-PMT-001 and
 EPC-SCT-003) found no IBAN in the bundled .05 to .08 samples, and a SEPA
 bank may reject such a payment or repair it by hand.
+
+The same templates had no `PmtTpInf` at all, so `service_level_code`
+was dropped from the input, and a SEPA file built from them failed the
+bundled Schematron rule EPC-PMT-002. The .03 and .09 to .13 templates
+write `PmtTpInf/SvcLvl/Cd` on the payment batch when the column has a
+value.
 
 ## Options considered
 
@@ -37,19 +43,32 @@ mod-97. The .04 to .08 templates write the debtor and creditor accounts
 with `{% if … is iban %}<IBAN>…{% else %}<Othr><Id>…{% endif %}`; those
 templates write no other account (no charges or ultimate-party account).
 
+For the service level, the same reasoning: copy the switch .03 and .09
+make. The .04 to .08 templates write
+`{%- if service_level_code %}<PmtTpInf><SvcLvl><Cd>…</Cd></SvcLvl></PmtTpInf>`
+after `BtchBookg`, where the XSD puts it. The .05 to .08 data preparer
+used to default the value to `SEPA`, unused until now; it passes the
+column as given, so the element appears only for input that sets it.
+The charge bearer stays on each transaction, where these templates
+already write it; the SEPA rulebook's EPC-PMT-003 now accepts it there.
+
 ## Consequences
 
 - Breaking for output: for the same input, a valid IBAN in either column
-  of a .04 to .08 message moves from `<Othr><Id>` to `<IBAN>`. The golden
-  files and bundled examples for .04 to .08 are regenerated with
-  `scripts/generate_golden_files.py` and
+  of a .04 to .08 message moves from `<Othr><Id>` to `<IBAN>`, and a
+  non-empty `service_level_code` adds `PmtTpInf/SvcLvl/Cd` to the batch.
+  The golden files and bundled examples for .04 to .08 are regenerated
+  once for both, with `scripts/generate_golden_files.py` and
   `scripts/generate_xml_examples.py`; they change only in those
   elements.
-- Any other value (an account number, an IBAN written with spaces, one
-  with bad check digits) renders byte-identically to 0.0.81.
+- Any other account value (an account number, an IBAN written with
+  spaces, one with bad check digits) and input without a service level
+  render byte-identically to 0.0.81.
 - `tests/test_account_iban_element.py` generates every version from .03
-  to .13 with IBAN input and requires `<IBAN>` for both accounts, so the
-  versions cannot drift apart again.
-- Not addressed here: the .04 to .08 templates write no `PmtTpInf`
-  service level although the input has `service_level_code`, so SEPA
-  Schematron rule EPC-PMT-002 still fails on their samples.
+  to .13 with IBAN input and requires `<IBAN>` for both accounts, and
+  `tests/test_service_level_element.py` requires the service level in
+  .04 to .08 and its absence without one, so the versions cannot drift
+  apart again.
+- The bundled .05 to .08 samples pass the SEPA Schematron rulebook. The
+  .04 sample still does not: it uses charge bearer `SHAR` and service
+  level `INST` on purpose.
