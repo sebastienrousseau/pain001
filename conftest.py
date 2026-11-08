@@ -117,7 +117,17 @@ def pytest_configure(config: pytest.Config) -> None:
     os.environ["TEMP"] = str(tmp_root)
     os.environ["TMP"] = str(tmp_root)
     tempfile.tempdir = str(tmp_root)
-    config.option.basetemp = str(tmp_root / "pytest")
+    # mutmut runs one pytest session per mutant, in parallel forked
+    # children. pytest empties a pinned basetemp when a session starts, so
+    # a shared one let each child delete its neighbours' files mid-test,
+    # and those unrelated failures were counted as killed mutants (the
+    # few points of run-to-run variance in the mutation score). Each
+    # child gets its own; mutmut sets MUTANT_UNDER_TEST before the
+    # session starts.
+    basetemp = tmp_root / "pytest"
+    if os.environ.get("MUTANT_UNDER_TEST"):
+        basetemp = tmp_root / f"pytest-mutant-{os.getpid()}"
+    config.option.basetemp = str(basetemp)
 
     if config.getoption("--enforce-slos"):
         config.addinivalue_line(
