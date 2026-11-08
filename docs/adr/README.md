@@ -20,6 +20,7 @@ ADR that supersedes the old one.
 | [0008](0008-csv-ingress-preserves-raw-values.md) | Preserve raw CSV values on ingress; formula neutralisation is opt-in | Proposed |
 | [0009](0009-serve-refuses-open-unauthenticated-bind.md) | Refuse an unauthenticated non-loopback bind in `pain001 serve` | Accepted |
 | [0010](0010-one-validation-ladder-for-check.md) | One validation ladder behind every check surface | Accepted |
+| [0011](0011-iban-accounts-written-as-iban.md) | Write an IBAN account as `<IBAN>` in every pain.001 version | Accepted |
 
 Template: copy [`template.md`](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/template.md), number it next, add a row
 here, and open it in the pull request that implements the decision.

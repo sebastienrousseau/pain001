@@ -31,6 +31,7 @@ text, which is wrapped back in ``Markup`` when the input was ``Markup``.
 from __future__ import annotations
 
 import functools
+import re
 
 from jinja2 import Template, select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
@@ -72,6 +73,32 @@ def indent(
     return rv
 
 
+#: The XSD pattern of an IBAN element (IBAN2007Identifier).
+_IBAN_SHAPE = re.compile(r"[A-Z]{2}[0-9]{2}[a-zA-Z0-9]{1,30}")
+
+
+def is_iban(value: object) -> bool:
+    """The templates' ``is iban`` test: an IBAN the ``<IBAN>`` element takes.
+
+    True only for text in the XSD's IBAN shape (no spaces) whose check
+    digits pass mod-97, so anything else stays an ``<Othr><Id>`` account
+    number, as before 0.0.82 (ADR-0011).
+
+    Args:
+        value: The account value a template renders.
+
+    Returns:
+        Whether the value is written as ``<IBAN>``.
+    """
+    from pain001.validation.iban_validator import validate_iban_safe
+
+    return (
+        isinstance(value, str)
+        and _IBAN_SHAPE.fullmatch(value) is not None
+        and validate_iban_safe(value)
+    )
+
+
 @functools.lru_cache(maxsize=32)
 def compile_template(template_source: str) -> Template:
     """Compile a template's text once, in the XML-autoescaping sandbox.
@@ -96,7 +123,8 @@ def compile_template(template_source: str) -> Template:
     )
     # Same output as Jinja's indent, without MarkupSafe on every step.
     env.filters["indent"] = indent
+    env.tests["iban"] = is_iban
     return env.from_string(template_source)
 
 
-__all__ = ["compile_template", "indent"]
+__all__ = ["compile_template", "indent", "is_iban"]

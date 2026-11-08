@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Fast and checkable: `pain001 check` validates a file that already
 exists, and the hot paths get faster.
 
+### Breaking
+
+- pain.001.001.04 to .08 write a valid IBAN in `debtor_account_IBAN` or
+  `creditor_account_IBAN` as `<IBAN>` instead of `<Othr><Id>`, as .03
+  and .09 to .13 already do: for the same input, those two elements
+  change. `<Othr><Id>` carried no scheme name, so a bank or validator
+  could not tell it was an IBAN (pain001's own SEPA checks missed it).
+  Any other value, such as an account number, renders as before. The
+  .04 to .08 golden files and bundled examples are regenerated
+  (ADR-0011).
+
 ### Added
 
 - `pain001 check FILE...` runs the validation ladder on pain.001 and
