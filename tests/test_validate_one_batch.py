@@ -26,7 +26,8 @@ from pain001.api.app import app
 from pain001.cli.cli import cli
 from pain001.constants import TEMPLATES_DIR
 from pain001.exceptions import PaymentValidationError
-from pain001.validation._one_batch import load_batch, require_one_batch
+from pain001.validation._one_batch import load_batch
+from pain001.xml.batch_consistency import require_one_batch
 
 _TYPE = "pain.001.001.03"
 _CONFLICT = "debtor_name (row 1 vs row 2)"
@@ -112,3 +113,14 @@ def test_rest_validation_refuses_a_mixed_file(
     response = TestClient(app).post(route, json=body)
     assert response.status_code == 400, response.text
     assert _CONFLICT in response.json()["detail"]
+
+
+def test_the_checks_are_public_for_front_ends() -> None:
+    """pain001-mcp and other front ends reach both checks by public names."""
+    import pain001.validation as validation
+    from pain001.xml import batch_consistency
+
+    assert "check_identifiers" in validation.__all__
+    assert "identifier_errors" in validation.__all__
+    assert validation.check_identifiers is not None
+    assert batch_consistency.require_one_batch is require_one_batch

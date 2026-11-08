@@ -23,6 +23,10 @@ from pain001.schematron import (
     SchematronValidator,
     validate_schematron,
 )
+from pain001.validation._identifiers import (
+    check_identifiers,
+    identifier_errors,
+)
 from pain001.validation.bic_validator import (
     validate_bic,
     validate_bic_format,
@@ -90,6 +94,9 @@ __all__ = [
     "sanitize_to_charset",
     # Scheme rulebook validation
     "validate_scheme",
+    # IBAN and BIC column checks (run by the loader on every load)
+    "check_identifiers",
+    "identifier_errors",
     "ValidationProfile",
     "SepaCreditTransferProfile",
     "SepaDirectDebitProfile",

@@ -90,6 +90,10 @@ accepted before; each says how to opt out or fix it.
   `normalize_payment_records`) lives in `pain001.xml.payment_records`;
   both names are still importable from `pain001.xml.generate_xml` and
   `pain001`.
+- `pain001.validation.check_identifiers` / `identifier_errors` and
+  `pain001.xml.batch_consistency.require_one_batch` expose the IBAN/BIC
+  and one-batch checks to front ends that take rows directly, such as
+  pain001-mcp.
 - `TemplateMetadata.display_name` gives the ISO 20022 message name
   (`Customer Credit Transfer Initiation V09`), for pain001-mcp and
   other front ends.

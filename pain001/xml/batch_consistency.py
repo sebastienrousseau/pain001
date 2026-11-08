@@ -38,6 +38,7 @@ from collections.abc import Sequence
 from typing import Any
 
 from pain001.exceptions import PaymentValidationError
+from pain001.xml.payment_records import normalize_payment_records
 
 #: A PmtInf column, as the alias chain the preparer reads it through:
 #: the effective value is the first non-blank one.
@@ -205,3 +206,24 @@ def require_single_payment_information(
             "(one debtor for a transfer, one creditor for a debit).",
             field="records",
         )
+
+
+def require_one_batch(data: list[dict[str, Any]], message_type: str) -> None:
+    """Refuse rows that would not share one payment information block.
+
+    The rows are normalised first, as generation does, so values that
+    render the same (``True`` and ``true``) do not conflict. Rows that
+    cannot be normalised (a bad amount) are left to the schema check,
+    which reports them by row. Disagreeing rows raise the
+    ``PaymentValidationError`` of the generation check, naming each
+    column and the first row that disagrees with row 1.
+
+    Args:
+        data: The loaded payment rows.
+        message_type: The target message type.
+    """
+    try:
+        rows = normalize_payment_records(data)
+    except PaymentValidationError:
+        return
+    require_single_payment_information(rows, message_type)

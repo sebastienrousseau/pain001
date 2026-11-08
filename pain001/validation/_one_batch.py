@@ -26,30 +26,7 @@ from __future__ import annotations
 from typing import Any
 
 from pain001.data.loader import load_payment_data
-from pain001.exceptions import PaymentValidationError
-from pain001.xml.batch_consistency import require_single_payment_information
-from pain001.xml.payment_records import normalize_payment_records
-
-
-def require_one_batch(data: list[dict[str, Any]], message_type: str) -> None:
-    """Refuse rows that would not share one payment information block.
-
-    The rows are normalised first, as generation does, so values that
-    render the same (``True`` and ``true``) do not conflict. Rows that
-    cannot be normalised (a bad amount) are left to the schema check,
-    which reports them by row. Disagreeing rows raise the
-    ``PaymentValidationError`` of the generation check, naming each
-    column and the first row that disagrees with row 1.
-
-    Args:
-        data: The loaded payment rows.
-        message_type: The target message type.
-    """
-    try:
-        rows = normalize_payment_records(data)
-    except PaymentValidationError:
-        return
-    require_single_payment_information(rows, message_type)
+from pain001.xml.batch_consistency import require_one_batch
 
 
 def load_batch(
@@ -66,7 +43,8 @@ def load_batch(
         The loaded rows.
 
     A ``PaymentValidationError`` from the loader (an invalid identifier)
-    or from :func:`require_one_batch` propagates unchanged.
+    or from :func:`pain001.xml.batch_consistency.require_one_batch`
+    propagates unchanged.
     """
     data = load_payment_data(data_file_path, identifier_checks)
     require_one_batch(data, message_type)
