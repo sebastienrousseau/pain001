@@ -63,6 +63,15 @@ exists, and the hot paths get faster.
 
 ### Changed
 
+- Stricter SEPA validation: the bundled rulebook's new EPC-SCT-008
+  requires every service level a transaction carries to be `SEPA`. A
+  transaction's `PmtTpInf/SvcLvl` overrides the batch's, so a `URGP` or
+  proprietary code there asks the bank for a non-SEPA payment inside a
+  SEPA batch, and passed until now. EPC-PMT-002 likewise requires every
+  service level code on the batch (`SvcLvl` repeats from .09) to be
+  `SEPA`, not just one. No generated XML changes, but a file that
+  passed `--schematron sepa` before can now fail. A transaction with no
+  service level is still judged by the batch's.
 - The bundled pain.001.001.09 to .13 samples use charge bearer `SLEV`, as
   SEPA requires (EPC-PMT-003 in the bundled Schematron, `SEPA-CHRGBR` in
   `sepa-sct`); they used `DEBT` and failed both. The samples, templates,

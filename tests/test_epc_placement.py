@@ -4,14 +4,16 @@
 # Licensed under either of the Apache License, Version 2.0 or the MIT
 # License, at your option. See LICENSE-APACHE and LICENSE-MIT.
 
-"""EPC-PMT-002 and EPC-PMT-003 accept the batch or every transaction.
+"""EPC-PMT-002, EPC-PMT-003 and EPC-SCT-008: where a SEPA value may sit.
 
 EPC allows the service level (``PmtTpInf/SvcLvl``) and the charge
 bearer (``ChrgBr``) on the payment batch or on each transaction. Until
 0.0.82 the bundled SEPA rulebook required both on the batch, so it
 rejected files EPC accepts. Each rule now holds when the batch carries
 the SEPA value, or carries nothing and every transaction does, and
-still fails when a value is missing from both places.
+still fails when a value is missing from both places. EPC-SCT-008 holds
+each transaction's own service level, which overrides the batch's, to
+SEPA, and every repeated code must be SEPA, not just one.
 """
 
 from __future__ import annotations
@@ -44,10 +46,20 @@ _DOC = """<?xml version="1.0" encoding="UTF-8"?>
 """
 
 
-def _service(code: str | None) -> str:
-    if code is None:
+Service = str | tuple[str, ...] | None
+
+
+def _service(codes: Service) -> str:
+    """``PmtTpInf`` with one ``SvcLvl`` per code; ``Prtry:X`` is proprietary."""
+    if codes is None:
         return ""
-    return f"\n        <PmtTpInf><SvcLvl><Cd>{code}</Cd></SvcLvl></PmtTpInf>"
+    levels = "".join(
+        f"<SvcLvl><Prtry>{code[6:]}</Prtry></SvcLvl>"
+        if code.startswith("Prtry:")
+        else f"<SvcLvl><Cd>{code}</Cd></SvcLvl>"
+        for code in ((codes,) if isinstance(codes, str) else codes)
+    )
+    return f"\n        <PmtTpInf>{levels}</PmtTpInf>"
 
 
 def _charge(bearer: str | None) -> str:
@@ -58,8 +70,8 @@ def _document(
     *,
     batch_charge: str | None = "SLEV",
     tx_charges: tuple[str | None, ...] = (None, None),
-    batch_service: str | None = "SEPA",
-    tx_services: tuple[str | None, ...] | None = None,
+    batch_service: Service = "SEPA",
+    tx_services: tuple[Service, ...] | None = None,
     message_type: str = "pain.001.001.03",
 ) -> str:
     services = tx_services or (None,) * len(tx_charges)
@@ -189,7 +201,7 @@ class TestServiceLevel:
             tx_services=("SEPA", "URGP"),
             message_type=message_type,
         )
-        assert _failed(xml) == {"EPC-PMT-002"}
+        assert _failed(xml) == {"EPC-PMT-002", "EPC-SCT-008"}
 
     def test_another_code_on_the_batch_fails(self, message_type: str) -> None:
         xml = _document(
@@ -198,6 +210,60 @@ class TestServiceLevel:
             message_type=message_type,
         )
         assert _failed(xml) == {"EPC-PMT-002"}
+
+
+@pytest.mark.parametrize("message_type", VERSIONS)
+class TestTransactionServiceLevel:
+    """EPC-SCT-008: every service level a transaction carries is SEPA.
+
+    A transaction's service level overrides the batch's for that
+    transaction, so a non-SEPA one inside a SEPA batch is not SEPA.
+    """
+
+    def test_no_transaction_service_level_passes(
+        self, message_type: str
+    ) -> None:
+        xml = _document(tx_services=(None, None), message_type=message_type)
+        assert _failed(xml) == set()
+
+    def test_sepa_passes(self, message_type: str) -> None:
+        xml = _document(tx_services=("SEPA", None), message_type=message_type)
+        assert _failed(xml) == set()
+
+    def test_urgp_fails(self, message_type: str) -> None:
+        xml = _document(tx_services=("URGP", None), message_type=message_type)
+        assert _failed(xml) == {"EPC-SCT-008"}
+
+    def test_a_proprietary_code_fails(self, message_type: str) -> None:
+        xml = _document(
+            tx_services=("Prtry:SEPA", None), message_type=message_type
+        )
+        assert _failed(xml) == {"EPC-SCT-008"}
+
+
+class TestRepeatedServiceLevels:
+    """From .09, ``SvcLvl`` repeats: every code must be SEPA, not one."""
+
+    def test_a_transaction_listing_sepa_and_urgp_fails(self) -> None:
+        xml = _document(
+            tx_services=(("SEPA", "URGP"), None),
+            message_type="pain.001.001.09",
+        )
+        assert _failed(xml) == {"EPC-SCT-008"}
+
+    def test_a_batch_listing_sepa_and_urgp_fails(self) -> None:
+        xml = _document(
+            batch_service=("SEPA", "URGP"), message_type="pain.001.001.09"
+        )
+        assert _failed(xml) == {"EPC-PMT-002"}
+
+    def test_every_transaction_listing_only_sepa_passes(self) -> None:
+        xml = _document(
+            batch_service=None,
+            tx_services=(("SEPA", "SEPA"), "SEPA"),
+            message_type="pain.001.001.09",
+        )
+        assert _failed(xml) == set()
 
 
 def test_a_batch_with_no_transactions_fails_both_rules() -> None:

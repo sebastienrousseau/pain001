@@ -31,6 +31,10 @@ REMEDIATIONS: dict[str, str] = {
     "EPC-SCT-007": (
         "Provide a non-empty EndToEndId (must not be 'NOTPROVIDED')."
     ),
+    "EPC-SCT-008": (
+        "Set each transaction's SvcLvl to Cd 'SEPA', or remove it to use "
+        "the batch's."
+    ),
     "EPC-PMT-001": "Provide an IBAN for the debtor account.",
     "EPC-PMT-002": (
         "Set SvcLvl/Cd to 'SEPA' in the batch's PmtTpInf, or in every "
