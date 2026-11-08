@@ -104,6 +104,13 @@ exists, and the hot paths get faster.
   USD passed `--schematron sepa`. A rulebook prefix bound to the
   document's message family now follows the document's version, and
   `pain001 check` warns when a rulebook ran no rule at all.
+- The Schematron evaluator treats a location path as XPath does: an
+  element with only children counts as present, `=` holds when any
+  selected node matches (never on an empty selection, so `X != 'a'` is
+  false when `X` is missing), `count()` counts, and `[...]` predicates
+  (tests and positions) filter steps. A path used to read as its first
+  element's text, so a rule could not say "every transaction". A `!`
+  that is not part of `!=` no longer hangs the evaluator.
 
 ## [0.0.81] - 2026-11-08
 
