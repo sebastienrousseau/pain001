@@ -48,6 +48,16 @@ exists, and the hot paths get faster.
   bundled examples are regenerated with this input change, so the
   output change is not a breaking change.
 
+### Performance
+
+- Templates are compiled once per template text and reused: a
+  five-row `generate_xml_string` call drops from about 8.9 ms to 0.7 ms
+  (compiling was 8.6 ms of it). An edited template compiles again.
+- The templates' `indent` filter works on plain strings instead of
+  MarkupSafe objects: rendering 1,000 pain.001.001.09 rows drops from
+  about 29 ms to 20 ms. The output is byte-identical (golden files, and
+  1,000-row renders of every template that indents).
+
 ### Fixed
 
 - The CLI starts on a base install again. In 0.0.81, `pip install pain001`
