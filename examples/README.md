@@ -40,6 +40,7 @@ python examples/01_generate_xml_file.py
 | `24_templates_and_errors.py` | Query and guard the template registry (`DEFAULT_TEMPLATE_REGISTRY`, `TemplateRegistry`, `validate_registry`), catch `DataSourceError` and `PaymentValidationError`, inspect `SchemeValidationResult` / `SchemeViolation`, and receive `MetricEvent`s |
 | `25_cli_plugins_and_upload.py` | `plugins list/show/disable`, `upload` (its offline refusals, then an SFTP round trip against a throwaway loopback server with password login, a passphrase-protected private key, and that key with an OpenSSH certificate, `upload` extra) and `serve --help`, with a temporary HOME |
 | `26_rest_server.py` | `pain001 serve` started for real on a free loopback port: health check, `PAIN001_API_KEY` bearer auth (401 without, 200 with), validation over HTTP, and a graceful SIGTERM shutdown (`api` extra) |
+| `27_check_existing_file.py` | `check_document` and `pain001 check` on files that already exist: the bundled .09 sample passes the XSD, MDR and `sepa-sct` rungs, a broken copy fails the XSD, and the CLI exits 1 with a JSON report per file |
 
 Install the development environment with `poetry install --all-extras --with dev`
 before running the complete suite. Examples illustrate workflows; they do not

@@ -43,7 +43,7 @@ def test_all_versions():
             "debtor_town_name": "Debtortown",
             "debtor_country_code": "DE",
             "debtor_account_IBAN": "DE89370400440532013000",
-            "debtor_agent_BIC": "DEUTDEFF",
+            "debtor_agent_BIC": "RQKKDEF0",
             "charge_bearer": "SLEV",
             "payment_id": "PAY001",
             "payment_amount": 100.50,

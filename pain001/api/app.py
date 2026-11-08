@@ -43,6 +43,7 @@ from pain001.api._pipeline import (
 )
 from pain001.api._startup import startup_checks
 from pain001.api.auth import require_api_key as _require_api_key
+from pain001.api.check import check_router
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import JobStatus, job_manager, output_name
@@ -56,7 +57,7 @@ from pain001.api.models import (
     ValidationRequest,
     ValidationResponse,
 )
-from pain001.api.ratelimit import RateLimitMiddleware, parse_rate_limit
+from pain001.api.ratelimit import install_rate_limiting
 from pain001.api.ui import ui_router
 from pain001.constants import TEMPLATES_DIR
 from pain001.exceptions import PaymentValidationError
@@ -653,32 +654,16 @@ async def metrics() -> PlainTextResponse:
     return PlainTextResponse(render_prometheus(__version__))
 
 
-def _install_rate_limiting(application: FastAPI) -> None:
-    """Attach the rate-limit middleware when PAIN001_RATE_LIMIT is set.
-
-    Args:
-        application: The FastAPI application to wrap.
-    """
-    spec = os.environ.get("PAIN001_RATE_LIMIT")
-    if not spec:
-        return
-    max_requests, window_seconds = parse_rate_limit(spec)
-    application.add_middleware(
-        RateLimitMiddleware,
-        max_requests=max_requests,
-        window_seconds=window_seconds,
-    )
-
-
-# The dashboard and its two JSON endpoints, and the faces, ride on the
-# main router so they are served under both prefixes and share its auth
+# The dashboard and its two JSON endpoints, the faces and check ride on
+# the main router so they are served under both prefixes and share its auth
 # and metrics.
 router.include_router(ui_router)
 router.include_router(faces_router)
+router.include_router(check_router)
 
 # Mount the routes: canonical, documented ``/api/v1`` plus the legacy
 # ``/api`` alias (served but hidden from the OpenAPI schema).
 app.include_router(router, prefix="/api/v1")
 app.include_router(router, prefix="/api", include_in_schema=False)
 app.add_middleware(MetricsMiddleware)
-_install_rate_limiting(app)
+install_rate_limiting(app)

@@ -50,6 +50,14 @@ pain001.async\_adapter module
    :show-inheritance:
    :undoc-members:
 
+pain001.check module
+--------------------
+
+.. automodule:: pain001.check
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.constants module
 ------------------------
 

@@ -31,16 +31,31 @@
       <assert test="boolean(pain:PmtId/pain:EndToEndId) and pain:PmtId/pain:EndToEndId != 'NOTPROVIDED'" id="EPC-SCT-007">
         EndToEndId must be provided and cannot be NOTPROVIDED.
       </assert>
+      <!--
+        A transaction's service level overrides the batch's for that
+        transaction. Every one present must be SEPA: SvcLvl repeats from
+        .09, and a Prtry code is not SEPA.
+      -->
+      <assert test="not(pain:PmtTpInf/pain:SvcLvl[not(pain:Cd = 'SEPA')])" id="EPC-SCT-008">
+        Service level when specified at transaction level must be SEPA for EPC SEPA payments.
+      </assert>
     </rule>
     <rule context="//pain:PmtInf">
       <assert test="boolean(pain:DbtrAcct/pain:Id/pain:IBAN)" id="EPC-PMT-001">
         Debtor account must be specified as an IBAN.
       </assert>
-      <assert test="pain:PmtTpInf/pain:SvcLvl/pain:Cd = 'SEPA'" id="EPC-PMT-002">
-        Payment service level code must be SEPA.
+      <!--
+        EPC allows the service level and the charge bearer on the batch
+        or on every transaction. Each rule holds when the batch says
+        SEPA (SLEV), or says nothing and every transaction does; it
+        fails when a value is missing from both places. Every service
+        level present must be SEPA, since SvcLvl repeats from .09.
+      -->
+      <assert test="(pain:PmtTpInf/pain:SvcLvl and not(pain:PmtTpInf/pain:SvcLvl[not(pain:Cd = 'SEPA')])) or (not(pain:PmtTpInf/pain:SvcLvl) and pain:CdtTrfTxInf and not(pain:CdtTrfTxInf[not(pain:PmtTpInf/pain:SvcLvl) or pain:PmtTpInf/pain:SvcLvl[not(pain:Cd = 'SEPA')]]))" id="EPC-PMT-002">
+        Service level code must be SEPA, on the payment batch or on every transaction.
       </assert>
-      <assert test="pain:ChrgBr = 'SLEV'" id="EPC-PMT-003">
-        Charge bearer must be SLEV for EPC SEPA payments.
+      <assert test="pain:ChrgBr = 'SLEV' or (not(pain:ChrgBr) and pain:CdtTrfTxInf and not(pain:CdtTrfTxInf[not(pain:ChrgBr = 'SLEV')]))" id="EPC-PMT-003">
+        Charge bearer must be SLEV, on the payment batch or on every transaction.
       </assert>
     </rule>
   </pattern>

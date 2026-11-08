@@ -379,3 +379,29 @@ def test_wrong_passphrase_on_an_openssh_format_key(connection, tmp_path):
             passphrase="not-the-passphrase",
         )
     client.connect.assert_not_called()
+
+
+def test_a_wrong_passphrase_that_decrypts_to_garbage_is_still_named(
+    key, tmp_path, monkeypatch
+):
+    """About 1 in 256 wrong passwords pass the PEM padding check.
+
+    The key then fails to parse, and paramiko reports "Could not
+    deserialize key data" instead of a bad password; with a passphrase
+    given and an encrypted PEM file, that is still a wrong passphrase.
+    """
+    from pain001.transport import identity
+
+    path = _key_file(tmp_path, key)
+
+    def garbage(*args, **kwargs):
+        raise paramiko.SSHException("Could not deserialize key data.")
+
+    for key_class in identity._KEY_TYPES:
+        monkeypatch.setattr(key_class, "from_private_key_file", garbage)
+    with pytest.raises(ValueError, match="wrong passphrase"):
+        identity._load_private_key(path, "not-the-passphrase", "id_rsa")
+    plain = tmp_path / "plain"
+    key.write_private_key_file(str(plain))
+    with pytest.raises(ValueError, match="not an RSA, ECDSA or Ed25519"):
+        identity._load_private_key(str(plain), "any", "plain")

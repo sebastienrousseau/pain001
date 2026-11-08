@@ -86,3 +86,24 @@ def test_the_release_workflow_titles_the_release_by_project() -> None:
     )
     assert '"version=$TAG_VERSION" >> "$GITHUB_OUTPUT"' in workflow
     assert "--project Pain001" not in workflow
+
+
+def test_the_readme_names_the_version_being_released() -> None:
+    """Both README release statements follow the version sources."""
+    from pain001.constants import VERSION
+
+    assert preflight_release.readme_release_problems(VERSION) == []
+
+
+def test_a_stale_readme_blocks_the_release() -> None:
+    """The 0.0.81 README, still announcing 0.0.80, fails both checks."""
+    stale = (
+        "> **Latest release: v0.0.80**: ISO 20022 files\n"
+        "... The current release\nis 0.0.80; publication requires ..."
+    )
+    assert preflight_release.readme_release_problems("0.0.81", stale) == [
+        "README.md lacks 'Latest release: v0.0.81'",
+        "README.md lacks 'The current release is 0.0.81;'",
+    ]
+    fixed = stale.replace("0.0.80", "0.0.81")
+    assert preflight_release.readme_release_problems("0.0.81", fixed) == []

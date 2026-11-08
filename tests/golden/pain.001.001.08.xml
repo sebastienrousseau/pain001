@@ -23,6 +23,11 @@
             <PmtInfId>Payment001</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
             <BtchBookg>true</BtchBookg>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>SEPA</Cd>
+                </SvcLvl>
+            </PmtTpInf>
             <ReqdExctnDt>
                 <Dt>2023-01-04</Dt>
             </ReqdExctnDt>
@@ -38,9 +43,7 @@
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <Othr>
-                        <Id>GB82WEST12345698765432</Id>
-                    </Othr>
+                    <IBAN>GB82WEST12345698765432</IBAN>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
@@ -73,9 +76,7 @@
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
-                        <Othr>
-                            <Id>FR1420041010050500013M02606</Id>
-                        </Othr>
+                        <IBAN>FR1420041010050500013M02606</IBAN>
                     </Id>
                 </CdtrAcct>
                 <Purp>

@@ -122,7 +122,7 @@ def test_inline_document_with_the_long_tail() -> None:
 <GrpHdr><MsgId>M</MsgId><CreDtTm>2026-01-02T09:00:00</CreDtTm><NbOfTxs>1</NbOfTxs><CtrlSum>10.00</CtrlSum>
 <InitgPty><Nm>Init</Nm></InitgPty></GrpHdr>
 <PmtInf><PmtInfId>P</PmtInfId><PmtMtd>TRF</PmtMtd><ReqdExctnDt><DtTm>2026-01-03T10:00:00</DtTm></ReqdExctnDt>
-<Dbtr><Nm>D</Nm><Id><OrgId><AnyBIC>DEUTDEFF</AnyBIC></OrgId></Id><CtryOfRes>DE</CtryOfRes></Dbtr>
+<Dbtr><Nm>D</Nm><Id><OrgId><AnyBIC>RQKKDEF0</AnyBIC></OrgId></Id><CtryOfRes>DE</CtryOfRes></Dbtr>
 <DbtrAcct><Id><Othr><Id>12345678</Id><SchmeNm><Cd>BBAN</Cd></SchmeNm></Othr></Id><Ccy>GBP</Ccy><Tp><Cd>CACC</Cd></Tp></DbtrAcct>
 <DbtrAgt><FinInstnId><Nm>Bank</Nm><Othr><Id>AG1</Id></Othr></FinInstnId></DbtrAgt>
 <UltmtDbtr><Nm>UD</Nm></UltmtDbtr>
@@ -146,7 +146,7 @@ def test_inline_document_with_the_long_tail() -> None:
     assert row["equivalent_amount_currency"] == "USD"
     assert row["requested_execution_date"] == "2026-01-03T10:00:00"
     assert (
-        row["debtor_bic"] == "DEUTDEFF"
+        row["debtor_bic"] == "RQKKDEF0"
         and row["debtor_country_of_residence"] == "DE"
     )
     assert (

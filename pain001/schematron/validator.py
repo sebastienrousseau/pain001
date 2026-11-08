@@ -14,6 +14,7 @@
 
 """High-level Schematron validator for ISO 20022 clearing network rulebooks."""
 
+import re
 import time
 from pathlib import Path
 from xml.etree.ElementTree import Element  # nosec B405
@@ -34,6 +35,43 @@ from pain001.schematron.parser import (
     parse_schematron,
 )
 from pain001.security.path_validator import validate_path
+
+#: An ISO 20022 namespace: its message family, then its version.
+_ISO_NAMESPACE = re.compile(
+    r"^(urn:iso:std:iso:20022:tech:xsd:[a-z]{4}\.\d{3}\.\d{3}\.)\d{2}$"
+)
+
+
+def bind_to_document(
+    namespaces: dict[str, str], root: Element
+) -> dict[str, str]:
+    """Point the rulebook's prefixes at the document's message version.
+
+    A rulebook binds a prefix to one version's namespace (the bundled
+    ones to pain.001.001.03). Its rules describe the message family, so
+    a prefix bound to the same family as the document is rebound to the
+    document's own namespace; until 0.0.82 a .04 to .13 document matched
+    no rule and passed. Other prefixes are left as they are.
+
+    Args:
+        namespaces: The rulebook's prefix bindings.
+        root: The document's root element.
+
+    Returns:
+        The bindings to evaluate with.
+    """
+    document = (
+        root.tag[1:].partition("}")[0] if root.tag.startswith("{") else ""
+    )
+    match = _ISO_NAMESPACE.match(document)
+    if match is None:
+        return namespaces
+    family = match[1]
+    return {
+        prefix: document if uri.startswith(family) else uri
+        for prefix, uri in namespaces.items()
+    }
+
 
 #: Mapping of friendly preset names to packaged rulebook .sch files.
 PRESET_RULEBOOKS: dict[str, str] = {
@@ -132,12 +170,11 @@ class SchematronValidator:
 
         violations: list[SchematronViolation] = []
         rules_evaluated = 0
+        namespaces = bind_to_document(self.schema.namespaces, root)
 
         for pattern in self.schema.patterns:
             for rule in pattern.rules:
-                nodes = find_context_elements(
-                    root, rule.context, self.schema.namespaces
-                )
+                nodes = find_context_elements(root, rule.context, namespaces)
                 for node in nodes:
                     for assertion in rule.assertions:
                         rules_evaluated += 1
@@ -145,7 +182,7 @@ class SchematronValidator:
                             assertion,
                             node,
                             rule.context,
-                            self.schema.namespaces,
+                            namespaces,
                         )
                         if violation:
                             violations.append(violation)

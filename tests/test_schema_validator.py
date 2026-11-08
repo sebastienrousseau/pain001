@@ -37,7 +37,7 @@ class TestSchemaValidator(unittest.TestCase):
             "requested_execution_date": "2024-01-16",
             "debtor_name": "John Doe",
             "debtor_account_IBAN": "DE89370400440532013000",
-            "debtor_agent_BIC": "DEUTDEFF",
+            "debtor_agent_BIC": "RQKKDEF0",
             "charge_bearer": "SLEV",
             "payment_id": "PAY001",
             "payment_amount": 100.50,

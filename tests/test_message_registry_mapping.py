@@ -41,7 +41,6 @@ _CASES: list[tuple[str, Prepare, dict[tuple[Any, ...], str]]] = [
         "pain.001.001.05",
         registry._prepare_xml_data_v05_to_v08,
         {
-            ("service_level_code",): "SEPA",
             ("payment_method",): "TRF",
             ("batch_booking",): "false",
             ("transactions", 0, "charge_bearer"): "SLEV",

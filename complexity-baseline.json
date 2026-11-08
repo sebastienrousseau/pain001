@@ -24,7 +24,7 @@
     "lines": 71
   },
   "pain001/api/app.py": {
-    "file_lines": 684
+    "file_lines": 669
   },
   "pain001/api/job_store.py::RedisJobStore.load_all": {
     "cognitive": 17
@@ -44,7 +44,7 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1369
+    "file_lines": 1350
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "lines": 121
@@ -63,7 +63,7 @@
     "lines": 108
   },
   "pain001/core/core.py::process_files_streaming": {
-    "lines": 89
+    "lines": 85
   },
   "pain001/corpus/builder.py": {
     "file_lines": 946
@@ -235,24 +235,9 @@
   "pain001/parquet/load_parquet_data.py::load_parquet_data_streaming": {
     "lines": 63
   },
-  "pain001/schematron/evaluator.py::XPathEvaluator._eval_function": {
-    "cognitive": 50,
-    "cyclomatic": 34
-  },
-  "pain001/schematron/evaluator.py::XPathEvaluator._eval_primary": {
-    "cyclomatic": 11
-  },
-  "pain001/schematron/evaluator.py::_tokenize": {
-    "cognitive": 18,
-    "cyclomatic": 12
-  },
   "pain001/schematron/evaluator.py::find_context_elements": {
     "cognitive": 22,
     "cyclomatic": 14
-  },
-  "pain001/schematron/evaluator.py::resolve_xpath_value": {
-    "cognitive": 25,
-    "cyclomatic": 15
   },
   "pain001/schematron/parser.py::parse_schematron": {
     "cognitive": 48,
@@ -261,7 +246,7 @@
   },
   "pain001/schematron/validator.py::SchematronValidator.validate": {
     "cyclomatic": 12,
-    "lines": 75
+    "lines": 74
   },
   "pain001/security/dsig.py::sign_xml_document": {
     "lines": 108
@@ -385,13 +370,7 @@
     "lines": 82
   },
   "pain001/xml/message_registry.py": {
-    "file_lines": 645
-  },
-  "pain001/xml/message_registry.py::_prepare_xml_data_v04": {
-    "lines": 80
-  },
-  "pain001/xml/message_registry.py::_prepare_xml_data_v05_to_v08": {
-    "lines": 76
+    "file_lines": 643
   },
   "pain001/xml/message_registry.py::_prepare_xml_data_v09_to_v12": {
     "lines": 119

@@ -4,7 +4,7 @@ country: SE
 message_type: pain.001.001.03
 variant: null
 description: Swedish Bankgiro supplier payment with an OCR reference.
-sha256: fce8407811f3bd61276f6e1b609d5d2e75e4268503f55bf270304fcd7da98a67
+sha256: cfcf90c18a68873cde75c04b13c952a462936a106fee3239816b435aa284bea7
 build:
   renamed:
   - /Document/CstmrCdtTrfInitn/PmtInf/DbtrAgt/FinInstnId/BICFI -> BIC
@@ -33,7 +33,7 @@ validation:
   overlays: {}
 twins:
   iso_json:
-    sha256: 8f92e69f11292c49a25b0f1078d07af89ea083aea5c7c2bdfdbfbdb245e40b90
+    sha256: 41ba531d1c88be54fdfc06ef734901ab562f7b378ad2054341274e65133a7eb4
     schema_findings: []
   records:
     rows: 2

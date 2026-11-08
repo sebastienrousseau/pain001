@@ -19,6 +19,12 @@ from collections.abc import Callable
 from typing import Any
 from xml.etree.ElementTree import Element  # nosec B405
 
+from pain001.schematron._xpath_syntax import (
+    DELIMITERS,
+    scan,
+    split_top,
+    step_parts,
+)
 from pain001.schematron.models import SchematronViolation
 from pain001.schematron.parser import SchematronAssertion
 
@@ -114,90 +120,135 @@ def find_context_elements(
     return current
 
 
+class NodeSet(list[Element]):
+    """The elements a location path selected, in document order.
+
+    XPath treats a node-set differently from a string: it is true when
+    it is not empty, whatever the nodes contain, and ``=`` holds when
+    any one of its nodes compares equal.
+    """
+
+
+def _filter(
+    nodes: list[Element], predicate: str, namespaces: dict[str, str]
+) -> list[Element]:
+    """Keep the nodes a predicate selects: a position, or a test."""
+    if predicate.strip().isdigit():
+        position = int(predicate)
+        return nodes[position - 1 : position] if position else []
+    return [
+        node
+        for node in nodes
+        if XPathEvaluator(node, namespaces).evaluate(predicate)
+    ]
+
+
+def _child_step(
+    nodes: list[Element], step: str, namespaces: dict[str, str]
+) -> list[Element]:
+    """Apply one child step, predicates included, to every node."""
+    name, predicates = step_parts(step)
+    selected = [
+        child
+        for node in nodes
+        for child in node
+        if _match_tag(child, name, namespaces)
+    ]
+    for predicate in predicates:
+        selected = _filter(selected, predicate, namespaces)
+    return selected
+
+
+def select_path(
+    node: Element, path: str, namespaces: dict[str, str]
+) -> NodeSet | str | None:
+    """Select a relative location path from a node.
+
+    Args:
+        node: The context node.
+        path: Child steps separated by ``/``, each optionally with
+            ``[...]`` predicates, or ending in an ``@attribute`` step.
+        namespaces: Prefix-to-URI mapping for the name tests.
+
+    Returns:
+        The selected elements, or for an attribute step the first
+        selected element's value of it (None when none has it).
+    """
+    nodes: list[Element] = [node]
+    for step in split_top(path, "/"):
+        if step.startswith("@"):
+            return next(
+                (n.attrib[step[1:]] for n in nodes if step[1:] in n.attrib),
+                None,
+            )
+        if step != ".":
+            nodes = _child_step(nodes, step, namespaces)
+    return NodeSet(nodes)
+
+
+def _string(value: Any) -> Any:
+    """A node-set as its first node's text (None when empty); else as-is."""
+    if isinstance(value, NodeSet):
+        return (value[0].text or "").strip() if value else None
+    return value
+
+
+def _atoms(value: Any) -> list[Any]:
+    """The values a comparison tries: each node's text, or the value."""
+    if isinstance(value, NodeSet):
+        return [(node.text or "").strip() for node in value]
+    return [value]
+
+
 def resolve_xpath_value(
     node: Element, path: str, namespaces: dict[str, str]
 ) -> Any:
     """Resolve a relative XPath expression on an element node.
 
-    Returns string value, number, list of elements, or None.
+    Returns the first selected element's text, an attribute's value,
+    or None when nothing is selected.
     """
-    clean_path = path.strip()
-    if not clean_path or clean_path == ".":
-        return (node.text or "").strip()
+    return _string(select_path(node, path, namespaces))
 
-    steps = [s.strip() for s in clean_path.split("/") if s.strip()]
-    current_elements = [node]
 
-    for step in steps:
-        if step.startswith("@"):
-            attr_name = step[1:]
-            for elem in current_elements:
-                if attr_name in elem.attrib:
-                    return elem.attrib[attr_name]
-            return None
-
-        next_elems: list[Element] = []
-        for elem in current_elements:
-            for child in elem:
-                if _match_tag(child, step, namespaces):
-                    next_elems.append(child)
-        current_elements = next_elems
-        if not current_elements:
-            return None
-
-    first = current_elements[0]
-    return (first.text or "").strip()
+def _read_token(expr: str, start: int) -> tuple[str, int]:
+    """The token at ``start`` (not whitespace) and the index after it."""
+    pair = expr[start : start + 2]
+    if pair in ("<=", ">=", "!="):
+        return pair, start + 2
+    char = expr[start]
+    if char in "(),=<>":
+        return char, start + 1
+    if char in "'\"":
+        # A string literal, always given back in single quotes.
+        close = expr.find(char, start + 1)
+        close = len(expr) if close < 0 else close
+        return f"'{expr[start + 1 : close]}'", close + 1
+    # Word, number, function or path, predicates included; at least one
+    # character, so a stray delimiter cannot stall the tokenizer.
+    end = next(
+        (
+            index
+            for index, found, level in scan(expr, start)
+            if index > start
+            and level == 0
+            and (found.isspace() or found in DELIMITERS)
+        ),
+        len(expr),
+    )
+    return expr[start:end], end
 
 
 def _tokenize(expr: str) -> list[str]:
     """Tokenize a Schematron XPath assertion expression."""
     tokens: list[str] = []
-    i = 0
-    n = len(expr)
-
-    while i < n:
-        c = expr[i]
-        if c.isspace():
-            i += 1
+    index = 0
+    while index < len(expr):
+        if expr[index].isspace():
+            index += 1
             continue
-
-        if c in ("(", ")", ","):
-            tokens.append(c)
-            i += 1
-            continue
-
-        # String literals with single or double quotes
-        if c in ("'", '"'):
-            quote = c
-            start = i + 1
-            i += 1
-            while i < n and expr[i] != quote:
-                i += 1
-            tokens.append(f"'{expr[start:i]}'")
-            i += 1
-            continue
-
-        # Multi-character comparison operators
-        if expr[i : i + 2] in ("<=", ">=", "!="):
-            tokens.append(expr[i : i + 2])
-            i += 2
-            continue
-
-        if c in ("=", "<", ">"):
-            tokens.append(c)
-            i += 1
-            continue
-
-        # Word, number, function, or path
-        start = i
-        while (
-            i < n
-            and not expr[i].isspace()
-            and expr[i] not in ("(", ")", ",", "=", "<", ">", "!", "'", '"')
-        ):
-            i += 1
-        tokens.append(expr[start:i])
-
+        token, index = _read_token(expr, index)
+        tokens.append(token)
     return tokens
 
 
@@ -251,19 +302,19 @@ class XPathEvaluator:
     def _apply_comparison(self, left: Any, op: str, right: Any) -> bool:
         """Apply comparison operator to left and right operands.
 
-        Numbers compare numerically; anything else compares as strings,
-        with ``None`` as the empty string. An unknown operator is false.
+        A node-set side holds when any of its nodes does, so an empty one
+        never does. Numbers compare numerically; anything else compares
+        as strings, with ``None`` as the empty string. An unknown
+        operator is false.
         """
         compare = _COMPARATORS.get(op)
         if compare is None:
             return False
-        try:
-            return bool(compare(float(left), float(right)))
-        except (ValueError, TypeError):
-            # Either side is not a number: compare them as strings.
-            left_str = str(left) if left is not None else ""
-            right_str = str(right) if right is not None else ""
-            return bool(compare(left_str, right_str))
+        return any(
+            _compare(compare, one, other)
+            for one in _atoms(left)
+            for other in _atoms(right)
+        )
 
     def _eval_primary(self, tokens: list[str], idx: int) -> tuple[Any, int]:
         """Evaluate primary token, literal, subexpression, or function call."""
@@ -283,21 +334,17 @@ class XPathEvaluator:
             fn_name = tok.lower()
             return self._eval_function(fn_name, tokens, idx + 2)
 
-        # String literal
+        return self._literal_or_path(tok), idx + 1
+
+    def _literal_or_path(self, tok: str) -> Any:
+        """A string or number literal, else a location path's value."""
         if tok.startswith("'") and tok.endswith("'"):
-            return tok[1:-1], idx + 1
-
-        # Number literal
+            return tok[1:-1]
         try:
-            if "." in tok:
-                return float(tok), idx + 1
-            return int(tok), idx + 1
+            return float(tok) if "." in tok else int(tok)
         except ValueError:
-            pass
-
-        # XPath node / attribute resolution
-        val = resolve_xpath_value(self.node, tok, self.namespaces)
-        return val, idx + 1
+            # A location path: a node-set, or an attribute's value.
+            return select_path(self.node, tok, self.namespaces)
 
     def _eval_function(
         self, fn_name: str, tokens: list[str], idx: int
@@ -317,48 +364,59 @@ class XPathEvaluator:
                     idx += 1
                 break
 
-        if fn_name == "true":
-            return True, idx
+        function = _FUNCTIONS.get(fn_name)
+        return (function(args) if function else None), idx
 
-        if fn_name == "false":
-            return False, idx
 
-        if fn_name == "not":
-            arg = args[0] if args else None
-            return (not bool(arg)), idx
+def _compare(
+    compare: Callable[[Any, Any], bool], left: Any, right: Any
+) -> bool:
+    """Compare two atomic values, as numbers when both are numeric."""
+    try:
+        return bool(compare(float(left), float(right)))
+    except (ValueError, TypeError):
+        # Either side is not a number: compare them as strings.
+        left_str = str(left) if left is not None else ""
+        right_str = str(right) if right is not None else ""
+        return bool(compare(left_str, right_str))
 
-        if fn_name == "boolean":
-            arg = args[0] if args else None
-            return bool(arg), idx
 
-        if fn_name == "number":
-            arg = args[0] if args else 0
-            try:
-                return float(arg), idx
-            except (ValueError, TypeError):
-                return 0.0, idx
+def _text_arg(args: list[Any], position: int) -> str:
+    """Argument ``position`` as a string, ``""`` when missing or empty."""
+    value = _string(args[position]) if len(args) > position else None
+    return str(value) if value is not None else ""
 
-        if fn_name == "string-length":
-            arg = str(args[0]) if args and args[0] is not None else ""
-            return len(arg), idx
 
-        if fn_name == "starts-with":
-            s = str(args[0]) if len(args) > 0 and args[0] is not None else ""
-            prefix = (
-                str(args[1]) if len(args) > 1 and args[1] is not None else ""
-            )
-            return s.startswith(prefix), idx
+def _number(args: list[Any]) -> float:
+    """XPath ``number()``, with 0 for anything that is not a number."""
+    try:
+        return float(_string(args[0]) if args else 0)
+    except (ValueError, TypeError):
+        return 0.0
 
-        if fn_name == "contains":
-            s = str(args[0]) if len(args) > 0 and args[0] is not None else ""
-            sub = str(args[1]) if len(args) > 1 and args[1] is not None else ""
-            return sub in s, idx
 
-        if fn_name == "count":
-            arg = args[0] if args else None
-            return (1 if arg is not None and arg != "" else 0), idx
+def _count(args: list[Any]) -> int:
+    """XPath ``count()``: the nodes in a node-set, else 1 for a value."""
+    arg = args[0] if args else None
+    if isinstance(arg, NodeSet):
+        return len(arg)
+    return 1 if arg is not None and arg != "" else 0
 
-        return None, idx
+
+#: The XPath functions assertions may call, by lower-case name.
+_FUNCTIONS: dict[str, Callable[[list[Any]], Any]] = {
+    "true": lambda args: True,
+    "false": lambda args: False,
+    "not": lambda args: not (args and args[0]),
+    "boolean": lambda args: bool(args and args[0]),
+    "number": _number,
+    "string-length": lambda args: len(_text_arg(args, 0)),
+    "starts-with": lambda args: _text_arg(args, 0).startswith(
+        _text_arg(args, 1)
+    ),
+    "contains": lambda args: _text_arg(args, 1) in _text_arg(args, 0),
+    "count": _count,
+}
 
 
 def evaluate_assertion(

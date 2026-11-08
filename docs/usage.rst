@@ -49,7 +49,89 @@ them on for anything a bank will see.
 Generation recomputes control totals and validates rendered XML against the
 bundled XSD before writing. Scheme validation, including anti-duplicate,
 adds domain rules but does not certify compliance with a bank's private rules.
-Streaming creates one output per chunk.
+Streaming creates one output per chunk. ``--workers N`` (with
+``--streaming``; ``workers=N`` in ``process_files_streaming``, or
+``PAIN001_WORKERS``) builds
+chunks in N processes and writes the same files in the same order: four
+workers took 40,000 rows from 1.6 s to 0.9 s on a six-core machine. A
+chunk that fails leaves the chunks before it and nothing after it. From
+Python, call it under ``if __name__ == "__main__":``, as with any
+``multiprocessing`` code, because the workers start fresh interpreters.
+
+Checking existing files
+=======================
+
+``pain001 check`` runs the validation ladder on pain.001 and pain.008
+files that already exist, whoever wrote them: the bundled XSD of the
+message type the file's namespace names, then the message definition's
+cross-element rules. ``--scheme`` adds scheme profiles (comma-separated),
+``--rules`` a private CEL policy (``pain001[rules]``) and ``--schematron``
+a rulebook, each run on the file as it stands.
+
+.. code-block:: bash
+
+   pain001 check out/*.xml
+   pain001 check --scheme sepa-sct --format json out/batch.xml
+   pain001 check --format sarif -o check.sarif out/*.xml
+
+It exits 0 when every file passes, 1 when any file has an error finding,
+and 2 when a file is not a bundled pain.001 or pain.008 message, is not
+UTF-8, is over 10 MiB, carries a DTD, or an option names an unknown
+scheme or rulebook. Every file gets a report; ``--format sarif`` writes
+one SARIF 2.1.0 log for code scanning. In Python, ``check_document``
+returns the same report:
+
+.. code-block:: python
+
+   from pain001 import check_document
+
+   report = check_document(xml_text, scheme="sepa-sct")
+   for finding in report.findings:
+       print(finding.rung, finding.rule, finding.location, finding.message)
+
+Over REST (``pain001 serve``), ``POST /api/v1/check`` takes the document
+as XML text in a JSON body with optional ``scheme`` and ``schematron``
+fields, and answers the same report. A Schematron rulebook is named by
+preset only (``sepa``, ``fednow``, ``cbpr``), never a server path. A
+failed rung is a ``200`` with ``"passed": false``; a document that
+cannot be checked is a ``422``.
+
+In CI
+-----
+
+The repository is also a GitHub Action. It installs pain001 from the
+tag you pin, checks the files, uploads the findings to code scanning
+and fails the job when a file does not pass. ``--skip-other-xml`` is
+on, so a glob may match XML that is not a payment:
+
+.. code-block:: yaml
+
+   permissions:
+     contents: read
+     security-events: write   # for the SARIF upload
+   steps:
+     - uses: actions/checkout@<sha>
+     - uses: sebastienrousseau/pain001@v0.0.82
+       with:
+         files: "payments/**/*.xml"
+         scheme: sepa-sct
+
+``files`` takes paths or globs (``**`` recurses); ``schematron``,
+``rules``, ``sarif-file``, ``upload-sarif: "false"`` and
+``python-version`` are optional.
+
+For pre-commit, ``pain001-check`` checks staged XML files and
+``pain001-validate`` validates a data file when it changes:
+
+.. code-block:: yaml
+
+   - repo: https://github.com/sebastienrousseau/pain001
+     rev: v0.0.82
+     hooks:
+       - id: pain001-check
+       - id: pain001-validate
+         args: [-t, pain.001.001.09, -d, payments.csv]
+         files: ^payments\.csv$
 
 Python: in-memory output
 ========================

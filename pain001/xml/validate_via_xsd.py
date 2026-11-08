@@ -32,15 +32,25 @@ mutated to be invalid in nine different ways — and the two
 implementations agreed on every one.
 """
 
+from __future__ import annotations
+
 import logging
 from functools import lru_cache
 from io import StringIO
+from typing import TYPE_CHECKING
 
-import xmlschema
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
 
+from pain001._lazy import lazy_module
 from pain001.observability.otel import traced
+
+# xmlschema loads on first use (about 60 ms): the CLI imports this module
+# at start-up, and --help never validates anything.
+if TYPE_CHECKING:
+    import xmlschema
+else:
+    xmlschema = lazy_module("xmlschema")
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +69,7 @@ def _get_cached_schema(xsd_file_path: str) -> xmlschema.XMLSchema:
 
 
 @lru_cache(maxsize=16)
-def _get_cached_lxml_schema(xsd_file_path: str) -> "_lxml_etree.XMLSchema":
+def _get_cached_lxml_schema(xsd_file_path: str) -> _lxml_etree.XMLSchema:
     """Return a cached compiled libxml2 schema for the given XSD path.
 
     Compiling the schema is the expensive part and does not depend on the
@@ -68,7 +78,7 @@ def _get_cached_lxml_schema(xsd_file_path: str) -> "_lxml_etree.XMLSchema":
     return _lxml_etree.XMLSchema(_lxml_etree.parse(xsd_file_path))
 
 
-def _hardened_lxml_parser() -> "_lxml_etree.XMLParser":
+def _hardened_lxml_parser() -> _lxml_etree.XMLParser:
     """Return an lxml parser with the unsafe XML features switched off.
 
     ``defusedxml`` does not wrap ``lxml``, so the protections it would

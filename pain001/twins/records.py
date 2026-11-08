@@ -40,10 +40,9 @@ from pathlib import Path
 from typing import Any
 
 from defusedxml import ElementTree as defused_et
-from jinja2 import select_autoescape
-from jinja2.sandbox import SandboxedEnvironment
 
 from pain001.twins.iso_json import _check, to_iso_json
+from pain001.xml._jinja import compile_template
 from pain001.xml.generate_xml import _load_trusted_template_source
 from pain001.xml.message_registry import (
     get_message_definition,
@@ -158,7 +157,16 @@ def _sentinel(column: str, index: int, row: int) -> str:
         return "true"
     if column == "currency":
         return f"C{index:02d}"
+    if column.endswith("_IBAN"):
+        return _sentinel_iban(index, row)
     return f"S{index:02d}R{row}"
+
+
+def _sentinel_iban(index: int, row: int) -> str:
+    """A valid, unique German IBAN, so templates take their IBAN branch."""
+    bban = f"{index:06d}{row:06d}{0:06d}"
+    check = 98 - int(bban + "131400") % 97  # DE as digits, then 00
+    return f"DE{check:02d}{bban}"
 
 
 def _render(version: str, rows: list[dict[str, str]]) -> str:
@@ -177,13 +185,9 @@ def _render(version: str, rows: list[dict[str, str]]) -> str:
         context["payment_nb_of_txs"] = count
     if "ctrl_sum" in context:
         context["ctrl_sum"] = total
-    env = SandboxedEnvironment(
-        autoescape=select_autoescape(
-            enabled_extensions=("xml",), default_for_string=True
-        )
-    )
+    # The generator's own sandbox, with its filters and tests.
     source = _load_trusted_template_source(str(template_path))
-    return str(env.from_string(source).render(**context))
+    return str(compile_template(source).render(**context))
 
 
 def _texts(xml: str) -> dict[str, list[str]]:

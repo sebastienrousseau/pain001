@@ -4,7 +4,7 @@ country: SE
 message_type: pain.001.001.09
 variant: null
 description: Swedish Plusgiro supplier payment with an invoice message.
-sha256: 535b0be71df984bd36e61779b82df3450217199088e4f38256086bf6b30a1dc9
+sha256: e6329593df4cc983e390f39364c1109f3d00f326d02fca9acb6dcc801aebecc8
 build:
   renamed: []
   wrapped:
@@ -31,7 +31,7 @@ validation:
   overlays: {}
 twins:
   iso_json:
-    sha256: 5475d936273691a87c013cfc94c45158621aef7677a5573eecf6c1ccea30c34a
+    sha256: 2bc27219dba7aeb255388d3619a51c60f0a3ca7360d0f344173f3dad49904344
     schema_findings: []
   records:
     rows: 1

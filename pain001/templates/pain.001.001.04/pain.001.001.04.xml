@@ -21,6 +21,11 @@
             <PmtInfId>1234567890</PmtInfId>
             <PmtMtd>TRF</PmtMtd>
             <BtchBookg>true</BtchBookg>
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>INST</Cd>
+                </SvcLvl>
+            </PmtTpInf>
             <ReqdExctnDt>2023-03-12</ReqdExctnDt>
             <Dbtr>
                 <Nm>Acme Corp</Nm>
@@ -34,9 +39,7 @@
             </Dbtr>
             <DbtrAcct>
                 <Id>
-                    <Othr>
-                        <Id>DE07512108001245126162</Id>
-                    </Othr>
+                    <IBAN>DE07512108001245126162</IBAN>
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
@@ -57,7 +60,7 @@
                 <ChrgBr>SHAR</ChrgBr>
                 <CdtrAgt>
                     <FinInstnId>
-                        <BICFI>SPUEDE2UXXX</BICFI>
+                        <BICFI>ZFUMDE50XXX</BICFI>
                     </FinInstnId>
                 </CdtrAgt>
                 <Cdtr>
@@ -71,9 +74,7 @@
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
-                        <Othr>
-                            <Id>DE67370400440532013008</Id>
-                        </Othr>
+                        <IBAN>DE67370400440532013008</IBAN>
                     </Id>
                 </CdtrAcct>
                 <Purp>

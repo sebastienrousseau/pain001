@@ -87,7 +87,7 @@ def _generate_valid_document() -> str:
         "currency": "EUR",
         "payment_currency": "EUR",
         "ctrl_sum": "100.00",
-        "creditor_agent_BIC": "SPUEDE2UXXX",
+        "creditor_agent_BIC": "ZFUMDE50XXX",
         "creditor_name": "Creditor",
         "creditor_street_name": "Street",
         "creditor_building_number": "1",

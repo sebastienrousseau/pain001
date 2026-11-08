@@ -152,6 +152,25 @@ def _check_version_sources(requested: str | None) -> str | None:
     return version
 
 
+def readme_release_problems(
+    version: str, text: str | None = None
+) -> list[str]:
+    """The README's two statements of the current release must be ``version``.
+
+    Both come from ``docs/readme-values.json``; nothing else moves them,
+    so the 0.0.81 README still announced 0.0.80. Whitespace is folded,
+    since the rendered README wraps the second one.
+    """
+    if text is None:
+        text = (ROOT / "README.md").read_text(encoding="utf-8")
+    folded = " ".join(text.split())
+    wanted = (
+        f"Latest release: v{version}",
+        f"The current release is {version};",
+    )
+    return [f"README.md lacks '{w}'" for w in wanted if w not in folded]
+
+
 def _check_release_documents(version: str) -> None:
     """Item 7, item 5 and the suite floors, from the tree alone."""
     # The suite releases in lockstep: every member's floor is this release.
@@ -174,6 +193,13 @@ def _check_release_documents(version: str) -> None:
             f"{len(body.split())} words",
         )
         check("release note names the right tag", f"v{version}" in body)
+
+    readme = readme_release_problems(version)
+    check(
+        f"README.md names {version} as the current release",
+        not readme,
+        "; ".join(readme),
+    )
 
     # 5. CHANGELOG has a dated section for this version
     changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")

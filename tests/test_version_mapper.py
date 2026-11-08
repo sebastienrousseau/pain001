@@ -217,7 +217,7 @@ def test_generic_mapping_applies_fallbacks_and_defaults() -> None:
         "requested_execution_date": "2026-09-13",
         "debtor_name": "D",
         "debtor_account_IBAN": "DE89370400440532013000",
-        "debtor_agent_BIC": "DEUTDEFF",
+        "debtor_agent_BIC": "RQKKDEF0",
         "payment_amount": "1.00",
         "payment_currency": "EUR",
         "creditor_agent_BICFI": "COBADEFF",

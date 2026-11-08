@@ -7,6 +7,131 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.82] - 2026-11-08
+
+Fast and checkable: `pain001 check` validates a file that already
+exists, and the hot paths get faster.
+
+### Breaking
+
+- pain.001.001.04 to .08 write a valid IBAN in `debtor_account_IBAN` or
+  `creditor_account_IBAN` as `<IBAN>` instead of `<Othr><Id>`, as .03
+  and .09 to .13 already do: for the same input, those two elements
+  change. `<Othr><Id>` carried no scheme name, so a bank or validator
+  could not tell it was an IBAN (pain001's own SEPA checks missed it).
+  Any other value, such as an account number, renders as before.
+  The same templates now write `service_level_code` as
+  `PmtTpInf/SvcLvl/Cd` on the payment batch, as .03 and .09 to .13 do;
+  they had no `PmtTpInf`, so the value was dropped and a SEPA file
+  failed EPC-PMT-002. Input without a service level renders as before,
+  and rows that disagree on it are refused, as in .03 and .09 to .13.
+  The .04 to .08 golden files and bundled examples are regenerated once
+  for both changes (ADR-0011).
+
+### Added
+
+- `pain001 check FILE...` runs the validation ladder on pain.001 and
+  pain.008 files that already exist: the bundled XSD of the message
+  type the namespace names, the message definition's cross-element
+  rules, and `--scheme`, `--rules` and `--schematron` when given. It
+  writes text, JSON or SARIF 2.1.0 (`--format`, `-o`), and exits 0 when
+  every file passes, 1 on an error finding, 2 when a file cannot be
+  checked. `check_document` and `CheckReport` are the same engine in
+  Python (`examples/27_check_existing_file.py`).
+- `POST /api/v1/check` runs the same check on a document sent as XML
+  text, with `scheme` and a Schematron preset (never a server path), on
+  the bounded pipeline pool: `200` with the report, `422` when the
+  document cannot be checked.
+- `--skip-other-xml` makes `pain001 check` skip, with a note, well-formed
+  XML that is not a pain.001 or pain.008 Document, so a glob can match
+  other XML files; malformed XML and DTDs are still refused.
+- The repository is a GitHub Action (`action.yml`): it installs pain001
+  from the pinned tag, runs `pain001 check` on `files` (paths or globs),
+  uploads SARIF to code scanning and fails the job when a file does not
+  pass.
+- pre-commit hooks (`.pre-commit-hooks.yaml`): `pain001-check` on staged
+  XML files and `pain001-validate` on a payment data file.
+- `--workers N` (with `--streaming`), `PAIN001_WORKERS` and `workers=N` in
+  `process_files_streaming` build streamed chunks in N processes: the
+  same files in the same order, and a failing chunk still leaves only the
+  chunks before it. Four workers took 40,000 rows from 1.6 s to 0.9 s.
+- Every release attaches `pain001-<version>.facts.json` (version, Python
+  floor, extras, message types, scheme profiles, Schematron rulebooks,
+  faces, CLI commands and their counts), generated from the sources by
+  `scripts/facts.py`, so the site and the MCP manifests can render the
+  numbers instead of restating them.
+
+### Changed
+
+- Stricter SEPA validation: the bundled rulebook's new EPC-SCT-008
+  requires every service level a transaction carries to be `SEPA`. A
+  transaction's `PmtTpInf/SvcLvl` overrides the batch's, so a `URGP` or
+  proprietary code there asks the bank for a non-SEPA payment inside a
+  SEPA batch, and passed until now. EPC-PMT-002 likewise requires every
+  service level code on the batch (`SvcLvl` repeats from .09) to be
+  `SEPA`, not just one. No generated XML changes, but a file that
+  passed `--schematron sepa` before can now fail. A transaction with no
+  service level is still judged by the batch's.
+- The bundled pain.001.001.09 to .13 samples use charge bearer `SLEV`, as
+  SEPA requires (EPC-PMT-003 in the bundled Schematron, `SEPA-CHRGBR` in
+  `sepa-sct`); they used `DEBT` and failed both. The samples, templates,
+  test fixtures and examples use synthetic test-form BICs (`0` as the
+  eighth character, which SWIFT reserves for test BICs) in place of real
+  banks' codes, and the Bankgiro and PlusGiro corpus scenarios use
+  `bic: auto`, as `docs/corpus.md` promises. The golden files and
+  bundled examples are regenerated with this input change, so the
+  output change is not a breaking change.
+
+### Performance
+
+- Templates are compiled once per template text and reused: a
+  five-row `generate_xml_string` call drops from about 8.9 ms to 0.7 ms
+  (compiling was 8.6 ms of it). An edited template compiles again.
+- The templates' `indent` filter works on plain strings instead of
+  MarkupSafe objects: rendering 1,000 pain.001.001.09 rows drops from
+  about 29 ms to 20 ms. The output is byte-identical (golden files, and
+  1,000-row renders of every template that indents).
+- The CLI starts about 2.5 times faster: `pain001 --help` takes about
+  120 ms instead of 320 ms on an idle machine. `import pain001` resolves
+  its public names on first use (about 20 ms instead of 260 ms), and
+  xmlschema, pyarrow and the ISO JSON twins load when they are first
+  needed, not at start-up.
+- Written files report their size from disk instead of encoding the
+  document a second time to count it; on Windows the count now includes
+  the CRLF line endings the file actually has.
+
+### Fixed
+
+- The CLI starts on a base install again. In 0.0.81, `pip install pain001`
+  without the `api` extra made every command, `pain001 --version`
+  included, fail with "The REST API requires the 'api' extra": the
+  `serve` refusal imported its settings from the FastAPI module. The
+  settings now live in `pain001.security.api_access` (re-exported by
+  `pain001.api.auth`), and a test runs the CLI with every extra blocked.
+- `pain001 upload` names a wrong passphrase for an encrypted PEM key every
+  time. About 1 in 256 wrong passwords pass the PEM padding check and
+  fail later as unparsable key data, which was reported as "not an RSA,
+  ECDSA or Ed25519 private key".
+- Schematron rulebooks judge every pain.001 version. The bundled ones bind
+  `pain:` to pain.001.001.03, so on a .04 to .13 document they matched no
+  element, ran no rule and reported the file valid: a .09 file paying in
+  USD passed `--schematron sepa`. A rulebook prefix bound to the
+  document's message family now follows the document's version, and
+  `pain001 check` warns when a rulebook ran no rule at all.
+- The bundled SEPA rulebook accepts the service level and the charge
+  bearer on every transaction instead of the payment batch, as EPC
+  allows. EPC-PMT-002 and EPC-PMT-003 required both on the batch and
+  rejected such files. They still fail when a value is missing from the
+  batch and from any transaction, and EPC-SCT-002 still rejects a
+  transaction charge bearer other than `SLEV`.
+- The Schematron evaluator treats a location path as XPath does: an
+  element with only children counts as present, `=` holds when any
+  selected node matches (never on an empty selection, so `X != 'a'` is
+  false when `X` is missing), `count()` counts, and `[...]` predicates
+  (tests and positions) filter steps. A path used to read as its first
+  element's text, so a rule could not say "every transaction". A `!`
+  that is not part of `!=` no longer hangs the evaluator.
+
 ## [0.0.81] - 2026-11-08
 
 Correct output: every file pain001 writes is one valid batch, checked

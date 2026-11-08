@@ -251,7 +251,7 @@ def test_party_identification_forms_and_contact() -> None:
     doc = _base()
     doc["payment"]["debtor"]["id"] = {
         "org": {
-            "bic": "DEUTDEFF",
+            "bic": "RQKKDEF0",
             "lei": "auto",
             "other": [
                 {"id": "HRB12345", "scheme": "CUST", "issuer": "AG München"}
@@ -278,7 +278,7 @@ def test_party_identification_forms_and_contact() -> None:
     }
     v09 = build(doc, "pain.001.001.09").xml
     for text in (
-        "<AnyBIC>DEUTDEFF</AnyBIC>",
+        "<AnyBIC>RQKKDEF0</AnyBIC>",
         "<Issr>AG München</Issr>",
         "<Cd>CUST</Cd>",
         "<EmailAdr>t@example.com</EmailAdr>",
@@ -292,7 +292,7 @@ def test_party_identification_forms_and_contact() -> None:
     assert re.search(r"<LEI>[A-Z0-9]{18}[0-9]{2}</LEI>", v09)
     v03 = build(doc, "pain.001.001.03")
     assert (
-        "<BICOrBEI>DEUTDEFF</BICOrBEI>" in v03.xml
+        "<BICOrBEI>RQKKDEF0</BICOrBEI>" in v03.xml
         and "<LEI>" not in v03.xml
         and "<JobTitl>" not in v03.xml
     )

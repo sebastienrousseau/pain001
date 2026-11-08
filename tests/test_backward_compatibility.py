@@ -352,7 +352,7 @@ class TestBICValidatorBackwardCompat(unittest.TestCase):
         """BIC validator should accept valid BICs."""
         valid_bics = [
             "BANKDEFFXXX",
-            "SPUEDE2UXXX",
+            "ZFUMDE50XXX",
             "DEUTDEDBBER",
             "GENODEM1GLS",
         ]

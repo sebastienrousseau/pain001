@@ -23,6 +23,13 @@
             <PmtInfId>{{payment_information_id}}</PmtInfId>
             <PmtMtd>{{payment_method}}</PmtMtd>
             <BtchBookg>{{batch_booking}}</BtchBookg>
+            {%- if service_level_code %}
+            <PmtTpInf>
+                <SvcLvl>
+                    <Cd>{{service_level_code}}</Cd>
+                </SvcLvl>
+            </PmtTpInf>
+            {%- endif %}
             <ReqdExctnDt>
                 <Dt>{{requested_execution_date}}</Dt>
             </ReqdExctnDt>
@@ -38,9 +45,13 @@
             </Dbtr>
             <DbtrAcct>
                 <Id>
+                    {%- if debtor_account_IBAN is iban %}
+                    <IBAN>{{debtor_account_IBAN}}</IBAN>
+                    {%- else %}
                     <Othr>
                         <Id>{{debtor_account_IBAN}}</Id>
                     </Othr>
+                    {%- endif %}
                 </Id>
             </DbtrAcct>
             <DbtrAgt>
@@ -73,9 +84,13 @@
                 </Cdtr>
                 <CdtrAcct>
                     <Id>
+                        {%- if tx.creditor_account_IBAN is iban %}
+                        <IBAN>{{tx.creditor_account_IBAN}}</IBAN>
+                        {%- else %}
                         <Othr>
                             <Id>{{tx.creditor_account_IBAN}}</Id>
                         </Othr>
+                        {%- endif %}
                     </Id>
                 </CdtrAcct>
                 <Purp>

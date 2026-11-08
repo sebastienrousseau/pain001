@@ -21,11 +21,11 @@ Example:
     >>> from pain001.validation.bic_validator import validate_bic
     >>>
     >>> # Valid BIC (8 characters)
-    >>> is_valid, error = validate_bic("DEUTDEFF")
+    >>> is_valid, error = validate_bic("RQKKDEF0")
     >>> assert is_valid
     >>>
     >>> # Valid BIC (11 characters with branch code)
-    >>> is_valid, error = validate_bic("DEUTDEFF500")
+    >>> is_valid, error = validate_bic("RQKKDEF0500")
     >>> assert is_valid
     >>>
     >>> # Invalid BIC (wrong length)
@@ -167,9 +167,9 @@ def validate_bic_format(
         Tuple of (is_valid, error_message).
 
     Example:
-        >>> is_valid, error = validate_bic_format("DEUTDEFF")
+        >>> is_valid, error = validate_bic_format("RQKKDEF0")
         >>> assert is_valid
-        >>> is_valid, error = validate_bic_format("DEUTDEFF500")
+        >>> is_valid, error = validate_bic_format("RQKKDEF0500")
         >>> assert is_valid
     """
     if not bic:
@@ -247,7 +247,7 @@ def validate_bic(
 
     Example:
         >>> # Non-strict mode (returns tuple)
-        >>> is_valid, error = validate_bic("DEUTDEFF", strict=False)
+        >>> is_valid, error = validate_bic("RQKKDEF0", strict=False)
         >>> assert is_valid
         >>>
         >>> # Strict mode (raises exception on error)
@@ -286,7 +286,7 @@ def validate_bic_safe(bic: str, field: str | None = None) -> bool:
         True if BIC is valid, False otherwise.
 
     Example:
-        >>> if validate_bic_safe("DEUTDEFF"):
+        >>> if validate_bic_safe("RQKKDEF0"):
         ...     print("Valid BIC")
     """
     if _FAST_AVAILABLE and _fast is not None:

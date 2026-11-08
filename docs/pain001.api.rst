@@ -22,6 +22,14 @@ pain001.api.auth module
    :show-inheritance:
    :undoc-members:
 
+pain001.api.check module
+------------------------
+
+.. automodule:: pain001.api.check
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.api.faces module
 ------------------------
 

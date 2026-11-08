@@ -261,6 +261,10 @@ jobs:
           "$tools/bin/pip-licenses" --python "$project_python" --format=json \
             --with-license-file --no-license-path \
             --output-file="sbom/pain001-${version}.spdx-licenses.json"
+          # The release's facts (counts, message types, Python floor),
+          # generated from the sources; the site and the MCP manifests
+          # render from this file instead of restating numbers.
+          poetry run python scripts/facts.py -o "sbom/pain001-${version}.facts.json"
           ls -la sbom/
 
       # Every file attached to the release must be hashed here, not just

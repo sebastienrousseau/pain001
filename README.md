@@ -65,7 +65,7 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.80**: ISO 20022 pain.001 and pain.008 files generated
+> **Latest release: v0.0.82**: ISO 20022 pain.001 and pain.008 files generated
 > from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
 > official XSD, for Python 3.11+, released with the whole pain001 suite at one
 > version.
@@ -177,6 +177,9 @@ See [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md) for methodology and full results.
 
 - Generate validated XML to files or in memory through `generate_xml_string`.
   Streaming produces one file per chunk with recomputed control totals.
+- Check files that already exist with `pain001 check` (XSD, message rules,
+  schemes; text, JSON or SARIF), at `POST /api/v1/check`, in the GitHub Action
+  or as a pre-commit hook.
 - Discover bundled message types with `pain001 versions` and inspect metadata
   with `pain001 inspect`. Inputs, templates and schemas are described in the
   [user guide](docs/usage.rst) and [input-column reference](docs/input-columns.md).
@@ -314,7 +317,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.80; publication requires approved release PRs and signed release tags.
+is 0.0.82; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

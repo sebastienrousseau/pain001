@@ -35,10 +35,10 @@
 			</DbtrAcct>
 			<DbtrAgt>
 				<FinInstnId>
-					<BICFI>DEUTDEFFXXX</BICFI>
+					<BICFI>RQKKDEF0XXX</BICFI>
 				</FinInstnId>
 			</DbtrAgt>
-			<ChrgBr>DEBT</ChrgBr>
+			<ChrgBr>SLEV</ChrgBr>
 			<CdtTrfTxInf>
 				<PmtId>
 					<EndToEndId>PaymentID6789</EndToEndId>
@@ -48,7 +48,7 @@
 				</Amt>
 				<CdtrAgt>
 					<FinInstnId>
-						<BICFI>DEUTDEFFXXX</BICFI>
+						<BICFI>RQKKDEF0XXX</BICFI>
 					</FinInstnId>
 				</CdtrAgt>
 				<Cdtr>
@@ -72,7 +72,7 @@
 				</Amt>
 				<CdtrAgt>
 					<FinInstnId>
-						<BICFI>DEUTDEFFXXX</BICFI>
+						<BICFI>RQKKDEF0XXX</BICFI>
 					</FinInstnId>
 				</CdtrAgt>
 				<Cdtr>

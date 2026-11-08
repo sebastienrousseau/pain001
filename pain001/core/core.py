@@ -24,6 +24,7 @@ import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
+from pain001.core._parallel import ChunkJob, build_chunks
 from pain001.core._support import (
     determine_data_source_type as _determine_data_source_type,
 )
@@ -45,11 +46,6 @@ from pain001.observability import (
 )
 from pain001.security.path_validator import sanitize_for_log, validate_path
 from pain001.xml.envelope import BusinessApplicationHeader
-from pain001.xml.publish import (
-    finalise_message,
-    publish_text,
-    require_schematron,
-)
 
 # Library code: no handlers, no level overrides — the host
 # application controls logging configuration.
@@ -374,6 +370,7 @@ def process_files_streaming(
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
     identifier_checks: bool = True,
+    workers: int | None = None,
 ) -> list[str]:
     """Generate multiple XML files from streamed input chunks.
 
@@ -392,12 +389,16 @@ def process_files_streaming(
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
         identifier_checks: If False, skip the IBAN and BIC checks.
+        workers: Processes building chunks at once; when omitted,
+            ``PAIN001_WORKERS`` (set by ``--workers``), else 1, which
+            builds them in this process. The arguments must pickle.
 
     Returns:
         Paths of the generated chunk XML files, in chunk order.
 
     Schematron, row and XSD errors propagate; the chunk that raised is
-    never written, earlier chunks stay published.
+    never written, earlier chunks stay published, and with several
+    workers a later chunk already published is removed.
     """
     safe_template_path, safe_schema_path = _validate_inputs(
         xml_message_type, xml_template_file_path, xsd_schema_file_path
@@ -406,55 +407,40 @@ def process_files_streaming(
     if output_dir is None:
         output_dir = os.path.dirname(os.path.realpath(data_file_path))
 
-    generated_paths: list[str] = []
     chunks = load_payment_data_streaming(
         data_file_path, chunk_size, identifier_checks=identifier_checks
     )
-    for chunk_index, payment_chunk in numbered_chunks(chunks):
-        xml_content = xml_generate.generate_xml_string(
-            payment_chunk,
+    jobs = (
+        ChunkJob(
+            index,
+            rows,
             xml_message_type,
             safe_template_path,
             safe_schema_path,
-        )
-        xml_content = finalise_message(
-            xml_content,
+            output_dir,
             envelop_bah,
             bah_header,
             xml_sign_key,
             xml_sign_cert,
             xml_sign_passphrase,
+            schematron,
         )
-        chunked_path = _chunk_output_path(
-            os.path.join(output_dir, f"{xml_message_type}.xml"), chunk_index
-        )
-        # Schematron runs on the final bytes before they are published;
-        # publish_text stages, fsyncs and renames, so a refused or
-        # failed chunk never appears in output_dir.
-        if schematron is not None:
-            require_schematron(
-                xml_content,
-                schematron,
-                f"Schematron validation failed for chunk '{chunked_path}'",
-            )
-        publish_text(xml_content, chunked_path)
-
+        for index, rows in numbered_chunks(chunks)
+    )
+    generated_paths: list[str] = []
+    if workers is None:
+        workers = int(os.environ.get("PAIN001_WORKERS", "1"))
+    for chunk_index, chunked_path, record_count in build_chunks(jobs, workers):
         emit_metric_event(
             "xml_generated",
             message_type=xml_message_type,
             output_path=chunked_path,
             chunk_index=chunk_index,
-            record_count=len(payment_chunk),
+            record_count=record_count,
         )
         generated_paths.append(chunked_path)
 
     return generated_paths
-
-
-def _chunk_output_path(base_xml_path: str, chunk_index: int) -> str:
-    """Build a chunk-specific XML output path."""
-    stem, suffix = os.path.splitext(base_xml_path)
-    return f"{stem}.chunk{chunk_index:04d}{suffix}"
 
 
 if __name__ == "__main__":

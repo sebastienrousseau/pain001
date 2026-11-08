@@ -39,12 +39,16 @@ StagedCheck = Callable[[str], None]
 
 
 def _write_all(handle: TextIO, chunks: Iterable[str]) -> int:
-    """Write every chunk to ``handle``; return the UTF-8 byte count."""
-    total = 0
+    """Write every chunk to ``handle``; return the bytes on disk.
+
+    The size comes from the file once flushed, not from encoding each
+    chunk a second time: the handle already encodes it, and on Windows
+    it also writes CRLF, which a count of the text would miss.
+    """
     for chunk in chunks:
         handle.write(chunk)
-        total += len(chunk.encode("utf-8"))
-    return total
+    handle.flush()
+    return os.fstat(handle.fileno()).st_size
 
 
 def _stage(target: str) -> tuple[int, str]:

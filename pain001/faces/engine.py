@@ -35,7 +35,6 @@ from defusedxml.ElementTree import fromstring as _defused_fromstring
 from pain001.faces import berlin_group, iso_2018, uk_open_banking
 from pain001.faces.models import FaceError, FaceResult, LossReport
 from pain001.faces.paths import leaf_paths
-from pain001.twins.iso_json import to_iso_json
 
 FaceFunc = Callable[
     [dict[str, Any], dict[str, Any] | None], tuple[dict[str, Any], set[str]]
@@ -188,6 +187,9 @@ def project_face(
     if version is None:
         version = detect_version(xml_text)
     try:
+        # The twins load xmlschema; the CLI imports this module at start-up.
+        from pain001.twins.iso_json import to_iso_json  # noqa: PLC0415
+
         twin = to_iso_json(xml_text, version)
     except Exception as exc:
         raise FaceError(f"failed to generate ISO JSON twin: {exc}") from exc

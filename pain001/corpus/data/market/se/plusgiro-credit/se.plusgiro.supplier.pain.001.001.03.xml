@@ -39,13 +39,13 @@
       </Dbtr>
       <DbtrAcct>
         <Id>
-          <IBAN>SE4407238474849977370614</IBAN>
+          <IBAN>SE2161468030701442852382</IBAN>
         </Id>
         <Ccy>SEK</Ccy>
       </DbtrAcct>
       <DbtrAgt>
         <FinInstnId>
-          <BIC>MNWHSEA0</BIC>
+          <BIC>EJWZSEW0</BIC>
         </FinInstnId>
       </DbtrAgt>
       <ChrgBr>SLEV</ChrgBr>
@@ -58,7 +58,7 @@
         </Amt>
         <CdtrAgt>
           <FinInstnId>
-            <BIC>NDEASESS</BIC>
+            <BIC>OCFGSEQ0</BIC>
           </FinInstnId>
         </CdtrAgt>
         <Cdtr>

@@ -33,7 +33,7 @@ payment:
 transactions:
   - end_to_end_id: NTA-2026-0921-003
     amount: {ccy: SEK, value: "7125.50"}
-    creditor_agent: {bic: NDEASESS}
+    creditor_agent: {bic: auto}
     creditor: {name: Fjällmaskin Service AB, address: {form: hybrid, post_code: "831 30", town: Östersund, country: SE}}
     creditor_account: {other: {id: "123455", proprietary_scheme: PGNR}}
     remittance: {unstructured: "Faktura 2026-0512"}

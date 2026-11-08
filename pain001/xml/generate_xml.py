@@ -17,18 +17,19 @@
 """Generate and XSD-validate ISO 20022 XML payment messages."""
 
 import logging
+import os
 import re
 import time
 from collections.abc import Iterator
 from typing import Any
 
-from jinja2 import Template, select_autoescape
-from jinja2.sandbox import SandboxedEnvironment
+from jinja2 import Template
 
 from pain001.exceptions import PaymentValidationError
 from pain001.observability import emit_metric_event
 from pain001.observability.otel import set_span_attributes, traced
 from pain001.security import validate_path
+from pain001.xml._jinja import compile_template as _compile_template
 from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
 from pain001.xml.payment_records import (
     _normalize_financial_fields,
@@ -145,13 +146,7 @@ def _prepare_template_and_data(
     )
 
     template_source = _load_trusted_template_source(safe_template_path)
-    env = SandboxedEnvironment(
-        autoescape=select_autoescape(
-            enabled_extensions=("xml",),
-            default_for_string=True,
-        ),
-    )
-    template = env.from_string(template_source)
+    template = _compile_template(template_source)
     return template, xml_data, len(normalized_data)
 
 
@@ -405,6 +400,14 @@ def generate_xml_string(
     return str(xml_content)
 
 
+def _written_size(path: str, xml_content: str) -> int:
+    """The file's size on disk; the text's if a plugin wrote elsewhere."""
+    try:
+        return os.path.getsize(path)
+    except OSError:
+        return len(xml_content.encode("utf-8"))
+
+
 @traced("pain001.write")
 def generate_xml(
     data: list[dict[str, Any]],
@@ -487,7 +490,7 @@ def generate_xml(
         "xml_generated",
         message_type=payment_initiation_message_type,
         output_path=str(safe_xml_path),
-        file_size_bytes=len(xml_content.encode("utf-8")),
+        file_size_bytes=_written_size(safe_xml_path, xml_content),
     )
 
     logger.info("XML file created at %s", safe_xml_path)

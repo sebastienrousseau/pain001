@@ -185,9 +185,9 @@ def test_agent_bic_and_address() -> None:
     reader = Reader()
     assert (
         agent_bic(
-            reader, {"Agt": {"FinInstnId": {"BIC": "DEUTDEFF"}}}, "P", "Agt"
+            reader, {"Agt": {"FinInstnId": {"BIC": "RQKKDEF0"}}}, "P", "Agt"
         )
-        == "DEUTDEFF"
+        == "RQKKDEF0"
     )
     assert agent_bic(reader, {"Agt": {"FinInstnId": {}}}, "P", "Agt") is None
     party = {"PstlAdr": {"StrtNm": "Main", "Ctry": "DE", "AdrLine": ["L1"]}}
@@ -303,7 +303,7 @@ def test_uk_open_banking_takes_one_transaction() -> None:
 def test_berlin_group_single_payment() -> None:
     """One transaction gives a paymentInitiation_json body."""
     tx = _tx(
-        CdtrAgt={"FinInstnId": {"BICFI": "DEUTDEFF", "Nm": "Bank"}},
+        CdtrAgt={"FinInstnId": {"BICFI": "RQKKDEF0", "Nm": "Bank"}},
         Cdtr={
             "Nm": "Creditor",
             "PstlAdr": {
@@ -328,7 +328,7 @@ def test_berlin_group_single_payment() -> None:
         "endToEndIdentification": "E-1",
         "instructedAmount": {"currency": "EUR", "amount": "10.00"},
         "creditorAccount": {"iban": "DE89370400440532013000"},
-        "creditorAgent": "DEUTDEFF",
+        "creditorAgent": "RQKKDEF0",
         "creditorAgentName": "Bank",
         "creditorName": "Creditor",
         "creditorAddress": {

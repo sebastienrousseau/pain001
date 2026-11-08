@@ -76,6 +76,7 @@ async def process_files_streaming_async(
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
     identifier_checks: bool = True,
+    workers: int | None = None,
 ) -> list[str]:
     """Run process_files_streaming() in a worker thread.
 
@@ -97,6 +98,7 @@ async def process_files_streaming_async(
         xml_sign_passphrase=xml_sign_passphrase,
         schematron=schematron,
         identifier_checks=identifier_checks,
+        workers=workers,
     )
 
 
