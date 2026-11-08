@@ -310,9 +310,17 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
     warning so one broken plugin can't take pain001 down. The
     operator can isolate the culprit via ``pain001 plugins list``
     plus the logged plugin name.
+
+    An entry point whose name is listed in ``PAIN001_DISABLE_PLUGINS``
+    is skipped before ``entry.load()``, so a disabled plugin's module
+    is never imported and its constructor never runs. The declared
+    ``meta.name`` is still checked at registration, for plugins whose
+    entry-point name differs from it.
     """
     for kind, group in ENTRY_POINT_GROUPS.items():
         for entry in _iter_entry_points(group):
+            if _is_disabled_entry(reg, entry, kind):
+                continue
             try:
                 plugin_cls = entry.load()
                 plugin = plugin_cls()
@@ -341,6 +349,30 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
                         "traceback_hash": traceback_hash,
                     },
                 )
+
+
+def _is_disabled_entry(
+    reg: PluginRegistry, entry: metadata.EntryPoint, kind: str
+) -> bool:
+    """Return True, and log it, when ``entry`` is named in the disable list.
+
+    Args:
+        reg: Registry whose ``PAIN001_DISABLE_PLUGINS`` set applies.
+        entry: Entry point about to be loaded.
+        kind: Plugin kind of the entry-point group, for the log line.
+
+    Returns:
+        True if the entry point must not be loaded.
+    """
+    if entry.name not in reg._disabled:
+        return False
+    logger.info(
+        "skipping disabled %s plugin %s before loading it "
+        "(set via PAIN001_DISABLE_PLUGINS)",
+        kind,
+        entry.name,
+    )
+    return True
 
 
 def _iter_entry_points(group: str) -> Iterable[metadata.EntryPoint]:
