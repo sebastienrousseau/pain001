@@ -20,7 +20,7 @@ from __future__ import annotations
 import csv
 import re
 from collections.abc import Callable, Iterator
-from typing import Any
+from typing import Any, cast
 
 import pytest
 
@@ -67,16 +67,16 @@ _IDS = [case[0] for case in _CASES]
 _LEGACY_ALIASES = {"initiator_town"}
 
 
-class _RecordingRow(dict):  # type: ignore[type-arg]
+class _RecordingRow:
     """A row that has every column: it records each one read and
-    answers ``<prefix>:<column>``."""
+    answers ``<prefix>:<column>``. The prepare functions only call
+    ``get``, ``[]`` and ``in`` on a row, so it need not be a dict."""
 
     def __init__(self, prefix: str) -> None:
-        super().__init__()
         self.prefix = prefix
         self.read: set[str] = set()
 
-    def get(self, key: str, default: Any = None) -> str:  # type: ignore[override]
+    def get(self, key: str, default: Any = None) -> str:
         self.read.add(key)
         return f"{self.prefix}:{key}"
 
@@ -86,6 +86,10 @@ class _RecordingRow(dict):  # type: ignore[type-arg]
     def __contains__(self, key: object) -> bool:
         self.read.add(str(key))
         return True
+
+
+def _rows(*rows: _RecordingRow) -> list[dict[str, Any]]:
+    return cast("list[dict[str, Any]]", list(rows))
 
 
 def _leaves(
@@ -135,7 +139,7 @@ def test_every_column_read_is_a_known_column(
     message_type: str, prepare: Prepare, defaults: dict[Any, str]
 ) -> None:
     row = _RecordingRow("r0")
-    prepare([row])
+    prepare(_rows(row))
     unknown = row.read - _template_columns() - _LEGACY_ALIASES
     assert not unknown, f"{message_type} reads unknown columns {unknown}"
 
@@ -146,7 +150,7 @@ def test_every_column_read_is_a_known_column(
 def test_every_template_variable_is_provided(
     message_type: str, prepare: Prepare, defaults: dict[Any, str]
 ) -> None:
-    result = prepare([_RecordingRow("r0")])
+    result = prepare(_rows(_RecordingRow("r0")))
     top, attributes = _template_variables(message_type)
     assert top <= set(result), top - set(result)
     for transaction in result["transactions"]:
@@ -173,7 +177,7 @@ def test_each_value_comes_from_its_own_row(
 ) -> None:
     """Message-level values come from the first row; each transaction
     from its own row, in order."""
-    result = prepare([_RecordingRow("r0"), _RecordingRow("r1")])
+    result = prepare(_rows(_RecordingRow("r0"), _RecordingRow("r1")))
     assert len(result["transactions"]) == 2
     for path, value in _leaves(result):
         expected = f"r{path[1]}:" if path[0] == "transactions" else "r0:"
