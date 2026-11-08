@@ -113,21 +113,21 @@ corpus gate can run them (the plan's L2).
 | :--- | :--- |
 | `uk-bacs` | Bacs ISO 20022 / Standard 18 translation guide v1.1; Bacs service description (originator name and reference lengths) |
 | `uk-fps` | Pay.UK Faster Payments scheme limits; Pay.UK ISO 20022 usage (service levels URGP and URNS) |
-| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses); NatWest Bankline XML import guide (Jan 2025) |
+| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses); a UK bank's public bulk-payment import guide (Jan 2025) |
 | `uk-bacs-dd` | Bacs AUDDIS service guide; Bacs ISO 20022 translation guide v1.1 (sequence-type to transaction-code mapping is an assumption) |
-| `de-ccu` | DK DFÜ-Abkommen Anlage 3 V26.11, order type CCU; DZ BANK CCU product description |
-| `de-axz` | DK DFÜ-Abkommen Anlage 3 V3.8, order type AXZ; DZ BANK AXZ product description (regulatory reporting for AWV) |
+| `de-ccu` | DK DFÜ-Abkommen Anlage 3 V26.11, order type CCU; a German bank's public CCU product description |
+| `de-axz` | DK DFÜ-Abkommen Anlage 3 V3.8, order type AXZ; a German bank's public AXZ product description (regulatory reporting for AWV) |
 | `ch-domestic` | SIX Swiss Payment Standards, IG Credit Transfer SPS 2025 v2.2 and SPS 2026 v2.3; SIX Business Rules 3.2 |
 | `ch-sepa` | SIX Swiss Payment Standards, IG Credit Transfer, payment type S |
-| `se-bankgiro` | Nordea pain.001 examples v2.6 (Jun 2026); Swedbank MIG 2.0; Bankgirot OCR reference rules |
-| `us-ach` | Nacha Operating Rules (Standard Entry Class codes); Huntington pain.001 developer documentation; Cross River pain.001.001.03 input specification |
-| `us-wire` | Federal Reserve Fedwire Funds Service ISO 20022 quick reference; Citi ISO 20022 FAQs (Feb 2026) |
-| `us-rtp` | The Clearing House RTP network (per-item limit); Cross River RTP input specification |
-| `hk-fps` | HKICL Faster Payment System rules and clearing-code list; East West Bank HK ISO 20022 FPS file specification |
-| `sg-fast` | Association of Banks in Singapore, FAST (S$200,000 per transaction); UOB, OCBC and DBS ISO 20022 pages |
-| `my-duitnow` | PayNet DuitNow developer documentation; BNM purpose-code lists as published by Deutsche Bank, HSBC and CIMB Malaysia |
-| `qa-qatch` | Qatar Central Bank retail payment pages; ClearingPost QA-RTGS guide; HSBC Qatar purpose-of-payment page |
-| `ae-uaefts` | CBUAE technical notes on transaction codes for balance-of-payments reporting (AUX700); HSBC UAE purpose-of-payment notes |
+| `se-bankgiro` | Bankgirot OCR reference rules; a Swedish bank's public pain.001 examples v2.6 (Jun 2026); a second Swedish bank's public pain.001 MIG 2.0 |
+| `us-ach` | Nacha Operating Rules (Standard Entry Class codes); a US bank's public pain.001 developer documentation; a second US bank's public pain.001.001.03 input specification |
+| `us-wire` | Federal Reserve Fedwire Funds Service ISO 20022 quick reference; a US bank's public ISO 20022 FAQs (Feb 2026) |
+| `us-rtp` | The Clearing House RTP network (per-item limit); a US bank's public RTP input specification |
+| `hk-fps` | HKICL Faster Payment System rules and clearing-code list; a Hong Kong bank's public ISO 20022 FPS file specification |
+| `sg-fast` | Association of Banks in Singapore, FAST (S$200,000 per transaction); three Singapore banks' public ISO 20022 pages |
+| `my-duitnow` | PayNet DuitNow developer documentation; BNM purpose-code lists as republished by three banks in Malaysia |
+| `qa-qatch` | Qatar Central Bank retail payment pages; ClearingPost QA-RTGS guide; a bank's public Qatar purpose-of-payment page |
+| `ae-uaefts` | CBUAE technical notes on transaction codes for balance-of-payments reporting (AUX700); a bank's public UAE purpose-of-payment notes |
 | `cbpr-cross-border` | Swift CBPR+ usage guidelines SR2025 (pain.001.001.09); CGI-MP pain.001 V09 implementation guide |
 
 ### `anti-duplicate`: catching a payment keyed in twice
