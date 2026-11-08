@@ -130,8 +130,13 @@ kinds exist:
 The repository ships **public overlays only**. Bank usage guidelines are
 the bank's documentation under its own terms, so no overlay derived from
 one, no variant built from one and no citation of one is committed here
-or published on the website. The variant mechanism exists so that you can
-apply your own bank's guideline privately:
+or published on the website. Only scheme rulebooks, central-bank and
+clearing-system publications and ISO 20022 artefacts are cited by name.
+Where a rail or scenario also leans on a bank's public web page, its
+source names no bank ("a Swedish bank's public pain.001 examples"), and
+`tests/test_no_bank_names.py` fails on any bank name in the wheel or this
+manual. The variant mechanism exists so that you can apply your own
+bank's guideline privately:
 
 ```python
 from pain001.corpus import list_files, get_file
@@ -178,9 +183,10 @@ workflow is:
 2. List the rail profile under `profiles:`. If the rail has none yet, add a
    `Rail` to `pain001/validation/rails.py` with its sources; what the scheme
    document states is an error, what is typical bank practice is a warning.
-3. Where a public bank guide adds rules, write an overlay under
-   `scenarios/overlays/` with `applies_to: [<family or scenario id>]` and a
-   `source` block. The grammar is the one `iso20022-bank-profile-mcp` uses,
+3. Where a scheme body, a national banking association, a central bank
+   or a clearing system publishes rules beyond the XSD, write an overlay
+   under `scenarios/overlays/` with
+   `applies_to: [<family or scenario id>]` and a `source` block. The grammar is the one `iso20022-bank-profile-mcp` uses,
    extended with `forbidden`, `one_of`, `max_length`, `matches` and `charset`.
 4. `make corpus-build`, then `make corpus-coverage`. A file that cannot pass
    the ladder is not shipped; it becomes an open question in the scenario's
