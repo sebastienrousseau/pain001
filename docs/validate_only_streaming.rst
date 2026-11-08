@@ -53,3 +53,9 @@ the base is shortened so the whole fits the schemas' 35 characters. A
 run that fits one chunk keeps its ids, and its file is identical to the
 one the batch path writes. Every chunk's rows get the batch path's
 validation, and a refused row stops the run (0.0.81).
+
+Every file is staged in a hidden temporary file next to its
+destination, fsynced, checked (XSD; Schematron when ``schematron`` is
+given) and only then renamed into place. A failed or refused file never
+appears in the output directory, and an existing file of the same name
+is left as it was (0.0.81).

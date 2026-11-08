@@ -17,10 +17,8 @@
 """Generate and XSD-validate ISO 20022 XML payment messages."""
 
 import logging
-import os
 import re
 import time
-import warnings
 from collections.abc import Iterator
 from decimal import Decimal, InvalidOperation
 from typing import Any
@@ -32,13 +30,15 @@ from pain001.exceptions import PaymentValidationError
 from pain001.observability import emit_metric_event
 from pain001.observability.otel import set_span_attributes, traced
 from pain001.security import validate_path
-from pain001.xml.generate_updated_xml_file_path import (
-    generate_updated_xml_file_path,
-)
 from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
-from pain001.xml.validate_via_xsd import (
-    collect_xsd_validation_errors,
-    validate_xml_string_via_xsd,
+from pain001.xml.publish import (
+    finalise_message,
+    prepare_stream_target,
+    publish_stream,
+    require_schematron,
+    require_xsd_valid,
+    resolve_output_path,
+    xsd_check,
 )
 
 logger = logging.getLogger(__name__)
@@ -446,8 +446,13 @@ def stream_xml_to_file(
     xml_template_path: str,
     output_path: str,
     buffer_size: int = 10,
+    xsd_schema_path: str | None = None,
 ) -> str:
     """Stream ISO 20022 pain.001 XML directly to a file with constant memory.
+
+    Rows are checked against the message type's column contract; the
+    document is staged next to ``output_path``, XSD-validated there and
+    renamed into place only when valid.
 
     Args:
         data: List of dictionaries containing payment data.
@@ -455,26 +460,33 @@ def stream_xml_to_file(
         xml_template_path: Path to the Jinja2 XML template file.
         output_path: Destination filesystem path for the XML file.
         buffer_size: Buffer size for streaming chunks (default 10).
+        xsd_schema_path: The schema to validate against; the bundled
+            one for the message type when omitted.
 
     Returns:
         The canonical path the XML file was written to.
 
-    A ``ValueError`` from invalid message type, empty data, or invalid
-    template path propagates unchanged.
+    ``ValueError`` (inputs, paths), ``PaymentValidationError`` (rows)
+    and ``RuntimeError`` (XSD) propagate; none leaves a file behind.
     """
-    safe_xml_path = os.path.realpath(str(output_path))
-    os.makedirs(os.path.dirname(safe_xml_path) or ".", exist_ok=True)
+    safe_xml_path, safe_xsd_path = prepare_stream_target(
+        data,
+        payment_initiation_message_type,
+        xml_template_path,
+        output_path,
+        xsd_schema_path,
+    )
     chunks = stream_xml_chunks(
         data,
         payment_initiation_message_type,
         xml_template_path,
         buffer_size=buffer_size,
     )
-    total_bytes = 0
-    with open(safe_xml_path, "w", encoding="utf-8") as handle:
-        for chunk in chunks:
-            handle.write(chunk)
-            total_bytes += len(chunk.encode("utf-8"))
+    safe_xml_path, total_bytes = publish_stream(
+        chunks,
+        safe_xml_path,
+        xsd_check(safe_xsd_path, payment_initiation_message_type),
+    )
 
     emit_metric_event(
         "xml_generated",
@@ -514,8 +526,8 @@ def generate_xml_string(
         ValueError: If message type is invalid, data is empty, the
             template or schema path fails validation, or the template
             contains disabled Jinja filesystem directives.
-        RuntimeError: If XML validation fails against XSD schema.
 
+    RuntimeError from XSD validation (every violation listed) and
     PaymentValidationError from amount normalization (missing,
     non-numeric, non-positive, or over-precise payment_amount values)
     propagates unchanged.
@@ -564,31 +576,11 @@ def generate_xml_string(
         duration_ms=int((time.time() - render_started) * 1000),
     )
 
-    # Validate the XML content against the XSD schema
-    validation_started = time.time()
-    is_valid = validate_xml_string_via_xsd(xml_content, xsd_schema_path)
-
-    if not is_valid:
-        emit_metric_event(
-            "validation_failed",
-            message_type=payment_initiation_message_type,
-            schema_path=str(xsd_schema_path),
-        )
-        # Report every violation at once (element path + reason) so a
-        # caller can fix all inputs in a single retry instead of probing
-        # one opaque failure per attempt.
-        reasons = collect_xsd_validation_errors(xml_content, xsd_schema_path)
-        detail = "; ".join(reasons) if reasons else "unknown reason"
-        raise RuntimeError(
-            f"Generated XML failed validation against "
-            f"{xsd_schema_path}: {detail}"
-        )
-
-    emit_metric_event(
-        "xsd_validation_passed",
-        message_type=payment_initiation_message_type,
-        schema_path=str(xsd_schema_path),
-        duration_ms=int((time.time() - validation_started) * 1000),
+    # Validate the XML content against the XSD schema; every violation
+    # is reported at once (element path + reason) so a caller can fix
+    # all inputs in a single retry.
+    require_xsd_valid(
+        xml_content, xsd_schema_path, payment_initiation_message_type
     )
 
     return str(xml_content)
@@ -606,6 +598,7 @@ def generate_xml(
     xml_sign_key: str | bytes | None = None,
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
+    schematron: str | Any | None = None,
 ) -> str:
     """Generates an ISO 20022 pain.001 XML file from input data.
 
@@ -629,6 +622,8 @@ def generate_xml(
         xml_sign_key: Optional RSA private key in PEM format to sign the XML.
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
+        schematron: Optional Schematron rulebook preset or .sch path the
+            final document must pass before it is written.
 
     Returns:
         The path the XML file was written to.
@@ -636,63 +631,31 @@ def generate_xml(
     Raises:
         ValueError: If message type is invalid, data is empty, or the
             output path fails validation. RuntimeError from XSD
-            validation in generate_xml_string propagates unchanged.
+            validation in generate_xml_string and XMLGenerationError
+            from Schematron propagate unchanged, and nothing is written.
     """
     # Generate XML content as string
     xml_content = generate_xml_string(
         data, payment_initiation_message_type, xml_file_path, xsd_file_path
     )
 
-    if envelop_bah or bah_header is not None:
-        from pain001.xml.envelope import (
-            BusinessApplicationHeader,
-            envelop_iso20022_message,
-        )
-
-        hdr = bah_header or BusinessApplicationHeader()
-        xml_content = envelop_iso20022_message(xml_content, hdr)
-
-    if xml_sign_key is not None:
-        from pain001.security.dsig import sign_xml_document
-
-        xml_content = sign_xml_document(
+    xml_content = finalise_message(
+        xml_content,
+        envelop_bah,
+        bah_header,
+        xml_sign_key,
+        xml_sign_cert,
+        xml_sign_passphrase,
+    )
+    safe_xml_path = resolve_output_path(
+        output_path, xml_file_path, payment_initiation_message_type
+    )
+    if schematron is not None:
+        require_schematron(
             xml_content,
-            private_key_pem=xml_sign_key,
-            cert_pem=xml_sign_cert,
-            passphrase=xml_sign_passphrase,
+            schematron,
+            f"Schematron rulebook validation failed for '{safe_xml_path}'",
         )
-
-    if output_path is not None:
-        safe_xml_path = os.path.realpath(str(output_path))
-        os.makedirs(os.path.dirname(safe_xml_path) or ".", exist_ok=True)
-    else:
-        warnings.warn(
-            "Calling generate_xml without output_path writes next to the "
-            "template and requires it to be under the current working "
-            "directory; pass output_path explicitly instead.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        # Legacy behavior: derive the output path from the template path.
-        updated_xml_file_path = generate_updated_xml_file_path(
-            xml_file_path, payment_initiation_message_type
-        )
-
-        try:
-            safe_xml_path = validate_path(updated_xml_file_path)
-        except (
-            Exception
-        ) as e:  # pragma: no cover - the template path was already validated
-            raise ValueError(f"Path validation failed: {e}") from e
-
-        # Explicit startswith guard for CodeQL CWE-22 sanitiser recognition.
-        cwd_prefix = str(os.path.realpath(os.getcwd()))
-        if not safe_xml_path.startswith(
-            cwd_prefix + os.sep
-        ):  # pragma: no cover - CodeQL barrier; validate_path enforces it
-            raise ValueError(
-                f"Output path outside working directory: {safe_xml_path}"
-            )
 
     from pain001.plugins.registry import registry as plugin_registry
 

@@ -24,7 +24,6 @@ import pain001.xml.generate_xml as xml_generate
 import pain001.xml.register_namespaces as xml_namespaces
 from pain001.constants import valid_xml_types
 from pain001.context.context import Context
-from pain001.core._schematron import schematron_failure
 from pain001.core._support import (
     determine_data_source_type as _determine_data_source_type,
 )
@@ -44,11 +43,12 @@ from pain001.observability import (
     emit_metric_event,
     traced,
 )
-from pain001.security.dsig import sign_xml_document
 from pain001.security.path_validator import sanitize_for_log, validate_path
-from pain001.xml.envelope import (
-    BusinessApplicationHeader,
-    envelop_iso20022_message,
+from pain001.xml.envelope import BusinessApplicationHeader
+from pain001.xml.publish import (
+    finalise_message,
+    publish_text,
+    require_schematron,
 )
 
 # Library code: no handlers, no level overrides — the host
@@ -217,6 +217,7 @@ def _generate_and_log(
     xml_sign_key: str | bytes | None = None,
     xml_sign_cert: str | bytes | None = None,
     xml_sign_passphrase: str | bytes | None = None,
+    schematron: str | Any | None = None,
 ) -> tuple[str, int]:
     """Generate the XML, returning (output file path, duration in ms)."""
     gen_start = time.time()
@@ -241,6 +242,7 @@ def _generate_and_log(
         xml_sign_key=xml_sign_key,
         xml_sign_cert=xml_sign_cert,
         xml_sign_passphrase=xml_sign_passphrase,
+        schematron=schematron,
     )
 
     return written_path, int((time.time() - gen_start) * 1000)
@@ -316,20 +318,11 @@ def process_files(
             xml_sign_key=xml_sign_key,
             xml_sign_cert=xml_sign_cert,
             xml_sign_passphrase=xml_sign_passphrase,
+            # checked before the file is published (generate_xml)
+            schematron=schematron,
         )
 
         if os.path.exists(written_path):
-            sch_error = schematron_failure(
-                written_path,
-                schematron,
-                "Schematron rulebook validation failed for",
-            )
-            if sch_error:
-                context_logger.error(
-                    f"{sanitize_for_log(sch_error)}".replace("\n", "")
-                )
-                raise XMLGenerationError(sch_error)
-
             context_logger.info(
                 f"Successfully generated XML file '{written_path}'".replace(
                     "\n", ""
@@ -403,8 +396,8 @@ def process_files_streaming(
     Returns:
         Paths of the generated chunk XML files, in chunk order.
 
-    Raises:
-        XMLGenerationError: If Schematron rulebook validation fails for any chunk.
+    Schematron, row and XSD errors propagate; the chunk that raised is
+    never written, earlier chunks stay published.
     """
     safe_template_path, safe_schema_path = _validate_inputs(
         xml_message_type, xml_template_file_path, xsd_schema_file_path
@@ -424,27 +417,27 @@ def process_files_streaming(
             safe_template_path,
             safe_schema_path,
         )
-        if envelop_bah or bah_header is not None:
-            hdr = bah_header or BusinessApplicationHeader()
-            xml_content = envelop_iso20022_message(xml_content, hdr)
-        if xml_sign_key is not None:
-            xml_content = sign_xml_document(
-                xml_content,
-                private_key_pem=xml_sign_key,
-                cert_pem=xml_sign_cert,
-                passphrase=xml_sign_passphrase,
-            )
+        xml_content = finalise_message(
+            xml_content,
+            envelop_bah,
+            bah_header,
+            xml_sign_key,
+            xml_sign_cert,
+            xml_sign_passphrase,
+        )
         chunked_path = _chunk_output_path(
             os.path.join(output_dir, f"{xml_message_type}.xml"), chunk_index
         )
-        with open(chunked_path, "w", encoding="utf-8") as handle:
-            handle.write(xml_content)
-
-        sch_error = schematron_failure(
-            chunked_path, schematron, "Schematron validation failed for chunk"
-        )
-        if sch_error:
-            raise XMLGenerationError(sch_error)
+        # Schematron runs on the final bytes before they are published;
+        # publish_text stages, fsyncs and renames, so a refused or
+        # failed chunk never appears in output_dir.
+        if schematron is not None:
+            require_schematron(
+                xml_content,
+                schematron,
+                f"Schematron validation failed for chunk '{chunked_path}'",
+            )
+        publish_text(xml_content, chunked_path)
 
         emit_metric_event(
             "xml_generated",

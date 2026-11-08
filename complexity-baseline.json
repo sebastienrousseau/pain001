@@ -60,7 +60,7 @@
     "lines": 82
   },
   "pain001/core/core.py::process_files": {
-    "lines": 117
+    "lines": 108
   },
   "pain001/core/core.py::process_files_streaming": {
     "lines": 89
@@ -379,17 +379,17 @@
     "lines": 87
   },
   "pain001/xml/generate_xml.py": {
-    "file_lines": 712
+    "file_lines": 675
   },
   "pain001/xml/generate_xml.py::_coerce_temporal_and_boolean": {
     "cognitive": 17,
     "cyclomatic": 11
   },
   "pain001/xml/generate_xml.py::generate_xml": {
-    "lines": 115
+    "lines": 86
   },
   "pain001/xml/generate_xml.py::generate_xml_string": {
-    "lines": 102
+    "lines": 82
   },
   "pain001/xml/message_registry.py": {
     "file_lines": 645

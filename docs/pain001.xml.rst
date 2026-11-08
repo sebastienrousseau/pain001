@@ -62,6 +62,14 @@ pain001.xml.message\_registry module
    :show-inheritance:
    :undoc-members:
 
+pain001.xml.publish module
+--------------------------
+
+.. automodule:: pain001.xml.publish
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.xml.register\_namespaces module
 ---------------------------------------
 
