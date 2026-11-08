@@ -43,7 +43,7 @@ provenance:
   sources:
   - title: DK DFUE-Abkommen Anlage 3 V3.8, order type AXZ
     read: '2026-09-10'
-  - title: DZ BANK, AXZ product description (AWV reporting)
+  - title: A German bank's public AXZ product description (AWV reporting)
     read: '2026-09-10'
   confidence: assumed
   evidence: []

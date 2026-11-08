@@ -84,6 +84,11 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
         "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct', "
         "'anti-duplicate'); comma-separate names to run several",
     )
+    identifier_checks: bool = Field(
+        default=True,
+        description="Check every IBAN (mod-97, country length) and BIC "
+        "(ISO 9362) column; false skips those checks",
+    )
 
     model_config = ConfigDict(
         use_enum_values=False,
@@ -133,6 +138,11 @@ class GenerateXMLRequest(BaseModel):
         description="Payment-scheme rulebook to enforce before generating "
         "(e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct', "
         "'anti-duplicate'); comma-separate names to run several",
+    )
+    identifier_checks: bool = Field(
+        default=True,
+        description="Check every IBAN (mod-97, country length) and BIC "
+        "(ISO 9362) column; false skips those checks",
     )
 
     model_config = ConfigDict(

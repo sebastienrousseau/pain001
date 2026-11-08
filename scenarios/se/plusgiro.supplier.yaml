@@ -1,6 +1,6 @@
 # A Swedish supplier payment to a Plusgiro number: the creditor account
-# carried under the proprietary scheme PGNR with Nordea as the Plusgiro
-# agent, an unstructured invoice message instead of an OCR reference.
+# carried under the proprietary scheme PGNR with the bank that runs Plusgiro
+# as the agent, an unstructured invoice message instead of an OCR reference.
 id: se.plusgiro.supplier
 family: plusgiro-credit
 country: SE
@@ -40,6 +40,6 @@ transactions:
 
 provenance:
   sources:
-    - {title: "Nordea, pain.001 examples and Corporate Access implementation guide (Jun 2026): Plusgiro payment", read: "2026-09-10"}
+    - {title: "A Swedish bank's public pain.001 examples and implementation guide (Jun 2026): Plusgiro payment", read: "2026-09-10"}
   confidence: derived
   evidence: []

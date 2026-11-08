@@ -14,6 +14,7 @@
 
 """Click-based command-line interface for generating ISO 20022 payment files."""
 
+import functools
 import json
 import logging
 import os
@@ -31,7 +32,15 @@ from rich.console import Console
 from rich.table import Table
 
 from pain001.cli._config import _resolve_config
+from pain001.cli._hints import print_data_tip, read_text
+from pain001.cli._output import (
+    esc,
+    print_scheme_result,
+    print_template_details,
+    print_template_list,
+)
 from pain001.cli._paths import _file_not_directory, _resolve_template_assets
+from pain001.cli._serve import serve_cmd
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
 from pain001.constants import (
@@ -40,7 +49,6 @@ from pain001.constants import (
 )
 from pain001.context.context import Context
 from pain001.core.core import process_files, process_files_streaming
-from pain001.data.loader import load_payment_data
 from pain001.faces.cli import face_cmd
 from pain001.logging_schema import (
     Events,
@@ -53,11 +61,11 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
-from pain001.observability.otel import init_otel
 from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.transport.cli import upload_cmd
 from pain001.validation import validate_scheme
+from pain001.validation._one_batch import load_batch
 from pain001.xml.envelope import BusinessApplicationHeader
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
@@ -113,12 +121,12 @@ def _validate_schema(
             logger, "xsd_schema", False, e, message_type=xml_message_type
         )
         console.print(
-            f"[bold red]✗ Schema validation failed:[/bold red] {e}",
+            f"[bold red]✗ Schema validation failed:[/bold red] {esc(e)}",
             style="red",
         )
         console.print(
             f"\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
-            f"Expected: {xml_message_type}"
+            f"Expected: {esc(xml_message_type)}"
         )
         raise SystemExit(1) from e
 
@@ -184,22 +192,8 @@ def _run_scheme_check(
             raise SystemExit(1)
         return
 
-    console.print(f"[cyan]→ Validating against scheme '{scheme}'...[/cyan]")
-    for violation in result.violations:
-        colour = "red" if violation.severity == "error" else "yellow"
-        console.print(
-            f"[{colour}]  row {violation.index} [{violation.rule}] "
-            f"{violation.field or ''}: {violation.message}[/{colour}]"
-        )
-        if explain and violation.remediation:
-            console.print(f"[dim]    fix: {violation.remediation}[/dim]")
-    if result.is_valid:
-        console.print(f"[bold green]✓ Scheme '{scheme}' passed[/bold green]")
-    else:
-        console.print(
-            f"[bold red]✗ Scheme '{scheme}' validation failed[/bold red]",
-            style="red",
-        )
+    print_scheme_result(console, result, scheme, explain)
+    if not result.is_valid:
         raise SystemExit(1)
 
 
@@ -222,7 +216,7 @@ def _apply_gpg_options(
     if decrypt_key:
         os.environ["PAIN001_GPG_KEYFILE"] = decrypt_key
         console.print(
-            f"[cyan]ℹ GPG key file: {sanitize_for_log(decrypt_key)}[/cyan]"
+            f"[cyan]ℹ GPG key file: {esc(sanitize_for_log(decrypt_key))}[/cyan]"
         )
     if decrypt_passphrase_env:
         os.environ["PAIN001_GPG_PASSPHRASE_ENV"] = decrypt_passphrase_env
@@ -236,6 +230,7 @@ def _validate_payment_data(
     explain: bool = False,
     scheme_format: str = "text",
     rules: str | None = None,
+    identifier_checks: bool = True,
 ) -> int:
     """Validate payment data and return record count.
 
@@ -247,6 +242,7 @@ def _validate_payment_data(
         explain: If True, print remediation hints for scheme violations.
         scheme_format: Output format for scheme results ('text' or 'json').
         rules: Optional private YAML policy file.
+        identifier_checks: If False, skip the IBAN and BIC checks.
 
     Returns:
         Number of valid payment records.
@@ -256,7 +252,7 @@ def _validate_payment_data(
     """
     console.print("[cyan]→ Validating payment data...[/cyan]")
     try:
-        data = load_payment_data(data_file_path)
+        data = load_batch(data_file_path, xml_message_type, identifier_checks)
         record_count = len(data)
         log_validation_event(
             logger, "payment_data", True, message_type=xml_message_type
@@ -280,60 +276,18 @@ def _validate_payment_data(
             logger, "payment_data", False, e, message_type=xml_message_type
         )
         console.print(
-            f"[bold red]✗ Data validation failed:[/bold red] {e}",
+            f"[bold red]✗ Data validation failed:[/bold red] {esc(e)}",
             style="red",
         )
-        # Provide helpful error messages based on file extension
-        file_ext = os.path.splitext(data_file_path)[1].lower()
-        if file_ext == ".parquet":
-            console.print(
-                "\n[yellow]Tip:[/yellow] Parquet files require pyarrow. "
-                "Install with: [cyan]pip install pyarrow[/cyan]"
-            )
-        elif file_ext in [".json", ".jsonl"]:
-            console.print(
-                "\n[yellow]Tip:[/yellow] Ensure JSON is valid. "
-                "Check for syntax errors or invalid structure."
-            )
+        print_data_tip(console, data_file_path)
         raise SystemExit(1) from e
 
 
 def _console_metrics_callback(event: MetricEvent) -> None:
     """Render lightweight metrics to the terminal when requested."""
     console.print(
-        f"[dim]metric[/dim] {event.name} {event.attributes}",
+        f"[dim]metric[/dim] {esc(event.name)} {esc(event.attributes)}",
         highlight=False,
-    )
-
-
-def _print_template_list() -> None:
-    """Print all discovered bundled templates."""
-    table = Table(box=box.SIMPLE_HEAVY)
-    table.add_column("Message Type")
-    table.add_column("Category")
-    table.add_column("Deprecated")
-    for metadata in DEFAULT_TEMPLATE_REGISTRY.list_templates():
-        table.add_row(
-            metadata.message_type,
-            metadata.message_category,
-            "yes" if metadata.deprecated else "no",
-        )
-    console.print(table)
-
-
-def _print_template_details(message_type: str) -> None:
-    """Print metadata for a single template."""
-    metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
-    console.print(f"[bold]{metadata.message_type}[/bold]")
-    console.print(f"category: {metadata.message_category}")
-    console.print(f"template: {metadata.template_path}")
-    console.print(f"schema: {metadata.xsd_path}")
-    if metadata.example_data_path:
-        console.print(f"example data: {metadata.example_data_path}")
-    if metadata.example_xml_path:
-        console.print(f"example xml: {metadata.example_xml_path}")
-    console.print(
-        f"input formats: {', '.join(metadata.supported_input_formats)}"
     )
 
 
@@ -355,6 +309,7 @@ def _generate_xml_files(
     xml_sign_cert: str | None = None,
     xml_sign_passphrase_env: str | None = None,
     schematron: str | None = None,
+    identifier_checks: bool = True,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """Generate XML payment files, exiting with code 1 on failure.
@@ -379,6 +334,7 @@ def _generate_xml_files(
         xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
         schematron: Optional Schematron rulebook preset or path.
+        identifier_checks: If False, skip the IBAN and BIC checks.
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
@@ -398,15 +354,8 @@ def _generate_xml_files(
             biz_msg_idr=bah_msg_id,
         )
 
-    sign_key_bytes: str | None = None
-    if xml_sign_key:
-        with open(xml_sign_key, encoding="utf-8") as f:
-            sign_key_bytes = f.read()
-
-    sign_cert_bytes: str | None = None
-    if xml_sign_cert:
-        with open(xml_sign_cert, encoding="utf-8") as f:
-            sign_cert_bytes = f.read()
+    sign_key_bytes = read_text(xml_sign_key)
+    sign_cert_bytes = read_text(xml_sign_cert)
 
     sign_passphrase = (
         os.environ.get(xml_sign_passphrase_env)
@@ -429,6 +378,7 @@ def _generate_xml_files(
                 xml_sign_cert=sign_cert_bytes,
                 xml_sign_passphrase=sign_passphrase,
                 schematron=schematron,
+                identifier_checks=identifier_checks,
             )
         else:
             process_files(
@@ -445,22 +395,30 @@ def _generate_xml_files(
                 xml_sign_cert=sign_cert_bytes,
                 xml_sign_passphrase=sign_passphrase,
                 schematron=schematron,
+                identifier_checks=identifier_checks,
             )
 
         console.print(
             f"\n[bold green]✓ Success![/bold green] XML files generated successfully.\n"
-            f"[cyan]Message Type:[/cyan] {xml_message_type}\n"
-            f"[cyan]Output Location:[/cyan] {resolved_output_dir}"
+            f"[cyan]Message Type:[/cyan] {esc(xml_message_type)}\n"
+            f"[cyan]Output Location:[/cyan] {esc(resolved_output_dir)}"
         )
     except Exception as e:
         console.print(
-            f"[bold red]✗ Generation failed:[/bold red] {e}",
+            f"[bold red]✗ Generation failed:[/bold red] {esc(e)}",
             style="red",
         )
         if verbose:
             console.print("\n[yellow]Traceback:[/yellow]")
-            console.print(traceback.format_exc())
+            console.print(traceback.format_exc(), markup=False)
         sys.exit(1)
+
+
+_identifier_checks_option = click.option(
+    "--identifier-checks/--no-identifier-checks",
+    default=True,
+    help="Check each IBAN (mod-97) and BIC (ISO 9362); on by default.",
+)
 
 
 @click.command(
@@ -690,6 +648,7 @@ def _generate_xml_files(
     default=None,
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
+@_identifier_checks_option
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -720,6 +679,7 @@ def main(
     xml_sign_cert: str | None = None,
     xml_sign_passphrase_env: str | None = None,
     schematron: str | None = None,
+    identifier_checks: bool = True,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -761,6 +721,7 @@ def main(
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
         schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
             or filesystem path to a .sch rulebook file.
+        identifier_checks: If False, skip the IBAN and BIC checks.
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
@@ -777,11 +738,11 @@ def main(
     logger = _configure_logging(verbose)
 
     if list_templates:
-        _print_template_list()
+        print_template_list(console)
         return
 
     if show_template:
-        _print_template_details(show_template)
+        print_template_details(console, show_template)
         return
 
     resolved_config = _resolve_config(
@@ -844,7 +805,7 @@ def main(
     output_dir = resolved_config.get("output_dir")
     if output_dir:
         os.makedirs(output_dir, exist_ok=True)
-        console.print(f"[cyan]ℹ Output directory: {output_dir}[/cyan]")
+        console.print(f"[cyan]ℹ Output directory: {esc(output_dir)}[/cyan]")
 
     log_event(
         logger,
@@ -865,7 +826,7 @@ def main(
             message_type=xml_message_type,
         )
         console.print(
-            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{xml_message_type}[/yellow]\n"
+            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{esc(xml_message_type)}[/yellow]\n"
             f"[cyan]Valid types:[/cyan] {', '.join(valid_xml_types)}",
             style="red",
         )
@@ -874,23 +835,26 @@ def main(
     _validate_schema(
         logger, xml_template_file_path, xsd_schema_file_path, xml_message_type
     )
+    validate_data = functools.partial(
+        _validate_payment_data,
+        logger,
+        data_file_path,
+        xml_message_type,
+        scheme=scheme,
+        explain=explain,
+        scheme_format=scheme_format,
+        rules=rules,
+        identifier_checks=identifier_checks,
+    )
 
     if dry_run:
-        record_count = _validate_payment_data(
-            logger,
-            data_file_path,
-            xml_message_type,
-            scheme=scheme,
-            explain=explain,
-            scheme_format=scheme_format,
-            rules=rules,
-        )
+        record_count = validate_data()
         if schematron:
             from pain001.data.loader import load_payment_data
             from pain001.schematron import validate_schematron
             from pain001.xml.generate_xml import generate_xml_string
 
-            payment_data = load_payment_data(data_file_path)
+            payment_data = load_payment_data(data_file_path, identifier_checks)
             xml_str = generate_xml_string(
                 payment_data,
                 xml_message_type,
@@ -900,12 +864,12 @@ def main(
             sch_result = validate_schematron(xml_str, rulebook=schematron)
             if not sch_result.is_valid:
                 console.print(
-                    f"\n[bold red]✗ Schematron rulebook '{schematron}' failed:[/bold red]\n"
-                    f"{sch_result.format_report()}"
+                    f"\n[bold red]✗ Schematron rulebook '{esc(schematron)}' failed:[/bold red]\n"
+                    f"{esc(sch_result.format_report())}"
                 )
                 sys.exit(1)
             console.print(
-                f"[bold green]✓ Schematron rulebook '{schematron}' passed[/bold green] "
+                f"[bold green]✓ Schematron rulebook '{esc(schematron)}' passed[/bold green] "
                 f"({sch_result.rules_passed}/{sch_result.rules_evaluated} rules)"
             )
 
@@ -926,15 +890,7 @@ def main(
         return
 
     if scheme or rules is not None:
-        _validate_payment_data(
-            logger,
-            data_file_path,
-            xml_message_type,
-            scheme=scheme,
-            explain=explain,
-            scheme_format=scheme_format,
-            rules=rules,
-        )
+        validate_data()
 
     _generate_xml_files(
         logger,
@@ -954,6 +910,7 @@ def main(
         xml_sign_cert=xml_sign_cert,
         xml_sign_passphrase_env=xml_sign_passphrase_env,
         schematron=schematron,
+        identifier_checks=identifier_checks,
     )
 
     clear_metrics_callbacks()
@@ -1011,6 +968,7 @@ cli.add_command(main, name="generate")
 # This adapter imports Paramiko only when the user requests an upload.
 cli.add_command(upload_cmd)
 cli.add_command(face_cmd)
+cli.add_command(serve_cmd)
 
 
 @cli.command("validate")
@@ -1088,6 +1046,7 @@ cli.add_command(face_cmd)
     default=None,
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
+@_identifier_checks_option
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -1103,6 +1062,7 @@ def validate_cmd(
     verbose: bool,
     rules: str | None,
     schematron: str | None = None,
+    identifier_checks: bool = True,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -1124,6 +1084,7 @@ def validate_cmd(
         verbose: If True, enable detailed logging output.
         rules: Optional path to private YAML CEL policy rules.
         schematron: Optional Schematron rulebook preset or path.
+        identifier_checks: If False, skip the IBAN and BIC checks.
     """
     ctx.invoke(
         main,
@@ -1140,6 +1101,7 @@ def validate_cmd(
         dry_run=True,
         rules=rules,
         schematron=schematron,
+        identifier_checks=identifier_checks,
     )
 
 
@@ -1186,7 +1148,7 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
     if message_type not in valid_xml_types:
         console.print(
             f"[bold red]✗ Error:[/bold red] Unknown message type: "
-            f"[yellow]{message_type}[/yellow]"
+            f"[yellow]{esc(message_type)}[/yellow]"
         )
         sys.exit(2)
     if as_json:
@@ -1204,7 +1166,7 @@ def inspect_cmd(message_type: str, as_json: bool) -> None:
             )
         )
         return
-    _print_template_details(message_type)
+    print_template_details(console, message_type)
 
 
 @cli.command("init")
@@ -1228,7 +1190,7 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
     if message_type not in valid_xml_types:
         console.print(
             f"[bold red]✗ Error:[/bold red] Unknown message type: "
-            f"[yellow]{message_type}[/yellow]"
+            f"[yellow]{esc(message_type)}[/yellow]"
         )
         sys.exit(2)
     metadata = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
@@ -1236,50 +1198,15 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
     if not source.is_file():  # pragma: no cover - bundled assets always ship
         console.print(
             f"[bold red]✗ Error:[/bold red] No starter CSV bundled for "
-            f"{message_type}."
+            f"{esc(message_type)}."
         )
         sys.exit(1)
     destination = Path(output_path or f"{message_type}.csv")
     shutil.copyfile(source, destination)
     console.print(
-        f"[bold green]✓ Wrote starter CSV:[/bold green] {destination}\n"
+        f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}\n"
         f"[dim]Edit it, then run:[/dim] pain001 generate -t {message_type} "
-        f"-d {destination}"
-    )
-
-
-@cli.command("serve")
-@click.option("--host", default="127.0.0.1", show_default=True)
-@click.option("--port", default=8000, show_default=True, type=int)
-@click.option(
-    "--reload",
-    is_flag=True,
-    default=False,
-    help="Enable auto-reload for local development.",
-)
-def serve_cmd(host: str, port: int, reload: bool) -> None:
-    """Launch the REST API with uvicorn (requires pain001[api]).
-    \f
-    Args:
-        host: Interface address to bind.
-        port: TCP port to listen on.
-        reload: If True, enable uvicorn auto-reload.
-    """
-    try:
-        import uvicorn
-    except ImportError:
-        console.print(
-            "[bold red]✗ Error:[/bold red] The REST API requires the 'api' "
-            "extra. Install it with: [cyan]pip install pain001[api][/cyan]"
-        )
-        sys.exit(2)
-    # Bootstrap tracing once per process (no-op unless OTEL_ENABLED).
-    init_otel()
-    console.print(
-        f"[cyan]→ Serving pain001 REST API on http://{host}:{port}[/cyan]"
-    )
-    uvicorn.run(  # pragma: no cover - long-running server process
-        "pain001.api.app:app", host=host, port=port, reload=reload
+        f"-d {esc(destination)}"
     )
 
 
@@ -1354,9 +1281,9 @@ def plugins_list_cmd(kind: str | None, as_json: bool) -> None:
     for info in infos:
         table.add_row(
             info.kind,
-            info.meta.name,
-            info.meta.source,
-            info.meta.description,
+            esc(info.meta.name),
+            esc(info.meta.source),
+            esc(info.meta.description),
         )
     console.print(table)
 
@@ -1386,7 +1313,7 @@ def plugins_show_cmd(name: str, kind: str | None) -> None:
     if not matches:
         console.print(
             f"[bold red]✗ Error:[/bold red] No plugin named "
-            f"[yellow]{name}[/yellow]"
+            f"[yellow]{esc(name)}[/yellow]"
             + (f" of kind [yellow]{kind}[/yellow]" if kind else "")
             + "."
         )
@@ -1394,12 +1321,12 @@ def plugins_show_cmd(name: str, kind: str | None) -> None:
     for info in matches:
         console.print(
             f"[bold cyan]{info.kind}[/bold cyan] "
-            f"[bold]{info.meta.name}[/bold] "
-            f"[dim]v{info.meta.version}[/dim]\n"
-            f"  source:      {info.meta.source}\n"
+            f"[bold]{esc(info.meta.name)}[/bold] "
+            f"[dim]v{esc(info.meta.version)}[/dim]\n"
+            f"  source:      {esc(info.meta.source)}\n"
             f"  api version: "
             f"{info.meta.api_version[0]}.{info.meta.api_version[1]}\n"
-            f"  description: {info.meta.description}"
+            f"  description: {esc(info.meta.description)}"
         )
 
 

@@ -72,6 +72,7 @@ def _get_file_stream_loaders() -> dict[str, tuple[Any, Any, str]]:
 
 def load_payment_data(
     data_source: str | list[dict[str, Any]] | dict[str, Any],
+    identifier_checks: bool = True,
 ) -> list[dict[str, Any]]:
     """
     Universal data loader supporting multiple input sources.
@@ -84,15 +85,16 @@ def load_payment_data(
         data_source: File path to CSV, SQLite, JSON, JSONL, Parquet or a
             registered plugin format; a list of payment dictionaries; or
             one payment transaction dictionary.
+        identifier_checks: Check every IBAN (mod-97, country length)
+            and BIC (ISO 9362) column; False skips those checks.
 
     Returns:
         List[Dict[str, Any]]: List of payment data dictionaries
 
-    Raises:
-        DataSourceError: If the data source type is unsupported.
-            Errors from the underlying loaders (e.g. FileNotFoundError
-            for missing files, PaymentValidationError for invalid rows)
-            propagate unchanged.
+    A DataSourceError for an unsupported source type, and errors from
+    the underlying loaders (e.g. FileNotFoundError for missing files,
+    PaymentValidationError for invalid rows or identifiers), propagate
+    unchanged.
 
     Examples:
         # Existing file-based usage (backward compatible)
@@ -116,6 +118,45 @@ def load_payment_data(
         >>> data = load_payment_data({
         ...     'id': 'MSG001', 'amount': '1000.00', ...
         ... })
+    """
+    return _checked(_load_any(data_source), identifier_checks)
+
+
+def _checked(
+    rows: list[dict[str, Any]], identifier_checks: bool, start: int = 0
+) -> list[dict[str, Any]]:
+    """Return ``rows`` once their IBAN and BIC columns pass, if asked.
+
+    Args:
+        rows: Loaded payment rows (a whole input, or one chunk of it).
+        identifier_checks: False returns ``rows`` unchecked.
+        start: Index of the first row, so a chunk's errors name the
+            row of the whole input.
+
+    Returns:
+        ``rows``, unchanged.
+    """
+    if identifier_checks:
+        # Imported here: pain001.validation imports this module.
+        from pain001.validation._identifiers import check_identifiers
+
+        check_identifiers(rows, start)
+    return rows
+
+
+def _load_any(
+    data_source: str | list[dict[str, Any]] | dict[str, Any],
+) -> list[dict[str, Any]]:
+    """Dispatch ``data_source`` to the loader for its type.
+
+    Args:
+        data_source: A file path, a list of rows or one row.
+
+    Returns:
+        The loaded rows.
+
+    Raises:
+        DataSourceError: If the data source type is unsupported.
     """
     # pylint: disable=fixme
     # TODO: add streaming/chunked loaders for large CSV/DB sources to reduce memory usage.
@@ -245,6 +286,7 @@ def load_payment_data_streaming(
     data_source: str | list[dict[str, Any]],
     chunk_size: int = 1000,
     validate: bool = True,
+    identifier_checks: bool = True,
 ) -> Generator[list[dict[str, Any]], None, None]:
     """
     Memory-efficient streaming loader supporting multiple input sources.
@@ -259,15 +301,16 @@ def load_payment_data_streaming(
         chunk_size: Number of records to yield per chunk. Default is 1000.
         validate: If True, validate each chunk. Default True.
                  Set False for testing or when data is pre-validated.
+        identifier_checks: Check each chunk's IBAN and BIC columns,
+            whatever ``validate`` says; False skips those checks.
 
     Yields:
         list[dict[str, Any]]: Chunks of payment data dictionaries
 
-    Raises:
-        DataSourceError: If the data source type is unsupported or a
-            chunk fails validation. Errors from the underlying streaming
-            loaders (e.g. FileNotFoundError for missing files) propagate
-            unchanged.
+    A DataSourceError for an unsupported source type, and errors from
+    the underlying streaming loaders (e.g. FileNotFoundError for missing
+    files, PaymentValidationError for a chunk that fails validation or
+    carries an invalid IBAN or BIC), propagate unchanged.
 
     Examples:
         # Streaming from large CSV file
@@ -291,6 +334,28 @@ def load_payment_data_streaming(
 
     Note:
         Single dict input not supported in streaming mode. Convert to list first.
+    """
+    start = 0
+    for chunk in _stream_any(data_source, chunk_size, validate):
+        yield _checked(chunk, identifier_checks, start)
+        start += len(chunk)
+
+
+def _stream_any(
+    data_source: str | list[dict[str, Any]], chunk_size: int, validate: bool
+) -> Generator[list[dict[str, Any]], None, None]:
+    """Dispatch ``data_source`` to the streaming loader for its type.
+
+    Args:
+        data_source: A file path or a list of rows.
+        chunk_size: Number of records per chunk.
+        validate: If True, validate each chunk.
+
+    Yields:
+        list[dict[str, Any]]: Chunks of payment rows.
+
+    Raises:
+        DataSourceError: If the data source type is unsupported.
     """
     # Handle file path (CSV or SQLite)
     if isinstance(data_source, str):

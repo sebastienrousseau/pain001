@@ -33,7 +33,7 @@ from pain001 import (
 )
 from pain001.constants import TEMPLATES_DIR
 from pain001.exceptions import PaymentValidationError
-from pain001.xml import generate_xml as generate_xml_module
+from pain001.xml import validate_via_xsd as validate_via_xsd_module
 from pain001.xml.message_registry import prepare_xml_data
 from pain001.xml.validate_via_xsd import (
     collect_xsd_validation_errors,
@@ -345,13 +345,15 @@ class TestXsdErrorDetail:
         assert "failed validation" in message
 
     def test_unknown_reason_fallback(self, monkeypatch):
+        # the XSD gate lives in pain001.xml.publish, which looks these
+        # up on pain001.xml.validate_via_xsd at call time
         monkeypatch.setattr(
-            generate_xml_module,
+            validate_via_xsd_module,
             "validate_xml_string_via_xsd",
             lambda *_: False,
         )
         monkeypatch.setattr(
-            generate_xml_module,
+            validate_via_xsd_module,
             "collect_xsd_validation_errors",
             lambda *_: [],
         )

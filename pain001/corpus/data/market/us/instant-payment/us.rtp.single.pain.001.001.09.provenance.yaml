@@ -41,7 +41,7 @@ provenance:
   sources:
   - title: The Clearing House RTP network rules (per-item limit)
     read: '2026-09-10'
-  - title: Cross River RTP pain.001 input specification (local instrument rtp)
+  - title: A US bank's public RTP pain.001 input specification (local instrument rtp)
     read: '2026-09-10'
   confidence: derived
   evidence: []

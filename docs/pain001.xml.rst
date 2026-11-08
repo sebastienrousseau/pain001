@@ -6,6 +6,14 @@ pain001.xml package
 Submodules
 ----------
 
+pain001.xml.batch\_consistency module
+-------------------------------------
+
+.. automodule:: pain001.xml.batch_consistency
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.xml.create\_root\_element module
 ----------------------------------------
 
@@ -50,6 +58,22 @@ pain001.xml.message\_registry module
 ------------------------------------
 
 .. automodule:: pain001.xml.message_registry
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.xml.payment\_records module
+-----------------------------------
+
+.. automodule:: pain001.xml.payment_records
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.xml.publish module
+--------------------------
+
+.. automodule:: pain001.xml.publish
    :members:
    :show-inheritance:
    :undoc-members:

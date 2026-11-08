@@ -46,7 +46,7 @@ provenance:
   - title: Hong Kong Interbank Clearing Limited, Faster Payment System rules and clearing-code
       list
     read: '2026-09-11'
-  - title: East West Bank HK, ISO 20022 FPS file specification (public)
+  - title: A Hong Kong bank's public ISO 20022 FPS file specification
     read: '2026-09-11'
   confidence: assumed
   evidence: []

@@ -29,7 +29,6 @@ built-ins before it can hurt a downstream package.
 from __future__ import annotations
 
 from collections.abc import Iterable
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pain001.plugins._registration import BuiltinRegistry
@@ -327,13 +326,14 @@ class _XmlFileWriter:
     )
 
     def write(self, xml: str, destination: str) -> str:
-        """Write ``xml`` verbatim to ``destination``; return its real path."""
-        target = Path(destination)
-        parent = target.parent
-        if parent and not parent.exists():
-            parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(xml, encoding="utf-8")
-        return str(target.resolve())
+        """Write ``xml`` verbatim to ``destination``; return its real path.
+
+        The bytes are staged in a temporary sibling, fsynced and renamed
+        into place, so a failed write never leaves a partial file.
+        """
+        from pain001.xml.publish import publish_text  # noqa: PLC0415
+
+        return publish_text(xml, destination)
 
 
 _BUILTIN_LOADERS = (

@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -37,6 +38,17 @@ class TemplateMetadata:
     supported_input_formats: list[str]
     iso_version: str
     deprecated: bool = False
+
+    @property
+    def display_name(self) -> str:
+        """The ISO 20022 message name, such as ``Customer Credit Transfer
+        Initiation V09``, from the category and version.
+
+        Returns:
+            The category split into words, then ``V`` and the version.
+        """
+        words = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", self.message_category)
+        return f"{words} V{self.iso_version}"
 
 
 class TemplateRegistry:

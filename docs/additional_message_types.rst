@@ -13,7 +13,8 @@ Pain001 supports these ISO 20022 families beyond ``pain.001``:
     The columns name the direct-debit roles. The ``creditor_*`` columns
     (``creditor_name``, ``creditor_account_IBAN``, ``creditor_agent_BIC``)
     describe the party that collects, once per batch, and fill ``Cdtr``,
-    ``CdtrAcct`` and ``CdtrAgt``; the batch takes them from the first row.
+    ``CdtrAcct`` and ``CdtrAgt``; the batch takes them from the first row,
+    and a row that names a different creditor is refused (0.0.81).
     The ``debtor_*`` columns describe the party that pays, row by row, and
     fill each transaction's ``Dbtr``, ``DbtrAcct`` and ``DbtrAgt``. This is
     the reverse of ``pain.001``, where the debtor sends the batch.

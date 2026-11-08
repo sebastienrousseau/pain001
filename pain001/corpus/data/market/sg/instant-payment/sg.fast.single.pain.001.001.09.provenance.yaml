@@ -43,7 +43,7 @@ provenance:
   - title: Association of Banks in Singapore, FAST service description (S$200,000
       per transaction)
     read: '2026-09-11'
-  - title: UOB, OCBC and DBS ISO 20022 pain.001 pages (public)
+  - title: Three Singapore banks' public ISO 20022 pain.001 pages
     read: '2026-09-11'
   confidence: assumed
   evidence: []

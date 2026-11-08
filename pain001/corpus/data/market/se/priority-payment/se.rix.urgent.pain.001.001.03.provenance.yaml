@@ -39,8 +39,8 @@ twins:
     missing_required: []
 provenance:
   sources:
-  - title: Sveriges Riksbank, RIX-RTGS participant and message guidance; Nordea Corporate
-      Access urgent SEK payment examples (Jun 2026)
+  - title: Sveriges Riksbank, RIX-RTGS participant and message guidance; a Swedish
+      bank's public urgent SEK pain.001 examples (Jun 2026)
     read: '2026-09-10'
   confidence: derived
   evidence: []

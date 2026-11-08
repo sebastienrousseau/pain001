@@ -1035,7 +1035,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses)",
-            "NatWest Bankline XML import guide (Jan 2025)",
+            "A UK bank's public bulk-payment import guide (Jan 2025)",
         ),
         currencies=("GBP",),
         service_levels=("SDVA",),
@@ -1067,7 +1067,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "DK DFÜ-Abkommen Anlage 3 V26.11, order type CCU",
-            "DZ BANK CCU product description",
+            "A German bank's public CCU product description",
         ),
         currencies=("EUR",),
         service_levels=("URGP",),
@@ -1082,7 +1082,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "DK DFÜ-Abkommen Anlage 3 V3.8, order type AXZ",
-            "DZ BANK AXZ product description (regulatory reporting for AWV)",
+            "A German bank's public AXZ product description (regulatory reporting for AWV)",
         ),
         bic_required=True,
         charge_bearers=("DEBT", "CRED", "SHAR"),
@@ -1118,9 +1118,9 @@ RAILS: tuple[Rail, ...] = (
         "SE-BG",
         ("pain.001",),
         (
-            "Nordea pain.001 examples v2.6 (Jun 2026)",
-            "Swedbank MIG 2.0",
             "Bankgirot OCR reference rules",
+            "A Swedish bank's public pain.001 examples v2.6 (Jun 2026)",
+            "A second Swedish bank's public pain.001 MIG 2.0",
         ),
         currencies=("SEK",),
         service_levels=("NURG",),
@@ -1134,8 +1134,8 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001", "pain.008"),
         (
             "Nacha Operating Rules (Standard Entry Class codes)",
-            "Huntington pain.001 developer documentation",
-            "Cross River pain.001.001.03 input specification",
+            "A US bank's public pain.001 developer documentation",
+            "A second US bank's public pain.001.001.03 input specification",
         ),
         currencies=("USD",),
         service_levels=("NURG", "SDVA"),
@@ -1151,7 +1151,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "Federal Reserve Fedwire Funds Service ISO 20022 quick reference",
-            "Citi ISO 20022 FAQs (Feb 2026)",
+            "A US bank's public ISO 20022 FAQs (Feb 2026)",
         ),
         currencies=("USD",),
         service_levels=("URGP",),
@@ -1168,7 +1168,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "The Clearing House RTP network (per-item limit)",
-            "Cross River RTP input specification",
+            "A US bank's public RTP input specification",
         ),
         currencies=("USD",),
         max_amount=Decimal("10000000.00"),
@@ -1182,7 +1182,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "HKICL Faster Payment System rules and clearing-code list",
-            "East West Bank HK ISO 20022 FPS file specification",
+            "A Hong Kong bank's public ISO 20022 FPS file specification",
         ),
         currencies=("HKD", "CNY"),
         max_amount=Decimal("1000000.00"),
@@ -1197,7 +1197,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "Association of Banks in Singapore, FAST (S$200,000 per transaction)",
-            "UOB, OCBC and DBS ISO 20022 pages",
+            "Three Singapore banks' public ISO 20022 pages",
         ),
         currencies=("SGD",),
         max_amount=Decimal("200000.00"),
@@ -1213,7 +1213,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "PayNet DuitNow developer documentation",
-            "BNM purpose-code lists as published by Deutsche Bank, HSBC and CIMB Malaysia",
+            "BNM purpose-code lists as republished by three banks in Malaysia",
         ),
         currencies=("MYR",),
         max_amount=Decimal("10000000.00"),
@@ -1229,7 +1229,7 @@ RAILS: tuple[Rail, ...] = (
         (
             "Qatar Central Bank retail payment pages",
             "ClearingPost QA-RTGS guide",
-            "HSBC Qatar purpose-of-payment page",
+            "A bank's public Qatar purpose-of-payment page",
         ),
         currencies=("QAR",),
         max_amount=Decimal("250000.00"),
@@ -1244,7 +1244,7 @@ RAILS: tuple[Rail, ...] = (
         ("pain.001",),
         (
             "CBUAE technical notes on transaction codes for balance-of-payments reporting (AUX700)",
-            "HSBC UAE purpose-of-payment notes",
+            "A bank's public UAE purpose-of-payment notes",
         ),
         currencies=("AED",),
         iban_countries=("AE",),
@@ -1299,8 +1299,8 @@ PURPOSE_MANDATES: tuple[PurposeMandate, ...] = (
         "regulatory",
         currency="CNY",
         sources=(
-            "HSBC HK RMB purpose-code notices",
-            "Bank of America RMB quick guide",
+            "A Hong Kong bank's public RMB purpose-code notices",
+            "A US bank's public RMB quick guide",
         ),
     ),
 )

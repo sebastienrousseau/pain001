@@ -26,6 +26,12 @@ from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.exceptions import DataSourceError, PaymentValidationError
 
 
+def _de_iban(bban: str) -> str:
+    """Return the German IBAN for ``bban`` with valid mod-97 digits."""
+    digits = int(bban + "131400")  # "DE00" with D=13, E=14
+    return f"DE{98 - digits % 97:02d}{bban}"
+
+
 class TestStreamingLoaders(unittest.TestCase):
     """Test streaming data loaders for memory-efficient processing."""
 
@@ -161,14 +167,16 @@ class TestStreamingLoaders(unittest.TestCase):
                     "service_level_code": "NORM",
                     "requested_execution_date": "2024-01-16",
                     "debtor_name": f"Debtor {i}",
-                    "debtor_account_IBAN": f"DE89370400440532013{i:03d}",
+                    "debtor_account_IBAN": _de_iban(f"370400440532013{i:03d}"),
                     "debtor_agent_BIC": "BANKDEFFXXX",
                     "charge_bearer": "SLEV",
                     "payment_id": f"TX{i:04d}",
                     "payment_amount": 100.0 + i,
                     "creditor_agent_BIC": "BANKDEFFXXX",
                     "creditor_name": f"Creditor {i}",
-                    "creditor_account_IBAN": f"DE89370400440532014{i:03d}",
+                    "creditor_account_IBAN": _de_iban(
+                        f"370400440532014{i:03d}"
+                    ),
                     "remittance_information": f"Payment {i}",
                 }
             )

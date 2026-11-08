@@ -10,10 +10,37 @@ stateless and need none of this; it applies to the `pain001[api]` server.
 
 ```bash
 pip install "pain001[api]"
-pain001 serve --host 0.0.0.0 --port 8000      # dev
+pain001 serve                                  # dev: 127.0.0.1:8000, no key needed
+# Any other address needs a key (or an explicit opt-out, below).
+export PAIN001_API_KEY=$(openssl rand -hex 32)
+pain001 serve --host 0.0.0.0 --port 8000
 # Production: front with a process manager / container + a reverse proxy.
 uvicorn pain001.api.app:app --host 0.0.0.0 --port 8000 --workers 4
 ```
+
+`pain001 serve` refuses to bind anything but loopback (`127.0.0.1`,
+`::1`, `localhost`) while `PAIN001_API_KEY` is unset, because the API
+then has no authentication. It exits with a usage error naming the two
+ways out: set `PAIN001_API_KEY`, or, for a local experiment on a
+network you trust, pass `--insecure` (or set `PAIN001_ALLOW_INSECURE=1`)
+to serve unauthenticated anyway:
+
+```bash
+# Local experiments only: anyone who can reach the port can use the API.
+pain001 serve --host 0.0.0.0 --insecure
+```
+
+`uvicorn` started directly cannot apply this check (the application
+does not see the address it is bound to); it logs a start-up warning
+instead when `PAIN001_API_KEY` is unset, so set the key whenever you
+run it on anything but loopback.
+
+Validation and generation run in a thread pool, off the event loop, so
+`/health` and other requests stay responsive while a large file is
+processed. At most `PAIN001_API_CONCURRENCY` pipelines run at once per
+worker process (default: the CPU count); further requests and async
+jobs wait their turn (jobs show `pending` until they start). With
+`--workers N`, each worker has its own pool.
 
 ### Container image (GHCR)
 
@@ -56,7 +83,9 @@ browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 
 | Variable | Effect | Example |
 | :--- | :--- | :--- |
-| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint except `/api/v1/health` | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
+| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint except `/api/v1/health`; `pain001 serve` needs it for any non-loopback `--host` | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
+| `PAIN001_ALLOW_INSECURE` | `1`, `true` or `yes` lets `pain001 serve` bind a non-loopback address without a key (same as `--insecure`); local experiments only | `1` |
+| `PAIN001_API_CONCURRENCY` | Validation and generation pipelines run at once per worker process; extra requests and jobs queue. A positive integer; anything else stops the server at start-up | CPU count (default) |
 | `PAIN001_RATE_LIMIT` | Per-client request cap (fixed window); unset means no limit | `100/minute` |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` shares the rate-limit counters across replicas (`pain001[redis]`) | `redis` |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the rate limiter; falls back to `PAIN001_JOB_STORE_URL` | `redis://redis:6379/0` |

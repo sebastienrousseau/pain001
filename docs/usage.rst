@@ -37,6 +37,15 @@ Parquet input. Installed plugins can add formats such as XLSX. See
 :doc:`plugins` for privileges, discovery and disable controls, and
 :doc:`input-columns` for schema-derived field mappings.
 
+Every load checks each IBAN (length for its country and mod-97 check digits)
+and BIC (ISO 9362) column, whatever the scheme. A failure names the row
+(counted from 0) and the column, never the identifier. ``--no-identifier-checks``
+on ``generate`` and ``validate``, ``identifier_checks=False`` in
+``process_files``, ``process_files_streaming``, ``load_payment_data`` and
+their async forms, and ``"identifier_checks": false`` in a ``POST /api/validate``,
+``/api/generate`` or ``/api/generate/async`` body turn the checks off; keep
+them on for anything a bank will see.
+
 Generation recomputes control totals and validates rendered XML against the
 bundled XSD before writing. Scheme validation, including anti-duplicate,
 adds domain rules but does not certify compliance with a bank's private rules.

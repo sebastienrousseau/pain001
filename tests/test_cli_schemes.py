@@ -71,7 +71,7 @@ class TestCliScheme(unittest.TestCase):
     def test_scheme_text_reports_violations(self) -> None:
         """--scheme prints per-row violations and exits 1."""
         with patch(
-            "pain001.cli.cli.load_payment_data",
+            "pain001.cli.cli.load_batch",
             return_value=[dict(_SEPA_VIOLATING_ROW)],
         ):
             result = self.runner.invoke(
@@ -83,7 +83,7 @@ class TestCliScheme(unittest.TestCase):
     def test_scheme_explain_prints_remediation(self) -> None:
         """--explain adds a remediation hint under each violation."""
         with patch(
-            "pain001.cli.cli.load_payment_data",
+            "pain001.cli.cli.load_batch",
             return_value=[dict(_SEPA_VIOLATING_ROW)],
         ):
             result = self.runner.invoke(
@@ -102,7 +102,7 @@ class TestCliScheme(unittest.TestCase):
     def test_scheme_json_output(self) -> None:
         """--scheme-format json emits a parseable result object."""
         with patch(
-            "pain001.cli.cli.load_payment_data",
+            "pain001.cli.cli.load_batch",
             return_value=[dict(_SEPA_VIOLATING_ROW)],
         ):
             result = self.runner.invoke(
@@ -152,7 +152,7 @@ class TestCliScheme(unittest.TestCase):
     def test_scheme_gates_generation(self) -> None:
         """Without --dry-run, a scheme failure blocks generation."""
         with patch(
-            "pain001.cli.cli.load_payment_data",
+            "pain001.cli.cli.load_batch",
             return_value=[dict(_SEPA_VIOLATING_ROW)],
         ):
             result = self.runner.invoke(
@@ -164,7 +164,7 @@ class TestCliScheme(unittest.TestCase):
     def test_scheme_passes_for_compliant_data(self) -> None:
         """A SEPA-compliant row passes the scheme check (exit 0)."""
         with patch(
-            "pain001.cli.cli.load_payment_data",
+            "pain001.cli.cli.load_batch",
             return_value=[dict(_SEPA_VALID_ROW)],
         ):
             result = self.runner.invoke(
@@ -176,7 +176,7 @@ class TestCliScheme(unittest.TestCase):
     def test_scheme_json_passes_for_compliant_data(self) -> None:
         """JSON output reports is_valid=True for compliant data (exit 0)."""
         with patch(
-            "pain001.cli.cli.load_payment_data",
+            "pain001.cli.cli.load_batch",
             return_value=[dict(_SEPA_VALID_ROW)],
         ):
             result = self.runner.invoke(
@@ -224,7 +224,7 @@ class TestCliDataFailureTips(unittest.TestCase):
         """A JSON load failure prints a JSON-specific tip."""
         with patch("pain001.cli.cli.validate_via_xsd", return_value=True):
             with patch(
-                "pain001.cli.cli.load_payment_data",
+                "pain001.cli.cli.load_batch",
                 side_effect=ValueError("bad json"),
             ):
                 result = self.runner.invoke(main, self._args("data.json"))
@@ -235,7 +235,7 @@ class TestCliDataFailureTips(unittest.TestCase):
         """A Parquet load failure prints a pyarrow tip."""
         with patch("pain001.cli.cli.validate_via_xsd", return_value=True):
             with patch(
-                "pain001.cli.cli.load_payment_data",
+                "pain001.cli.cli.load_batch",
                 side_effect=ValueError("bad parquet"),
             ):
                 result = self.runner.invoke(main, self._args("data.parquet"))

@@ -199,9 +199,12 @@ alter the XML — the generator owns canonical form.
 │       pain001.validators                                │
 │       pain001.schemes                                   │
 │       pain001.writers                                   │
-│  3. Each entry instantiates with no args; the registry  │
+│  3. `PAIN001_DISABLE_PLUGINS` skips matching entry-     │
+│     point names before they are loaded.                 │
+│  4. Each entry instantiates with no args; the registry  │
 │     stamps `meta.source = "<dist>==<version>"`.         │
-│  4. `PAIN001_DISABLE_PLUGINS` skips matching names.     │
+│  5. `PAIN001_DISABLE_PLUGINS` also skips a matching     │
+│     declared `meta.name` at registration.               │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -210,7 +213,10 @@ A broken plugin (one that raises at `load()` or instantiation) is
 the registered plugins. The operator can find the culprit with
 `pain001 plugins list` and the structured log line.
 
-To disable a plugin without uninstalling it:
+To disable a plugin without uninstalling it, name it in
+`PAIN001_DISABLE_PLUGINS`. An entry point with that name is skipped
+before `load()`, so none of the disabled plugin's code runs; give the
+entry point the same name as the plugin's `meta.name`:
 
 ```bash
 PAIN001_DISABLE_PLUGINS=parquet pain001 plugins list

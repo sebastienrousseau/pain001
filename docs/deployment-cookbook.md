@@ -144,6 +144,8 @@ services:
 
       # Logging
       PYTHONUNBUFFERED: "1"
+    # `serve` refuses a non-loopback --host unless PAIN001_API_KEY is
+    # set (above), so a missing key stops the container at start-up.
     command: >
       serve --host 0.0.0.0 --port 8000
     depends_on:
@@ -334,13 +336,14 @@ observability.
 
 | Variable | Purpose |
 | :--- | :--- |
-| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health`. Generate with `openssl rand -hex 32`; rotate every 90 days. |
+| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health`. Generate with `openssl rand -hex 32`; rotate every 90 days. Without it, `pain001 serve --host 0.0.0.0` refuses to start. |
 
 ### Recommended env vars
 
 | Variable | Recommended value | Why |
 | :--- | :--- | :--- |
 | `PAIN001_RATE_LIMIT` | `100/minute` | Per-client cap. Unset means no rate limit. Tune to your traffic. |
+| `PAIN001_API_CONCURRENCY` | CPU count (default) | Validation and generation pipelines run at once per worker; extra requests and async jobs queue instead of starving `/health`. Lower it to cap memory on a small container. |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` | Shared across replicas (needs the `redis` extra). The in-process backend protects one worker only. |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | `redis://redis:6379/0` | Pointing at the compose-network Redis. |
 | `PAIN001_JOB_STORE_URL` | `redis://redis:6379/1` | Durable async-job state (needs the `redis` extra). Survives a pain001 restart. |

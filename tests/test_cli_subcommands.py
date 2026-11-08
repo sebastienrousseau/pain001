@@ -170,8 +170,10 @@ class TestServeCommand:
         """Provide a fresh Click runner per test."""
         self.runner = CliRunner()
 
-    def test_serve_invokes_uvicorn(self) -> None:
+    def test_serve_invokes_uvicorn(self, monkeypatch) -> None:
         """`serve` binds the configured host/port via uvicorn.run."""
+        # A public bind needs a key (D9; tests/test_cli_serve.py).
+        monkeypatch.setenv("PAIN001_API_KEY", "secret")
         with patch("uvicorn.run") as run:
             result = self.runner.invoke(
                 cli, ["serve", "--host", "0.0.0.0", "--port", "9100"]

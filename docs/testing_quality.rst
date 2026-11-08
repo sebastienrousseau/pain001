@@ -20,6 +20,11 @@ Use mutmut 3 with ``[tool.mutmut]`` in ``pyproject.toml``:
 
    poetry run make mutate-fast
 
+CI runs the same tier as two shards in parallel
+(``make mutate-shard SHARD=REGISTRY`` and ``SHARD=REST``) and gates their
+summed score with ``make mutate-gate``, so the floor applies to the tier
+as a whole.
+
 Type Checking
 =============
 

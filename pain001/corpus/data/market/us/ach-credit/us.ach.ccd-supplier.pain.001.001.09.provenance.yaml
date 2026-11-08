@@ -41,7 +41,7 @@ provenance:
   sources:
   - title: Nacha Operating Rules and Guidelines, Standard Entry Class codes
     read: '2026-09-10'
-  - title: Huntington pain.001 developer documentation; Cross River pain.001.001.03
+  - title: Two US banks' public pain.001 developer documentation and pain.001.001.03
       input specification
     read: '2026-09-10'
   confidence: derived

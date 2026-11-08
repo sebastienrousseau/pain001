@@ -36,6 +36,7 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
+import threading
 import traceback
 from collections.abc import Iterable
 from importlib import metadata
@@ -74,7 +75,9 @@ class PluginRegistry:
 
     Not thread-safe for *registration* (plugins are registered once
     at startup and the registry is read-only after); fully safe for
-    concurrent lookups thereafter.
+    concurrent lookups thereafter. Lazy population on first lookup is
+    serialised by a re-entrant lock, so concurrent first lookups wait
+    for it to finish rather than reading a half-filled registry.
 
     Args:
         api_version: The ``(major, minor)`` tuple the host pain001
@@ -91,6 +94,11 @@ class PluginRegistry:
         self._writers: dict[str, AbstractWriter] = {}
         self._disabled = _parse_disabled_env()
         self._populated = False
+        # Population runs once, under this lock. ``_populating`` lets a
+        # lookup made by a plugin while it registers (same thread, so
+        # the RLock lets it in) return instead of recursing.
+        self._populate_lock = threading.RLock()
+        self._populating = False
 
     # ---------------------------------------------------------------
     # Public lookup API
@@ -181,12 +189,18 @@ class PluginRegistry:
 
         Test-only seam. Production code never resets the singleton.
         """
-        self._loaders.clear()
-        self._validators.clear()
-        self._schemes.clear()
-        self._writers.clear()
-        self._disabled = _parse_disabled_env()
-        self._populated = False
+        with self._populate_lock:
+            self._loaders.clear()
+            self._validators.clear()
+            self._schemes.clear()
+            self._writers.clear()
+            self._disabled = _parse_disabled_env()
+            self._populated = False
+        # Population runs once, under this lock. ``_populating`` lets a
+        # lookup made by a plugin while it registers (same thread, so
+        # the RLock lets it in) return instead of recursing.
+        self._populate_lock = threading.RLock()
+        self._populating = False
 
     # ---------------------------------------------------------------
     # Internals
@@ -256,15 +270,31 @@ class PluginRegistry:
             )
 
     def _ensure_populated(self) -> None:
-        """Lazily register built-ins + entry-point plugins on first lookup."""
+        """Lazily register built-ins + entry-point plugins on first lookup.
+
+        The populated flag is set only once population has finished, so
+        another thread never reads a registry that is still filling up:
+        it waits on the lock instead. A lookup from the populating
+        thread itself (a plugin consulting the registry while it
+        registers) sees the partial registry rather than looping. If
+        population raises, the flag stays unset and the next lookup
+        tries again.
+        """
         if self._populated:
             return
-        self._populated = True  # set before, so re-entrant lookups don't loop
-        # Built-ins first; entry-point plugins later (later wins).
-        from pain001.plugins import _builtins  # noqa: PLC0415  - lazy
+        with self._populate_lock:
+            if self._populated or self._populating:
+                return
+            self._populating = True
+            try:
+                # Built-ins first; entry-point plugins later (later wins).
+                from pain001.plugins import _builtins  # noqa: PLC0415
 
-        _builtins.register_all(self)
-        _load_entry_point_plugins(self)
+                _builtins.register_all(self)
+                _load_entry_point_plugins(self)
+                self._populated = True
+            finally:
+                self._populating = False
 
 
 def _parse_disabled_env() -> frozenset[str]:
@@ -280,9 +310,17 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
     warning so one broken plugin can't take pain001 down. The
     operator can isolate the culprit via ``pain001 plugins list``
     plus the logged plugin name.
+
+    An entry point whose name is listed in ``PAIN001_DISABLE_PLUGINS``
+    is skipped before ``entry.load()``, so a disabled plugin's module
+    is never imported and its constructor never runs. The declared
+    ``meta.name`` is still checked at registration, for plugins whose
+    entry-point name differs from it.
     """
     for kind, group in ENTRY_POINT_GROUPS.items():
         for entry in _iter_entry_points(group):
+            if _is_disabled_entry(reg, entry, kind):
+                continue
             try:
                 plugin_cls = entry.load()
                 plugin = plugin_cls()
@@ -311,6 +349,30 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
                         "traceback_hash": traceback_hash,
                     },
                 )
+
+
+def _is_disabled_entry(
+    reg: PluginRegistry, entry: metadata.EntryPoint, kind: str
+) -> bool:
+    """Return True, and log it, when ``entry`` is named in the disable list.
+
+    Args:
+        reg: Registry whose ``PAIN001_DISABLE_PLUGINS`` set applies.
+        entry: Entry point about to be loaded.
+        kind: Plugin kind of the entry-point group, for the log line.
+
+    Returns:
+        True if the entry point must not be loaded.
+    """
+    if entry.name not in reg._disabled:
+        return False
+    logger.info(
+        "skipping disabled %s plugin %s before loading it "
+        "(set via PAIN001_DISABLE_PLUGINS)",
+        kind,
+        entry.name,
+    )
+    return True
 
 
 def _iter_entry_points(group: str) -> Iterable[metadata.EntryPoint]:

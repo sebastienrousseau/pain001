@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.80"
+version = "0.0.81"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -372,6 +372,10 @@ pytest_add_cli_args = [
     # inside the copy every function is a mutmut trampoline, so the
     # measurement differs. The ordinary test run and CI job cover it.
     "--deselect=tests/test_check_complexity.py::test_the_tree_matches_its_baseline",
+    # The bank-name gate lists the wheel's files with git ls-files; the
+    # copy is not tracked by git, so the list would miss every module.
+    # It scans shipped text, not logic a mutant changes.
+    "--ignore=tests/test_no_bank_names.py",
 ]
 # The example scripts and the corpus data are read by tests by path.
 # mutmut runs the tests inside its working copy (mutants/), which holds

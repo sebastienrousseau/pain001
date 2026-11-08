@@ -178,7 +178,7 @@ class TestCliErrorPaths:
                     raise ValueError("invalid data")
 
                 mp.setattr(
-                    "pain001.cli.cli.load_payment_data",
+                    "pain001.cli.cli.load_batch",
                     _raise_value_error,
                 )
 

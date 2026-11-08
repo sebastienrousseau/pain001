@@ -44,12 +44,15 @@ from jinja2 import select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
 
 from pain001.twins.iso_json import _check, to_iso_json
-from pain001.xml.generate_xml import (
+from pain001.xml.generate_xml import _load_trusted_template_source
+from pain001.xml.message_registry import (
+    get_message_definition,
+    prepare_xml_data,
+)
+from pain001.xml.payment_records import (
     _FIELD_ALIASES,
-    _load_trusted_template_source,
     _normalize_financial_fields,
 )
-from pain001.xml.message_registry import prepare_xml_data
 
 INPUT_SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schemas"
 _ROWS = 2
@@ -166,7 +169,9 @@ def _render(version: str, rows: list[dict[str, str]]) -> str:
         version
     ).template_path
     data, count, total = _normalize_financial_fields([dict(r) for r in rows])
-    context = prepare_xml_data(data, version)
+    # The preparer itself, not prepare_xml_data: the sentinel rows differ
+    # on every column by design, which the one-PmtInf check would refuse.
+    context = get_message_definition(version).preparer(data)
     context["nb_of_txs"] = count
     if "payment_nb_of_txs" in context:
         context["payment_nb_of_txs"] = count

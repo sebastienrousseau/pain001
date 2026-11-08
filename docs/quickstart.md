@@ -121,9 +121,25 @@ Output (success; the record count is the number of rows in your file):
 ✓ All validations passed (--dry-run: no XML generated)
 ```
 
+Every IBAN and BIC column is checked on the way in, with or without a
+scheme: an IBAN must have the right length for its country and valid
+mod-97 check digits, and a BIC must be ISO 9362. Output (failure, here a
+debtor IBAN with a broken check digit):
+
+```text
+✗ Data validation failed: Invalid account identifiers (1):
+  row 0, column debtor_account_IBAN: not a valid IBAN (IBAN checksum validation
+failed (mod 97 = 2, expected 1))
+Fix the values, or skip these checks with --no-identifier-checks
+(identifier_checks=False).
+```
+
+Rows count from 0 and the message never repeats the IBAN itself. Pass
+`--no-identifier-checks` only for test data you know is synthetic.
+
 Want to check it'll pass the SEPA Credit Transfer rulebook *as
 well as* the schema? Add `--scheme`. The scheme profiles are where
-IBAN check digits, currency and amount limits are enforced:
+currency, amount limits and the rest of the rulebook are enforced:
 
 ```bash
 pain001 validate -t pain.001.001.03 -d my-payments.csv --scheme sepa-sct

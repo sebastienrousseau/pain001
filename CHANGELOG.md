@@ -7,6 +7,108 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.81] - 2026-11-08
+
+Correct output: every file pain001 writes is one valid batch, checked
+before it lands on disk. Five changes refuse input or start-up that was
+accepted before; each says how to opt out or fix it.
+
+### Breaking
+
+- Rows that disagree on a column rendered once in `PmtInf` (debtor,
+  debtor account or agent, execution date, payment method, batch
+  booking, charge bearer, payment type; for `pain.008` the creditor,
+  sequence type and service level) raise `PaymentValidationError`
+  naming the column and row. Before, every row was written under row
+  1's values: a five-debtor file came out as one debtor paying five
+  times. `pain001 validate`, `generate --validate-only` and the REST
+  validation endpoints refuse the same files, so a file that
+  validates also generates. Split such a batch into one file per
+  debtor (decision D1).
+- IBAN (length for its country, mod-97 check digits) and BIC
+  (ISO 9362) columns are checked on every load, with or without
+  `--scheme`. A failure names the row and column, never the value.
+  Opt out with `--no-identifier-checks`, `identifier_checks=False` or
+  `"identifier_checks": false`; `ValidationConfig.pre_validate`, which
+  was documented as this switch but never read, now controls it.
+- The `sepa-sct`, `sepa-inst`, `sepa-sdd` and `sepa-b2b` profiles
+  reject a charge bearer other than `SLEV` (new rule `SEPA-CHRGBR`,
+  per the EPC Customer-to-PSP Implementation Guidelines EPC132-08,
+  EPC121-16, EPC130-08 and EPC131-08, 2025 version 1.0).
+- `process_files_streaming` gives each chunk of a multi-chunk run its
+  own MsgId `<id>-<n>` and PmtInfId `<payment_information_id>-<n>`,
+  cut to 35 characters; before, every chunk repeated the same MsgId,
+  which banks reject as a duplicate. A single-chunk run is unchanged.
+  Streamed rows now get the same validation as `process_files`, so an
+  invalid row stops the run (decision D3).
+- `pain001 serve` with a non-loopback `--host` and no
+  `PAIN001_API_KEY` exits 2 instead of starting an unauthenticated
+  server on the network. Set the key, or pass `--insecure` (or
+  `PAIN001_ALLOW_INSECURE=1`) on a trusted network (decision D9,
+  ADR 0009).
+
+### Fixed
+
+- Every writer (`generate_xml` and the xml-file writer, streamed
+  chunks, `stream_xml_to_file`) stages the file beside its
+  destination, fsyncs it and renames it into place. Schematron now
+  runs on the final document before it is written, so a refused,
+  half-written or failed file never appears at the output path and an
+  existing file there is left as it was. Files are created `0o600`
+  (owner read and write only), whatever the umask: a payment file
+  carries account data. Before, they followed the umask, usually
+  `0o644`; widen them yourself if another account must read them.
+- `stream_xml_to_file` checks its output path, validates its rows and
+  XSD-validates the result before publishing it (new optional
+  `xsd_schema_path`, defaulting to the bundled schema).
+- The REST API runs each pipeline (load, validate, render) on a
+  thread pool sized by `PAIN001_API_CONCURRENCY` (default: the CPU
+  count) instead of the event loop. A 1,000-row `/validate` no longer
+  stalls `/health` for five seconds, and a burst of async jobs queues
+  instead of running all at once. A process forked after the pool
+  started gets a fresh pool rather than one with no threads that
+  never runs a job.
+- A failed async REST job reports which rows and columns failed
+  validation instead of "Processing failed".
+- Concurrent first lookups on a fresh plugin registry no longer return
+  `None` for an installed plugin.
+- A plugin named in `PAIN001_DISABLE_PLUGINS` is skipped before its
+  module is imported; before, its code still ran.
+- User text in CLI output (file paths, error messages, scheme
+  violations, plugin metadata) is escaped, so a `[` in a file name no
+  longer crashes the CLI with a Rich `MarkupError` and `[link=...]`
+  no longer becomes a live hyperlink.
+
+### Changed
+
+- JSON Schema row validation compiles each schema once: about 30x
+  faster on 1,000 rows, with identical messages.
+- The bundled sample CSVs and their SQLite copies (`.03`, `.09` to
+  `.13`, `pain.008.001.02` and `.08`) are one batch from one debtor
+  (one creditor for `pain.008`), and the `.03` sample uses charge
+  bearer `SLEV` on every row. The bundled golden and example XML
+  files are unchanged.
+- `generate_xml` takes a `schematron` argument.
+- Record normalisation (`canonicalize_payment_record`,
+  `normalize_payment_records`) lives in `pain001.xml.payment_records`;
+  both names are still importable from `pain001.xml.generate_xml` and
+  `pain001`.
+- `pain001.validation.check_identifiers` / `identifier_errors` and
+  `pain001.xml.batch_consistency.require_one_batch` expose the IBAN/BIC
+  and one-batch checks to front ends that take rows directly, such as
+  pain001-mcp.
+- `TemplateMetadata.display_name` gives the ISO 20022 message name
+  (`Customer Credit Transfer Initiation V09`), for pain001-mcp and
+  other front ends.
+- Corpus scenarios, rail sources and `SCHEMES.md` describe bank
+  documents by kind, edition and date instead of naming the bank;
+  only scheme rulebooks, central-bank and clearing-system publications
+  and ISO 20022 artefacts are cited by name. `tests/test_no_bank_names.py`
+  scans every file the wheel ships (decision D8).
+- CI runs the fast mutation tier as two parallel shards and gates
+  their summed score as one tier (`make mutate-shard`, `make
+  mutate-gate`), keeping headroom in the 90 minute job as it grows.
+
 ## [0.0.80] - 2026-11-07
 
 ### Security

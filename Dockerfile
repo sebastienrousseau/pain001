@@ -3,7 +3,8 @@
 # Multi-stage build for a minimal pain001 image.
 #
 # The image ships the CLI (`pain001`) and, via the `api` extra, the
-# FastAPI REST surface (`pain001 serve --host 0.0.0.0`). Multi-arch:
+# FastAPI REST surface (`pain001 serve --host 0.0.0.0`, which needs
+# PAIN001_API_KEY set). Multi-arch:
 # linux/amd64 and linux/arm64.
 
 FROM python:3.12-slim@sha256:57cd7c3a7a273101a6485ba99423ee568157882804b1124b4dd04266317710de AS builder
@@ -71,7 +72,9 @@ WORKDIR /home/pain001
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
     CMD python -c "import pain001" || exit 1
 
-# Default to the CLI; ``docker run pain001 serve --host 0.0.0.0``
-# brings up the REST API.
+# Default to the CLI; ``docker run -e PAIN001_API_KEY=<key> pain001
+# serve --host 0.0.0.0`` brings up the REST API. Without the key,
+# ``serve`` refuses a non-loopback bind (``--insecure`` overrides it,
+# for local experiments only).
 ENTRYPOINT ["pain001"]
 CMD ["--help"]

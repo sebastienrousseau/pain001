@@ -299,7 +299,7 @@ def test_serve_command_bootstraps_the_sdk() -> None:
 
     with (
         patch("uvicorn.run") as run,
-        patch("pain001.cli.cli.init_otel") as init,
+        patch("pain001.cli._serve.init_otel") as init,
     ):
         result = CliRunner().invoke(cli, ["serve", "--port", "9101"])
     assert result.exit_code == 0, result.output

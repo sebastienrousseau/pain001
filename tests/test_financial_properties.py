@@ -27,7 +27,7 @@ from hypothesis import given, settings
 from hypothesis import strategies as st
 
 from pain001.exceptions import PaymentValidationError
-from pain001.xml.generate_xml import (
+from pain001.xml.payment_records import (
     _format_amount,
     _normalize_financial_fields,
 )

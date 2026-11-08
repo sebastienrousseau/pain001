@@ -55,7 +55,7 @@ def test_all_versions():
             "creditor_postal_code": "11223",
             "creditor_town_name": "Creditortown",
             "creditor_country_code": "DE",
-            "creditor_account_IBAN": "DE89370400440532013001",
+            "creditor_account_IBAN": "DE62370400440532013001",
             "purpose_code": "CASH",
             "reference_number": "REF123",
             "reference_date": "2024-01-14",

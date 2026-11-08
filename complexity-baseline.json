@@ -24,18 +24,7 @@
     "lines": 71
   },
   "pain001/api/app.py": {
-    "file_lines": 918
-  },
-  "pain001/api/app.py::_process_generation_job": {
-    "cyclomatic": 11,
-    "lines": 143
-  },
-  "pain001/api/app.py::generate_xml_sync": {
-    "cyclomatic": 12,
-    "lines": 122
-  },
-  "pain001/api/app.py::validate_data": {
-    "lines": 62
+    "file_lines": 684
   },
   "pain001/api/job_store.py::RedisJobStore.load_all": {
     "cognitive": 17
@@ -55,35 +44,26 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1442
+    "file_lines": 1369
   },
   "pain001/cli/cli.py::_generate_xml_files": {
-    "cyclomatic": 12,
-    "lines": 124
+    "lines": 121
   },
   "pain001/cli/cli.py::_run_scheme_check": {
-    "cognitive": 21,
-    "cyclomatic": 14,
-    "lines": 78
-  },
-  "pain001/cli/cli.py::_validate_payment_data": {
-    "lines": 68
+    "lines": 64
   },
   "pain001/cli/cli.py::main": {
     "cyclomatic": 17,
-    "lines": 267
-  },
-  "pain001/core/core.py": {
-    "file_lines": 513
+    "lines": 265
   },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82
   },
   "pain001/core/core.py::process_files": {
-    "lines": 127
+    "lines": 108
   },
   "pain001/core/core.py::process_files_streaming": {
-    "lines": 95
+    "lines": 89
   },
   "pain001/corpus/builder.py": {
     "file_lines": 946
@@ -204,12 +184,6 @@
     "lines": 103
   },
   "pain001/data/loader.py::_load_from_file": {
-    "lines": 65
-  },
-  "pain001/data/loader.py::load_payment_data": {
-    "lines": 65
-  },
-  "pain001/data/loader.py::load_payment_data_streaming": {
     "lines": 65
   },
   "pain001/db/load_db_data.py::load_db_data": {
@@ -392,8 +366,7 @@
     "lines": 82
   },
   "pain001/validation/service.py::ValidationService.validate_all": {
-    "cyclomatic": 13,
-    "lines": 81
+    "lines": 77
   },
   "pain001/xml/envelope.py::BusinessApplicationHeader.to_element": {
     "cognitive": 20,
@@ -405,18 +378,11 @@
     "cyclomatic": 27,
     "lines": 87
   },
-  "pain001/xml/generate_xml.py": {
-    "file_lines": 712
-  },
-  "pain001/xml/generate_xml.py::_coerce_temporal_and_boolean": {
-    "cognitive": 17,
-    "cyclomatic": 11
-  },
   "pain001/xml/generate_xml.py::generate_xml": {
-    "lines": 115
+    "lines": 86
   },
   "pain001/xml/generate_xml.py::generate_xml_string": {
-    "lines": 102
+    "lines": 82
   },
   "pain001/xml/message_registry.py": {
     "file_lines": 645
