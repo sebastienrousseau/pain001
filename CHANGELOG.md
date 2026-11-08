@@ -54,9 +54,10 @@ accepted before; each says how to opt out or fix it.
   destination, fsyncs it and renames it into place. Schematron now
   runs on the final document before it is written, so a refused,
   half-written or failed file never appears at the output path and an
-  existing file there is left as it was. Files are created `0o644`
-  narrowed by the umask, so a payment file is never group- or
-  world-writable, even under an empty umask.
+  existing file there is left as it was. Files are created `0o600`
+  (owner read and write only), whatever the umask: a payment file
+  carries account data. Before, they followed the umask, usually
+  `0o644`; widen them yourself if another account must read them.
 - `stream_xml_to_file` checks its output path, validates its rows and
   XSD-validates the result before publishing it (new optional
   `xsd_schema_path`, defaulting to the bundled schema).

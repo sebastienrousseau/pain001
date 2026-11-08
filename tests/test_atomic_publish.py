@@ -167,24 +167,23 @@ def test_publish_text_stages_next_to_the_destination(
 
 
 def test_publish_text_honours_the_umask(tmp_path: Path) -> None:
-    """The published file is 0o644 narrowed by the umask, never writable
-    by others."""
+    """The published file is owner-only under a common umask."""
     umask = os.umask(0o022)
     try:
         written = publish.publish_text("<a/>", str(tmp_path / "m.xml"))
     finally:
         os.umask(umask)
-    assert stat.S_IMODE(os.stat(written).st_mode) == 0o644
+    assert stat.S_IMODE(os.stat(written).st_mode) == 0o600
 
 
 def test_publish_text_is_never_world_writable(tmp_path: Path) -> None:
-    """Even with an empty umask, others cannot write a payment file."""
+    """Even with an empty umask, no one else can read or write it."""
     umask = os.umask(0)
     try:
         written = publish.publish_text("<a/>", str(tmp_path / "w.xml"))
     finally:
         os.umask(umask)
-    assert stat.S_IMODE(os.stat(written).st_mode) == 0o644
+    assert stat.S_IMODE(os.stat(written).st_mode) == 0o600
 
 
 @pytest.mark.parametrize("failing", ["write", "fsync", "replace"])

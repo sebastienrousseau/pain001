@@ -50,16 +50,15 @@ def _write_all(handle: TextIO, chunks: Iterable[str]) -> int:
 def _stage(target: str) -> tuple[int, str]:
     """Create an exclusive temporary sibling of ``target``.
 
-    ``os.open`` with mode 0o644, narrowed further by the process umask:
-    a payment file is never group- or world-writable, whatever the
-    umask.
+    ``os.open`` with mode 0o600: a payment file carries account data,
+    so only its owner can read or write it, whatever the umask.
     """
     folder, name = os.path.split(target)
     while True:
         staged = os.path.join(folder, f".{name}.{secrets.token_hex(6)}.tmp")
         try:
             flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-            return os.open(staged, flags, 0o644), staged
+            return os.open(staged, flags, 0o600), staged
         except FileExistsError:  # pragma: no cover - 48 random bits
             continue
 

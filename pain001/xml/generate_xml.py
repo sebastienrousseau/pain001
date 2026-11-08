@@ -30,14 +30,12 @@ from pain001.observability import emit_metric_event
 from pain001.observability.otel import set_span_attributes, traced
 from pain001.security import validate_path
 from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
-from pain001.xml.payment_records import _normalize_financial_fields
-
-# Re-exported: public here before payment_records split out (0.0.81).
 from pain001.xml.payment_records import (
-    canonicalize_payment_record as canonicalize_payment_record,
+    _normalize_financial_fields,
+    canonicalize_payment_record,
 )
 from pain001.xml.payment_records import (
-    normalize_payment_records as normalize_payment_records,
+    normalize_payment_records as _normalize_payment_records,
 )
 from pain001.xml.publish import (
     finalise_message,
@@ -49,6 +47,10 @@ from pain001.xml.publish import (
 )
 
 logger = logging.getLogger(__name__)
+
+# Public here before the record helpers moved to payment_records
+# (0.0.81); kept so existing imports from this module still work.
+normalize_payment_records = _normalize_payment_records
 
 # Templates are trusted, but these directives would let one pull in
 # arbitrary files from disk, so they are rejected before rendering.
