@@ -57,6 +57,11 @@ exists, and the hot paths get faster.
   MarkupSafe objects: rendering 1,000 pain.001.001.09 rows drops from
   about 29 ms to 20 ms. The output is byte-identical (golden files, and
   1,000-row renders of every template that indents).
+- The CLI starts about 2.5 times faster: `pain001 --help` takes about
+  120 ms instead of 320 ms on an idle machine. `import pain001` resolves
+  its public names on first use (about 20 ms instead of 260 ms), and
+  xmlschema, pyarrow and the ISO JSON twins load when they are first
+  needed, not at start-up.
 
 ### Fixed
 

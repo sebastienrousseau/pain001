@@ -15,6 +15,7 @@
 """Parquet data loader for payment data (optional feature)."""
 
 # pylint: disable=duplicate-code
+import importlib.util
 import os
 from collections.abc import Generator
 from typing import Any, cast
@@ -22,13 +23,38 @@ from typing import Any, cast
 from pain001.exceptions import DataSourceError
 from pain001.security import validate_path
 
-# Optional import: pyarrow is not a required dependency
-try:
-    import pyarrow.parquet as pq  # type: ignore[import-untyped,import-not-found,unused-ignore]
 
-    HAS_PARQUET_SUPPORT = True
-except ImportError:  # pragma: no cover - pyarrow is an optional extra
-    HAS_PARQUET_SUPPORT = False
+# pyarrow is an optional extra, and importing it costs about 60 ms, which
+# every CLI start-up paid through the data loaders. Its presence is
+# checked without importing it; pyarrow.parquet loads on first use.
+def _installed(name: str) -> bool:
+    """Tell whether ``name`` can be imported, without importing it.
+
+    Args:
+        name: A top-level module name.
+
+    Returns:
+        False when it is not installed, or when an import hook refuses
+        it while it is being looked up.
+    """
+    try:
+        return importlib.util.find_spec(name) is not None
+    except ImportError:
+        return False
+
+
+HAS_PARQUET_SUPPORT = _installed("pyarrow")
+
+
+def _pq() -> Any:
+    """Import ``pyarrow.parquet`` on first use.
+
+    Returns:
+        The ``pyarrow.parquet`` module.
+    """
+    import pyarrow.parquet as pq  # type: ignore[import-untyped,import-not-found,unused-ignore]  # noqa: PLC0415
+
+    return pq
 
 
 def _check_parquet_support() -> None:
@@ -86,7 +112,7 @@ def load_parquet_data(file_path: str) -> list[dict[str, Any]]:
 
     try:
         # Read Parquet file (now safe after validation)
-        table = pq.read_table(str(safe_path))  # nosec B108
+        table = _pq().read_table(str(safe_path))  # nosec B108
 
         # Convert to list of dicts
         data = cast(list[dict[str, Any]], table.to_pylist())
@@ -148,7 +174,7 @@ def load_parquet_data_streaming(
 
     try:
         # Open Parquet file for streaming
-        parquet_file = pq.ParquetFile(str(safe_path))
+        parquet_file = _pq().ParquetFile(str(safe_path))
 
         # Read in batches
         for batch in parquet_file.iter_batches(batch_size=chunk_size):
