@@ -74,6 +74,10 @@ exists, and the hot paths get faster.
   `serve` refusal imported its settings from the FastAPI module. The
   settings now live in `pain001.security.api_access` (re-exported by
   `pain001.api.auth`), and a test runs the CLI with every extra blocked.
+- `pain001 upload` names a wrong passphrase for an encrypted PEM key every
+  time. About 1 in 256 wrong passwords pass the PEM padding check and
+  fail later as unparsable key data, which was reported as "not an RSA,
+  ECDSA or Ed25519 private key".
 
 ## [0.0.81] - 2026-11-08
 

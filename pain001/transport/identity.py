@@ -140,7 +140,22 @@ def _load_private_key(
                 raise ValueError(
                     f"Could not unlock private key {name}: wrong passphrase."
                 ) from exc
+    # About 1 in 256 wrong passwords pass the PEM padding check; the key
+    # then fails to parse and paramiko names no password problem.
+    if passphrase is not None and _is_encrypted_pem(path):
+        raise ValueError(
+            f"Could not unlock private key {name}: wrong passphrase."
+        )
     raise ValueError(f"{name} is not an RSA, ECDSA or Ed25519 private key.")
+
+
+def _is_encrypted_pem(path: str) -> bool:
+    """Tell whether ``path`` holds a passphrase-encrypted PEM key."""
+    with open(path, encoding="utf-8", errors="replace") as handle:
+        head = handle.read(4096)
+    return (
+        "Proc-Type: 4,ENCRYPTED" in head or "BEGIN ENCRYPTED PRIVATE" in head
+    )
 
 
 def _utc(seconds: int) -> str:
