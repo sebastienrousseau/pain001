@@ -54,7 +54,9 @@ accepted before; each says how to opt out or fix it.
   destination, fsyncs it and renames it into place. Schematron now
   runs on the final document before it is written, so a refused,
   half-written or failed file never appears at the output path and an
-  existing file there is left as it was.
+  existing file there is left as it was. Files are created `0o644`
+  narrowed by the umask, so a payment file is never group- or
+  world-writable, even under an empty umask.
 - `stream_xml_to_file` checks its output path, validates its rows and
   XSD-validates the result before publishing it (new optional
   `xsd_schema_path`, defaulting to the bundled schema).
@@ -84,6 +86,10 @@ accepted before; each says how to opt out or fix it.
   bearer `SLEV` on every row. The bundled golden and example XML
   files are unchanged.
 - `generate_xml` takes a `schematron` argument.
+- Record normalisation (`canonicalize_payment_record`,
+  `normalize_payment_records`) lives in `pain001.xml.payment_records`;
+  both names are still importable from `pain001.xml.generate_xml` and
+  `pain001`.
 - `TemplateMetadata.display_name` gives the ISO 20022 message name
   (`Customer Credit Transfer Initiation V09`), for pain001-mcp and
   other front ends.
