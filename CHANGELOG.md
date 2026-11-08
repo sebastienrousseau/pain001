@@ -39,6 +39,11 @@ exists, and the hot paths get faster.
   `process_files_streaming` build streamed chunks in N processes: the
   same files in the same order, and a failing chunk still leaves only the
   chunks before it. Four workers took 40,000 rows from 1.6 s to 0.9 s.
+- Every release attaches `pain001-<version>.facts.json` (version, Python
+  floor, extras, message types, scheme profiles, Schematron rulebooks,
+  faces, CLI commands and their counts), generated from the sources by
+  `scripts/facts.py`, so the site and the MCP manifests can render the
+  numbers instead of restating them.
 
 ### Changed
 
