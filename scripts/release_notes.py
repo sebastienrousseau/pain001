@@ -144,7 +144,8 @@ def changes(repo: str, tag: str, prev: str | None, run: Runner) -> list[str]:
         return list(rows.values())
     return [
         f"* {c['commit']['message'].splitlines()[0]} by "
-        f"@{(c.get('author') or {}).get('login', 'unknown')} in {c['html_url']}"
+        f"@{(c.get('author') or {}).get('login', 'unknown')} "
+        f"in {c['html_url']}"
         for c in commits
     ]
 
