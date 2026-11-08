@@ -32,8 +32,14 @@ REMEDIATIONS: dict[str, str] = {
         "Provide a non-empty EndToEndId (must not be 'NOTPROVIDED')."
     ),
     "EPC-PMT-001": "Provide an IBAN for the debtor account.",
-    "EPC-PMT-002": "Set payment service level code SvcLvl/Cd to 'SEPA'.",
-    "EPC-PMT-003": "Set payment level ChrgBr (Charge Bearer) to 'SLEV'.",
+    "EPC-PMT-002": (
+        "Set SvcLvl/Cd to 'SEPA' in the batch's PmtTpInf, or in every "
+        "transaction's."
+    ),
+    "EPC-PMT-003": (
+        "Set ChrgBr (Charge Bearer) to 'SLEV' on the batch, or on every "
+        "transaction."
+    ),
     "FDN-TX-001": "Set currency attribute to 'USD' on InstdAmt.",
     "FDN-TX-002": (
         "Set ChrgBr to 'DEBT' or 'SHAR' for FedNow instant transfers."

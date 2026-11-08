@@ -36,11 +36,17 @@
       <assert test="boolean(pain:DbtrAcct/pain:Id/pain:IBAN)" id="EPC-PMT-001">
         Debtor account must be specified as an IBAN.
       </assert>
-      <assert test="pain:PmtTpInf/pain:SvcLvl/pain:Cd = 'SEPA'" id="EPC-PMT-002">
-        Payment service level code must be SEPA.
+      <!--
+        EPC allows the service level and the charge bearer on the batch
+        or on every transaction. Each rule holds when the batch says
+        SEPA (SLEV), or says nothing and every transaction does; it
+        fails when a value is missing from both places.
+      -->
+      <assert test="pain:PmtTpInf/pain:SvcLvl/pain:Cd = 'SEPA' or (not(pain:PmtTpInf/pain:SvcLvl) and pain:CdtTrfTxInf and not(pain:CdtTrfTxInf[not(pain:PmtTpInf/pain:SvcLvl/pain:Cd = 'SEPA')]))" id="EPC-PMT-002">
+        Service level code must be SEPA, on the payment batch or on every transaction.
       </assert>
-      <assert test="pain:ChrgBr = 'SLEV'" id="EPC-PMT-003">
-        Charge bearer must be SLEV for EPC SEPA payments.
+      <assert test="pain:ChrgBr = 'SLEV' or (not(pain:ChrgBr) and pain:CdtTrfTxInf and not(pain:CdtTrfTxInf[not(pain:ChrgBr = 'SLEV')]))" id="EPC-PMT-003">
+        Charge bearer must be SLEV, on the payment batch or on every transaction.
       </assert>
     </rule>
   </pattern>

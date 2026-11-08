@@ -104,6 +104,12 @@ exists, and the hot paths get faster.
   USD passed `--schematron sepa`. A rulebook prefix bound to the
   document's message family now follows the document's version, and
   `pain001 check` warns when a rulebook ran no rule at all.
+- The bundled SEPA rulebook accepts the service level and the charge
+  bearer on every transaction instead of the payment batch, as EPC
+  allows. EPC-PMT-002 and EPC-PMT-003 required both on the batch and
+  rejected such files. They still fail when a value is missing from the
+  batch and from any transaction, and EPC-SCT-002 still rejects a
+  transaction charge bearer other than `SLEV`.
 - The Schematron evaluator treats a location path as XPath does: an
   element with only children counts as present, `=` holds when any
   selected node matches (never on an empty selection, so `X != 'a'` is
