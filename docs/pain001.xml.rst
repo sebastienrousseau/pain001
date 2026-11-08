@@ -6,6 +6,14 @@ pain001.xml package
 Submodules
 ----------
 
+pain001.xml.batch\_consistency module
+-------------------------------------
+
+.. automodule:: pain001.xml.batch_consistency
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.xml.create\_root\_element module
 ----------------------------------------
 

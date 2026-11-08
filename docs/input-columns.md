@@ -21,6 +21,14 @@ templates keep their earlier, narrower column set.
   (`.03`: the date only). One of `debtor_account_IBAN` or
   `debtor_account_number`, and one of `debtor_agent_BIC` or
   `debtor_agent_member_id`; the same for the creditor on every row.
+- **One payment information block per file**: every template renders
+  one `PmtInf`, so the columns that land in it (debtor, debtor account
+  and agent, execution date, payment method, batch booking, charge
+  bearer, payment type; for `pain.008` the creditor and sequence type)
+  must carry the same value on every row that gives one. A later row
+  may leave them blank; a row that differs is refused with a
+  `PaymentValidationError` naming the column and the row (0.0.81).
+  Split a multi-debtor batch into one file per debtor.
 - **Optional columns render only when given**; an absent column adds no
   element. `nb_of_txs` and `ctrl_sum` are computed from the rows and
   rendered at both the group-header and payment-information level.

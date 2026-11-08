@@ -19,6 +19,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pain001.exceptions import PaymentValidationError
+from pain001.xml.batch_consistency import require_single_payment_information
 
 XmlDataPreparer = Callable[[list[dict[str, Any]]], dict[str, Any]]
 
@@ -386,9 +387,7 @@ def _boolean(row: dict[str, Any], key: str) -> str | None:
 
 
 #: ISO ExternalCreditorReferenceType1Code: rendered as Cd, anything else as Prtry.
-_CREDITOR_REFERENCE_CODES = frozenset(
-    {"DISP", "FXDR", "PUOR", "RADM", "RPIN", "SCOR"}
-)
+_CREDITOR_REFERENCE_CODES = frozenset("DISP FXDR PUOR RADM RPIN SCOR".split())
 
 
 def _context_v09(data: list[dict[str, Any]]) -> dict[str, Any]:
@@ -642,4 +641,5 @@ def prepare_xml_data(
     data: list[dict[str, Any]], message_type: str
 ) -> dict[str, Any]:
     """Prepare XML payload using the registry-driven pipeline."""
+    require_single_payment_information(data, message_type)
     return get_message_definition(message_type).preparer(data)
