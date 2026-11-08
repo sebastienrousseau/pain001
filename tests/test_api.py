@@ -887,7 +887,7 @@ class TestAsyncWorkerErrorPaths:
             pipeline_module = sys.modules["pain001.api._pipeline"]
             with patch.object(
                 pipeline_module,
-                "load_payment_data",
+                "load_batch",
                 return_value=[{"id": "1"}],
             ):
                 asyncio.run(_process_generation_job(job_id, request))
@@ -1034,7 +1034,7 @@ class TestValidateSchemaErrors:
 
         pipeline_module = sys.modules["pain001.api._pipeline"]
         with patch.object(
-            pipeline_module, "load_payment_data", return_value=[{"id": "1"}]
+            pipeline_module, "load_batch", return_value=[{"id": "1"}]
         ):
             response = client.post(
                 "/api/validate",
@@ -1228,7 +1228,7 @@ class TestUnexpectedFailures:
 
     def test_validate_endpoint_wraps_unexpected_errors(self, monkeypatch):
         pipeline_module = sys.modules["pain001.api._pipeline"]
-        monkeypatch.setattr(pipeline_module, "load_payment_data", self._boom)
+        monkeypatch.setattr(pipeline_module, "load_batch", self._boom)
         response = client.post(
             "/api/validate",
             json={
@@ -1242,7 +1242,7 @@ class TestUnexpectedFailures:
 
     def test_generate_endpoint_wraps_unexpected_errors(self, monkeypatch):
         pipeline_module = sys.modules["pain001.api._pipeline"]
-        monkeypatch.setattr(pipeline_module, "load_payment_data", self._boom)
+        monkeypatch.setattr(pipeline_module, "load_batch", self._boom)
         response = client.post(
             "/api/generate",
             json={

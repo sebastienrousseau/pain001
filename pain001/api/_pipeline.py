@@ -50,8 +50,8 @@ from pain001.api.models import (
     ValidationResponse,
 )
 from pain001.api.models import ValidationError as ValidationErrorModel
-from pain001.data.loader import load_payment_data
 from pain001.validation import validate_scheme
+from pain001.validation._one_batch import load_batch
 from pain001.validation.schema_validator import SchemaValidator
 from pain001.validation.schemes import SchemeValidationResult
 from pain001.xml.generate_xml import generate_xml
@@ -220,7 +220,9 @@ def validate_pipeline(
     Returns:
         The validation response.
     """
-    data = load_payment_data(file_path, request.identifier_checks)
+    data = load_batch(
+        file_path, request.message_type.value, request.identifier_checks
+    )
     validator = SchemaValidator(request.message_type.value)
     total, valid, errors = validator.validate_batch(data)
 
@@ -289,7 +291,9 @@ def generate_pipeline(
         The outcome, for the caller to turn into its response.
     """
     progress(10)
-    data = load_payment_data(file_path, request.identifier_checks)
+    data = load_batch(
+        file_path, request.message_type.value, request.identifier_checks
+    )
     progress(40)
     validator = SchemaValidator(request.message_type.value)
     total, valid, errors = validator.validate_batch(data)

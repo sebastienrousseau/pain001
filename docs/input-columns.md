@@ -28,7 +28,9 @@ templates keep their earlier, narrower column set.
   must carry the same value on every row that gives one. A later row
   may leave them blank; a row that differs is refused with a
   `PaymentValidationError` naming the column and the row (0.0.81).
-  Split a multi-debtor batch into one file per debtor.
+  `pain001 validate`, `generate --validate-only` and the REST
+  validation endpoints apply the same check, so a file that validates
+  also generates. Split a multi-debtor batch into one file per debtor.
 - **Optional columns render only when given**; an absent column adds no
   element. `nb_of_txs` and `ctrl_sum` are computed from the rows and
   rendered at both the group-header and payment-information level.

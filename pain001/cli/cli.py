@@ -49,7 +49,6 @@ from pain001.constants import (
 )
 from pain001.context.context import Context
 from pain001.core.core import process_files, process_files_streaming
-from pain001.data.loader import load_payment_data
 from pain001.faces.cli import face_cmd
 from pain001.logging_schema import (
     Events,
@@ -66,6 +65,7 @@ from pain001.security.path_validator import sanitize_for_log
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.transport.cli import upload_cmd
 from pain001.validation import validate_scheme
+from pain001.validation._one_batch import load_batch
 from pain001.xml.envelope import BusinessApplicationHeader
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
@@ -252,7 +252,7 @@ def _validate_payment_data(
     """
     console.print("[cyan]→ Validating payment data...[/cyan]")
     try:
-        data = load_payment_data(data_file_path, identifier_checks)
+        data = load_batch(data_file_path, xml_message_type, identifier_checks)
         record_count = len(data)
         log_validation_event(
             logger, "payment_data", True, message_type=xml_message_type
