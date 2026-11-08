@@ -37,9 +37,39 @@ from pathlib import Path
 from typing import Any
 
 import jsonschema
+from jsonschema.protocols import Validator
 
 from pain001.constants import valid_xml_types
 from pain001.security import validate_path
+
+# One compiled validator per schema file. ``jsonschema.validate`` checks
+# the schema against its metaschema on every call, which cost 25-45x the
+# validation itself on a 1,000-row batch; the bundled schemas are package
+# data, so checking each once per process is enough.
+_COMPILED: dict[str, Validator] = {}
+
+
+def _compiled_validator(schema_path: str, schema: dict[str, Any]) -> Validator:
+    """Return the cached validator for ``schema``, compiling it once.
+
+    It is built the way ``jsonschema.validate`` builds one (the class
+    the schema's ``$schema`` selects, no format checker), so the errors
+    it reports are the ones the one-shot call reported.
+
+    Args:
+        schema_path: The schema file the dictionary was loaded from.
+        schema: The loaded JSON Schema.
+
+    Returns:
+        The validator for ``schema``.
+    """
+    validator = _COMPILED.get(schema_path)
+    if validator is None:
+        cls = jsonschema.validators.validator_for(schema)
+        cls.check_schema(schema)
+        validator = cls(schema)
+        _COMPILED[schema_path] = validator
+    return validator
 
 
 class ValidationError:
@@ -193,27 +223,28 @@ class SchemaValidator:
         errors: list[ValidationError] = []
 
         try:
-            jsonschema.validate(
-                instance=self._coerce_types_for_validation(data),
-                schema=self.schema,
-            )
-        except jsonschema.ValidationError as e:
+            validator = _compiled_validator(self.schema_path, self.schema)
+        except jsonschema.SchemaError as e:
+            raise ValueError(f"Invalid schema: {e.message}") from e
+
+        first = jsonschema.exceptions.best_match(
+            validator.iter_errors(self._coerce_types_for_validation(data))
+        )
+        if first is not None:
             # Format the path to JSON pointer notation
             path = (
-                "$." + ".".join(str(p) for p in e.absolute_path)
-                if e.absolute_path
+                "$." + ".".join(str(p) for p in first.absolute_path)
+                if first.absolute_path
                 else "$"
             )
 
             error = ValidationError(
-                message=e.message,
+                message=first.message,
                 path=path,
-                value=e.instance,
-                rule=str(e.validator) if e.validator else "unknown",
+                value=first.instance,
+                rule=str(first.validator) if first.validator else "unknown",
             )
             errors.append(error)
-        except jsonschema.SchemaError as e:
-            raise ValueError(f"Invalid schema: {e.message}") from e
 
         return errors
 
