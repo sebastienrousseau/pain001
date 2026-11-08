@@ -59,12 +59,12 @@ def warn_if_unauthenticated() -> None:
     """
     if os.environ.get(API_KEY_ENV) or insecure_allowed():
         return
+    # The variable names are spelled out: only names are logged here,
+    # never the key, and CodeQL reads API_KEY_ENV itself as a secret.
     logger.warning(
-        "%s is unset: every endpoint is unauthenticated. Bind to loopback "
-        "only, or set %s (or %s=1 to accept an open server).",
-        API_KEY_ENV,
-        API_KEY_ENV,
-        INSECURE_ENV,
+        "PAIN001_API_KEY is unset: every endpoint is unauthenticated. "
+        "Bind to loopback only, or set PAIN001_API_KEY (or "
+        "PAIN001_ALLOW_INSECURE=1 to accept an open server)."
     )
 
 

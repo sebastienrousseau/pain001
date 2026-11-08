@@ -50,15 +50,16 @@ def _write_all(handle: TextIO, chunks: Iterable[str]) -> int:
 def _stage(target: str) -> tuple[int, str]:
     """Create an exclusive temporary sibling of ``target``.
 
-    ``os.open`` with mode 0o666 lets the process umask decide the final
-    permissions, as a plain ``open()`` of the destination would.
+    ``os.open`` with mode 0o644, narrowed further by the process umask:
+    a payment file is never group- or world-writable, whatever the
+    umask.
     """
     folder, name = os.path.split(target)
     while True:
         staged = os.path.join(folder, f".{name}.{secrets.token_hex(6)}.tmp")
         try:
             flags = os.O_WRONLY | os.O_CREAT | os.O_EXCL
-            return os.open(staged, flags, 0o666), staged
+            return os.open(staged, flags, 0o644), staged
         except FileExistsError:  # pragma: no cover - 48 random bits
             continue
 
@@ -237,63 +238,6 @@ def finalise_message(
             passphrase=xml_sign_passphrase,
         )
     return xml_content
-
-
-def prepare_stream_target(
-    data: list[dict[str, Any]],
-    message_type: str,
-    template_path: str,
-    output_path: str,
-    xsd_schema_path: str | None,
-) -> tuple[str, str]:
-    """Check a streamed write's inputs, paths, schema and rows up front.
-
-    Args:
-        data: The payment rows.
-        message_type: The target message type.
-        template_path: The Jinja2 template the rows will be rendered by.
-        output_path: Where the caller wants the file.
-        xsd_schema_path: The schema, or ``None`` for the bundled one.
-
-    Returns:
-        The validated output path and schema path.
-
-    Raises:
-        ValueError: If the message type is unknown, the data empty, or
-            the template, output or schema path fails validation.
-        PaymentValidationError: If the rows break the message type's
-            column contract.
-    """
-    from pain001.csv.validate_csv_data import validate_csv_data
-    from pain001.exceptions import PaymentValidationError
-    from pain001.security import validate_path
-    from pain001.xml.generate_xml import (
-        _validate_generation_inputs,
-        canonicalize_payment_record,
-    )
-
-    _validate_generation_inputs(data, message_type, template_path)
-    try:
-        safe_output = validate_path(output_path)
-    except Exception as e:
-        raise ValueError(f"Invalid output path: {e}") from e
-    if xsd_schema_path is None:
-        from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
-
-        template = DEFAULT_TEMPLATE_REGISTRY.get_template(message_type)
-        xsd_schema_path = str(template.xsd_path)
-    try:
-        safe_xsd = validate_path(xsd_schema_path, must_exist=True)
-    except Exception as e:
-        raise ValueError(f"Invalid schema path: {e}") from e
-    rows = [canonicalize_payment_record(row) for row in data]
-    if not validate_csv_data(rows, message_type):
-        raise PaymentValidationError(
-            f"Row validation failed for {message_type}; the log names "
-            "each missing or mistyped column",
-            field="records",
-        )
-    return safe_output, safe_xsd
 
 
 def resolve_output_path(

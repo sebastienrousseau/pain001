@@ -378,13 +378,6 @@
     "cyclomatic": 27,
     "lines": 87
   },
-  "pain001/xml/generate_xml.py": {
-    "file_lines": 675
-  },
-  "pain001/xml/generate_xml.py::_coerce_temporal_and_boolean": {
-    "cognitive": 17,
-    "cyclomatic": 11
-  },
   "pain001/xml/generate_xml.py::generate_xml": {
     "lines": 86
   },

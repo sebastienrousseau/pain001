@@ -63,11 +63,13 @@ from pain001.xml.envelope import (
     unpack_iso20022_message,
 )
 from pain001.xml.generate_xml import (
-    canonicalize_payment_record,
     generate_xml_string,
-    normalize_payment_records,
     stream_xml_chunks,
     stream_xml_to_file,
+)
+from pain001.xml.payment_records import (
+    canonicalize_payment_record,
+    normalize_payment_records,
 )
 
 __all__ = [

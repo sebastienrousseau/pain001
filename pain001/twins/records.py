@@ -44,14 +44,14 @@ from jinja2 import select_autoescape
 from jinja2.sandbox import SandboxedEnvironment
 
 from pain001.twins.iso_json import _check, to_iso_json
-from pain001.xml.generate_xml import (
-    _FIELD_ALIASES,
-    _load_trusted_template_source,
-    _normalize_financial_fields,
-)
+from pain001.xml.generate_xml import _load_trusted_template_source
 from pain001.xml.message_registry import (
     get_message_definition,
     prepare_xml_data,
+)
+from pain001.xml.payment_records import (
+    _FIELD_ALIASES,
+    _normalize_financial_fields,
 )
 
 INPUT_SCHEMA_DIR = Path(__file__).resolve().parent.parent / "schemas"

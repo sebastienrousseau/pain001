@@ -28,7 +28,7 @@ from typing import Any
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import PaymentValidationError
 from pain001.xml.batch_consistency import require_single_payment_information
-from pain001.xml.generate_xml import normalize_payment_records
+from pain001.xml.payment_records import normalize_payment_records
 
 
 def require_one_batch(data: list[dict[str, Any]], message_type: str) -> None:
