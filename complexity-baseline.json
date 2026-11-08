@@ -24,7 +24,7 @@
     "lines": 71
   },
   "pain001/api/app.py": {
-    "file_lines": 684
+    "file_lines": 669
   },
   "pain001/api/job_store.py::RedisJobStore.load_all": {
     "cognitive": 17

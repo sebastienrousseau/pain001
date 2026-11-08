@@ -82,6 +82,13 @@ returns the same report:
    for finding in report.findings:
        print(finding.rung, finding.rule, finding.location, finding.message)
 
+Over REST (``pain001 serve``), ``POST /api/v1/check`` takes the document
+as XML text in a JSON body with optional ``scheme`` and ``schematron``
+fields, and answers the same report. A Schematron rulebook is named by
+preset only (``sepa``, ``fednow``, ``cbpr``), never a server path. A
+failed rung is a ``200`` with ``"passed": false``; a document that
+cannot be checked is a ``422``.
+
 Python: in-memory output
 ========================
 

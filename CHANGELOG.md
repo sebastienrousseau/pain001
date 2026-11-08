@@ -22,6 +22,10 @@ exists, and the hot paths get faster.
   every file passes, 1 on an error finding, 2 when a file cannot be
   checked. `check_document` and `CheckReport` are the same engine in
   Python (`examples/27_check_existing_file.py`).
+- `POST /api/v1/check` runs the same check on a document sent as XML
+  text, with `scheme` and a Schematron preset (never a server path), on
+  the bounded pipeline pool: `200` with the report, `422` when the
+  document cannot be checked.
 
 ## [0.0.81] - 2026-11-08
 

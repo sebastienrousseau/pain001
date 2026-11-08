@@ -16,7 +16,7 @@ from fastapi import FastAPI  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 from starlette.responses import PlainTextResponse  # noqa: E402
 
-from pain001.api.app import _install_rate_limiting, app  # noqa: E402
+from pain001.api.app import app  # noqa: E402
 from pain001.api.job_manager import JobManager, JobStatus  # noqa: E402
 from pain001.api.job_store import (  # noqa: E402
     FileJobStore,
@@ -24,6 +24,7 @@ from pain001.api.job_store import (  # noqa: E402
 )
 from pain001.api.ratelimit import (  # noqa: E402
     RateLimitMiddleware,
+    install_rate_limiting,
     parse_rate_limit,
 )
 
@@ -178,21 +179,21 @@ class TestRateLimitMiddleware:
 
 
 class TestInstallRateLimiting:
-    """`_install_rate_limiting` env wiring."""
+    """`install_rate_limiting` env wiring."""
 
     def test_noop_without_env(self, monkeypatch) -> None:
         """No middleware is added when the env var is unset."""
         monkeypatch.delenv("PAIN001_RATE_LIMIT", raising=False)
         fresh = FastAPI()
         before = len(fresh.user_middleware)
-        _install_rate_limiting(fresh)
+        install_rate_limiting(fresh)
         assert len(fresh.user_middleware) == before
 
     def test_installs_with_env(self, monkeypatch) -> None:
         """The middleware is added when the env var is set."""
         monkeypatch.setenv("PAIN001_RATE_LIMIT", "100/minute")
         fresh = FastAPI()
-        _install_rate_limiting(fresh)
+        install_rate_limiting(fresh)
         assert any(m.cls is RateLimitMiddleware for m in fresh.user_middleware)
 
 

@@ -325,3 +325,20 @@ class RateLimitMiddleware:
             await response(scope, receive, send)
             return
         await self.app(scope, receive, send)
+
+
+def install_rate_limiting(application: Any) -> None:
+    """Attach the rate-limit middleware when ``PAIN001_RATE_LIMIT`` is set.
+
+    Args:
+        application: The FastAPI (or Starlette) application to wrap.
+    """
+    spec = os.environ.get("PAIN001_RATE_LIMIT")
+    if not spec:
+        return
+    max_requests, window_seconds = parse_rate_limit(spec)
+    application.add_middleware(
+        RateLimitMiddleware,
+        max_requests=max_requests,
+        window_seconds=window_seconds,
+    )
