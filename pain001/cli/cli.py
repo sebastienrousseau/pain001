@@ -31,6 +31,7 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+from pain001.cli._check import check_cmd
 from pain001.cli._config import _resolve_config
 from pain001.cli._hints import print_data_tip, read_text
 from pain001.cli._output import (
@@ -43,10 +44,7 @@ from pain001.cli._paths import _file_not_directory, _resolve_template_assets
 from pain001.cli._serve import serve_cmd
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
-from pain001.constants import (
-    VERSION,
-    valid_xml_types,
-)
+from pain001.constants import VERSION, valid_xml_types
 from pain001.context.context import Context
 from pain001.core.core import process_files, process_files_streaming
 from pain001.faces.cli import face_cmd
@@ -969,6 +967,7 @@ cli.add_command(main, name="generate")
 cli.add_command(upload_cmd)
 cli.add_command(face_cmd)
 cli.add_command(serve_cmd)
+cli.add_command(check_cmd)
 
 
 @cli.command("validate")

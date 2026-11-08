@@ -38,6 +38,7 @@ are representative workflows. Paths in this table are repository-relative.
 | Template registry, typed errors and metric events | `tests/test_template_registry.py`, `tests/test_schema_guardrails.py`, `tests/test_exceptions.py` | `examples/24_templates_and_errors.py` |
 | Plugin and upload CLI | `tests/test_plugins_cli.py`, `tests/test_sftp_cli.py`, `tests/test_sftp_roundtrip.py`, `tests/test_sftp_upload.py` | `examples/25_cli_plugins_and_upload.py` |
 | REST server launcher and API-key auth | `tests/test_api.py`, `tests/test_cli_subcommands.py` | `examples/26_rest_server.py` |
+| Checking existing files (`pain001 check`, text, JSON and SARIF) | `tests/test_check.py`, `tests/test_cli_check.py` | `examples/27_check_existing_file.py` |
 | SFTP trust, identities, certificates, atomic upload and retries | `tests/test_sftp_upload.py`, `tests/test_sftp_cli.py`, `tests/test_transport_identity.py` | `tests/test_sftp_roundtrip.py` (real loopback SSH/SFTP, synthetic credentials) |
 | Encryption and security boundaries | `tests/test_plugins_gpg.py`, `tests/test_plugins_gpg_keyfile.py`, `tests/test_template_security.py`, `tests/test_code_scanning_regressions.py` | Focused regression fixtures; no real keys, bank accounts or external bank connection |
 

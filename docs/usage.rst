@@ -51,6 +51,37 @@ bundled XSD before writing. Scheme validation, including anti-duplicate,
 adds domain rules but does not certify compliance with a bank's private rules.
 Streaming creates one output per chunk.
 
+Checking existing files
+=======================
+
+``pain001 check`` runs the validation ladder on pain.001 and pain.008
+files that already exist, whoever wrote them: the bundled XSD of the
+message type the file's namespace names, then the message definition's
+cross-element rules. ``--scheme`` adds scheme profiles (comma-separated),
+``--rules`` a private CEL policy (``pain001[rules]``) and ``--schematron``
+a rulebook, each run on the file as it stands.
+
+.. code-block:: bash
+
+   pain001 check out/*.xml
+   pain001 check --scheme sepa-sct --format json out/batch.xml
+   pain001 check --format sarif -o check.sarif out/*.xml
+
+It exits 0 when every file passes, 1 when any file has an error finding,
+and 2 when a file is not a bundled pain.001 or pain.008 message, is not
+UTF-8, is over 10 MiB, carries a DTD, or an option names an unknown
+scheme or rulebook. Every file gets a report; ``--format sarif`` writes
+one SARIF 2.1.0 log for code scanning. In Python, ``check_document``
+returns the same report:
+
+.. code-block:: python
+
+   from pain001 import check_document
+
+   report = check_document(xml_text, scheme="sepa-sct")
+   for finding in report.findings:
+       print(finding.rung, finding.rule, finding.location, finding.message)
+
 Python: in-memory output
 ========================
 

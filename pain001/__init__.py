@@ -32,6 +32,7 @@ from pain001.camt053 import (
     build_camt053_statement,
     parse_camt053_statement,
 )
+from pain001.check import CheckReport, check_document
 from pain001.config import ConfigManager
 from pain001.core.core import process_files
 from pain001.exceptions import DataSourceError, PaymentValidationError
@@ -95,6 +96,8 @@ __all__ = [
     "register_metrics_callback",
     "clear_metrics_callbacks",
     "validate_all_async",
+    "check_document",
+    "CheckReport",
     "validate_scheme",
     "SchemeValidationResult",
     "SchemeViolation",

@@ -10,8 +10,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.0.82] - Unreleased
 
 Fast and checkable: `pain001 check` validates a file that already
-exists through the same ladder as generation, and the hot paths get
-faster.
+exists, and the hot paths get faster.
+
+### Added
+
+- `pain001 check FILE...` runs the validation ladder on pain.001 and
+  pain.008 files that already exist: the bundled XSD of the message
+  type the namespace names, the message definition's cross-element
+  rules, and `--scheme`, `--rules` and `--schematron` when given. It
+  writes text, JSON or SARIF 2.1.0 (`--format`, `-o`), and exits 0 when
+  every file passes, 1 on an error finding, 2 when a file cannot be
+  checked. `check_document` and `CheckReport` are the same engine in
+  Python (`examples/27_check_existing_file.py`).
 
 ## [0.0.81] - 2026-11-08
 
