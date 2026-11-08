@@ -235,12 +235,15 @@ def test_as_dict_is_json_ready() -> None:
 
 
 def test_format_text_lists_each_finding_then_the_verdict() -> None:
+    verdict = (
+        "pay.xml: pain.001.001.09 failed (xsd, mdr, scheme): "
+        "2 error(s), 1 warning(s)"
+    )
     assert format_text(_REPORT, "pay.xml").splitlines() == [
         "pay.xml: error [xsd] xsd at /Document/a: bad element",
         "pay.xml: warning [scheme] SEPA-X: hm",
         "pay.xml: error [scheme] SEPA-X at transaction 2: again",
-        "pay.xml: pain.001.001.09 failed (xsd, mdr, scheme): "
-        "2 error(s), 1 warning(s)",
+        verdict,
     ]
     clean = CheckReport("pain.001.001.09", ("xsd", "mdr"))
     assert format_text(clean, "ok.xml") == (
