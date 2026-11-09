@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Correct the 0.0.84 citation date to 9 November 2026, matching the published release and its changelog. Published tags and package artifacts remain unchanged.
+
 ## [0.0.84] - 2026-11-09
 
 ### Added
