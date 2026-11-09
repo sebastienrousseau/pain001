@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Keep enabled tracing tests on local SDK providers and in-memory exporters,
+  then shut their providers down so spans cannot leak to a real OTLP endpoint.
 - Generate README and roadmap component tables from the audited inventory.
   Remove obsolete independent-version and loader-floor instructions from
   the release guide and record the nine-member lockstep policy.
