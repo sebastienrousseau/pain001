@@ -22,6 +22,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   JSON reports, generated companion workflow adapters, required release
   payload checks, and offline tests with a separate 100% line/branch floor.
 
+### Changed
+
+The following breaking signature API and output changes were announced in
+0.0.83 and accepted in ADR-0012:
+
+- `verify_xml_signature()` requires `public_key_pem` or `cert_pem`; missing
+  trust raises `ValueError`. Explicit embedded-certificate integrity checks
+  remain available through `verify_signature(..., trust_embedded_cert=True)`.
+- `sign_xml_document()` signs the parsed XML with exclusive C14N 1.0 and
+  preserves namespace prefixes. The standalone C14N 2.0 utility keeps its
+  existing contract.
+- With a head.001.001.03 header, signatures are written inside
+  `AppHdr/Sgntr`, covering the whole envelope. Existing signatures,
+  ambiguous headers and occupied signature containers are refused.
+
 ### Fixed
 
 - Keep enabled tracing tests on local SDK providers and in-memory exporters,
