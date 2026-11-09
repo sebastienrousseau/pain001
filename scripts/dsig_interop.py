@@ -40,6 +40,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from cryptography.x509.oid import NameOID
 
+from pain001.security._dsig_algorithms import ALGORITHMS
 from pain001.security.dsig import sign_xml_document, verify_signature
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -133,13 +134,46 @@ def _xmlsec1(*args: str) -> None:
         raise RuntimeError(done.stderr.strip() or done.stdout.strip())
 
 
+def _xmlsec1_template(sample: bytes, name: str) -> bytes:
+    """The sample with an empty enveloped Signature for xmlsec1 to fill."""
+    from lxml import etree
+
+    ds = "http://www.w3.org/2000/09/xmldsig#"
+    exc = "http://www.w3.org/2001/10/xml-exc-c14n#"
+    root = etree.fromstring(sample)
+    sig = etree.SubElement(root, f"{{{ds}}}Signature", nsmap={"ds": ds})
+    info = etree.SubElement(sig, f"{{{ds}}}SignedInfo")
+    etree.SubElement(info, f"{{{ds}}}CanonicalizationMethod", Algorithm=exc)
+    etree.SubElement(
+        info, f"{{{ds}}}SignatureMethod", Algorithm=ALGORITHMS[name].uri
+    )
+    ref = etree.SubElement(info, f"{{{ds}}}Reference", URI="")
+    transforms = etree.SubElement(ref, f"{{{ds}}}Transforms")
+    etree.SubElement(
+        transforms, f"{{{ds}}}Transform", Algorithm=f"{ds}enveloped-signature"
+    )
+    etree.SubElement(transforms, f"{{{ds}}}Transform", Algorithm=exc)
+    etree.SubElement(
+        ref,
+        f"{{{ds}}}DigestMethod",
+        Algorithm="http://www.w3.org/2001/04/xmlenc#sha256",
+    )
+    etree.SubElement(ref, f"{{{ds}}}DigestValue")
+    etree.SubElement(sig, f"{{{ds}}}SignatureValue")
+    key_info = etree.SubElement(sig, f"{{{ds}}}KeyInfo")
+    etree.SubElement(key_info, f"{{{ds}}}X509Data")
+    return bytes(etree.tostring(root, xml_declaration=True, encoding="UTF-8"))
+
+
 def _check_xmlsec1(
-    name: str, ours: bytes, theirs: bytes, work: Path, cert_pem: bytes
+    name: str, ours: bytes, sample: bytes, work: Path, cert_pem: bytes
 ) -> None:
     """xmlsec1 verifies ours, and pain001 verifies one xmlsec1 signs.
 
     ``--insecure`` skips xmlsec1's certificate-chain check for the
     self-signed test certificate; the signature itself is still checked.
+    xmlsec1 signs a clean template (empty values, empty X509Data), the
+    way it is normally used.
     """
     (work / "ours.xml").write_bytes(ours)
     _xmlsec1(
@@ -150,17 +184,17 @@ def _check_xmlsec1(
         str(work / "ours.xml"),
     )
     print(f"  {name}: pain001 signs, xmlsec1 verifies")
-    (work / "theirs.xml").write_bytes(theirs)
+    (work / "template.xml").write_bytes(_xmlsec1_template(sample, name))
     _xmlsec1(
         "--sign",
         "--privkey-pem",
         f"{work / 'key.pem'},{work / 'cert.pem'}",
         "--output",
-        str(work / "resigned.xml"),
-        str(work / "theirs.xml"),
+        str(work / "xmlsec1.xml"),
+        str(work / "template.xml"),
     )
     report = verify_signature(
-        (work / "resigned.xml").read_bytes(), trust_anchor=cert_pem
+        (work / "xmlsec1.xml").read_bytes(), trust_anchor=cert_pem
     )
     if not report.valid:
         raise RuntimeError(f"pain001 rejected xmlsec1's {name}: {report}")
@@ -186,7 +220,7 @@ def _check_case(name: str, sample: bytes, work: Path, xmlsec1: bool) -> None:
     print(f"  {name}: signxml signs, pain001 verifies")
 
     if xmlsec1:
-        _check_xmlsec1(name, ours, theirs, work, cert_pem)
+        _check_xmlsec1(name, ours, sample, work, cert_pem)
 
 
 def main(argv: list[str] | None = None) -> int:
