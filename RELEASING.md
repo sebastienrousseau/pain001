@@ -48,11 +48,13 @@ A release is ready only when **all** of the following hold on `main`:
    exception ("not announced a release ahead") with the ADR that
    explains it. To announce a change, add `### Announced` to the
    release before the one that makes it.
+9. Every `uses: sebastienrousseau/pain001@v...` example, in `action.yml`
+   and `docs/usage.rst`, names the version being released.
 
 The checklist above is **executable** — do not eyeball it:
 
 ```bash
-make release-check           # items 5 to 8 + tree/branch/tag/signing state
+make release-check           # items 5 to 9 + tree/branch/tag/signing state
 make release-check FULL=1    # additionally runs tests, build and pip-audit
 ```
 

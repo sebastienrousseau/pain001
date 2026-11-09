@@ -171,6 +171,40 @@ def readme_release_problems(
     return [f"README.md lacks '{w}'" for w in wanted if w not in folded]
 
 
+ACTION_EXAMPLES = ("action.yml", "docs/usage.rst")
+_ACTION_PIN = re.compile(r"sebastienrousseau/pain001@v([0-9][0-9.]*[0-9])")
+
+
+def action_pin_problems(
+    version: str, texts: dict[str, str] | None = None
+) -> list[str]:
+    """Every ``uses: sebastienrousseau/pain001@v...`` example names ``version``.
+
+    ``action.yml`` and the manual show the Action pinned to a tag, and
+    nothing moved those pins: the 0.0.83 manual still told readers to
+    use ``@v0.0.82``. A file without any example is a problem too, so a
+    reworded example cannot drop out of the check unnoticed.
+    """
+    if texts is None:
+        texts = {
+            name: (ROOT / name).read_text(encoding="utf-8")
+            for name in ACTION_EXAMPLES
+        }
+    problems = []
+    for name, text in texts.items():
+        pins = _ACTION_PIN.findall(text)
+        if not pins:
+            problems.append(
+                f"{name} has no sebastienrousseau/pain001@v... example"
+            )
+        problems.extend(
+            f"{name} pins sebastienrousseau/pain001@v{pin}, not @v{version}"
+            for pin in pins
+            if pin != version
+        )
+    return problems
+
+
 def _sections(changelog: str) -> list[tuple[str, str]]:
     """``(version, body)`` for each ``## [x.y.z]`` section, newest first."""
     heads = list(
@@ -267,6 +301,13 @@ def _check_release_documents(version: str) -> None:
         f"README.md names {version} as the current release",
         not readme,
         "; ".join(readme),
+    )
+
+    pins = action_pin_problems(version)
+    check(
+        f"the Action examples pin @v{version}",
+        not pins,
+        "; ".join(pins),
     )
 
     # 5. CHANGELOG has a dated section for this version

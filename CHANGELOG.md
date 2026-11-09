@@ -44,6 +44,11 @@ The following breaking signature API and output changes were announced in
 - Generate README and roadmap component tables from the audited inventory.
   Remove obsolete independent-version and loader-floor instructions from
   the release guide and record the nine-member lockstep policy.
+- The GitHub Action example in `action.yml` and the manual pins
+  `sebastienrousseau/pain001@v0.0.84`; the 0.0.83 manual still showed
+  `@v0.0.82`. The release preflight (item 9 in `RELEASING.md`) and a
+  test now require every such example to name the version being
+  released.
 
 ## [0.0.83] - 2026-11-09
 

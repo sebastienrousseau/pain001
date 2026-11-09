@@ -158,7 +158,7 @@ on, so a glob may match XML that is not a payment:
      security-events: write   # for the SARIF upload
    steps:
      - uses: actions/checkout@<sha>
-     - uses: sebastienrousseau/pain001@v0.0.82
+     - uses: sebastienrousseau/pain001@v0.0.84
        with:
          files: "payments/**/*.xml"
          scheme: sepa-sct
