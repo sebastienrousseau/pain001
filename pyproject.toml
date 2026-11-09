@@ -132,7 +132,7 @@ filelock = ">=4.2.1"
 # msgpack comes in through cachecontrol (pip-audit). CVE-2026-114613
 # affects msgpack < 1.2.3; the floor keeps every affected release from resolving.
 msgpack = ">=1.2.3"
-ruff = "^0.17.3"
+ruff = "^0.17.4"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.0.0.20261021"
 types-pyyaml = "^6.0.12"
