@@ -84,6 +84,37 @@ jobs:
       - name: Check complexity against the baseline
         run: python scripts/check_complexity.py
 
+  # XML-DSig interop (ADR-0012): pain001, signxml and xmlsec1 sign and
+  # verify each other's signatures for every algorithm pain001 supports.
+  # 0.0.82 rejected valid signxml signatures; this keeps the canonical
+  # forms from drifting apart again.
+  dsig-interop:
+    name: XML-DSig interop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install Poetry
+        run: pipx install poetry==2.4.1
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+          cache: "poetry"
+      - name: Install pain001 with every extra
+        run: poetry install --no-interaction --all-extras
+      - name: Install signxml (hash-pinned, dependencies from the lock)
+        run: |
+          poetry run pip install --require-hashes --no-deps -r .github/requirements/interop.txt
+          poetry run pip check
+      - name: Install xmlsec1
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq xmlsec1
+          xmlsec1 --version
+      - name: Sign and verify both ways
+        run: poetry run python scripts/dsig_interop.py --require-xmlsec1
+
   # 2. TOLLGATES (Blocking - Latest Python)
   tollgates:
     needs: version-sync

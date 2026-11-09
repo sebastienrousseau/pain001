@@ -1,0 +1,5 @@
+# The XML-DSig interop job (scripts/dsig_interop.py): signxml checks
+# pain001's signatures and signs ones pain001 must verify. Installed
+# with --no-deps into the poetry environment, which already has its
+# dependencies (lxml, cryptography, certifi) from pain001[sign].
+signxml==5.2.0
