@@ -262,9 +262,9 @@ packaging==26.2 \
     --hash=sha256:5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e \
     --hash=sha256:ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661
     # via sphinx
-pydata-sphinx-theme==0.23.0 \
-    --hash=sha256:7bf56f1eda7b03c62719dd0dd3b50035c8bfb72caf4faefa5ac46400a82e408f \
-    --hash=sha256:f9e647e0bb3f1d8eaa6d866248812711211313627cc4ae76b5f88a17a4be38ce
+pydata-sphinx-theme==0.24.0 \
+    --hash=sha256:195bc167ab1dcf0b31037e26f145f60461dc9cbb1eb2011283565567ee4fb6e5 \
+    --hash=sha256:bc9050daac696ab62c817e324ef29ee43720c2e6068fde809c76a52d4c788ac2
     # via -r docs.in
 pygments==2.20.0 \
     --hash=sha256:6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f \

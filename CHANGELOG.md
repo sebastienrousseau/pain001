@@ -12,6 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Signatures: exclusive C14N, ECDSA and RSA-PSS, and a trust anchor for
 verification.
 
+### Changed
+
+- Dependencies, in place of Dependabot #368 to #378:
+
+  | Package | From | To | Where |
+  | :--- | :--- | :--- | :--- |
+  | pyarrow (`parquet` extra) | `>=25.0.1,<26` | `>=26.0.1,<27` | pyproject, poetry.lock |
+  | cryptography (`sign` extra) | 50.0.0 | 50.0.2 | pyproject floor, poetry.lock |
+  | holidays (`rules` extra) | 0.107 | 0.108 | pyproject floor, poetry.lock |
+  | rpds-py | 2026.6.3 | 2026.9.1 | requirements.txt, api and sbom locks |
+  | filelock, pandas, ruff, types-paramiko | 4.2.4, 3.1.0, 0.17.3, 5.0.0.20261021 | 4.2.9, 3.1.1, 0.17.4, 5.1.0.20261030 | dev group |
+  | myst-parser, pydata-sphinx-theme | 4.0.1, 0.23.0 | 5.1.0, 0.24.0 | docs group, docs lock |
+  | GitHub Actions | | codeql-action, setup-java, docker/login-action 4.8.0, action-gh-release 3.0.4 | workflows |
+
+  myst-parser 5 brings markdown-it-py 4.2.0 and mdit-py-plugins 0.6.1
+  into `poetry.lock`.
+
 ## [0.0.82] - 2026-11-08
 
 Fast and checkable: `pain001 check` validates a file that already
