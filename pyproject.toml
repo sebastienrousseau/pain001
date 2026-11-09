@@ -91,7 +91,7 @@ redis = {version = ">=8.1.0,<9", optional = true}
 python-gnupg = {version = ">=0.5.7,<1", optional = true}
 # XML-DSig signing and verification (sign_xml_document,
 # verify_xml_signature, --xml-sign-key) import it at call time.
-cryptography = {version = ">=50.0.0,<51", optional = true}
+cryptography = {version = ">=50.0.2,<51", optional = true}
 opentelemetry-api = {version = ">=1.27,<2", optional = true}
 opentelemetry-sdk = {version = ">=1.27,<2", optional = true}
 opentelemetry-exporter-otlp-proto-http = {version = ">=1.27,<2", optional = true}
