@@ -94,7 +94,6 @@ C14N, as the CHANGELOG's `### Announced` section says.
 - 0.0.84: `verify_xml_signature` without a key raises; the signer keeps
   the caller's document and prefixes.
 
-
 ## Implementation in 0.0.84
 
 The accepted second stage is implemented: the boolean wrapper requires
