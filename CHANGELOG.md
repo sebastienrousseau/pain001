@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.84] - 2026-11-09
+
 ### Added
 
 - A complete nine-repository publication inventory and read-only audit of

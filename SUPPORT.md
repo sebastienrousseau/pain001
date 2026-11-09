@@ -141,7 +141,8 @@ for the exact policy. Pain001 requires **Python 3.11+**.
 
 | Version | Supported? |
 | :--- | :--- |
-| 0.0.83 (latest) | ✅ |
+| 0.0.84 (latest) | ✅ |
+| 0.0.83 | ✅ |
 | 0.0.82 | ✅ |
 | 0.0.81 | ✅ |
 | 0.0.80 | ✅ |

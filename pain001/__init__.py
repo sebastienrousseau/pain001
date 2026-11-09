@@ -18,7 +18,7 @@ import importlib
 import logging
 from typing import TYPE_CHECKING
 
-__version__ = "0.0.83"
+__version__ = "0.0.84"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
