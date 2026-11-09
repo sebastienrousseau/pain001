@@ -4,6 +4,9 @@
 from __future__ import annotations
 
 import json
+import sys
+import types
+from dataclasses import dataclass, field
 from pathlib import Path
 
 import pytest
@@ -85,7 +88,9 @@ def test_a_rejected_group_counts_without_transactions(tmp_path):
     assert entry["rejected"] == ["group MSG-2", "payment PMT-2"]
 
 
-def test_a_camt053_statement_is_summarised(tmp_path):
+def test_a_camt053_statement_is_summarised(tmp_path, monkeypatch):
+    """Without camt053 installed, the core's own camt.053 parser reads it."""
+    monkeypatch.setitem(sys.modules, "camt053", None)
     path = tmp_path / "stmt.xml"
     path.write_text(
         build_camt053_statement(
@@ -106,11 +111,11 @@ def test_a_camt053_statement_is_summarised(tmp_path):
     [
         (
             '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:'
-            'camt.054.001.08"/>',
-            "camt.054.001.08 is not supported",
+            'pacs.008.001.08"/>',
+            "pacs.008.001.08 is not supported",
         ),
         ("<not-xml", "cannot read"),
-        ("<Document/>", "not a pain.002 or camt.053"),
+        ("<Document/>", "not a pain.002 or camt.05x"),
     ],
 )
 def test_an_unreadable_or_unsupported_file_exits_2(tmp_path, body, message):
@@ -232,3 +237,139 @@ def test_download_with_nothing_left_says_nothing_extra(tmp_path, monkeypatch):
     )
     assert result.exit_code == 0
     assert result.output == ""
+
+
+CAMT = '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:{}"/>'
+
+
+class _FakeParseError(Exception):
+    """Stands in for camt053.StatementParseError."""
+
+
+@dataclass
+class _Statement:
+    entries: list[object] = field(default_factory=list)
+
+
+@dataclass
+class _Parsed:
+    message_type: str
+    statements: list[_Statement]
+
+
+def _fake_camt053(monkeypatch, seen: list[str]) -> None:
+    """Install a camt053 stand-in whose parse_document records its input."""
+
+    def parse_document(xml: str) -> _Parsed:
+        seen.append(xml)
+        if "broken" in xml:
+            raise _FakeParseError("Unrecognised container")
+        kind = xml.split("xsd:")[1][:8]
+        return _Parsed(kind, [_Statement([1, 2]), _Statement([3])])
+
+    module = types.ModuleType("camt053")
+    module.parse_document = parse_document  # type: ignore[attr-defined]
+    module.StatementParseError = _FakeParseError  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "camt053", module)
+
+
+@pytest.mark.parametrize(
+    "version", ["camt.052.001.08", "camt.053.001.08", "camt.054.001.08"]
+)
+def test_camt053_reads_every_camt_report_when_installed(
+    tmp_path, monkeypatch, version
+):
+    """Plan D6: camt053 parses camt.052, .053 and .054 for status."""
+    seen: list[str] = []
+    _fake_camt053(monkeypatch, seen)
+    path = tmp_path / "camt.xml"
+    path.write_text(CAMT.format(version), encoding="utf-8")
+    result = _status(str(path))
+    assert result.exit_code == 0, result.output
+    assert f"{path}: {version[:8]} 2 statements, 3 entries" in result.output
+    assert seen == [CAMT.format(version)]
+
+
+@pytest.mark.parametrize("version", ["camt.052.001.08", "camt.054.001.08"])
+def test_camt052_and_054_need_camt053(tmp_path, monkeypatch, version):
+    """Without camt053, only camt.053 is read; the others name the fix."""
+    monkeypatch.setitem(sys.modules, "camt053", None)
+    path = tmp_path / "camt.xml"
+    path.write_text(CAMT.format(version), encoding="utf-8")
+    result = _status(str(path))
+    assert result.exit_code == 2
+    assert f"{version} needs camt053: pip install camt053" in result.output
+
+
+def test_a_camt_file_camt053_cannot_parse_exits_2(tmp_path, monkeypatch):
+    _fake_camt053(monkeypatch, [])
+    path = tmp_path / "camt.xml"
+    path.write_text(
+        CAMT.format("camt.054.001.08").replace("/>", "><broken/></Document>"),
+        encoding="utf-8",
+    )
+    result = _status(str(path))
+    assert result.exit_code == 2
+    assert "cannot read it: Unrecognised container" in result.output
+
+
+@pytest.mark.parametrize("kind", ["pain.002", "camt.053"])
+def test_status_reads_a_named_file_outside_the_working_directory(
+    tmp_path, monkeypatch, kind
+):
+    """``download --to DIR`` saves anywhere; status must read it there.
+
+    The parsers' path guard allows only the cwd and temp directories
+    unless told a base; the file named on the command line is the base.
+    """
+    monkeypatch.setitem(sys.modules, "camt053", None)
+    inbox, elsewhere = tmp_path / "inbox", tmp_path / "elsewhere"
+    inbox.mkdir()
+    elsewhere.mkdir()
+    if kind == "pain.002":
+        path = inbox / "reply.xml"
+        path.write_bytes(FIXTURE.read_bytes())
+    else:
+        path = inbox / "stmt.xml"
+        path.write_text(
+            build_camt053_statement(
+                "STMT-1",
+                IBAN,
+                "GBP",
+                [{"amount": "10.00", "credit_debit_indicator": "DBIT"}],
+            ),
+            encoding="utf-8",
+        )
+    monkeypatch.chdir(elsewhere)
+    monkeypatch.setattr("tempfile.tempdir", str(elsewhere))
+    # The test base sits inside the package directory, itself an allowed
+    # base; move that base away so only the file's own directory counts.
+    monkeypatch.setattr(
+        "pain001.security.path_validator.__file__",
+        str(elsewhere / "pain001" / "security" / "path_validator.py"),
+    )
+    result = _status(str(path))
+    assert "outside allowed directories" not in result.output
+    assert f"{path}: {kind}" in result.output
+
+
+def test_base_dir_confines_the_parsers(tmp_path):
+    """``base_dir`` narrows the guard; a file outside it is refused."""
+    from pain001.camt053 import parse_camt053_statement
+    from pain001.exceptions import DataSourceError
+    from pain001.pain002 import parse_pain002_report
+
+    inside, outside = tmp_path / "in", tmp_path / "out"
+    inside.mkdir()
+    outside.mkdir()
+    reply = outside / "reply.xml"
+    reply.write_bytes(FIXTURE.read_bytes())
+    stmt = outside / "stmt.xml"
+    stmt.write_text(
+        build_camt053_statement("S-1", IBAN, "GBP", []), encoding="utf-8"
+    )
+    with pytest.raises(DataSourceError, match="escapes base directory"):
+        parse_pain002_report(str(reply), base_dir=inside)
+    with pytest.raises(DataSourceError, match="escapes base directory"):
+        parse_camt053_statement(str(stmt), base_dir=inside)
+    assert parse_pain002_report(str(reply), base_dir=outside)["group_status"]

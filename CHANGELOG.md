@@ -18,8 +18,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is saved as `name.<sha8>.xml`, and `--pattern`, `--settle-seconds`,
   `--max-files` and `--max-bytes` bound a run. It takes every `upload`
   trust and identity flag (ADR 0013).
-- `pain001 status FILE...` reads pain.002 reports and camt.053
-  statements and exits 3 when anything was rejected.
+- `pain001 status FILE...` reads pain.002 reports and exits 3 when
+  anything was rejected. It reads camt.052, camt.053 and camt.054 with
+  the `camt053` package when that is installed (plan decision D6); without
+  it, camt.053 is read with the core's own parser and camt.052 and
+  camt.054 are refused with the install command.
+- `parse_pain002_report` and `parse_camt053_statement` take an optional
+  `base_dir`, the directory the XML path must stay inside; `status`
+  passes the named file's own directory, so it reads files outside the
+  working directory.
 
 ### Changed
 

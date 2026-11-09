@@ -100,6 +100,10 @@ pain001 download --sftp sftp://user@bank.example/outbox/ --to ./replies \
   file; a later `keep` run skips files the ledger holds at the same size and
   modification time. `delete` removes it, and `move:/absolute/dir` renames
   it into an archive directory on the server.
+  Use `delete` or `move` for production runs. `keep` suits trying the
+  command out and read-only bank outboxes: SFTP gives the modification
+  time in whole seconds, so a file rewritten with the same size within
+  the same second would be skipped.
 - **Files still being written.** `--settle-seconds N` lists twice, N
   seconds apart, and leaves any file whose size or time changed for the
   next run. A file whose size changes during the transfer is refused.
@@ -118,10 +122,13 @@ interfaces never open network connections, so they do not offer it.
 pain001 status replies/*.xml
 ```
 
-`status` reads pain.002 status reports and camt.053 statements with the
-same parsers as the library and prints one line per file. Every rejected
-group, payment block and transaction is listed with its reason code. It
-exits `3` when anything was rejected (`RJCT`), `2` when a file cannot be
-read or is another message (camt.052 and camt.054 are not read yet), and
-`0` otherwise; `--format json` prints the same as data. Together with
+`status` reads pain.002 status reports with the library's parser, and
+camt.052, camt.053 and camt.054 with the
+[camt053](https://pypi.org/project/camt053/) package when it is
+installed (`pip install camt053`); without it, camt.053 is read with the
+library's own parser and camt.052 and camt.054 are refused. It prints
+one line per file, and every rejected group, payment block and
+transaction is listed with its reason code. It exits `3` when anything
+was rejected (`RJCT`), `2` when a file cannot be read or is another
+message, and `0` otherwise; `--format json` prints the same as data. Together with
 `download`, a scheduled job can fetch replies and alert on rejections.
