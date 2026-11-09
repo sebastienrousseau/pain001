@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 from defusedxml import ElementTree as defused_et
@@ -27,11 +28,21 @@ from pain001.xml.validate_via_xsd import validate_via_xsd
 
 
 def parse_camt053_statement(
-    xml_file_path: str, xsd_file_path: str | None = None
+    xml_file_path: str,
+    xsd_file_path: str | None = None,
+    *,
+    base_dir: str | Path | None = None,
 ) -> dict[str, object]:
-    """Parse a camt.053 statement into a compact Python structure."""
+    """Parse a camt.053 statement into a compact Python structure.
+
+    ``base_dir`` names the directory the XML path must stay inside; by
+    default the path guard allows the working directory, the temp
+    directories and the package.
+    """
     try:
-        safe_xml_path = validate_path(xml_file_path, must_exist=True)
+        safe_xml_path = validate_path(
+            xml_file_path, base_dir=base_dir, must_exist=True
+        )
     except Exception as exc:
         raise DataSourceError(f"Invalid camt.053 XML path: {exc}") from exc
 

@@ -2,9 +2,9 @@
 
 # 0013. Download bank replies exactly once, with a local ledger
 
-- **Status:** Proposed
+- **Status:** Accepted
 - **Date:** 2026-11-09
-- **Deciders:** Sebastien Rousseau (pending; targets 0.0.85)
+- **Deciders:** Sebastien Rousseau (accepted 2026-11-09; ships in 0.0.85)
 
 ## Context
 
@@ -52,9 +52,22 @@ the download: they never open network connections.
 - The `upload` extra now covers download too; no new dependency
   (`sqlite3` is in the standard library).
 - A `keep` run skips files whose remote size and mtime the ledger
-  already holds, without reading them. A file rewritten with the same
-  size and mtime would be missed; `delete` or `move` avoids that.
-- `status` reads pain.002 and camt.053; camt.052 and camt.054 are
-  refused with exit 2 until the camt decision (plan D6) is made.
+  already holds, without reading them. SFTP reports the mtime in whole
+  seconds, so a file the bank rewrites with the same size within the
+  same second would be missed; while nothing is deleted, the earlier
+  copy also stays on the server. `delete` or `move` avoids that, and
+  is the setting for production runs.
+- `status` reads pain.002 with the core's parser. Plan decision D6
+  (2026-11-09) gives camt parsing to the `camt053` package rather than
+  a second parser here: when camt053 is installed, `status` reads
+  camt.052, camt.053 and camt.054 with it; without it, the core's own
+  camt.053 parser reads camt.053, and camt.052 and camt.054 are refused
+  with exit 2 and the install command. A `pain001[camt]` extra follows
+  once camt053 releases with version ranges instead of its exact
+  jinja2, colorama and defusedxml pins, and the in-tree camt.053 parser
+  is then deprecated.
+- `status` reads the files named on its command line wherever they are
+  (`download --to` saves anywhere): the parsers take a `base_dir`, and
+  the file's own directory is the only base allowed.
 - The ledger holds remote paths and local paths, not file contents or
   credentials.

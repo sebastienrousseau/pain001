@@ -51,6 +51,8 @@ def parse_pain002_report(
     xml_file_path: str,
     xsd_file_path: str | None = None,
     validate: bool = False,
+    *,
+    base_dir: str | Path | None = None,
 ) -> dict[str, object]:
     """Parse a pain.002 payment status report into structured data.
 
@@ -63,22 +65,64 @@ def parse_pain002_report(
             that version rather than parsing unvalidated — a silent skip
             would report success while checking nothing. Call
             :func:`bundled_schema_versions` to see what is covered.
+        base_dir: Directory the XML path must stay inside. By default
+            the path guard allows the working directory, the temp
+            directories and the package; a caller that already trusts a
+            named file (the CLI's ``status``) passes its directory.
 
     Returns:
         The parsed report: message and original-message identifiers,
         creation timestamp, group status, and a ``payment_statuses``
         list of per-transaction status and reason codes.
 
+    Schema checks (``xsd_file_path`` or ``validate``) raise
+    :class:`~pain001.exceptions.SchemaValidationError` when the document
+    fails validation, or when ``validate`` asks for an unbundled version.
+
     Raises:
         DataSourceError: The path is invalid or the XML is malformed.
-        SchemaValidationError: The document failed validation, or
-            ``validate`` was requested for an unbundled version.
     """
     try:
-        safe_xml_path = validate_path(xml_file_path, must_exist=True)
+        safe_xml_path = validate_path(
+            xml_file_path, base_dir=base_dir, must_exist=True
+        )
     except Exception as exc:
         raise DataSourceError(f"Invalid pain.002 XML path: {exc}") from exc
 
+    _check_schema(safe_xml_path, xsd_file_path, validate)
+    report, ns = _load_report(safe_xml_path)
+    statuses = [
+        _payment_status(payment_info, ns)
+        for payment_info in report.findall(f"{ns}OrgnlPmtInfAndSts")
+    ]
+    return {
+        "message_id": _find_text(report, ns, "GrpHdr/MsgId"),
+        "creation_datetime": _find_text(report, ns, "GrpHdr/CreDtTm"),
+        "original_message_id": _find_text(
+            report, ns, "OrgnlGrpInfAndSts/OrgnlMsgId"
+        ),
+        "original_message_name_id": _find_text(
+            report, ns, "OrgnlGrpInfAndSts/OrgnlMsgNmId"
+        ),
+        "group_status": _find_text(report, ns, "OrgnlGrpInfAndSts/GrpSts"),
+        "payment_statuses": statuses,
+    }
+
+
+def _check_schema(
+    safe_xml_path: str, xsd_file_path: str | None, validate: bool
+) -> None:
+    """Validate against an explicit schema, or the bundled one on request.
+
+    Args:
+        safe_xml_path: The report, already through the path guard.
+        xsd_file_path: An explicit schema; takes precedence.
+        validate: Use the bundled schema for the document's namespace.
+
+    Raises:
+        DataSourceError: The schema path is invalid.
+        SchemaValidationError: The document failed validation.
+    """
     if xsd_file_path:
         try:
             safe_xsd_path = validate_path(xsd_file_path, must_exist=True)
@@ -91,6 +135,19 @@ def parse_pain002_report(
     elif validate:
         _validate_against_bundled_schema(safe_xml_path)
 
+
+def _load_report(safe_xml_path: str) -> tuple[Any, str]:
+    """Parse the file and return its CstmrPmtStsRpt and namespace.
+
+    Args:
+        safe_xml_path: The report, already through the path guard.
+
+    Returns:
+        The ``CstmrPmtStsRpt`` element and the ``{namespace}`` prefix.
+
+    Raises:
+        DataSourceError: Malformed XML, or not a pain.002 report.
+    """
     try:
         root = defused_et.parse(safe_xml_path).getroot()
     except (ParseError, OSError) as exc:
@@ -104,24 +161,7 @@ def parse_pain002_report(
         raise DataSourceError(
             "Input XML is not a pain.002 payment status report"
         )
-
-    statuses = [
-        _payment_status(payment_info, ns)
-        for payment_info in report.findall(f"{ns}OrgnlPmtInfAndSts")
-    ]
-
-    return {
-        "message_id": _find_text(report, ns, "GrpHdr/MsgId"),
-        "creation_datetime": _find_text(report, ns, "GrpHdr/CreDtTm"),
-        "original_message_id": _find_text(
-            report, ns, "OrgnlGrpInfAndSts/OrgnlMsgId"
-        ),
-        "original_message_name_id": _find_text(
-            report, ns, "OrgnlGrpInfAndSts/OrgnlMsgNmId"
-        ),
-        "group_status": _find_text(report, ns, "OrgnlGrpInfAndSts/GrpSts"),
-        "payment_statuses": statuses,
-    }
+    return report, ns
 
 
 def _payment_status(payment_info: Any, ns: str) -> dict[str, Any]:
