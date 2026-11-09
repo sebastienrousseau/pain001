@@ -276,12 +276,14 @@ def _derive_tool() -> None:
         'base="xs:string"><xs:enumeration value="URNS"/></xs:restriction>'
         "</xs:simpleType></xs:schema>",
     )
-    outside = Path(
-        tempfile.mkdtemp(prefix="pain001-example-guideline-", dir="/tmp")
-    )
-    guideline = outside / "guideline.xsd"
-    guideline.write_text(text, encoding="utf-8")
-    changes = derive_overlay.diff(guideline, "pain.001.001.03")
+    # Outside the repository, as a real guideline export would be, and
+    # removed when the diff is done.
+    with tempfile.TemporaryDirectory(
+        prefix="pain001-example-guideline-", dir="/tmp"
+    ) as outside:
+        guideline = Path(outside) / "guideline.xsd"
+        guideline.write_text(text, encoding="utf-8")
+        changes = derive_overlay.diff(guideline, "pain.001.001.03")
     rules = derive_overlay.as_rules(changes)
     assert ("PmtInf/CdtTrfTxInf/Amt/EqvtAmt",) in changes["removed"]
     assert any("URNS" in r for r in rules)

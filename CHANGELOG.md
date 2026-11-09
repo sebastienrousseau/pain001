@@ -29,6 +29,14 @@ verification.
   myst-parser 5 brings markdown-it-py 4.2.0 and mdit-py-plugins 0.6.1
   into `poetry.lock`.
 
+### Fixed
+
+- `tests/test_derive_overlay.py` and `examples/15_example_corpus.py`
+  no longer leave a `pain001-guideline-*` or
+  `pain001-example-guideline-*` directory in `/tmp` on every run; the
+  synthetic guideline is written to a temporary directory that is
+  removed afterwards.
+
 ## [0.0.82] - 2026-11-08
 
 Fast and checkable: `pain001 check` validates a file that already
