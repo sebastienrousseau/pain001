@@ -40,6 +40,7 @@ are representative workflows. Paths in this table are repository-relative.
 | REST server launcher and API-key auth | `tests/test_api.py`, `tests/test_cli_subcommands.py` | `examples/26_rest_server.py` |
 | Checking existing files (`pain001 check`, text, JSON and SARIF; the GitHub Action and pre-commit hooks) | `tests/test_check.py`, `tests/test_cli_check.py`, `tests/test_api_check.py`, `tests/test_ci_surfaces.py` | `examples/27_check_existing_file.py` |
 | SFTP trust, identities, certificates, atomic upload and retries | `tests/test_sftp_upload.py`, `tests/test_sftp_cli.py`, `tests/test_transport_identity.py` | `tests/test_sftp_roundtrip.py` (real loopback SSH/SFTP, synthetic credentials) |
+| Exactly-once download, ledger and reply status (`pain001 download`, `pain001 status`) | `tests/test_sftp_download.py` (real loopback SSH/SFTP: keep, delete, move, crash before disposal, caps, settle, symlinks), `tests/test_cli_download_status.py` | `examples/28_download_and_status.py` |
 | Encryption and security boundaries | `tests/test_plugins_gpg.py`, `tests/test_plugins_gpg_keyfile.py`, `tests/test_template_security.py`, `tests/test_code_scanning_regressions.py` | Focused regression fixtures; no real keys, bank accounts or external bank connection |
 
 Companion XLSX, MCP correction tools, the plugin template and mockbank require
