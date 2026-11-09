@@ -173,7 +173,9 @@ def _check_xmlsec1(
     ``--insecure`` skips xmlsec1's certificate-chain check for the
     self-signed test certificate; the signature itself is still checked.
     xmlsec1 signs a clean template (empty values, empty X509Data), the
-    way it is normally used.
+    way it is normally used; ``--lax-key-search`` lets xmlsec1 1.3 use
+    the key it was given, since it otherwise looks keys up only through
+    the template's KeyInfo.
     """
     (work / "ours.xml").write_bytes(ours)
     _xmlsec1(
@@ -187,6 +189,7 @@ def _check_xmlsec1(
     (work / "template.xml").write_bytes(_xmlsec1_template(sample, name))
     _xmlsec1(
         "--sign",
+        "--lax-key-search",
         "--privkey-pem",
         f"{work / 'key.pem'},{work / 'cert.pem'}",
         "--output",
