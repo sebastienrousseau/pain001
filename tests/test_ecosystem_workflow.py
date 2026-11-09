@@ -88,3 +88,11 @@ def test_workflow_generator_emits_all_eight_companion_files(
     assert {path.parents[2].name for path in paths} == {
         member.name for member in inventory()[1:]
     }
+
+
+def test_generated_workflows_have_standalone_copyright() -> None:
+    """Website source headers need copyright as well as a license."""
+    for member in inventory()[1:]:
+        source = workflows.render(member, "1" * 40)
+        assert "# SPDX-FileCopyrightText: 2026 Sebastien Rousseau" in source
+        assert "# SPDX-License-Identifier: Apache-2.0 OR MIT" in source

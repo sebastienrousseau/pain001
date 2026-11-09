@@ -10,7 +10,8 @@ from pathlib import Path
 
 from .inventory import Member, inventory
 
-TEMPLATE = """# SPDX-License-Identifier: Apache-2.0 OR MIT
+TEMPLATE = """# SPDX-FileCopyrightText: 2026 Sebastien Rousseau
+# SPDX-License-Identifier: Apache-2.0 OR MIT
 # Generated from the core's docs/ecosystem.json by render_ecosystem_workflows.py.
 name: Suite Consistency
 on:
