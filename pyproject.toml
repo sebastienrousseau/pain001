@@ -71,6 +71,10 @@ pyyaml = ">=6.0,<7.0"
 paramiko = {version = ">=5.1.0,<6", optional = true}
 cel-python = {version = ">=0.5,<0.6", optional = true}
 holidays = {version = ">=0.108,<1", optional = true}
+# camt.052, camt.053 and camt.054 for `pain001 status` (plan decision D6):
+# 0.0.26 is the first release with version ranges and without the web
+# stack in its base install.
+camt053 = {version = ">=0.0.26,<1", optional = true}
 rich = ">=15.0.0,<16"
 xmlschema = ">=4.3.2,<5.0.0"
 # Optional: when present, libxml2 validates a generated document ~46x
@@ -112,6 +116,7 @@ sign = ["cryptography", "lxml"]
 otel = ["opentelemetry-api", "opentelemetry-sdk", "opentelemetry-exporter-otlp-proto-http", "certifi"]
 fast = ["lxml"]
 upload = ["paramiko"]
+camt = ["camt053"]
 rules = ["cel-python", "holidays"]
 
 [tool.poetry.group.dev.dependencies]

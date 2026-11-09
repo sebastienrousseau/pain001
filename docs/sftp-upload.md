@@ -125,7 +125,7 @@ pain001 status replies/*.xml
 `status` reads pain.002 status reports with the library's parser, and
 camt.052, camt.053 and camt.054 with the
 [camt053](https://pypi.org/project/camt053/) package when it is
-installed (`pip install camt053`); without it, camt.053 is read with the
+installed (`pip install 'pain001[camt]'`); without it, camt.053 is read with the
 library's own parser and camt.052 and camt.054 are refused. It prints
 one line per file, and every rejected group, payment block and
 transaction is listed with its reason code. It exits `3` when anything

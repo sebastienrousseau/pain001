@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   anything was rejected. It reads camt.052, camt.053 and camt.054 with
   the `camt053` package when that is installed (plan decision D6); without
   it, camt.053 is read with the core's own parser and camt.052 and
-  camt.054 are refused with the install command.
+  camt.054 are refused with the install command. The new `camt` extra
+  (`pip install 'pain001[camt]'`) installs camt053 0.0.26 or later.
 - `parse_pain002_report` and `parse_camt053_statement` take an optional
   `base_dir`, the directory the XML path must stay inside; `status`
   passes the named file's own directory, so it reads files outside the

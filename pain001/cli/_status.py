@@ -6,9 +6,9 @@ camt.053 and camt.054 reports with the ``camt053`` package when it is
 installed (plan decision D6: camt parsing belongs to camt053, not to a
 second parser here). Without camt053, the core's own camt.053 parser
 still reads camt.053, and camt.052 and camt.054 are refused with the
-install command. It exits 3 when any group, payment block or
-transaction was rejected (``RJCT``), so a scheduled job can alert on
-it. Exit 2 means a file could not be read or is a message this command
+install command (``pip install 'pain001[camt]'``). It exits 3 when any
+group, payment block or transaction was rejected (``RJCT``), so a
+scheduled job can alert on it. Exit 2 means a file could not be read or is a message this command
 does not cover.
 """
 
@@ -137,6 +137,15 @@ def _camt_with_camt053(path: Path, message: str, camt053: Any) -> Summary:
     return _camt_counts(path, message, len(statements), entries)
 
 
+def _camt053_module() -> Any | None:
+    """The ``camt053`` package, or ``None`` when it is not installed."""
+    try:
+        import camt053  # type: ignore[import-not-found,unused-ignore]  # noqa: PLC0415
+    except ImportError:
+        return None
+    return camt053
+
+
 def _camt(path: Path, message: str, version: str) -> Summary:
     """Summarise a camt.05x, with camt053 when it is installed.
 
@@ -151,15 +160,12 @@ def _camt(path: Path, message: str, version: str) -> Summary:
     Raises:
         StatusRefused: camt.052 or camt.054 without camt053 installed.
     """
-    try:
-        import camt053  # type: ignore[import-not-found]  # noqa: PLC0415
-    except ImportError:
-        camt053 = None
+    camt053 = _camt053_module()
     if camt053 is not None:
         return _camt_with_camt053(path, message, camt053)
     if message != "camt.053":
         raise StatusRefused(
-            f"{path}: {version} needs camt053: pip install camt053"
+            f"{path}: {version} needs camt053: pip install 'pain001[camt]'"
         )
     from pain001.camt053 import parse_camt053_statement  # noqa: PLC0415
 
