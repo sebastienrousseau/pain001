@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Callable
 from types import ModuleType
+from typing import Any
 
 import click
 
@@ -41,6 +43,93 @@ def _print_host_key(transport: ModuleType, url: str, timeout: float) -> None:
     )
 
 
+def ssh_options(command: Callable[..., Any]) -> Callable[..., Any]:
+    """Attach the trust and identity flags upload and download share.
+
+    Args:
+        command: The Click command function.
+
+    Returns:
+        The command with ``--known-hosts``, ``--accept-host-key``,
+        ``--identity-file``, ``--certificate``, ``--use-agent``,
+        ``--password-env``, ``--passphrase-env`` and ``--timeout``.
+    """
+    options = [
+        click.option(
+            "--known-hosts",
+            type=click.Path(exists=True, dir_okay=False),
+            help="Trusted SSH known_hosts file.",
+        ),
+        click.option(
+            "--accept-host-key",
+            help="Independently verified OpenSSH SHA256 fingerprint; "
+            "never saves trust.",
+        ),
+        click.option(
+            "--identity-file",
+            type=click.Path(exists=True, dir_okay=False),
+            help="SSH private key; otherwise use the agent or default SSH "
+            "keys.",
+        ),
+        click.option(
+            "--certificate",
+            type=click.Path(exists=True, dir_okay=False),
+            help="OpenSSH certificate (*-cert.pub) issued for "
+            "--identity-file.",
+        ),
+        click.option(
+            "--use-agent",
+            is_flag=True,
+            help="Also offer ssh-agent keys (hardware keys) with a key or "
+            "password.",
+        ),
+        click.option(
+            "--password-env",
+            help="Environment variable containing the SSH password.",
+        ),
+        click.option(
+            "--passphrase-env",
+            help="Environment variable containing the private-key passphrase.",
+        ),
+        click.option(
+            "--timeout",
+            type=click.FloatRange(min=0.1, max=300),
+            default=15,
+            show_default=True,
+            help="Network timeout in seconds.",
+        ),
+    ]
+    for option in reversed(options):
+        command = option(command)
+    return command
+
+
+def ssh_kwargs(ssh: dict[str, Any]) -> dict[str, Any]:
+    """Turn the shared flags into transport keyword arguments.
+
+    Secrets are read from the named environment variables here, so
+    their values never appear on the command line or in output.
+
+    Args:
+        ssh: The flags ``ssh_options`` added, as Click passed them.
+
+    Returns:
+        ``known_hosts``, ``accept_host_key``, ``identity_file``,
+        ``certificate``, ``use_agent``, ``password``, ``passphrase`` and
+        ``timeout`` for ``upload_sftp`` or ``download_sftp``.
+    """
+    return {
+        "known_hosts": ssh["known_hosts"],
+        "accept_host_key": ssh["accept_host_key"],
+        "identity_file": ssh["identity_file"],
+        "certificate": ssh["certificate"],
+        "use_agent": ssh["use_agent"],
+        "password": _secret_from_env(ssh["password_env"]),
+        "passphrase": _secret_from_env(ssh["passphrase_env"]),
+        "timeout": ssh["timeout"],
+    }
+
+
 @click.command("upload")
 @click.argument(
     "file_path", required=False, type=click.Path(exists=True, dir_okay=False)
@@ -51,48 +140,11 @@ def _print_host_key(transport: ModuleType, url: str, timeout: float) -> None:
     required=True,
     help="Destination: sftp://user@host/inbox/ or an explicit filename.",
 )
-@click.option(
-    "--known-hosts",
-    type=click.Path(exists=True, dir_okay=False),
-    help="Trusted SSH known_hosts file.",
-)
-@click.option(
-    "--accept-host-key",
-    help="Independently verified OpenSSH SHA256 fingerprint; never saves trust.",
-)
-@click.option(
-    "--identity-file",
-    type=click.Path(exists=True, dir_okay=False),
-    help="SSH private key; otherwise use the agent or default SSH keys.",
-)
-@click.option(
-    "--certificate",
-    type=click.Path(exists=True, dir_okay=False),
-    help="OpenSSH certificate (*-cert.pub) issued for --identity-file.",
-)
-@click.option(
-    "--use-agent",
-    is_flag=True,
-    help="Also offer ssh-agent keys (hardware keys) with a key or password.",
-)
-@click.option(
-    "--password-env", help="Environment variable containing the SSH password."
-)
-@click.option(
-    "--passphrase-env",
-    help="Environment variable containing the private-key passphrase.",
-)
+@ssh_options
 @click.option(
     "--print-host-key",
     is_flag=True,
     help="Print the unverified fingerprint without authenticating or uploading.",
-)
-@click.option(
-    "--timeout",
-    type=click.FloatRange(min=0.1, max=300),
-    default=15,
-    show_default=True,
-    help="Network timeout in seconds.",
 )
 def upload_cmd(
     file_path: str | None,

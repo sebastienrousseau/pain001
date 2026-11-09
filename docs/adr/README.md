@@ -22,6 +22,7 @@ ADR that supersedes the old one.
 | [0010](0010-one-validation-ladder-for-check.md) | One validation ladder behind every check surface | Accepted |
 | [0011](0011-iban-accounts-written-as-iban.md) | Write IBAN accounts and the service level in .04 to .08 | Accepted |
 | [0012](0012-verify-signatures-against-a-trust-anchor.md) | Verify XML signatures against a trust anchor | Accepted |
+| [0013](0013-download-replies-exactly-once.md) | Download bank replies exactly once, with a local ledger | Proposed |
 
 Template: copy [`template.md`](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/template.md), number it next, add a row
 here, and open it in the pull request that implements the decision.

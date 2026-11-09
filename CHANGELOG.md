@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.0.85] - Unreleased
 
+### Added
+
+- `pain001 download --sftp URL --to DIR` and `download_sftp()` fetch a
+  bank's replies over SFTP, each file exactly once: a 0600 SQLite ledger
+  is committed before the remote copy is deleted or moved
+  (`--after-fetch keep|delete|move:/dir`), a reused name with new bytes
+  is saved as `name.<sha8>.xml`, and `--pattern`, `--settle-seconds`,
+  `--max-files` and `--max-bytes` bound a run. It takes every `upload`
+  trust and identity flag (ADR 0013).
+- `pain001 status FILE...` reads pain.002 reports and camt.053
+  statements and exits 3 when anything was rejected.
+
+### Changed
+
+- `upload` and `download` share one SFTP session, so the host-key check
+  before any credential is sent exists in one place.
+
 ### Fixed
 
 - Correct the 0.0.84 citation date to 9 November 2026, matching the published release and its changelog. Published tags and package artifacts remain unchanged.

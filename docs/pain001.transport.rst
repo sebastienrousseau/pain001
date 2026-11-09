@@ -14,10 +14,34 @@ pain001.transport.cli module
    :show-inheritance:
    :undoc-members:
 
+pain001.transport.download module
+---------------------------------
+
+.. automodule:: pain001.transport.download
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.transport.download\_cli module
+--------------------------------------
+
+.. automodule:: pain001.transport.download_cli
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.transport.identity module
 ---------------------------------
 
 .. automodule:: pain001.transport.identity
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.transport.ledger module
+-------------------------------
+
+.. automodule:: pain001.transport.ledger
    :members:
    :show-inheritance:
    :undoc-members:
