@@ -35,6 +35,7 @@ from pain001.cli._check import check_cmd
 from pain001.cli._config import _resolve_config
 from pain001.cli._gpg import _apply_gpg_options, _workers_option
 from pain001.cli._hints import print_data_tip, read_text
+from pain001.cli._operations import add_operations
 from pain001.cli._output import (
     esc,
     print_scheme_result,
@@ -65,7 +66,6 @@ from pain001.observability import (
     register_metrics_callback,
 )
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
-from pain001.transport.cli import upload_cmd
 from pain001.validation import validate_scheme
 from pain001.validation._one_batch import load_batch
 from pain001.xml.envelope import BusinessApplicationHeader
@@ -932,7 +932,7 @@ def cli() -> None:
 cli.add_command(main, name="generate")
 
 # This adapter imports Paramiko only when the user requests an upload.
-cli.add_command(upload_cmd)
+add_operations(cli)
 cli.add_command(face_cmd)
 cli.add_command(serve_cmd)
 cli.add_command(check_cmd)

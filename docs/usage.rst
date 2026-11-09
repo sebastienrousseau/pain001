@@ -237,5 +237,7 @@ Optional integrations
 REST is started with pain001 serve after installing the api extra.
 :doc:`custom-rules` apply through CLI and REST (``rules`` extra), MCP offers
 review-only record corrections (``mcp`` extra), and :doc:`sftp-upload`
-delivers a file explicitly (``upload`` extra). Generation never uploads a
-payment automatically.
+delivers a file explicitly and collects the bank's replies with
+``pain001 download`` (``upload`` extra). ``pain001 status`` reads those
+replies and exits 3 on any rejection. Generation never uploads a payment
+automatically.
