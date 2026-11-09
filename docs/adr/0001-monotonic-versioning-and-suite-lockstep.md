@@ -42,7 +42,7 @@ section of the README).
 
 ## Consequences
 
-- `pain001/suite.py` lists the members; `scripts/check_suite_consistency.py`
+- `pain001/suite.py` lists the PyPI members; `scripts/check_suite_consistency.py`
   queries PyPI daily and fails when any member lags the core or declares
   a floor the core has not published.
 - The same table records each member's `pain001` floor policy (added
@@ -63,8 +63,15 @@ section of the README).
 - `tests/test_suite_conformance.py`, a byte-identical file vendored in
   every repository, checks that the version is restated consistently and
   that the CHANGELOG's newest heading is the declared version.
+- **Amended 2026-11-09 (0.0.82):** the mockbank, plugin scaffold, native
+  extension and website are part of the lockstep family too. The maintainer
+  authorized adopting 0.0.82 while retaining their old published tags.
+  `docs/ecosystem.json` is the complete nine-repository inventory.
+  `scripts/check_ecosystem.py` verifies GitHub releases and tags, PyPI,
+  both GHCR images and the deployed browser runtime after publishing
+  workflows complete and daily. A missing member fails the family audit.
 - A change that adds a message type or alters the required-field set is
-  a five-repository release. That cost is accepted because the
+  a coordinated family release. That cost is accepted because the
   alternative was users guessing.
 - `scripts/preflight_release.py` additionally checks `CITATION.cff` and
   the `SECURITY.md` support table.

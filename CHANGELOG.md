@@ -7,6 +7,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- A complete nine-repository publication inventory and read-only audit of
+  GitHub release titles, signed annotated tags and checksum notes; all five
+  PyPI distributions and core dependency floors; both Linux architectures
+  of the core, MCP, LSP and mockbank GHCR images; the MCP Registry; and the live website runtime and
+  pinned core wheel hash. Partial publications fail with per-member evidence.
+- A shared GitHub action, daily and post-publishing workflow checks, retained
+  JSON reports, generated companion workflow adapters, required release
+  payload checks, and offline tests with a separate 100% line/branch floor.
+
+### Fixed
+
+- Generate README and roadmap component tables from the audited inventory.
+  Remove obsolete independent-version and loader-floor instructions from
+  the release guide and record the nine-member lockstep policy.
+
 ## [0.0.83] - 2026-11-09
 
 Signatures: exclusive C14N, ECDSA and RSA-PSS, and a trust anchor for

@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Check pain001 ecosystem publications
+description: Verify signed releases, checksums, PyPI metadata, OCI images and the live website for all nine repositories.
+inputs:
+  version:
+    description: Optional historical version; empty checks the latest published family
+    required: false
+    default: ""
+  report:
+    description: JSON evidence file, retained even when a publication is incomplete
+    required: false
+    default: ecosystem-publication.json
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      with:
+        python-version: "3.12"
+    - name: Verify every required publication
+      shell: bash
+      env:
+        AUDIT_ROOT: ${{ github.action_path }}/../../..
+        AUDIT_VERSION: ${{ inputs.version }}
+        AUDIT_REPORT: ${{ inputs.report }}
+        GH_TOKEN: ${{ github.token }}
+      run: python3 "$AUDIT_ROOT/scripts/check_ecosystem.py" --version "$AUDIT_VERSION" --output "$AUDIT_REPORT"

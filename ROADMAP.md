@@ -9,7 +9,7 @@ small, well-tested core, first-class developer surfaces (library, CLI,
 REST, MCP, LSP), and a formal plugin contract so the ecosystem can
 extend it without forking.
 
-## Where we are (v0.0.78 shipped 2026-11-07 with the whole suite)
+## Shipped capabilities
 
 - **Generation:** pain.001.001.03 to .13, pain.008.001.02 and .08,
   registry-driven, `Decimal` end-to-end, mandatory XSD validation
@@ -18,12 +18,21 @@ extend it without forking.
   (XML-DSig RSA-SHA256), and streaming XML chunk generation.
 - **Validation:** ISO 20022 Schematron business rule evaluator for
   EPC/SEPA, CBPR+, and FedNow rulebooks; native acceleration hooks
-  integrating `pain001-fast` for sub-25ns financial validation; six scheme
+  for optional `pain001-fast` validators; six scheme
   rulebooks — `sepa-sct`, `sepa-sdd`, `sepa-inst`, `sepa-b2b`,
   `xborder-ct`, and `anti-duplicate`, composable as
   `--scheme sepa-sct,anti-duplicate`; 18 rail profiles and 5 purpose
   mandates; memoized IBAN / BIC validators; formula injection shielding
   across batch and streaming CSV ingestion (CWE-1236).
+- **Existing-file checks (0.0.82):** `pain001 check` validates an existing
+  file against its namespace-selected XSD and business rules, with optional
+  schemes and policies. Text, JSON and SARIF output are also available
+  through the REST check endpoint, GitHub Action and pre-commit integration.
+- **Signature verification (0.0.83):** RSA-SHA256, RSA-PSS and ECDSA,
+  exclusive canonicalisation, explicit trust-anchor verification and
+  `pain001 verify-signature`. Cross-tool CI exercises signxml and xmlsec1.
+  The two breaking signature changes announced for 0.0.84 remain governed
+  by [ADR-0012](docs/adr/0012-verify-signatures-against-a-trust-anchor.md).
 - **Custom policy & safe corrections:** Request-local CEL policy rules
   (`pain001 --rules my-policy.yaml`) for CLI and REST
   validation/generation via optional `rules` extra (#184); deterministic,
@@ -77,18 +86,28 @@ and **project sustainability / ecosystem discovery**.
 
 ## Suite
 
-The suite all moves together; sibling packages release at matching
-version numbers.
+All nine repositories follow the suite version. They publish through
+different channels; one GitHub release does not publish its companions.
+The [publication audit](docs/ecosystem-publications.md) checks the live
+releases, registries, images and browser demo. The table is generated from
+[`docs/ecosystem.json`](docs/ecosystem.json); it records channels rather
+than maintaining another set of release-version numbers.
 
-| Package | Role | Latest |
+<!-- ecosystem:start -->
+
+| Component | Role | Publications |
 | :--- | :--- | :--- |
-| [`pain001`](https://pypi.org/project/pain001/) | Core library + CLI + REST API | 0.0.78 |
-| [`pain001-mcp`](https://pypi.org/project/pain001-mcp/) | Model Context Protocol server (28 tools) | 0.0.78 |
-| [`pain001-lsp`](https://pypi.org/project/pain001-lsp/) | Language Server Protocol server (6 features) | 0.0.78 |
-| [`pain001-loader-xlsx`](https://pypi.org/project/pain001-loader-xlsx/) | Excel (.xlsx) loader plugin | 0.0.78 |
-| [`pain001-loader-mt101`](https://pypi.org/project/pain001-loader-mt101/) | SWIFT MT101 loader plugin | 0.0.78 |
-| [`pain001-plugin-template`](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter scaffold for external plugins | 0.0.1 (unreleased) |
-| [`pain001-mockbank`](https://github.com/sebastienrousseau/pain001-mockbank) | Synthetic SFTP bank response test service | 0.0.1 (edge image) |
+| [pain001](https://github.com/sebastienrousseau/pain001) | Generation, validation, CLI and REST | GitHub Releases, PyPI, GHCR |
+| [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) | Model Context Protocol server | GitHub Releases, PyPI, GHCR, MCP Registry |
+| [pain001-lsp](https://github.com/sebastienrousseau/pain001-lsp) | Language Server Protocol server | GitHub Releases, PyPI, GHCR |
+| [pain001-loader-mt101](https://github.com/sebastienrousseau/pain001-loader-mt101) | SWIFT MT101 loader plugin | GitHub Releases, PyPI |
+| [pain001-loader-xlsx](https://github.com/sebastienrousseau/pain001-loader-xlsx) | Excel loader plugin | GitHub Releases, PyPI |
+| [pain001-mockbank](https://github.com/sebastienrousseau/pain001-mockbank) | Synthetic SFTP bank-response test service | GitHub Releases, GHCR |
+| [pain001-plugin-template](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter plugin scaffold | GitHub Releases |
+| [pain001-fast](https://github.com/sebastienrousseau/pain001-fast) | Experimental native validation extension | GitHub Releases |
+| [pain001.com](https://github.com/sebastienrousseau/pain001.github.io) | Website and browser demo | GitHub Releases, live website |
+
+<!-- ecosystem:end -->
 
 ## Planned releases
 
@@ -150,12 +169,13 @@ per country and rail with provenance and an evidence state.
 | v0.0.68 | Tier-1 market packs (UK, SEPA core countries, US, CH, SE), overlay tooling to apply a bank's guideline privately, website corpus page, MCP and LSP corpus tools | ✅ v0.0.68 |
 | v0.0.69 | Tiers 2 and 3 (CZ, LU, HK, SG, MY, QA, AE) with confidence chips; CSV pipeline extension for the twelve most-used rails; the pain.001 twin foundation (ISO JSON twins, JSON Schema per edition, records twin, ADR-0005) | ✅ v0.0.69 |
 
-### Next releases *(v0.0.79+)*
+### Next work
 
 | Milestone | Scope | Effort | Status |
 | :--- | :--- | :--- | :--- |
 | **Faces engine (ADR-0005 Phase B & C)** | Outbound JSON projections of pain.001 to compatible standards: UK Open Banking Payment Initiation API and Berlin Group NextGenPSD2, plus the ISO 2018 compatibility face backed by a name table derived from the Message Definition Reports, with per-occurrence loss reports and CI validation against the published schemas, served by the library, the CLI, the REST API, pain001-mcp and pain001-lsp. | M | ✅ v0.0.78 |
-| **Mutation floor hardening** | Pin ordering and timing dependencies in the fast mutation tier tests to eliminate variance (2,941 mutants), raising `MUTATION_FLOOR` from 80% to >=85%. | M | planned |
+| **Ecosystem publication audit** | Enforce the nine-repository inventory after publishing workflows and daily, including GitHub tags and checksum notes, PyPI, both container images and the deployed browser runtime. | M | in progress |
+| **Mutation floor hardening** | Pin ordering and timing dependencies in the fast mutation tier tests to eliminate variance, raising `MUTATION_FLOOR` from 80% to >=85% once the measured score supports it. | M | planned |
 | **Twin import (ADR-0005 Phase D)** | Inbound deserialization: read ISO JSON twins and Open Banking / Berlin Group payloads back into canonical payment instruction models and validated XML documents. | L | planned |
 | **Ecosystem discovery** | Submit `pain001-mcp` to `awesome-mcp-servers` and `pain001-lsp` to `awesome-language-servers` per `scripts/awesome-list-submissions.md`. | S | ready |
 

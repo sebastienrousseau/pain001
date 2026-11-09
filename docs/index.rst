@@ -84,6 +84,7 @@ Contents
    input-columns
    message-deltas
    development
+   ecosystem-publications
    packaging
    adr/README
 

@@ -1,18 +1,22 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 name: Suite Consistency
 
-# The suite ships one version number across every package, and nothing
-# breaks when that slips: a member left behind still installs, still
-# imports, still passes its own tests. The only way to notice is to go and
-# look. This does the looking.
-#
-# It also catches the version bumped in the tree and never released, which
-# has happened three times in this suite and each time stranded a security
-# floor that reached nobody.
+# Check every publication channel, including the four non-PyPI members.
+# GITHUB_TOKEN-created releases do not trigger another release workflow.
+# workflow_run observes the actual publishing jobs, including the separate
+# OCI build. Always check trusted default-branch code, never upstream PR code.
 on:
   schedule:
     - cron: "59 6 * * *"
   workflow_dispatch:
+    inputs:
+      version:
+        description: "Optional historical version; empty audits the latest published family"
+        type: string
+        default: ""
+  workflow_run:
+    workflows: ["ci", "🐳 Build & Publish Docker Image"]
+    types: [completed]
 
 permissions:
   contents: read
@@ -23,17 +27,24 @@ concurrency:
 
 jobs:
   consistency:
-    name: Published versions agree
-    runs-on: ubuntu-latest
+    name: All nine publications agree
+    if: >-
+      github.event_name != 'workflow_run' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       startsWith(github.event.workflow_run.head_branch, 'v0.'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+      - uses: ./.github/actions/check-ecosystem
         with:
-          python-version: "3.12"
-
-      # Queries pypi.org and exits non-zero when the suite disagrees with
-      # itself, so a schedule becomes a notification rather than a report
-      # nobody opens.
-      - name: Check suite consistency
-        run: python3 scripts/check_suite_consistency.py
+          version: ${{ inputs.version }}
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: always()
+        with:
+          name: ecosystem-publication-report
+          path: ecosystem-publication.json
+          if-no-files-found: error
+          retention-days: 14

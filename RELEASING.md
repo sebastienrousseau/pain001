@@ -106,13 +106,22 @@ cd /tmp/pain001-dry-run && PIP_NO_INDEX=1 .venv/bin/python -m build --no-isolati
 
 ## Coordinated release ordering and evidence
 
-Prepare release PRs for core, MCP, LSP, XLSX and MT101. Mockbank and the
-plugin template have independent version lines. MCP and LSP require the
-matching core release; their Poetry locks must be regenerated from the
-published core distributions before their release gates can pass. Do not
-invent registry hashes or lower their declared dependency floor to bypass
-this ordering constraint. Publish and audit core first, then finalize the
-dependent PRs. The loaders retain their documented older plugin floors.
+Prepare release PRs for all nine members in `docs/ecosystem.json`. The
+scaffold, native extension and website joined the suite at 0.0.82 by
+maintainer decision; their earlier tags remain unchanged. Every subsequent
+release advances together by one. All four PyPI companions require the
+matching core release, including the loaders. Regenerate their locks from
+the published core distributions before their release gates run. Never
+invent registry hashes or lower dependency floors to bypass this ordering.
+Publish and audit core first, then finalize dependent PRs and the remaining
+members' actual GitHub, image and website publication channels.
+
+Run `make ecosystem-check` after the last publication and inspect its JSON
+evidence. It must pass before calling the suite release complete. The
+[publication audit](docs/ecosystem-publications.md) checks all nine releases,
+the five PyPI distributions, all four versioned container images, the MCP
+Registry and the live
+browser runtime; a partial rollout fails and names its missing members.
 
 The maintainer must explicitly approve each named PR before merge. Passing
 candidate tests on a feature branch is not a full release preflight: the
@@ -121,8 +130,8 @@ origin/main. Run full preflight again on that merged commit.
 
 `scripts/check_security_exceptions.py` enforces the review and expiry dates
 in `docs/security-exceptions.json`. Acceptance in this repository does not
-authorize dismissing findings in companion repositories. Review all five
-security dashboards before declaring the coordinated release ready.
+authorize dismissing findings in companion repositories. Review all nine
+members' security dashboards before declaring the coordinated release ready.
 
 `scripts/inspect_release.py` inspects wheel and source-archive metadata,
 runtime versions, licences, README contents and source manifests, then writes

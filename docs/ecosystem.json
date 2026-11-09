@@ -1,0 +1,125 @@
+[
+  {
+    "name": "pain001",
+    "project": "pain001",
+    "purpose": "Generation, validation, CLI and REST",
+    "usage": "Payment-file pipelines",
+    "pypi": true,
+    "image": true,
+    "publishers": [
+      "ci",
+      "🐳 Build & Publish Docker Image"
+    ]
+  },
+  {
+    "name": "pain001-mcp",
+    "project": "pain001-mcp",
+    "purpose": "Model Context Protocol server",
+    "usage": "Agent tools for payment data",
+    "pypi": true,
+    "publishers": [
+      "Release",
+      "Publish to MCP Registry",
+      "Build & Publish Docker Image"
+    ],
+    "image": true,
+    "mcp_registry": "io.github.sebastienrousseau/pain001-mcp"
+  },
+  {
+    "name": "pain001-lsp",
+    "project": "pain001-lsp",
+    "purpose": "Language Server Protocol server",
+    "usage": "Editor diagnostics for payment data",
+    "pypi": true,
+    "publishers": [
+      "Release",
+      "VS Code extension",
+      "Build & Publish Docker Image"
+    ],
+    "image": true,
+    "required_assets": [
+      "pain001-lsp-json-{version}.vsix"
+    ]
+  },
+  {
+    "name": "pain001-loader-mt101",
+    "project": "pain001-loader-mt101",
+    "purpose": "SWIFT MT101 loader plugin",
+    "usage": "Convert supported MT101 inputs",
+    "pypi": true,
+    "publishers": [
+      "Release"
+    ]
+  },
+  {
+    "name": "pain001-loader-xlsx",
+    "project": "pain001-loader-xlsx",
+    "purpose": "Excel loader plugin",
+    "usage": "Read .xlsx and .xlsm payment inputs",
+    "pypi": true,
+    "publishers": [
+      "Release"
+    ]
+  },
+  {
+    "name": "pain001-mockbank",
+    "project": "pain001-mockbank",
+    "purpose": "Synthetic SFTP bank-response test service",
+    "usage": "Generate pain.002 replies in integration tests",
+    "image": true,
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001_mockbank-{version}.tar.gz",
+      "image.txt"
+    ]
+  },
+  {
+    "name": "pain001-plugin-template",
+    "project": "pain001-plugin-template",
+    "purpose": "Cookiecutter plugin scaffold",
+    "usage": "Develop an external loader or validator",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001-plugin-template-{version}.tar.gz",
+      "SHA256SUMS"
+    ]
+  },
+  {
+    "name": "pain001-fast",
+    "project": "pain001-fast",
+    "purpose": "Experimental native validation extension",
+    "usage": "Optional IBAN, BIC and character-set helpers",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001_fast-{version}.tar.gz",
+      "SHA256SUMS",
+      "pain001_fast-{version}-cp311-abi3-linux_x86_64.whl",
+      "pain001_fast-{version}-cp311-abi3-linux_aarch64.whl",
+      "pain001_fast-{version}-cp311-abi3-macosx_11_0_arm64.whl",
+      "pain001_fast-{version}-cp311-abi3-macosx_11_0_x86_64.whl",
+      "pain001_fast-{version}-cp311-abi3-win_amd64.whl"
+    ]
+  },
+  {
+    "name": "pain001.github.io",
+    "project": "pain001.com",
+    "purpose": "Website and browser demo",
+    "usage": "Browse documentation and try the library",
+    "runtime": "https://pain001.com/pyodide/pain001-runtime.json",
+    "publishers": [
+      "Release",
+      "CI"
+    ],
+    "required_assets": [
+      "pain001-site-v{version}.tar.gz",
+      "pain001-site-v{version}.cdx.json",
+      "SHA256SUMS"
+    ]
+  }
+]

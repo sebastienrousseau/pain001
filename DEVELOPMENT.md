@@ -45,7 +45,8 @@ reproduced without reading YAML.
 | Benchmarks (kept compiling, not asserted) | `make perf` | `quality.yml` |
 | Fuzzing (Atheris harness in `fuzz/`) | `python fuzz/fuzz_validation.py -max_total_time=60` | `nightly.yml` |
 | Suite conformance (this repo against the family rules) | `poetry run pytest tests/test_suite_conformance.py` | `ci.yml` |
-| Suite consistency (published versions across the family) | `python3 scripts/check_suite_consistency.py` | `suite-consistency.yml` (daily) |
+| Full ecosystem publications (network, all nine repositories) | `make ecosystem-check` | `suite-consistency.yml` (daily and after publishing workflows) |
+| Publication audit regression tests and coverage (offline) | `make test-publications` | `quality.yml` |
 | Combined local gate (types separately) | `make check` and `make type` | — |
 
 The coverage floor is 100 % and deliberately so: the rationale is in
@@ -62,6 +63,7 @@ tests/
   golden/                     the golden XML, regenerate with scripts/generate_golden_files.py
   test_suite_conformance.py   the family-wide rules; a vendored, byte-identical copy — do not edit here
   test_suite_consistency.py   the PyPI version-lockstep checker, tested with stubbed metadata
+  test_ecosystem_*.py         complete family publications and transport, tested with synthetic metadata
   test_docker_smoke.py        builds the image and runs the CLI inside it (skipped without Docker)
   data/                       small fixtures (CSV, JSON)
 examples/                     numbered, self-checking scripts; every one runs in CI
@@ -99,6 +101,11 @@ Sphinx build before claiming documentation is ready.
   disagree.
 - The line is `0.0.x` and every release is one step up; every member of
   the suite ships the same number ([ADR-0001](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
+- The nine-member inventory is `docs/ecosystem.json`. `make ecosystem-check`
+  checks each member's real publication channels. See the
+  [publication audit](https://github.com/sebastienrousseau/pain001/blob/main/docs/ecosystem-publications.md) for partial rollouts,
+  evidence and explicit-version checks. A successful core publish alone
+  is not a completed suite release.
 - Releases are cut by tag; the tag is SSH-signed; `ci.yml` builds,
   attests and publishes to PyPI with trusted publishing, then
   `scripts/release_notes.py` writes the release page from
