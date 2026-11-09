@@ -19,6 +19,9 @@
    envelope, unpack it again, and check the header and document survive.
 3. Sign the envelope with an enveloped XML-DSig (RSA-SHA256), verify it,
    then change one amount and show verification refuses the document.
+4. Sign with an ECDSA P-256 key and an embedded certificate, check it
+   with ``verify_signature`` against that certificate as the trust
+   anchor (a ``SignatureReport``), and with ``pain001 verify-signature``.
 
 Signing needs the ``cryptography`` package. The key is generated in
 memory for this run and never written to disk.
@@ -30,13 +33,19 @@ Run from the repository root::
 
 from __future__ import annotations
 
+import datetime
 import re
+import tempfile
 import xml.etree.ElementTree as et  # nosec B405
 from pathlib import Path
 
+from click.testing import CliRunner
+
 try:
-    from cryptography.hazmat.primitives import serialization
-    from cryptography.hazmat.primitives.asymmetric import rsa
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes, serialization
+    from cryptography.hazmat.primitives.asymmetric import ec, rsa
+    from cryptography.x509.oid import NameOID
 except ImportError as error:
     raise SystemExit(
         "cryptography not installed; run `pip install pain001[sign]`."
@@ -44,13 +53,16 @@ except ImportError as error:
 
 from pain001 import (
     BusinessApplicationHeader,
+    SignatureReport,
     XmlSignatureError,
     envelop_iso20022_message,
     generate_xml_string,
     sign_xml_document,
     unpack_iso20022_message,
+    verify_signature,
     verify_xml_signature,
 )
+from pain001.cli.cli import cli
 from pain001.constants import TEMPLATES_DIR
 from pain001.csv.load_csv_data import load_csv_data
 
@@ -145,11 +157,57 @@ def sign_and_verify(envelope: str) -> None:
         raise AssertionError("a tampered document must not verify")
 
 
+def ecdsa_with_certificate() -> tuple[bytes, bytes]:
+    """A fresh P-256 key and a one-day self-signed certificate, as PEM."""
+    key = ec.generate_private_key(ec.SECP256R1())
+    name = x509.Name([x509.NameAttribute(NameOID.COMMON_NAME, "Example Ltd")])
+    now = datetime.datetime.now(datetime.UTC)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now - datetime.timedelta(minutes=5))
+        .not_valid_after(now + datetime.timedelta(days=1))
+        .sign(key, hashes.SHA256())
+    )
+    key_pem = key.private_bytes(
+        encoding=serialization.Encoding.PEM,
+        format=serialization.PrivateFormat.PKCS8,
+        encryption_algorithm=serialization.NoEncryption(),
+    )
+    return key_pem, cert.public_bytes(serialization.Encoding.PEM)
+
+
+def ecdsa_and_trust_anchor(envelope: str) -> None:
+    """Sign with ECDSA, verify against the certificate, then from the CLI."""
+    key_pem, cert_pem = ecdsa_with_certificate()
+    signed = sign_xml_document(envelope, key_pem, cert_pem)
+    report: SignatureReport = verify_signature(signed, trust_anchor=cert_pem)
+    assert report.valid and report.algorithm == "ecdsa-sha256"
+    print(f"ECDSA: {report.algorithm}, signer {report.signer}, {report.trust}")
+    with tempfile.TemporaryDirectory(prefix="pain001-example-22-") as work:
+        signed_file, cert_file = (
+            Path(work, "signed.xml"),
+            Path(work, "cert.pem"),
+        )
+        signed_file.write_text(signed, encoding="utf-8")
+        cert_file.write_bytes(cert_pem)
+        result = CliRunner().invoke(
+            cli,
+            ["verify-signature", str(signed_file), "--cert", str(cert_file)],
+        )
+    assert result.exit_code == 0, result.output
+    print("pain001 verify-signature:", result.output.split(": ", 1)[1].strip())
+
+
 def main() -> None:
     """Generate, envelop, unpack, sign, verify, and tamper."""
     document = generate_document()
     envelope = envelope_round_trip(document)
     sign_and_verify(envelope)
+    ecdsa_and_trust_anchor(envelope)
     print("Envelope and signing example completed.")
 
 

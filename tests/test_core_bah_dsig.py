@@ -151,7 +151,10 @@ def test_process_files_xml_sign(
     assert os.path.exists(res)
     content = out_file.read_text(encoding="utf-8")
     assert "Signature" in content
-    assert verify_xml_signature(content) is True
+    assert (
+        verify_xml_signature(content, cert_pem=Path(cert_file).read_bytes())
+        is True
+    )
 
 
 def test_process_files_streaming_bah_and_sign(
@@ -178,7 +181,12 @@ def test_process_files_streaming_bah_and_sign(
     chunk_content = Path(chunk_files[0]).read_text(encoding="utf-8")
     assert "BizData" in chunk_content
     assert "Signature" in chunk_content
-    assert verify_xml_signature(chunk_content) is True
+    assert (
+        verify_xml_signature(
+            chunk_content, cert_pem=Path(cert_file).read_bytes()
+        )
+        is True
+    )
 
 
 def test_cli_generate_with_bah_and_dsig(
@@ -222,7 +230,10 @@ def test_cli_generate_with_bah_and_dsig(
     assert "TESTBIC1XXX" in content
     assert "CLI-BAH-001" in content
     assert "Signature" in content
-    assert verify_xml_signature(content) is True
+    assert (
+        verify_xml_signature(content, cert_pem=Path(cert_file).read_bytes())
+        is True
+    )
 
 
 def test_process_files_envelop_bah_default(

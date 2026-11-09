@@ -234,11 +234,14 @@ def finalise_message(
     if xml_sign_key is not None:
         from pain001.security.dsig import sign_xml_document
 
+        # ``--xml-sign-alg`` sets PAIN001_XML_SIGN_ALG; unset, the key
+        # decides (RSA keys sign rsa-sha256, as before 0.0.83).
         xml_content = sign_xml_document(
             xml_content,
             private_key_pem=xml_sign_key,
             cert_pem=xml_sign_cert,
             passphrase=xml_sign_passphrase,
+            algorithm=os.environ.get("PAIN001_XML_SIGN_ALG") or None,
         )
     return xml_content
 
