@@ -128,7 +128,7 @@ bandit = "^1.9.4"
 # GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and GHSA-v4x8-3wr5-3wq8; the
 # floor keeps every affected release from resolving.
 pip-audit = ">=2.7,<3.0"
-filelock = ">=4.2.1"
+filelock = ">=4.2.9"
 # msgpack comes in through cachecontrol (pip-audit). CVE-2026-114613
 # affects msgpack < 1.2.3; the floor keeps every affected release from resolving.
 msgpack = ">=1.2.3"
