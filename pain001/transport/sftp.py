@@ -9,6 +9,8 @@ import hashlib
 import hmac
 import socket
 import stat
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import BinaryIO
@@ -205,14 +207,29 @@ def _remote_state(
 
 
 @dataclass(frozen=True)
-class _Credentials:
+class Credentials:
     """How the client authenticates; secrets are never logged."""
 
-    identity_file: str | None
-    certificate: str | None
-    password: str | None
-    passphrase: str | None
-    use_agent: bool
+    identity_file: str | None = None
+    certificate: str | None = None
+    password: str | None = None
+    passphrase: str | None = None
+    use_agent: bool = False
+
+    def __repr__(self) -> str:
+        """Name the identity file only; secrets stay out of tracebacks."""
+        return (
+            f"Credentials(identity_file={self.identity_file!r}, "
+            f"use_agent={self.use_agent})"
+        )
+
+
+@dataclass(frozen=True)
+class Trust:
+    """Which host keys are trusted before any credential is sent."""
+
+    known_hosts: str | None = None
+    accept_host_key: str | None = None
 
 
 def _prepare(
@@ -271,7 +288,7 @@ def _pin_host(
 def _connect(
     client: paramiko.SSHClient,
     target: SFTPTarget,
-    credentials: _Credentials,
+    credentials: Credentials,
     timeout: float,
 ) -> None:
     """Load the identity, then connect; the host check runs first.
@@ -428,15 +445,45 @@ def upload_sftp(
     target, local, destination = _prepare(
         file_path, url, accept_host_key, timeout
     )
-    credentials = _Credentials(
+    credentials = Credentials(
         identity_file, certificate, password, passphrase, use_agent
     )
-    with local.open("rb") as source, paramiko.SSHClient() as client:
+    trust = Trust(known_hosts, accept_host_key)
+    with local.open("rb") as source:
         digest, size = _measure(source)
-        _pin_host(client, known_hosts, accept_host_key)
-        _connect(client, target, credentials, timeout)
-        with _open_sftp(client, timeout) as sftp:
+        with session(target, trust, credentials, timeout) as sftp:
             reused = _already_delivered(sftp, destination, digest, size)
             if not reused:
                 _publish(sftp, source, destination, digest)
     return UploadResult(destination, digest, reused)
+
+
+@contextmanager
+def session(
+    target: SFTPTarget,
+    trust: Trust,
+    credentials: Credentials,
+    timeout: float,
+) -> Iterator[paramiko.SFTPClient]:
+    """Open the one audited SFTP connection upload and download share.
+
+    The host-key policy is installed before ``connect``, so no credential
+    leaves the machine until the server's key matches known_hosts or the
+    explicit pin; the SFTP channel carries the same network timeout.
+
+    Args:
+        target: Validated host, port, username and path.
+        trust: known_hosts file and optional SHA256 pin.
+        credentials: Identity, password, passphrase and agent use.
+        timeout: Network operation timeout in seconds.
+
+    Yields:
+        paramiko.SFTPClient: An open client, closed with its SSH
+        connection on exit.
+    """
+    _validate_fingerprint(trust.accept_host_key)
+    with paramiko.SSHClient() as client:
+        _pin_host(client, trust.known_hosts, trust.accept_host_key)
+        _connect(client, target, credentials, timeout)
+        with _open_sftp(client, timeout) as sftp:
+            yield sftp
