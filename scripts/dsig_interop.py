@@ -133,19 +133,6 @@ def _xmlsec1(*args: str) -> None:
         raise RuntimeError(done.stderr.strip() or done.stdout.strip())
 
 
-def _xmlsec1_transforms() -> set[str] | None:
-    """The transform names the installed xmlsec1 lists, or None if absent."""
-    if shutil.which("xmlsec1") is None:
-        return None
-    done = subprocess.run(  # nosec B603 - fixed program and argument
-        ["xmlsec1", "--list-transforms"],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
-    return set((done.stdout + done.stderr).replace(",", " ").split())
-
-
 def _check_xmlsec1(
     name: str, ours: bytes, theirs: bytes, work: Path, cert_pem: bytes
 ) -> None:
@@ -180,9 +167,7 @@ def _check_xmlsec1(
     print(f"  {name}: xmlsec1 signs, pain001 verifies")
 
 
-def _check_case(
-    name: str, sample: bytes, work: Path, xmlsec1: set[str] | None
-) -> None:
+def _check_case(name: str, sample: bytes, work: Path, xmlsec1: bool) -> None:
     factory, method = CASES[name]
     key_pem, cert_pem = _material(factory())
     (work / "key.pem").write_bytes(key_pem)
@@ -200,12 +185,8 @@ def _check_case(
         raise RuntimeError(f"pain001 rejected signxml's {name}: {report}")
     print(f"  {name}: signxml signs, pain001 verifies")
 
-    if xmlsec1 is None:
-        return
-    if name not in xmlsec1:
-        print(f"  {name}: skipped for xmlsec1, which does not list it")
-        return
-    _check_xmlsec1(name, ours, theirs, work, cert_pem)
+    if xmlsec1:
+        _check_xmlsec1(name, ours, theirs, work, cert_pem)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -214,11 +195,13 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--sample", type=Path, default=SAMPLE)
     parser.add_argument("--require-xmlsec1", action="store_true")
     args = parser.parse_args(argv)
-    xmlsec1 = _xmlsec1_transforms()
-    if args.require_xmlsec1 and xmlsec1 is None:
+    # Every case runs against xmlsec1 when it is installed: a case it
+    # cannot check is a failure to look at, never a silent skip.
+    xmlsec1 = shutil.which("xmlsec1") is not None
+    if args.require_xmlsec1 and not xmlsec1:
         print("xmlsec1 is not on PATH", file=sys.stderr)
         return 1
-    if xmlsec1 is None:
+    if not xmlsec1:
         print("xmlsec1 not found: checking against signxml only")
     sample = args.sample.read_bytes()
     with tempfile.TemporaryDirectory(prefix="pain001-dsig-") as name:
