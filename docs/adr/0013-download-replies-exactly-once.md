@@ -62,10 +62,11 @@ the download: they never open network connections.
   a second parser here: when camt053 is installed, `status` reads
   camt.052, camt.053 and camt.054 with it; without it, the core's own
   camt.053 parser reads camt.053, and camt.052 and camt.054 are refused
-  with exit 2 and the install command. A `pain001[camt]` extra follows
-  once camt053 releases with version ranges instead of its exact
-  jinja2, colorama and defusedxml pins, and the in-tree camt.053 parser
-  is then deprecated.
+  with exit 2 and the install command. The `pain001[camt]` extra
+  installs camt053 0.0.26 or later, the first release with version
+  ranges instead of exact jinja2, colorama and defusedxml pins and
+  without the web stack in its base install. The in-tree camt.053
+  parser is deprecated in a later release.
 - `status` reads the files named on its command line wherever they are
   (`download --to` saves anywhere): the parsers take a `base_dir`, and
   the file's own directory is the only base allowed.

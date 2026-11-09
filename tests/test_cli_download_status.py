@@ -298,7 +298,10 @@ def test_camt052_and_054_need_camt053(tmp_path, monkeypatch, version):
     path.write_text(CAMT.format(version), encoding="utf-8")
     result = _status(str(path))
     assert result.exit_code == 2
-    assert f"{version} needs camt053: pip install camt053" in result.output
+    assert (
+        f"{version} needs camt053: pip install 'pain001[camt]'"
+        in result.output
+    )
 
 
 def test_a_camt_file_camt053_cannot_parse_exits_2(tmp_path, monkeypatch):
