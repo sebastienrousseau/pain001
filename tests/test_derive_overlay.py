@@ -19,6 +19,7 @@ from __future__ import annotations
 import re
 import sys
 import tempfile
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -30,11 +31,26 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import derive_overlay  # noqa: E402
 
 
-def _guideline(tmp_path: Path) -> Path:
+@pytest.fixture
+def outside() -> Iterator[Path]:
+    """A directory outside the repository, removed after the test.
+
+    Not ``tmp_path`` or the default temp directory: conftest points both
+    inside the repository, where ``derive_overlay`` refuses a guideline.
+    """
+    with tempfile.TemporaryDirectory(
+        prefix="pain001-guideline-", dir="/tmp"
+    ) as name:
+        path = Path(name)
+        assert not path.resolve().is_relative_to(derive_overlay.REPO_ROOT)
+        yield path
+
+
+def _guideline(outside: Path) -> Path:
     """A synthetic guideline: the .03 XSD with a few restrictions applied.
 
-    Written under the system temp directory, outside the repository, as
-    a real guideline export would be.
+    Written to ``outside``, outside the repository, as a real guideline
+    export would be.
     """
     base = DEFAULT_TEMPLATE_REGISTRY.get_template(
         "pain.001.001.03"
@@ -73,15 +89,14 @@ def _guideline(tmp_path: Path) -> Path:
         1,
     )
     assert text != base
-    outside = Path(tempfile.mkdtemp(prefix="pain001-guideline-", dir="/tmp"))
     path = outside / "guideline.xsd"
     path.write_text(text, encoding="utf-8")
     return path
 
 
-def test_diff_reports_each_kind_of_restriction(tmp_path: Path) -> None:
+def test_diff_reports_each_kind_of_restriction(outside: Path) -> None:
     """Removed, mandatory, narrowed and shortened items are found."""
-    changes = derive_overlay.diff(_guideline(tmp_path), "pain.001.001.03")
+    changes = derive_overlay.diff(_guideline(outside), "pain.001.001.03")
     assert ("PmtInf/CdtTrfTxInf/Amt/EqvtAmt",) in changes["removed"]
     assert all(
         not p[0].startswith("PmtInf/CdtTrfTxInf/Amt/EqvtAmt/")
@@ -107,10 +122,10 @@ def test_diff_reports_each_kind_of_restriction(tmp_path: Path) -> None:
 
 
 def test_main_prints_and_refuses_paths_inside_the_repo(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    outside: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """The report and the rule form print; an in-repo path is refused."""
-    guideline = _guideline(tmp_path)
+    guideline = _guideline(outside)
     assert (
         derive_overlay.main([str(guideline), "--base", "pain.001.001.03"]) == 0
     )

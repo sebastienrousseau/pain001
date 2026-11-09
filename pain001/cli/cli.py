@@ -43,6 +43,10 @@ from pain001.cli._output import (
 )
 from pain001.cli._paths import _file_not_directory, _resolve_template_assets
 from pain001.cli._serve import serve_cmd
+from pain001.cli._verify_signature import (
+    verify_signature_cmd,
+    xml_sign_options,
+)
 from pain001.constants import APP_DESCRIPTION as description
 from pain001.constants import APP_NAME as title
 from pain001.constants import VERSION, valid_xml_types
@@ -603,25 +607,7 @@ _identifier_checks_option = click.option(
     default=None,
     help="Business Message Identifier for the Business Application Header.",
 )
-@click.option(
-    "--xml-sign-key",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    default=None,
-    help="RSA private key PEM file to cryptographically sign generated XML via W3C XML-DSig.",
-)
-@click.option(
-    "--xml-sign-cert",
-    type=click.Path(exists=True, dir_okay=False, readable=True),
-    default=None,
-    help="Optional X.509 certificate PEM file to embed in XML-DSig <KeyInfo>.",
-)
-@click.option(
-    "--xml-sign-passphrase-env",
-    type=str,
-    default=None,
-    metavar="VAR",
-    help="Environment variable holding the passphrase for --xml-sign-key.",
-)
+@xml_sign_options
 @click.option(
     "--schematron",
     type=str,
@@ -950,6 +936,7 @@ cli.add_command(upload_cmd)
 cli.add_command(face_cmd)
 cli.add_command(serve_cmd)
 cli.add_command(check_cmd)
+cli.add_command(verify_signature_cmd)
 
 
 @cli.command("validate")

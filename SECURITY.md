@@ -9,7 +9,8 @@ in the table below; older 0.0.x versions do not receive them.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.82` (latest) | Current | ✅ Yes |
+| `0.0.83` (latest) | Current | ✅ Yes |
+| `0.0.82` | Prior | ✅ Yes |
 | `0.0.81` | Prior | ✅ Yes |
 | `0.0.80` | Prior | ✅ Yes |
 | `0.0.79` | Prior | ✅ Yes |
@@ -161,11 +162,18 @@ get the same signal CI does.
 
 Cryptography is optional and delegated to established libraries:
 
-- **XML signing**: `sign_xml_document` and `verify_xml_signature`
-  (`pain001.security.dsig`, CLI `--xml-sign-key`) apply and check a
-  W3C XML-DSig enveloped RSA-SHA256 signature through the `sign`
-  extra (`cryptography`). An embedded X.509 certificate is carried in
+- **XML signing**: `sign_xml_document` (CLI `--xml-sign-key`,
+  `--xml-sign-alg`) applies a W3C XML-DSig enveloped signature with
+  RSA-SHA256, RSA-PSS or ECDSA (P-256, P-384) through the `sign` extra
+  (`cryptography`, `lxml`). `verify_signature` (CLI
+  `pain001 verify-signature`) checks one against a trust anchor, the
+  signer's certificate or public key, with exclusive C14N 1.0 and an
+  allow-list of algorithms; without an anchor it runs only when asked
+  (`trust_embedded_cert=True`, `--trust-embedded-cert`), as an
+  integrity check. An embedded X.509 certificate is carried in
   `<KeyInfo>`; its chain and validity are not checked.
+  `verify_xml_signature` without a key still trusts the embedded
+  certificate, with a deprecation warning, until 0.0.84 refuses it.
 - **Encrypted input**: `.gpg` / `.asc` data files are decrypted with
   the `gpg` extra (`python-gnupg` and the system GnuPG).
 - **SFTP authentication**: `pain001 upload` uses SSH keys, OpenSSH

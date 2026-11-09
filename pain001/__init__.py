@@ -18,7 +18,7 @@ import importlib
 import logging
 from typing import TYPE_CHECKING
 
-__version__ = "0.0.82"
+__version__ = "0.0.83"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
@@ -51,8 +51,10 @@ if TYPE_CHECKING:
     )
     from pain001.pain002 import build_pain002_report, parse_pain002_report
     from pain001.security.dsig import (
+        SignatureReport,
         XmlSignatureError,
         sign_xml_document,
+        verify_signature,
         verify_xml_signature,
     )
     from pain001.templates import (
@@ -102,6 +104,8 @@ _LAZY: dict[str, str] = {
     "XmlSignatureError": "pain001.security.dsig",
     "sign_xml_document": "pain001.security.dsig",
     "verify_xml_signature": "pain001.security.dsig",
+    "verify_signature": "pain001.security.dsig",
+    "SignatureReport": "pain001.security.dsig",
     "DEFAULT_TEMPLATE_REGISTRY": "pain001.templates",
     "TemplateRegistry": "pain001.templates",
     "validate_registry": "pain001.templates",
@@ -155,6 +159,8 @@ __all__ = [
     "unpack_iso20022_message",
     "sign_xml_document",
     "verify_xml_signature",
+    "verify_signature",
+    "SignatureReport",
     "XmlSignatureError",
     "__version__",
 ]

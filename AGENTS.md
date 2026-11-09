@@ -15,10 +15,12 @@ automated change is most likely to get wrong.
   release opens (`chore(release): open v0.0.N for work`).
 - When it does move, every restatement moves together:
   `pyproject.toml`, `pain001/__init__.py`, `pain001/constants.py`,
-  `CITATION.cff`, the `SECURITY.md` support table, and a new
+  `CITATION.cff`, the `SECURITY.md` and `SUPPORT.md` support tables,
+  the two release statements in `docs/readme-values.json` (then
+  re-render the README with `scripts/render_readme.py`), and a new
   `## [0.0.N]` heading at the top of `CHANGELOG.md`.
-  `scripts/preflight_release.py` and `tests/test_suite_conformance.py`
-  check this.
+  `scripts/preflight_release.py`, `tests/test_preflight_release.py`
+  and `tests/test_suite_conformance.py` check this.
 - Every member of the suite (`pain001-mcp`, `pain001-lsp`,
   `pain001-loader-xlsx`, `pain001-loader-mt101`) ships the same version
   as the core. A change that adds a message type or alters the

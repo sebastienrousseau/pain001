@@ -7,6 +7,101 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.0.83] - 2026-11-09
+
+Signatures: exclusive C14N, ECDSA and RSA-PSS, and a trust anchor for
+verification.
+
+### Announced
+
+These change in 0.0.84 (see
+[ADR-0012](docs/adr/0012-verify-signatures-against-a-trust-anchor.md)):
+
+- `verify_xml_signature()` with neither `public_key_pem` nor `cert_pem`
+  is refused. Today it trusts the certificate inside the document, so
+  anyone can sign a file that passes; 0.0.83 warns
+  (`DeprecationWarning`). Pass the signer's certificate, or call
+  `verify_signature(..., trust_embedded_cert=True)` for an
+  integrity-only check.
+- `sign_xml_document()` signs the parsed document with exclusive C14N
+  1.0 and keeps the document's namespace prefixes. Today it rewrites the
+  tree through ElementTree, so a default namespace comes out as `ns0:`;
+  the signed files change for the same input and key, and verify as
+  before.
+
+### Added
+
+- `verify_signature(signed_xml, trust_anchor=..., trust_embedded_cert=...)`
+  returns a `SignatureReport` (`valid`, `trust`, `algorithm`, `signer`,
+  `reason`). It needs the signer's certificate or public key as the
+  trust anchor, or `trust_embedded_cert=True` for an integrity-only
+  check.
+- `pain001 verify-signature FILE... --cert PEM` (or
+  `--trust-embedded-cert`), text or JSON; exit 0 when every file
+  verifies, 1 when one does not, 2 when it cannot run.
+- Signing with RSA-PSS (`rsa-pss-sha256`, RFC 9231) and ECDSA on P-256
+  and P-384 (`ecdsa-sha256`, `ecdsa-sha384`, the raw `r || s` value
+  XML-DSig 1.1 requires). `sign_xml_document(..., algorithm=...)` and
+  `generate --xml-sign-alg` choose; by default the key decides, and RSA
+  keys sign `rsa-sha256` byte for byte as in 0.0.82.
+- `scripts/dsig_interop.py` and an `XML-DSig interop` CI job: pain001
+  and signxml (and xmlsec1 in CI) sign and verify each other's
+  signatures for every algorithm.
+
+### Deprecated
+
+- `verify_xml_signature()` without a key or certificate (see Announced).
+
+### Changed
+
+- The `sign` extra installs `lxml` as well as `cryptography`;
+  verification canonicalises with it.
+
+- Dependencies, in place of Dependabot #368 to #378:
+
+  | Package | From | To | Where |
+  | :--- | :--- | :--- | :--- |
+  | pyarrow (`parquet` extra) | `>=25.0.1,<26` | `>=26.0.1,<27` | pyproject, poetry.lock |
+  | cryptography (`sign` extra) | 50.0.0 | 50.0.2 | pyproject floor, poetry.lock |
+  | holidays (`rules` extra) | 0.107 | 0.108 | pyproject floor, poetry.lock |
+  | rpds-py | 2026.6.3 | 2026.9.1 | requirements.txt, api and sbom locks |
+  | filelock, pandas, ruff, types-paramiko | 4.2.4, 3.1.0, 0.17.3, 5.0.0.20261021 | 4.2.9, 3.1.1, 0.17.4, 5.1.0.20261030 | dev group |
+  | myst-parser, pydata-sphinx-theme | 4.0.1, 0.23.0 | 5.1.0, 0.24.0 | docs group, docs lock |
+  | GitHub Actions | | codeql-action, setup-java, docker/login-action 4.8.0, action-gh-release 3.0.4 | workflows |
+
+  myst-parser 5 brings markdown-it-py 4.2.0 and mdit-py-plugins 0.6.1
+  into `poetry.lock`.
+
+### Notes
+
+- 0.0.82 changed generated XML for .04 to .08 without the notice one
+  release ahead that the README's stability policy promises; its
+  CHANGELOG entry and ADR-0011 now say so. The policy stands, and the
+  release preflight enforces it: when `tests/golden` changed since the
+  previous tag, that release's CHANGELOG section must have an
+  `### Announced` subsection, or this release's section must record the
+  exception ("not announced a release ahead") with the ADR that explains
+  it.
+
+### Fixed
+
+- Verification rejected valid signatures from other signers. It read
+  the document through ElementTree and canonicalised with C14N 2.0,
+  while the signature declares exclusive C14N 1.0, so a signature made
+  by signxml or a bank over the document as written failed with a
+  digest mismatch. It now parses once with lxml and digests that tree
+  with exclusive C14N 1.0 (honouring an `InclusiveNamespaces` prefix
+  list), keeps the text after the Signature when the enveloped
+  transform removes it, finds `ds:Signature` by namespace rather than
+  by substring and refuses a document with more than one, and accepts
+  only the declared algorithms on its allow-lists. Signatures pain001
+  0.0.82 wrote still verify.
+- `tests/test_derive_overlay.py` and `examples/15_example_corpus.py`
+  no longer leave a `pain001-guideline-*` or
+  `pain001-example-guideline-*` directory in `/tmp` on every run; the
+  synthetic guideline is written to a temporary directory that is
+  removed afterwards.
+
 ## [0.0.82] - 2026-11-08
 
 Fast and checkable: `pain001 check` validates a file that already
@@ -26,7 +121,10 @@ exists, and the hot paths get faster.
   failed EPC-PMT-002. Input without a service level renders as before,
   and rows that disagree on it are refused, as in .03 and .09 to .13.
   The .04 to .08 golden files and bundled examples are regenerated once
-  for both changes (ADR-0011).
+  for both changes (ADR-0011). This was not announced a release ahead,
+  as the README's stability policy asks;
+  [ADR-0011](docs/adr/0011-iban-accounts-written-as-iban.md) records the
+  exception.
 
 ### Added
 

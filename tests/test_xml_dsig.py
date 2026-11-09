@@ -23,6 +23,7 @@ from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 
+from pain001.security import dsig
 from pain001.security.dsig import (
     XmlSignatureError,
     _get_cryptography_modules,
@@ -36,6 +37,16 @@ SAMPLE_XML = (
     '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">'
     "<CstmrCdtTrfInitn><GrpHdr><MsgId>MSG-100</MsgId></GrpHdr></CstmrCdtTrfInitn>"
     "</Document>"
+)
+
+#: A public key for calls that fail before any key is used.
+_ANY_PUBLIC_KEY = (
+    rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    .public_key()
+    .public_bytes(
+        serialization.Encoding.PEM,
+        serialization.PublicFormat.SubjectPublicKeyInfo,
+    )
 )
 
 
@@ -121,8 +132,9 @@ def test_sign_and_verify_with_certificate(
     )
 
     assert "X509Certificate" in signed_xml
-    # Verification without explicit public key extracts cert from KeyInfo
-    assert verify_xml_signature(signed_xml) is True
+    # Without a key it trusts the cert in KeyInfo: deprecated, refused in 0.0.84
+    with pytest.warns(DeprecationWarning, match="0.0.84 refuses this"):
+        assert verify_xml_signature(signed_xml) is True
     # Verification with explicit certificate
     assert verify_xml_signature(signed_xml, cert_pem=cert_pem) is True
 
@@ -187,7 +199,7 @@ def test_tampered_signature_fails_verification(
 def test_verify_missing_signature() -> None:
     """Verify unsigned document raises XmlSignatureError."""
     with pytest.raises(XmlSignatureError, match="No XML-DSig <Signature>"):
-        verify_xml_signature(SAMPLE_XML)
+        verify_xml_signature(SAMPLE_XML, public_key_pem=_ANY_PUBLIC_KEY)
 
 
 def test_verify_malformed_signature_elements(
@@ -235,8 +247,11 @@ def test_verify_missing_key_and_cert() -> None:
         "<SignatureValue>AAAA</SignatureValue>"
         "</Signature></root>"
     )
-    with pytest.raises(
-        XmlSignatureError, match="No public key or certificate supplied"
+    with (
+        pytest.warns(DeprecationWarning),
+        pytest.raises(
+            XmlSignatureError, match="No public key or certificate supplied"
+        ),
     ):
         verify_xml_signature(xml_no_key)
 
@@ -273,17 +288,11 @@ def test_signing_failure_raises_xml_signature_error(
 ) -> None:
     """Verify XmlSignatureError when private_key.sign() raises an exception."""
     key_pem, _, _ = rsa_key_and_cert
-    from cryptography.hazmat.primitives import serialization
 
-    class BadKey:
-        def sign(self, *args: object, **kwargs: object) -> bytes:
-            raise ValueError("Simulated signing hardware error")
+    def failing_sign(*args: object, **kwargs: object) -> bytes:
+        raise ValueError("Simulated signing hardware error")
 
-    monkeypatch.setattr(
-        serialization,
-        "load_pem_private_key",
-        lambda *args, **kwargs: BadKey(),
-    )
+    monkeypatch.setattr(dsig, "sign_bytes", failing_sign)
     with pytest.raises(
         XmlSignatureError,
         match="Signing failed: Simulated signing hardware error",

@@ -44,7 +44,7 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1350
+    "file_lines": 1337
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "lines": 121
@@ -247,14 +247,6 @@
   "pain001/schematron/validator.py::SchematronValidator.validate": {
     "cyclomatic": 12,
     "lines": 74
-  },
-  "pain001/security/dsig.py::sign_xml_document": {
-    "lines": 108
-  },
-  "pain001/security/dsig.py::verify_xml_signature": {
-    "cognitive": 30,
-    "cyclomatic": 25,
-    "lines": 122
   },
   "pain001/security/path_validator.py::_resolve_within_allowed_bases": {
     "lines": 74

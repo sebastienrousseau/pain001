@@ -96,6 +96,45 @@ preset only (``sepa``, ``fednow``, ``cbpr``), never a server path. A
 failed rung is a ``200`` with ``"passed": false``; a document that
 cannot be checked is a ``422``.
 
+Signing and verifying signatures
+================================
+
+``--xml-sign-key`` on ``generate`` adds an enveloped W3C XML-DSig
+signature (``pain001[sign]``). The algorithm follows the key: an RSA key
+signs ``rsa-sha256``, a P-256 or P-384 key ``ecdsa-sha256`` or
+``ecdsa-sha384``. ``--xml-sign-alg rsa-pss-sha256`` signs RSA-PSS
+instead. ``--xml-sign-cert`` embeds the signer's certificate.
+
+``pain001 verify-signature`` checks the signature on files you received
+or wrote. Pass the signer's certificate (or public key) with ``--cert``;
+that is the trust anchor. ``--trust-embedded-cert`` verifies with each
+file's own certificate instead, which proves the file is unchanged since
+it was signed but not who signed it, since anyone can sign with a
+certificate they made.
+
+.. code-block:: bash
+
+   pain001 verify-signature out/batch.xml --cert bank-signer.pem
+   pain001 verify-signature out/*.xml --cert ours.pem --format json
+
+It exits 0 when every file verifies, 1 when any does not, and 2 when it
+cannot run (no trust choice, an unreadable certificate). In Python,
+``verify_signature`` returns a ``SignatureReport``:
+
+.. code-block:: python
+
+   from pain001 import verify_signature
+
+   report = verify_signature(signed_xml, trust_anchor=cert_pem)
+   print(report.valid, report.algorithm, report.signer, report.reason)
+
+Verification uses exclusive C14N 1.0 on the parsed document and accepts
+only the algorithms above, SHA-256 to SHA-512 digests, and a reference
+to the whole document with the enveloped transform. The certificate's
+chain and validity dates are not checked. ``verify_xml_signature``
+without a key or certificate still trusts the embedded certificate, with
+a ``DeprecationWarning``; pain001 0.0.84 refuses it.
+
 In CI
 -----
 
