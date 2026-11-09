@@ -6,12 +6,15 @@ import re
 import sys
 from pathlib import Path
 
+from ecosystem_audit.documentation import readme_values
+
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def render() -> str:
     """Substitute evidence without altering the canonical layout."""
     values = json.loads((ROOT / "docs/readme-values.json").read_text())
+    values.update(readme_values())
     template = (ROOT / "docs/readme-template.md").read_text()
     return re.sub(
         r"\{\{([A-Z_]+)\}\}", lambda match: values[match[1]], template

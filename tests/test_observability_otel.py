@@ -19,12 +19,52 @@ import pytest
 
 from pain001.observability import otel
 
+try:
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+        OTLPSpanExporter as _NetworkExporter,
+    )
+except ImportError:
+    _NetworkExporter = None
+
 
 @pytest.fixture(autouse=True)
-def _reset_otel_state():
-    """Drop the cached tracer between tests so each starts clean."""
+def _reset_otel_state(monkeypatch):
+    """Keep SDK providers local and exported test spans in memory."""
+    providers = []
+    try:
+        from opentelemetry import trace
+        from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+            InMemorySpanExporter,
+        )
+    except ImportError:
+        pass
+    else:
+        original = trace.get_tracer_provider
+        monkeypatch.setattr(trace, "set_tracer_provider", providers.append)
+        monkeypatch.setattr(
+            trace,
+            "get_tracer_provider",
+            lambda: providers[-1] if providers else original(),
+        )
+        monkeypatch.setattr(
+            trace,
+            "get_tracer",
+            lambda *args, **kwargs: trace.get_tracer_provider().get_tracer(
+                *args, **kwargs
+            ),
+        )
+        try:
+            from opentelemetry.exporter.otlp.proto.http import trace_exporter
+        except ImportError:
+            pass
+        else:
+            monkeypatch.setattr(
+                trace_exporter, "OTLPSpanExporter", InMemorySpanExporter
+            )
     otel.reset_for_tests()
     yield
+    for provider in providers:
+        provider.shutdown()
     otel.reset_for_tests()
 
 
@@ -96,11 +136,14 @@ def test_init_otel_respects_otel_service_name(monkeypatch):
     pytest.importorskip("opentelemetry.sdk")
     monkeypatch.setenv("OTEL_ENABLED", "true")
     monkeypatch.setenv("OTEL_SERVICE_NAME", "acme-payments")
-    # We can't easily introspect the Resource without poking SDK
-    # internals; instead verify init succeeds and a span carries the
-    # service.name attribute when written.
     tracer = otel.init_otel()
     assert tracer is not None
+    from opentelemetry import trace
+
+    assert (
+        trace.get_tracer_provider().resource.attributes["service.name"]
+        == "acme-payments"
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -243,3 +286,28 @@ def test_reset_for_tests_clears_singleton(monkeypatch):
     otel.reset_for_tests()
     monkeypatch.delenv("OTEL_ENABLED", raising=False)
     assert otel.init_otel() is None
+
+
+def test_enabled_tracing_tests_never_reach_otlp_transport(monkeypatch):
+    """The real-SDK test seam keeps exported spans in memory."""
+    pytest.importorskip(
+        "opentelemetry.exporter.otlp.proto.http.trace_exporter"
+    )
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace.export import SpanExportResult
+
+    assert _NetworkExporter is not None
+    attempts = []
+    monkeypatch.setattr(
+        _NetworkExporter,
+        "export",
+        lambda self, spans: (
+            attempts.append(tuple(spans)) or SpanExportResult.SUCCESS
+        ),
+    )
+    monkeypatch.setenv("OTEL_ENABLED", "true")
+    tracer = otel.init_otel()
+    with tracer.start_as_current_span("synthetic-test-span"):
+        pass
+    assert trace.get_tracer_provider().force_flush()
+    assert attempts == []

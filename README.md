@@ -35,7 +35,7 @@
 
 **The Pain001 ecosystem**
 
-- [The Pain001 ecosystem](#the-pain001-ecosystem) — core, MCP, LSP, loaders, plugin scaffold and mockbank
+- [The Pain001 ecosystem](#the-pain001-ecosystem) — core, MCP, LSP, loaders, scaffold, mockbank, native extension and website
 
 **Library reference**
 
@@ -65,10 +65,10 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.83**: ISO 20022 pain.001 and pain.008 files generated
-> from CSV, SQLite, JSON, JSON Lines and Parquet and validated against the
-> official XSD, for Python 3.11+, released with the whole pain001 suite at one
-> version.
+> **Latest release: v0.0.84**: ISO 20022 pain.001 and pain.008 files
+> generated from CSV, SQLite, JSON, JSON Lines and Parquet and validated
+> against the official XSD, for Python 3.11+. Each companion publication
+> is verified separately by the ecosystem audit.
 
 Optional extras: `api`, `parquet`, `redis`, `mcp`, `lsp`, `gpg`, `otel`,
 `fast` (libxml2 validation), `upload` (SFTP), `rules` (CEL policies) and `sign`
@@ -117,21 +117,25 @@ checks data but is not a bank acceptance guarantee.
 
 ## The Pain001 ecosystem
 
-Core, MCP, LSP, XLSX and MT101 packages follow the coordinated version policy;
-see [suite policy](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md).
-The new plugin scaffold and mockbank start separately at unreleased `0.0.1`.
-The [issue acceptance audit](docs/issue-audit.md) is a historical 0.0.71
-record. Companion packages are independently installed.
+All nine repositories follow one suite version; see the
+[suite policy](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md).
+The scaffold, native extension and website joined at 0.0.82 by maintainer
+decision. Each member publishes through its own channels. The
+[publication audit](docs/ecosystem-publications.md) verifies every member
+before a coordinated release is declared complete. Component rows below
+are generated from [the publication inventory](docs/ecosystem.json).
 
 | Component | Purpose | Use case |
 | :--- | :--- | :--- |
 | [pain001](https://github.com/sebastienrousseau/pain001) | Generation, validation, CLI and REST | Payment-file pipelines |
-| [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) | Agent tools | Standalone MCP service; in-tree alternative uses the `mcp` extra |
-| [pain001-lsp](https://github.com/sebastienrousseau/pain001-lsp) | Editor integration | Standalone JSON diagnostics; in-tree LSP handles CSV |
-| [pain001-loader-xlsx](https://github.com/sebastienrousseau/pain001-loader-xlsx) | Excel loader plugin | Install alongside core for `.xlsx` / `.xlsm`; first sheet only, reject numeric IBAN and datetime cells |
-| [pain001-loader-mt101](https://github.com/sebastienrousseau/pain001-loader-mt101) | MT101 loader plugin | Convert supported MT101 inputs |
-| [pain001-plugin-template](https://github.com/sebastienrousseau/pain001-plugin-template/tree/feat/v0.0.1) | Cookiecutter scaffold | Develop an external plugin |
-| [pain001-mockbank](https://github.com/sebastienrousseau/pain001-mockbank/tree/feat/v0.0.1) | Synthetic SFTP test service | Generate pain.002 replies; development image `ghcr.io/sebastienrousseau/pain001-mockbank:edge` |
+| [pain001-mcp](https://github.com/sebastienrousseau/pain001-mcp) | Model Context Protocol server | Agent tools for payment data |
+| [pain001-lsp](https://github.com/sebastienrousseau/pain001-lsp) | Language Server Protocol server | Editor diagnostics for payment data |
+| [pain001-loader-mt101](https://github.com/sebastienrousseau/pain001-loader-mt101) | SWIFT MT101 loader plugin | Convert supported MT101 inputs |
+| [pain001-loader-xlsx](https://github.com/sebastienrousseau/pain001-loader-xlsx) | Excel loader plugin | Read .xlsx and .xlsm payment inputs |
+| [pain001-mockbank](https://github.com/sebastienrousseau/pain001-mockbank) | Synthetic SFTP bank-response test service | Generate pain.002 replies in integration tests |
+| [pain001-plugin-template](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter plugin scaffold | Develop an external loader or validator |
+| [pain001-fast](https://github.com/sebastienrousseau/pain001-fast) | Experimental native validation extension | Optional IBAN, BIC and character-set helpers |
+| [pain001.com](https://github.com/sebastienrousseau/pain001.github.io) | Website and browser demo | Browse documentation and try the library |
 
 ---
 
@@ -317,7 +321,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.83; publication requires approved release PRs and signed release tags.
+is 0.0.84; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

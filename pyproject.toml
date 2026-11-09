@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.83"
+version = "0.0.84"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -171,6 +171,7 @@ build-backend = "poetry.core.masonry.api"
 [tool.pytest.ini_options]
 # Test discovery
 testpaths = ["tests"]
+pythonpath = [".", "scripts"]
 python_files = "test_*.py"
 python_classes = "Test*"
 python_functions = "test_*"
@@ -393,6 +394,8 @@ also_copy = [
     "docs", "examples", "scenarios", "scripts", "benches", "requirements.txt",
     "DEVELOPMENT.md", "GOVERNANCE.md", "ARCHITECTURE.md", "SUPPORT.md",
     "RELEASING.md", "CITATION.cff",
+    # The inventory-generation test reads both root component tables.
+    "ROADMAP.md",
     # The release-notes test reads releases/vX.md once the version is dated.
     "releases",
     # tests/test_ci_surfaces.py reads the Action and the pre-commit hooks.

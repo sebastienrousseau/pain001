@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean docs help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates face-contracts
+.PHONY: release-check format lint type test cov sec complexity demo pr check perf slos clean docs help tollgate-deps tollgate-xsd tollgate-idempotency tollgate-envparity tollgates face-contracts test-publications ecosystem-check
 
 # Color output
 RED := \033[0;31m
@@ -37,6 +37,8 @@ help:
 	@echo "  cov           - Generate coverage report (100% enforced)"
 	@echo "  sec           - Security checks (bandit, safety)"
 	@echo "  release-check - Pre-flight the RELEASING.md checklist before tagging"
+	@echo "  ecosystem-check - Audit all nine published suite members (network)"
+	@echo "  test-publications - Test the audit offline with 100% line/branch coverage"
 	@echo "  perf          - Performance benchmarks (XML generation < 500ms/1000tx)"
 	@echo "  complex       - Code complexity analysis"
 	@echo "  complexity    - Complexity ceilings against complexity-baseline.json (gate)"
@@ -288,5 +290,15 @@ slos: lint type test perf
 	@echo "$(GREEN)✓ All SLOs verified$(NC)"
 
 # --- Full quality gate (blocking) ---
-check: lint cov sec complexity corpus-coverage
+check: lint cov test-publications sec complexity corpus-coverage
 	@echo "$(GREEN)✓ Full quality gate passed$(NC)"
+
+# The publication checker has its own coverage source. The package's full
+# coverage gate above remains unchanged; this target also tests CLI failures.
+test-publications:
+	@poetry run pytest -o addopts='' tests/test_ecosystem_publications.py tests/test_ecosystem_transport.py tests/test_ecosystem_cli.py tests/test_ecosystem_documentation.py tests/test_ecosystem_workflow.py --cov=ecosystem_audit --cov=check_ecosystem --cov=render_ecosystem_docs --cov=render_ecosystem_workflows --cov-branch --cov-report=term-missing --cov-fail-under=100 -q
+	@python3 scripts/render_ecosystem_docs.py --check
+	@python3 scripts/render_readme.py --check
+
+ecosystem-check:
+	@python3 scripts/check_ecosystem.py $(if $(VERSION),--version $(VERSION),)

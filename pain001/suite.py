@@ -12,7 +12,11 @@
 # implied. See the applicable Licence for the specific language
 # governing permissions and limitations.
 
-"""What the pain001 suite is, and how its versions move.
+"""The PyPI portion of the pain001 suite and its dependency-floor policy.
+
+The full nine-repository publication inventory is ``docs/ecosystem.json``.
+It also includes GitHub-only, container and website publications checked by
+``scripts/check_ecosystem.py``. This module retains the PyPI policy API.
 
 Users install more than one package — `pain001`, `pain001-mcp`,
 `pain001-lsp`, a loader or two — and the failure they hit is a version
@@ -96,7 +100,7 @@ class SuiteMember(NamedTuple):
 #: The core distribution every other member depends on.
 CORE: Final[str] = "pain001"
 
-#: Every published member of the suite, keyed by distribution name.
+#: Every PyPI member of the suite, keyed by distribution name.
 #:
 #: Read-only: this is reference data, and a caller reshaping it would
 #: change what a consistency check believes about the world.
@@ -140,13 +144,13 @@ SUITE: Final[MappingProxyType[str, SuiteMember]] = MappingProxyType(
 
 
 def members() -> tuple[SuiteMember, ...]:
-    """Return every member of the suite, core first.
+    """Return every PyPI member of the suite, core first.
 
     Every member is lockstep, so there is no second accessor to pick a
     subset — the absence of one is the policy.
 
     Returns:
-        All suite members, core first.
+        All PyPI suite members, core first.
 
     Example:
         >>> [m.distribution for m in members()][0]

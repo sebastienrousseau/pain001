@@ -7,6 +7,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.0.84] - 2026-11-09
+
+### Added
+
+- A complete nine-repository publication inventory and read-only audit of
+  GitHub release titles, signed annotated tags and checksum notes; all five
+  PyPI distributions and core dependency floors; both Linux architectures
+  of the core, MCP, LSP and mockbank GHCR images; the MCP Registry; and the live website runtime and
+  pinned core wheel hash. Partial publications fail with per-member evidence.
+- A shared GitHub action, daily and post-publishing workflow checks, retained
+  JSON reports, generated companion workflow adapters, required release
+  payload checks, and offline tests with a separate 100% line/branch floor.
+
+### Changed
+
+The following breaking signature API and output changes were announced in
+0.0.83 and accepted in ADR-0012:
+
+- `verify_xml_signature()` requires `public_key_pem` or `cert_pem`; missing
+  trust raises `ValueError`. Explicit embedded-certificate integrity checks
+  remain available through `verify_signature(..., trust_embedded_cert=True)`.
+- `sign_xml_document()` signs the parsed XML with exclusive C14N 1.0 and
+  preserves namespace prefixes. The standalone C14N 2.0 utility keeps its
+  existing contract.
+- With a head.001.001.03 header, signatures are written inside
+  `AppHdr/Sgntr`, covering the whole envelope. Existing signatures,
+  ambiguous headers and occupied signature containers are refused.
+
+### Fixed
+
+- Keep enabled tracing tests on local SDK providers and in-memory exporters,
+  then shut their providers down so spans cannot leak to a real OTLP endpoint.
+- Generate README and roadmap component tables from the audited inventory.
+  Remove obsolete independent-version and loader-floor instructions from
+  the release guide and record the nine-member lockstep policy.
+- The GitHub Action example in `action.yml` and the manual pins
+  `sebastienrousseau/pain001@v0.0.84`; the 0.0.83 manual still showed
+  `@v0.0.82`. The release preflight (item 9 in `RELEASING.md`) and a
+  test now require every such example to name the version being
+  released.
+
 ## [0.0.83] - 2026-11-09
 
 Signatures: exclusive C14N, ECDSA and RSA-PSS, and a trust anchor for

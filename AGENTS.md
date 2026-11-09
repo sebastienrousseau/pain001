@@ -21,10 +21,12 @@ automated change is most likely to get wrong.
   `## [0.0.N]` heading at the top of `CHANGELOG.md`.
   `scripts/preflight_release.py`, `tests/test_preflight_release.py`
   and `tests/test_suite_conformance.py` check this.
-- Every member of the suite (`pain001-mcp`, `pain001-lsp`,
-  `pain001-loader-xlsx`, `pain001-loader-mt101`) ships the same version
-  as the core. A change that adds a message type or alters the
+- Every member in `docs/ecosystem.json`, including mockbank, the plugin
+  scaffold, native extension and website, ships the same suite version.
+  A change that adds a message type or alters the
   required-field set is a coordinated release across all of them.
+- Verify publication with `make ecosystem-check`; the PyPI-only suite
+  checker does not establish a complete ecosystem release.
 
 ## Commits and signing
 

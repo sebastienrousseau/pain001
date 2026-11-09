@@ -93,3 +93,20 @@ C14N, as the CHANGELOG's `### Announced` section says.
   the same rewrite of the signer.
 - 0.0.84: `verify_xml_signature` without a key raises; the signer keeps
   the caller's document and prefixes.
+
+## Implementation in 0.0.84
+
+The accepted second stage is implemented: the boolean wrapper requires
+an explicit public key or certificate, and signing uses exclusive C14N
+1.0 over the parsed document and SignedInfo. Input namespace prefixes are
+preserved. A supported head.001.001.03 header carries the signature in
+`AppHdr/Sgntr`; the container exists before the payload digest is taken.
+An existing signature, ambiguous headers or an occupied container are
+refused. Plain documents retain a root-level enveloped signature.
+
+The standalone `canonicalize_xml` C14N 2.0 utility keeps its existing
+contract and is no longer used by signing. Tests cover namespace
+preservation, explicit trust, header placement, malformed input and all
+supported signing algorithms. The interoperability script checks the
+result against signxml and xmlsec1. The canonicalization and enveloped
+transform rules follow the [W3C XML Signature specification](https://www.w3.org/TR/xmldsig-core1/).

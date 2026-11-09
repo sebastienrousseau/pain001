@@ -109,6 +109,27 @@ def test_a_stale_readme_blocks_the_release() -> None:
     assert preflight_release.readme_release_problems("0.0.81", fixed) == []
 
 
+def test_the_action_examples_pin_the_version_being_released() -> None:
+    """action.yml and docs/usage.rst show ``pain001@v<version>``."""
+    from pain001.constants import VERSION
+
+    assert preflight_release.action_pin_problems(VERSION) == []
+
+
+def test_a_stale_action_pin_blocks_the_release() -> None:
+    """The 0.0.83 manual, still pinning @v0.0.82, fails the check."""
+    texts = {
+        "docs/usage.rst": "- uses: sebastienrousseau/pain001@v0.0.82\n",
+        "action.yml": "#   - uses: sebastienrousseau/pain001@v0.0.83\n",
+    }
+    assert preflight_release.action_pin_problems("0.0.83", texts) == [
+        "docs/usage.rst pins sebastienrousseau/pain001@v0.0.82, not @v0.0.83"
+    ]
+    assert preflight_release.action_pin_problems(
+        "0.0.83", {"action.yml": "no example here\n"}
+    ) == ["action.yml has no sebastienrousseau/pain001@v... example"]
+
+
 _ANNOUNCED = """## [0.0.83] - Unreleased
 
 ### Changed

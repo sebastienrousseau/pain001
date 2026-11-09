@@ -22,6 +22,7 @@ from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
+from lxml import etree
 
 from pain001.security import dsig
 from pain001.security.dsig import (
@@ -90,7 +91,7 @@ def rsa_key_and_cert() -> tuple[bytes, bytes, bytes]:
 
 
 def test_canonicalize_xml_string_and_element() -> None:
-    """Verify exclusive canonicalization produces standard deterministic c14n output."""
+    """The existing C14N 2.0 utility accepts strings and ElementTree nodes."""
     xml_str = '<root b="2" a="1"><child>text</child></root>'
     c14n1 = canonicalize_xml(xml_str)
     assert '<root a="1" b="2"><child>text</child></root>' == c14n1
@@ -132,9 +133,9 @@ def test_sign_and_verify_with_certificate(
     )
 
     assert "X509Certificate" in signed_xml
-    # Without a key it trusts the cert in KeyInfo: deprecated, refused in 0.0.84
-    with pytest.warns(DeprecationWarning, match="0.0.84 refuses this"):
-        assert verify_xml_signature(signed_xml) is True
+    # The embedded certificate is metadata; the caller supplies trust.
+    with pytest.raises(ValueError, match="public_key_pem or cert_pem"):
+        verify_xml_signature(signed_xml)
     # Verification with explicit certificate
     assert verify_xml_signature(signed_xml, cert_pem=cert_pem) is True
 
@@ -180,7 +181,7 @@ def test_tampered_signature_fails_verification(
     key_pem, pub_pem, _ = rsa_key_and_cert
     signed_xml = sign_xml_document(SAMPLE_XML, key_pem)
 
-    root = et.fromstring(signed_xml)
+    root = etree.fromstring(signed_xml.encode())
     sig_val = root.find(
         ".//{http://www.w3.org/2000/09/xmldsig#}SignatureValue"
     )
@@ -188,7 +189,7 @@ def test_tampered_signature_fails_verification(
     # Flip the first char of base64 signature
     corrupted_b64 = ("A" if sig_val.text[0] != "A" else "B") + sig_val.text[1:]
     sig_val.text = corrupted_b64
-    corrupted_xml = et.tostring(root, encoding="unicode")
+    corrupted_xml = etree.tostring(root, encoding="unicode")
 
     with pytest.raises(
         XmlSignatureError, match="Cryptographic signature verification failed"
@@ -240,19 +241,14 @@ def test_verify_malformed_signature_elements(
 
 
 def test_verify_missing_key_and_cert() -> None:
-    """Verify XmlSignatureError raised when no key/cert given and no KeyInfo present."""
+    """Missing caller trust is refused before an untrusted document is parsed."""
     xml_no_key = (
         '<root><Signature xmlns="http://www.w3.org/2000/09/xmldsig#">'
         "<SignedInfo><DigestValue>dummy</DigestValue></SignedInfo>"
         "<SignatureValue>AAAA</SignatureValue>"
         "</Signature></root>"
     )
-    with (
-        pytest.warns(DeprecationWarning),
-        pytest.raises(
-            XmlSignatureError, match="No public key or certificate supplied"
-        ),
-    ):
+    with pytest.raises(ValueError, match="public_key_pem or cert_pem"):
         verify_xml_signature(xml_no_key)
 
 

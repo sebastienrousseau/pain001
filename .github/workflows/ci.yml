@@ -340,11 +340,11 @@ jobs:
         with:
           attestations: true
 
-      # The website regenerates its corpus pages, demo samples and version
-      # stamps from each release and opens a pull request there. Needs a
-      # fine-grained PAT (contents: write, pull requests: write on
-      # pain001.github.io) in SITE_DISPATCH_TOKEN; without it this step
-      # fails on its own and the release is unaffected.
+      # Ask the website to prepare its corpus pages, demo samples and
+      # version stamps as a reviewable patch artifact. The maintainer
+      # applies it in the website's active iteration PR. Dispatch needs
+      # SITE_DISPATCH_TOKEN access to pain001.github.io; without it this
+      # step fails on its own and the release is unaffected.
       - name: ❯ Ask the website to regenerate
         continue-on-error: true
         env:

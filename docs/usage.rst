@@ -132,8 +132,16 @@ Verification uses exclusive C14N 1.0 on the parsed document and accepts
 only the algorithms above, SHA-256 to SHA-512 digests, and a reference
 to the whole document with the enveloped transform. The certificate's
 chain and validity dates are not checked. ``verify_xml_signature``
-without a key or certificate still trusts the embedded certificate, with
-a ``DeprecationWarning``; pain001 0.0.84 refuses it.
+requires an explicit ``public_key_pem`` or ``cert_pem``; a call without
+one raises ``ValueError``. For an explicit integrity-only check, use
+``verify_signature(..., trust_embedded_cert=True)``. This change was
+announced in 0.0.83 (ADR-0012).
+
+Signing also uses exclusive C14N 1.0 on the parsed tree and preserves the
+input's namespace prefixes. For a head.001.001.03 Business Application
+Header, the signature is inside ``AppHdr/Sgntr``; without that header it
+is an enveloped signature on the document root. The whole document is
+covered in both cases, including the header and payment payload.
 
 In CI
 -----
@@ -150,7 +158,7 @@ on, so a glob may match XML that is not a payment:
      security-events: write   # for the SARIF upload
    steps:
      - uses: actions/checkout@<sha>
-     - uses: sebastienrousseau/pain001@v0.0.82
+     - uses: sebastienrousseau/pain001@v0.0.84
        with:
          files: "payments/**/*.xml"
          scheme: sepa-sct

@@ -20,22 +20,19 @@ RSA-PSS or ECDSA (the algorithm follows the key, or ``algorithm``).
 needs a trust anchor, or ``trust_embedded_cert=True`` for an
 integrity-only check. ``verify_xml_signature`` is the older boolean form.
 
-Announced for 0.0.84: ``verify_xml_signature`` without a key or
-certificate is refused instead of trusting the document's own
-certificate, and ``sign_xml_document`` signs the parsed document with
-exclusive C14N 1.0 and keeps its namespace prefixes instead of rewriting
-the tree through ElementTree (``ns0:``).
+``verify_xml_signature`` requires the caller's key or certificate.
+``sign_xml_document`` uses exclusive C14N 1.0 on the parsed document and
+keeps its namespace prefixes. With a head.001.001.03 BAH, the signature
+is placed in ``AppHdr/Sgntr``; a plain document carries it at the root.
+These changes were announced in 0.0.83 for 0.0.84 (ADR-0012).
 """
 
 from __future__ import annotations
 
 import base64
 import hashlib
-import warnings
 import xml.etree.ElementTree as et  # nosec B405
 from typing import Any
-
-import defusedxml.ElementTree as defused_et
 
 from pain001.security._dsig_algorithms import (
     SIG_RSA_SHA256,
@@ -43,11 +40,18 @@ from pain001.security._dsig_algorithms import (
     algorithm_for_key,
     sign_bytes,
 )
+from pain001.security._dsig_sign import (
+    _prepare_document,
+    _serialize_document,
+)
 from pain001.security._dsig_verify import (
     C14N_EXCLUSIVE,
     TRANSFORM_ENVELOPED,
     XMLDSIG_NS,
     SignatureReport,
+    _c14n,
+    _etree,
+    _parse,
     verify_signature,
 )
 
@@ -74,11 +78,10 @@ class XmlSignatureError(Exception):
 
 
 def canonicalize_xml(xml_content: str | et.Element) -> str:
-    """Canonicalise XML the way ``sign_xml_document`` has since 0.0.60.
+    """Canonicalise XML with ElementTree's C14N 2.0 utility.
 
-    This is ElementTree's C14N 2.0, kept so 0.0.83 signs byte for byte
-    as 0.0.82 did; verification uses exclusive C14N 1.0 on the parsed
-    tree instead. 0.0.84 signs with exclusive C14N too (announced).
+    This utility retains its existing string and ElementTree support.
+    The signature APIs use exclusive C14N 1.0 on parsed XML instead.
 
     Args:
         xml_content: An XML string or ElementTree.Element.
@@ -169,7 +172,7 @@ def _load_signing_key(
 
 
 def _signed_info_xml(digest_value: str, signature_method: str) -> str:
-    """SignedInfo as 0.0.82 wrote it: one enveloped whole-document reference."""
+    """SignedInfo with one enveloped whole-document reference."""
     return (
         f'<ds:SignedInfo xmlns:ds="{XMLDSIG_NS}">'
         f'<ds:CanonicalizationMethod Algorithm="{C14N_EXCLUSIVE}"/>'
@@ -186,7 +189,7 @@ def _signed_info_xml(digest_value: str, signature_method: str) -> str:
     )
 
 
-def _append_key_info(sig_el: et.Element, cert_pem: str | bytes) -> None:
+def _append_key_info(sig_el: Any, cert_pem: str | bytes) -> None:
     """Embed the certificate's base64 body in KeyInfo/X509Data."""
     cert_str = (
         cert_pem.decode("utf-8") if isinstance(cert_pem, bytes) else cert_pem
@@ -198,9 +201,11 @@ def _append_key_info(sig_el: et.Element, cert_pem: str | bytes) -> None:
         .replace("\r", "")
         .strip()
     )
-    key_info_el = et.SubElement(sig_el, f"{{{XMLDSIG_NS}}}KeyInfo")
-    x509_data_el = et.SubElement(key_info_el, f"{{{XMLDSIG_NS}}}X509Data")
-    x509_cert_el = et.SubElement(
+    key_info_el = _etree().SubElement(sig_el, f"{{{XMLDSIG_NS}}}KeyInfo")
+    x509_data_el = _etree().SubElement(
+        key_info_el, f"{{{XMLDSIG_NS}}}X509Data"
+    )
+    x509_cert_el = _etree().SubElement(
         x509_data_el, f"{{{XMLDSIG_NS}}}X509Certificate"
     )
     x509_cert_el.text = cert_clean
@@ -234,30 +239,18 @@ def sign_xml_document(
     private_key, chosen = _load_signing_key(
         private_key_pem, passphrase, algorithm
     )
-    root = defused_et.fromstring(xml_content)
-    et.register_namespace("ds", XMLDSIG_NS)
-
-    # Digest the payload, then sign the canonical SignedInfo naming it.
-    digest_val = compute_sha256_digest(canonicalize_xml(root))
-    signed_info_xml = _signed_info_xml(digest_val, chosen.uri)
-    canonical_signed_info = canonicalize_xml(signed_info_xml)
     try:
-        sig_bytes = sign_bytes(
-            private_key, chosen, canonical_signed_info.encode("utf-8")
-        )
+        tree, sig_el, digest = _prepare_document(xml_content)
+        info = _parse(_signed_info_xml(digest, chosen.uri).encode()).getroot()
+        sig_el.append(info)
+        sig_bytes = sign_bytes(private_key, chosen, _c14n(info, None))
+        value = _etree().SubElement(sig_el, f"{{{XMLDSIG_NS}}}SignatureValue")
+        value.text = base64.b64encode(sig_bytes).decode("ascii")
+        if cert_pem is not None:
+            _append_key_info(sig_el, cert_pem)
+        return _serialize_document(tree)
     except Exception as err:
         raise XmlSignatureError(f"Signing failed: {err}") from err
-
-    sig_el = et.Element(f"{{{XMLDSIG_NS}}}Signature")
-    sig_el.append(defused_et.fromstring(signed_info_xml))
-    sig_val_el = et.SubElement(sig_el, f"{{{XMLDSIG_NS}}}SignatureValue")
-    sig_val_el.text = base64.b64encode(sig_bytes).decode("ascii")
-    if cert_pem is not None:
-        _append_key_info(sig_el, cert_pem)
-
-    root.append(sig_el)
-    body = et.tostring(root, encoding="unicode")
-    return f'<?xml version="1.0" encoding="UTF-8"?>\n{body}'
 
 
 def verify_xml_signature(
@@ -267,11 +260,11 @@ def verify_xml_signature(
 ) -> bool:
     """Verify an enveloped XML-DSig signature; True or an exception.
 
-    The boolean form of ``verify_signature``. With ``public_key_pem`` or
-    ``cert_pem`` that key is the trust anchor. With neither, it trusts
-    the certificate inside the document, which proves integrity but not
-    who signed: that emits a ``DeprecationWarning``, and pain001 0.0.84
-    refuses it.
+    The boolean form of ``verify_signature``. The caller's
+    ``public_key_pem`` or ``cert_pem`` is the trust anchor. An embedded
+    certificate alone is refused, as announced in 0.0.83. For an explicit
+    integrity-only check, use ``verify_signature(...,
+    trust_embedded_cert=True)`` instead.
 
     Args:
         signed_xml: The signed XML document string or bytes.
@@ -283,22 +276,17 @@ def verify_xml_signature(
 
     Raises:
         XmlSignatureError: If the signature is missing or does not verify.
+        ValueError: If neither an explicit public key nor certificate is given.
     """
-    _get_cryptography_modules()
     anchor = public_key_pem if public_key_pem is not None else cert_pem
     if anchor is None:
-        warnings.warn(
-            "verify_xml_signature() without public_key_pem or cert_pem "
-            "trusts the certificate inside the document, so anyone can "
-            "sign a document that passes; pain001 0.0.84 refuses this. "
-            "Pass the signer's certificate, or call verify_signature(..., "
-            "trust_embedded_cert=True) for an integrity-only check.",
-            DeprecationWarning,
-            stacklevel=2,
+        raise ValueError(
+            "verify_xml_signature requires public_key_pem or cert_pem; "
+            "use verify_signature(..., trust_embedded_cert=True) only "
+            "for an explicit integrity-only check"
         )
-    report = verify_signature(
-        signed_xml, trust_anchor=anchor, trust_embedded_cert=anchor is None
-    )
+    _get_cryptography_modules()
+    report = verify_signature(signed_xml, trust_anchor=anchor)
     if not report.valid:
         raise XmlSignatureError(report.reason)
     return True
