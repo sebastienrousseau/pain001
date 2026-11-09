@@ -80,7 +80,7 @@ jobs:
             -g python \
             -o ./pain001-client \
             --package-name pain001_client \
-            --additional-properties=packageVersion=${VERSION},projectName=pain001-client
+            "--additional-properties=packageVersion=${VERSION},projectName=pain001-client"
 
       - name: Build the generated client
         run: |
