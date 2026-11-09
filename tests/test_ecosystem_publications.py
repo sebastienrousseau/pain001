@@ -401,10 +401,9 @@ def test_image_must_match_both_release_version_and_source(
 def test_mcp_registry_is_a_required_publication() -> None:
     """PyPI success does not establish an active MCP Registry publication."""
     published = Published()
-    endpoint = next(
-        url
-        for url in published.data
-        if "registry.modelcontextprotocol.io" in url
+    endpoint = (
+        "https://registry.modelcontextprotocol.io/v0.1/servers/io.github.sebastienrousseau%2Fpain001-mcp/versions/"
+        + VERSION
     )
     del published.data[endpoint]
     report = ecosystem_audit.audit(published)

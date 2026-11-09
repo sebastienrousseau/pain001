@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+from abc import abstractmethod
 from typing import Any, Protocol
 from urllib.parse import urlsplit
 
@@ -21,13 +22,13 @@ HOSTS = {
 class Transport(Protocol):
     """The byte/JSON boundary replaced by synthetic data in tests."""
 
+    @abstractmethod
     def get(self, url: str, headers: dict[str, str] | None = None) -> bytes:
         """Read an HTTPS resource."""
-        ...
 
+    @abstractmethod
     def json(self, url: str, headers: dict[str, str] | None = None) -> Any:
         """Read a JSON resource."""
-        ...
 
 
 class Client:

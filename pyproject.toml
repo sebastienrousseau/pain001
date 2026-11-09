@@ -394,6 +394,8 @@ also_copy = [
     "docs", "examples", "scenarios", "scripts", "benches", "requirements.txt",
     "DEVELOPMENT.md", "GOVERNANCE.md", "ARCHITECTURE.md", "SUPPORT.md",
     "RELEASING.md", "CITATION.cff",
+    # The inventory-generation test reads both root component tables.
+    "ROADMAP.md",
     # The release-notes test reads releases/vX.md once the version is dated.
     "releases",
     # tests/test_ci_surfaces.py reads the Action and the pre-commit hooks.

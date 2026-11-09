@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import re
 import sys
 from pathlib import Path
 
@@ -19,9 +20,10 @@ from ecosystem_audit.documentation import (
 def test_readme_values_include_non_pypi_members() -> None:
     """The canonical renderer derives its rows from the publication inventory."""
     values = readme_values()
+    urls = re.findall(r"\]\((https://[^)]+)\)", values["COMPONENT_USE_CASE"])
     assert values["COMPONENT_NAME"].startswith("[pain001](")
-    assert "pain001-fast" in values["COMPONENT_USE_CASE"]
-    assert "pain001.github.io" in values["COMPONENT_USE_CASE"]
+    assert "https://github.com/sebastienrousseau/pain001-fast" in urls
+    assert "https://github.com/sebastienrousseau/pain001.github.io" in urls
     assert len(values["COMPONENT_USE_CASE"].splitlines()) == 9
 
 
