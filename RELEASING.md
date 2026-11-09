@@ -41,11 +41,18 @@ A release is ready only when **all** of the following hold on `main`:
    two to four bullets; it supplies the Highlights of the GitHub release
    body (`tests/test_release_notes.py` fails without it once the
    CHANGELOG dates the version).
+8. A change to generated XML was announced a release ahead, as the
+   README's stability policy asks: when `tests/golden` changed since the
+   previous tag, that release's CHANGELOG section has an `### Announced`
+   subsection naming the change, or this release's section records the
+   exception ("not announced a release ahead") with the ADR that
+   explains it. To announce a change, add `### Announced` to the
+   release before the one that makes it.
 
 The checklist above is **executable** — do not eyeball it:
 
 ```bash
-make release-check           # items 5, 6, 7 + tree/branch/tag/signing state
+make release-check           # items 5 to 8 + tree/branch/tag/signing state
 make release-check FULL=1    # additionally runs tests, build and pip-audit
 ```
 

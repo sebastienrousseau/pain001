@@ -29,6 +29,17 @@ verification.
   myst-parser 5 brings markdown-it-py 4.2.0 and mdit-py-plugins 0.6.1
   into `poetry.lock`.
 
+### Notes
+
+- 0.0.82 changed generated XML for .04 to .08 without the notice one
+  release ahead that the README's stability policy promises; its
+  CHANGELOG entry and ADR-0011 now say so. The policy stands, and the
+  release preflight enforces it: when `tests/golden` changed since the
+  previous tag, that release's CHANGELOG section must have an
+  `### Announced` subsection, or this release's section must record the
+  exception ("not announced a release ahead") with the ADR that explains
+  it.
+
 ### Fixed
 
 - `tests/test_derive_overlay.py` and `examples/15_example_corpus.py`
@@ -56,7 +67,10 @@ exists, and the hot paths get faster.
   failed EPC-PMT-002. Input without a service level renders as before,
   and rows that disagree on it are refused, as in .03 and .09 to .13.
   The .04 to .08 golden files and bundled examples are regenerated once
-  for both changes (ADR-0011).
+  for both changes (ADR-0011). This was not announced a release ahead,
+  as the README's stability policy asks;
+  [ADR-0011](docs/adr/0011-iban-accounts-written-as-iban.md) records the
+  exception.
 
 ### Added
 

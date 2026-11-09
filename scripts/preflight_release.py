@@ -171,6 +171,74 @@ def readme_release_problems(
     return [f"README.md lacks '{w}'" for w in wanted if w not in folded]
 
 
+def _sections(changelog: str) -> list[tuple[str, str]]:
+    """``(version, body)`` for each ``## [x.y.z]`` section, newest first."""
+    heads = list(
+        re.finditer(r"^## \[(\d+\.\d+\.\d+)\][^\n]*$", changelog, re.M)
+    )
+    ends = [h.start() for h in heads[1:]] + [len(changelog)]
+    return [
+        (h.group(1), changelog[h.end() : e])
+        for h, e in zip(heads, ends, strict=True)
+    ]
+
+
+def breaking_notice_problems(
+    version: str, changelog: str, golden_changed: bool
+) -> list[str]:
+    """A change to generated XML must have been announced a release ahead.
+
+    The README's stability policy makes a generated-XML change breaking
+    and asks for notice one release ahead; 0.0.82 changed .04 to .08
+    output without it. When ``tests/golden`` changed since the previous
+    release, that release's CHANGELOG section must carry an
+    ``### Announced`` subsection, or this release's section must record
+    the exception: "not announced a release ahead" and the ADR saying why.
+    """
+    if not golden_changed:
+        return []
+    sections = _sections(changelog)
+    names = [name for name, _ in sections]
+    if version not in names or names.index(version) + 1 >= len(names):
+        return []
+    current = sections[names.index(version)][1]
+    previous, previous_body = sections[names.index(version) + 1]
+    if re.search(r"^### Announced\b", previous_body, re.M):
+        return []
+    folded = " ".join(current.split()).lower()
+    if "not announced a release ahead" in folded and "docs/adr/" in folded:
+        return []
+    return [
+        f"tests/golden changed since {previous}, but [{previous}] has no "
+        f"### Announced section and [{version}] records no exception "
+        "('not announced a release ahead' with its ADR)"
+    ]
+
+
+def _check_breaking_notice(version: str) -> None:
+    """Golden-file changes since the previous tag were announced."""
+    changelog = (ROOT / "CHANGELOG.md").read_text(encoding="utf-8")
+    names = [name for name, _ in _sections(changelog)]
+    if version not in names or names.index(version) + 1 >= len(names):
+        skip("generated XML changes were announced", "no earlier release")
+        return
+    previous = names[names.index(version) + 1]
+    diff = run(
+        "git", "diff", "--quiet", f"v{previous}", "HEAD", "--", "tests/golden"
+    )
+    if diff.returncode not in (0, 1):
+        check(
+            "generated XML changes were announced", False, diff.stderr.strip()
+        )
+        return
+    found = breaking_notice_problems(version, changelog, diff.returncode == 1)
+    check(
+        "generated XML changes were announced a release ahead (item 8)",
+        not found,
+        "; ".join(found),
+    )
+
+
 def _check_release_documents(version: str) -> None:
     """Item 7, item 5 and the suite floors, from the tree alone."""
     # The suite releases in lockstep: every member's floor is this release.
@@ -358,6 +426,7 @@ def main() -> int:
     print(f"\n  release candidate: v{version}\n")
 
     _check_release_documents(version)
+    _check_breaking_notice(version)
     _check_lock_and_tree()
     _check_tag_absent_and_signing(version)
     if args.full:

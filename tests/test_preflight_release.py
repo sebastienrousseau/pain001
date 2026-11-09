@@ -107,3 +107,80 @@ def test_a_stale_readme_blocks_the_release() -> None:
     ]
     fixed = stale.replace("0.0.80", "0.0.81")
     assert preflight_release.readme_release_problems("0.0.81", fixed) == []
+
+
+_ANNOUNCED = """## [0.0.83] - Unreleased
+
+### Changed
+
+- Something.
+
+## [0.0.82] - 2026-11-09
+
+### Announced
+
+- 0.0.83 writes `<X>` instead of `<Y>`.
+
+## [0.0.81] - 2026-11-08
+"""
+
+
+def test_unchanged_golden_files_need_no_notice() -> None:
+    """Output that did not change needs no announcement."""
+    bare = _ANNOUNCED.replace("### Announced", "### Fixed")
+    assert (
+        preflight_release.breaking_notice_problems("0.0.83", bare, False) == []
+    )
+
+
+def test_a_golden_change_announced_a_release_ahead_passes() -> None:
+    """The previous release's ``### Announced`` section is the notice."""
+    assert (
+        preflight_release.breaking_notice_problems("0.0.83", _ANNOUNCED, True)
+        == []
+    )
+
+
+def test_an_unannounced_golden_change_blocks_the_release() -> None:
+    """0.0.82 changed .04 to .08 output with no notice in 0.0.81."""
+    bare = _ANNOUNCED.replace("### Announced", "### Fixed")
+    (problem,) = preflight_release.breaking_notice_problems(
+        "0.0.83", bare, True
+    )
+    assert "0.0.82" in problem and "### Announced" in problem
+
+
+def test_a_recorded_exception_passes() -> None:
+    """An exception names itself and the ADR that records why."""
+    bare = _ANNOUNCED.replace("### Announced", "### Fixed")
+    owned = bare.replace(
+        "- Something.",
+        "- Something. This was not announced a\n  release ahead as the "
+        "policy asks; [ADR-0012](docs/adr/0012-x.md) records why.",
+    )
+    assert (
+        preflight_release.breaking_notice_problems("0.0.83", owned, True) == []
+    )
+    unlinked = bare.replace(
+        "- Something.", "- Something. Not announced a release ahead."
+    )
+    assert preflight_release.breaking_notice_problems("0.0.83", unlinked, True)
+
+
+def test_the_first_release_has_nothing_to_announce_from() -> None:
+    """With no earlier section there is no previous release to check."""
+    only = "## [0.0.1] - 2023-01-01\n\n- First.\n"
+    assert (
+        preflight_release.breaking_notice_problems("0.0.1", only, True) == []
+    )
+
+
+def test_0_0_82_records_its_exception() -> None:
+    """The real CHANGELOG: 0.0.82 regenerated golden files unannounced."""
+    changelog = (
+        Path(__file__).resolve().parent.parent / "CHANGELOG.md"
+    ).read_text(encoding="utf-8")
+    assert (
+        preflight_release.breaking_notice_problems("0.0.82", changelog, True)
+        == []
+    )

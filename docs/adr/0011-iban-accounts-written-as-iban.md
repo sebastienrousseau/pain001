@@ -72,3 +72,15 @@ already write it; the SEPA rulebook's EPC-PMT-003 now accepts it there.
 - The bundled .05 to .08 samples pass the SEPA Schematron rulebook. The
   .04 sample still does not: it uses charge bearer `SHAR` and service
   level `INST` on purpose.
+
+## Notice
+
+The README's stability policy makes a change to generated XML breaking
+and asks for it to be announced one release ahead. This one was not: it
+was decided and shipped in 0.0.82. The old output was not conformant
+(an IBAN with no scheme, a service level dropped), and SEPA files built
+from .04 to .08 failed pain001's own checks, but that argues for a
+quick announcement, not for none. The policy is unchanged. From 0.0.83
+the release preflight refuses a release whose golden files changed
+unless the previous release's CHANGELOG has an `### Announced` section
+or the release records its exception, as this one now does.
