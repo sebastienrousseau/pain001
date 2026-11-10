@@ -1,0 +1,43 @@
+<!-- SPDX-License-Identifier: Apache-2.0 OR MIT -->
+
+# Maintenance policy
+
+Pain001 is free open-source software maintained in a personal
+capacity. This page says what to expect from it. It is a statement of
+intent, not a contract: there is no paid tier, no service level
+agreement (SLA) and no out-of-hours cover.
+
+## Releases
+
+- Releases move one step at a time on the `0.0.x` line, as described in
+  [`RELEASING.md`](https://github.com/sebastienrousseau/pain001/blob/main/RELEASING.md). Each release is a signed tag with
+  build provenance, attestations, an SBOM and SHA-256 checksums of every
+  asset.
+- The [support table in `SUPPORT.md`](https://github.com/sebastienrousseau/pain001/blob/main/SUPPORT.md) lists the versions
+  that currently receive fixes.
+
+## Long-term support
+
+- One long-term support (LTS) line is designated each year.
+- An LTS line is supported for 18 months. During that time, security
+  fixes are backported to it on a best-effort basis.
+- Other releases receive fixes by upgrading to the next release.
+
+> **Maintainer decision pending:** which release becomes the first LTS
+> line has not been decided. Until it is, no release is an LTS line.
+
+## Security reports
+
+- Report vulnerabilities privately, as [`SECURITY.md`](https://github.com/sebastienrousseau/pain001/blob/main/SECURITY.md)
+  describes.
+- The goal is to acknowledge a report within 5 working days. This is a
+  goal, not a guarantee.
+
+## What this policy does not offer
+
+- No SLA, no guaranteed response or fix times, no out-of-hours cover.
+- No paid support, sponsorship or partner programme. Pain001's licence
+  lets any firm support it commercially; the project has no commercial
+  partners and takes no fees or referrals.
+- No certification. Pain001 does not claim compliance with any
+  regulation or standard.

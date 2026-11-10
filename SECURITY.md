@@ -65,10 +65,15 @@ Please include:
 - The version(s) affected (`python -c "import pain001; print(pain001.__version__)"`)
 - Any proposed remediation, if known
 
-**Acknowledgement timeline**: within 48 hours.
-**Triage**: a severity assessment and remediation plan within 7 days.
-**Fix windows**: critical 7 days, high 30 days, medium 60 days, low
-best-effort. The clock starts at triage, not at report.
+These are goals, not guarantees: Pain001 is maintained in a personal
+capacity, with no SLA and no out-of-hours cover (see the
+[maintenance policy](docs/maintenance-policy.md)).
+
+**Acknowledgement**: the goal is within 5 working days.
+**Triage**: a severity assessment and remediation plan after
+acknowledgement.
+**Fix windows** (best effort): critical 7 days, high 30 days, medium 60
+days, low best-effort. The clock starts at triage, not at report.
 
 We publish a CVE through GitHub Security Advisories (the GitHub
 Advisory Database mirrors into OSV/PyPI) when the issue is fixed.
