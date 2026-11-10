@@ -7,6 +7,7 @@ import hashlib
 import os
 import stat
 from pathlib import Path
+from unittest.mock import patch
 
 import pytest
 
@@ -245,12 +246,24 @@ def test_ledger_refuses_a_symlink_and_tightens_permissions(tmp_path):
     os.symlink(target, tmp_path / "link.sqlite3")
     with pytest.raises(ValueError, match="symlink"):
         Ledger(tmp_path / "link.sqlite3")
-    # Group-readable is loose enough to prove the ledger tightens it,
-    # without a world-readable mode (CodeQL py/overly-permissive-file).
+    # Report a legacy group-readable mode without exposing a real file.
+    # The actual fixture and the ledger must remain private throughout.
     loose = tmp_path / "loose.sqlite3"
-    loose.touch(mode=0o640)
-    os.chmod(loose, 0o640)
-    Ledger(loose).close()
+    loose.touch(mode=0o600)
+    real_lstat = Path.lstat
+
+    def legacy_mode(path):
+        details = real_lstat(path)
+        if path == loose:
+            return os.stat_result((stat.S_IFREG | 0o640, *details[1:]))
+        return details
+
+    with (
+        patch.object(Path, "lstat", autospec=True, side_effect=legacy_mode),
+        patch("pain001.transport.ledger.os.chmod", wraps=os.chmod) as harden,
+    ):
+        Ledger(loose).close()
+        harden.assert_called_once_with(loose, 0o600)
     assert stat.S_IMODE(loose.stat().st_mode) == 0o600
 
 
