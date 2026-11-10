@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add a code of conduct (adapted from Contributor Covenant 2.1, the
-  text pain001.com publishes); reports go privately to
-  contact@pain001.com.
+- Rename `CODE-OF-CONDUCT.md` to `CODE_OF_CONDUCT.md`, the name GitHub
+  and the suite's compliance audit recognise; the text is unchanged and
+  GOVERNANCE.md links the new name.
 - `build_pain002_report` takes a `transactions` list on a payment-status
   row, so one `OrgnlPmtInfAndSts` block can report several transactions,
   as a bank's reply does. A row with the flat `transaction_status`
