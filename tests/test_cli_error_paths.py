@@ -168,11 +168,6 @@ class TestCliErrorPaths:
                     f.write("content")
 
             with pytest.MonkeyPatch.context() as mp:
-                mp.setattr(
-                    "pain001.cli.cli.validate_via_xsd",
-                    lambda *args, **kwargs: True,
-                    raising=False,
-                )
 
                 def _raise_value_error(*_args, **_kwargs):
                     raise ValueError("invalid data")

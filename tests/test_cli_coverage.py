@@ -177,26 +177,21 @@ class TestCLIIntrospectionFlags:
         from pain001.cli.cli import _console_metrics_callback
 
         runner = CliRunner()
-        with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            return_value=True,
-        ):
-            with patch("pain001.cli.cli.process_files", autospec=True):
-                with patch(
-                    "pain001.cli.cli.register_metrics_callback",
-                    autospec=True,
-                ) as mock_register:
-                    result = runner.invoke(
-                        main,
-                        [
-                            "-t",
-                            "pain.001.001.03",
-                            "-d",
-                            "pain001/test_fixtures/template.csv",
-                            "--emit-metrics",
-                        ],
-                    )
+        with patch("pain001.cli.cli.process_files", autospec=True):
+            with patch(
+                "pain001.cli.cli.register_metrics_callback",
+                autospec=True,
+            ) as mock_register:
+                result = runner.invoke(
+                    main,
+                    [
+                        "-t",
+                        "pain.001.001.03",
+                        "-d",
+                        "pain001/test_fixtures/template.csv",
+                        "--emit-metrics",
+                    ],
+                )
         assert result.exit_code == 0
         mock_register.assert_called_once_with(_console_metrics_callback)
 
@@ -223,14 +218,9 @@ class TestCLIStreamingDispatch:
 
         runner = CliRunner()
         with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            return_value=True,
-        ):
-            with patch(
-                "pain001.cli.cli.process_files_streaming", autospec=True
-            ) as mock_streaming:
-                result = runner.invoke(main, args)
+            "pain001.cli.cli.process_files_streaming", autospec=True
+        ) as mock_streaming:
+            result = runner.invoke(main, args)
         return result, mock_streaming
 
     def test_cli_streaming_without_output_dir(self):

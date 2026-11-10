@@ -99,19 +99,6 @@ def test_generation_failure_and_traceback(runner, payload):
 
 
 @pytest.mark.parametrize("payload", PAYLOADS)
-def test_schema_failure_message(runner, payload):
-    """An XSD failure message prints literally."""
-    with patch.object(
-        cli_mod, "validate_via_xsd", side_effect=ValueError(payload)
-    ):
-        result = runner.invoke(
-            cli, ["generate", "-t", MTYPE, "-d", "rows.csv"]
-        )
-    _assert_literal(result, f"Schema validation failed: {payload}")
-    assert result.exit_code == 1
-
-
-@pytest.mark.parametrize("payload", PAYLOADS)
 def test_schematron_report_and_name(runner, payload):
     """A Schematron rulebook name and its report print literally."""
     report = MagicMock(is_valid=False)

@@ -69,7 +69,6 @@ from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.validation import validate_scheme
 from pain001.validation._one_batch import load_batch
 from pain001.xml.envelope import BusinessApplicationHeader
-from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
 
@@ -90,47 +89,6 @@ def _configure_logging(verbose: bool) -> logging.Logger:
     else:
         logger.setLevel(logging.INFO)
     return logger
-
-
-def _validate_schema(
-    logger: logging.Logger,
-    xml_template_file_path: str,
-    xsd_schema_file_path: str,
-    xml_message_type: str,
-) -> None:
-    """Validate XML template against XSD schema.
-
-    Args:
-        logger: Logger instance for event recording.
-        xml_template_file_path: Path to XML template.
-        xsd_schema_file_path: Path to XSD schema.
-        xml_message_type: ISO 20022 message type.
-
-    Raises:
-        SystemExit: If validation fails (exit code 1).
-    """
-    console.print(
-        "[cyan]→ Validating XML template against XSD schema...[/cyan]"
-    )
-    try:
-        validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
-        log_validation_event(
-            logger, "xsd_schema", True, message_type=xml_message_type
-        )
-        console.print("[bold green]✓ Schema validation passed[/bold green]")
-    except Exception as e:
-        log_validation_event(
-            logger, "xsd_schema", False, e, message_type=xml_message_type
-        )
-        console.print(
-            f"[bold red]✗ Schema validation failed:[/bold red] {esc(e)}",
-            style="red",
-        )
-        console.print(
-            f"\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
-            f"Expected: {esc(xml_message_type)}"
-        )
-        raise SystemExit(1) from e
 
 
 def _run_scheme_check(
@@ -798,9 +756,6 @@ def main(
         )
         sys.exit(2)
 
-    _validate_schema(
-        logger, xml_template_file_path, xsd_schema_file_path, xml_message_type
-    )
     validate_data = functools.partial(
         _validate_payment_data,
         logger,

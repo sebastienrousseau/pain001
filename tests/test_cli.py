@@ -164,41 +164,11 @@ class TestCliModule(unittest.TestCase):
             f.write(f"xsd_schema_file_path = {self.xsd_schema}\n")
             f.write(f"data_file_path = {self.csv_file}\n")
 
-        # Mock the process_files and validate_via_xsd functions
+        # Mock process_files so nothing is generated
         with patch(
             "pain001.cli.cli.process_files", autospec=True
         ) as mock_process:
-            with patch(
-                "pain001.cli.cli.validate_via_xsd",
-                autospec=True,
-                return_value=True,
-            ):
-                self.runner.invoke(
-                    main,
-                    [
-                        "-t",
-                        "pain.001.001.03",
-                        "-m",
-                        self.xml_template,
-                        "-s",
-                        self.xsd_schema,
-                        "-d",
-                        self.csv_file,
-                        "-c",
-                        config_file,
-                    ],
-                )
-                # The CLI should process the files
-                assert mock_process.called
-
-    def test_cli_schema_validation_failure(self) -> None:
-        """Test CLI when schema validation fails."""
-        with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            side_effect=Exception("Validation error"),
-        ):
-            result = self.runner.invoke(
+            self.runner.invoke(
                 main,
                 [
                     "-t",
@@ -209,10 +179,12 @@ class TestCliModule(unittest.TestCase):
                     self.xsd_schema,
                     "-d",
                     self.csv_file,
+                    "-c",
+                    config_file,
                 ],
             )
-            assert result.exit_code == 1
-            assert "Schema validation failed" in result.output
+            # The CLI should process the files
+            assert mock_process.called
 
     def test_cli_dry_run_validates_without_generation(self) -> None:
         """Test CLI dry-run flag validates data but skips XML generation."""
@@ -221,29 +193,24 @@ class TestCliModule(unittest.TestCase):
             "pain001.cli.cli.process_files", autospec=True
         ) as mock_process:
             with patch(
-                "pain001.cli.cli.validate_via_xsd",
+                "pain001.cli.cli.load_batch",
                 autospec=True,
-                return_value=True,
-            ):
-                with patch(
-                    "pain001.cli.cli.load_batch",
-                    autospec=True,
-                    return_value=[{}],
-                ) as mock_load:
-                    result = self.runner.invoke(
-                        main,
-                        [
-                            "-t",
-                            "pain.001.001.03",
-                            "-m",
-                            self.xml_template,
-                            "-s",
-                            self.xsd_schema,
-                            "-d",
-                            self.csv_file,
-                            "--dry-run",
-                        ],
-                    )
+                return_value=[{}],
+            ) as mock_load:
+                result = self.runner.invoke(
+                    main,
+                    [
+                        "-t",
+                        "pain.001.001.03",
+                        "-m",
+                        self.xml_template,
+                        "-s",
+                        self.xsd_schema,
+                        "-d",
+                        self.csv_file,
+                        "--dry-run",
+                    ],
+                )
 
         assert result.exit_code == 0
         assert (
@@ -263,30 +230,25 @@ class TestCliModule(unittest.TestCase):
             f.write("<root></root>")
 
         with patch("os.path.expanduser", autospec=True, return_value=home_xml):
-            with patch(
-                "pain001.cli.cli.validate_via_xsd",
-                autospec=True,
-                return_value=True,
-            ):
-                with patch("pain001.cli.cli.process_files", autospec=True):
-                    result = self.runner.invoke(
-                        main,
-                        [
-                            "-t",
-                            "pain.001.001.03",
-                            "-m",
-                            "~/template.xml",
-                            "-s",
-                            self.xsd_schema,
-                            "-d",
-                            self.csv_file,
-                        ],
-                    )
-                    # Should not fail due to path expansion
-                    assert (
-                        "does not exist" not in result.output
-                        or result.exit_code != 1
-                    )
+            with patch("pain001.cli.cli.process_files", autospec=True):
+                result = self.runner.invoke(
+                    main,
+                    [
+                        "-t",
+                        "pain.001.001.03",
+                        "-m",
+                        "~/template.xml",
+                        "-s",
+                        self.xsd_schema,
+                        "-d",
+                        self.csv_file,
+                    ],
+                )
+                # Should not fail due to path expansion
+                assert (
+                    "does not exist" not in result.output
+                    or result.exit_code != 1
+                )
 
     def test_cli_main_entry_point(self) -> None:
         """Test that CLI main entry point works."""
@@ -308,26 +270,21 @@ class TestCliModule(unittest.TestCase):
         output_dir = os.path.join(self.temp_dir, "output", "xml")
 
         with patch("pain001.cli.cli.process_files", autospec=True):
-            with patch(
-                "pain001.cli.cli.validate_via_xsd",
-                autospec=True,
-                return_value=True,
-            ):
-                result = self.runner.invoke(
-                    main,
-                    [
-                        "-t",
-                        "pain.001.001.03",
-                        "-m",
-                        self.xml_template,
-                        "-s",
-                        self.xsd_schema,
-                        "-d",
-                        self.csv_file,
-                        "-o",
-                        output_dir,
-                    ],
-                )
+            result = self.runner.invoke(
+                main,
+                [
+                    "-t",
+                    "pain.001.001.03",
+                    "-m",
+                    self.xml_template,
+                    "-s",
+                    self.xsd_schema,
+                    "-d",
+                    self.csv_file,
+                    "-o",
+                    output_dir,
+                ],
+            )
 
         assert result.exit_code == 0
         assert os.path.exists(output_dir)
@@ -338,26 +295,21 @@ class TestCliModule(unittest.TestCase):
         os.makedirs(output_dir, exist_ok=True)
 
         with patch("pain001.cli.cli.process_files", autospec=True):
-            with patch(
-                "pain001.cli.cli.validate_via_xsd",
-                autospec=True,
-                return_value=True,
-            ):
-                result = self.runner.invoke(
-                    main,
-                    [
-                        "-t",
-                        "pain.001.001.03",
-                        "-m",
-                        self.xml_template,
-                        "-s",
-                        self.xsd_schema,
-                        "-d",
-                        self.csv_file,
-                        "-o",
-                        output_dir,
-                    ],
-                )
+            result = self.runner.invoke(
+                main,
+                [
+                    "-t",
+                    "pain.001.001.03",
+                    "-m",
+                    self.xml_template,
+                    "-s",
+                    self.xsd_schema,
+                    "-d",
+                    self.csv_file,
+                    "-o",
+                    output_dir,
+                ],
+            )
 
         assert result.exit_code == 0
         assert (
@@ -368,68 +320,29 @@ class TestCliModule(unittest.TestCase):
     def test_cli_verbose_flag_enables_debug_logging(self) -> None:
         """Test that --verbose flag enables detailed logging."""
         with patch("pain001.cli.cli.process_files", autospec=True):
-            with patch(
-                "pain001.cli.cli.validate_via_xsd",
-                autospec=True,
-                return_value=True,
-            ):
-                result = self.runner.invoke(
-                    main,
-                    [
-                        "-t",
-                        "pain.001.001.03",
-                        "-m",
-                        self.xml_template,
-                        "-s",
-                        self.xsd_schema,
-                        "-d",
-                        self.csv_file,
-                        "--verbose",
-                    ],
-                )
+            result = self.runner.invoke(
+                main,
+                [
+                    "-t",
+                    "pain.001.001.03",
+                    "-m",
+                    self.xml_template,
+                    "-s",
+                    self.xsd_schema,
+                    "-d",
+                    self.csv_file,
+                    "--verbose",
+                ],
+            )
 
         assert "Verbose logging enabled" in result.output
 
     def test_cli_dry_run_with_verbose(self) -> None:
         """Test combining --dry-run and --verbose flags."""
         with patch(
-            "pain001.cli.cli.validate_via_xsd",
+            "pain001.cli.cli.load_batch",
             autospec=True,
-            return_value=True,
-        ):
-            with patch(
-                "pain001.cli.cli.load_batch",
-                autospec=True,
-                return_value=[{"id": "1"}, {"id": "2"}],
-            ):
-                result = self.runner.invoke(
-                    main,
-                    [
-                        "-t",
-                        "pain.001.001.03",
-                        "-m",
-                        self.xml_template,
-                        "-s",
-                        self.xsd_schema,
-                        "-d",
-                        self.csv_file,
-                        "--dry-run",
-                        "--verbose",
-                    ],
-                )
-
-        assert result.exit_code == 0
-        assert (
-            "payment records" in result.output
-            or "validation passed" in result.output.lower()
-        )
-
-    def test_cli_improved_error_messages(self) -> None:
-        """Test that error messages include helpful tips."""
-        with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            side_effect=Exception("Schema mismatch error"),
+            return_value=[{"id": "1"}, {"id": "2"}],
         ):
             result = self.runner.invoke(
                 main,
@@ -442,14 +355,15 @@ class TestCliModule(unittest.TestCase):
                     self.xsd_schema,
                     "-d",
                     self.csv_file,
+                    "--dry-run",
+                    "--verbose",
                 ],
             )
 
-        assert result.exit_code == 1
-        # Check for helpful tip in output
+        assert result.exit_code == 0
         assert (
-            "Tip" in result.output
-            or "validation failed" in result.output.lower()
+            "payment records" in result.output
+            or "validation passed" in result.output.lower()
         )
 
     def test_cli_missing_template_uses_registry_resolution(self) -> None:
@@ -488,42 +402,37 @@ class TestCliModule(unittest.TestCase):
     def test_cli_alias_flags(self) -> None:
         """Test that short and long flag names work."""
         with patch("pain001.cli.cli.process_files", autospec=True):
-            with patch(
-                "pain001.cli.cli.validate_via_xsd",
-                autospec=True,
-                return_value=True,
-            ):
-                # Test short flags
-                result_short = self.runner.invoke(
-                    main,
-                    [
-                        "-t",
-                        "pain.001.001.03",
-                        "-m",
-                        self.xml_template,
-                        "-s",
-                        self.xsd_schema,
-                        "-d",
-                        self.csv_file,
-                        "-v",  # Short verbose flag
-                    ],
-                )
+            # Test short flags
+            result_short = self.runner.invoke(
+                main,
+                [
+                    "-t",
+                    "pain.001.001.03",
+                    "-m",
+                    self.xml_template,
+                    "-s",
+                    self.xsd_schema,
+                    "-d",
+                    self.csv_file,
+                    "-v",  # Short verbose flag
+                ],
+            )
 
-                # Test long flags
-                result_long = self.runner.invoke(
-                    main,
-                    [
-                        "--xml-message-type",
-                        "pain.001.001.03",
-                        "--template",
-                        self.xml_template,
-                        "--schema",
-                        self.xsd_schema,
-                        "--data",
-                        self.csv_file,
-                        "--verbose",
-                    ],
-                )
+            # Test long flags
+            result_long = self.runner.invoke(
+                main,
+                [
+                    "--xml-message-type",
+                    "pain.001.001.03",
+                    "--template",
+                    self.xml_template,
+                    "--schema",
+                    self.xsd_schema,
+                    "--data",
+                    self.csv_file,
+                    "--verbose",
+                ],
+            )
 
         assert result_short.exit_code == 0
         assert result_long.exit_code == 0

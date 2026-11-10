@@ -179,7 +179,7 @@ pain001 generate -t pain.001.001.03 -d my-payments.csv -o ./outbox
 Output:
 
 ```text
-✓ Schema validation passed
+ℹ Output directory: ./outbox
 → Generating XML payment files...
 
 ✓ Success! XML files generated successfully.
