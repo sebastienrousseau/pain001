@@ -15,7 +15,9 @@
 """End-to-end CLI tests for the --scheme rulebook flags."""
 
 import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -226,7 +228,10 @@ class TestCliDataFailureTips(unittest.TestCase):
             "pain001.cli.cli.load_batch",
             side_effect=ValueError("bad json"),
         ):
-            result = self.runner.invoke(main, self._args("data.json"))
+            with tempfile.TemporaryDirectory() as tmp:
+                data = Path(tmp) / "data.json"
+                data.write_text("[]", encoding="utf-8")
+                result = self.runner.invoke(main, self._args(str(data)))
         assert result.exit_code == 1
         assert "json" in result.output.lower()
 
@@ -236,7 +241,10 @@ class TestCliDataFailureTips(unittest.TestCase):
             "pain001.cli.cli.load_batch",
             side_effect=ValueError("bad parquet"),
         ):
-            result = self.runner.invoke(main, self._args("data.parquet"))
+            with tempfile.TemporaryDirectory() as tmp:
+                data = Path(tmp) / "data.parquet"
+                data.write_bytes(b"")
+                result = self.runner.invoke(main, self._args(str(data)))
         assert result.exit_code == 1
         assert "pyarrow" in result.output.lower()
 

@@ -33,8 +33,9 @@ function shows the whole mapping.
 
 ## 2. Batch pipeline
 
-Run these from the directory that holds the data: `validate` and
-`generate` read data files only inside the working directory.
+`validate` and `generate` read the files you name on the command line
+from any directory; from Python, data files must be under the working
+directory.
 
 ```sh
 pain001 validate -t pain.001.001.09 -d payments.csv

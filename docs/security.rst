@@ -3,7 +3,7 @@ Security
 
 Pain001 applies several security controls relevant to payment processing:
 
-* Path validation constrains template, schema, and data files to approved directories.
+* Path validation constrains template, schema, and data files to approved directories. The command line is the one exception: a file its user names on it is that user's own and is read wherever it lives. The REST API, the MCP server and the dashboard take paths from a request and keep the restriction.
 * XML parsing uses ``defusedxml`` protections.
 * Template rendering uses a Jinja2 sandbox for XML generation and rejects filesystem directives such as ``include`` and ``extends``.
 * Validation APIs reject paths that escape the working directory or temporary directories.

@@ -150,7 +150,7 @@ class TestCliErrorPaths:
                 "/nonexistent/data.csv",
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         output = " ".join(result.output.lower().split())
         assert "error" in output
 

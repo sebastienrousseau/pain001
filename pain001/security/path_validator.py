@@ -17,7 +17,16 @@
 import os
 import re
 import tempfile
+from collections.abc import Iterator
+from contextlib import contextmanager
+from contextvars import ContextVar
 from pathlib import Path
+
+#: Exact files the running command may read wherever they are; see
+#: :func:`trusted_paths`.
+_TRUSTED: ContextVar[frozenset[str]] = ContextVar(
+    "pain001_trusted_paths", default=frozenset()
+)
 
 
 class PathValidationError(ValueError):
@@ -104,6 +113,30 @@ def _resolve_within_allowed_bases(
     )
 
 
+@contextmanager
+def trusted_paths(*paths: str) -> Iterator[None]:
+    """Let these exact files past the base-directory check, in this block.
+
+    For the local command line only: its user named the files, and they
+    are that user's own, so they may live anywhere. Services that take
+    paths from a request (the REST API, the MCP server, the dashboard)
+    never call this, and keep the jail. Only a file whose resolved path
+    equals one named here passes; its directory does not.
+
+    Args:
+        *paths: The files to trust, as given on the command line.
+
+    Yields:
+        None: Control to the block, while the files are trusted.
+    """
+    named = frozenset(os.path.realpath(path) for path in paths)
+    token = _TRUSTED.set(_TRUSTED.get() | named)
+    try:
+        yield
+    finally:
+        _TRUSTED.reset(token)
+
+
 def validate_path(
     untrusted_path: str | Path,
     must_exist: bool = False,
@@ -125,8 +158,13 @@ def validate_path(
             SecurityError (path escapes allowed directories) from the
             underlying resolution propagate unchanged.
     """
-    # Core validation — return value is taint-free per neutralModel.
-    safe_path = _resolve_within_allowed_bases(untrusted_path, base_dir)
+    trusted = _TRUSTED.get()
+    resolved = os.path.realpath(str(untrusted_path)) if trusted else ""
+    if resolved in trusted:
+        safe_path = resolved
+    else:
+        # Core validation — return value is taint-free per neutralModel.
+        safe_path = _resolve_within_allowed_bases(untrusted_path, base_dir)
 
     if must_exist and not os.path.exists(safe_path):
         raise FileNotFoundError(f"Path does not exist: {safe_path}")

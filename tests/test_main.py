@@ -151,7 +151,7 @@ class TestMain:
         )
 
     def test_main_with_nonexistent_template_file(self) -> None:
-        """Non-existent template fails schema validation — exit code 1."""
+        """A non-existent template is a usage error: exit code 2."""
         result = self.runner.invoke(
             cli,
             [
@@ -165,12 +165,12 @@ class TestMain:
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         output = " ".join(result.output.lower().split())
-        assert "does not exist" in output
+        assert "input file not found" in output
 
     def test_main_with_nonexistent_schema_file(self) -> None:
-        """Non-existent schema fails schema validation — exit code 1."""
+        """A non-existent schema is a usage error: exit code 2."""
         result = self.runner.invoke(
             cli,
             [
@@ -184,12 +184,12 @@ class TestMain:
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         output = " ".join(result.output.lower().split())
-        assert "does not exist" in output
+        assert "input file not found" in output
 
     def test_main_with_nonexistent_data_file(self) -> None:
-        """Non-existent data file fails during generation — exit code 1."""
+        """A non-existent data file is a usage error: exit code 2."""
 
         result = self.runner.invoke(
             cli,
@@ -204,8 +204,8 @@ class TestMain:
                 "nonexistent.csv",
             ],
         )
-        assert result.exit_code == 1
-        assert "failed" in result.output.lower()
+        assert result.exit_code == 2
+        assert "input file not found" in result.output.lower()
 
     def test_main_module_entry_point(self) -> None:
         """Test __main__.py when run as a script."""

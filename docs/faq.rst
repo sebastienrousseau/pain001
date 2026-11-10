@@ -132,7 +132,7 @@ Use a loop or batch processing:
     bundle = TEMPLATES_DIR / message_type
     Path("output").mkdir(exist_ok=True)
 
-    # Data files must be under the current working directory.
+    # From Python, data files must be under the current working directory.
     for csv_file in sorted(Path("payments").glob("*.csv")):
         process_files(
             xml_message_type=message_type,

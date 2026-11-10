@@ -68,7 +68,7 @@ def test_missing_data_file_name(runner, payload):
     name = f"pay{payload}.csv"
     result = runner.invoke(cli, ["generate", "-t", MTYPE, "-d", name])
     _assert_literal(result, name)
-    assert result.exit_code == 1
+    assert result.exit_code == 2
 
 
 @pytest.mark.parametrize("payload", PAYLOADS)

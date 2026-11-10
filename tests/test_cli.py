@@ -127,12 +127,8 @@ class TestCliModule(unittest.TestCase):
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 1
-        assert (
-            "does not exist" in result.output.lower()
-            or "invalid value" in result.output.lower()
-            or "outside allowed" in result.output.lower()
-        )
+        assert result.exit_code == 2
+        assert "input file not found" in result.output.lower()
 
     def test_cli_invalid_xml_message_type(self) -> None:
         """Test CLI with invalid XML message type."""

@@ -18,6 +18,7 @@ import functools
 import json
 import logging
 import os
+import shlex
 import shutil
 import sys
 import traceback
@@ -42,7 +43,12 @@ from pain001.cli._output import (
     print_template_details,
     print_template_list,
 )
-from pain001.cli._paths import _file_not_directory, _resolve_template_assets
+from pain001.cli._paths import (
+    _file_not_directory,
+    _require_inputs,
+    _require_message_type,
+    _resolve_template_assets,
+)
 from pain001.cli._serve import serve_cmd
 from pain001.cli._verify_signature import (
     verify_signature_cmd,
@@ -65,6 +71,7 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
+from pain001.security.path_validator import trusted_paths
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.validation import validate_scheme
 from pain001.validation._one_batch import load_batch
@@ -703,6 +710,7 @@ def main(
         console.print("[bold red]✗ Error:[/bold red] Missing data file path")
         sys.exit(2)
 
+    _require_message_type(console, xml_message_type)
     (
         xml_template_file_path,
         xsd_schema_file_path,
@@ -722,6 +730,10 @@ def main(
         )
         return
 
+    inputs = (data_file_path, xml_template_file_path, xsd_schema_file_path)
+    _require_inputs(console, inputs)
+    # The user named these files; they are read wherever they live.
+    click.get_current_context().with_resource(trusted_paths(*inputs))
     if resolved_config.get("emit_metrics"):
         register_metrics_callback(_console_metrics_callback)
     _apply_gpg_options(decrypt_key, decrypt_passphrase_env)
@@ -737,24 +749,6 @@ def main(
         Events.CLI_ARGS_PARSED,
         **{Fields.MESSAGE_TYPE: xml_message_type, "dry_run": dry_run},
     )
-
-    # Redundant with Click validation; kept so the failure is logged.
-    if (
-        xml_message_type not in valid_xml_types
-    ):  # pragma: no cover - Click rejects it first
-        log_validation_event(
-            logger,
-            "message_type",
-            False,
-            ValueError(f"Invalid XML message type: {xml_message_type}"),
-            message_type=xml_message_type,
-        )
-        console.print(
-            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{esc(xml_message_type)}[/yellow]\n"
-            f"[cyan]Valid types:[/cyan] {', '.join(valid_xml_types)}",
-            style="red",
-        )
-        sys.exit(2)
 
     validate_data = functools.partial(
         _validate_payment_data,
@@ -1127,9 +1121,14 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
     destination = Path(output_path or f"{message_type}.csv")
     shutil.copyfile(source, destination)
     console.print(
-        f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}\n"
+        f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}"
+    )
+    # An absolute, quoted path, on one unwrapped line: the command runs
+    # as printed from any directory.
+    console.print(
         f"[dim]Edit it, then run:[/dim] pain001 generate -t {message_type} "
-        f"-d {esc(destination)}"
+        f"-d {esc(shlex.quote(str(destination.resolve())))}",
+        soft_wrap=True,
     )
 
 
