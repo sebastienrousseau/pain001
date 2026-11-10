@@ -30,6 +30,7 @@ from pain001.db.load_db_data import load_db_data
 from pain001.exceptions import DataSourceError
 from pain001.json.load_json_data import load_json_data, load_jsonl_data
 from pain001.parquet.load_parquet_data import load_parquet_data
+from pain001.security.formula import sanitize_formula_injection
 from pain001.xml.generate_xml import generate_xml_string
 
 
@@ -167,14 +168,26 @@ class VersionMapper:
         rows: list[dict[str, Any]],
         output_path: str,
     ) -> str:
-        """Persist migrated rows as CSV."""
+        """Persist migrated rows as CSV.
+
+        Text cells that a spreadsheet would run as a formula (``=``,
+        ``+``, ``-``, ``@`` and the control prefixes) are written with a
+        leading ``'``, as the CSV loader does on input; a JSON, Parquet
+        or database source is not sanitised on the way in.
+        """
         output = Path(output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
 
         with open(output, "w", encoding="utf-8", newline="") as handle:
             writer = csv.DictWriter(handle, fieldnames=self._MODERN_FIELDS)
             writer.writeheader()
-            writer.writerows(rows)
+            writer.writerows(
+                {
+                    key: sanitize_formula_injection(value)
+                    for key, value in row.items()
+                }
+                for row in rows
+            )
         return str(output)
 
     def validate_migrated_rows(
