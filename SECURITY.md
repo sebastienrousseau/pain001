@@ -113,8 +113,12 @@ Reporters are credited unless they ask to remain anonymous.
 - The library ships no credentials, tokens, or example IBANs that
   resolve to real accounts.
 - Structured logging redacts IBAN / BIC / name fields by default
-  (`pain001.logging_schema.redaction`). Validation errors carry
-  the rule id + field name; **never** the raw row value.
+  (`pain001.logging_schema.redaction`). In the library and CLI,
+  schema and XSD validation errors carry the rule and the field path,
+  not the value. Scheme-rule findings quote the rejected code, currency
+  or amount (for example `SEPA requires EUR currency (got USD)`) so the
+  fix is clear, and the structural BIC check quotes the BIC it rejects;
+  IBAN findings give lengths and checksums, not the IBAN.
 - The REST API's `PAIN001_API_KEY` is read from the environment,
   not from disk; tokens never persist beyond the process.
 
@@ -182,8 +186,9 @@ Cryptography is optional and delegated to established libraries:
   (`trust_embedded_cert=True`, `--trust-embedded-cert`), as an
   integrity check. An embedded X.509 certificate is carried in
   `<KeyInfo>`; its chain and validity are not checked.
-  `verify_xml_signature` without a key still trusts the embedded
-  certificate, with a deprecation warning, until 0.0.84 refuses it.
+  Since 0.0.84, `verify_xml_signature` without `public_key_pem` or
+  `cert_pem` raises `ValueError` instead of trusting the embedded
+  certificate.
 - **Encrypted input**: `.gpg` / `.asc` data files are decrypted with
   the `gpg` extra (`python-gnupg` and the system GnuPG).
 - **SFTP authentication**: `pain001 upload` uses SSH keys, OpenSSH
