@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   triplet gives the same XML as before; a row with both shapes, or a
   listed transaction without a status, is refused.
 
+### Fixed
+
+- `pain001 status` counted every rejected line, so a rejected group and
+  payment block inflated the count ("5 transactions, 11 rejected" for a
+  reply with five rejected transactions). The count is now of rejected
+  transactions, rejected groups and payment blocks are named after it,
+  and `--format json` adds `rejected_transactions` to `counts`.
+
 ## [0.0.85] - 2026-11-10
 
 ### Added

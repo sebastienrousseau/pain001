@@ -376,3 +376,64 @@ def test_base_dir_confines_the_parsers(tmp_path):
     with pytest.raises(DataSourceError, match="escapes base directory"):
         parse_camt053_statement(str(stmt), base_dir=inside)
     assert parse_pain002_report(str(reply), base_dir=outside)["group_status"]
+
+
+def _block_report(tmp_path: Path, txs: list[str], *, group: str) -> Path:
+    """One payment block in ``group`` status holding ``txs`` transactions."""
+    path = tmp_path / "block.xml"
+    path.write_text(
+        build_pain002_report(
+            "STS-3",
+            "MSG-3",
+            group,
+            [
+                {
+                    "original_payment_information_id": "PMT-3",
+                    "payment_information_status": group,
+                    "transactions": [
+                        {
+                            "original_end_to_end_id": f"E2E-{n}",
+                            "transaction_status": tx,
+                        }
+                        for n, tx in enumerate(txs, 1)
+                    ],
+                }
+            ],
+            creation_datetime="2026-11-10T10:00:00",
+        ),
+        encoding="utf-8",
+    )
+    return path
+
+
+def test_rejected_counts_transactions_not_lines(tmp_path):
+    """A rejected group and block do not inflate the transaction count.
+
+    0.0.85 printed "5 transactions, 11 rejected" for a mock bank reply:
+    the group line and every block line were counted with the
+    transactions.
+    """
+    path = _block_report(tmp_path, ["RJCT", "RJCT", "ACCP"], group="RJCT")
+    result = _status(str(path))
+    assert result.exit_code == 3
+    head = result.output.splitlines()[0]
+    assert head == (
+        f"{path}: pain.002 RJCT, 3 transactions, 2 rejected; "
+        "group and 1 payment block rejected"
+    )
+    assert "  RJCT E2E-1" in result.output and "  RJCT E2E-2" in result.output
+
+
+def test_json_reports_the_rejected_transaction_count(tmp_path):
+    path = _block_report(tmp_path, ["RJCT", "ACCP"], group="PART")
+    result = _status("--format", "json", str(path))
+    (entry,) = json.loads(result.output)
+    assert entry["counts"] == {"transactions": 2, "rejected_transactions": 1}
+
+
+def test_a_rejected_group_without_transactions_says_so(tmp_path):
+    path = _block_report(tmp_path, [], group="RJCT")
+    head = _status(str(path)).output.splitlines()[0]
+    assert head.endswith(
+        "0 transactions, 0 rejected; group and 1 payment block rejected"
+    )

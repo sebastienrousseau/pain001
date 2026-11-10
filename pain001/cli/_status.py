@@ -94,7 +94,7 @@ def _pain002(path: Path) -> Summary:
     rejected = []
     if report["group_status"] == "RJCT":
         rejected.append(f"group {report['original_message_id']}")
-    transactions = 0
+    transactions = rejected_transactions = 0
     for block in report["payment_statuses"]:
         if block["payment_information_status"] == "RJCT":
             rejected.append(
@@ -103,6 +103,7 @@ def _pain002(path: Path) -> Summary:
         for tx in block["transactions"]:
             transactions += 1
             if tx["transaction_status"] == "RJCT":
+                rejected_transactions += 1
                 rejected.append(
                     f"RJCT {tx['original_end_to_end_id']} {tx['status_reason']}".strip()
                 )
@@ -110,7 +111,10 @@ def _pain002(path: Path) -> Summary:
         str(path),
         "pain.002",
         report["group_status"],
-        {"transactions": transactions},
+        {
+            "transactions": transactions,
+            "rejected_transactions": rejected_transactions,
+        },
         rejected,
     )
 
@@ -215,9 +219,31 @@ def _line(summary: Summary) -> str:
     head = (
         f"{summary.file}: pain.002 {summary.group_status}, "
         f"{_plural(summary.counts['transactions'], 'transaction', 'transactions')}, "
-        f"{len(summary.rejected)} rejected"
+        f"{summary.counts['rejected_transactions']} rejected"
+        f"{_levels_rejected(summary.rejected)}"
     )
     return "\n".join([head, *(f"  {item}" for item in summary.rejected)])
+
+
+def _levels_rejected(rejected: list[str]) -> str:
+    """Name the group and payment-block rejections, which are not counted.
+
+    The count in the head is of transactions; a rejected group or payment
+    block is named after it so a reader still sees why the exit is 3.
+
+    Args:
+        rejected: The summary's rejected items.
+
+    Returns:
+        ``"; group and 2 payment blocks rejected"`` or similar, or ``""``.
+    """
+    levels = []
+    if any(item.startswith("group ") for item in rejected):
+        levels.append("group")
+    blocks = sum(item.startswith("payment ") for item in rejected)
+    if blocks:
+        levels.append(_plural(blocks, "payment block", "payment blocks"))
+    return f"; {' and '.join(levels)} rejected" if levels else ""
 
 
 @click.command("status")
