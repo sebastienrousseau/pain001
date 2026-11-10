@@ -312,7 +312,7 @@ class TestRestApi:
         assert response.status_code == 200
         assert "scheme_violations" in response.json()
 
-    def test_async_job_lifecycle(self) -> None:
+    def test_async_job_lifecycle(self, tmp_path) -> None:
         """POST /api/generate/async returns a job that can be polled."""
         response = client.post(
             "/api/generate/async",
@@ -320,6 +320,7 @@ class TestRestApi:
                 "data_source": "csv",
                 "file_path": self._CSV,
                 "message_type": "pain.001.001.03",
+                "output_dir": str(tmp_path),
             },
         )
         assert response.status_code in (200, 202)

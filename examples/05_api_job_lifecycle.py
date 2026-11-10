@@ -116,12 +116,25 @@ def run(client: TestClient) -> None:
             f"GET  /api/v1/download/{{id}}   -> {len(download.content)} bytes of XML"
         )
 
+    _delete_a_job(client)
+
+
+def _delete_a_job(client: TestClient) -> None:
+    """Start a job and delete it.
+
+    Args:
+        client: API test client with a running event loop.
+    """
+    # A validate-only job, so it writes nothing: a generation job may
+    # already be writing its XML when it is deleted, and the file would
+    # be left in the working directory.
     response = client.post(
         "/api/v1/generate/async",
         json={
             "data_source": "json",
             "file_path": DATA_FILE,
             "message_type": MESSAGE_TYPE,
+            "validate_only": True,
         },
     )
     second_job = response.json()["job_id"]
