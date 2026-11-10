@@ -128,7 +128,7 @@ A: Initial setup: 30min. Per-commit: 2-5min (mostly automated). Value: Prevents 
 ## Contact
 
 - Issues: Use GitHub Issues
-- Questions: GitHub Discussions
+- Questions: GitHub Issues
 - Security: See SECURITY.md
 
 ---

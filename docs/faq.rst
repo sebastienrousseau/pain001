@@ -420,7 +420,17 @@ Getting Help
 
 - `Documentation <https://docs.pain001.com/>`_
 - `GitHub Issues <https://github.com/sebastienrousseau/pain001/issues>`_
-- `Email <mailto:contact@pain001.com>`_
+- Confidential security matters only: see the `security policy
+  <https://github.com/sebastienrousseau/pain001/blob/main/SECURITY.md>`_
+  (``contact@pain001.com`` is kept for those, not for general help).
+
+**Is there paid support?**
+
+No. Pain001 is free open-source software with no paid tier and no SLA;
+the `maintenance policy
+<https://github.com/sebastienrousseau/pain001/blob/main/docs/maintenance-policy.md>`_
+says what to expect. Its licence lets any firm support it commercially;
+the project has no commercial partners and takes no fees or referrals.
 
 **How do I report a bug?**
 

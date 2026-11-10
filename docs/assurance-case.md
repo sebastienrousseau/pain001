@@ -224,5 +224,5 @@ poetry run pytest tests/test_schema_completeness.py
 ```
 
 Reports of anything here being untrue are handled under `SECURITY.md`,
-which commits to acknowledgement within 48 hours and a triage plan
-within 7 days.
+whose goal is to acknowledge a report within 5 working days (a goal,
+not a guarantee; see the [maintenance policy](maintenance-policy.md)).

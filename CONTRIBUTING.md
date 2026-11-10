@@ -120,3 +120,14 @@ a required check is pending or failing.
   `process_files` is `data_file_path`; see [usage](docs/usage.rst).
 - Use [SUPPORT.md](SUPPORT.md) for help and [SECURITY.md](SECURITY.md) for
   private vulnerability reporting. Never post real payment records or secrets.
+
+## Contributing a bank profile
+
+A bank profile (a CEL policy and a Schematron rulebook, see
+[docs/bank-profiles.md](docs/bank-profiles.md)) may be contributed when
+every rule in it comes from public, non-confidential material: a
+scheme rulebook or a guideline its publisher releases without
+restriction. Cite the public source for each rule id in the pull
+request. Never contribute rules taken from a guideline whose terms
+restrict it, real account numbers or personal data; the sample-data and
+bank-name checks reject them.

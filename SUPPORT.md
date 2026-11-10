@@ -22,22 +22,6 @@ Thanks for using Pain001. Here's the fastest way to get help, by need.
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** — module map and extension
   points.
 
-## Supported channel and private profile work
-
-The software is free and stays free, at any scale. Around it, three
-things are offered to organisations that need them, and disclosed here
-so nobody has to guess:
-
-| Offer | What it is | What it is not |
-| :--- | :--- | :--- |
-| **Supported release channel** | A named contact, a response target, and fixes backported to a long-term line for the suite versions you run | A different product; the packages on PyPI are the supported ones |
-| **Private profile derivation** | Your bank's own usage guideline applied as a validation overlay with the library's `derive_overlay` tooling, under NDA; the guideline never enters a public repository | A bank-specific fork; overlays sit on the public rulebooks |
-| **Integration help** | Recipes for the ERP or treasury system you name, and a review of your first files against your bank's checks | Hosting or processing your payments; everything runs on your machines |
-
-Terms are per engagement and start from the [enterprise page](https://pain001.com/enterprise/),
-which has the form. The [governance page](https://pain001.com/governance/)
-discloses how the project is funded. Nothing here gates a feature.
-
 ## Questions & how-to
 
 Open a [GitHub issue](https://github.com/sebastienrousseau/pain001/issues/new/choose)
@@ -88,19 +72,21 @@ private disclosure process in [SECURITY.md](SECURITY.md):
 - **Preferred:** [GitHub Private Vulnerability Reporting](https://github.com/sebastienrousseau/pain001/security/advisories/new)
 - **Email:** `security@pain001.com`
 
-## Support tiers
+## Support
 
-Pain001 is open source under Apache-2.0 / MIT. There is **no paid
-support tier today**.
+Pain001 is free open-source software under Apache-2.0 / MIT,
+maintained in a personal capacity. There is **no paid tier, no SLA
+and no out-of-hours cover**, and the project takes no sponsorships,
+donations, fees or referrals.
 
-- **Community support** (issues / PRs): best effort
-  by the maintainers and other contributors. Most questions get a
-  response within a few business days; bugs are triaged within a
-  week.
-- **Commercial support**: not available today. If your organisation
-  needs an SLA, contact `support@pain001.com` so we can gauge
-  demand. (No promises; this signal directly informs whether a paid
-  tier is worth standing up.)
+- **Community support** (issues / PRs): best effort by the
+  maintainers and other contributors.
+- **Maintenance:** what to expect from releases and security
+  fixes is in the
+  [maintenance policy](docs/maintenance-policy.md).
+- **Commercial support:** Pain001's licence lets any firm support it
+  commercially. The project has no commercial partners and takes no
+  fees or referrals.
 
 The single maintainer note: pain001 has one maintainer today. That
 is the project's #1 risk and the headline item on the
@@ -141,7 +127,8 @@ for the exact policy. Pain001 requires **Python 3.11+**.
 
 | Version | Supported? |
 | :--- | :--- |
-| 0.0.84 (latest) | ✅ |
+| 0.0.85 (latest) | ✅ |
+| 0.0.84 | ✅ |
 | 0.0.83 | ✅ |
 | 0.0.82 | ✅ |
 | 0.0.81 | ✅ |

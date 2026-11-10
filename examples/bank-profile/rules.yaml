@@ -1,0 +1,18 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# Template private bank profile, record-level rules (CEL, pain001[rules]).
+# "Example Bank" is fictional. Replace each rule with one your bank's
+# usage guideline states, keep the rule id stable, and keep this file
+# inside your network if the guideline is confidential.
+- id: EXB-LIMIT
+  where: payment_amount > decimal("50000")
+  severity: error
+  message: "Example Bank accepts single payments up to 50,000 in one file."
+- id: EXB-CCY
+  where: payment_currency != "EUR"
+  severity: error
+  message: "Example Bank's SEPA channel accepts EUR only."
+- id: EXB-WEEKEND
+  where: day_of_week(requested_execution_date) == "Saturday" || day_of_week(requested_execution_date) == "Sunday"
+  severity: warning
+  message: "Example Bank executes on the next business day after a weekend date."

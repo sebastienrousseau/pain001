@@ -51,6 +51,8 @@ Contents
    configuration
    plugins
    custom-rules
+   bank-profiles
+   integration-recipes
    sftp-upload
    template_registry
    version_migration
@@ -72,6 +74,8 @@ Contents
 
    faq
    glossary
+   maintenance-policy
+   evidence/index
 
 .. toctree::
    :maxdepth: 1

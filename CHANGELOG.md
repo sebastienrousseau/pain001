@@ -9,6 +9,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.85] - 2026-11-10
+
+### Added
+
+- `pain001 download --sftp URL --to DIR` and `download_sftp()` fetch a
+  bank's replies over SFTP, each file exactly once: a 0600 SQLite ledger
+  is committed before the remote copy is deleted or moved
+  (`--after-fetch keep|delete|move:/dir`), a reused name with new bytes
+  is saved as `name.<sha8>.xml`, and `--pattern`, `--settle-seconds`,
+  `--max-files` and `--max-bytes` bound a run. It takes every `upload`
+  trust and identity flag (ADR 0013).
+- [Build your own bank profile](docs/bank-profiles.md): a step-by-step
+  guide for a bank's team to turn its usage guideline into a private
+  profile in-house (a CEL policy and a Schematron rulebook, applied by
+  `check`, `validate` and `generate`), with a template for a fictional
+  bank in `examples/bank-profile/`, `examples/29_private_bank_profile.py`
+  and a test that each template rule fires. Public, non-confidential
+  profiles may be contributed (`CONTRIBUTING.md`).
+- [Integration recipes](docs/integration-recipes.md): ERP or treasury
+  CSV export to pain.001, a batch pipeline (`validate`, `generate`,
+  `check`, SFTP), the REST API, pain.002 handling with `pain001 status`,
+  and camt.052/053/054 reconciliation by end-to-end id through
+  `pain001[camt]`; `examples/30_integration_recipes.py` runs them.
+- A "Tell us you use Pain001" issue form (organisation type, use,
+  consent to be named yes or no). It says issues are public and that
+  submissions are acknowledged and closed, since the repository keeps
+  no issues open.
+- A continuity plan in `GOVERNANCE.md`: what happens to the release
+  keys, the PyPI project, the repositories and the domain if the lead
+  maintainer becomes unavailable, the goal of a second maintainer with
+  release rights by mid-2027, and a neutral foundation under
+  consideration. Facts only the maintainer has are marked TODO.
+- An evidence pack for bank reviewers on every release,
+  `pain001-<version>-evidence-pack.zip`: the documents in
+  `docs/evidence/` (data handling, verifying a release, a DORA evidence
+  map with no compliance claim, a licence summary, a pre-filled
+  security questionnaire as CSV), the maintenance and security policies,
+  the licence texts, the release's SBOM, provenance and SHA256SUMS
+  (each checked against SHA256SUMS), the OpenSSF Scorecard result and
+  the website's security.txt and accessibility statement. Built by
+  `scripts/build_evidence_pack.py` in a new `evidence-pack` job of the
+  tag workflow, before the release notes list its checksum.
+- `pain001 status FILE...` reads pain.002 reports and exits 3 when
+  anything was rejected. It reads camt.052, camt.053 and camt.054 with
+  the `camt053` package when that is installed (plan decision D6); without
+  it, camt.053 is read with the core's own parser and camt.052 and
+  camt.054 are refused with the install command. The new `camt` extra
+  (`pip install 'pain001[camt]'`) installs camt053 0.0.26 or later.
+- `parse_pain002_report` and `parse_camt053_statement` take an optional
+  `base_dir`, the directory the XML path must stay inside; `status`
+  passes the named file's own directory, so it reads files outside the
+  working directory.
+
+### Changed
+
+- `upload` and `download` share one SFTP session, so the host-key check
+  before any credential is sent exists in one place.
+
+- Pain001 is free open-source software with no paid tier
+  (maintainer decision, 2026-11-10): `.github/FUNDING.yml` is removed,
+  and `SUPPORT.md` and the FAQ drop the paid-support signal in favour
+  of the published [maintenance policy](docs/maintenance-policy.md)
+  (fixes ship in the next release, no long-term support line at
+  present, a 5-working-day acknowledgement goal for security reports,
+  no SLA).
+  `SECURITY.md`'s response times are goals, not commitments. Any firm
+  may support Pain001 commercially under its licence; the project has
+  no commercial partners and takes no fees or referrals.
+- The issue chooser no longer links GitHub Discussions, which are not
+  enabled; questions go to issues. The continuity plan marks what is
+  not yet arranged instead of carrying maintainer to-dos, and no
+  longer mentions a foundation.
+
 ### Fixed
 
 - Correct the 0.0.84 citation date to 9 November 2026, matching the published release and its changelog. Published tags and package artifacts remain unchanged.

@@ -377,7 +377,53 @@ jobs:
       base64-subjects: ${{ needs.publish.outputs.hashes }}
       upload-assets: true
 
-  # 6. RELEASE BODY (Only on Tags)
+  # 6. EVIDENCE PACK (Only on Tags)
+  #
+  # One ZIP a bank's reviewer can download without a form: the review
+  # documents in docs/evidence/, the maintenance and security policies,
+  # the licence texts, this release's SBOM, provenance and SHA256SUMS
+  # (each checked against SHA256SUMS), the OpenSSF Scorecard result and
+  # the website's security.txt and accessibility statement. It runs after
+  # the provenance it contains and before the release notes, which then
+  # list its checksum. It is not a provenance subject: the provenance is
+  # one of its inputs.
+  evidence-pack:
+    needs: [publish, provenance]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    name: 🗂️ Evidence Pack
+    permissions:
+      contents: write # upload the pack to the release
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: ❯ Build and attach the evidence pack
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          gh release download "$GITHUB_REF_NAME" -R "$REPO" -D release \
+            -p "pain001-${version}.cdx.json" -p "pain001-${version}.cdx.xml" \
+            -p "pain001-${version}.spdx-licenses.json" \
+            -p multiple.intoto.jsonl -p SHA256SUMS
+          curl -fsS --retry 3 -o scorecard.json \
+            "https://api.securityscorecards.dev/projects/github.com/${REPO}"
+          curl -fsS --retry 3 -o security.txt \
+            https://pain001.com/.well-known/security.txt
+          curl -fsS --retry 3 -o accessibility.html \
+            https://pain001.com/accessibility/
+          python3 scripts/build_evidence_pack.py --version "$version" \
+            --assets release --out evidence \
+            --include openssf-scorecard.json=scorecard.json \
+            --include security.txt=security.txt \
+            --include accessibility-statement.html=accessibility.html
+          gh release upload "$GITHUB_REF_NAME" -R "$REPO" --clobber \
+            "evidence/pain001-${version}-evidence-pack.zip"
+
+  # 7. RELEASE BODY (Only on Tags)
   #
   # Runs last, once every asset is attached (dist, SBOMs, SHA256SUMS and
   # the provenance above), and rewrites the release body from the live
@@ -387,7 +433,7 @@ jobs:
   # cannot list the provenance, which is uploaded after it, and lacks
   # the merged pull requests (0.0.77 and 0.0.78 were rewritten by hand).
   release-notes:
-    needs: [publish, provenance]
+    needs: [publish, provenance, evidence-pack]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     name: 📝 Release Notes

@@ -158,7 +158,7 @@ on, so a glob may match XML that is not a payment:
      security-events: write   # for the SARIF upload
    steps:
      - uses: actions/checkout@<sha>
-     - uses: sebastienrousseau/pain001@v0.0.84
+     - uses: sebastienrousseau/pain001@v0.0.85
        with:
          files: "payments/**/*.xml"
          scheme: sepa-sct
@@ -237,5 +237,7 @@ Optional integrations
 REST is started with pain001 serve after installing the api extra.
 :doc:`custom-rules` apply through CLI and REST (``rules`` extra), MCP offers
 review-only record corrections (``mcp`` extra), and :doc:`sftp-upload`
-delivers a file explicitly (``upload`` extra). Generation never uploads a
-payment automatically.
+delivers a file explicitly and collects the bank's replies with
+``pain001 download`` (``upload`` extra). ``pain001 status`` reads those
+replies and exits 3 on any rejection. Generation never uploads a payment
+automatically.

@@ -1,0 +1,55 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+name: Tell us you use Pain001
+description: Let the maintainer know your organisation uses Pain001 (optional, public)
+title: "[Adoption]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for telling us. This is optional and there is nothing
+        in return: no support, no listing and no exchange of value.
+
+        **Issues are public.** Everything you write here, and your
+        GitHub account, can be seen by anyone. Do not include
+        confidential information, personal data or account details.
+
+        Submissions are read, acknowledged and then closed, because the
+        project keeps no issues open. Closing one does not remove it.
+        Your organisation is named on pain001.com only if you answer
+        "Yes" below; the maintainer records the date and this issue as
+        the source.
+  - type: dropdown
+    id: organisation_type
+    attributes:
+      label: Organisation type
+      options:
+        - Bank or payment service provider
+        - Corporate treasury or finance team
+        - Software vendor or integrator
+        - Public sector
+        - Individual or open-source project
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: use
+    attributes:
+      label: How do you use Pain001?
+      description: For example the message types, schemes or volumes, at the level of detail you are comfortable making public.
+    validations:
+      required: true
+  - type: dropdown
+    id: consent
+    attributes:
+      label: May the maintainer name your organisation on pain001.com?
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: true
+  - type: input
+    id: name
+    attributes:
+      label: Organisation name to show (only if you answered Yes)
+    validations:
+      required: false

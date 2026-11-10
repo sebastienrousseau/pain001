@@ -75,3 +75,60 @@ files immediately, so absence on a later retry cannot prove whether a payment
 was already processed. Use bank acknowledgements and your own submission
 ledger to manage that case. Host-key rotation remains an explicit operator
 decision. No live bank connection is part of the test suite.
+
+## Fetching replies: `pain001 download`
+
+`pain001 download` collects a bank's replies from a remote directory, each
+file exactly once. It takes every trust and identity flag `upload` takes,
+and checks the host key before any credential is sent:
+
+```sh
+pain001 download --sftp sftp://user@bank.example/outbox/ --to ./replies \
+  --known-hosts trusted_known_hosts --identity-file ./transfer_key \
+  --pattern '*.xml' --after-fetch move:/archive --settle-seconds 30
+```
+
+- **Exactly once.** Each file is read into a private (0600) temporary file
+  in `--to`, hashed, and moved into place. A ledger,
+  `.pain001-ledger.sqlite3` in `--to` unless `--ledger` names another,
+  records it by remote path and SHA256 before the remote copy is touched.
+  If a run stops between saving and the remote delete or move, the next run
+  finishes the disposal without saving the file again.
+- **Never overwritten.** A name that reappears with different bytes is saved
+  beside the first as `name.<sha8>.xml`.
+- **After the fetch.** `--after-fetch keep` (the default) leaves the remote
+  file; a later `keep` run skips files the ledger holds at the same size and
+  modification time. `delete` removes it, and `move:/absolute/dir` renames
+  it into an archive directory on the server.
+  Use `delete` or `move` for production runs. `keep` suits trying the
+  command out and read-only bank outboxes: SFTP gives the modification
+  time in whole seconds, so a file rewritten with the same size within
+  the same second would be skipped.
+- **Files still being written.** `--settle-seconds N` lists twice, N
+  seconds apart, and leaves any file whose size or time changed for the
+  next run. A file whose size changes during the transfer is refused.
+- **Limits.** `--max-files` and `--max-bytes` bound one run; what they leave
+  stays on the server and is reported.
+- **Skipped names.** Symlinks, directories, hidden names and `.tmp` or
+  `.part` files are skipped and listed, so a link on the server cannot point
+  the download at another file.
+
+There is no daemon. Run it from cron or a systemd timer. The MCP and REST
+interfaces never open network connections, so they do not offer it.
+
+## Reading replies: `pain001 status`
+
+```sh
+pain001 status replies/*.xml
+```
+
+`status` reads pain.002 status reports with the library's parser, and
+camt.052, camt.053 and camt.054 with the
+[camt053](https://pypi.org/project/camt053/) package when it is
+installed (`pip install 'pain001[camt]'`); without it, camt.053 is read with the
+library's own parser and camt.052 and camt.054 are refused. It prints
+one line per file, and every rejected group, payment block and
+transaction is listed with its reason code. It exits `3` when anything
+was rejected (`RJCT`), `2` when a file cannot be read or is another
+message, and `0` otherwise; `--format json` prints the same as data. Together with
+`download`, a scheduled job can fetch replies and alert on rejections.

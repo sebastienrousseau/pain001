@@ -88,8 +88,23 @@ in payments. The mitigations in place:
   codebase, [`RELEASING.md`](RELEASING.md) documents the release process, and
   every public surface ships a runnable example.
 - **Quality is enforced by CI,** not by one person's memory.
-- **The goal is ≥ 2 maintainers** with independent release authority. If you
-  rely on Pain001 and can help, please reach out — see the previous section.
+- **The goal is a second maintainer with release rights by mid-2027.** If you
+  rely on Pain001 and can help, please reach out; see the previous section.
+
+### Continuity plan
+
+What happens to each piece of the project if the lead maintainer becomes
+unavailable. Items marked **Not yet arranged** have no continuity
+arrangement today; the plan is incomplete until they do.
+
+| Asset | Today | Continuity |
+| :--- | :--- | :--- |
+| Release signing keys | SSH keys listed in `KEYS.asc`; tags and commits are signed with them | A new maintainer signs with their own key, added to `KEYS.asc` in a reviewed change; old releases stay verifiable because the file's history is kept. **Not yet arranged:** a documented key backup. |
+| PyPI project | Published by trusted publishing from the release workflow; owned by the lead maintainer | Add a second PyPI owner. **Not yet arranged:** there is no second owner. |
+| GitHub repositories | Owned by the lead maintainer's account | Transfer to an organisation or foundation with at least two owners, keeping redirects. **Not yet arranged:** no target account has been chosen. |
+| Domain `pain001.com` | Registered by the lead maintainer, served through Cloudflare | **Not yet arranged:** no one else is named to renew or transfer it. |
+| Releases and CI | Documented in `RELEASING.md` and run by GitHub Actions | Anyone with release rights can cut a release from the documented process. |
+| The code | Apache-2.0 OR MIT, public history | Anyone can fork and continue it, with or without the project. |
 
 ## Code of conduct & security
 

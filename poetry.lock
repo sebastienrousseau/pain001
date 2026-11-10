@@ -368,6 +368,35 @@ filecache = ["filelock (>=3.8.0)"]
 redis = ["redis (>=2.10.5)"]
 
 [[package]]
+name = "camt053"
+version = "0.0.26"
+description = "Camt053 is a Python library for reading ISO 20022 camt Bank-to-Customer Statements (camt.053/052/054) and generating validated reversing entries by return reason code (e.g. AC04 Closed Account)."
+optional = true
+python-versions = "<4.0,>=3.11"
+groups = ["main"]
+markers = "extra == \"camt\""
+files = [
+    {file = "camt053-0.0.26-py3-none-any.whl", hash = "sha256:b9cbbe2972c270ec761ccea85749b9b5604f0898de0529e55703c64e3d785f84"},
+    {file = "camt053-0.0.26.tar.gz", hash = "sha256:85c983c285a0e879cba6c97aca5ef4602956989fff036540cdc061ade3450ab7"},
+]
+
+[package.dependencies]
+click = ">=8.1,<9"
+colorama = ">=0.4.6,<1"
+defusedxml = ">=0.7.1,<1"
+jinja2 = ">=3.1.6,<4"
+jsonschema = ">=4.20,<5"
+markupsafe = ">=2.1,<4"
+pygments = ">=2.20.0,<3.0.0"
+rich = ">=13.7.1,<16"
+xmlschema = ">=4.3.2,<5.0.0"
+
+[package.extras]
+api = ["anyio (>=4.14.2,<5)", "certifi (>=2026.10.19)", "cryptography (>=50.0.0,<51.0.0)", "fastapi (>=0.109.1,<1)", "h11 (>=0.16.0,<1)", "httpx (>=0.23,<1)", "idna (>=3.15,<4)", "pydantic (>=2.4.0,<3)", "python-dotenv (>=1.2.2,<2)", "pyyaml (>=5.4,<7)", "starlette (>=1.3.1,<2)", "uvicorn[standard] (>=0.20,<1)"]
+fast = ["lxml (>=6.1.0,<7)"]
+telemetry = ["opentelemetry-api (>=1.20,<2)"]
+
+[[package]]
 name = "cattrs"
 version = "26.1.0"
 description = "Composable complex class support for attrs and dataclasses."
@@ -683,12 +712,12 @@ version = "0.4.6"
 description = "Cross-platform colored terminal text."
 optional = false
 python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,>=2.7"
-groups = ["dev", "docs"]
+groups = ["main", "dev", "docs"]
 files = [
     {file = "colorama-0.4.6-py2.py3-none-any.whl", hash = "sha256:4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6"},
     {file = "colorama-0.4.6.tar.gz", hash = "sha256:08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44"},
 ]
-markers = {docs = "sys_platform == \"win32\""}
+markers = {main = "extra == \"camt\"", docs = "sys_platform == \"win32\""}
 
 [[package]]
 name = "complexipy"
@@ -5721,6 +5750,7 @@ type = ["pytest-mypy"]
 
 [extras]
 api = ["fastapi", "uvicorn"]
+camt = ["camt053"]
 fast = ["lxml"]
 gpg = ["python-gnupg"]
 lsp = ["pygls"]
@@ -5735,4 +5765,4 @@ upload = ["paramiko"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "99f1647801c3b15ae4847080f75c8967532bd5c91aa4f12cdb319cddcc18c35f"
+content-hash = "a6227a7190df4d5f283eb6e9bd140fa87bd57992934ffab8e64d5be0c79f9266"
