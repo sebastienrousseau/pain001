@@ -32,6 +32,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `check`, SFTP), the REST API, pain.002 handling with `pain001 status`,
   and camt.052/053/054 reconciliation by end-to-end id through
   `pain001[camt]`; `examples/30_integration_recipes.py` runs them.
+- A "Tell us you use Pain001" issue form (organisation type, use,
+  consent to be named yes or no). It says issues are public and that
+  submissions are acknowledged and closed, since the repository keeps
+  no issues open.
 - An evidence pack for bank reviewers on every release,
   `pain001-<version>-evidence-pack.zip`: the documents in
   `docs/evidence/` (data handling, verifying a release, a DORA evidence
