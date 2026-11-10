@@ -245,9 +245,11 @@ def test_ledger_refuses_a_symlink_and_tightens_permissions(tmp_path):
     os.symlink(target, tmp_path / "link.sqlite3")
     with pytest.raises(ValueError, match="symlink"):
         Ledger(tmp_path / "link.sqlite3")
+    # Group-readable is loose enough to prove the ledger tightens it,
+    # without a world-readable mode (CodeQL py/overly-permissive-file).
     loose = tmp_path / "loose.sqlite3"
-    loose.touch(mode=0o644)
-    os.chmod(loose, 0o644)
+    loose.touch(mode=0o640)
+    os.chmod(loose, 0o640)
     Ledger(loose).close()
     assert stat.S_IMODE(loose.stat().st_mode) == 0o600
 
