@@ -71,11 +71,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (maintainer decision, 2026-11-10): `.github/FUNDING.yml` is removed,
   and `SUPPORT.md` and the FAQ drop the paid-support signal in favour
   of the published [maintenance policy](docs/maintenance-policy.md)
-  (one LTS line a year, 18 months, best-effort backports, a 5-working-
-  day acknowledgement goal for security reports, no SLA).
+  (fixes ship in the next release, no long-term support line at
+  present, a 5-working-day acknowledgement goal for security reports,
+  no SLA).
   `SECURITY.md`'s response times are goals, not commitments. Any firm
   may support Pain001 commercially under its licence; the project has
   no commercial partners and takes no fees or referrals.
+- The issue chooser no longer links GitHub Discussions, which are not
+  enabled; questions go to issues. The continuity plan marks what is
+  not yet arranged instead of carrying maintainer to-dos, and no
+  longer mentions a foundation.
 
 ### Fixed
 

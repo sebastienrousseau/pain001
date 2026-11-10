@@ -94,21 +94,17 @@ in payments. The mitigations in place:
 ### Continuity plan
 
 What happens to each piece of the project if the lead maintainer becomes
-unavailable. Items marked **TODO (maintainer)** need facts only the lead
-maintainer has; until they are filled in, the plan is incomplete.
+unavailable. Items marked **Not yet arranged** have no continuity
+arrangement today; the plan is incomplete until they do.
 
 | Asset | Today | Continuity |
 | :--- | :--- | :--- |
-| Release signing keys | SSH keys listed in `KEYS.asc`; tags and commits are signed with them | A new maintainer signs with their own key, added to `KEYS.asc` in a reviewed change; old releases stay verifiable because the file's history is kept. **TODO (maintainer):** where the current key is backed up. |
-| PyPI project | Published by trusted publishing from the release workflow; owned by the lead maintainer | Add a second PyPI owner. **TODO (maintainer):** the second owner, once there is one. |
-| GitHub repositories | Owned by the lead maintainer's account | Transfer to an organisation or foundation with at least two owners, keeping redirects. **TODO (maintainer):** the target account and its owners. |
-| Domain `pain001.com` | Registered by the lead maintainer, served through Cloudflare | **TODO (maintainer):** registrar, renewal date, and who can renew or transfer it. |
+| Release signing keys | SSH keys listed in `KEYS.asc`; tags and commits are signed with them | A new maintainer signs with their own key, added to `KEYS.asc` in a reviewed change; old releases stay verifiable because the file's history is kept. **Not yet arranged:** a documented key backup. |
+| PyPI project | Published by trusted publishing from the release workflow; owned by the lead maintainer | Add a second PyPI owner. **Not yet arranged:** there is no second owner. |
+| GitHub repositories | Owned by the lead maintainer's account | Transfer to an organisation or foundation with at least two owners, keeping redirects. **Not yet arranged:** no target account has been chosen. |
+| Domain `pain001.com` | Registered by the lead maintainer, served through Cloudflare | **Not yet arranged:** no one else is named to renew or transfer it. |
 | Releases and CI | Documented in `RELEASING.md` and run by GitHub Actions | Anyone with release rights can cut a release from the documented process. |
 | The code | Apache-2.0 OR MIT, public history | Anyone can fork and continue it, with or without the project. |
-
-A neutral foundation, such as FINOS, could give institutional users the
-continuity a single maintainer cannot. Hosting the project there is under
-consideration; no application has been made.
 
 ## Code of conduct & security
 

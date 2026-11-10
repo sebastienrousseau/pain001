@@ -19,13 +19,11 @@ agreement (SLA) and no out-of-hours cover.
 
 ## Long-term support
 
-- One long-term support (LTS) line is designated each year.
-- An LTS line is supported for 18 months. During that time, security
-  fixes are backported to it on a best-effort basis.
-- Other releases receive fixes by upgrading to the next release.
-
-> **Maintainer decision pending:** which release becomes the first LTS
-> line has not been decided. Until it is, no release is an LTS line.
+- There is no long-term support (LTS) line at present.
+- Fixes, including security fixes, ship in the next release; you get
+  them by upgrading. Earlier releases are not patched.
+- If an LTS line is offered later, this page will name the release and
+  how long it is supported before that applies.
 
 ## Security reports
 
