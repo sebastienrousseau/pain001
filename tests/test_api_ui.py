@@ -30,6 +30,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from pain001 import __version__
+from pain001.api import _upload as upload_module
 from pain001.api import ui as ui_module
 from pain001.api.app import app
 from pain001.constants import TEMPLATES_DIR, valid_xml_types
@@ -212,7 +213,7 @@ def test_validate_reports_schema_errors(
         def validate_batch(self, rows: list[dict[str, object]]) -> tuple:
             return len(rows), len(rows) - 1, [(0, [_Error()])]
 
-    monkeypatch.setattr(ui_module, "SchemaValidator", _FakeValidator)
+    monkeypatch.setattr(upload_module, "SchemaValidator", _FakeValidator)
     response = client.post("/api/v1/ui/validate", json=_payload())
     assert response.status_code == 200
     body = response.json()
@@ -285,7 +286,7 @@ def test_generate_is_blocked_by_schema_errors(
         def validate_batch(self, rows: list[dict[str, object]]) -> tuple:
             return len(rows), 0, [(0, [_Error()])]
 
-    monkeypatch.setattr(ui_module, "SchemaValidator", _FakeValidator)
+    monkeypatch.setattr(upload_module, "SchemaValidator", _FakeValidator)
     response = client.post("/api/v1/ui/generate", json=_payload())
     body = response.json()
     assert response.status_code == 200
@@ -302,7 +303,7 @@ def test_generate_surfaces_rendering_failures_as_400(
     def _boom(*args: object, **kwargs: object) -> str:
         raise RuntimeError("Generated XML failed validation against xsd")
 
-    monkeypatch.setattr(ui_module, "generate_xml_string", _boom)
+    monkeypatch.setattr(upload_module, "generate_xml_string", _boom)
     response = client.post("/api/v1/ui/generate", json=_payload())
     assert response.status_code == 400
     assert "Generation failed" in response.json()["detail"]
@@ -325,7 +326,7 @@ def test_unsupported_suffix_is_rejected(filename: str) -> None:
 
 def test_oversized_upload_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
     """The size cap answers 413 and points at the CLI."""
-    monkeypatch.setattr(ui_module, "MAX_UPLOAD_BYTES", 16)
+    monkeypatch.setattr(upload_module, "MAX_UPLOAD_BYTES", 16)
     response = client.post("/api/v1/ui/validate", json=_payload())
     assert response.status_code == 413
     assert "CLI" in response.json()["detail"]

@@ -565,6 +565,30 @@
         "title": "MessageType",
         "type": "string"
       },
+      "ReadyResponse": {
+        "description": "Readiness: whether this replica can serve validation and generation.",
+        "properties": {
+          "checks": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "One entry per dependency: ``ok``, ``disabled`` (not configured) or ``failed``",
+            "title": "Checks",
+            "type": "object"
+          },
+          "status": {
+            "description": "``ready`` or ``not_ready``",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "checks"
+        ],
+        "title": "ReadyResponse",
+        "type": "object"
+      },
       "RowError": {
         "description": "One row-level validation error.\n\nNamed ``RowError`` in the OpenAPI document: FastAPI publishes its own\nrequest-validation error as ``ValidationError``, which replaced this\nmodel's schema under the old name. ``ValidationError`` stays as an\nalias for Python callers.",
         "properties": {
@@ -608,7 +632,8 @@
         ],
         "properties": {
           "content": {
-            "description": "The file's text (UTF-8)",
+            "description": "The file's text (UTF-8), at most 10 MiB",
+            "maxLength": 10485760,
             "title": "Content",
             "type": "string"
           },
@@ -882,8 +907,8 @@
     },
     "description": "RESTful API for ISO 20022 **pain.001** / **pain.008** XML generation and\nvalidation.\n\n* **Versioned** \u2014 all endpoints are served under `/api/v1`; the unversioned\n  `/api/*` paths remain as a backwards-compatible alias.\n* **Authenticated** \u2014 set `PAIN001_API_KEY` to require a\n  `Authorization: Bearer <key>` header (open in local development).\n* **Rate limited** \u2014 set `PAIN001_RATE_LIMIT` (e.g. `100/minute`) to cap\n  requests per client.\n\nInteractive reference: [`/api/reference`](/api/reference) \u00b7\nOpenAPI document: [`/openapi.json`](/openapi.json) \u00b7\nDashboard: [`/api/v1/ui`](/api/v1/ui) (disable with `PAIN001_UI_DISABLED=1`)\n",
     "license": {
-      "name": "Apache-2.0",
-      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+      "identifier": "Apache-2.0 OR MIT",
+      "name": "Apache-2.0 OR MIT"
     },
     "title": "Pain001 REST API",
     "version": "conformance-kit-1"
@@ -1181,7 +1206,7 @@
     },
     "/api/v1/generate/async": {
       "post": {
-        "description": "Start async XML generation job.\n\nArgs:\n    request: Generation request.\n\nReturns:\n    Dictionary with job_id for status polling.\n\nRaises:\n    HTTPException: If job creation fails.",
+        "description": "Start async XML generation job.\n\nArgs:\n    request: Generation request.\n\nReturns:\n    Dictionary with job_id for status polling.\n\nRaises:\n    HTTPException: ``503`` with ``Retry-After`` when the active-job\n        cap (``PAIN001_MAX_ACTIVE_JOBS``) is reached; ``500`` if job\n        creation fails.",
         "operationId": "generate_xml_async_api_v1_generate_async_post",
         "parameters": [
           {
@@ -1326,6 +1351,38 @@
         ]
       }
     },
+    "/api/v1/ready": {
+      "get": {
+        "description": "Report whether this replica can validate and generate.\n\nRuns in the thread pool: a job-store ping is blocking I/O.\n\nReturns:\n    ``200`` with ``status=ready`` when every check passes, else\n    ``503`` with ``status=not_ready``; ``checks`` names each result.",
+        "operationId": "ready_api_v1_ready_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReadyResponse"
+                }
+              }
+            },
+            "description": "Not ready"
+          }
+        },
+        "summary": "Readiness check",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
     "/api/v1/status/{job_id}": {
       "get": {
         "description": "Get status of async job.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    JobStatusResponse: Current job status and result.\n\nRaises:\n    HTTPException: If job not found.",
@@ -1387,7 +1444,7 @@
     },
     "/api/v1/ui/generate": {
       "post": {
-        "description": "Validate the upload, then render the XML and return it inline.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    ``success=True`` with the XML document and a suggested filename,\n    or ``success=False`` carrying the validation errors or scheme\n    violations that blocked generation.\n\nRaises:\n    HTTPException: ``400`` when rendering fails (for example the\n        rendered document does not satisfy the XSD).",
+        "description": "Validate the upload, then render the XML and return it inline.\n\nParsing, validation and rendering run on the bounded pipeline pool,\noff the event loop (see :mod:`pain001.api._upload`). A rendering\nfailure (for example a document the XSD rejects) answers ``400``.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    ``success=True`` with the XML document and a suggested filename,\n    or ``success=False`` carrying the validation errors or scheme\n    violations that blocked generation.",
         "operationId": "ui_generate_api_v1_ui_generate_post",
         "parameters": [
           {
@@ -1447,7 +1504,7 @@
     },
     "/api/v1/ui/validate": {
       "post": {
-        "description": "Validate the uploaded text against the schema and optional schemes.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    The same shape as ``POST /validate``.",
+        "description": "Validate the uploaded text against the schema and optional schemes.\n\nParsing and validation run on the bounded pipeline pool, off the\nevent loop (see :mod:`pain001.api._upload`).\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    The same shape as ``POST /validate``.",
         "operationId": "ui_validate_api_v1_ui_validate_post",
         "parameters": [
           {

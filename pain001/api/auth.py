@@ -63,25 +63,38 @@ def require_api_key(
     """Enforce bearer-token auth when ``PAIN001_API_KEY`` is configured.
 
     When the environment variable is unset the API remains open
-    (local development mode); set it in any shared deployment.
+    (local development mode); set it in any shared deployment. When it
+    is set, :func:`check_bearer` answers ``401`` unless the header
+    carries the key.
 
     Args:
         authorization: The raw ``Authorization`` header, if any.
-
-    Raises:
-        HTTPException: ``401`` when a key is configured and the header
-            does not carry it.
     """
     expected = os.environ.get(API_KEY_ENV)
-    if not expected:
-        return
+    if expected:
+        check_bearer(authorization, expected, "Invalid or missing API key")
+
+
+def check_bearer(
+    authorization: str | None, expected: str, detail: str
+) -> None:
+    """Compare a bearer token with ``expected`` in constant time.
+
+    Args:
+        authorization: The raw ``Authorization`` header, if any.
+        expected: The configured token.
+        detail: The ``401`` message when it does not match.
+
+    Raises:
+        HTTPException: ``401`` when the header does not carry ``expected``.
+    """
     provided = ""
     if authorization and authorization.startswith("Bearer "):
         provided = authorization[len("Bearer ") :]
     if not secrets.compare_digest(provided, expected):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid or missing API key",
+            detail=detail,
             headers={"WWW-Authenticate": "Bearer"},
         )
 
@@ -89,6 +102,7 @@ def require_api_key(
 __all__ = [
     "API_KEY_ENV",
     "INSECURE_ENV",
+    "check_bearer",
     "insecure_allowed",
     "require_api_key",
     "warn_if_unauthenticated",

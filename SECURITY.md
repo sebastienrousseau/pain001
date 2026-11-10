@@ -135,9 +135,19 @@ The REST API ships with:
   is retained for backwards compatibility but **will be deprecated
   in v0.1**.
 - Async-job state can be stored in-process (default), on disk
-  (`PAIN001_JOB_STORE_DIR`), or in Redis (`PAIN001_JOB_STORE_URL`).
-  No backend exposes job data over the network beyond the REST
-  endpoints' bearer-gated paths.
+  (`PAIN001_JOB_STORE_DIR`, files `0600` in a `0700` directory), or in
+  Redis (`PAIN001_JOB_STORE_URL`). No backend exposes job data over the
+  network beyond the REST endpoints' bearer-gated paths. Pending plus
+  running jobs are capped (`PAIN001_MAX_ACTIVE_JOBS`, default 100) and
+  finished jobs past the retention count are deleted from the store.
+- Request bodies are capped (`PAIN001_MAX_BODY_BYTES`, default 21 MiB)
+  and refused with `413` before parsing.
+- `/metrics` takes the API key (or its own `PAIN001_METRICS_TOKEN`)
+  whenever one is set. Payment volume per currency is not recorded
+  unless `PAIN001_METRICS_PAYMENT_VOLUME=1`.
+- Row errors in REST responses mask IBAN, BIC, account and name values
+  (first and last four characters, or `[REDACTED]` for names), with the
+  same rules as the log redactor.
 
 ### Dependency hygiene (CI-enforced on every commit)
 

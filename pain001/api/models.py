@@ -27,6 +27,14 @@ from pydantic import (
     field_validator,
 )
 
+MAX_UPLOAD_BYTES = 10 * 1024 * 1024
+"""Largest file the dashboard accepts, in UTF-8 bytes (10 MiB).
+
+``UiFilePayload.content`` declares it as ``maxLength`` (characters, which
+never outnumber the bytes), so an oversized upload is refused while the
+body is parsed; the byte count is checked again before the rows are.
+"""
+
 
 class DataSourceType(StrEnum):
     """Supported data source types."""
@@ -264,7 +272,11 @@ class UiFilePayload(BaseModel):
         description="Name the browser reported; only the suffix "
         "(.csv, .json, .jsonl) is used to pick a parser",
     )
-    content: str = Field(..., description="The file's text (UTF-8)")
+    content: str = Field(
+        ...,
+        max_length=MAX_UPLOAD_BYTES,
+        description="The file's text (UTF-8), at most 10 MiB",
+    )
     message_type: MessageType = Field(
         default=MessageType.PAIN_001_03,
         description="ISO 20022 message type",
@@ -322,3 +334,14 @@ class HealthResponse(BaseModel):
     status: str = Field(..., description="Service status")
     version: str = Field(..., description="API version")
     message: str = Field(..., description="Health check message")
+
+
+class ReadyResponse(BaseModel):
+    """Readiness: whether this replica can serve validation and generation."""
+
+    status: str = Field(..., description="``ready`` or ``not_ready``")
+    checks: dict[str, str] = Field(
+        ...,
+        description="One entry per dependency: ``ok``, ``disabled`` (not "
+        "configured) or ``failed``",
+    )

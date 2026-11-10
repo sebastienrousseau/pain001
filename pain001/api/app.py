@@ -27,7 +27,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
-from fastapi.responses import FileResponse, HTMLResponse, PlainTextResponse
+from fastapi.responses import FileResponse
 
 from pain001 import __version__
 from pain001.api._pipeline import (
@@ -46,9 +46,15 @@ from pain001.api.auth import require_api_key as _require_api_key
 from pain001.api.check import check_router
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
-from pain001.api.job_manager import JobStatus, job_manager, output_name
-from pain001.api.meta import API_DESCRIPTION, SCALAR_HTML, TAGS_METADATA
-from pain001.api.metrics import MetricsMiddleware, render_prometheus
+from pain001.api.job_manager import (
+    JobCapacityError,
+    JobStatus,
+    job_manager,
+    output_name,
+)
+from pain001.api.limits import install_body_limit
+from pain001.api.meta import API_DESCRIPTION, TAGS_METADATA
+from pain001.api.metrics import MetricsMiddleware
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
@@ -57,6 +63,7 @@ from pain001.api.models import (
     ValidationRequest,
     ValidationResponse,
 )
+from pain001.api.ops import metrics_router, ready_router
 from pain001.api.ratelimit import install_rate_limiting
 from pain001.api.ui import ui_router
 from pain001.constants import TEMPLATES_DIR
@@ -277,8 +284,8 @@ app = FastAPI(
         "url": "https://github.com/sebastienrousseau/pain001",
     },
     license_info={
-        "name": "Apache-2.0",
-        "url": "https://www.apache.org/licenses/LICENSE-2.0",
+        "name": "Apache-2.0 OR MIT",
+        "identifier": "Apache-2.0 OR MIT",
     },
 )
 
@@ -417,10 +424,11 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
         Dictionary with job_id for status polling.
 
     Raises:
-        HTTPException: If job creation fails.
+        HTTPException: ``503`` with ``Retry-After`` when the active-job
+            cap (``PAIN001_MAX_ACTIVE_JOBS``) is reached; ``500`` if job
+            creation fails.
     """
     try:
-        # Create job
         job_id = job_manager.create_job()
 
         # Start background task, keeping a strong reference until done
@@ -434,6 +442,12 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
             "message": f"Job {job_id} created. Check status with /api/status/{job_id}",
         }
 
+    except JobCapacityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Too many jobs pending; retry shortly",
+            headers={"Retry-After": "5"},
+        ) from e
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -634,32 +648,14 @@ def _report_progress(job_id: str, percent: int) -> None:
     job_manager.update_status(job_id, JobStatus.PROCESSING, progress=percent)
 
 
-@app.get("/api/reference", include_in_schema=False)
-async def scalar_reference() -> HTMLResponse:
-    """Serve an interactive Scalar API reference for the OpenAPI document.
-
-    Returns:
-        The Scalar reference UI as an HTML response.
-    """
-    return HTMLResponse(SCALAR_HTML)
-
-
-@app.get("/metrics", include_in_schema=False)
-async def metrics() -> PlainTextResponse:
-    """Expose Prometheus metrics (build info, gauges, request counters).
-
-    Returns:
-        The metrics document in Prometheus text exposition format.
-    """
-    return PlainTextResponse(render_prometheus(__version__))
-
-
 # The dashboard and its two JSON endpoints, the faces and check ride on
 # the main router so they are served under both prefixes and share its auth
 # and metrics.
 router.include_router(ui_router)
 router.include_router(faces_router)
 router.include_router(check_router)
+router.include_router(ready_router)
+app.include_router(metrics_router)
 
 # Mount the routes: canonical, documented ``/api/v1`` plus the legacy
 # ``/api`` alias (served but hidden from the OpenAPI schema).
@@ -667,3 +663,4 @@ app.include_router(router, prefix="/api/v1")
 app.include_router(router, prefix="/api", include_in_schema=False)
 app.add_middleware(MetricsMiddleware)
 install_rate_limiting(app)
+install_body_limit(app)

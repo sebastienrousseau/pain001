@@ -14,6 +14,7 @@
 
 """Job management for async XML generation."""
 
+import os
 import threading
 import uuid
 from datetime import UTC, datetime
@@ -37,6 +38,37 @@ class JobStatus(StrEnum):
 TERMINAL_STATUSES = frozenset(
     {JobStatus.SUCCESS, JobStatus.FAILED, JobStatus.CANCELLED}
 )
+
+MAX_ACTIVE_JOBS_ENV = "PAIN001_MAX_ACTIVE_JOBS"
+"""Environment variable capping pending plus processing async jobs."""
+
+DEFAULT_MAX_ACTIVE_JOBS = 100
+"""Active jobs the API accepts when ``PAIN001_MAX_ACTIVE_JOBS`` is unset."""
+
+
+class JobCapacityError(RuntimeError):
+    """Raised when a new job would exceed the active-job cap."""
+
+
+def max_active_jobs() -> int:
+    """Return how many jobs may be pending or processing at once.
+
+    Returns:
+        ``PAIN001_MAX_ACTIVE_JOBS``, or :data:`DEFAULT_MAX_ACTIVE_JOBS`
+        when it is unset or empty.
+
+    Raises:
+        ValueError: If the variable is set to anything but a positive
+            integer.
+    """
+    raw = os.environ.get(MAX_ACTIVE_JOBS_ENV, "").strip()
+    if not raw:
+        return DEFAULT_MAX_ACTIVE_JOBS
+    if not raw.isdigit() or int(raw) < 1:
+        raise ValueError(
+            f"{MAX_ACTIVE_JOBS_ENV} must be a positive integer, got {raw!r}"
+        )
+    return int(raw)
 
 
 class JobResult:  # pylint: disable=too-few-public-methods
@@ -121,47 +153,131 @@ def output_name(message_type: str) -> str:
 class JobManager:
     """Manages async job lifecycle.
 
+    Snapshots are written to the store outside the manager's lock, so a
+    slow disk or Redis never holds the lock ``/status`` needs; a version
+    number per job keeps a late write from replacing a newer one.
+
     Args:
-        max_jobs: Maximum number of jobs to keep in memory.
+        max_jobs: Maximum number of jobs to keep in memory; a store
+            holding more loads the newest ``max_jobs`` and drops the rest.
         store: Optional persistence backend. When provided, jobs are
             write-through persisted and rehydrated from it on construction
             so they survive a process restart.
+        max_active: Most jobs that may be pending or processing at once,
+            or ``None`` for no cap. :meth:`create_job` refuses the next.
     """
 
-    def __init__(self, max_jobs: int = 1000, store: JobStore | None = None):
+    def __init__(
+        self,
+        max_jobs: int = 1000,
+        store: JobStore | None = None,
+        max_active: int | None = None,
+    ):
         self._lock = threading.RLock()
+        self._store_lock = threading.Lock()
+        self._versions: dict[str, int] = {}
+        self._written: dict[str, int] = {}
         self.jobs: dict[str, JobResult] = {}
         self.max_jobs = max_jobs
+        self.max_active = max_active
         self.store = store
         if store is not None:
-            for job_id, snapshot in store.load_all().items():
-                self.jobs[job_id] = JobResult.from_dict(snapshot)
+            self._load(store)
 
-    def _persist(self, job_id: str) -> None:
-        """Write a job through to the persistence backend, if configured.
+    def _load(self, store: JobStore) -> None:
+        """Rehydrate the newest ``max_jobs`` jobs and drop the rest.
 
         Args:
-            job_id: Identifier of the job to persist.
+            store: The persistence backend to read.
         """
-        if self.store is not None and job_id in self.jobs:
-            self.store.save(job_id, self.jobs[job_id].to_dict())
+        loaded = [
+            JobResult.from_dict(snapshot)
+            for snapshot in store.load_all().values()
+        ]
+        loaded.sort(key=lambda job: job.updated_at, reverse=True)
+        for job in loaded[: self.max_jobs]:
+            self.jobs[job.job_id] = job
+        for job in loaded[self.max_jobs :]:
+            store.delete(job.job_id)
+
+    def _snapshot(self, job_id: str) -> tuple[int, dict[str, Any]] | None:
+        """Take a versioned snapshot of a job; call with the lock held.
+
+        Args:
+            job_id: Identifier of the job to snapshot.
+
+        Returns:
+            ``(version, snapshot)``, or ``None`` when nothing is persisted.
+        """
+        if self.store is None or job_id not in self.jobs:
+            return None
+        version = self._versions.get(job_id, 0) + 1
+        self._versions[job_id] = version
+        return version, self.jobs[job_id].to_dict()
+
+    def _write(
+        self, job_id: str, taken: tuple[int, dict[str, Any]] | None
+    ) -> None:
+        """Write a snapshot to the store, unless a newer one is there.
+
+        Called without the manager lock, so readers never wait on I/O.
+
+        Args:
+            job_id: Identifier of the job.
+            taken: What :meth:`_snapshot` returned.
+        """
+        if taken is None or self.store is None:
+            return
+        version, snapshot = taken
+        with self._store_lock:
+            # A job evicted since the snapshot stays deleted.
+            if job_id not in self._versions or version <= self._written.get(
+                job_id, 0
+            ):
+                return
+            self._written[job_id] = version
+            self.store.save(job_id, snapshot)
+
+    def _active_count(self) -> int:
+        """Count pending and processing jobs; call with the lock held.
+
+        Returns:
+            The number of jobs not yet in a terminal status.
+        """
+        return sum(
+            job.status not in TERMINAL_STATUSES for job in self.jobs.values()
+        )
 
     def create_job(self) -> str:
         """Create a new job.
 
         Returns:
             Job ID.
+
+        Raises:
+            JobCapacityError: When ``max_active`` jobs are already
+                pending or processing.
         """
         with self._lock:
-            if len(self.jobs) >= self.max_jobs:
-                self.cleanup_old_jobs()
+            if (
+                self.max_active is not None
+                and self._active_count() >= self.max_active
+            ):
+                raise JobCapacityError(
+                    f"{self.max_active} jobs are already pending or running"
+                )
+            evicted = (
+                self._evict(100) if len(self.jobs) >= self.max_jobs else []
+            )
             job_id = str(uuid.uuid4())
             self.jobs[job_id] = JobResult(
                 job_id=job_id,
                 status=JobStatus.PENDING,
             )
-            self._persist(job_id)
-            return job_id
+            taken = self._snapshot(job_id)
+        self._forget(evicted)
+        self._write(job_id, taken)
+        return job_id
 
     def get_job(self, job_id: str) -> JobResult | None:
         """Get job by ID.
@@ -197,18 +313,18 @@ class JobManager:
         cancelled the job) must not resurrect or overwrite them.
         """
         with self._lock:
-            if job_id in self.jobs:
-                job = self.jobs[job_id]
-                if job.status in TERMINAL_STATUSES:
-                    return
-                job.status = status
-                job.progress_percent = min(100, max(0, progress))
-                job.updated_at = datetime.now(UTC)
-                if result:
-                    job.result = result
-                if error:
-                    job.error = error
-                self._persist(job_id)
+            job = self.jobs.get(job_id)
+            if job is None or job.status in TERMINAL_STATUSES:
+                return
+            job.status = status
+            job.progress_percent = min(100, max(0, progress))
+            job.updated_at = datetime.now(UTC)
+            if result:
+                job.result = result
+            if error:
+                job.error = error
+            taken = self._snapshot(job_id)
+        self._write(job_id, taken)
 
     @staticmethod
     def error_for(exc: Exception) -> str:
@@ -238,35 +354,69 @@ class JobManager:
             True if cancelled, False if not found.
         """
         with self._lock:
-            if job_id in self.jobs:
-                job = self.jobs[job_id]
-                if job.status not in TERMINAL_STATUSES:
-                    job.status = JobStatus.CANCELLED
-                    job.updated_at = datetime.now(UTC)
-                    self._persist(job_id)
-                    return True
-            return False
+            job = self.jobs.get(job_id)
+            if job is None or job.status in TERMINAL_STATUSES:
+                return False
+            job.status = JobStatus.CANCELLED
+            job.updated_at = datetime.now(UTC)
+            taken = self._snapshot(job_id)
+        self._write(job_id, taken)
+        return True
 
     def cleanup_old_jobs(self, keep_count: int = 100) -> None:
-        """Remove old completed jobs to free memory.
+        """Remove old completed jobs from memory and from the store.
 
         Args:
             keep_count: Number of recent jobs to keep.
         """
         with self._lock:
-            completed_jobs = [
-                (job_id, job)
-                for job_id, job in self.jobs.items()
-                if job.status in TERMINAL_STATUSES
-            ]
+            evicted = self._evict(keep_count)
+        self._forget(evicted)
 
-            # Sort by updated_at and remove oldest
-            if len(completed_jobs) > keep_count:
-                completed_jobs.sort(key=lambda x: x[1].updated_at)
-                for job_id, _ in completed_jobs[:-keep_count]:
-                    del self.jobs[job_id]
+    def _evict(self, keep_count: int) -> list[str]:
+        """Drop all but the newest ``keep_count`` finished jobs from memory.
+
+        Call with the lock held.
+
+        Args:
+            keep_count: Number of recent finished jobs to keep.
+
+        Returns:
+            The identifiers removed, for :meth:`_forget`.
+        """
+        completed_jobs = [
+            (job_id, job)
+            for job_id, job in self.jobs.items()
+            if job.status in TERMINAL_STATUSES
+        ]
+        if len(completed_jobs) <= keep_count:
+            return []
+        # Sort by updated_at and remove oldest
+        completed_jobs.sort(key=lambda x: x[1].updated_at)
+        # ``[:-keep_count]`` would keep everything when keep_count is 0.
+        excess = len(completed_jobs) - keep_count
+        evicted = [job_id for job_id, _ in completed_jobs[:excess]]
+        for job_id in evicted:
+            del self.jobs[job_id]
+            self._versions.pop(job_id, None)
+        return evicted
+
+    def _forget(self, job_ids: list[str]) -> None:
+        """Delete evicted jobs from the store, outside the manager lock.
+
+        Args:
+            job_ids: The jobs just removed from memory.
+        """
+        if self.store is None:
+            return
+        with self._store_lock:
+            for job_id in job_ids:
+                self._written.pop(job_id, None)
+                self.store.delete(job_id)
 
 
 # Global job manager instance. Persistence activates only when
 # PAIN001_JOB_STORE_DIR is set; otherwise jobs are kept in memory.
-job_manager = JobManager(store=job_store_from_env())
+job_manager = JobManager(
+    store=job_store_from_env(), max_active=max_active_jobs()
+)

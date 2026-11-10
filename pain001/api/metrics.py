@@ -24,7 +24,8 @@ This is a single-process exporter — sufficient for one API node. Scraped
 behind a gateway or aggregated with a push-gateway for multi-node setups.
 """
 
-from collections import defaultdict
+import os
+from collections import defaultdict, deque
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
@@ -32,14 +33,37 @@ from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 _Labels = tuple[tuple[str, str], ...]
 
+MAX_SUMMARY_SAMPLES = 10_000
+"""Newest observations a summary keeps for its quantiles."""
+
+PAYMENT_VOLUME_ENV = "PAIN001_METRICS_PAYMENT_VOLUME"
+"""Set to ``1`` / ``true`` / ``yes`` to count payment volume by currency."""
+
+
+def payment_volume_enabled() -> bool:
+    """Return whether the operator opted in to payment-volume metrics.
+
+    Volume per currency is business data: off by default, so a scrape
+    endpoint never reveals it unless the operator asked for it.
+
+    Returns:
+        ``True`` when ``PAIN001_METRICS_PAYMENT_VOLUME`` is one of
+        ``1`` / ``true`` / ``yes`` (case-insensitive).
+    """
+    return os.environ.get(PAYMENT_VOLUME_ENV, "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+    }
+
 
 class MetricsRegistry:
     """A minimal counter and summary registry rendering Prometheus text format."""
 
     def __init__(self) -> None:
         self._counters: dict[tuple[str, _Labels], float] = defaultdict(float)
-        self._summaries: dict[tuple[str, _Labels], list[float]] = defaultdict(
-            list
+        self._summaries: dict[tuple[str, _Labels], deque[float]] = defaultdict(
+            lambda: deque(maxlen=MAX_SUMMARY_SAMPLES)
         )
         self._summary_counts: dict[tuple[str, _Labels], int] = defaultdict(int)
         self._summary_sums: dict[tuple[str, _Labels], float] = defaultdict(
@@ -76,10 +100,8 @@ class MetricsRegistry:
             labels: Optional label set.
         """
         key = (name, tuple(sorted((labels or {}).items())))
-        samples = self._summaries[key]
-        samples.append(value)
-        if len(samples) > 10000:
-            samples.pop(0)
+        # A bounded deque drops the oldest sample in O(1).
+        self._summaries[key].append(value)
         self._summary_counts[key] += 1
         self._summary_sums[key] += value
 
@@ -198,9 +220,13 @@ class MetricsRegistry:
     def record_data_volumes(self, data: list[dict[str, Any]]) -> None:
         """Extract and record payment volumes in cents by currency from rows.
 
+        Records nothing unless :func:`payment_volume_enabled`.
+
         Args:
             data: List of payment record dictionaries.
         """
+        if not payment_volume_enabled():
+            return
         for row in data:
             amt_raw = (
                 row.get("payment_amount")
@@ -276,6 +302,89 @@ class MetricsMiddleware:
         )
 
 
+def _gauge_lines(version: str) -> list[str]:
+    """Render build info and the live gauges.
+
+    Args:
+        version: The running package version (for ``pain001_build_info``).
+
+    Returns:
+        The gauge section of the exposition.
+    """
+    from pain001.api.job_manager import JobStatus, job_manager
+    from pain001.constants import valid_xml_types
+    from pain001.validation.schemes import PROFILES
+
+    lines = [
+        "# HELP pain001_build_info Build information.",
+        "# TYPE pain001_build_info gauge",
+        f'pain001_build_info{{version="{version}"}} 1',
+        "# HELP pain001_supported_message_types Supported message types.",
+        "# TYPE pain001_supported_message_types gauge",
+        f"pain001_supported_message_types {len(valid_xml_types)}",
+        "# HELP pain001_scheme_profiles Registered scheme profiles.",
+        "# TYPE pain001_scheme_profiles gauge",
+        f"pain001_scheme_profiles {len(PROFILES)}",
+        "# HELP pain001_jobs Async jobs by status.",
+        "# TYPE pain001_jobs gauge",
+    ]
+    counts = dict.fromkeys(JobStatus, 0)
+    for job in list(job_manager.jobs.values()):
+        counts[job.status] += 1
+    for status, count in counts.items():
+        lines.append(f'pain001_jobs{{status="{status.value}"}} {count}')
+    return lines
+
+
+_COUNTERS: tuple[tuple[str, str], ...] = (
+    ("pain001_http_requests_total", "HTTP requests by method/status."),
+    (
+        "pain001_files_processed_total",
+        "Files processed by status and message type.",
+    ),
+    (
+        "pain001_payment_volume_cents_total",
+        "Payment volume in cents by currency.",
+    ),
+)
+"""The documented counters, in exposition order, with their help text."""
+
+
+def _counter_lines() -> list[str]:
+    """Render the documented counters.
+
+    The payment-volume counter appears only when
+    :func:`payment_volume_enabled`.
+
+    Returns:
+        The counter section of the exposition.
+    """
+    lines: list[str] = []
+    for name, help_text in _COUNTERS:
+        if name == "pain001_payment_volume_cents_total" and (
+            not payment_volume_enabled()
+        ):
+            continue
+        lines.append(f"# HELP {name} {help_text}")
+        lines.append(f"# TYPE {name} counter")
+        lines.extend(registry.render(name))
+    return lines
+
+
+def _other_counter_lines() -> list[str]:
+    """Render any counter registered beyond the documented ones.
+
+    Returns:
+        A ``TYPE`` line and the samples for each such counter.
+    """
+    known = {name for name, _ in _COUNTERS}
+    lines: list[str] = []
+    for name in sorted({n for n, _ in registry._counters if n not in known}):
+        lines.append(f"# TYPE {name} counter")
+        lines.extend(registry.render(name))
+    return lines
+
+
 def render_prometheus(version: str) -> str:
     """Render the full metrics document in Prometheus text format.
 
@@ -285,67 +394,12 @@ def render_prometheus(version: str) -> str:
     Returns:
         The complete exposition body (ending with a trailing newline).
     """
-    from pain001.api.job_manager import JobStatus, job_manager
-    from pain001.constants import valid_xml_types
-    from pain001.validation.schemes import PROFILES
-
-    lines: list[str] = []
-
-    lines.append("# HELP pain001_build_info Build information.")
-    lines.append("# TYPE pain001_build_info gauge")
-    lines.append(f'pain001_build_info{{version="{version}"}} 1')
-
+    lines = _gauge_lines(version) + _counter_lines()
     lines.append(
-        "# HELP pain001_supported_message_types Supported message types."
-    )
-    lines.append("# TYPE pain001_supported_message_types gauge")
-    lines.append(f"pain001_supported_message_types {len(valid_xml_types)}")
-
-    lines.append("# HELP pain001_scheme_profiles Registered scheme profiles.")
-    lines.append("# TYPE pain001_scheme_profiles gauge")
-    lines.append(f"pain001_scheme_profiles {len(PROFILES)}")
-
-    lines.append("# HELP pain001_jobs Async jobs by status.")
-    lines.append("# TYPE pain001_jobs gauge")
-    counts = dict.fromkeys(JobStatus, 0)
-    for job in job_manager.jobs.values():
-        counts[job.status] += 1
-    for status, count in counts.items():
-        lines.append(f'pain001_jobs{{status="{status.value}"}} {count}')
-
-    lines.append(
-        "# HELP pain001_http_requests_total HTTP requests by method/status."
-    )
-    lines.append("# TYPE pain001_http_requests_total counter")
-    lines.extend(registry.render("pain001_http_requests_total"))
-
-    lines.append(
-        "# HELP pain001_files_processed_total Files processed by status and message type."
-    )
-    lines.append("# TYPE pain001_files_processed_total counter")
-    lines.extend(registry.render("pain001_files_processed_total"))
-
-    lines.append(
-        "# HELP pain001_payment_volume_cents_total Payment volume in cents by currency."
-    )
-    lines.append("# TYPE pain001_payment_volume_cents_total counter")
-    lines.extend(registry.render("pain001_payment_volume_cents_total"))
-
-    lines.append(
-        "# HELP pain001_processing_seconds Payment generation processing latency in seconds."
+        "# HELP pain001_processing_seconds Payment generation processing "
+        "latency in seconds."
     )
     lines.append("# TYPE pain001_processing_seconds summary")
     lines.extend(registry.render_summaries("pain001_processing_seconds"))
-
-    known_counters = {
-        "pain001_http_requests_total",
-        "pain001_files_processed_total",
-        "pain001_payment_volume_cents_total",
-    }
-    for name in sorted(
-        {n for n, _ in registry._counters if n not in known_counters}
-    ):
-        lines.append(f"# TYPE {name} counter")
-        lines.extend(registry.render(name))
-
+    lines.extend(_other_counter_lines())
     return "\n".join(lines) + "\n"
