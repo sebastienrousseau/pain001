@@ -119,6 +119,10 @@ which keeps the "nothing leaves your machine unless you ask" claim
 checkable rather than promised.
 
 **Plugins sit outside the trust boundary by default.**
+An installed plugin cannot replace a built-in loader, scheme profile,
+validator or writer of the same name: the registry refuses it with a
+warning unless the operator names it in
+`PAIN001_ALLOW_PLUGIN_OVERRIDES`.
 `PAIN001_DISABLE_PLUGINS=name1,name2` disables the named plugins, and
 `pain001 plugins list` / `pain001 plugins show <name>` make every
 discovered plugin auditable before first use — the control that matters
