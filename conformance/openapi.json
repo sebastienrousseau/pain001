@@ -380,7 +380,7 @@
           "validation_errors": {
             "description": "Validation errors if validation failed",
             "items": {
-              "$ref": "#/components/schemas/ValidationError"
+              "$ref": "#/components/schemas/RowError"
             },
             "title": "Validation Errors",
             "type": "array"
@@ -565,6 +565,37 @@
         "title": "MessageType",
         "type": "string"
       },
+      "RowError": {
+        "description": "One row-level validation error.\n\nNamed ``RowError`` in the OpenAPI document: FastAPI publishes its own\nrequest-validation error as ``ValidationError``, which replaced this\nmodel's schema under the old name. ``ValidationError`` stays as an\nalias for Python callers.",
+        "properties": {
+          "field": {
+            "description": "Field name or JSON path",
+            "title": "Field",
+            "type": "string"
+          },
+          "message": {
+            "description": "Error message",
+            "title": "Message",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {},
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The invalid value",
+            "title": "Value"
+          }
+        },
+        "required": [
+          "field",
+          "message"
+        ],
+        "title": "RowError",
+        "type": "object"
+      },
       "UiFilePayload": {
         "description": "An uploaded payment file, as the dashboard sends it.\n\nThe browser reads the dropped file and posts its text; the server\nparses it in memory, so nothing the user uploads touches the disk.",
         "examples": [
@@ -650,7 +681,7 @@
           "validation_errors": {
             "description": "Validation errors if validation failed",
             "items": {
-              "$ref": "#/components/schemas/ValidationError"
+              "$ref": "#/components/schemas/RowError"
             },
             "title": "Validation Errors",
             "type": "array"
@@ -798,7 +829,7 @@
           "errors": {
             "description": "List of validation errors",
             "items": {
-              "$ref": "#/components/schemas/ValidationError"
+              "$ref": "#/components/schemas/RowError"
             },
             "title": "Errors",
             "type": "array"

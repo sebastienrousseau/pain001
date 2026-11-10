@@ -31,6 +31,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The OpenAPI document described row errors (`ValidationResponse.errors`,
+  `validation_errors`) with FastAPI's request-validation shape
+  (`loc`, `msg`, `type`), because both models were named
+  `ValidationError` and FastAPI's replaced pain001's. pain001's model is
+  now published as `RowError` (`field`, `message`, `value`), so
+  generated clients get the right type; responses are unchanged and
+  `pain001.api.ValidationError` remains as an alias.
 - `pain001 status` counted every rejected line, so a rejected group and
   payment block inflated the count ("5 transactions, 11 rejected" for a
   reply with five rejected transactions). The count is now of rejected

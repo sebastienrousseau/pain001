@@ -161,12 +161,22 @@ class GenerateXMLRequest(BaseModel):
     )
 
 
-class ValidationError(BaseModel):
-    """Validation error details."""
+class RowError(BaseModel):
+    """One row-level validation error.
+
+    Named ``RowError`` in the OpenAPI document: FastAPI publishes its own
+    request-validation error as ``ValidationError``, which replaced this
+    model's schema under the old name. ``ValidationError`` stays as an
+    alias for Python callers.
+    """
 
     field: str = Field(..., description="Field name or JSON path")
     message: str = Field(..., description="Error message")
     value: Any | None = Field(None, description="The invalid value")
+
+
+#: Backward-compatible name for :class:`RowError`.
+ValidationError = RowError
 
 
 class ValidationResponse(BaseModel):
@@ -176,7 +186,7 @@ class ValidationResponse(BaseModel):
     total_rows: int = Field(..., description="Total number of rows")
     valid_rows: int = Field(default=0, description="Number of valid rows")
     invalid_rows: int = Field(default=0, description="Number of invalid rows")
-    errors: list[ValidationError] = Field(
+    errors: list[RowError] = Field(
         default_factory=list,
         description="List of validation errors",
     )
@@ -210,7 +220,7 @@ class GenerateXMLResponse(BaseModel):
     success: bool = Field(..., description="Whether generation succeeded")
     message: str = Field(..., description="Result message")
     file_path: str | None = Field(None, description="Path to generated XML")
-    validation_errors: list[ValidationError] = Field(
+    validation_errors: list[RowError] = Field(
         default_factory=list,
         description="Validation errors if validation failed",
     )
@@ -296,7 +306,7 @@ class UiGenerateResponse(BaseModel):
     xml: str | None = Field(
         default=None, description="The generated XML document"
     )
-    validation_errors: list[ValidationError] = Field(
+    validation_errors: list[RowError] = Field(
         default_factory=list,
         description="Validation errors if validation failed",
     )

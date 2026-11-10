@@ -162,3 +162,23 @@ def test_the_runner_reports_each_kind_of_failure():
         0
     ].startswith("id,")
     assert _pointer({"a/b": {"~": 1}}, "/a~1b/~0") == 1
+
+
+def test_row_errors_are_described_by_pain001s_own_schema():
+    """Row errors in the OpenAPI document are pain001's, not FastAPI's.
+
+    FastAPI publishes its request-validation error as ``ValidationError``;
+    a pain001 model of the same name was silently replaced by it, so
+    clients generated from the document typed row errors as
+    ``{loc, msg, type}`` instead of ``{field, message, value}``.
+    """
+    schemas = app.openapi()["components"]["schemas"]
+    ref = schemas["ValidationResponse"]["properties"]["errors"]["items"][
+        "$ref"
+    ]
+    row = schemas[ref.rsplit("/", 1)[1]]
+    assert set(row["properties"]) == {"field", "message", "value"}
+    detail = schemas["HTTPValidationError"]["properties"]["detail"]["items"][
+        "$ref"
+    ]
+    assert "loc" in schemas[detail.rsplit("/", 1)[1]]["properties"]
