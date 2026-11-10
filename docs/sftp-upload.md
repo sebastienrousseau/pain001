@@ -98,9 +98,13 @@ pain001 download --sftp sftp://user@bank.example/outbox/ --to ./replies \
   beside the first as `name.<sha8>.xml`.
 - **After the fetch.** `--after-fetch keep` (the default) leaves the remote
   file; a later `keep` run skips files the ledger holds at the same size and
-  modification time. `delete` removes it, and `move:/absolute/dir` renames
-  it into an archive directory on the server.
-  Use `delete` or `move` for production runs. `keep` suits trying the
+  modification time (a server that reports no modification time never
+  matches). `delete` removes it, and `move:/absolute/dir` renames
+  it into an archive directory on the server. Both read and hash every
+  file before touching the remote copy, so a reply reissued under the
+  same name and size is saved as `name.<sha8>.xml`, never deleted unread.
+  Use `delete` or `move` with a non-zero `--settle-seconds` for production
+  runs. `keep` suits trying the
   command out and read-only bank outboxes: SFTP gives the modification
   time in whole seconds, so a file rewritten with the same size within
   the same second would be skipped.
@@ -109,9 +113,12 @@ pain001 download --sftp sftp://user@bank.example/outbox/ --to ./replies \
   next run. A file whose size changes during the transfer is refused.
 - **Limits.** `--max-files` and `--max-bytes` bound one run; what they leave
   stays on the server and is reported.
-- **Skipped names.** Symlinks, directories, hidden names and `.tmp` or
-  `.part` files are skipped and listed, so a link on the server cannot point
-  the download at another file.
+- **Skipped names.** Symlinks, directories, hidden names, `.tmp` or
+  `.part` files, and names holding a path separator, a colon or a control
+  character are skipped and listed, so a link on the server cannot point
+  the download at another file and a name cannot leave `--to` (a colon is
+  drive-relative or a data stream on Windows). Listed names are printed
+  with control characters and backslashes escaped as `\xNN` or `\uNNNN`.
 
 There is no daemon. Run it from cron or a systemd timer. The MCP and REST
 interfaces never open network connections, so they do not offer it.
