@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- `build_pain002_report` takes a `transactions` list on a payment-status
+  row, so one `OrgnlPmtInfAndSts` block can report several transactions,
+  as a bank's reply does. A row with the flat `transaction_status`
+  triplet gives the same XML as before; a row with both shapes, or a
+  listed transaction without a status, is refused.
+
 ## [0.0.85] - 2026-11-10
 
 ### Added

@@ -187,3 +187,83 @@ class TestRoundTrip:
         from pain001 import build_pain002_report as top
 
         assert top("x", "y", "ACCP", []).startswith("<?xml")
+
+
+class TestSeveralTransactionsPerBlock:
+    """One payment block can report several transactions (0.0.86)."""
+
+    ROW = {
+        "original_payment_information_id": "PMT-1",
+        "payment_information_status": "RJCT",
+        "transactions": [
+            {
+                "original_end_to_end_id": "E2E-1",
+                "transaction_status": "RJCT",
+                "status_reason": "NARR",
+            },
+            {"original_end_to_end_id": "E2E-2", "transaction_status": "RJCT"},
+        ],
+    }
+
+    def test_one_block_holds_every_transaction(self, tmp_path) -> None:
+        """Two transactions stay under one OrgnlPmtInfAndSts."""
+        xml = build_pain002_report("STS", "MSG", "RJCT", [self.ROW])
+        assert xml.count("<OrgnlPmtInfAndSts>") == 1
+        assert xml.count("<TxInfAndSts>") == 2
+        (block,) = parse_pain002_report(_write(tmp_path, xml))[
+            "payment_statuses"
+        ]
+        assert [
+            (t["original_end_to_end_id"], t["transaction_status"])
+            for t in block["transactions"]
+        ] == [("E2E-1", "RJCT"), ("E2E-2", "RJCT")]
+        assert block["transactions"][0]["status_reason"] == "NARR"
+        assert "<Cd>NARR</Cd>" in xml and xml.count("<StsRsnInf>") == 1
+
+    def test_the_single_transaction_keys_still_work(self) -> None:
+        """The flat triplet gives the same XML as a one-item list."""
+        flat = {
+            "original_payment_information_id": "PMT-1",
+            "payment_information_status": "ACCP",
+            "original_end_to_end_id": "E2E-1",
+            "transaction_status": "ACCP",
+        }
+        listed = {
+            "original_payment_information_id": "PMT-1",
+            "payment_information_status": "ACCP",
+            "transactions": [
+                {
+                    "original_end_to_end_id": "E2E-1",
+                    "transaction_status": "ACCP",
+                }
+            ],
+        }
+        when = "2026-11-10T10:00:00"
+        assert build_pain002_report(
+            "S", "M", "ACCP", [flat], creation_datetime=when
+        ) == build_pain002_report(
+            "S", "M", "ACCP", [listed], creation_datetime=when
+        )
+
+    def test_both_shapes_in_one_row_are_refused(self) -> None:
+        """A row with a list and the flat keys is ambiguous."""
+        row = dict(self.ROW, transaction_status="RJCT")
+        with pytest.raises(ValueError, match="either"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])
+
+    def test_a_bad_status_in_the_list_is_refused(self) -> None:
+        """Every listed transaction status is checked."""
+        row = dict(
+            self.ROW,
+            transactions=[
+                {"original_end_to_end_id": "E", "transaction_status": "NOPE"}
+            ],
+        )
+        with pytest.raises(ValueError, match="NOPE"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])
+
+    def test_a_list_entry_without_a_status_is_refused(self) -> None:
+        """A listed transaction needs its status."""
+        row = dict(self.ROW, transactions=[{"original_end_to_end_id": "E"}])
+        with pytest.raises(ValueError, match="transaction_status"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])

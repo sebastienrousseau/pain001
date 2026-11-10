@@ -226,9 +226,6 @@
   "pain001/observability/otel.py::traced": {
     "lines": 62
   },
-  "pain001/pain002/generator.py::build_pain002_report": {
-    "lines": 72
-  },
   "pain001/parquet/load_parquet_data.py::load_parquet_data_streaming": {
     "lines": 63
   },

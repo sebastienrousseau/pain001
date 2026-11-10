@@ -21,6 +21,7 @@ ElementTree (output is fully under our control); the result round-trips
 cleanly back through the parser.
 """
 
+from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 from xml.etree import ElementTree as ET  # nosec B405 - generation only
@@ -79,9 +80,11 @@ def build_pain002_report(
         group_status: Group-level status code (e.g. ``ACCP``, ``RJCT``).
         payment_statuses: One dict per original payment information block.
             Recognised keys: ``original_payment_information_id`` (required),
-            ``payment_information_status`` (required), and the optional
-            transaction triplet ``original_end_to_end_id``,
-            ``transaction_status``, ``status_reason``.
+            ``payment_information_status`` (required), and either
+            ``transactions``, a list of dicts each with
+            ``transaction_status`` (required), ``original_end_to_end_id``
+            and ``status_reason``, or that triplet directly on the row for
+            a block with a single transaction.
         original_message_name_id: Name id of the original message
             (default ``pain.001.001.03``).
         creation_datetime: ISO-8601 creation timestamp; defaults to now (UTC).
@@ -99,6 +102,35 @@ def build_pain002_report(
 
     ns = _ns(version)
     ET.register_namespace("", ns)
+    q = _qualifier(ns)
+    when = creation_datetime or datetime.now(UTC).isoformat(timespec="seconds")
+
+    document = ET.Element(q("Document"))
+    report = _sub(document, q("CstmrPmtStsRpt"))
+    _append_group(
+        report,
+        q,
+        (message_id, when),
+        (original_message_id, original_message_name_id, group_status),
+    )
+    for row in payment_statuses:
+        _append_payment_status(report, q, row)
+
+    xml_bytes: bytes = ET.tostring(
+        document, encoding="utf-8", xml_declaration=True
+    )
+    return xml_bytes.decode("utf-8")
+
+
+def _qualifier(ns: str) -> Callable[[str], str]:
+    """A function that namespace-qualifies a tag in ``ns``.
+
+    Args:
+        ns: The message namespace URI.
+
+    Returns:
+        A callable turning a local tag name into Clark notation.
+    """
 
     def q(tag: str) -> str:
         """Namespace-qualify a tag.
@@ -111,27 +143,32 @@ def build_pain002_report(
         """
         return f"{{{ns}}}{tag}"
 
-    when = creation_datetime or datetime.now(UTC).isoformat(timespec="seconds")
+    return q
 
-    document = ET.Element(q("Document"))
-    report = _sub(document, q("CstmrPmtStsRpt"))
 
+def _append_group(
+    report: ET.Element,
+    q: Callable[[str], str],
+    header: tuple[str, str],
+    original: tuple[str, str, str],
+) -> None:
+    """Append ``GrpHdr`` and ``OrgnlGrpInfAndSts`` to the report.
+
+    Args:
+        report: The ``CstmrPmtStsRpt`` element.
+        q: A tag-qualifier callable.
+        header: This report's message id and creation timestamp.
+        original: The original message id, its name id and the group
+            status.
+    """
     grp_hdr = _sub(report, q("GrpHdr"))
-    _sub(grp_hdr, q("MsgId"), message_id)
-    _sub(grp_hdr, q("CreDtTm"), when)
-
+    _sub(grp_hdr, q("MsgId"), header[0])
+    _sub(grp_hdr, q("CreDtTm"), header[1])
     orig = _sub(report, q("OrgnlGrpInfAndSts"))
-    _sub(orig, q("OrgnlMsgId"), original_message_id)
-    _sub(orig, q("OrgnlMsgNmId"), original_message_name_id)
-    _sub(orig, q("GrpSts"), group_status)
-
-    for row in payment_statuses:
-        _append_payment_status(report, q, row)
-
-    xml_bytes: bytes = ET.tostring(
-        document, encoding="utf-8", xml_declaration=True
-    )
-    return xml_bytes.decode("utf-8")
+    for tag, text in zip(
+        ("OrgnlMsgId", "OrgnlMsgNmId", "GrpSts"), original, strict=True
+    ):
+        _sub(orig, q(tag), text)
 
 
 def _append_payment_status(
@@ -159,19 +196,64 @@ def _append_payment_status(
     _sub(block, q("OrgnlPmtInfId"), pmt_inf_id)
     _sub(block, q("PmtInfSts"), pmt_status)
 
+    for tx in _transactions_of(row):
+        _append_transaction(block, q, tx)
+
+
+def _transactions_of(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """The transactions a payment-status row reports.
+
+    Args:
+        row: The payment-status row (see :func:`build_pain002_report`).
+
+    Returns:
+        Its ``transactions`` list, the flat triplet as a one-item list,
+        or an empty list when it reports none.
+
+    Raises:
+        ValueError: If the row carries both shapes, or a listed
+            transaction has no ``transaction_status``.
+    """
+    if "transactions" not in row:
+        return [row] if "transaction_status" in row else []
     if "transaction_status" in row:
-        tx_status = str(row["transaction_status"])
-        if tx_status not in VALID_STATUS_CODES:
-            raise ValueError(f"Invalid transaction status: {tx_status!r}")
-        tx = _sub(block, q("TxInfAndSts"))
-        _sub(
-            tx,
-            q("OrgnlEndToEndId"),
-            str(row.get("original_end_to_end_id", "")),
+        raise ValueError(
+            "payment status row takes either transactions or "
+            "transaction_status, not both"
         )
-        _sub(tx, q("TxSts"), tx_status)
-        reason = row.get("status_reason")
-        if reason:
-            rsn_inf = _sub(tx, q("StsRsnInf"))
-            rsn = _sub(rsn_inf, q("Rsn"))
-            _sub(rsn, q("Cd"), str(reason))
+    transactions = list(row["transactions"])
+    for tx in transactions:
+        if "transaction_status" not in tx:
+            raise ValueError(
+                "listed transaction missing key: 'transaction_status'"
+            )
+    return transactions
+
+
+def _append_transaction(block: ET.Element, q: Any, tx: dict[str, Any]) -> None:
+    """Append one TxInfAndSts to a payment block.
+
+    Args:
+        block: The ``OrgnlPmtInfAndSts`` element.
+        q: A tag-qualifier callable.
+        tx: ``transaction_status``, and optionally
+            ``original_end_to_end_id`` and ``status_reason``.
+
+    Raises:
+        ValueError: If the transaction status code is invalid.
+    """
+    tx_status = str(tx["transaction_status"])
+    if tx_status not in VALID_STATUS_CODES:
+        raise ValueError(f"Invalid transaction status: {tx_status!r}")
+    element = _sub(block, q("TxInfAndSts"))
+    _sub(
+        element,
+        q("OrgnlEndToEndId"),
+        str(tx.get("original_end_to_end_id", "")),
+    )
+    _sub(element, q("TxSts"), tx_status)
+    reason = tx.get("status_reason")
+    if reason:
+        rsn_inf = _sub(element, q("StsRsnInf"))
+        rsn = _sub(rsn_inf, q("Rsn"))
+        _sub(rsn, q("Cd"), str(reason))
