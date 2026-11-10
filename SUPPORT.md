@@ -88,19 +88,21 @@ private disclosure process in [SECURITY.md](SECURITY.md):
 - **Preferred:** [GitHub Private Vulnerability Reporting](https://github.com/sebastienrousseau/pain001/security/advisories/new)
 - **Email:** `security@pain001.com`
 
-## Support tiers
+## Support
 
-Pain001 is open source under Apache-2.0 / MIT. There is **no paid
-support tier today**.
+Pain001 is free open-source software under Apache-2.0 / MIT,
+maintained in a personal capacity. There is **no paid tier, no SLA
+and no out-of-hours cover**, and the project takes no sponsorships,
+donations, fees or referrals.
 
-- **Community support** (issues / PRs): best effort
-  by the maintainers and other contributors. Most questions get a
-  response within a few business days; bugs are triaged within a
-  week.
-- **Commercial support**: not available today. If your organisation
-  needs an SLA, contact `support@pain001.com` so we can gauge
-  demand. (No promises; this signal directly informs whether a paid
-  tier is worth standing up.)
+- **Community support** (issues / PRs): best effort by the
+  maintainers and other contributors.
+- **Maintenance:** what to expect from releases, long-term support
+  lines and security fixes is in the
+  [maintenance policy](docs/maintenance-policy.md).
+- **Commercial support:** Pain001's licence lets any firm support it
+  commercially. The project has no commercial partners and takes no
+  fees or referrals.
 
 The single maintainer note: pain001 has one maintainer today. That
 is the project's #1 risk and the headline item on the

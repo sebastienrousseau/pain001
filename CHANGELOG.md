@@ -46,6 +46,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `upload` and `download` share one SFTP session, so the host-key check
   before any credential is sent exists in one place.
 
+- Pain001 is free open-source software with no paid tier
+  (maintainer decision, 2026-11-10): `.github/FUNDING.yml` is removed,
+  and `SUPPORT.md` and the FAQ drop the paid-support signal in favour
+  of the published [maintenance policy](docs/maintenance-policy.md)
+  (one LTS line a year, 18 months, best-effort backports, a 5-working-
+  day acknowledgement goal for security reports, no SLA).
+  `SECURITY.md`'s response times are goals, not commitments. Any firm
+  may support Pain001 commercially under its licence; the project has
+  no commercial partners and takes no fees or referrals.
+
 ### Fixed
 
 - Correct the 0.0.84 citation date to 9 November 2026, matching the published release and its changelog. Published tags and package artifacts remain unchanged.
