@@ -48,6 +48,11 @@ class Summary:
     group_status: str = ""
     counts: dict[str, int] = field(default_factory=dict)
     rejected: list[str] = field(default_factory=list)
+    #: The full message version its namespace names.
+    version: str = ""
+    #: pain.002 only: whether it was checked against a bundled schema
+    #: (``False`` for a version the package does not bundle).
+    validated: bool | None = None
 
 
 def _plural(count: int, one: str, many: str) -> str:
@@ -84,39 +89,79 @@ def _message_of(path: Path) -> tuple[str, str]:
     return match[2], match[1]
 
 
-def _pain002(path: Path) -> Summary:
-    """Summarise a pain.002, listing every rejected level."""
-    from pain001.pain002 import parse_pain002_report  # noqa: PLC0415
+def _pain002(path: Path, version: str) -> Summary:
+    """Summarise a pain.002, listing every rejected level.
 
-    report: dict[str, Any] = parse_pain002_report(
-        str(path), base_dir=path.parent
+    A reply in a version with a bundled schema is validated against it
+    first; any other version is read unvalidated and says so.
+
+    Args:
+        path: The pain.002 report.
+        version: Its version, from the root namespace.
+
+    Returns:
+        Its group status, counts per level and rejected items.
+    """
+    from pain001.pain002 import (  # noqa: PLC0415
+        bundled_schema_versions,
+        parse_pain002_report,
     )
-    rejected = []
-    if report["group_status"] == "RJCT":
-        rejected.append(f"group {report['original_message_id']}")
-    transactions = rejected_transactions = 0
-    for block in report["payment_statuses"]:
-        if block["payment_information_status"] == "RJCT":
-            rejected.append(
-                f"payment {block['original_payment_information_id']}"
-            )
-        for tx in block["transactions"]:
-            transactions += 1
-            if tx["transaction_status"] == "RJCT":
-                rejected_transactions += 1
-                rejected.append(
-                    f"RJCT {tx['original_end_to_end_id']} {tx['status_reason']}".strip()
-                )
+
+    validated = version in bundled_schema_versions()
+    report: dict[str, Any] = parse_pain002_report(
+        str(path), validate=validated, base_dir=path.parent
+    )
+    counts, rejected = _pain002_rejections(report)
     return Summary(
         str(path),
         "pain.002",
         report["group_status"],
-        {
-            "transactions": transactions,
-            "rejected_transactions": rejected_transactions,
-        },
+        counts,
         rejected,
+        version=version,
+        validated=validated,
     )
+
+
+def _pain002_rejections(
+    report: dict[str, Any],
+) -> tuple[dict[str, int], list[str]]:
+    """Count a parsed pain.002 per level and name what was rejected.
+
+    Args:
+        report: :func:`~pain001.pain002.parse_pain002_report` output.
+
+    Returns:
+        The counts (transactions, and rejections per level) and the
+        rejected items in document order.
+    """
+    counts = dict.fromkeys(
+        (
+            "transactions",
+            "rejected_transactions",
+            "rejected_groups",
+            "rejected_blocks",
+        ),
+        0,
+    )
+    rejected = []
+    if report["group_status"] == "RJCT":
+        counts["rejected_groups"] = 1
+        rejected.append(f"group {report['original_message_id']}")
+    for block in report["payment_statuses"]:
+        if block["payment_information_status"] == "RJCT":
+            counts["rejected_blocks"] += 1
+            rejected.append(
+                f"payment {block['original_payment_information_id']}"
+            )
+        for tx in block["transactions"]:
+            counts["transactions"] += 1
+            if tx["transaction_status"] == "RJCT":
+                counts["rejected_transactions"] += 1
+                rejected.append(
+                    f"RJCT {tx['original_end_to_end_id']} {tx['status_reason']}".strip()
+                )
+    return counts, rejected
 
 
 def _camt_counts(
@@ -199,12 +244,12 @@ def summarise(path: Path) -> Summary:
     message, version = _message_of(resolved)
     try:
         if message == "pain.002":
-            summary = _pain002(resolved)
+            summary = _pain002(resolved, version)
         else:
             summary = _camt(resolved, message, version)
     except (DataSourceError, SchemaValidationError) as exc:
         raise StatusRefused(f"{path}: cannot read it: {exc}") from exc
-    return replace(summary, file=str(path))
+    return replace(summary, file=str(path), version=version)
 
 
 def _line(summary: Summary) -> str:
@@ -216,31 +261,37 @@ def _line(summary: Summary) -> str:
             f"{_plural(counts['statements'], 'statement', 'statements')}, "
             f"{_plural(counts['entries'], 'entry', 'entries')}"
         )
+    counts = summary.counts
     head = (
         f"{summary.file}: pain.002 {summary.group_status}, "
-        f"{_plural(summary.counts['transactions'], 'transaction', 'transactions')}, "
-        f"{summary.counts['rejected_transactions']} rejected"
-        f"{_levels_rejected(summary.rejected)}"
+        f"{_plural(counts['transactions'], 'transaction', 'transactions')}, "
+        f"{counts['rejected_transactions']} rejected"
+        f"{_levels_rejected(counts)}"
     )
+    if summary.validated is False:
+        head += (
+            f"; not schema-validated (no bundled schema for {summary.version})"
+        )
     return "\n".join([head, *(f"  {item}" for item in summary.rejected)])
 
 
-def _levels_rejected(rejected: list[str]) -> str:
+def _levels_rejected(counts: dict[str, int]) -> str:
     """Name the group and payment-block rejections, which are not counted.
 
     The count in the head is of transactions; a rejected group or payment
     block is named after it so a reader still sees why the exit is 3.
 
     Args:
-        rejected: The summary's rejected items.
+        counts: The summary's counts, with ``rejected_groups`` and
+            ``rejected_blocks``.
 
     Returns:
         ``"; group and 2 payment blocks rejected"`` or similar, or ``""``.
     """
     levels = []
-    if any(item.startswith("group ") for item in rejected):
+    if counts["rejected_groups"]:
         levels.append("group")
-    blocks = sum(item.startswith("payment ") for item in rejected)
+    blocks = counts["rejected_blocks"]
     if blocks:
         levels.append(_plural(blocks, "payment block", "payment blocks"))
     return f"; {' and '.join(levels)} rejected" if levels else ""

@@ -122,16 +122,23 @@ interfaces never open network connections, so they do not offer it.
 pain001 status replies/*.xml
 ```
 
-`status` reads pain.002 status reports with the library's parser, and
-camt.052, camt.053 and camt.054 with the
-[camt053](https://pypi.org/project/camt053/) package when it is
-installed (`pip install 'pain001[camt]'`); without it, camt.053 is read with the
-library's own parser and camt.052 and camt.054 are refused. It prints
-one line per file with its transaction count and how many of those
-transactions were rejected, followed by the group or payment blocks
-rejected, if any (`pain.002 RJCT, 3 transactions, 2 rejected; group and
-1 payment block rejected`). Every rejected group, payment block and
-transaction is then listed with its reason code. It exits `3` when anything
-was rejected (`RJCT`), `2` when a file cannot be read or is another
-message, and `0` otherwise; `--format json` prints the same as data. Together with
-`download`, a scheduled job can fetch replies and alert on rejections.
+`status` reads pain.002 status reports with the library's parser,
+validating each against the bundled schema for its version
+(pain.002.001.03, .12, .14 and .15) and refusing one that fails it; a
+report in another version is read unvalidated and its line says
+`not schema-validated`. It reads camt.052, camt.053 and camt.054 with
+the [camt053](https://pypi.org/project/camt053/) package when it is
+installed (`pip install 'pain001[camt]'`); without it, camt.053 is read
+with the library's own parser and camt.052 and camt.054 are refused. It
+prints one line per file with its transaction count and how many of
+those transactions were rejected, followed by the group or payment
+blocks rejected, if any (`pain.002 RJCT, 3 transactions, 2 rejected;
+group and 1 payment block rejected`). Every rejected group and payment
+block is then listed by its id, and every rejected transaction by its
+end-to-end id and reason code. It exits `3` when anything was rejected
+(`RJCT`), `2` when a file cannot be read, fails its schema or is
+another message, and `0` otherwise; `--format json` prints the same as
+data, with `rejected_transactions`, `rejected_groups` and
+`rejected_blocks` in `counts` and a `validated` flag for each pain.002.
+Together with `download`, a scheduled job can fetch replies and alert
+on rejections.

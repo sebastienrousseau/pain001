@@ -428,7 +428,76 @@ def test_json_reports_the_rejected_transaction_count(tmp_path):
     path = _block_report(tmp_path, ["RJCT", "ACCP"], group="PART")
     result = _status("--format", "json", str(path))
     (entry,) = json.loads(result.output)
-    assert entry["counts"] == {"transactions": 2, "rejected_transactions": 1}
+    assert entry["counts"] == {
+        "transactions": 2,
+        "rejected_transactions": 1,
+        "rejected_groups": 0,
+        "rejected_blocks": 0,
+    }
+    assert entry["validated"] is True
+
+
+def test_json_counts_rejected_groups_and_blocks(tmp_path):
+    """The group and block rejections are counts, not parsed text."""
+    path = _block_report(tmp_path, ["RJCT"], group="RJCT")
+    (entry,) = json.loads(_status("--format", "json", str(path)).output)
+    assert entry["counts"]["rejected_groups"] == 1
+    assert entry["counts"]["rejected_blocks"] == 1
+
+
+def test_the_text_is_built_from_the_counts():
+    """A rejected item's wording never decides what level it counts as."""
+    from pain001.cli._status import Summary, _line  # noqa: PLC0415
+
+    summary = Summary(
+        "r.xml",
+        "pain.002",
+        "PART",
+        {
+            "transactions": 1,
+            "rejected_transactions": 1,
+            "rejected_groups": 0,
+            "rejected_blocks": 0,
+        },
+        ["group payment E2E-1"],
+        validated=True,
+    )
+    assert _line(summary).splitlines()[0] == (
+        "r.xml: pain.002 PART, 1 transaction, 1 rejected"
+    )
+
+
+def test_a_reply_that_fails_its_bundled_schema_exits_2(tmp_path):
+    """A pain.002 in a bundled version is validated before it is read."""
+    path = _report(tmp_path, "bad.xml", "ACCP", "ACCP")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "<TxSts>ACCP</TxSts>", "<TxSts>NOPE</TxSts>"
+        ),
+        encoding="utf-8",
+    )
+    result = _status(str(path))
+    assert result.exit_code == 2
+    assert "failed validation" in result.output
+
+
+def test_an_unbundled_version_is_read_but_reported_unvalidated(tmp_path):
+    """No bundled schema: the reply is read and says it was not validated."""
+    path = _report(tmp_path, "v10.xml", "ACCP", "ACCP")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "pain.002.001.03", "pain.002.001.10"
+        ),
+        encoding="utf-8",
+    )
+    result = _status(str(path))
+    assert result.exit_code == 0, result.output
+    assert result.output.splitlines()[0] == (
+        f"{path}: pain.002 ACCP, 1 transaction, 0 rejected; "
+        "not schema-validated (no bundled schema for pain.002.001.10)"
+    )
+    (entry,) = json.loads(_status("--format", "json", str(path)).output)
+    assert entry["validated"] is False
 
 
 def test_a_rejected_group_without_transactions_says_so(tmp_path):
