@@ -20,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is saved as `name.<sha8>.xml`, and `--pattern`, `--settle-seconds`,
   `--max-files` and `--max-bytes` bound a run. It takes every `upload`
   trust and identity flag (ADR 0013).
+- [Build your own bank profile](docs/bank-profiles.md): a step-by-step
+  guide for a bank's team to turn its usage guideline into a private
+  profile in-house (a CEL policy and a Schematron rulebook, applied by
+  `check`, `validate` and `generate`), with a template for a fictional
+  bank in `examples/bank-profile/`, `examples/29_private_bank_profile.py`
+  and a test that each template rule fires. Public, non-confidential
+  profiles may be contributed (`CONTRIBUTING.md`).
 - An evidence pack for bank reviewers on every release,
   `pain001-<version>-evidence-pack.zip`: the documents in
   `docs/evidence/` (data handling, verifying a release, a DORA evidence

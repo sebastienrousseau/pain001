@@ -51,6 +51,7 @@ Contents
    configuration
    plugins
    custom-rules
+   bank-profiles
    sftp-upload
    template_registry
    version_migration
