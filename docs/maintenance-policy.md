@@ -12,7 +12,8 @@ agreement (SLA) and no out-of-hours cover.
 - Releases move one step at a time on the `0.0.x` line, as described in
   [`RELEASING.md`](https://github.com/sebastienrousseau/pain001/blob/main/RELEASING.md). Each release is a signed tag with
   build provenance, attestations, an SBOM and SHA-256 checksums of every
-  asset.
+  asset; [verify a release](evidence/verify-a-release.md) shows how to
+  check them.
 - The [support table in `SUPPORT.md`](https://github.com/sebastienrousseau/pain001/blob/main/SUPPORT.md) lists the versions
   that currently receive fixes.
 
@@ -39,5 +40,6 @@ agreement (SLA) and no out-of-hours cover.
 - No paid support, sponsorship or partner programme. Pain001's licence
   lets any firm support it commercially; the project has no commercial
   partners and takes no fees or referrals.
-- No certification. Pain001 does not claim compliance with any
-  regulation or standard.
+- No certification. Pain001 publishes evidence (see
+  [Evidence for reviewers](evidence/index.md)); it does not claim
+  compliance with any regulation or standard.

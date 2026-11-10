@@ -73,6 +73,7 @@ Contents
    faq
    glossary
    maintenance-policy
+   evidence/index
 
 .. toctree::
    :maxdepth: 1

@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   is saved as `name.<sha8>.xml`, and `--pattern`, `--settle-seconds`,
   `--max-files` and `--max-bytes` bound a run. It takes every `upload`
   trust and identity flag (ADR 0013).
+- An evidence pack for bank reviewers on every release,
+  `pain001-<version>-evidence-pack.zip`: the documents in
+  `docs/evidence/` (data handling, verifying a release, a DORA evidence
+  map with no compliance claim, a licence summary, a pre-filled
+  security questionnaire as CSV), the maintenance and security policies,
+  the licence texts, the release's SBOM, provenance and SHA256SUMS
+  (each checked against SHA256SUMS), the OpenSSF Scorecard result and
+  the website's security.txt and accessibility statement. Built by
+  `scripts/build_evidence_pack.py` in a new `evidence-pack` job of the
+  tag workflow, before the release notes list its checksum.
 - `pain001 status FILE...` reads pain.002 reports and exits 3 when
   anything was rejected. It reads camt.052, camt.053 and camt.054 with
   the `camt053` package when that is installed (plan decision D6); without
