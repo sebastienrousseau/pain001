@@ -406,3 +406,43 @@ def test_algorithm_for_key() -> None:
 def test_a_mismatched_algorithm_is_a_signing_error() -> None:
     with pytest.raises(XmlSignatureError, match="does not fit"):
         sign_xml_document(DOC, _private_pem(_P256), algorithm="rsa-sha256")
+
+
+def _resigned(tree: Any) -> bytes:
+    """Sign an edited SignedInfo again, so only the edit is under test."""
+    info = tree.find(f".//{{{DS}}}SignedInfo")
+    value = algs.sign_bytes(_RSA, algs.ALGORITHMS["rsa-sha256"], _c14n(info))
+    tree.find(f".//{{{DS}}}SignatureValue").text = base64.b64encode(
+        value
+    ).decode()
+    return bytes(etree.tostring(tree))
+
+
+def test_a_signature_that_is_the_whole_document_is_invalid() -> None:
+    """A parentless Signature envelops nothing: a report, not a crash."""
+    tree = etree.fromstring(_sign())
+    sig = tree.find(f"{{{DS}}}Signature")
+    assert "inside the document" in _reason(etree.tostring(sig))
+
+
+def test_a_second_reference_is_refused() -> None:
+    """Only one Reference is checked, so a second is never accepted."""
+    tree = etree.fromstring(_sign())
+    info = tree.find(f".//{{{DS}}}SignedInfo")
+    reference = info.find(f"{{{DS}}}Reference")
+    extra = etree.fromstring(etree.tostring(reference))
+    extra.set("URI", "#elsewhere")
+    info.append(extra)
+    assert "exactly one <Reference>" in _reason(_resigned(tree))
+
+
+def test_the_digest_value_is_read_from_the_reference() -> None:
+    """A DigestValue elsewhere in SignedInfo is not the Reference's."""
+    tree = etree.fromstring(_sign())
+    info = tree.find(f".//{{{DS}}}SignedInfo")
+    good = info.find(f".//{{{DS}}}DigestValue")
+    decoy = etree.SubElement(
+        info.find(f"{{{DS}}}CanonicalizationMethod"), f"{{{DS}}}DigestValue"
+    )
+    decoy.text, good.text = good.text, "AAAA"
+    assert "Digest mismatch" in _reason(_resigned(tree))
