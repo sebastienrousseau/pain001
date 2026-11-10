@@ -122,9 +122,12 @@ Reporters are credited unless they ask to remain anonymous.
 
 The REST API ships with:
 
-- Bearer-token auth gated on `PAIN001_API_KEY` (off when unset —
-  the install assumption is "behind a reverse proxy that handles
-  auth").
+- Bearer-token auth gated on `PAIN001_API_KEY`. Without a key every
+  endpoint is unauthenticated, so `pain001 serve` refuses a
+  non-loopback bind unless the operator opts in with `--insecure` or
+  `PAIN001_ALLOW_INSECURE=1` (`pain001/cli/_serve.py`). A server
+  started with `uvicorn` directly cannot see its bind address and logs
+  a warning instead (`pain001/api/auth.py`).
 - Configurable rate limiting (`PAIN001_RATE_LIMIT`) with both an
   in-process default and a Redis-backed distributed backend
   (`pain001[redis]`) so caps survive multi-replica deployments.
