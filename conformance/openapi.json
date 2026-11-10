@@ -1,0 +1,1564 @@
+{
+  "components": {
+    "schemas": {
+      "CheckFindingModel": {
+        "description": "One problem one rung found.",
+        "properties": {
+          "location": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Element path, context, or transaction N",
+            "title": "Location"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "rule": {
+            "title": "Rule",
+            "type": "string"
+          },
+          "rung": {
+            "description": "xsd, mdr, scheme or schematron",
+            "title": "Rung",
+            "type": "string"
+          },
+          "severity": {
+            "description": "error or warning",
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "rung",
+          "rule",
+          "severity",
+          "message"
+        ],
+        "title": "CheckFindingModel",
+        "type": "object"
+      },
+      "CheckRequest": {
+        "description": "A document to check, with the optional rungs to add.",
+        "properties": {
+          "schematron": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A Schematron preset (sepa, fednow, cbpr); not a path",
+            "title": "Schematron"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "pattern": "^[a-z0-9-]+(,[a-z0-9-]+)*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Scheme profiles, comma-separated (e.g. sepa-sct)",
+            "title": "Scheme"
+          },
+          "xml": {
+            "description": "The pain.001 or pain.008 document as XML text",
+            "maxLength": 10485760,
+            "minLength": 1,
+            "title": "Xml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "xml"
+        ],
+        "title": "CheckRequest",
+        "type": "object"
+      },
+      "CheckResponse": {
+        "description": "The report: the verdict, the rungs that ran and every finding.",
+        "properties": {
+          "errors": {
+            "title": "Errors",
+            "type": "integer"
+          },
+          "findings": {
+            "items": {
+              "$ref": "#/components/schemas/CheckFindingModel"
+            },
+            "title": "Findings",
+            "type": "array"
+          },
+          "message_type": {
+            "title": "Message Type",
+            "type": "string"
+          },
+          "passed": {
+            "title": "Passed",
+            "type": "boolean"
+          },
+          "rungs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Rungs",
+            "type": "array"
+          },
+          "warnings": {
+            "title": "Warnings",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "message_type",
+          "passed",
+          "errors",
+          "warnings",
+          "rungs",
+          "findings"
+        ],
+        "title": "CheckResponse",
+        "type": "object"
+      },
+      "DataSourceType": {
+        "description": "Supported data source types.",
+        "enum": [
+          "csv",
+          "sqlite",
+          "json",
+          "jsonl",
+          "parquet"
+        ],
+        "title": "DataSourceType",
+        "type": "string"
+      },
+      "FaceInfo": {
+        "description": "One face: its name, its target and the bindings it accepts.",
+        "properties": {
+          "bindings": {
+            "description": "Binding keys the face accepts; any other is refused",
+            "items": {
+              "type": "string"
+            },
+            "title": "Bindings",
+            "type": "array"
+          },
+          "description": {
+            "description": "The target standard",
+            "title": "Description",
+            "type": "string"
+          },
+          "name": {
+            "description": "Face name, used in the path",
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description",
+          "bindings"
+        ],
+        "title": "FaceInfo",
+        "type": "object"
+      },
+      "FaceRequest": {
+        "description": "A pain.001 document to project, with optional private bindings.",
+        "properties": {
+          "bindings": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Side inputs the message does not carry (for example a UK Open Banking ConsentId); used for this response only",
+            "title": "Bindings"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "pattern": "^pain\\.001\\.001\\.\\d{2}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The pain.001 edition; detected from the namespace if omitted",
+            "title": "Version"
+          },
+          "xml": {
+            "description": "The pain.001 document as XML text",
+            "maxLength": 10485760,
+            "minLength": 1,
+            "title": "Xml",
+            "type": "string"
+          }
+        },
+        "required": [
+          "xml"
+        ],
+        "title": "FaceRequest",
+        "type": "object"
+      },
+      "FaceResponse": {
+        "description": "The target payload and its loss report.",
+        "properties": {
+          "face": {
+            "title": "Face",
+            "type": "string"
+          },
+          "loss_report": {
+            "$ref": "#/components/schemas/LossReportModel"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "description": "The body in the target's shape",
+            "title": "Payload",
+            "type": "object"
+          },
+          "version": {
+            "description": "The source pain.001 edition",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "face",
+          "version",
+          "payload",
+          "loss_report"
+        ],
+        "title": "FaceResponse",
+        "type": "object"
+      },
+      "GenerateXMLRequest": {
+        "description": "Request model for XML generation.",
+        "examples": [
+          {
+            "data_source": "csv",
+            "file_path": "payments.csv",
+            "message_type": "pain.001.001.03",
+            "output_dir": ".",
+            "validate_only": false
+          }
+        ],
+        "properties": {
+          "data_source": {
+            "$ref": "#/components/schemas/DataSourceType",
+            "description": "Type of data source"
+          },
+          "file_path": {
+            "description": "Path to the data file",
+            "title": "File Path",
+            "type": "string"
+          },
+          "identifier_checks": {
+            "default": true,
+            "description": "Check every IBAN (mod-97, country length) and BIC (ISO 9362) column; false skips those checks",
+            "title": "Identifier Checks",
+            "type": "boolean"
+          },
+          "message_type": {
+            "$ref": "#/components/schemas/MessageType",
+            "default": "pain.001.001.03",
+            "description": "ISO 20022 message type"
+          },
+          "output_dir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Output directory for generated XML",
+            "title": "Output Dir"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "maxLength": 65536,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Inline YAML CEL policy enforced before generation; requires pain001[rules].",
+            "title": "Rules"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Payment-scheme rulebook to enforce before generating (e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct', 'anti-duplicate'); comma-separate names to run several",
+            "title": "Scheme"
+          },
+          "table_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Table name for SQLite sources",
+            "title": "Table Name"
+          },
+          "validate_only": {
+            "default": false,
+            "description": "Only validate, don't generate XML",
+            "title": "Validate Only",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "data_source",
+          "file_path"
+        ],
+        "title": "GenerateXMLRequest",
+        "type": "object"
+      },
+      "GenerateXMLResponse": {
+        "description": "Response model for XML generation.",
+        "properties": {
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Path to generated XML",
+            "title": "File Path"
+          },
+          "message": {
+            "description": "Result message",
+            "title": "Message",
+            "type": "string"
+          },
+          "scheme_violations": {
+            "description": "Scheme-rulebook violations if scheme validation failed",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Scheme Violations",
+            "type": "array"
+          },
+          "success": {
+            "description": "Whether generation succeeded",
+            "title": "Success",
+            "type": "boolean"
+          },
+          "validation_errors": {
+            "description": "Validation errors if validation failed",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Validation Errors",
+            "type": "array"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "GenerateXMLResponse",
+        "type": "object"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Detail",
+            "type": "array"
+          }
+        },
+        "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthResponse": {
+        "description": "Response model for health check.",
+        "properties": {
+          "message": {
+            "description": "Health check message",
+            "title": "Message",
+            "type": "string"
+          },
+          "status": {
+            "description": "Service status",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "description": "API version",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "message"
+        ],
+        "title": "HealthResponse",
+        "type": "object"
+      },
+      "JobStatusResponse": {
+        "description": "Response model for job status.",
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Error message if failed",
+            "title": "Error"
+          },
+          "job_id": {
+            "description": "Unique job identifier",
+            "title": "Job Id",
+            "type": "string"
+          },
+          "message": {
+            "description": "Status message",
+            "title": "Message",
+            "type": "string"
+          },
+          "progress_percent": {
+            "default": 0,
+            "description": "Progress percentage (0-100)",
+            "title": "Progress Percent",
+            "type": "integer"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GenerateXMLResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Result when status is success"
+          },
+          "status": {
+            "description": "Current job status (pending, processing, success, failed, cancelled)",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "message"
+        ],
+        "title": "JobStatusResponse",
+        "type": "object"
+      },
+      "LossReportModel": {
+        "description": "What the projection carried and what it did not, by indexed path.",
+        "properties": {
+          "face": {
+            "title": "Face",
+            "type": "string"
+          },
+          "is_lossless": {
+            "title": "Is Lossless",
+            "type": "boolean"
+          },
+          "loss_ratio": {
+            "description": "Share of source leaves not carried",
+            "title": "Loss Ratio",
+            "type": "number"
+          },
+          "mapped_count": {
+            "title": "Mapped Count",
+            "type": "integer"
+          },
+          "mapped_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Mapped Paths",
+            "type": "array"
+          },
+          "total_source_elements": {
+            "title": "Total Source Elements",
+            "type": "integer"
+          },
+          "unmapped_count": {
+            "title": "Unmapped Count",
+            "type": "integer"
+          },
+          "unmapped_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unmapped Paths",
+            "type": "array"
+          }
+        },
+        "required": [
+          "face",
+          "total_source_elements",
+          "mapped_count",
+          "unmapped_count",
+          "is_lossless",
+          "loss_ratio",
+          "mapped_paths",
+          "unmapped_paths"
+        ],
+        "title": "LossReportModel",
+        "type": "object"
+      },
+      "MessageType": {
+        "description": "Supported ISO 20022 message types.",
+        "enum": [
+          "pain.001.001.03",
+          "pain.001.001.04",
+          "pain.001.001.05",
+          "pain.001.001.06",
+          "pain.001.001.07",
+          "pain.001.001.08",
+          "pain.001.001.09",
+          "pain.001.001.10",
+          "pain.001.001.11",
+          "pain.001.001.12",
+          "pain.001.001.13",
+          "pain.008.001.02",
+          "pain.008.001.08"
+        ],
+        "title": "MessageType",
+        "type": "string"
+      },
+      "UiFilePayload": {
+        "description": "An uploaded payment file, as the dashboard sends it.\n\nThe browser reads the dropped file and posts its text; the server\nparses it in memory, so nothing the user uploads touches the disk.",
+        "examples": [
+          {
+            "content": "id,date,nb_of_txs,...",
+            "filename": "payments.csv",
+            "message_type": "pain.001.001.03",
+            "scheme": "sepa-sct,anti-duplicate"
+          }
+        ],
+        "properties": {
+          "content": {
+            "description": "The file's text (UTF-8)",
+            "title": "Content",
+            "type": "string"
+          },
+          "filename": {
+            "description": "Name the browser reported; only the suffix (.csv, .json, .jsonl) is used to pick a parser",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Filename",
+            "type": "string"
+          },
+          "message_type": {
+            "$ref": "#/components/schemas/MessageType",
+            "default": "pain.001.001.03",
+            "description": "ISO 20022 message type"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Payment-scheme rulebook(s) to enforce (e.g. 'sepa-sct', 'anti-duplicate'); comma-separate names to run several",
+            "title": "Scheme"
+          }
+        },
+        "required": [
+          "filename",
+          "content"
+        ],
+        "title": "UiFilePayload",
+        "type": "object"
+      },
+      "UiGenerateResponse": {
+        "description": "Result of generating XML from an uploaded file.\n\nOn success the XML document travels inline so the browser can offer\nit as a download; on failure the blocking findings are attached.",
+        "properties": {
+          "filename": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Suggested download name for the XML",
+            "title": "Filename"
+          },
+          "message": {
+            "description": "Result message",
+            "title": "Message",
+            "type": "string"
+          },
+          "scheme_violations": {
+            "description": "Scheme-rulebook violations if scheme validation failed",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Scheme Violations",
+            "type": "array"
+          },
+          "success": {
+            "description": "Whether generation succeeded",
+            "title": "Success",
+            "type": "boolean"
+          },
+          "validation_errors": {
+            "description": "Validation errors if validation failed",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Validation Errors",
+            "type": "array"
+          },
+          "xml": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The generated XML document",
+            "title": "Xml"
+          }
+        },
+        "required": [
+          "success",
+          "message"
+        ],
+        "title": "UiGenerateResponse",
+        "type": "object"
+      },
+      "ValidationError": {
+        "properties": {
+          "ctx": {
+            "title": "Context",
+            "type": "object"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "title": "Location",
+            "type": "array"
+          },
+          "msg": {
+            "title": "Message",
+            "type": "string"
+          },
+          "type": {
+            "title": "Error Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError",
+        "type": "object"
+      },
+      "ValidationRequest": {
+        "description": "Request model for data validation.",
+        "examples": [
+          {
+            "data_source": "csv",
+            "file_path": "payments.csv",
+            "message_type": "pain.001.001.03",
+            "scheme": "sepa-sct"
+          }
+        ],
+        "properties": {
+          "data_source": {
+            "$ref": "#/components/schemas/DataSourceType",
+            "description": "Type of data source (csv, sqlite, json, etc.)"
+          },
+          "file_path": {
+            "description": "Path to the data file",
+            "title": "File Path",
+            "type": "string"
+          },
+          "identifier_checks": {
+            "default": true,
+            "description": "Check every IBAN (mod-97, country length) and BIC (ISO 9362) column; false skips those checks",
+            "title": "Identifier Checks",
+            "type": "boolean"
+          },
+          "message_type": {
+            "$ref": "#/components/schemas/MessageType",
+            "default": "pain.001.001.03",
+            "description": "ISO 20022 message type"
+          },
+          "rules": {
+            "anyOf": [
+              {
+                "maxLength": 65536,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Inline YAML CEL policy; requires pain001[rules]. Never a server-side file path.",
+            "title": "Rules"
+          },
+          "scheme": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Payment-scheme rulebook to validate against (e.g. 'sepa-sct', 'sepa-sdd', 'sepa-b2b', 'sepa-inst', 'xborder-ct', 'anti-duplicate'); comma-separate names to run several",
+            "title": "Scheme"
+          },
+          "table_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Table name for SQLite sources",
+            "title": "Table Name"
+          }
+        },
+        "required": [
+          "data_source",
+          "file_path"
+        ],
+        "title": "ValidationRequest",
+        "type": "object"
+      },
+      "ValidationResponse": {
+        "description": "Response model for validation results.",
+        "properties": {
+          "errors": {
+            "description": "List of validation errors",
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "invalid_rows": {
+            "default": 0,
+            "description": "Number of invalid rows",
+            "title": "Invalid Rows",
+            "type": "integer"
+          },
+          "is_valid": {
+            "description": "Whether data is valid",
+            "title": "Is Valid",
+            "type": "boolean"
+          },
+          "scheme_violations": {
+            "description": "Scheme-rulebook violations (when a scheme is given)",
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Scheme Violations",
+            "type": "array"
+          },
+          "total_rows": {
+            "description": "Total number of rows",
+            "title": "Total Rows",
+            "type": "integer"
+          },
+          "valid_rows": {
+            "default": 0,
+            "description": "Number of valid rows",
+            "title": "Valid Rows",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "is_valid",
+          "total_rows"
+        ],
+        "title": "ValidationResponse",
+        "type": "object"
+      }
+    }
+  },
+  "info": {
+    "contact": {
+      "name": "Pain001",
+      "url": "https://github.com/sebastienrousseau/pain001"
+    },
+    "description": "RESTful API for ISO 20022 **pain.001** / **pain.008** XML generation and\nvalidation.\n\n* **Versioned** \u2014 all endpoints are served under `/api/v1`; the unversioned\n  `/api/*` paths remain as a backwards-compatible alias.\n* **Authenticated** \u2014 set `PAIN001_API_KEY` to require a\n  `Authorization: Bearer <key>` header (open in local development).\n* **Rate limited** \u2014 set `PAIN001_RATE_LIMIT` (e.g. `100/minute`) to cap\n  requests per client.\n\nInteractive reference: [`/api/reference`](/api/reference) \u00b7\nOpenAPI document: [`/openapi.json`](/openapi.json) \u00b7\nDashboard: [`/api/v1/ui`](/api/v1/ui) (disable with `PAIN001_UI_DISABLED=1`)\n",
+    "license": {
+      "name": "Apache-2.0",
+      "url": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    "title": "Pain001 REST API",
+    "version": "conformance-kit-1"
+  },
+  "openapi": "3.1.0",
+  "paths": {
+    "/api/v1/check": {
+      "post": {
+        "description": "Run the validation ladder on the document in the body.\n\nArgs:\n    request: The document, and the scheme profiles and Schematron\n        preset to add.\n\nReturns:\n    The report, ``passed: false`` when a rung found an error.\n\nRaises:\n    HTTPException: ``422`` when the document cannot be checked.",
+        "operationId": "check_api_v1_check_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CheckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "The document cannot be checked"
+          }
+        },
+        "summary": "Check an existing pain.001 or pain.008 document",
+        "tags": [
+          "Validation"
+        ]
+      }
+    },
+    "/api/v1/download/{job_id}": {
+      "get": {
+        "description": "Download generated XML file.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    FileResponse: XML file for download.\n\nRaises:\n    HTTPException: If job not found or file not available.",
+        "operationId": "download_xml_api_v1_download__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download generated XML",
+        "tags": [
+          "Generation"
+        ]
+      }
+    },
+    "/api/v1/faces": {
+      "get": {
+        "description": "List the faces, their targets and the binding keys each accepts.\n\nReturns:\n    One entry per face, sorted by name.",
+        "operationId": "list_faces_api_v1_faces_get",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/FaceInfo"
+                  },
+                  "title": "Response List Faces Api V1 Faces Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List faces",
+        "tags": [
+          "Faces"
+        ]
+      }
+    },
+    "/api/v1/faces/{face}": {
+      "post": {
+        "description": "Project the document into ``face`` and report what was not carried.\n\nArgs:\n    face: The face name, one of ``GET /faces``.\n    request: The document, its optional edition and the bindings.\n\nReturns:\n    The face, the source edition, the payload and the loss report.\n\nRaises:\n    HTTPException: ``404`` for an unknown face; ``422`` when the face\n        refuses the document or a binding.",
+        "operationId": "project_api_v1_faces__face__post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "face",
+            "required": true,
+            "schema": {
+              "title": "Face",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FaceRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FaceResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "description": "No face has this name"
+          },
+          "422": {
+            "description": "The face refused the document or a binding"
+          }
+        },
+        "summary": "Project a pain.001 document into a face",
+        "tags": [
+          "Faces"
+        ]
+      }
+    },
+    "/api/v1/generate": {
+      "post": {
+        "description": "Generate XML synchronously.\n\nArgs:\n    request: Generation request with data source and options.\n\nReturns:\n    GenerateXMLResponse: Generated XML file path or errors.\n\nRaises:\n    HTTPException: If generation fails.",
+        "operationId": "generate_xml_sync_api_v1_generate_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateXMLRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenerateXMLResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate XML (synchronous)",
+        "tags": [
+          "Generation"
+        ]
+      }
+    },
+    "/api/v1/generate/async": {
+      "post": {
+        "description": "Start async XML generation job.\n\nArgs:\n    request: Generation request.\n\nReturns:\n    Dictionary with job_id for status polling.\n\nRaises:\n    HTTPException: If job creation fails.",
+        "operationId": "generate_xml_async_api_v1_generate_async_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GenerateXMLRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": true,
+                  "title": "Response Generate Xml Async Api V1 Generate Async Post",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate XML (asynchronous)",
+        "tags": [
+          "Generation"
+        ]
+      }
+    },
+    "/api/v1/health": {
+      "get": {
+        "description": "Check API health status.\n\nReturns:\n    HealthResponse: API status and version information.",
+        "operationId": "health_api_v1_health_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Health check",
+        "tags": [
+          "Health"
+        ]
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "delete": {
+        "description": "Cancel an async job.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    Dictionary with cancellation status.\n\nRaises:\n    HTTPException: If job not found.",
+        "operationId": "cancel_job_api_v1_jobs__job_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "title": "Response Cancel Job Api V1 Jobs  Job Id  Delete",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Cancel job",
+        "tags": [
+          "Job Management"
+        ]
+      }
+    },
+    "/api/v1/status/{job_id}": {
+      "get": {
+        "description": "Get status of async job.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    JobStatusResponse: Current job status and result.\n\nRaises:\n    HTTPException: If job not found.",
+        "operationId": "get_job_status_api_v1_status__job_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "job_id",
+            "required": true,
+            "schema": {
+              "title": "Job Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/JobStatusResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get job status",
+        "tags": [
+          "Job Management"
+        ]
+      }
+    },
+    "/api/v1/ui/generate": {
+      "post": {
+        "description": "Validate the upload, then render the XML and return it inline.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    ``success=True`` with the XML document and a suggested filename,\n    or ``success=False`` carrying the validation errors or scheme\n    violations that blocked generation.\n\nRaises:\n    HTTPException: ``400`` when rendering fails (for example the\n        rendered document does not satisfy the XSD).",
+        "operationId": "ui_generate_api_v1_ui_generate_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UiFilePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UiGenerateResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate XML from an uploaded file (dashboard)",
+        "tags": [
+          "UI"
+        ]
+      }
+    },
+    "/api/v1/ui/validate": {
+      "post": {
+        "description": "Validate the uploaded text against the schema and optional schemes.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    The same shape as ``POST /validate``.",
+        "operationId": "ui_validate_api_v1_ui_validate_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UiFilePayload"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate an uploaded file (dashboard)",
+        "tags": [
+          "UI"
+        ]
+      }
+    },
+    "/api/v1/validate": {
+      "post": {
+        "description": "Validate payment data against schema.\n\nArgs:\n    request: Validation request with data source and file path.\n\nReturns:\n    ValidationResponse: Validation results with error details.\n\nRaises:\n    HTTPException: If file not found or validation fails.",
+        "operationId": "validate_data_api_v1_validate_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Validate payment data",
+        "tags": [
+          "Validation"
+        ]
+      }
+    }
+  },
+  "tags": [
+    {
+      "description": "Liveness and version probe for load balancers.",
+      "name": "Health"
+    },
+    {
+      "description": "Validate payment data against the XSD schema and, optionally, a payment-scheme rulebook \u2014 without producing a file.",
+      "name": "Validation"
+    },
+    {
+      "description": "Generate ISO 20022 XML synchronously or as a background job, and download the result.",
+      "name": "Generation"
+    },
+    {
+      "description": "Poll, cancel, and manage asynchronous generation jobs.",
+      "name": "Job Management"
+    },
+    {
+      "description": "Project a pain.001 document into another standard's JSON shape (UK Open Banking, Berlin Group, ISO 20022 names) with a loss report of every element not carried.",
+      "name": "Faces"
+    },
+    {
+      "description": "Backing endpoints for the hosted dashboard at `/api/v1/ui`: the same validation and generation, fed with an uploaded file's content instead of a server-side path.",
+      "name": "UI"
+    }
+  ]
+}

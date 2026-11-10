@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `conformance/`: the SDK conformance kit. `cases.json` lists the
+  requests every pain001 SDK (Java, Go, Rust, .NET, C++) sends to a
+  running `pain001 serve` and what each response must satisfy, with
+  synthetic fixtures and a normalised `openapi.json`;
+  `tests/test_conformance_kit.py` runs every case in-process and fails
+  when the OpenAPI snapshot drifts (`scripts/build_conformance_openapi.py`).
 - Rename `CODE-OF-CONDUCT.md` to `CODE_OF_CONDUCT.md`, the name GitHub
   and the suite's compliance audit recognise; the text is unchanged and
   GOVERNANCE.md links the new name.
