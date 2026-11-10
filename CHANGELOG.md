@@ -27,6 +27,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   bank in `examples/bank-profile/`, `examples/29_private_bank_profile.py`
   and a test that each template rule fires. Public, non-confidential
   profiles may be contributed (`CONTRIBUTING.md`).
+- [Integration recipes](docs/integration-recipes.md): ERP or treasury
+  CSV export to pain.001, a batch pipeline (`validate`, `generate`,
+  `check`, SFTP), the REST API, pain.002 handling with `pain001 status`,
+  and camt.052/053/054 reconciliation by end-to-end id through
+  `pain001[camt]`; `examples/30_integration_recipes.py` runs them.
 - An evidence pack for bank reviewers on every release,
   `pain001-<version>-evidence-pack.zip`: the documents in
   `docs/evidence/` (data handling, verifying a release, a DORA evidence

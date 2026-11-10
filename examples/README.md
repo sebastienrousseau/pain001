@@ -43,6 +43,7 @@ python examples/01_generate_xml_file.py
 | `27_check_existing_file.py` | `check_document` and `pain001 check` on files that already exist: the bundled .09 sample passes the XSD, MDR and `sepa-sct` rungs, a broken copy fails the XSD, and the CLI exits 1 with a JSON report per file |
 | `28_download_and_status.py` | `pain001 status` on a synthetic accepted and rejected pain.002 (exit 3 on a rejection, JSON output), and `pain001 download` refusing a non-directory URL and an unknown `--after-fetch` before any connection |
 | `29_private_bank_profile.py` | A private bank profile kept in-house: the template CEL policy and Schematron rulebook in `bank-profile/` pass the bundled sample and fail a copy with a 75,000 EUR payment (`EXB-LIMIT`); see `docs/bank-profiles.md` |
+| `30_integration_recipes.py` | The integration recipes in `docs/integration-recipes.md`: an ERP CSV export mapped to pain001's columns, `validate`, `generate` and `check`, a pain.002 rejecting one payment (`pain001 status` exits 3), and reconciling a camt.053 by end-to-end id through `pain001[camt]` (skipped without camt053) |
 
 Install the development environment with `poetry install --all-extras --with dev`
 before running the complete suite. Examples illustrate workflows; they do not
