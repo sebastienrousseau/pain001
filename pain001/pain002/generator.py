@@ -19,12 +19,22 @@ status a bank (or a test harness simulating one) wants to report, produce a
 well-formed pain.002 XML document. Generation uses the standard library's
 ElementTree (output is fully under our control); the result round-trips
 cleanly back through the parser.
+
+Only versions with a bundled schema are built, and every report is
+validated against that schema before it is returned, so the builder
+never hands back a document the parser's ``validate=True`` would refuse.
 """
 
 from collections.abc import Callable
 from datetime import UTC, datetime
 from typing import Any
 from xml.etree import ElementTree as ET  # nosec B405 - generation only
+
+from pain001.pain002.parser import SCHEMA_DIR, bundled_schema_versions
+from pain001.xml.validate_via_xsd import (
+    collect_xsd_validation_errors,
+    validate_xml_string_via_xsd,
+)
 
 #: Status codes defined by ISO 20022 for group/payment/transaction status.
 VALID_STATUS_CODES = frozenset(
@@ -88,17 +98,20 @@ def build_pain002_report(
         original_message_name_id: Name id of the original message
             (default ``pain.001.001.03``).
         creation_datetime: ISO-8601 creation timestamp; defaults to now (UTC).
-        version: pain.002 message version (drives the namespace).
+        version: pain.002 message version (drives the namespace); one
+            of :func:`~pain001.pain002.bundled_schema_versions`.
 
     Returns:
-        The pain.002 report as a UTF-8 XML string (with declaration).
+        The report as a UTF-8 XML string (with declaration), valid
+        against the bundled schema for ``version``.
 
     Raises:
-        ValueError: If ``group_status`` or any row status is not a known
-            ISO 20022 status code, or a required row key is missing.
+        ValueError: An unknown status code, a missing row key, a version
+            with no bundled schema, or a report that fails that schema.
     """
     if group_status not in VALID_STATUS_CODES:
         raise ValueError(f"Invalid group status code: {group_status!r}")
+    _require_bundled(version)
 
     ns = _ns(version)
     ET.register_namespace("", ns)
@@ -116,10 +129,49 @@ def build_pain002_report(
     for row in payment_statuses:
         _append_payment_status(report, q, row)
 
-    xml_bytes: bytes = ET.tostring(
-        document, encoding="utf-8", xml_declaration=True
+    xml = ET.tostring(document, encoding="utf-8", xml_declaration=True)
+    return _check_against_schema(xml.decode("utf-8"), version)
+
+
+def _require_bundled(version: str) -> None:
+    """Refuse a version the package has no schema to validate against.
+
+    Args:
+        version: The requested pain.002 version.
+
+    Raises:
+        ValueError: No bundled schema covers ``version``.
+    """
+    bundled = bundled_schema_versions()
+    if version not in bundled:
+        raise ValueError(
+            f"Cannot build {version}: no bundled schema. Bundled versions "
+            f"are {', '.join(bundled)}."
+        )
+
+
+def _check_against_schema(xml: str, version: str) -> str:
+    """Refuse a built report its bundled schema does not accept.
+
+    Args:
+        xml: The built report.
+        version: Its pain.002 version (already known to be bundled).
+
+    Returns:
+        ``xml`` unchanged, once it validates.
+
+    Raises:
+        ValueError: The report fails the schema; the message names the
+            first violations.
+    """
+    schema = str(SCHEMA_DIR / f"{version}.xsd")
+    if validate_xml_string_via_xsd(xml, schema):
+        return xml
+    errors = collect_xsd_validation_errors(xml, schema, max_errors=3)
+    raise ValueError(
+        f"Built {version} report fails the bundled schema: "
+        + "; ".join(errors)
     )
-    return xml_bytes.decode("utf-8")
 
 
 def _qualifier(ns: str) -> Callable[[str], str]:
@@ -287,7 +339,8 @@ def _append_transaction(
         block: The ``OrgnlPmtInfAndSts`` element.
         q: A tag-qualifier callable.
         tx: ``transaction_status``, and optionally
-            ``original_end_to_end_id`` and ``status_reason``.
+            ``original_end_to_end_id`` (omitted from the XML when absent
+            or empty) and ``status_reason``.
 
     Raises:
         ValueError: If the transaction status code is invalid.
@@ -296,11 +349,11 @@ def _append_transaction(
     if tx_status not in VALID_STATUS_CODES:
         raise ValueError(f"Invalid transaction status: {tx_status!r}")
     element = _sub(block, q("TxInfAndSts"))
-    _sub(
-        element,
-        q("OrgnlEndToEndId"),
-        str(tx.get("original_end_to_end_id", "")),
-    )
+    end_to_end_id = tx.get("original_end_to_end_id", "")
+    if end_to_end_id != "":
+        # The schemas allow OrgnlEndToEndId to be absent but never
+        # empty (Max35Text has a minimum length of 1).
+        _sub(element, q("OrgnlEndToEndId"), str(end_to_end_id))
     _sub(element, q("TxSts"), tx_status)
     reason = tx.get("status_reason")
     if reason:
