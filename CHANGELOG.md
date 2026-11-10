@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   consent to be named yes or no). It says issues are public and that
   submissions are acknowledged and closed, since the repository keeps
   no issues open.
+- A continuity plan in `GOVERNANCE.md`: what happens to the release
+  keys, the PyPI project, the repositories and the domain if the lead
+  maintainer becomes unavailable, the goal of a second maintainer with
+  release rights by mid-2027, and a neutral foundation under
+  consideration. Facts only the maintainer has are marked TODO.
 - An evidence pack for bank reviewers on every release,
   `pain001-<version>-evidence-pack.zip`: the documents in
   `docs/evidence/` (data handling, verifying a release, a DORA evidence
