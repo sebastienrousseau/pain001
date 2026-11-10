@@ -200,8 +200,16 @@ def _append_payment_status(
         _append_transaction(block, q, tx)
 
 
+_TX_KEYS = ("original_end_to_end_id", "transaction_status", "status_reason")
+
+
 def _transactions_of(row: dict[str, Any]) -> list[dict[str, Any]]:
     """The transactions a payment-status row reports.
+
+    A row may carry the flat transaction keys beside a ``transactions``
+    list, as :func:`parse_pain002_report` returns it (the first
+    transaction's keys repeated on the block); that is accepted when the
+    flat keys agree with the first listed transaction.
 
     Args:
         row: The payment-status row (see :func:`build_pain002_report`).
@@ -211,26 +219,68 @@ def _transactions_of(row: dict[str, Any]) -> list[dict[str, Any]]:
         or an empty list when it reports none.
 
     Raises:
-        ValueError: If the row carries both shapes, or a listed
-            transaction has no ``transaction_status``.
+        ValueError: If ``transactions`` is not a list of dicts, a listed
+            transaction has no ``transaction_status``, or the flat keys
+            disagree with the first listed transaction.
     """
     if "transactions" not in row:
         return [row] if "transaction_status" in row else []
-    if "transaction_status" in row:
+    transactions = _listed_transactions(row["transactions"])
+    flat = {key: row[key] for key in _TX_KEYS if key in row}
+    if flat and not _agrees(flat, transactions):
         raise ValueError(
-            "payment status row takes either transactions or "
-            "transaction_status, not both"
+            "payment status row: flat transaction keys disagree with "
+            "transactions[0]"
         )
-    transactions = list(row["transactions"])
-    for tx in transactions:
-        if "transaction_status" not in tx:
-            raise ValueError(
-                "listed transaction missing key: 'transaction_status'"
-            )
     return transactions
 
 
-def _append_transaction(block: ET.Element, q: Any, tx: dict[str, Any]) -> None:
+def _listed_transactions(value: Any) -> list[dict[str, Any]]:
+    """Check that ``value`` is a list of transaction dicts with a status.
+
+    Args:
+        value: A row's ``transactions`` entry.
+
+    Returns:
+        The same list.
+
+    Raises:
+        ValueError: If it is not a list of dicts, or an entry has no
+            ``transaction_status``.
+    """
+    if not isinstance(value, list) or not all(
+        isinstance(tx, dict) for tx in value
+    ):
+        raise ValueError(
+            "payment status row: transactions must be a list of dicts"
+        )
+    if any("transaction_status" not in tx for tx in value):
+        raise ValueError(
+            "listed transaction missing key: 'transaction_status'"
+        )
+    return value
+
+
+def _agrees(flat: dict[str, Any], transactions: list[dict[str, Any]]) -> bool:
+    """Whether the flat keys repeat the first listed transaction's values.
+
+    Args:
+        flat: The transaction keys found directly on the row.
+        transactions: The row's listed transactions.
+
+    Returns:
+        ``True`` when there is a first transaction and every flat key
+        has its value there.
+    """
+    return bool(transactions) and all(
+        str(transactions[0].get(key, "")) == str(value)
+        for key, value in flat.items()
+    )
+
+
+def _append_transaction(
+    block: ET.Element, q: Callable[[str], str], tx: dict[str, Any]
+) -> None:
     """Append one TxInfAndSts to a payment block.
 
     Args:

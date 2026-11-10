@@ -17,8 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `build_pain002_report` takes a `transactions` list on a payment-status
   row, so one `OrgnlPmtInfAndSts` block can report several transactions,
   as a bank's reply does. A row with the flat `transaction_status`
-  triplet gives the same XML as before; a row with both shapes, or a
-  listed transaction without a status, is refused.
+  triplet gives the same XML as before. A row as `parse_pain002_report`
+  returns it (the list plus the first transaction's keys) rebuilds
+  unchanged; flat keys that disagree with the list, a `transactions`
+  value that is not a list of dicts, or a listed transaction without a
+  status are refused.
 
 ### Fixed
 

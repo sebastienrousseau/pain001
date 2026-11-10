@@ -245,10 +245,50 @@ class TestSeveralTransactionsPerBlock:
             "S", "M", "ACCP", [listed], creation_datetime=when
         )
 
-    def test_both_shapes_in_one_row_are_refused(self) -> None:
-        """A row with a list and the flat keys is ambiguous."""
-        row = dict(self.ROW, transaction_status="RJCT")
-        with pytest.raises(ValueError, match="either"):
+    def test_flat_keys_that_disagree_with_the_list_are_refused(self) -> None:
+        """Flat keys that contradict the first listed transaction are refused."""
+        row = dict(self.ROW, transaction_status="ACCP")
+        with pytest.raises(ValueError, match="disagree"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])
+
+    def test_a_parsed_report_rebuilds_unchanged(self, tmp_path) -> None:
+        """parse_pain002_report output feeds straight back into the builder.
+
+        The parser keeps the first transaction's keys on the block beside
+        the full list; the builder must accept that agreeing pair.
+        """
+        when = "2026-11-10T10:00:00"
+        first = build_pain002_report(
+            "STS",
+            "MSG",
+            "RJCT",
+            [
+                self.ROW,
+                {
+                    "original_payment_information_id": "PMT-2",
+                    "payment_information_status": "ACCP",
+                    "transactions": [],
+                },
+            ],
+            creation_datetime=when,
+        )
+        parsed = parse_pain002_report(_write(tmp_path, first), validate=True)
+        again = build_pain002_report(
+            "STS",
+            "MSG",
+            parsed["group_status"],
+            parsed["payment_statuses"],
+            creation_datetime=when,
+        )
+        assert again == first
+
+    @pytest.mark.parametrize(
+        "bad", [None, {"transaction_status": "ACCP"}, "ACCP"]
+    )
+    def test_transactions_must_be_a_list_of_dicts(self, bad) -> None:
+        """A non-list, or entries that are not dicts, are refused clearly."""
+        row = dict(self.ROW, transactions=bad)
+        with pytest.raises(ValueError, match="transactions"):
             build_pain002_report("STS", "MSG", "RJCT", [row])
 
     def test_a_bad_status_in_the_list_is_refused(self) -> None:
