@@ -233,103 +233,171 @@ def _regulatory(tx: Any) -> dict[str, str]:
     return row
 
 
-def _amount(tx: Any) -> dict[str, str]:
-    """Instructed or equivalent amount with its currency."""
+def _present(fields: dict[str, str | None]) -> dict[str, str]:
+    """The fields that carry a value, in order."""
+    return {k: v for k, v in fields.items() if v is not None}
+
+
+def _currency(ccy: str | None) -> dict[str, str]:
+    """The payment currency, under both column names, when non-empty."""
+    return {"payment_currency": ccy, "currency": ccy} if ccy else {}
+
+
+def _has_text(node: Any) -> bool:
+    """Whether ``node`` exists and carries non-blank text."""
+    return (
+        node is not None and bool(node.text) and bool(str(node.text).strip())
+    )
+
+
+def _equivalent_amount(eqvt: Any) -> dict[str, str]:
+    """An equivalent amount, its currency, and the currency of transfer."""
     row: dict[str, str] = {}
-    instd = _child(tx, "Amt", "InstdAmt")
-    if instd is None:
-        instd = _child(tx, "InstdAmt")
-    if instd is not None and instd.text and str(instd.text).strip():
-        row["payment_amount"] = str(instd.text).strip()
-        ccy = instd.get("Ccy")
-        if ccy:
-            row["payment_currency"] = ccy
-            row["currency"] = ccy
-        return row
-    eqvt = _child(tx, "Amt", "EqvtAmt")
-    if eqvt is not None:
-        amount = _child(eqvt, "Amt")
-        if amount is not None and amount.text and str(amount.text).strip():
-            row["payment_amount"] = str(amount.text).strip()
-            row["equivalent_amount_currency"] = amount.get("Ccy") or ""
-        ccy = _text(eqvt, "CcyOfTrf")
-        if ccy:
-            row["payment_currency"] = ccy
-            row["currency"] = ccy
+    amount: Any = _child(eqvt, "Amt")
+    if _has_text(amount):
+        row["payment_amount"] = str(amount.text).strip()
+        row["equivalent_amount_currency"] = amount.get("Ccy") or ""
+    row.update(_currency(_text(eqvt, "CcyOfTrf")))
     return row
 
 
-def rows_from_xml(xml: str) -> list[dict[str, str]]:
-    """One row per transaction, payment-information values merged in.
+def _amount(tx: Any) -> dict[str, str]:
+    """Instructed or equivalent amount with its currency."""
+    instd: Any = _child(tx, "Amt", "InstdAmt")
+    if instd is None:
+        instd = _child(tx, "InstdAmt")
+    if _has_text(instd):
+        return {
+            "payment_amount": str(instd.text).strip(),
+            **_currency(instd.get("Ccy")),
+        }
+    eqvt = _child(tx, "Amt", "EqvtAmt")
+    return _equivalent_amount(eqvt) if eqvt is not None else {}
 
-    Args:
-        xml: A pain.001 or pain.008 document.
 
-    Returns:
-        The rows, in document order.
-
-    Raises:
-        ValueError: If the document is neither message family.
-    """
-    root = defused_et.fromstring(xml)
+def _document_body(root: Any) -> tuple[Any, bool]:
+    """The message body and whether it is a direct debit (pain.008)."""
     body = _child(root, "CstmrCdtTrfInitn")
-    direct_debit = False
-    if body is None:
-        body = _child(root, "CstmrDrctDbtInitn")
-        direct_debit = True
+    if body is not None:
+        return body, False
+    body = _child(root, "CstmrDrctDbtInitn")
     if body is None:
         raise ValueError("not a pain.001 or pain.008 document")
+    return body, True
+
+
+def _group_header(body: Any) -> dict[str, str]:
+    """The group-header values every row carries."""
     header = _child(body, "GrpHdr")
-    common: dict[str, str] = {}
-    for key, value in {
-        "id": _text(header, "MsgId"),
-        "date": _text(header, "CreDtTm"),
-        "nb_of_txs": _text(header, "NbOfTxs"),
-        "ctrl_sum": _text(header, "CtrlSum"),
-        "initiator_name": _text(header, "InitgPty", "Nm"),
-    }.items():
-        if value is not None:
-            common[key] = value
-    rows: list[dict[str, str]] = []
-    for pmt in (c for c in body if _local(c.tag) == "PmtInf"):
-        level: dict[str, str] = dict(common)
-        for key, value in {
-            "payment_information_id": _text(pmt, "PmtInfId"),
-            "payment_method": _text(pmt, "PmtMtd"),
-            "batch_booking": _text(pmt, "BtchBookg"),
-            "requested_execution_date": _first_text(
-                pmt,
-                ("ReqdExctnDt",),
-                ("ReqdExctnDt", "Dt"),
-                ("ReqdExctnDt", "DtTm"),
-                ("ReqdColltnDt",),
-            ),
-            "charge_bearer": _text(pmt, "ChrgBr"),
-        }.items():
-            if value is not None:
-                level[key] = value
-        level.update(_payment_type(_child(pmt, "PmtTpInf")))
-        if direct_debit:
-            level.update(_party(_child(pmt, "Cdtr"), "creditor"))
-            level.update(_account(_child(pmt, "CdtrAcct"), "creditor_account"))
-            level.update(_agent(_child(pmt, "CdtrAgt"), "creditor_agent"))
-            level.update(_party(_child(pmt, "UltmtCdtr"), "ultimate_creditor"))
-            scheme = _first_text(
-                pmt,
-                ("CdtrSchmeId", "Id", "PrvtId", "Othr", "Id"),
-                ("CdtrSchmeId", "Id", "OrgId", "Othr", "Id"),
-            )
-            if scheme:
-                level["creditor_id"] = scheme
-        else:
-            level.update(_party(_child(pmt, "Dbtr"), "debtor"))
-            level.update(_account(_child(pmt, "DbtrAcct"), "debtor_account"))
-            level.update(_agent(_child(pmt, "DbtrAgt"), "debtor_agent"))
-            level.update(_party(_child(pmt, "UltmtDbtr"), "ultimate_debtor"))
-        tx_name = "DrctDbtTxInf" if direct_debit else "CdtTrfTxInf"
-        for tx in (c for c in pmt if _local(c.tag) == tx_name):
-            row = dict(level)
-            for key, value in {
+    return _present(
+        {
+            "id": _text(header, "MsgId"),
+            "date": _text(header, "CreDtTm"),
+            "nb_of_txs": _text(header, "NbOfTxs"),
+            "ctrl_sum": _text(header, "CtrlSum"),
+            "initiator_name": _text(header, "InitgPty", "Nm"),
+        }
+    )
+
+
+def _creditor_scheme_id(node: Any, *prefix: str) -> dict[str, str]:
+    """The creditor scheme identifier under ``prefix``, private or org."""
+    scheme = _first_text(
+        node,
+        (*prefix, "CdtrSchmeId", "Id", "PrvtId", "Othr", "Id"),
+        (*prefix, "CdtrSchmeId", "Id", "OrgId", "Othr", "Id"),
+    )
+    return {"creditor_id": scheme} if scheme else {}
+
+
+def _block_parties(pmt: Any, direct_debit: bool) -> dict[str, str]:
+    """The payment-information level party: creditor or debtor side."""
+    row: dict[str, str] = {}
+    if direct_debit:
+        row.update(_party(_child(pmt, "Cdtr"), "creditor"))
+        row.update(_account(_child(pmt, "CdtrAcct"), "creditor_account"))
+        row.update(_agent(_child(pmt, "CdtrAgt"), "creditor_agent"))
+        row.update(_party(_child(pmt, "UltmtCdtr"), "ultimate_creditor"))
+        row.update(_creditor_scheme_id(pmt))
+    else:
+        row.update(_party(_child(pmt, "Dbtr"), "debtor"))
+        row.update(_account(_child(pmt, "DbtrAcct"), "debtor_account"))
+        row.update(_agent(_child(pmt, "DbtrAgt"), "debtor_agent"))
+        row.update(_party(_child(pmt, "UltmtDbtr"), "ultimate_debtor"))
+    return row
+
+
+def _block_level(
+    pmt: Any, common: dict[str, str], direct_debit: bool
+) -> dict[str, str]:
+    """The values one payment-information block gives its transactions."""
+    level = dict(common)
+    level.update(
+        _present(
+            {
+                "payment_information_id": _text(pmt, "PmtInfId"),
+                "payment_method": _text(pmt, "PmtMtd"),
+                "batch_booking": _text(pmt, "BtchBookg"),
+                "requested_execution_date": _first_text(
+                    pmt,
+                    ("ReqdExctnDt",),
+                    ("ReqdExctnDt", "Dt"),
+                    ("ReqdExctnDt", "DtTm"),
+                    ("ReqdColltnDt",),
+                ),
+                "charge_bearer": _text(pmt, "ChrgBr"),
+            }
+        )
+    )
+    level.update(_payment_type(_child(pmt, "PmtTpInf")))
+    level.update(_block_parties(pmt, direct_debit))
+    return level
+
+
+def _debit_parties(tx: Any) -> dict[str, str]:
+    """A direct debit's debtor side, mandate and creditor scheme id."""
+    row: dict[str, str] = {}
+    row.update(_party(_child(tx, "Dbtr"), "debtor"))
+    row.update(_account(_child(tx, "DbtrAcct"), "debtor_account"))
+    row.update(_agent(_child(tx, "DbtrAgt"), "debtor_agent"))
+    row.update(_party(_child(tx, "UltmtDbtr"), "ultimate_debtor"))
+    mandate = _child(tx, "DrctDbtTx", "MndtRltdInf")
+    row.update(
+        _present(
+            {
+                "mandate_id": _text(mandate, "MndtId"),
+                "date_of_signature": _text(mandate, "DtOfSgntr"),
+                "amendment_indicator": _text(mandate, "AmdmntInd"),
+            }
+        )
+    )
+    row.update(_creditor_scheme_id(tx, "DrctDbtTx"))
+    return row
+
+
+def _transfer_parties(tx: Any) -> dict[str, str]:
+    """A credit transfer's creditor side and intermediary agents."""
+    row: dict[str, str] = {}
+    row.update(_party(_child(tx, "Cdtr"), "creditor"))
+    row.update(_account(_child(tx, "CdtrAcct"), "creditor_account"))
+    row.update(_agent(_child(tx, "CdtrAgt"), "creditor_agent"))
+    row.update(_party(_child(tx, "UltmtCdtr"), "ultimate_creditor"))
+    row.update(_party(_child(tx, "UltmtDbtr"), "ultimate_debtor"))
+    for n in (1, 2, 3):
+        row.update(
+            _agent(_child(tx, f"IntrmyAgt{n}"), f"intermediary_agent_{n}")
+        )
+    return row
+
+
+def _transaction_row(
+    tx: Any, level: dict[str, str], direct_debit: bool
+) -> dict[str, str]:
+    """One transaction's row, its own values winning over the block's."""
+    row = dict(level)
+    row.update(
+        _present(
+            {
                 "payment_id": _text(tx, "PmtId", "EndToEndId"),
                 "end_to_end_id": _text(tx, "PmtId", "EndToEndId"),
                 "instruction_id": _text(tx, "PmtId", "InstrId"),
@@ -342,51 +410,42 @@ def rows_from_xml(xml: str) -> list[dict[str, str]]:
                 ),
                 "instruction_for_debtor_agent": _text(tx, "InstrForDbtrAgt"),
                 "cheque_type": _text(tx, "ChqInstr", "ChqTp"),
-            }.items():
-                if value is not None:
-                    row[key] = value
-            row.update(_payment_type(_child(tx, "PmtTpInf")))
-            row.update(_amount(tx))
-            row.update(_remittance(tx))
-            row.update(_regulatory(tx))
-            if direct_debit:
-                row.update(_party(_child(tx, "Dbtr"), "debtor"))
-                row.update(_account(_child(tx, "DbtrAcct"), "debtor_account"))
-                row.update(_agent(_child(tx, "DbtrAgt"), "debtor_agent"))
-                row.update(_party(_child(tx, "UltmtDbtr"), "ultimate_debtor"))
-                mandate = _child(tx, "DrctDbtTx", "MndtRltdInf")
-                for key, value in {
-                    "mandate_id": _text(mandate, "MndtId"),
-                    "date_of_signature": _text(mandate, "DtOfSgntr"),
-                    "amendment_indicator": _text(mandate, "AmdmntInd"),
-                }.items():
-                    if value is not None:
-                        row[key] = value
-                scheme = _first_text(
-                    tx,
-                    ("DrctDbtTx", "CdtrSchmeId", "Id", "PrvtId", "Othr", "Id"),
-                    ("DrctDbtTx", "CdtrSchmeId", "Id", "OrgId", "Othr", "Id"),
-                )
-                if scheme:
-                    row["creditor_id"] = scheme
-            else:
-                row.update(_party(_child(tx, "Cdtr"), "creditor"))
-                row.update(
-                    _account(_child(tx, "CdtrAcct"), "creditor_account")
-                )
-                row.update(_agent(_child(tx, "CdtrAgt"), "creditor_agent"))
-                row.update(
-                    _party(_child(tx, "UltmtCdtr"), "ultimate_creditor")
-                )
-                row.update(_party(_child(tx, "UltmtDbtr"), "ultimate_debtor"))
-                for n in (1, 2, 3):
-                    row.update(
-                        _agent(
-                            _child(tx, f"IntrmyAgt{n}"),
-                            f"intermediary_agent_{n}",
-                        )
-                    )
-            rows.append(row)
+            }
+        )
+    )
+    row.update(_payment_type(_child(tx, "PmtTpInf")))
+    row.update(_amount(tx))
+    row.update(_remittance(tx))
+    row.update(_regulatory(tx))
+    if direct_debit:
+        row.update(_debit_parties(tx))
+    else:
+        row.update(_transfer_parties(tx))
+    return row
+
+
+def rows_from_xml(xml: str) -> list[dict[str, str]]:
+    """One row per transaction, payment-information values merged in.
+
+    A document of neither message family propagates ValueError.
+
+    Args:
+        xml: A pain.001 or pain.008 document.
+
+    Returns:
+        The rows, in document order.
+    """
+    body, direct_debit = _document_body(defused_et.fromstring(xml))
+    common = _group_header(body)
+    tx_name = "DrctDbtTxInf" if direct_debit else "CdtTrfTxInf"
+    rows: list[dict[str, str]] = []
+    for pmt in (c for c in body if _local(c.tag) == "PmtInf"):
+        level = _block_level(pmt, common, direct_debit)
+        rows.extend(
+            _transaction_row(tx, level, direct_debit)
+            for tx in pmt
+            if _local(tx.tag) == tx_name
+        )
     return rows
 
 

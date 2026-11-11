@@ -152,14 +152,6 @@
     "cognitive": 16,
     "cyclomatic": 19
   },
-  "pain001/corpus/rules/projection.py::_amount": {
-    "cyclomatic": 12
-  },
-  "pain001/corpus/rules/projection.py::rows_from_xml": {
-    "cognitive": 54,
-    "cyclomatic": 23,
-    "lines": 129
-  },
   "pain001/csv/load_csv_data.py::load_csv_data": {
     "cognitive": 16,
     "lines": 86
@@ -217,29 +209,6 @@
   },
   "pain001/transport/sftp.py::parse_target": {
     "cyclomatic": 15
-  },
-  "pain001/twins/iso_json.py::_decode_node": {
-    "cognitive": 20,
-    "cyclomatic": 12
-  },
-  "pain001/twins/iso_json.py::_encode_node": {
-    "cognitive": 34,
-    "cyclomatic": 18
-  },
-  "pain001/twins/records.py::_leaf_paths": {
-    "cognitive": 17
-  },
-  "pain001/twins/records.py::_read": {
-    "cognitive": 20,
-    "cyclomatic": 13
-  },
-  "pain001/twins/records.py::column_paths": {
-    "cyclomatic": 35,
-    "lines": 74
-  },
-  "pain001/twins/records.py::to_records": {
-    "cognitive": 21,
-    "cyclomatic": 16
   },
   "pain001/validation/_scheme_rules.py": {
     "file_lines": 717

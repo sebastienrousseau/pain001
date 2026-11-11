@@ -229,6 +229,113 @@ _ALTERNATES: dict[str, str] = {
 _EXTRA_RENDERS: dict[str, str] = {"creditor_reference_type": "SCOR"}
 
 
+def _merge_texts(
+    texts: dict[str, list[str]], more: dict[str, list[str]]
+) -> None:
+    """Add the paths of a further rendering to ``texts``."""
+    for value, paths in more.items():
+        texts.setdefault(value, []).extend(paths)
+
+
+def _preferred_chain(alternate: str) -> set[str]:
+    """Every preferred column above ``alternate`` in :data:`_ALTERNATES`."""
+    removed: set[str] = set()
+    current = alternate
+    while current in _ALTERNATES:
+        current = _ALTERNATES[current]
+        removed.add(current)
+    return removed
+
+
+def _add_alternate_texts(
+    version: str,
+    columns: list[str],
+    rows: list[dict[str, str]],
+    texts: dict[str, list[str]],
+) -> None:
+    """Render without the preferred columns to see where alternates land.
+
+    An account number lands only where the IBAN is absent, so each
+    alternate gets a rendering with its whole chain of preferred columns
+    dropped.
+    """
+    for alternate in _ALTERNATES:
+        if alternate not in columns:
+            continue
+        removed = _preferred_chain(alternate)
+        sparse = [
+            {c: v for c, v in r.items() if c not in removed} for r in rows
+        ]
+        _merge_texts(texts, _texts(_render(version, sparse)))
+
+
+def _map_extra_renders(
+    version: str,
+    columns: list[str],
+    rows: list[dict[str, str]],
+    mapping: dict[str, set[str]],
+) -> None:
+    """Map the columns whose other value takes the template's other branch."""
+    for column, other in _EXTRA_RENDERS.items():
+        if column not in columns:
+            continue
+        variant = [dict(r, **{column: other}) for r in rows]
+        for value, paths in _texts(_render(version, variant)).items():
+            if value.startswith(other):
+                mapping[column].update(paths)
+
+
+def _is_sentinel(value: str, column: str, index: int) -> bool:
+    """Whether ``value`` is the first row's sentinel for ``column``."""
+    return value == _sentinel(column, index, 0) or (
+        column == "payment_amount" and value.endswith(f".{10 + index:02d}")
+    )
+
+
+def _map_sentinels(
+    texts: dict[str, list[str]],
+    columns: list[str],
+    mapping: dict[str, set[str]],
+) -> None:
+    """Map each column to the paths its sentinel was read back from."""
+    for value, paths in texts.items():
+        for index, column in enumerate(columns):
+            if _is_sentinel(value, column, index):
+                mapping[column].update(
+                    p for p in paths if not p.endswith("NbOfTxs")
+                )
+
+
+#: Totals the pipeline computes itself, by the element suffix they fill.
+_TOTALS = (("/NbOfTxs", "nb_of_txs"), ("/CtrlSum", "ctrl_sum"))
+
+
+def _map_totals(
+    texts: dict[str, list[str]], mapping: dict[str, set[str]]
+) -> None:
+    """Map the computed totals to every NbOfTxs and CtrlSum rendered."""
+    for path in (p for paths in texts.values() for p in paths):
+        for suffix, column in _TOTALS:
+            if path.endswith(suffix) and column in mapping:
+                mapping[column].add(path)
+
+
+def _batch_booking_paths(version: str, rows: list[dict[str, str]]) -> set[str]:
+    """The boolean cannot be unique: find the element whose text flips."""
+    flipped = [dict(r, batch_booking="false") for r in rows]
+    before = _texts(_render(version, rows)).get("true", [])
+    after = _texts(_render(version, flipped)).get("false", [])
+    return set(before) & set(after)
+
+
+def _fold_aliases(columns: list[str], mapping: dict[str, set[str]]) -> None:
+    """An alias the pipeline folds into its canonical column lands there."""
+    for column in columns:
+        alias = _FIELD_ALIASES.get(column)
+        if not mapping.get(column) and alias in mapping:
+            mapping[column] = set(mapping[alias])
+
+
 @cache
 def column_paths(version: str) -> dict[str, tuple[str, ...]]:
     """Which element paths each input column renders to, per edition.
@@ -251,59 +358,29 @@ def column_paths(version: str) -> dict[str, tuple[str, ...]]:
         for r in range(_ROWS)
     ]
     texts = _texts(_render(version, rows))
-    # a second rendering without the preferred columns reveals where the
-    # alternates land (an account number instead of an IBAN)
-    for alternate in _ALTERNATES:
-        if alternate not in columns:
-            continue
-        # drop the whole chain of preferred columns above this alternate
-        removed: set[str] = set()
-        current = alternate
-        while current in _ALTERNATES:
-            current = _ALTERNATES[current]
-            removed.add(current)
-        sparse = [
-            {c: v for c, v in r.items() if c not in removed} for r in rows
-        ]
-        for value, paths in _texts(_render(version, sparse)).items():
-            texts.setdefault(value, []).extend(paths)
+    _add_alternate_texts(version, columns, rows, texts)
     mapping: dict[str, set[str]] = {c: set() for c in columns}
-    for column, other in _EXTRA_RENDERS.items():
-        if column not in columns:
-            continue
-        variant = [dict(r, **{column: other}) for r in rows]
-        for value, paths in _texts(_render(version, variant)).items():
-            if value.startswith(other):
-                mapping[column].update(paths)
-    for value, paths in texts.items():
-        for index, column in enumerate(columns):
-            if value == _sentinel(column, index, 0) or (
-                column == "payment_amount"
-                and value.endswith(f".{10 + index:02d}")
-            ):
-                mapping[column].update(
-                    p for p in paths if not p.endswith("NbOfTxs")
-                )
-    # the pipeline computes the totals itself: they land on every
-    # NbOfTxs and CtrlSum the template renders
-    for paths in texts.values():
-        for path in paths:
-            if path.endswith("/NbOfTxs") and "nb_of_txs" in mapping:
-                mapping["nb_of_txs"].add(path)
-            if path.endswith("/CtrlSum") and "ctrl_sum" in mapping:
-                mapping["ctrl_sum"].add(path)
-    # the boolean cannot be unique: find the element whose text flips
+    _map_extra_renders(version, columns, rows, mapping)
+    _map_sentinels(texts, columns, mapping)
+    _map_totals(texts, mapping)
     if "batch_booking" in columns:
-        flipped = [dict(r, batch_booking="false") for r in rows]
-        before = _texts(_render(version, rows)).get("true", [])
-        after = _texts(_render(version, flipped)).get("false", [])
-        mapping["batch_booking"] = set(before) & set(after)
-    # an alias the pipeline folds into its canonical column lands there
-    for column in columns:
-        alias = _FIELD_ALIASES.get(column)
-        if not mapping.get(column) and alias in mapping:
-            mapping[column] = set(mapping[alias])
+        mapping["batch_booking"] = _batch_booking_paths(version, rows)
+    _fold_aliases(columns, mapping)
     return {c: tuple(sorted(mapping.get(c, ()))) for c in columns}
+
+
+def _step(node: dict[str, Any], step: str, tx_index: int) -> Any:
+    """Descend one step; a repeated element yields its relevant occurrence.
+
+    ``CdtTrfTxInf`` yields occurrence ``tx_index`` (``None`` past the
+    end); any other repeated element yields its first occurrence.
+    """
+    child = node[step]
+    if not isinstance(child, list):
+        return child
+    if step == "CdtTrfTxInf":
+        return child[tx_index] if tx_index < len(child) else None
+    return child[0]
 
 
 def _read(twin: dict[str, Any], path: str, tx_index: int) -> str | None:
@@ -314,11 +391,7 @@ def _read(twin: dict[str, Any], path: str, tx_index: int) -> str | None:
             return node.get("Ccy") if isinstance(node, dict) else None
         if not isinstance(node, dict) or step not in node:
             return None
-        node = node[step]
-        if step == "CdtTrfTxInf" and isinstance(node, list):
-            node = node[tx_index] if tx_index < len(node) else None
-        elif isinstance(node, list):
-            node = node[0]
+        node = _step(node, step, tx_index)
         if node is None:
             return None
     if isinstance(node, dict):
@@ -326,27 +399,64 @@ def _read(twin: dict[str, Any], path: str, tx_index: int) -> str | None:
     return str(node) if node is not None else None
 
 
+def _collect_leaves(node: Any, path: str, found: set[str]) -> None:
+    """Collect leaf paths, treating an amount object as one leaf."""
+    if isinstance(node, list):
+        for item in node:
+            _collect_leaves(item, path, found)
+    elif not isinstance(node, dict):
+        found.add(path)
+    elif set(node) == {"amt", "Ccy"}:
+        found.update((path, f"{path}/@Ccy"))
+    else:
+        for key, value in node.items():
+            _collect_leaves(value, f"{path}/{key}" if path else key, found)
+
+
 def _leaf_paths(twin: dict[str, Any]) -> set[str]:
     """Leaf paths present in a twin, relative to Document, no indexes."""
     found: set[str] = set()
-
-    def walk(node: Any, path: str) -> None:
-        """Collect leaf paths, treating an amount object as one leaf."""
-        if isinstance(node, list):
-            for item in node:
-                walk(item, path)
-        elif isinstance(node, dict):
-            if set(node) == {"amt", "Ccy"}:
-                found.add(path)
-                found.add(f"{path}/@Ccy")
-                return
-            for key, value in node.items():
-                walk(value, f"{path}/{key}" if path else key)
-        else:
-            found.add(path)
-
-    walk(twin["Document"], "")
+    _collect_leaves(twin["Document"], "", found)
     return found
+
+
+def _record_row(
+    twin: dict[str, Any],
+    columns: list[str],
+    paths: dict[str, tuple[str, ...]],
+    tx_index: int,
+    collapsed: set[str],
+) -> dict[str, str]:
+    """One transaction's flat record; note columns that feed two values.
+
+    A column that lands on two elements carrying different values is
+    added to ``collapsed``: the pipeline cannot give them different
+    values.
+    """
+    row: dict[str, str] = {}
+    for column in columns:
+        for path in paths[column]:
+            relative = path.split("/", 1)[1]
+            value = _read(twin, relative, tx_index)
+            if value is None:
+                continue
+            chosen = row.setdefault(column, value)
+            if value != chosen:
+                collapsed.add(f"{relative} (collapsed into {column})")
+    return row
+
+
+def _missing_required(version: str, rows: list[dict[str, str]]) -> list[str]:
+    """The preparer's required column groups that no row gives a value."""
+    present = set().union(*(set(r) for r in rows)) if rows else set()
+    return [
+        group
+        for group in preparer_required(version)
+        if not any(
+            c in present or _FIELD_ALIASES.get(c) in present
+            for c in group.split("|")
+        )
+    ]
 
 
 def to_records(xml: str, version: str) -> RecordsTwin:
@@ -362,43 +472,17 @@ def to_records(xml: str, version: str) -> RecordsTwin:
     twin = to_iso_json(xml, version)
     paths = column_paths(version)
     columns, _ = input_columns(version)
-    message = twin["Document"]["CstmrCdtTrfInitn"]
-    blocks = message["PmtInf"]
-    transactions = blocks[0]["CdtTrfTxInf"]
-    rows: list[dict[str, str]] = []
+    blocks = twin["Document"]["CstmrCdtTrfInitn"]["PmtInf"]
     collapsed: set[str] = set()
-    for tx_index in range(len(transactions)):
-        row: dict[str, str] = {}
-        for column in columns:
-            chosen: str | None = None
-            for path in paths[column]:
-                value = _read(twin, path.split("/", 1)[1], tx_index)
-                if value is None:
-                    continue
-                if chosen is None:
-                    row[column] = value
-                    chosen = value
-                elif value != chosen:
-                    # one column feeds two elements; the pipeline cannot
-                    # give them different values
-                    collapsed.add(
-                        f"{path.split('/', 1)[1]} (collapsed into {column})"
-                    )
-        rows.append(row)
+    rows = [
+        _record_row(twin, columns, paths, tx_index, collapsed)
+        for tx_index in range(len(blocks[0]["CdtTrfTxInf"]))
+    ]
     carried = {p.split("/", 1)[1] for ps in paths.values() for p in ps}
     gap = sorted((_leaf_paths(twin) - carried) | collapsed)
     if len(blocks) > 1:
         gap.append(f"CstmrCdtTrfInitn/PmtInf (occurrences 2 to {len(blocks)})")
-    present = set().union(*(set(r) for r in rows)) if rows else set()
-    missing = [
-        group
-        for group in preparer_required(version)
-        if not any(
-            c in present or _FIELD_ALIASES.get(c) in present
-            for c in group.split("|")
-        )
-    ]
-    return RecordsTwin(rows, gap, missing)
+    return RecordsTwin(rows, gap, _missing_required(version, rows))
 
 
 __all__ = [
