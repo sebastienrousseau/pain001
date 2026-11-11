@@ -383,6 +383,10 @@ pytest_add_cli_args = [
     # trampolined copy outside the runner; the ordinary run covers them.
     "--deselect=tests/test_xml_stream_memory.py::test_streaming_100k_rows_stays_under_400_mb",
     "--deselect=tests/test_xml_stream_memory.py::test_default_path_peaks_under_four_times_the_output",
+    # The warning's stacklevel is counted in frames; mutmut's trampoline
+    # adds one, so inside the copy the warning names the trampoline. The
+    # ordinary run checks it against the real call stack.
+    "--deselect=tests/test_xml_stream_memory.py::test_the_deprecation_warning_names_the_caller",
     # The complexity gate measures the real tree against its baseline;
     # inside the copy every function is a mutmut trampoline, so the
     # measurement differs. The ordinary test run and CI job cover it.
