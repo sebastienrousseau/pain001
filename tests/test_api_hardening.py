@@ -647,3 +647,23 @@ def test_body_limit_passes_non_body_messages() -> None:
     scope = {"type": "http", "headers": []}
     asyncio.run(BodyLimitMiddleware(inner)(scope, receive, None))
     assert received == ["http.disconnect"]
+
+
+def test_install_uses_the_backend_the_environment_names(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """``PAIN001_RATE_LIMIT_BACKEND=redis`` reaches the installed limiter."""
+    from fastapi import FastAPI
+
+    from pain001.api.ratelimit import (
+        RedisFixedWindowBackend,
+        install_rate_limiting,
+    )
+
+    monkeypatch.setenv("PAIN001_RATE_LIMIT", "5/minute")
+    monkeypatch.setenv("PAIN001_RATE_LIMIT_BACKEND", "redis")
+    monkeypatch.setenv("PAIN001_RATE_LIMIT_REDIS_URL", "redis://127.0.0.1:1/0")
+    fresh = FastAPI()
+    install_rate_limiting(fresh)
+    backend = fresh.user_middleware[0].kwargs.get("backend")
+    assert isinstance(backend, RedisFixedWindowBackend)

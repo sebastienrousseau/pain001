@@ -347,6 +347,9 @@ class RateLimitMiddleware:
 def install_rate_limiting(application: Any) -> None:
     """Attach the rate-limit middleware when ``PAIN001_RATE_LIMIT`` is set.
 
+    The backend is the one ``PAIN001_RATE_LIMIT_BACKEND`` names (see
+    :func:`backend_from_env`): in-process by default, Redis when asked.
+
     Args:
         application: The FastAPI (or Starlette) application to wrap.
     """
@@ -358,4 +361,5 @@ def install_rate_limiting(application: Any) -> None:
         RateLimitMiddleware,
         max_requests=max_requests,
         window_seconds=window_seconds,
+        backend=backend_from_env(max_requests, window_seconds),
     )
