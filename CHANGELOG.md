@@ -247,10 +247,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value (`logger.info("42")`) through as that value instead of a log
   object with `level`, `request_id` and `message`; it is now wrapped
   like any other plain-text message.
-- A mistyped command (`pain001 genrate`) reached `generate` as an
+- A mistyped command (`pain001 gneerate`) reached `generate` as an
   "unexpected extra argument"; only an invocation that starts with an
   option is routed to `generate` now, and Click names the closest
-  command: `No such command 'genrate'. Did you mean 'generate'?`.
+  command: `No such command 'gneerate'. Did you mean 'generate'?`.
 - A document declaring a DTD entity is refused as a validation error
   (`XML parse error: EntitiesForbidden(...)`) instead of raising
   defusedxml's exception out of `validate_via_xsd`,

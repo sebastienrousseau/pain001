@@ -12,10 +12,10 @@ from pain001.cli.cli import cli
 
 
 def test_a_mistyped_command_gets_a_suggestion() -> None:
-    """``genrate`` used to reach ``generate`` as an unexpected argument."""
-    result = CliRunner().invoke(cli, ["genrate", "-t", "pain.001.001.03"])
+    """``gneerate`` used to reach ``generate`` as an unexpected argument."""
+    result = CliRunner().invoke(cli, ["gneerate", "-t", "pain.001.001.03"])
     assert result.exit_code == 2
-    assert "No such command 'genrate'" in result.output
+    assert "No such command 'gneerate'" in result.output
     assert "Did you mean 'generate'?" in result.output
 
 
