@@ -207,7 +207,7 @@ def test_a_compact_row_answers_lookups_like_the_full_row() -> None:
     assert "missing" not in compact
     assert compact.get("missing", "default") == "default"
     with pytest.raises(KeyError):
-        compact["missing"]
+        _ = compact["missing"]
 
 
 def test_canonical_rows_are_read_without_a_copy() -> None:

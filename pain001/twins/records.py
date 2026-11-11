@@ -43,7 +43,7 @@ from defusedxml import ElementTree as defused_et
 
 from pain001.twins.iso_json import _check, to_iso_json
 from pain001.xml._jinja import compile_template
-from pain001.xml.generate_xml import _load_trusted_template_source
+from pain001.xml._render import _load_trusted_template_source
 from pain001.xml.message_registry import (
     get_message_definition,
     prepare_xml_data,

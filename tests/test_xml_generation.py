@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
 
 def test_trusted_template_source_requires_an_xml_suffix(tmp_path) -> None:
-    from pain001.xml.generate_xml import _load_trusted_template_source
+    from pain001.xml._render import _load_trusted_template_source
 
     plain = tmp_path / "template.txt"
     plain.write_text("<x/>", encoding="utf-8")

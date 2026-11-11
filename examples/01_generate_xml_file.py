@@ -31,7 +31,6 @@ import tempfile
 from pathlib import Path
 
 import pain001
-from pain001 import GenerationResult, ValidationReport
 
 MESSAGE_TYPE = "pain.001.001.03"
 DATA_FILE = Path(__file__).resolve().parent / "data" / "payments.csv"
@@ -39,12 +38,14 @@ DATA_FILE = Path(__file__).resolve().parent / "data" / "payments.csv"
 
 def main() -> None:
     """Validate the CSV data and write a pain.001 XML file."""
-    report: ValidationReport = pain001.validate(DATA_FILE, MESSAGE_TYPE)
+    report: pain001.ValidationReport = pain001.validate(
+        DATA_FILE, MESSAGE_TYPE
+    )
     assert report.is_valid, report.errors
     print(f"Validated {report.total_rows} payment rows from {DATA_FILE.name}")
 
     with tempfile.TemporaryDirectory() as output_dir:
-        result: GenerationResult = pain001.generate(
+        result: pain001.GenerationResult = pain001.generate(
             DATA_FILE, MESSAGE_TYPE, output_dir=output_dir
         )
         size = result.path.stat().st_size

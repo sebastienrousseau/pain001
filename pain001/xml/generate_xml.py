@@ -27,12 +27,6 @@ from pain001.observability import emit_metric_event
 from pain001.observability.otel import set_span_attributes, traced
 from pain001.security import validate_path
 from pain001.xml._render import (
-    _compile_template as _compile_template,
-)
-from pain001.xml._render import (
-    _load_trusted_template_source as _load_trusted_template_source,
-)
-from pain001.xml._render import (
     _prepare_template_and_data as _prepare_template_and_data,
 )
 from pain001.xml._render import (
