@@ -18,6 +18,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pain001.api.host_guard import HostGuardMiddleware
 from pain001.api.limits import install_body_limit
 from pain001.api.metrics import MetricsMiddleware
 from pain001.api.ratelimit import install_rate_limiting
@@ -29,7 +30,8 @@ def install_middleware(application: Any) -> None:
 
     From the outside in: the request context (request id, inbound trace
     context, server span), so every answer is traced and carries
-    ``X-Request-ID``; the body limit; the rate limiter, when
+    ``X-Request-ID``; the host guard, which keeps a server without
+    ``PAIN001_API_KEY`` to requests addressed to loopback; the body limit; the rate limiter, when
     ``PAIN001_RATE_LIMIT`` is set; then the request metrics.
 
     Args:
@@ -38,4 +40,5 @@ def install_middleware(application: Any) -> None:
     application.add_middleware(MetricsMiddleware)
     install_rate_limiting(application)
     install_body_limit(application)
+    application.add_middleware(HostGuardMiddleware)
     application.add_middleware(RequestContextMiddleware)

@@ -32,6 +32,10 @@ INSECURE_ENV = "PAIN001_ALLOW_INSECURE"
 """Environment variable that, when truthy, allows serving without a key
 on a non-loopback address (the twin of ``pain001 serve --insecure``)."""
 
+ALLOWED_HOSTS_ENV = "PAIN001_ALLOWED_HOSTS"
+"""Environment variable naming hosts, comma separated, that a server
+without a key answers besides loopback (``*`` for any)."""
+
 _TRUTHY = frozenset({"1", "true", "yes", "on"})
 
 
@@ -45,4 +49,9 @@ def insecure_allowed() -> bool:
     return os.environ.get(INSECURE_ENV, "").strip().lower() in _TRUTHY
 
 
-__all__ = ["API_KEY_ENV", "INSECURE_ENV", "insecure_allowed"]
+__all__ = [
+    "ALLOWED_HOSTS_ENV",
+    "API_KEY_ENV",
+    "INSECURE_ENV",
+    "insecure_allowed",
+]

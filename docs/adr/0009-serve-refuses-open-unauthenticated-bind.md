@@ -46,3 +46,21 @@ an opt-out keeps trusted-network experiments possible without a key.
   bound to. The app logs a start-up warning when no key is set instead.
 - `tests/test_cli_serve.py` pins every branch: refused hosts, loopback
   forms, the key, the flag and the environment variable.
+
+## Addendum (0.0.87): loopback requests only, while keyless
+
+An open server should answer only clients that address it as the
+local machine, not merely ones whose connection arrives on loopback.
+So, while no key is set, the application itself (not only `serve`) answers
+`400` to a `Host` that is not `localhost` or a loopback address (any
+port) and `403` to an `Origin` that is not. `PAIN001_ALLOWED_HOSTS`
+names further hosts, comma separated, or `*` for any; an `--insecure`
+server reached by a LAN name or address needs it. With
+`PAIN001_API_KEY` set the check is off, because the bearer token is
+what authenticates and a browser never sends it by itself.
+
+A random per-run token printed at start-up was considered and not
+adopted: it would break every keyless client (the dashboard, scripts,
+the SDK conformance runs) for little gain over the host check on a
+loopback bind. `pain001.api.host_guard` holds the check;
+`tests/test_api_host_guard.py` pins it.

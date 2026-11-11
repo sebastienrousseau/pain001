@@ -85,6 +85,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **A REST API running without `PAIN001_API_KEY` answers only requests
+  addressed to loopback.** A `Host` other than `localhost` or a
+  loopback address (any port) is answered `400`, and an `Origin` that
+  is not loopback `403`, before routing. `PAIN001_ALLOWED_HOSTS`
+  (comma separated, `*` for any) names further hosts, for example an
+  `--insecure` server reached by its LAN address. Nothing changes when
+  a key is set. See ADR 0009.
 - **The CLI and `process_files` now refuse rows that break the message
   type's JSON Schema**, as the REST API already did. `pain001 validate`
   and `pain001 generate` used to accept `currency=EURO` (or `eur`) and

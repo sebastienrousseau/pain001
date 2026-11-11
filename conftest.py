@@ -12,6 +12,12 @@ import pytest
 
 from pain001.constants import BASE_DIR
 
+# Starlette's TestClient addresses the app as "testserver". A REST
+# server without PAIN001_API_KEY answers only loopback hosts, plus the
+# ones PAIN001_ALLOWED_HOSTS names, so the suite names its client here;
+# tests/test_api_host_guard.py clears it to test the default.
+os.environ.setdefault("PAIN001_ALLOWED_HOSTS", "testserver")
+
 # Hypothesis under mutation testing. mutmut runs the stats pass and the
 # clean pass as two pytest sessions in one process, so every property
 # test is called from two executors; Hypothesis flags that as a health
