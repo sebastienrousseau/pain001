@@ -31,6 +31,10 @@ Use generated help rather than a duplicate flag table:
    pain001 versions
    pain001 inspect pain.001.001.03
 
+A mistyped command is refused with the closest match
+(``No such command 'genrate'. Did you mean 'generate'?``); only an
+invocation that starts with an option is routed to ``generate``.
+
 .. _machine-output:
 
 Machine-readable output

@@ -157,6 +157,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `openapi.json`, list the `400`, `422` and `500` answers; no kit case
   changes. `/validate` still answers `200` with `is_valid: false`, as
   `/check` does with `passed: false`.
+- A mistyped command (`pain001 genrate`) reached `generate` as an
+  "unexpected extra argument"; only an invocation that starts with an
+  option is routed to `generate` now, and Click names the closest
+  command: `No such command 'genrate'. Did you mean 'generate'?`.
 
 ## [0.0.86] - 2026-11-11
 

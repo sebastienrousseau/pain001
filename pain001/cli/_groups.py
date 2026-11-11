@@ -14,16 +14,19 @@ import click
 class DefaultGroup(click.Group):
     """Click group that falls back to a default subcommand.
 
-    Preserves backwards compatibility: an invocation that does not name a
-    subcommand (the long-documented ``pain001 -t ... -d ...``) is routed
-    to ``generate`` so existing scripts and one-liners keep working.
+    Preserves backwards compatibility: an invocation that starts with an
+    option instead of a subcommand (the long-documented
+    ``pain001 -t ... -d ...``) is routed to ``generate``. A first word
+    that is not a command is left to Click, which refuses it and names
+    the closest command ("Did you mean 'generate'?"); it used to reach
+    ``generate`` as an unexpected extra argument.
     """
 
-    #: Subcommand invoked when the first token is not a subcommand.
+    #: Subcommand invoked when the first token is an option.
     default_command = "generate"
 
     def parse_args(self, ctx: click.Context, args: list[str]) -> list[str]:
-        """Inject the default command when no subcommand is named.
+        """Inject the default command when the first token is an option.
 
         Args:
             ctx: The active Click context.
@@ -34,7 +37,7 @@ class DefaultGroup(click.Group):
         """
         if (
             args
-            and args[0] not in self.commands
+            and args[0].startswith("-")
             and args[0] not in ("-h", "--help", "-V", "--version")
         ):
             args = [self.default_command, *args]
