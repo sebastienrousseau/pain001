@@ -184,6 +184,42 @@ For pre-commit, ``pain001-check`` checks staged XML files and
          args: [-t, pain.001.001.09, -d, payments.csv]
          files: ^payments\.csv$
 
+Python: validate and generate
+=============================
+
+``pain001.validate`` and ``pain001.generate`` take a data file (or a
+list of row dictionaries) and a message type, and use the bundled
+template and schema. Both run the checks ``pain001 validate`` and the
+REST API run, in the same order: the row contract and identifiers, the
+message type's JSON Schema, then a scheme or private policy when one is
+named, so the three give the same verdict for the same input.
+
+.. code-block:: python
+
+   import shutil
+
+   import pain001
+   from pain001.constants import TEMPLATES_DIR
+
+   shutil.copy(TEMPLATES_DIR / "pain.001.001.03" / "template.csv", "payments.csv")
+   report = pain001.validate("payments.csv", "pain.001.001.03")
+   print(report.is_valid, report.total_rows, report.invalid_rows)
+   for issue in report.issues:  # line, column, code, message
+       print(issue)
+
+   try:
+       result = pain001.generate("payments.csv", "pain.001.001.03", output_dir="out")
+   except pain001.Pain001Error as exc:
+       print(exc)
+   else:
+       print(result.path, result.rows)
+
+``generate`` writes ``<message type>.xml`` in ``output_dir`` (the working
+directory when omitted) and raises ``PaymentValidationError``, whose
+``errors`` lists each problem, when any check refuses the data.
+``scheme="sepa-sct"`` and ``rules=<policy YAML text>`` add the scheme
+check to either call.
+
 Python: in-memory output
 ========================
 

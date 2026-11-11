@@ -95,6 +95,18 @@ def _process_files(data: str, out: Path) -> bool:
     return True
 
 
+def _python_validate(data: str, _out: Path) -> bool:
+    return pain001.validate(data, MESSAGE_TYPE).is_valid
+
+
+def _python_generate(data: str, out: Path) -> bool:
+    try:
+        pain001.generate(data, MESSAGE_TYPE, output_dir=out)
+    except pain001.PaymentValidationError:
+        return False
+    return True
+
+
 def _body(data: str, out: Path) -> dict[str, str]:
     return {
         "file_path": data,
@@ -124,6 +136,8 @@ SURFACES: dict[str, Callable[[str, Path], bool]] = {
     "cli-validate": _cli_validate,
     "cli-generate": _cli_generate,
     "process_files": _process_files,
+    "python-validate": _python_validate,
+    "python-generate": _python_generate,
     "rest-validate": _rest_validate,
     "rest-generate": _rest_generate,
 }

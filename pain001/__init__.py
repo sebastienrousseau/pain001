@@ -43,6 +43,7 @@ if TYPE_CHECKING:
     from pain001.check import CheckReport, check_document
     from pain001.config import ConfigManager
     from pain001.core.core import process_files
+    from pain001.entry import GenerationResult, generate, validate
     from pain001.exceptions import (
         DataSourceError,
         IssueCode,
@@ -71,6 +72,7 @@ if TYPE_CHECKING:
     from pain001.validation import (
         SchemeValidationResult,
         SchemeViolation,
+        ValidationReport,
         sanitize_to_charset,
         validate_scheme,
     )
@@ -100,6 +102,10 @@ _LAZY: dict[str, str] = {
     "check_document": "pain001.check",
     "ConfigManager": "pain001.config",
     "process_files": "pain001.core.core",
+    "GenerationResult": "pain001.entry",
+    "generate": "pain001.entry",
+    "validate": "pain001.entry",
+    "ValidationReport": "pain001.validation",
     "DataSourceError": "pain001.exceptions",
     "Pain001Error": "pain001.exceptions",
     "PaymentValidationError": "pain001.exceptions",
@@ -134,6 +140,10 @@ _LAZY: dict[str, str] = {
 
 __all__ = [
     "main",
+    "generate",
+    "validate",
+    "GenerationResult",
+    "ValidationReport",
     "process_files",
     "process_files_async",
     "process_files_streaming_async",

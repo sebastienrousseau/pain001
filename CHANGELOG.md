@@ -38,13 +38,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mandates cover payments between financial institutions.
   `docs/chaps-enhanced-data.md` cites the 2024 and 2025 policy
   statements and ISO 17442 for each rule.
-
+- `pain001.generate(data, message_type, output_dir=...)` returns a
+  `GenerationResult` (`path`, `message_type`, `rows`) and
+  `pain001.validate(data, message_type)` returns a `ValidationReport`
+  (`is_valid`, `total_rows`, `valid_rows`, `invalid_rows`, `issues`,
+  `scheme_violations`). Both take a data file or row dictionaries, use
+  the bundled template and schema, and accept `scheme=` and `rules=`.
+  `GenerationResult` and `ValidationReport` are exported from
+  `pain001`. `examples/01_generate_xml_file.py` uses them.
 - Issue codes `P001-E030` (a value breaks the message type's JSON
   Schema) and `P001-E040` (a row breaks the scheme or policy asked for).
 - `pain001.validation.ladder`: the one validation sequence (row
   contract and identifiers, JSON Schema, then scheme or policy) that
-  the CLI, `process_files`, `ValidationService` and the REST
-  `/validate`, `/generate` and `/ui/*` routes all run.
+  the CLI, `process_files`, `ValidationService`, `pain001.validate` and
+  `generate`, and the REST `/validate`, `/generate` and `/ui/*` routes
+  all run.
 
 ### Changed
 

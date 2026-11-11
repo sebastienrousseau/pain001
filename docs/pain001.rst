@@ -66,6 +66,14 @@ pain001.constants module
    :show-inheritance:
    :undoc-members:
 
+pain001.entry module
+--------------------
+
+.. automodule:: pain001.entry
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.exceptions module
 -------------------------
 
