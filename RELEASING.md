@@ -58,7 +58,7 @@ make release-check           # items 5 to 9 + tree/branch/tag/signing state
 make release-check FULL=1    # additionally runs tests, build and pip-audit
 ```
 
-Item 7 is the one that bites: the publish job enforces it too, but only
+Item 7 is the one that bites: the release build job enforces it too, but only
 *after* a tag has been pushed, and a rejected tag then has to be deleted
 locally and on the remote before you can retry.
 
@@ -88,11 +88,15 @@ cd /tmp/pain001-dry-run && PIP_NO_INDEX=1 .venv/bin/python -m build --no-isolati
    git push origin vX.Y.Z
    ```
 
-4. The tag triggers the `publish` job in `ci.yml`, which **fails fast** if
+4. The tag triggers the `build` job in `ci.yml`, which **fails fast** if
    the tag does not match the package version or the `releases/vX.Y.Z.md`
-   note is missing, then builds, runs `twine check`, creates the GitHub
-   release from the note, and publishes to PyPI via OIDC trusted publishing
-   (no long-lived token). After the provenance is attached, the
+   note is missing, then builds, runs `twine check`, writes the SBOMs and
+   hashes every asset, with read-only permissions and no dependency cache.
+   The `publish` job, the only one behind the `pypi` environment and with
+   the OIDC token, checks the build job's files against those hashes,
+   attests them, creates the GitHub release from the note, and publishes
+   to PyPI via OIDC trusted publishing (no long-lived token). After the
+   provenance is attached, the
    `release-notes` job runs `scripts/release_notes.py publish`, which sets
    the title to `pain001 X.Y.Z` and rewrites the body from the live
    release: the note's Highlights, the pull requests merged since the

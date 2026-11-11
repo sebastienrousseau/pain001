@@ -326,7 +326,7 @@ def _check_release_documents(version: str) -> None:
 
 def _check_lock_and_tree() -> None:
     """A current lock, a clean tree, and HEAD at origin/main."""
-    # poetry.lock must match pyproject.toml. The publish job installs
+    # poetry.lock must match pyproject.toml. The release build job installs
     # with poetry, so a stale lock fails the release — but only after the
     # tag is pushed and public. Editing pyproject and re-locking are one
     # action; this is the check that says so before it matters.
@@ -480,7 +480,7 @@ def main() -> int:
     print()
     if problems:
         print(f"{len(problems)} problem(s): " + "; ".join(problems))
-        print("Fix these before tagging — the publish job fails on them too,")
+        print("Fix these before tagging — the build job fails on them too,")
         print("but only after you have already pushed a tag.")
         return 1
 

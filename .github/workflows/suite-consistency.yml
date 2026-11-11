@@ -14,7 +14,10 @@ on:
         description: "Optional historical version; empty audits the latest published family"
         type: string
         default: ""
-  workflow_run:
+  # workflow_run is safe here: it runs default-branch code only, with a
+  # read-only token and no secrets, takes no artifact or code from the
+  # triggering run, and the job's `if` admits only successful push runs.
+  workflow_run: # zizmor: ignore[dangerous-triggers]
     workflows: ["ci", "🐳 Build & Publish Docker Image"]
     types: [completed]
 
@@ -37,8 +40,13 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
-      - uses: ./.github/actions/check-ecosystem
+      # zizmor suggests the `$/` self-repository form; actionlint 1.7.12,
+      # the latest release, rejects it, so the workspace form stays until
+      # actionlint accepts it.
+      - uses: ./.github/actions/check-ecosystem # zizmor: ignore[self-repository]
         with:
           version: ${{ inputs.version }}
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

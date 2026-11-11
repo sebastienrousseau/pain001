@@ -1,0 +1,60 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# zizmor: static analysis of this repository's GitHub Actions (workflows,
+# composite actions, action.yml and dependabot.yml). It fails on any
+# finding, and uploads the same findings to code scanning as SARIF.
+# Policy and the few justified exceptions live in .github/zizmor.yml.
+#
+# The weekly run catches advisories published against an action that
+# is already pinned here (the online audits need the token).
+
+name: zizmor
+
+on:
+  push:
+    branches: [main, "feat/*"]
+  pull_request:
+    branches: [main, "feat/*"]
+  schedule:
+    - cron: "17 3 * * 2" # weekly, Tuesday 03:17 UTC
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  zizmor:
+    name: zizmor
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      security-events: write # upload SARIF to code scanning
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - name: Install zizmor (hash-pinned)
+        run: python -m pip install --require-hashes -r .github/requirements/zizmor.txt
+      - name: Audit the workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format plain .
+      - name: Write the findings as SARIF
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: zizmor --format sarif --no-exit-codes . > zizmor.sarif
+      # A pull request from a fork gets a read-only token and cannot
+      # upload; its findings still fail the audit step above.
+      - name: Upload to code scanning
+        if: >-
+          always() &&
+          (github.event_name != 'pull_request' ||
+           github.event.pull_request.head.repo.full_name == github.repository)
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          sarif_file: zizmor.sarif
+          category: zizmor
