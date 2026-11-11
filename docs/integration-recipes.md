@@ -60,7 +60,10 @@ cron or a systemd timer; Pain001 runs no daemon.
 `pain001 serve` (the `api` extra) exposes the same steps over REST:
 `POST /api/v1/validate`, `POST /api/v1/generate` (and
 `/api/v1/generate/async` with job status and download) and
-`POST /api/v1/check` for an XML document you send. Without
+`POST /api/v1/check` for an XML document you send. `POST /generate`
+answers `422` with `success: false` and the row errors or scheme
+violations when the data is refused, `400` when the input file or a
+scheme name is refused, and `500` when generation fails. Without
 `PAIN001_API_KEY` the server binds only loopback.
 [`examples/05_api_job_lifecycle.py`](https://github.com/sebastienrousseau/pain001/blob/main/examples/05_api_job_lifecycle.py)
 and [`examples/26_rest_server.py`](https://github.com/sebastienrousseau/pain001/blob/main/examples/26_rest_server.py)

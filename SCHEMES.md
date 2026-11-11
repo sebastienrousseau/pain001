@@ -41,6 +41,8 @@ for v in result.violations:
 
 REST API — add `"scheme"` to the request body of `POST /api/validate` or
 `POST /api/generate`; violations come back in `scheme_violations`.
+`/validate` answers `200` with `is_valid: false`; `/generate` writes
+nothing and answers `422` with `success: false`.
 
 Exit codes (CLI): `0` pass · `1` violations found · `2` unknown profile.
 

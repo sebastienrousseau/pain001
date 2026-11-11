@@ -20,6 +20,31 @@ routes and wiring only.
 
 from __future__ import annotations
 
+from typing import Any
+
+GENERATE_RESPONSES: dict[int | str, dict[str, Any]] = {
+    400: {"description": "The input file or a scheme name was refused"},
+    422: {
+        "description": (
+            "Rows failed validation or a scheme rule (`success: false`, "
+            "with `validation_errors` or `scheme_violations`), or the "
+            "request body is malformed (`detail`)"
+        ),
+        "content": {
+            "application/json": {
+                "schema": {
+                    "anyOf": [
+                        {"$ref": "#/components/schemas/GenerateXMLResponse"},
+                        {"$ref": "#/components/schemas/HTTPValidationError"},
+                    ]
+                }
+            }
+        },
+    },
+    500: {"description": "Generation failed inside the server"},
+}
+"""The error statuses ``POST /generate`` answers, for the OpenAPI document."""
+
 # OpenAPI tag metadata — drives the grouped, described sections in the
 # interactive docs and any generated SDKs.
 TAGS_METADATA = [

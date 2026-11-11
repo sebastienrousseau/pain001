@@ -27,7 +27,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from pain001 import __version__
 from pain001.api._pipeline import (
@@ -54,7 +54,7 @@ from pain001.api.job_manager import (
     output_name,
 )
 from pain001.api.limits import install_body_limit
-from pain001.api.meta import API_DESCRIPTION, TAGS_METADATA
+from pain001.api.meta import API_DESCRIPTION, GENERATE_RESPONSES, TAGS_METADATA
 from pain001.api.metrics import MetricsMiddleware
 from pain001.api.models import (
     GenerateXMLRequest,
@@ -360,21 +360,22 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
     tags=["Generation"],
     summary="Generate XML (synchronous)",
     dependencies=[Depends(_require_api_key)],
+    responses=GENERATE_RESPONSES,
 )
 @traced("pain001.api.generate", attributes={"http.route": "/api/v1/generate"})
 async def generate_xml_sync(
     request: GenerateXMLRequest,
-) -> GenerateXMLResponse:
+) -> GenerateXMLResponse | JSONResponse:
     """Generate XML synchronously.
 
     Args:
         request: Generation request with data source and options.
 
     Returns:
-        GenerateXMLResponse: Generated XML file path or errors.
+        The XML file path; refused data is a ``422`` with its errors.
 
     Raises:
-        HTTPException: If generation fails.
+        HTTPException: ``400`` for a refused input, ``500`` on failure.
     """
     start_time = time.perf_counter()
     msg_type = request.message_type.value
@@ -390,8 +391,7 @@ async def generate_xml_sync(
     except PaymentValidationError as e:
         record_failure(msg_type, start_time)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
     except Exception as e:
         record_failure(msg_type, start_time)

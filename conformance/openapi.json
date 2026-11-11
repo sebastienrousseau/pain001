@@ -1146,7 +1146,7 @@
     },
     "/api/v1/generate": {
       "post": {
-        "description": "Generate XML synchronously.\n\nArgs:\n    request: Generation request with data source and options.\n\nReturns:\n    GenerateXMLResponse: Generated XML file path or errors.\n\nRaises:\n    HTTPException: If generation fails.",
+        "description": "Generate XML synchronously.\n\nArgs:\n    request: Generation request with data source and options.\n\nReturns:\n    The XML file path; refused data is a ``422`` with its errors.\n\nRaises:\n    HTTPException: ``400`` for a refused input, ``500`` on failure.",
         "operationId": "generate_xml_sync_api_v1_generate_post",
         "parameters": [
           {
@@ -1187,15 +1187,28 @@
             },
             "description": "Successful Response"
           },
+          "400": {
+            "description": "The input file or a scheme name was refused"
+          },
           "422": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/GenerateXMLResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Rows failed validation or a scheme rule (`success: false`, with `validation_errors` or `scheme_violations`), or the request body is malformed (`detail`)"
+          },
+          "500": {
+            "description": "Generation failed inside the server"
           }
         },
         "summary": "Generate XML (synchronous)",

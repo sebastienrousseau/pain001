@@ -40,6 +40,7 @@ from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar
 
 from fastapi import HTTPException, status
+from fastapi.responses import JSONResponse
 
 from pain001.api._redact import mask_error
 from pain001.api.job_manager import JobStatus
@@ -377,14 +378,37 @@ def record_outcome(
         record_failure(message_type, start_time)
 
 
-def sync_response(outcome: GenerationOutcome) -> GenerateXMLResponse:
+def sync_response(
+    outcome: GenerationOutcome,
+) -> GenerateXMLResponse | JSONResponse:
     """Turn an outcome into the synchronous ``/generate`` response.
+
+    Data that fails validation or a scheme rule is a ``422`` carrying
+    the same body, so the status agrees with ``success``.
 
     Args:
         outcome: What the pipeline produced.
 
     Returns:
-        The endpoint's response body.
+        The endpoint's response body, or a ``422`` response.
+    """
+    body = _sync_body(outcome)
+    if body.success:
+        return body
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content=body.model_dump(mode="json"),
+    )
+
+
+def _sync_body(outcome: GenerationOutcome) -> GenerateXMLResponse:
+    """Build the synchronous ``/generate`` response body.
+
+    Args:
+        outcome: What the pipeline produced.
+
+    Returns:
+        The body, ``success=False`` when the data was refused.
     """
     if outcome.kind == "invalid_rows":
         return GenerateXMLResponse(
