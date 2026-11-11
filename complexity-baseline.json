@@ -11,9 +11,6 @@
     "cyclomatic": 11,
     "lines": 63
   },
-  "examples/05_api_job_lifecycle.py::run": {
-    "lines": 61
-  },
   "examples/07_parse_bank_responses.py::main": {
     "lines": 69
   },

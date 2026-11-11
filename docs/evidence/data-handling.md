@@ -49,9 +49,22 @@ command-line and library feature only ([ADR 0013](../adr/0013-download-replies-e
   file contents and no credentials.
 - The REST API keeps job state in memory by default, or on disk or in
   Redis when you configure it to.
+- Reading a `.gpg` or `.asc` file (the `gpg` extra) decrypts it in
+  memory, then writes the plaintext to a temporary file created with
+  mode 0600, in `/dev/shm` on Linux when it is writable and in the
+  system temporary directory otherwise, so the inner loader can read
+  it. The file is unlinked as soon as that read ends (with
+  `--streaming`, when the last chunk has been read), including on
+  error; it is not overwritten first. With `PAIN001_GPG_KEYFILE` and
+  no `PAIN001_GPG_HOMEDIR`, the key is imported into a throwaway
+  keyring directory under `/tmp` that is removed afterwards
+  ([`pain001/plugins/builtins_gpg.py`](https://github.com/sebastienrousseau/pain001/blob/main/pain001/plugins/builtins_gpg.py)).
 - Structured logs redact IBAN, BIC and name fields by default
-  ([`pain001/logging_schema/redaction.py`](https://github.com/sebastienrousseau/pain001/blob/main/pain001/logging_schema/redaction.py)),
-  and validation errors carry the rule and field, not the value.
+  ([`pain001/logging_schema/redaction.py`](https://github.com/sebastienrousseau/pain001/blob/main/pain001/logging_schema/redaction.py)).
+  In the library and CLI, schema and XSD validation errors carry the
+  rule and the field path, not the value; scheme-rule findings quote
+  the rejected code, currency or amount, and the structural BIC check
+  quotes the BIC it rejects.
 
 ## How to check this yourself
 

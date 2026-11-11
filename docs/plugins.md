@@ -122,10 +122,12 @@ class AbstractLoader(Protocol):
 ```
 
 - `extensions` is the **dispatch key**. When several loaders claim an
-  extension, the earliest registered one wins on lookup. A later plugin
-  with the **same name** replaces the earlier one in place (the registry
-  logs the override), so to take over `.csv` register your loader as
-  `csv`.
+  extension, the earliest registered one wins on lookup. A plugin with
+  the **same name** as a built-in replaces it in place only when the
+  operator allows it: an installed package named `csv` is refused with
+  a warning unless `PAIN001_ALLOW_PLUGIN_OVERRIDES=csv` is set (see
+  [Discovery](#discovery-registration-dispatch)). Code that calls `register_loader` itself
+  may replace a built-in, and the registry logs it.
 - `load_streaming` is required by `--streaming` mode. A loader that
   truly cannot stream may yield a single `LoaderResult` carrying every
   row.
@@ -205,6 +207,9 @@ alter the XML — the generator owns canonical form.
 │     stamps `meta.source = "<dist>==<version>"`.         │
 │  5. `PAIN001_DISABLE_PLUGINS` also skips a matching     │
 │     declared `meta.name` at registration.               │
+│  6. An entry point whose name or `meta.name` is a       │
+│     built-in's of the same kind is refused unless       │
+│     `PAIN001_ALLOW_PLUGIN_OVERRIDES` names it.          │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -222,6 +227,21 @@ entry point the same name as the plugin's `meta.name`:
 PAIN001_DISABLE_PLUGINS=parquet pain001 plugins list
 PAIN001_DISABLE_PLUGINS="parquet, sqlite" pain001 generate ...
 ```
+
+An installed package cannot replace a built-in loader, scheme profile,
+validator or writer by reusing its name: plugins sit outside the trust
+boundary, and swapping `sepa-sct` or `csv` would change every run
+without a sign. The registry refuses such an entry point with a warning
+that names it (before `load()` when the entry-point name matches, after
+instantiation when only `meta.name` does). To let a specific plugin take
+over, name it in `PAIN001_ALLOW_PLUGIN_OVERRIDES`, or pass
+`allow_overrides=` to a `PluginRegistry` you build yourself:
+
+```bash
+PAIN001_ALLOW_PLUGIN_OVERRIDES=csv pain001 generate ...
+```
+
+Plugins with new names register as before.
 
 ---
 
@@ -346,8 +366,8 @@ The optional `pain001[rules]` extra supplies request-local CEL policies
 through `AbstractScheme`; see [custom rules](custom-rules.md). Policies are
 not installed into the global registry and do not leak across REST requests.
 
-Whole-file and streaming loaders use registered instances, including overrides
-of built-in names. Schema batch validation runs registered validator plugins
+Whole-file and streaming loaders use registered instances, including allowed
+overrides of built-in names. Schema batch validation runs registered validator plugins
 after its schema checks; errors block the batch. `validate_data` remains the
 schema-only primitive for plugin implementations. `validate_scheme` accepts
 registered profiles and forwards the selected message type. The default

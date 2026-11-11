@@ -119,6 +119,10 @@ which keeps the "nothing leaves your machine unless you ask" claim
 checkable rather than promised.
 
 **Plugins sit outside the trust boundary by default.**
+An installed plugin cannot replace a built-in loader, scheme profile,
+validator or writer of the same name: the registry refuses it with a
+warning unless the operator names it in
+`PAIN001_ALLOW_PLUGIN_OVERRIDES`.
 `PAIN001_DISABLE_PLUGINS=name1,name2` disables the named plugins, and
 `pain001 plugins list` / `pain001 plugins show <name>` make every
 discovered plugin auditable before first use — the control that matters
@@ -166,10 +170,10 @@ provenance are all public.
 |---|---|---|
 | XXE / entity expansion (CWE-611, CWE-776) | `defusedxml` for inbound XML parsing; the optional `lxml` gate runs with entities, DTDs and network off | `pain001/xml/validate_via_xsd.py`, dependency set |
 | Injection into generated XML (CWE-91) | Jinja `SandboxedEnvironment` with `select_autoescape`; values are data, never markup | `pain001/xml/generate_xml.py` (`SandboxedEnvironment`) |
-| Path traversal (CWE-22) | Output is a directory the operator names; no filename is taken from input data | CLI `-o` handling |
+| Path traversal (CWE-22) | Output is a directory the operator names, and generated files are named after the message type (with a UUID on the REST API), never after input data. `pain001 download` saves files under the names the server lists, but only flat, printable names (no `/`, `\`, leading dot or temporary suffix) of regular files; anything else is skipped | CLI `-o` handling, `_safe_name` in `pain001/transport/download.py` |
 | Deserialisation of untrusted data (CWE-502) | No `pickle`, `yaml.load`, or `eval` on input | `tests/`, CodeQL |
 | Uncontrolled resource consumption (CWE-400) | Streaming mode with `--chunk-size`; API rate limiting | `--streaming`, `PAIN001_RATE_LIMIT` |
-| Dependency confusion / compromise (CWE-1357) | Hash-pinned requirements for every CI job and the container image; Dependabot; `pip-audit` and Snyk on every commit | `requirements.txt`, `.github/requirements/*.txt` |
+| Dependency confusion / compromise (CWE-1357) | Hash-pinned requirements for every CI job and the container image; Dependabot; `pip-audit` on every push to and pull request into `main`, and daily | `requirements.txt`, `.github/requirements/*.txt` |
 | Tampered distribution (CWE-494) | Sigstore-signed SLSA Build L3 provenance covering every release artefact, verifiable with `slsa-verifier`; signed git tags | `multiple.intoto.jsonl` on each release |
 | Silent validation failure | Every bundled schema must exceed 10 KB, define ≥5 complex types, and *behaviourally reject* a junk document | `tests/test_schema_completeness.py` |
 | Untested code paths | 100% branch coverage enforced as a CI gate (`--cov-fail-under=100`) | `pyproject.toml`, CI |

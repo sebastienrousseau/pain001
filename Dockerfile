@@ -51,7 +51,7 @@ LABEL org.opencontainers.image.title="pain001" \
       org.opencontainers.image.description="Generate and validate ISO 20022 payment files (pain.001 / pain.008) from CSV, SQLite, JSON, or Parquet." \
       org.opencontainers.image.source="https://github.com/sebastienrousseau/pain001" \
       org.opencontainers.image.url="https://pain001.com" \
-      org.opencontainers.image.licenses="Apache-2.0"
+      org.opencontainers.image.licenses="Apache-2.0 OR MIT"
 
 # Non-root user.
 RUN groupadd --system pain001 \

@@ -22,7 +22,10 @@ Pain001 supports these ISO 20022 families beyond ``pain.001``:
 ``pain.002``
     Payment status reports can be parsed into Python dictionaries with
     ``pain001.pain002.parse_pain002_report``, and synthetic reports for
-    tests can be built with ``pain001.build_pain002_report``.
+    tests can be built with ``pain001.build_pain002_report``. The builder
+    accepts only the versions it bundles a schema for (pain.002.001.03,
+    .12, .14 and .15) and validates every report against that schema
+    before returning it, raising ``ValueError`` otherwise.
 
 ``camt.053``
     Bank statements can be parsed into Python dictionaries with
