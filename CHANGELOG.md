@@ -48,6 +48,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `-q`/`--quiet` on `generate`, `validate` and `init` drops the banner
   and progress lines. `tests/test_cli_machine_output.py` runs every
   command with `--format json` and parses its stdout.
+- `tests/data/cli-help.txt` pins every command's `--help`, and every
+  example under an `Examples:` heading is run against the bundled
+  sample data (`tests/test_cli_help_snapshot.py`).
 
 ### Changed
 

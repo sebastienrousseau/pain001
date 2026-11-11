@@ -1,0 +1,426 @@
+$ pain001 --help
+Usage: pain001 [OPTIONS] COMMAND [ARGS]...
+
+  ISO 20022 payment tooling: one binary for the whole workflow.
+
+  Run a bare invocation (or `generate`) to produce XML; the other subcommands
+  validate data, introspect templates, and launch the REST API and MCP servers.
+
+Options:
+  -V, --version  Show the version and exit.
+  -h, --help     Show this message and exit.
+
+Commands:
+  check             Check existing pain.001 or pain.008 files (exit 0 = all...
+  download          Fetch new files from an SFTP directory, each exactly once.
+  face              Project a pain.001 XML file into an external standard's...
+  generate          Generate ISO 20022 payment XML from CSV, SQLite, JSON,...
+  init              Scaffold a starter CSV for a message type from its...
+  inspect           Show the bundled template, schema, and accepted formats...
+  mcp               Launch the MCP server over stdio (requires pain001[mcp]).
+  plugins           Inspect the plugin substrate (loaders, validators,...
+  serve             Launch the REST API with uvicorn (requires pain001[api]).
+  status            Report the status in pain.002 and camt.05x FILES (exit...
+  upload            Deliver FILE_PATH atomically to an explicitly trusted...
+  validate          Validate inputs without generating XML (exit 0 = valid,...
+  verify-signature  Verify the XML-DSig signature on each FILE (exit 0 =...
+  versions          List the ISO 20022 message types this build can generate.
+
+$ pain001 check --help
+Usage: pain001 check [OPTIONS] FILES...
+
+  Check existing pain.001 or pain.008 files (exit 0 = all pass).
+
+  Runs the XSD of the message type the file declares, the message definition's
+  cross-element rules (as the corpus build does), and any scheme profiles,
+  policy or Schematron rulebook asked for. Exit 1 when a file has an error
+  finding, 2 when a file or option cannot be checked.
+
+Options:
+  --scheme TEXT               Scheme profiles to apply, comma-separated (e.g.
+                              sepa-sct).
+  --rules FILE                Private YAML CEL policy file (needs
+                              pain001[rules]).
+  --schematron TEXT           Schematron rulebook: sepa, fednow, cbpr, or a .sch
+                              path.
+  --format [text|json|sarif]  Report format; sarif is for code-scanning uploads.
+                              [default: text]
+  --skip-other-xml            Skip XML files that are not pain.001 or pain.008
+                              (for globs).
+  -o, --output FILE           Write the report to this file instead of standard
+                              output.
+  -h, --help                  Show this message and exit.
+
+$ pain001 download --help
+Usage: pain001 download [OPTIONS]
+
+  Fetch new files from an SFTP directory, each exactly once.
+
+  The host key is checked before any credential is sent. A file is saved,
+  recorded in the ledger, and only then deleted or moved on the server. Schedule
+  it with cron or a systemd timer; it runs once.
+
+Options:
+  --sftp TEXT                   Remote directory: sftp://user@host/outbox/
+                                (trailing slash).  [required]
+  --to DIRECTORY                Existing local directory to save files into.
+                                [required]
+  --pattern TEXT                Filename glob.  [default: *]
+  --after-fetch TEXT            keep, delete, or move:/absolute/dir for the
+                                remote copy.  [default: keep]
+  --settle-seconds FLOAT RANGE  Skip files whose size or mtime changes over this
+                                many seconds.  [default: 0; 0<=x<=3600]
+  --max-files INTEGER RANGE     Most files one run fetches.  [default: 1000;
+                                x>=1]
+  --max-bytes INTEGER RANGE     Most bytes one run fetches.  [default:
+                                268435456; x>=1]
+  --ledger FILE                 Ledger database (default:
+                                .pain001-ledger.sqlite3 in --to).
+  --known-hosts FILE            Trusted SSH known_hosts file.
+  --accept-host-key TEXT        Independently verified OpenSSH SHA256
+                                fingerprint; never saves trust.
+  --identity-file FILE          SSH private key; otherwise use the agent or
+                                default SSH keys.
+  --certificate FILE            OpenSSH certificate (*-cert.pub) issued for
+                                --identity-file.
+  --use-agent                   Also offer ssh-agent keys (hardware keys) with a
+                                key or password.
+  --password-env TEXT           Environment variable containing the SSH
+                                password.
+  --passphrase-env TEXT         Environment variable containing the private-key
+                                passphrase.
+  --timeout FLOAT RANGE         Network timeout in seconds.  [default: 15;
+                                0.1<=x<=300]
+  --format [text|json]          Result format on stdout: text, json.  [default:
+                                text]
+  -h, --help                    Show this message and exit.
+
+$ pain001 face --help
+Usage: pain001 face [OPTIONS] SOURCE
+
+  Project a pain.001 XML file into an external standard's JSON shape.
+
+  Faces are outbound only: UK Open Banking v4.0.1, Berlin Group NextGenPSD2
+  v1.3.16, or ISO 20022 element names in snake_case.
+
+Options:
+  --face [berlin_group|iso_2018|uk_open_banking]
+                                  Target standard.  [default: uk_open_banking]
+  --bindings FILE                 Private side inputs (JSON object); keep this
+                                  file out of version control.
+  -o, --output FILE               Write the payload here instead of standard
+                                  output.
+  --loss-report                   List the source elements not carried.
+  --format [text|json]            Result format on stdout: text, json.
+                                  [default: text]
+  -h, --help                      Show this message and exit.
+
+$ pain001 generate --help
+Usage: pain001 generate [OPTIONS]
+
+  Generate ISO 20022 payment XML from CSV, SQLite, JSON, JSONL or Parquet data.
+  The template and schema for the message type are bundled; -m and -s replace
+  them.
+
+  Examples:
+    # into the current directory
+    pain001 generate -t pain.001.001.09 -d payments.csv
+    # into a directory
+    pain001 generate -t pain.001.001.09 -d payments.csv -o out/
+    # validate only, write nothing
+    pain001 generate -t pain.001.001.09 -d payments.csv --dry-run
+    # JSON input, with log records on stderr
+    pain001 generate -t pain.001.001.09 -d payments.json -v
+    # your own template and schema
+    pain001 generate -t pain.001.001.09 -d payments.csv -m template.xml -s schema.xsd
+
+  Exit codes:
+    0  success
+    1  findings: invalid data or a failed check
+    2  usage, a missing input file or configuration
+
+Options:
+  -t, --xml-message-type [pain.001.001.03|pain.001.001.04|pain.001.001.05|pain.001.001.06|pain.001.001.07|pain.001.001.08|pain.001.001.09|pain.001.001.10|pain.001.001.11|pain.001.001.12|pain.001.001.13|pain.008.001.02|pain.008.001.08]
+                                  ISO 20022 message type (e.g.,
+                                  'pain.001.001.03', 'pain.001.001.11')
+  -m, --template FILE             Path to Jinja2 XML template file (auto-
+                                  resolved when omitted)
+  -s, --schema FILE               Path to XSD schema file for validation (auto-
+                                  resolved when omitted)
+  -d, --data FILE                 Path to payment data file (CSV, SQLite, JSON,
+                                  JSONL, or Parquet)
+  -c, --config FILE               Path to configuration YAML, TOML, or INI file
+                                  (optional)
+  -o, --output-dir DIRECTORY      Output directory for generated XML files
+                                  (default: current directory)
+  --dry-run, --validate-only      Validate inputs without generating XML. Useful
+                                  for CI/CD pre-flight checks. Exit code 0 =
+                                  valid, 1 = invalid.
+  -v, --verbose                   Show the library's DEBUG and INFO log records
+                                  on stderr.
+  --streaming / --no-streaming    Process input in chunks and generate one XML
+                                  file per chunk.
+  --chunk-size INTEGER RANGE      Number of payment rows per streaming chunk
+                                  (default: 1000).  [x>=1]
+  --workers INTEGER RANGE         Processes building streamed chunks at once
+                                  (with --streaming).  [x>=1]
+  --profile TEXT                  Configuration profile or built-in preset to
+                                  apply.
+  --show-config                   Print the resolved configuration and exit.
+  --list-templates                List bundled templates and exit.
+  --show-template TEXT            Show metadata for one bundled template and
+                                  exit.
+  --emit-metrics                  Write timing and lifecycle metrics to stdout
+                                  as JSON lines.
+  --scheme TEXT                   Validate rows against a payment-scheme
+                                  rulebook (e.g. sepa-sct, sepa-sdd, sepa-b2b,
+                                  sepa-inst, xborder-ct, anti-duplicate) on top
+                                  of XSD validation. Comma-separate names to run
+                                  several: sepa-sct,anti-duplicate.
+  --explain                       With --scheme, print a remediation hint for
+                                  each violation.
+  --scheme-format [text|json]     Deprecated: use --format json.
+  --decrypt-key FILE              GPG private-key file to import before reading
+                                  a .gpg/.asc data file (requires pain001[gpg];
+                                  sets PAIN001_GPG_KEYFILE).
+  --decrypt-passphrase-env VAR    Name of the environment variable holding the
+                                  GPG passphrase (sets
+                                  PAIN001_GPG_PASSPHRASE_ENV; the passphrase
+                                  itself never appears on the command line).
+  --rules FILE                    Private YAML CEL policy to enforce before
+                                  generation (requires pain001[rules]).
+  --envelop-bah                   Encapsulate generated payment in an ISO 20022
+                                  Business Application Header (head.001.001.03)
+                                  envelope.
+  --bah-sender TEXT               Sender BIC or Org ID for the Business
+                                  Application Header.
+  --bah-receiver TEXT             Receiver BIC or Org ID for the Business
+                                  Application Header.
+  --bah-msg-id TEXT               Business Message Identifier for the Business
+                                  Application Header.
+  --xml-sign-key FILE             Private key PEM file (RSA, or EC P-256/P-384)
+                                  to sign the generated XML with W3C XML-DSig.
+  --xml-sign-cert FILE            Optional X.509 certificate PEM file to embed
+                                  in XML-DSig <KeyInfo>.
+  --xml-sign-alg [ecdsa-sha256|ecdsa-sha384|rsa-pss-sha256|rsa-sha256]
+                                  XML-DSig algorithm; default follows the key
+                                  (RSA: rsa-sha256).
+  --xml-sign-passphrase-env VAR   Environment variable holding the passphrase
+                                  for --xml-sign-key.
+  --schematron TEXT               Schematron business rules preset ('sepa',
+                                  'fednow', 'cbpr') or path to .sch file.
+  --identifier-checks / --no-identifier-checks
+                                  Check each IBAN, BIC and LEI (check digits);
+                                  on by default.
+  --log-format [text|json]        Log record format on stderr: text or json
+                                  (PAIN001_LOG_FORMAT).
+  --format [text|json]            Result format on stdout: text, json.
+                                  [default: text]
+  -q, --quiet                     Print no banner or progress on stderr; errors
+                                  still show.
+  -h, --help                      Show this message and exit.
+
+$ pain001 init --help
+Usage: pain001 init [OPTIONS] MESSAGE_TYPE
+
+  Scaffold a starter CSV for a message type from its bundled example.
+
+Options:
+  -o, --output FILE     Where to write the starter CSV (default:
+                        ./<message_type>.csv).
+  --format [text|json]  Result format on stdout: text, json.  [default: text]
+  -q, --quiet           Print no banner or progress on stderr; errors still
+                        show.
+  -h, --help            Show this message and exit.
+
+$ pain001 inspect --help
+Usage: pain001 inspect [OPTIONS] MESSAGE_TYPE
+
+  Show the bundled template, schema, and accepted formats for a type.
+
+Options:
+  --format [text|json]  Result format on stdout: text, json.  [default: text]
+  -h, --help            Show this message and exit.
+
+$ pain001 mcp --help
+Usage: pain001 mcp [OPTIONS]
+
+  Launch the MCP server over stdio (requires pain001[mcp]).
+
+Options:
+  -h, --help  Show this message and exit.
+
+$ pain001 plugins --help
+Usage: pain001 plugins [OPTIONS] COMMAND [ARGS]...
+
+  Inspect the plugin substrate (loaders, validators, schemes, writers).
+
+Options:
+  -h, --help  Show this message and exit.
+
+Commands:
+  disable  Show how to disable plugins via ``PAIN001_DISABLE_PLUGINS``.
+  list     List every registered plugin (built-in + entry-point discovered).
+  show     Print the metadata for a single plugin by name.
+
+$ pain001 plugins disable --help
+Usage: pain001 plugins disable [OPTIONS] [NAME]
+
+  Show how to disable plugins via ``PAIN001_DISABLE_PLUGINS``.
+
+  Documentation-only command: the environment variable is the canonical disable
+  mechanism because it persists for the lifetime of a process and survives CLI
+  flag bypass.
+
+Options:
+  --format [text|json]  Result format on stdout: text, json.  [default: text]
+  -h, --help            Show this message and exit.
+
+$ pain001 plugins list --help
+Usage: pain001 plugins list [OPTIONS]
+
+  List every registered plugin (built-in + entry-point discovered).
+
+Options:
+  --kind [loader|validator|scheme|writer]
+                                  Filter to one plugin kind.
+  --format [text|json]            Result format on stdout: text, json.
+                                  [default: text]
+  -h, --help                      Show this message and exit.
+
+$ pain001 plugins show --help
+Usage: pain001 plugins show [OPTIONS] NAME
+
+  Print the metadata for a single plugin by name.
+
+Options:
+  --kind [loader|validator|scheme|writer]
+                                  Narrow the search to one kind when the same
+                                  name exists across kinds.
+  --format [text|json]            Result format on stdout: text, json.
+                                  [default: text]
+  -h, --help                      Show this message and exit.
+
+$ pain001 serve --help
+Usage: pain001 serve [OPTIONS]
+
+  Launch the REST API with uvicorn (requires pain001[api]).
+
+Options:
+  --host TEXT     [default: 127.0.0.1]
+  --port INTEGER  [default: 8000]
+  --reload        Enable auto-reload for local development.
+  --insecure      Allow a non-loopback --host without PAIN001_API_KEY (same as
+                  PAIN001_ALLOW_INSECURE=1). For trusted networks only.
+  -h, --help      Show this message and exit.
+
+$ pain001 status --help
+Usage: pain001 status [OPTIONS] FILES...
+
+  Report the status in pain.002 and camt.05x FILES (exit 3 on RJCT).
+
+  Exit 0 when nothing was rejected, 3 when any group, payment block or
+  transaction was, and 2 when a file cannot be read.
+
+Options:
+  --format [text|json]  Result format on stdout: text, json.  [default: text]
+  -h, --help            Show this message and exit.
+
+$ pain001 upload --help
+Usage: pain001 upload [OPTIONS] [FILE_PATH]
+
+  Deliver FILE_PATH atomically to an explicitly trusted SFTP server.
+
+Options:
+  --sftp TEXT             Destination: sftp://user@host/inbox/ or an explicit
+                          filename.  [required]
+  --known-hosts FILE      Trusted SSH known_hosts file.
+  --accept-host-key TEXT  Independently verified OpenSSH SHA256 fingerprint;
+                          never saves trust.
+  --identity-file FILE    SSH private key; otherwise use the agent or default
+                          SSH keys.
+  --certificate FILE      OpenSSH certificate (*-cert.pub) issued for
+                          --identity-file.
+  --use-agent             Also offer ssh-agent keys (hardware keys) with a key
+                          or password.
+  --password-env TEXT     Environment variable containing the SSH password.
+  --passphrase-env TEXT   Environment variable containing the private-key
+                          passphrase.
+  --timeout FLOAT RANGE   Network timeout in seconds.  [default: 15;
+                          0.1<=x<=300]
+  --print-host-key        Print the unverified fingerprint without
+                          authenticating or uploading.
+  --format [text|json]    Result format on stdout: text, json.  [default: text]
+  -h, --help              Show this message and exit.
+
+$ pain001 validate --help
+Usage: pain001 validate [OPTIONS]
+
+  Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
+
+  A named alias for ``generate --dry-run`` that reuses the same template
+  resolution and validation pipeline, so CI pre-flight checks read as a first-
+  class command.
+
+Options:
+  -t, --xml-message-type [pain.001.001.03|pain.001.001.04|pain.001.001.05|pain.001.001.06|pain.001.001.07|pain.001.001.08|pain.001.001.09|pain.001.001.10|pain.001.001.11|pain.001.001.12|pain.001.001.13|pain.008.001.02|pain.008.001.08]
+                                  ISO 20022 message type (e.g.,
+                                  'pain.001.001.03').
+  -m, --template FILE             Path to Jinja2 XML template (auto-resolved
+                                  when omitted).
+  -s, --schema FILE               Path to XSD schema (auto-resolved when
+                                  omitted).
+  -d, --data FILE                 Path to payment data (CSV, SQLite, JSON,
+                                  JSONL, or Parquet).
+  --scheme TEXT                   Also validate rows against a scheme rulebook
+                                  (e.g. sepa-sct).
+  --explain                       With --scheme, print a remediation hint for
+                                  each violation.
+  --scheme-format [text|json]     Deprecated: use --format json.
+  --decrypt-key FILE              GPG private-key file to import before reading
+                                  a .gpg/.asc file.
+  --decrypt-passphrase-env VAR    Environment variable holding the GPG
+                                  passphrase.
+  -v, --verbose                   Show the library's DEBUG and INFO log records
+                                  on stderr.
+  --rules FILE                    Private YAML CEL policy (requires
+                                  pain001[rules]).
+  --schematron TEXT               Schematron business rules preset ('sepa',
+                                  'fednow', 'cbpr') or path to .sch file.
+  --identifier-checks / --no-identifier-checks
+                                  Check each IBAN, BIC and LEI (check digits);
+                                  on by default.
+  --log-format [text|json]        Log record format on stderr: text or json
+                                  (PAIN001_LOG_FORMAT).
+  --format [text|json]            Result format on stdout: text, json.
+                                  [default: text]
+  -q, --quiet                     Print no banner or progress on stderr; errors
+                                  still show.
+  -h, --help                      Show this message and exit.
+
+$ pain001 verify-signature --help
+Usage: pain001 verify-signature [OPTIONS] FILES...
+
+  Verify the XML-DSig signature on each FILE (exit 0 = all valid).
+
+  Needs the signer's certificate (--cert), or --trust-embedded-cert, which
+  proves a file is unchanged since signing but not who signed it. Exit 1 when a
+  file does not verify, 2 when the command cannot run.
+
+Options:
+  --cert FILE            The signer's PEM certificate or PEM public key (trust
+                         anchor).
+  --trust-embedded-cert  Use each file's own certificate: integrity only, not
+                         identity.
+  --format [text|json]   Result format on stdout: text, json.  [default: text]
+  -h, --help             Show this message and exit.
+
+$ pain001 versions --help
+Usage: pain001 versions [OPTIONS]
+
+  List the ISO 20022 message types this build can generate.
+
+Options:
+  --format [text|json]  Result format on stdout: text, json.  [default: text]
+  -h, --help            Show this message and exit.
+
