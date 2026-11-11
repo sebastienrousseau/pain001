@@ -4,7 +4,7 @@
 
 Every pain001 release is built by the tag workflow in
 [`.github/workflows/ci.yml`](https://github.com/sebastienrousseau/pain001/blob/main/.github/workflows/ci.yml)
-(jobs `publish`, `provenance` and `release-notes`) from a signed tag.
+(jobs `build`, `publish`, `provenance` and `release-notes`) from a signed tag.
 These steps check that what you install came from that workflow and was
 not changed afterwards. Replace `0.0.85` with the version you are
 checking.
@@ -52,7 +52,8 @@ sha256sum pypi/*
 
 ## 3. The GitHub build attestation
 
-The `publish` job attests the wheel and the sdist with
+The `publish` job attests the wheel and the sdist that the `build` job
+produced, after checking them against the build job's hashes, with
 `actions/attest-build-provenance`, bound to this repository's workflow
 identity:
 

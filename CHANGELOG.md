@@ -56,6 +56,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no longer offers paramiko's fallback CBC and 3DES ciphers or its SHA-1
   and MD5 MACs. A server that supports only those is refused at key
   exchange.
+- The tag workflow builds the release in a new `build` job that has
+  read-only permissions, no OIDC token and no dependency cache, and
+  passes the distributions, SBOMs and their SHA-256 hashes to `publish`
+  as an artifact. `publish`, the only job behind the `pypi` environment,
+  checks out nothing and builds nothing: it verifies the files against
+  the build job's hashes, attests them, creates the GitHub release and
+  uploads to PyPI. The SLSA provenance subjects now come from `build`.
 
 ### Fixed
 
