@@ -403,6 +403,8 @@ also_copy = [
     "ROADMAP.md",
     # The release-notes test reads releases/vX.md once the version is dated.
     "releases",
+    # tests/test_conformance_kit.py reads the SDK conformance kit.
+    "conformance",
     # tests/test_ci_surfaces.py reads the Action and the pre-commit hooks.
     "action.yml", ".pre-commit-hooks.yaml",
 ]
