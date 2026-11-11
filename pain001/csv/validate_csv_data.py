@@ -44,36 +44,18 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from pain001.exceptions import IssueCode, RowIssue, format_issues
 from pain001.schemas.required_columns import required_columns
 
 logger = logging.getLogger(__name__)
 
-
-def _redact_row_for_error(row: dict[str, Any]) -> dict[str, str]:
-    """Return a log-safe copy of a payment row for validation errors."""
-    redacted: dict[str, str] = {}
-    for key, value in row.items():
-        text = "" if value is None else str(value)
-        key_lower = key.lower()
-
-        if "iban" in key_lower or "account" in key_lower:
-            redacted[key] = _mask_value(text, 4)
-        elif "bic" in key_lower:
-            redacted[key] = _mask_value(text, 3)
-        elif "name" in key_lower:
-            redacted[key] = "[REDACTED]"
-        elif "remittance" in key_lower or "reference" in key_lower:
-            redacted[key] = "[REDACTED]"
-        else:
-            redacted[key] = text
-    return redacted
-
-
-def _mask_value(value: str, visible_chars: int) -> str:
-    """Mask a sensitive value while keeping a small prefix and suffix."""
-    if len(value) <= visible_chars * 2:
-        return "*" * len(value)
-    return f"{value[:visible_chars]}****{value[-visible_chars:]}"
+#: Code and message for a value that is not of its column's type.
+_TYPE_ISSUES: dict[type, tuple[str, str]] = {
+    int: (IssueCode.NOT_INTEGER, "not a whole number"),
+    float: (IssueCode.NOT_DECIMAL, "not a decimal number"),
+    bool: (IssueCode.NOT_BOOLEAN, "not true, false, 1 or 0"),
+    datetime: (IssueCode.NOT_DATE, "not a date (YYYY-MM-DD or ISO 8601)"),
+}
 
 
 def _validate_datetime(value: str) -> bool:
@@ -164,38 +146,66 @@ def _validate_row(
     return missing_columns, invalid_columns
 
 
-def _format_errors(
-    row: dict[str, Any],
-    missing_columns: list[str],
-    invalid_columns: list[str],
-    required_columns: dict[str, type],
-) -> list[str]:
-    """Format error messages for a row.
+def _issues_for_row(
+    row: dict[str, Any], required: dict[str, type], line: int
+) -> list[RowIssue]:
+    """Return the issues in one row: missing values first, then types.
 
     Args:
-        row: The row with errors.
-        missing_columns: List of missing column names.
-        invalid_columns: List of invalid column names.
-        required_columns: Dictionary of required column types.
+        row: The row.
+        required: Required column names and types.
+        line: The row's line in the input, counted from 1.
 
     Returns:
-        list: List of formatted error messages.
+        One issue per bad column, in column order within each group.
     """
-    errors = []
-    safe_row = _redact_row_for_error(row)
-    if missing_columns:
-        errors.append(
-            f"Error: Missing value(s) for column(s) {missing_columns} in row: {safe_row}"
-        )
-    if invalid_columns:
-        expected_types = [
-            required_columns[col].__name__ for col in invalid_columns
+    missing, invalid = _validate_row(row, required)
+    issues = [
+        RowIssue(line, column, IssueCode.MISSING_VALUE, "missing value")
+        for column in missing
+    ]
+    for column in invalid:
+        code, message = _TYPE_ISSUES[required[column]]
+        issues.append(RowIssue(line, column, code, message))
+    return issues
+
+
+def row_issues(
+    data: list[dict[str, Any]],
+    message_type: str | None = None,
+    first_line: int = 1,
+) -> list[RowIssue]:
+    """Return every required-column problem in ``data``, by line.
+
+    The columns and types come from :func:`required_columns`: the
+    bundled JSON schema of ``message_type`` when given, otherwise every
+    column all bundled schemas describe. No issue carries the value.
+
+    Args:
+        data: The payment rows.
+        message_type: The target message type, or ``None``.
+        first_line: The line of ``data[0]`` in the input: 2 for a CSV
+            file (its header is line 1), 1 for other inputs, more for a
+            later chunk.
+
+    Returns:
+        The issues in input order; empty when every row is valid.
+    """
+    if not data:
+        return [
+            RowIssue(
+                None,
+                None,
+                IssueCode.EMPTY_INPUT,
+                "the input has no payment rows",
+            )
         ]
-        errors.append(
-            f"Error: Invalid data type for column(s) "
-            f"{invalid_columns}, expected {expected_types} in row: {safe_row}"
-        )
-    return errors
+    required = required_columns(message_type)
+    return [
+        issue
+        for index, row in enumerate(data)
+        for issue in _issues_for_row(row, required, first_line + index)
+    ]
 
 
 def validate_csv_data(
@@ -203,9 +213,8 @@ def validate_csv_data(
 ) -> bool:
     """Validate payment rows against the required-column contract.
 
-    The columns and types come from :func:`required_columns`: the
-    bundled JSON schema of ``message_type`` when given, otherwise every
-    column all bundled schemas describe.
+    :func:`row_issues` lists the problems; this logs them (by line and
+    column, never by value) and answers yes or no.
 
     Args:
         data: A list of dictionaries containing the CSV data.
@@ -215,25 +224,9 @@ def validate_csv_data(
     Returns:
         bool: True if the data is valid, False otherwise.
     """
-    required = required_columns(message_type)
-
-    if not data:
-        logger.error("The CSV data is empty.")
-        return False
-
-    is_valid = True
-    all_errors = []  # Batch error messages for better performance
-
-    for row in data:
-        missing_columns, invalid_columns = _validate_row(row, required)
-
-        if missing_columns or invalid_columns:
-            is_valid = False
-            all_errors.extend(
-                _format_errors(row, missing_columns, invalid_columns, required)
-            )
-
-    if all_errors:
-        logger.error("\n".join(all_errors))
-
-    return is_valid
+    issues = row_issues(data, message_type)
+    if issues:
+        logger.error(
+            "Payment rows failed validation:%s", format_issues(issues)
+        )
+    return not issues

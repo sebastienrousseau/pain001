@@ -44,7 +44,7 @@ def test_loader_override_and_streaming(
     target.write_text("synthetic", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(
-        "pain001.data.loader.validate_csv_data", lambda rows: True
+        "pain001.data.loader.row_issues", lambda rows, first_line=1: []
     )
     result = LoaderResult(rows=[{"from_plugin": True}])
     loader = SimpleNamespace(

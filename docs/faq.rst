@@ -132,7 +132,7 @@ Use a loop or batch processing:
     bundle = TEMPLATES_DIR / message_type
     Path("output").mkdir(exist_ok=True)
 
-    # Data files must be under the current working directory.
+    # From Python, data files must be under the current working directory.
     for csv_file in sorted(Path("payments").glob("*.csv")):
         process_files(
             xml_message_type=message_type,
@@ -226,7 +226,9 @@ Check:
 
 **How do I debug validation errors?**
 
-Run the CLI with ``-v`` / ``--verbose`` for INFO and DEBUG output, and add
+Each bad row is listed with its line, column and a stable code (see
+:doc:`troubleshooting`). Run the CLI with ``-v`` / ``--verbose`` to show
+the library's INFO and DEBUG log records on stderr, and add
 ``--scheme <profile> --explain`` for a remediation hint per violation:
 
 .. code-block:: bash
@@ -404,8 +406,15 @@ No! Never store sensitive credentials in code or templates. Use:
 
 **How do I write pain001's logs to a file?**
 
-Install the JSON formatter on the ``pain001`` logger; IBAN, BIC and name
-fields are redacted:
+From the command line, ``generate`` and ``validate`` write log records
+to stderr: WARNING and up by default, DEBUG and up with ``-v``, or the
+level in ``PAIN001_LOG_LEVEL``. ``PAIN001_LOG_FILE`` writes the same
+records to a file as well, and ``--log-format json`` (or
+``PAIN001_LOG_FORMAT=json``) writes one JSON object per record. A
+record never carries a payment row's values.
+
+From Python, install the JSON formatter on the ``pain001`` logger; IBAN,
+BIC and name fields are redacted:
 
 .. code-block:: python
 

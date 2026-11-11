@@ -30,7 +30,7 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1337
+    "file_lines": 1261
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "lines": 121
@@ -39,8 +39,8 @@
     "lines": 64
   },
   "pain001/cli/cli.py::main": {
-    "cyclomatic": 17,
-    "lines": 265
+    "cyclomatic": 16,
+    "lines": 244
   },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82
@@ -168,9 +168,6 @@
     "cognitive": 19,
     "cyclomatic": 12,
     "lines": 103
-  },
-  "pain001/data/loader.py::_load_from_file": {
-    "lines": 65
   },
   "pain001/db/load_db_data.py::load_db_data": {
     "lines": 79

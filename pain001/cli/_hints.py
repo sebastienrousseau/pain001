@@ -53,3 +53,27 @@ def read_text(path: str | None) -> str | None:
         return None
     with open(path, encoding="utf-8") as handle:
         return handle.read()
+
+
+#: ``generate --help``: every example runs with only ``-t`` and ``-d``.
+GENERATE_HELP = (
+    "Generate ISO 20022 payment XML from CSV, SQLite, JSON, JSONL "
+    "or Parquet data. The template and schema for the message type "
+    "are bundled; -m and -s replace them.\n\n"
+    "\b\nExamples:\n"
+    "  # into the current directory\n"
+    "  pain001 generate -t pain.001.001.09 -d payments.csv\n"
+    "  # into a directory\n"
+    "  pain001 generate -t pain.001.001.09 -d payments.csv -o out/\n"
+    "  # validate only, write nothing\n"
+    "  pain001 generate -t pain.001.001.09 -d payments.csv --dry-run\n"
+    "  # JSON input, with log records on stderr\n"
+    "  pain001 generate -t pain.001.001.09 -d payments.json -v\n"
+    "  # your own template and schema\n"
+    "  pain001 generate -t pain.001.001.09 -d payments.csv "
+    "-m template.xml -s schema.xsd\n\n"
+    "\b\nExit codes:\n"
+    "  0  success\n"
+    "  1  findings: invalid data or a failed check\n"
+    "  2  usage, a missing input file or configuration"
+)

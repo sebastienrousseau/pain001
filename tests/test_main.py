@@ -28,25 +28,20 @@ class TestMain:
     def test_main_with_valid_files(self) -> None:
         from unittest.mock import patch
 
-        with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            return_value=True,
-        ):
-            with patch("pain001.cli.cli.process_files", autospec=True):
-                result = self.runner.invoke(
-                    cli,
-                    [
-                        "-t",
-                        self.xml_message_type,
-                        "-m",
-                        self.xml_file,
-                        "-s",
-                        self.xsd_file,
-                        "-d",
-                        self.csv_file,
-                    ],
-                )
+        with patch("pain001.cli.cli.process_files", autospec=True):
+            result = self.runner.invoke(
+                cli,
+                [
+                    "-t",
+                    self.xml_message_type,
+                    "-m",
+                    self.xml_file,
+                    "-s",
+                    self.xsd_file,
+                    "-d",
+                    self.csv_file,
+                ],
+            )
         assert result.exit_code == 0
 
     def test_main_with_missing_xml_message_type(self) -> None:
@@ -73,24 +68,19 @@ class TestMain:
         from unittest.mock import patch
 
         with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            return_value=True,
-        ):
-            with patch(
-                "pain001.cli.cli.process_files", autospec=True
-            ) as mock_process:
-                result = self.runner.invoke(
-                    cli,
-                    [
-                        "-t",
-                        self.xml_message_type,
-                        "-s",
-                        self.xsd_file,
-                        "-d",
-                        self.csv_file,
-                    ],
-                )
+            "pain001.cli.cli.process_files", autospec=True
+        ) as mock_process:
+            result = self.runner.invoke(
+                cli,
+                [
+                    "-t",
+                    self.xml_message_type,
+                    "-s",
+                    self.xsd_file,
+                    "-d",
+                    self.csv_file,
+                ],
+            )
         assert result.exit_code == 0
         resolved_template = (
             mock_process.call_args.kwargs.get("xml_template_file_path")
@@ -103,24 +93,21 @@ class TestMain:
         from unittest.mock import patch
 
         with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            return_value=True,
-        ) as mock_validate:
-            with patch("pain001.cli.cli.process_files", autospec=True):
-                result = self.runner.invoke(
-                    cli,
-                    [
-                        "-t",
-                        self.xml_message_type,
-                        "-m",
-                        self.xml_file,
-                        "-d",
-                        self.csv_file,
-                    ],
-                )
+            "pain001.cli.cli.process_files", autospec=True
+        ) as mock_process:
+            result = self.runner.invoke(
+                cli,
+                [
+                    "-t",
+                    self.xml_message_type,
+                    "-m",
+                    self.xml_file,
+                    "-d",
+                    self.csv_file,
+                ],
+            )
         assert result.exit_code == 0
-        resolved_schema = mock_validate.call_args.args[1]
+        resolved_schema = mock_process.call_args.args[2]
         assert resolved_schema.endswith(f"{self.xml_message_type}.xsd")
 
     def test_main_with_missing_data(self) -> None:
@@ -164,7 +151,7 @@ class TestMain:
         )
 
     def test_main_with_nonexistent_template_file(self) -> None:
-        """Non-existent template fails schema validation — exit code 1."""
+        """A non-existent template is a usage error: exit code 2."""
         result = self.runner.invoke(
             cli,
             [
@@ -178,12 +165,12 @@ class TestMain:
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         output = " ".join(result.output.lower().split())
-        assert "does not exist" in output
+        assert "input file not found" in output
 
     def test_main_with_nonexistent_schema_file(self) -> None:
-        """Non-existent schema fails schema validation — exit code 1."""
+        """A non-existent schema is a usage error: exit code 2."""
         result = self.runner.invoke(
             cli,
             [
@@ -197,59 +184,28 @@ class TestMain:
                 self.csv_file,
             ],
         )
-        assert result.exit_code == 1
+        assert result.exit_code == 2
         output = " ".join(result.output.lower().split())
-        assert "does not exist" in output
+        assert "input file not found" in output
 
     def test_main_with_nonexistent_data_file(self) -> None:
-        """Non-existent data file fails during generation — exit code 1."""
-        from unittest.mock import patch
+        """A non-existent data file is a usage error: exit code 2."""
 
-        with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            return_value=True,
-        ):
-            result = self.runner.invoke(
-                cli,
-                [
-                    "-t",
-                    self.xml_message_type,
-                    "-m",
-                    self.xml_file,
-                    "-s",
-                    self.xsd_file,
-                    "-d",
-                    "nonexistent.csv",
-                ],
-            )
-        assert result.exit_code == 1
-        assert "failed" in result.output.lower()
-
-    def test_main_with_exception_handling(self) -> None:
-        """Test CLI exception handling via schema validation failure."""
-        from unittest.mock import patch
-
-        with patch(
-            "pain001.cli.cli.validate_via_xsd",
-            autospec=True,
-            side_effect=Exception("Test exception"),
-        ):
-            result = self.runner.invoke(
-                cli,
-                [
-                    "-t",
-                    self.xml_message_type,
-                    "-m",
-                    self.xml_file,
-                    "-s",
-                    self.xsd_file,
-                    "-d",
-                    self.csv_file,
-                ],
-            )
-            assert result.exit_code == 1
-            assert "validation failed" in result.output.lower()
+        result = self.runner.invoke(
+            cli,
+            [
+                "-t",
+                self.xml_message_type,
+                "-m",
+                self.xml_file,
+                "-s",
+                self.xsd_file,
+                "-d",
+                "nonexistent.csv",
+            ],
+        )
+        assert result.exit_code == 2
+        assert "input file not found" in result.output.lower()
 
     def test_main_module_entry_point(self) -> None:
         """Test __main__.py when run as a script."""

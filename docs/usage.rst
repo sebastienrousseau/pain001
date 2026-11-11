@@ -17,8 +17,10 @@ Run this in a fresh writable directory using synthetic bundled data:
 
 The generate command's -o flag names an output directory. Template and schema
 paths resolve from the bundled registry unless explicitly overridden.
-Exit codes are 0 for success, 1 for processing/validation failure, and 2 for
-invalid arguments or configuration. Dry-run validates data without writing
+Exit codes are 0 for success, 1 for findings (processing or validation
+failure), 2 for invalid arguments, a missing input file or configuration,
+and 3 for a bank rejection read by ``pain001 status``
+(:doc:`troubleshooting` has the table). Dry-run validates data without writing
 XML; it is not a bank-acceptance guarantee.
 
 Use generated help rather than a duplicate flag table:
@@ -183,8 +185,9 @@ For pre-commit, ``pain001-check`` checks staged XML files and
 Python: in-memory output
 ========================
 
-Data files must be under the current working directory; a path outside it
-is refused with ``SecurityError``. This example copies the synthetic sample
+From Python, data files must be under the current working directory; a
+path outside it is refused with ``SecurityError``. The command line reads
+the files you name on it wherever they are. This example copies the synthetic sample
 shipped in the installed package into the working directory first, and uses
 the bundled template and schema in place:
 

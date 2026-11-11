@@ -325,12 +325,14 @@ class TestDataLoader:
         """Test _load_from_list when validation fails (line 127)."""
         from unittest.mock import patch
 
+        from pain001.exceptions import RowIssue
+
         invalid_data_list = [{"id": "test", "date": "2023-01-01"}]
 
         with patch(
-            "pain001.data.loader.validate_csv_data",
+            "pain001.data.loader.row_issues",
             autospec=True,
-            return_value=False,
+            return_value=[RowIssue(1, "id", "P001-E010", "missing value")],
         ):
             with pytest.raises(
                 PaymentValidationError, match="Data list validation failed"
@@ -341,12 +343,14 @@ class TestDataLoader:
         """Test _load_from_dict when validation fails (line 143)."""
         from unittest.mock import patch
 
+        from pain001.exceptions import RowIssue
+
         invalid_data_dict = {"id": "test", "date": "2023-01-01"}
 
         with patch(
-            "pain001.data.loader.validate_csv_data",
+            "pain001.data.loader.row_issues",
             autospec=True,
-            return_value=False,
+            return_value=[RowIssue(1, "id", "P001-E010", "missing value")],
         ):
             with pytest.raises(
                 PaymentValidationError,

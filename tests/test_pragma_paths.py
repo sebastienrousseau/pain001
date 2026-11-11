@@ -131,8 +131,6 @@ def test_show_template_prints_example_files() -> None:
 
 def test_context_log_level_reaches_the_logger() -> None:
     context = Context.get_instance()
-    if context.logger is None:
-        context.init_logger()
     context.set_log_level("DEBUG")
     assert context.logger is not None
     assert context.logger.level == logging.DEBUG

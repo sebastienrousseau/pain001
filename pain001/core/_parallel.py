@@ -75,6 +75,7 @@ def build_chunk(job: ChunkJob) -> Built:
     Returns:
         The chunk's index, published path and row count.
     """
+    from pain001.security.path_validator import trusted_paths
     from pain001.xml import generate_xml as xml_generate
     from pain001.xml.publish import (
         finalise_message,
@@ -85,9 +86,14 @@ def build_chunk(job: ChunkJob) -> Built:
 
     # A spawned worker starts with no namespaces registered.
     register_namespaces(job.message_type)
-    xml_content = xml_generate.generate_xml_string(
-        job.rows, job.message_type, job.template, job.schema
-    )
+    # The parent already validated the template and schema (inside the
+    # jail, or as files the CLI user named); a spawned worker does not
+    # inherit that context, so it trusts exactly those two resolved
+    # files and nothing more.
+    with trusted_paths(job.template, job.schema):
+        xml_content = xml_generate.generate_xml_string(
+            job.rows, job.message_type, job.template, job.schema
+        )
     xml_content = finalise_message(
         xml_content,
         job.envelop_bah,

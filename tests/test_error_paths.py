@@ -19,33 +19,12 @@ import tempfile
 
 import pytest
 
-from pain001.context.context import Context
 from pain001.core.core import process_files
 from pain001.xml.generate_xml import generate_xml
 
 
 class TestErrorPaths:
     """Behavioural tests for error handling and edge cases."""
-
-    def test_context_logger_with_existing_handlers(self) -> None:
-        """Test context logger when handlers already exist."""
-        # Create a fresh context instance for testing
-        import logging
-
-        # Reset the singleton for this test
-        Context._instance = None
-        ctx = Context.get_instance()
-
-        # Manually set up logger with handler to test the branch
-        ctx.logger = logging.getLogger("test_pain001")
-        handler = logging.StreamHandler()
-        ctx.logger.addHandler(handler)
-
-        # Try to initialize - should raise exception because logger exists
-        with pytest.raises(
-            Exception, match="Logger has already been initialized"
-        ):
-            ctx.init_logger()
 
     def test_process_files_with_failed_xml_generation(self) -> None:
         """Test process_files when XML file generation fails."""

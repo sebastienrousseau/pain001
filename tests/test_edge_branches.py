@@ -42,9 +42,9 @@ def test_cli_missing_data_file_exits(tmp_path: Path) -> None:
         ],
     )
 
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     output = " ".join(result.output.lower().split())
-    assert "failed" in output
+    assert "input file not found" in output
 
 
 def test_process_files_invalid_message_type(tmp_path: Path) -> None:
