@@ -28,6 +28,7 @@ stays a liveness check and does not look at dependencies.
 
 from __future__ import annotations
 
+import functools
 import logging
 import os
 from collections.abc import Callable
@@ -48,8 +49,6 @@ logger = logging.getLogger(__name__)
 
 METRICS_AUTH_ENV = "PAIN001_METRICS_TOKEN"
 """Environment variable holding a bearer token for ``/metrics`` only."""
-
-_templates_loaded = False
 
 
 def require_metrics_token(
@@ -99,20 +98,18 @@ async def scalar_reference() -> HTMLResponse:
     return HTMLResponse(SCALAR_HTML)
 
 
+@functools.cache
 def _check_templates() -> None:
     """Load every bundled template and XSD once; remember success.
 
     A missing or unreadable file raises :class:`OSError`; one that is not
-    XML raises the parser's ``ParseError``.
+    XML raises the parser's ``ParseError``. ``functools.cache`` keeps only
+    a successful return, so a failed check is retried on the next probe.
     """
-    global _templates_loaded
-    if _templates_loaded:
-        return
     for message_type in valid_xml_types:
         base = TEMPLATES_DIR / message_type
         defused_et.parse(str(base / "template.xml"))
         defused_et.parse(str(base / f"{message_type}.xsd"))
-    _templates_loaded = True
 
 
 def _check_job_store() -> None:

@@ -592,11 +592,14 @@ def test_ready_fails_when_a_template_is_missing(
     """A missing bundled file makes the replica not ready."""
     from pain001.api import ops
 
-    monkeypatch.setattr(ops, "_templates_loaded", False)
+    ops._check_templates.cache_clear()
     monkeypatch.setattr(ops, "TEMPLATES_DIR", tmp_path)
     response = client.get("/api/v1/ready")
     assert response.status_code == 503
     assert response.json()["checks"]["templates"] == "failed"
+    # A failure is not remembered: the next probe checks again.
+    monkeypatch.undo()
+    assert client.get("/api/v1/ready").json()["checks"]["templates"] == "ok"
 
 
 def test_mask_error_rules() -> None:
