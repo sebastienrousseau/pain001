@@ -1,7 +1,9 @@
 # What the Bank of England requires of CHAPS payments since the ISO 20022
 # enhanced-data mandate: a purpose code on property and inter-financial
-# payments (1 May 2025), and structured or hybrid addresses on all
-# payments (from November 2025). Public source; no bank overlay.
+# payments (1 May 2025; on all payments from November 2027), and hybrid
+# or structured addresses (hybrid enabled November 2025, unstructured
+# rejected from November 2026). Public source; no bank overlay. See
+# docs/chaps-enhanced-data.md for the policy references.
 overlay_id: gb.boe.chaps-enhanced-data
 title: Bank of England CHAPS enhanced data
 applies_to: [gb.chaps.property-purchase]
@@ -15,9 +17,11 @@ rules:
     assertion: required
     error_code: CHAPS_PURPOSE_MISSING
   - rule_id: chaps-property-purpose
-    description: A property purchase uses the BoE housing code HLST.
+    description: >-
+      A property payment uses one of the six property codes the BoE
+      mandates from 1 May 2025.
     locator: Purp/Cd
-    assertion: one_of:[HLST, HLRP, HLTR]
+    assertion: one_of:[HLRP, HLST, PLDS, PDEP, PCOM, PLRF]
     error_code: CHAPS_PURPOSE_NOT_PROPERTY
     severity: warning
   - rule_id: chaps-town-required

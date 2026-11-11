@@ -22,12 +22,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   implementation; the corpus generator's LEI helpers now call it. The
   editor diagnostics report `invalid-lei` the same way, and the
   conformance kit gains `validate-bad-lei`.
+- `uk-chaps` carries the Bank of England's CHAPS enhanced-data rules
+  that reach a corporate's pain.001. A missing purpose code
+  (`UK-CHAPS-PURP`) stays a warning before the all-payments mandate and
+  is an error for payments whose requested execution date is on or
+  after 1 December 2027 (`rails.CHAPS_PURPOSE_ALL_PAYMENTS_FROM`; the
+  policy says "November 2027" with no day, so the narrower reading
+  starts after that month). The date comes from the file (the first
+  row's, when a later row leaves it blank), never the clock; a rail
+  built with `dataclasses.replace(rails.rail("uk-chaps"),
+  purpose_required_from=...)` moves it. Any `*_lei` value present must
+  verify (`UK-CHAPS-LEI`); no LEI is required, since the Bank's LEI
+  mandates cover payments between financial institutions.
+  `docs/chaps-enhanced-data.md` cites the 2024 and 2025 policy
+  statements and ISO 17442 for each rule.
 
 ### Changed
 
+- `PurposeMandate` and `PURPOSE_MANDATES` live in
+  `pain001.validation.purpose_mandates`, and the rails' check-digit
+  helpers in `pain001.validation._check_digits`; `rails` still exports
+  the mandates, so imports and profile names are unchanged.
 - The identifier-check error now opens `Invalid identifiers (N)`
   instead of `Invalid account identifiers (N)`, since an LEI is not an
   account identifier. Issue codes are unchanged.
+
+### Fixed
+
+- The Bank of England CHAPS overlay's property-purpose rule listed
+  HLTR, which is not an ISO external purpose code, and missed four of
+  the six codes the Bank mandates. It now lists HLRP, HLST, PLDS, PDEP,
+  PCOM and PLRF (policy statement 2024, section 4.1.5). Its header no
+  longer says structured addresses were required from November 2025:
+  hybrid addresses were enabled then, and unstructured ones are
+  rejected from November 2026.
 
 ## [0.0.86] - 2026-11-11
 

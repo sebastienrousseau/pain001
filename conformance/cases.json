@@ -85,6 +85,29 @@
       }
     },
     {
+      "id": "validate-chaps-purpose-required",
+      "method": "POST",
+      "path": "/api/v1/ui/validate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/chaps-no-purpose.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09",
+        "scheme": "uk-chaps"
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/is_valid": false,
+          "/errors": [],
+          "/scheme_violations/0/rule": "UK-CHAPS-PURP",
+          "/scheme_violations/0/severity": "error",
+          "/scheme_violations/0/field": "purpose_code"
+        }
+      }
+    },
+    {
       "id": "validate-unknown-message-type",
       "method": "POST",
       "path": "/api/v1/ui/validate",

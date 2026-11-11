@@ -16,6 +16,8 @@ server it describes. All data is synthetic.
   `pain001 generate`; the bad-IBAN file differs from the good one by one
   check digit, and the bad-LEI file adds a `debtor_lei` column whose
   synthetic LEI (unassigned `0000` prefix) has a broken check digit.
+  The CHAPS file is one synthetic GBP payment executed on 1 December
+  2027 with no purpose code, which the `uk-chaps` rail refuses.
 - `openapi.json`: the server's OpenAPI document at this kit version, for
   generating or checking client types. `tests/test_conformance_kit.py`
   fails when it drifts from the running app.

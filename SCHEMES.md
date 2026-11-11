@@ -114,6 +114,14 @@ and every remediation hint names the source document.
 The five `purpose-mandate-<cc>` profiles carry a country's purpose-code
 mandate on its own, so they compose with any rail: `uk-chaps,purpose-mandate-gb`.
 
+On `uk-chaps`, a missing purpose code is a warning until the Bank of
+England's all-payments mandate and an error for payments executed from
+1 December 2027 (`UK-CHAPS-PURP`), and any LEI the row carries must
+verify (`UK-CHAPS-LEI`). The date is read from the file, never the
+clock. [CHAPS enhanced data](https://github.com/sebastienrousseau/pain001/blob/main/docs/chaps-enhanced-data.md)
+records the policy, its sources and the readings taken where it is
+ambiguous.
+
 Rails judge the same rows the SEPA profiles do; a built corpus file is
 projected onto those rows by `pain001.corpus.rules.projection` so the
 corpus gate can run them (the plan's L2).
@@ -122,7 +130,7 @@ corpus gate can run them (the plan's L2).
 | :--- | :--- |
 | `uk-bacs` | Bacs ISO 20022 / Standard 18 translation guide v1.1; Bacs service description (originator name and reference lengths) |
 | `uk-fps` | Pay.UK Faster Payments scheme limits; Pay.UK ISO 20022 usage (service levels URGP and URNS) |
-| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses); a UK bank's public bulk-payment import guide (Jan 2025) |
+| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS, policy statements of 2024 and September 2025 (purpose codes from 1 May 2025 and on all payments from November 2027, LEIs, structured or hybrid addresses); a UK bank's public bulk-payment import guide (Jan 2025) |
 | `uk-bacs-dd` | Bacs AUDDIS service guide; Bacs ISO 20022 translation guide v1.1 (sequence-type to transaction-code mapping is an assumption) |
 | `de-ccu` | DK DFÜ-Abkommen Anlage 3 V26.11, order type CCU; a German bank's public CCU product description |
 | `de-axz` | DK DFÜ-Abkommen Anlage 3 V3.8, order type AXZ; a German bank's public AXZ product description (regulatory reporting for AWV) |

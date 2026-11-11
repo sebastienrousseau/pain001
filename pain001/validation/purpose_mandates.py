@@ -25,6 +25,7 @@ their own, so they compose with any rail through the comma syntax
 from __future__ import annotations
 
 import re
+from datetime import date
 from typing import Any
 
 from pain001.validation._scheme_rules import ValidationProfile
@@ -49,6 +50,26 @@ def row_text(row: dict[str, Any], *keys: str) -> str | None:
         if value is not None and str(value).strip():
             return str(value).strip()
     return None
+
+
+def execution_date(row: dict[str, Any]) -> date | None:
+    """The row's requested execution date, or ``None`` when unreadable.
+
+    Args:
+        row: One payment row.
+
+    Returns:
+        The date of ``requested_execution_date``, else of the date part
+        of ``requested_execution_datetime``; ``None`` when neither reads
+        as an ISO 8601 date.
+    """
+    raw = row_text(
+        row, "requested_execution_date", "requested_execution_datetime"
+    )
+    try:
+        return date.fromisoformat(raw[:10]) if raw else None
+    except ValueError:
+        return None
 
 
 def purpose_known(code: str) -> bool:
@@ -201,6 +222,7 @@ PURPOSE_MANDATES: tuple[PurposeMandate, ...] = (
 __all__ = [
     "PURPOSE_MANDATES",
     "PurposeMandate",
+    "execution_date",
     "purpose_known",
     "row_text",
 ]

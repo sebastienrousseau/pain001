@@ -44,19 +44,13 @@ from __future__ import annotations
 
 import re
 
+from pain001.validation._check_digits import mod97_alpha as _mod97
+
 #: The ISO 20022 ``LEIIdentifier`` pattern.
 LEI_PATTERN = re.compile(r"[A-Z0-9]{18}[0-9]{2}")
 
 #: An LEI's length (ISO 17442 clause 4).
 LEI_LENGTH = 20
-
-
-def _mod97(text: str) -> int:
-    """ISO/IEC 7064 MOD 97-10 remainder, letters mapped A=10 ... Z=35."""
-    remainder = 0
-    for digit in "".join(str(int(ch, 36)) for ch in text):
-        remainder = (remainder * 10 + int(digit)) % 97
-    return remainder
 
 
 def lei_check_digits(body: str) -> str:

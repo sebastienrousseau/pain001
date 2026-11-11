@@ -52,6 +52,7 @@ Contents
    plugins
    custom-rules
    bank-profiles
+   chaps-enhanced-data
    integration-recipes
    sftp-upload
    template_registry

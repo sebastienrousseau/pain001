@@ -285,7 +285,7 @@
     "lines": 84
   },
   "pain001/validation/rails.py": {
-    "file_lines": 1251
+    "file_lines": 1250
   },
   "pain001/validation/rails.py::RailProfile._check_creditor_reference": {
     "cognitive": 24,
