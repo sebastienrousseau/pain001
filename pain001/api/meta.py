@@ -22,6 +22,11 @@ from __future__ import annotations
 
 from typing import Any
 
+CANCEL_RESPONSES: dict[int | str, dict[str, Any]] = {
+    404: {"description": "No job has this id"},
+    409: {"description": "The job has already finished; it is left as it was"},
+}
+
 GENERATE_RESPONSES: dict[int | str, dict[str, Any]] = {
     400: {"description": "The input file or a scheme name was refused"},
     422: {

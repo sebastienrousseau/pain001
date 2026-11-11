@@ -91,6 +91,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   file. The job stays `cancelled` and is counted neither as a success
   nor as a failure.
 
+- Cancelling a job that has already finished answered `200` with
+  "cancelled" while leaving the job as it was. It now answers `409`
+  with the job's actual status, and the OpenAPI lists `404` and `409`
+  for the route.
+
 - `POST /api/v1/generate` answered `200` when it refused the data, so a
   client that checked only the status took a refusal for a generated
   file. Rows that fail validation or a scheme rule now answer `422`;

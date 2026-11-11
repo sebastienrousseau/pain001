@@ -396,6 +396,21 @@ class TestJobCancellationEndpoint:
         assert job is not None
         assert job.status == JobStatus.CANCELLED
 
+    @pytest.mark.parametrize(
+        "final", [JobStatus.SUCCESS, JobStatus.FAILED, JobStatus.CANCELLED]
+    )
+    def test_cancel_finished_job_is_refused(self, final):
+        """A finished job answers 409 with its status, unchanged."""
+        job_id = job_manager.create_job()
+        job_manager.update_status(job_id, final)
+
+        response = client.delete(f"/api/jobs/{job_id}")
+        assert response.status_code == 409
+        assert final.value in response.json()["detail"]
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == final
+
 
 class TestDownloadEndpoint:
     """Test /api/download/{job_id} endpoint."""

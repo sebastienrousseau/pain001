@@ -1303,7 +1303,7 @@
     },
     "/api/v1/jobs/{job_id}": {
       "delete": {
-        "description": "Cancel an async job.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    Dictionary with cancellation status.\n\nRaises:\n    HTTPException: If job not found.",
+        "description": "Cancel an async job.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    Dictionary with cancellation status.\n\nRaises:\n    HTTPException: 404 if the job is unknown, 409 if it has finished.",
         "operationId": "cancel_job_api_v1_jobs__job_id__delete",
         "parameters": [
           {
@@ -1346,6 +1346,12 @@
               }
             },
             "description": "Successful Response"
+          },
+          "404": {
+            "description": "No job has this id"
+          },
+          "409": {
+            "description": "The job has already finished; it is left as it was"
           },
           "422": {
             "content": {

@@ -49,12 +49,18 @@ from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import (
     JobCancelledError,
     JobCapacityError,
+    JobResult,
     JobStatus,
     job_manager,
     output_name,
 )
 from pain001.api.limits import install_body_limit
-from pain001.api.meta import API_DESCRIPTION, GENERATE_RESPONSES, TAGS_METADATA
+from pain001.api.meta import (
+    API_DESCRIPTION,
+    CANCEL_RESPONSES,
+    GENERATE_RESPONSES,
+    TAGS_METADATA,
+)
 from pain001.api.metrics import MetricsMiddleware
 from pain001.api.models import (
     GenerateXMLRequest,
@@ -456,6 +462,15 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
         ) from e
 
 
+def _job_or_404(job_id: str) -> JobResult:
+    """Return the job, or raise 404 when it is unknown."""
+    if (job := job_manager.get_job(job_id)) is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Job not found: {job_id}"
+        )
+    return job
+
+
 @router.get(
     "/status/{job_id}",
     response_model=JobStatusResponse,
@@ -478,13 +493,7 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     Raises:
         HTTPException: If job not found.
     """
-    job = job_manager.get_job(job_id)
-
-    if not job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
+    job = _job_or_404(job_id)
 
     message = {
         JobStatus.PENDING: "Job is pending",
@@ -508,6 +517,7 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     "/jobs/{job_id}",
     tags=["Job Management"],
     summary="Cancel job",
+    responses=CANCEL_RESPONSES,
     dependencies=[Depends(_require_api_key)],
 )
 async def cancel_job(job_id: str) -> dict[str, str]:
@@ -520,15 +530,11 @@ async def cancel_job(job_id: str) -> dict[str, str]:
         Dictionary with cancellation status.
 
     Raises:
-        HTTPException: If job not found.
+        HTTPException: 404 if the job is unknown, 409 if it has finished.
     """
-    cancelled = job_manager.cancel_job(job_id)
-
-    if not cancelled and job_id not in job_manager.jobs:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
+    if not job_manager.cancel_job(job_id):
+        job = _job_or_404(job_id)
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Job is {job.status}")
 
     return {
         "job_id": job_id,
@@ -559,13 +565,7 @@ async def download_xml(job_id: str) -> FileResponse:
     Raises:
         HTTPException: If job not found or file not available.
     """
-    job = job_manager.get_job(job_id)
-
-    if not job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
+    job = _job_or_404(job_id)
 
     if job.status != JobStatus.SUCCESS:
         raise HTTPException(
