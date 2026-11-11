@@ -64,3 +64,20 @@ def test_provenance_subjects_come_from_the_build_job() -> None:
         == "${{ needs.build.outputs.hashes }}"
     )
     assert "needs.publish.outputs" not in str(JOBS)
+
+
+def test_the_published_image_is_built_without_the_shared_cache() -> None:
+    """Only pull-request builds, which push nothing, use the GHA cache."""
+    docker = yaml.load(
+        (ROOT / ".github/workflows/docker.yml").read_text(encoding="utf-8"),
+        Loader=yaml.BaseLoader,
+    )
+    (build,) = [
+        step["with"]
+        for job in docker["jobs"].values()
+        for step in job["steps"]
+        if "docker/build-push-action" in step.get("uses", "")
+    ]
+    pr_only = "github.event_name == 'pull_request' && 'type=gha"
+    assert pr_only in build["cache-from"]
+    assert pr_only in build["cache-to"]

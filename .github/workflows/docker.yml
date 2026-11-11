@@ -88,8 +88,11 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Only pull-request builds, which push nothing, use the shared
+          # Actions cache; an image that is published is built from
+          # scratch, so a poisoned cache entry cannot reach it.
+          cache-from: ${{ github.event_name == 'pull_request' && 'type=gha' || '' }}
+          cache-to: ${{ github.event_name == 'pull_request' && 'type=gha,mode=max' || '' }}
           provenance: true
 
       - name: Smoke-test the published image

@@ -85,6 +85,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   an existing release on a re-run), Suite Consistency's `workflow_run`
   trigger, and its `./` action reference, which actionlint does not yet
   accept in the `$/` form.
+- The Docker workflow builds a published image without the shared
+  GitHub Actions cache; only pull-request builds, which push nothing,
+  read or write it.
 
 ### Fixed
 
