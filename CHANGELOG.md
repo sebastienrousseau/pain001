@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.87] - Unreleased
+
 ### Added
 
 - LEI checks on every load: each column named `lei` or ending in
