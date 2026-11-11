@@ -122,12 +122,14 @@ def run(client: TestClient) -> None:
 def _delete_a_job(client: TestClient) -> None:
     """Start a job and delete it.
 
+    A cancel stops the job at its next stage and removes any file it
+    was writing. A small job can finish before the DELETE arrives; the
+    server then answers 409 with the job's final status and leaves it
+    as it was, so both answers are expected here.
+
     Args:
         client: API test client with a running event loop.
     """
-    # A validate-only job, so it writes nothing: a generation job may
-    # already be writing its XML when it is deleted, and the file would
-    # be left in the working directory.
     response = client.post(
         "/api/v1/generate/async",
         json={
@@ -139,8 +141,12 @@ def _delete_a_job(client: TestClient) -> None:
     )
     second_job = response.json()["job_id"]
     response = client.delete(f"/api/v1/jobs/{second_job}")
-    assert response.status_code == 200, response.text
-    print(f"DELETE /api/v1/jobs/{{id}}     -> {response.json()['status']}")
+    assert response.status_code in {200, 409}, response.text
+    body = response.json()
+    outcome = body["status"] if response.status_code == 200 else body["detail"]
+    print(
+        f"DELETE /api/v1/jobs/{{id}}     -> {response.status_code} {outcome}"
+    )
 
 
 def main() -> None:
