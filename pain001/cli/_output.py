@@ -19,6 +19,7 @@ from rich.console import Console
 from rich.markup import escape
 from rich.table import Table
 
+from pain001.constants import APP_DESCRIPTION, APP_NAME
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.validation import SchemeValidationResult
 
@@ -114,3 +115,18 @@ def print_scheme_result(
             f"[bold red]✗ Scheme '{esc(scheme)}' validation failed[/bold red]",
             style="red",
         )
+
+
+def print_banner(console: Console) -> None:
+    """Print the name and one-line description at the top of a run.
+
+    Args:
+        console: The console the command writes to.
+    """
+    table = Table(
+        box=box.ROUNDED, safe_box=True, show_header=False, title=APP_NAME
+    )
+    table.add_column(justify="center", no_wrap=False, vertical="middle")
+    table.add_row(APP_DESCRIPTION)
+    table.width = 80
+    console.print(table)

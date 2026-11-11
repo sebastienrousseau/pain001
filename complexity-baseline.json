@@ -44,7 +44,7 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1291
+    "file_lines": 1278
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "lines": 121
@@ -54,7 +54,7 @@
   },
   "pain001/cli/cli.py::main": {
     "cyclomatic": 16,
-    "lines": 249
+    "lines": 244
   },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82

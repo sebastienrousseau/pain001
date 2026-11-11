@@ -374,8 +374,9 @@ docker compose logs --since 1h
 ```
 
 For production, ship logs to an aggregator (Loki / Datadog / CloudWatch).
-The server does not switch to JSON logs by itself: there is no
-environment variable for it. Call
+The server does not switch to JSON logs by itself (the
+`PAIN001_LOG_FORMAT` and `PAIN001_LOG_LEVEL` variables apply to the
+`generate` and `validate` commands, not to `serve`). Call
 `pain001.logging_schema.configure_json_logging()` from your own entry
 point if you need structured JSON (`PAIN001_LOG_LEVEL` and
 `PAIN001_LOG_FILE` then set the level and an optional file).

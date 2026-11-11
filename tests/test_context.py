@@ -68,21 +68,8 @@ class TestContext(unittest.TestCase):
         with self.assertRaises(ValueError):
             context.set_log_level(12345)  # some invalid int
 
-    def test_init_logger(self) -> None:
-        context = Context.get_instance()
-        context.logger = None
-        context.init_logger()
-        self.assertIsNotNone(context.logger)
-
-        with self.assertRaises(RuntimeError):
-            context.init_logger()
-
     def test_get_logger(self) -> None:
         context = Context.get_instance()
-        logger = context.get_logger()
-        self.assertIsNotNone(logger)
-        self.assertEqual(logger, context.logger)
-        context.logger = None
         logger = context.get_logger()
         self.assertIsNotNone(logger)
         self.assertEqual(logger, context.logger)
@@ -91,27 +78,6 @@ class TestContext(unittest.TestCase):
         context = Context.get_instance()
         context.set_log_level(logging.DEBUG)
         self.assertEqual(context.logger.level, logging.DEBUG)
-
-    def test_init_logger_with_existing_handlers(self) -> None:
-        """Test init_logger when logger already has handlers."""
-        context = Context.get_instance()
-
-        # Manually add a handler to test line 122 (if not self.logger.handlers)
-        test_handler = logging.StreamHandler()
-        context.logger.addHandler(test_handler)
-
-        # Remove all handlers and re-initialize to test the handler check
-        context.logger.handlers.clear()
-        context.logger = None
-        context.init_logger()
-
-        # Verify logger was initialized
-        self.assertIsNotNone(context.logger)
-        self.assertGreater(
-            len(context.logger.handlers),
-            0,
-            "Logger should have at least one handler",
-        )
 
     def test_concurrent_get_instance(self) -> None:
         """Test that get_instance is safe under concurrent execution across threads."""

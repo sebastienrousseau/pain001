@@ -36,9 +36,11 @@ from pain001.cli._check import check_cmd
 from pain001.cli._config import _resolve_config
 from pain001.cli._gpg import _apply_gpg_options, _workers_option
 from pain001.cli._hints import print_data_tip, read_text
+from pain001.cli._logging import configure_logging, log_format_option
 from pain001.cli._operations import add_operations
 from pain001.cli._output import (
     esc,
+    print_banner,
     print_scheme_result,
     print_template_details,
     print_template_list,
@@ -54,10 +56,7 @@ from pain001.cli._verify_signature import (
     verify_signature_cmd,
     xml_sign_options,
 )
-from pain001.constants import APP_DESCRIPTION as description
-from pain001.constants import APP_NAME as title
 from pain001.constants import VERSION, valid_xml_types
-from pain001.context.context import Context
 from pain001.core.core import process_files, process_files_streaming
 from pain001.faces.cli import face_cmd
 from pain001.logging_schema import (
@@ -78,24 +77,6 @@ from pain001.validation._one_batch import load_batch
 from pain001.xml.envelope import BusinessApplicationHeader
 
 console = Console()
-
-
-def _configure_logging(verbose: bool) -> logging.Logger:
-    """Configure logging level based on verbosity flag.
-
-    Args:
-        verbose: If True, enable DEBUG logging; otherwise INFO.
-
-    Returns:
-        Configured logger instance.
-    """
-    logger = Context.get_instance().get_logger()
-    if verbose:
-        logger.setLevel(logging.DEBUG)
-        console.print("[bold cyan]ℹ Verbose logging enabled[/bold cyan]")
-    else:
-        logger.setLevel(logging.INFO)
-    return logger
 
 
 def _run_scheme_check(
@@ -446,7 +427,7 @@ _identifier_checks_option = click.option(
     "--verbose",
     is_flag=True,
     default=False,
-    help="Enable detailed logging output (INFO and DEBUG messages)",
+    help="Show the library's DEBUG and INFO log records on stderr.",
 )
 @click.option(
     "--streaming/--no-streaming",
@@ -580,6 +561,7 @@ _identifier_checks_option = click.option(
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
 @_identifier_checks_option
+@log_format_option
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -611,6 +593,7 @@ def main(
     xml_sign_passphrase_env: str | None = None,
     schematron: str | None = None,
     identifier_checks: bool = True,
+    log_format: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -653,20 +636,14 @@ def main(
         schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
             or filesystem path to a .sch rulebook file.
         identifier_checks: If False, skip the IBAN and BIC checks.
+        log_format: Log record format on stderr ('text' or 'json').
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
     """
-    # Display banner
-    table = Table(
-        box=box.ROUNDED, safe_box=True, show_header=False, title=title
-    )
-    table.add_column(justify="center", no_wrap=False, vertical="middle")
-    table.add_row(description)
-    table.width = 80
-    console.print(table)
+    print_banner(console)
 
-    logger = _configure_logging(verbose)
+    logger = configure_logging(console, verbose, log_format)
 
     if list_templates:
         print_template_list(console)
@@ -950,7 +927,13 @@ cli.add_command(verify_signature_cmd)
     metavar="VAR",
     help="Environment variable holding the GPG passphrase.",
 )
-@click.option("-v", "--verbose", is_flag=True, default=False)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Show the library's DEBUG and INFO log records on stderr.",
+)
 @click.option(
     "--rules",
     type=click.Path(exists=True, dir_okay=False, readable=True),
@@ -964,6 +947,7 @@ cli.add_command(verify_signature_cmd)
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
 @_identifier_checks_option
+@log_format_option
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -980,6 +964,7 @@ def validate_cmd(
     rules: str | None,
     schematron: str | None = None,
     identifier_checks: bool = True,
+    log_format: str | None = None,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -1002,6 +987,7 @@ def validate_cmd(
         rules: Optional path to private YAML CEL policy rules.
         schematron: Optional Schematron rulebook preset or path.
         identifier_checks: If False, skip the IBAN and BIC checks.
+        log_format: Log record format on stderr ('text' or 'json').
     """
     ctx.invoke(
         main,
@@ -1019,6 +1005,7 @@ def validate_cmd(
         rules=rules,
         schematron=schematron,
         identifier_checks=identifier_checks,
+        log_format=log_format,
     )
 
 
