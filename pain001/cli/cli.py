@@ -76,6 +76,7 @@ from pain001.validation.ladder import check_scheme, load_valid, read_policy
 from pain001.xml.envelope import BusinessApplicationHeader
 
 console = Console()
+__all__ = ["cli", "main"]
 
 
 def _run_scheme_check(
@@ -98,8 +99,7 @@ def _run_scheme_check(
         message_type: Schema used for policy numeric types.
 
     Raises:
-        SystemExit: 2 if the scheme name is unknown, 1 if rows violate it.
-            A missing ``rules`` extra or a bad policy is a 2 as well.
+        SystemExit: 2 if the scheme or policy is refused, 1 if rows fail.
     """
     try:
         source = read_policy(rules) if rules is not None else None

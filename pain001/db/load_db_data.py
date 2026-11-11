@@ -26,6 +26,8 @@ from typing import Any
 from pain001.exceptions import ConfigurationError
 from pain001.security import validate_path
 
+__all__ = ["load_db_data", "sanitize_table_name"]
+
 
 def _connect_sqlite_read_only(safe_path: str) -> Any:
     """Open an SQLite database in read-only mode.

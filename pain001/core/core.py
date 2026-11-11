@@ -47,6 +47,8 @@ from pain001.security.path_validator import sanitize_for_log, validate_path
 from pain001.validation.ladder import load_valid, load_valid_chunks
 from pain001.xml.envelope import BusinessApplicationHeader
 
+__all__ = ["process_files", "process_files_streaming"]
+
 # Library code: no handlers, no level overrides — the host
 # application controls logging configuration.
 logger = logging.getLogger(__name__)

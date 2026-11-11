@@ -41,6 +41,8 @@ from pain001.parquet.load_parquet_data import (
     load_parquet_data_streaming,
 )
 
+__all__ = ["load_payment_data", "load_payment_data_streaming"]
+
 #: Line of the first row in a file with a header line; a row counts
 #: from 1 in every other input.
 _HEADER_FIRST_LINE = {".csv": 2}

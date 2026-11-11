@@ -10,6 +10,8 @@ from typing import Any
 from pain001.validation.charset import sanitize_to_charset
 from pain001.validation.schema_validator import SchemaValidator
 
+__all__ = ["suggest_record_fix"]
+
 _FIELD = re.compile(r"[A-Za-z][A-Za-z0-9_]*\Z")
 _PROTECTED = frozenset(
     {"amount", "payment_amount", "currency", "payment_currency", "ctrl_sum"}

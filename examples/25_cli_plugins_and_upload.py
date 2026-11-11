@@ -38,6 +38,8 @@ Run from the repository root::
     python examples/25_cli_plugins_and_upload.py
 """
 
+import base64
+import hashlib
 import importlib.util
 import json
 import logging
@@ -302,8 +304,6 @@ def _start_sftp_server(
     """
     import paramiko
 
-    from pain001.transport.sftp import fingerprint
-
     # The client side hangs up mid-handshake on purpose (host-key probe,
     # rejected pin); keep paramiko's server-side log of that quiet.
     logging.getLogger("paramiko").addHandler(logging.NullHandler())
@@ -324,7 +324,10 @@ def _start_sftp_server(
                 _serve_one(connection, key, root, stop, client_key)
 
     Thread(target=serve, daemon=True).start()
-    return listener.getsockname()[1], fingerprint(key)
+    # The OpenSSH SHA256 fingerprint, as `ssh-keygen -l` prints it.
+    digest = hashlib.sha256(key.asbytes()).digest()
+    host_key = "SHA256:" + base64.b64encode(digest).decode("ascii").rstrip("=")
+    return listener.getsockname()[1], host_key
 
 
 def _certificate(work: Path, user: object) -> Path:

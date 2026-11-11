@@ -45,6 +45,12 @@ from defusedxml.ElementTree import ParseError
 from pain001._lazy import lazy_module
 from pain001.observability.otel import traced
 
+__all__ = [
+    "collect_xsd_validation_errors",
+    "validate_via_xsd",
+    "validate_xml_string_via_xsd",
+]
+
 # xmlschema loads on first use (about 60 ms): the CLI imports this module
 # at start-up, and --help never validates anything.
 if TYPE_CHECKING:

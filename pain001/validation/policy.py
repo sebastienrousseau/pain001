@@ -27,6 +27,12 @@ from pain001.validation.schemes import (
     validate_scheme,
 )
 
+__all__ = [
+    "CustomRuleScheme",
+    "MAX_POLICY_BYTES",
+    "validate_policy",
+]
+
 MAX_POLICY_BYTES = 65536
 MAX_RULES = 64
 MAX_EXPRESSION_LENGTH = 2048

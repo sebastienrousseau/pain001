@@ -32,7 +32,7 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 
-from pain001.api.app import app
+from pain001.api import app
 
 # JSON rather than CSV: the API validates rows against a typed JSON
 # schema, and JSON carries the native integer/boolean types it expects.

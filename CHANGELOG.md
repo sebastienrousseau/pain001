@@ -53,6 +53,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the CLI, `process_files`, `ValidationService`, `pain001.validate` and
   `generate`, and the REST `/validate`, `/generate` and `/ui/*` routes
   all run.
+- Modules whose names the examples use declare `__all__`, and
+  `tests/test_examples.py` fails when an example imports a name outside
+  a module's `__all__` or from a private module.
 
 ### Changed
 

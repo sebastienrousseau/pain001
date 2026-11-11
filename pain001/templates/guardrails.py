@@ -25,6 +25,12 @@ from pain001.templates.registry import (
     TemplateRegistry,
 )
 
+__all__ = [
+    "SchemaGuardrailError",
+    "validate_registry",
+    "validate_template_bundle",
+]
+
 
 class SchemaGuardrailError(ValueError):
     """Raised when template metadata or namespaces drift."""

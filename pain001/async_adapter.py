@@ -25,6 +25,14 @@ from pain001.validation.service import ValidationConfig, ValidationService
 from pain001.xml.envelope import BusinessApplicationHeader
 from pain001.xml.generate_xml import generate_xml_string
 
+__all__ = [
+    "generate_xml_string_async",
+    "load_payment_data_async",
+    "process_files_async",
+    "process_files_streaming_async",
+    "validate_all_async",
+]
+
 
 async def process_files_async(
     xml_message_type: str,
