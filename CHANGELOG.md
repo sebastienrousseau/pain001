@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.86] - 2026-11-11
+
 ### Added
 
 - `GET /api/v1/ready` answers 503 unless every template and XSD loads
@@ -102,6 +104,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Release 0.0.86 in lockstep with the pain001 suite.
 - `pain001` exports `RowIssue`, `IssueCode` and `Pain001Error`.
 - `generate --help` examples need only `-t` and `-d`; the banner names
   every input format (CSV, SQLite, JSON, JSONL, Parquet).
