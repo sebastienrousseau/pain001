@@ -135,13 +135,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   npm on tag runs, the Docker smoke test reads the image tag from the
   environment instead of a template expansion, the CodeQL, Scorecard
   and setup-java pins carry their real version comments, and Dependabot
-  waits seven days before proposing a version update. Five exceptions
-  are recorded where they apply, each with its reason: the SLSA
-  generator's tag reference (`.github/zizmor.yml`), the Poetry caches in
-  the three CI jobs that publish nothing, `action-gh-release` (it updates
-  an existing release on a re-run), Suite Consistency's `workflow_run`
-  trigger, and its `./` action reference, which actionlint does not yet
-  accept in the `$/` form.
+  waits seven days before proposing a version update. Three exceptions
+  remain, each an inline ignore on the one line it covers with its
+  reason on that line: the SLSA generator's tag reference in `ci.yml`
+  and `slsa.yml` (slsa-verifier rejects a SHA reference),
+  `action-gh-release` (it updates an existing release on a re-run, where
+  `gh release create` fails), and Suite Consistency's `./` action
+  reference (actionlint 1.7.12 rejects the `$/` form zizmor suggests).
+  `.github/zizmor.yml` now holds policy only: every action, first-party
+  ones included, must be pinned to a commit.
+- The workflow exceptions first recorded for zizmor that covered a real
+  risk are fixed instead of ignored, and the pedantic audit's permission
+  and injection findings with them. Suite Consistency no longer runs on
+  `workflow_run`: it audits daily and on dispatch, since the core
+  publishes first and each companion audits after its own release. The
+  CI jobs that also run on release tags (XML-DSig interop, tollgates,
+  the quality-gate matrix) no longer restore a Poetry cache. The Docker
+  workflow no longer grants `id-token: write` at workflow level, the
+  Scorecard and SLSA workflows grant nothing at workflow level instead
+  of `read-all`, the CodeQL job drops `packages: read` and
+  `actions: read` (needed only for private repositories), and every
+  write scope carries a comment saying why. The CodeQL gate and the
+  mutation shards pass their values to the shell through `env` instead
+  of expanding them into the script. `tests/test_zizmor_ignores.py`
+  fails on an ignore without a reason, an ignore of template injection,
+  dangerous triggers or excessive permissions, an exception in the
+  configuration file, a `workflow_run` or `pull_request_target` trigger,
+  a write scope at workflow level, or a template expanded inside a
+  `run` script.
 - The Docker workflow builds a published image without the shared
   GitHub Actions cache; only pull-request builds, which push nothing,
   read or write it.

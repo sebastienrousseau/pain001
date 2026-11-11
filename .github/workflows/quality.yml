@@ -52,7 +52,9 @@ jobs:
       - run: poetry install --no-interaction --all-extras
       # No `|| true`: for months this step failed on a removed mutmut flag
       # and nobody saw it. The gate in the Makefile is the point of the job.
-      - run: poetry run make mutate-shard SHARD=${{ matrix.shard }}
+      - run: poetry run make mutate-shard SHARD="$SHARD"
+        env:
+          SHARD: ${{ matrix.shard }}
         timeout-minutes: 90
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()

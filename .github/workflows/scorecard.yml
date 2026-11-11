@@ -18,7 +18,8 @@ on:
     branches: [main]
   workflow_dispatch:
 
-permissions: read-all
+# The job below states the two scopes it needs; nothing else is granted.
+permissions: {}
 
 jobs:
   analysis:

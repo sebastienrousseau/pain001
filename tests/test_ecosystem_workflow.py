@@ -11,24 +11,30 @@ from ecosystem_audit import inventory, workflows
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_audit_watches_completed_publishing_workflows() -> None:
-    """GITHUB_TOKEN-created releases do not launch release-event workflows."""
+def test_core_audit_runs_on_its_own_schedule_and_on_demand() -> None:
+    """No other workflow's completion can start it with this repository's trust.
+
+    The core publishes first, so an audit after its own release fails
+    until the companions ship; each companion audits after its own
+    publication, and the core's runs daily or when dispatched.
+    """
     workflow = yaml.load(
         (ROOT / ".github/workflows/suite-consistency.yml").read_text(),
         Loader=yaml.BaseLoader,
     )
     events = workflow["on"]
-    assert {"schedule", "workflow_dispatch", "workflow_run"} <= set(events)
-    assert set(events["workflow_run"]["workflows"]) == {
-        "ci",
-        "🐳 Build & Publish Docker Image",
-    }
-    assert events["workflow_run"]["types"] == ["completed"]
+    assert set(events) == {"schedule", "workflow_dispatch"}
+    assert set(events["workflow_dispatch"]["inputs"]) == {"version"}
     assert workflow["permissions"] == {"contents": "read"}
-    condition = workflow["jobs"]["consistency"]["if"]
-    assert "workflow_run.conclusion == 'success'" in condition
-    assert "workflow_run.event == 'push'" in condition
-    assert "workflow_run.head_branch" in condition
+    job = workflow["jobs"]["consistency"]
+    assert "if" not in job
+    assert "workflow_run" not in str(job)
+    action = [
+        step
+        for step in job["steps"]
+        if "check-ecosystem" in step.get("uses", "")
+    ]
+    assert action[0]["with"]["version"] == "${{ inputs.version }}"
 
 
 def test_readme_and_roadmap_list_all_nine_members() -> None:

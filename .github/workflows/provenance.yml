@@ -28,9 +28,9 @@ jobs:
     name: Attest build provenance
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      id-token: write
-      attestations: write
+      contents: read # read the release assets
+      id-token: write # sign through Sigstore OIDC
+      attestations: write # store the attestation
     steps:
       - name: Download release distributions
         env:

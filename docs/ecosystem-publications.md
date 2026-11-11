@@ -52,12 +52,16 @@ checklist. A signed tag does not establish artifact provenance on its own.
 
 ## CI and partial rollouts
 
-The Suite Consistency workflow runs daily, manually, and after successful
-tag-publishing and container-building workflows. A standalone
-`release: published` trigger is insufficient because releases created with
-`GITHUB_TOKEN` do not launch another workflow; see GitHub's
+The core's Suite Consistency workflow runs daily and on dispatch, from
+trusted default-branch code with a read-only token. It does not run on
+another workflow's completion (`workflow_run`): the core publishes
+first, so an audit straight after its release can only report the
+companions that have not shipped yet, and each companion runs the audit
+after its own publication. Dispatch the core's workflow once the last
+member is out. A standalone `release: published` trigger would not help
+either, because releases created with `GITHUB_TOKEN` do not launch
+another workflow; see GitHub's
 [workflow triggering rules](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
-The audit uses read-only permissions and trusted default-branch code.
 
 The shared `.github/actions/check-ecosystem` action lets companions run the
 same checker pinned to a reviewed core commit. They watch their own release
