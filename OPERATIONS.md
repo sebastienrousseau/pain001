@@ -83,7 +83,11 @@ browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 
 | Variable | Effect | Example |
 | :--- | :--- | :--- |
-| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint except `/api/v1/health`; `pain001 serve` needs it for any non-loopback `--host` | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
+| `PAIN001_API_KEY` | Require `Authorization: Bearer <key>` on every endpoint except `/api/v1/health` and `/api/v1/ready`, `/metrics` included; `pain001 serve` needs it for any non-loopback `--host` | `export PAIN001_API_KEY=$(openssl rand -hex 32)` |
+| `PAIN001_METRICS_TOKEN` | A separate bearer token for `/metrics`, so the scraper never holds the API key; when set, `/metrics` takes this token and not the key | `export PAIN001_METRICS_TOKEN=$(openssl rand -hex 32)` |
+| `PAIN001_METRICS_PAYMENT_VOLUME` | `1`, `true` or `yes` records and exposes `pain001_payment_volume_cents_total`; off by default because volume per currency is business data | `1` |
+| `PAIN001_MAX_BODY_BYTES` | Largest request body; a bigger one is answered `413` before it is parsed. A positive integer; anything else stops the server at start-up | `22020096` (21 MiB, default) |
+| `PAIN001_MAX_ACTIVE_JOBS` | Async jobs that may be pending or processing at once; `POST /generate/async` answers `503` with `Retry-After: 5` beyond it | `100` (default) |
 | `PAIN001_ALLOW_INSECURE` | `1`, `true` or `yes` lets `pain001 serve` bind a non-loopback address without a key (same as `--insecure`); local experiments only | `1` |
 | `PAIN001_API_CONCURRENCY` | Validation and generation pipelines run at once per worker process; extra requests and jobs queue. A positive integer; anything else stops the server at start-up | CPU count (default) |
 | `PAIN001_RATE_LIMIT` | Per-client request cap (fixed window); unset means no limit | `100/minute` |
@@ -99,18 +103,31 @@ browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 ## Health and readiness
 
 - `GET /api/v1/health` → `{"status":"healthy","version":"…"}`. Use it as the
-  liveness/readiness probe. Any non-200 or timeout = unhealthy.
+  liveness probe: it answers while the process can serve HTTP and checks
+  nothing else. Any non-200 or timeout = unhealthy.
+- `GET /api/v1/ready` → `{"status":"ready","checks":{…}}`, or `503` with
+  `"status":"not_ready"`. It loads every bundled template and XSD (once,
+  then remembered) and, when a job store is configured, pings it (the
+  directory is writable, or Redis answers). `checks` names each result
+  (`ok`, `failed`, or `disabled` when there is no store); the reason for a
+  failure is logged, not returned. Use it as the readiness probe and the
+  load balancer check. Neither endpoint takes the API key.
 
 ```yaml
-# Kubernetes probe
+# Kubernetes probes
 livenessProbe:
   httpGet: { path: /api/v1/health, port: 8000 }
+  periodSeconds: 10
+readinessProbe:
+  httpGet: { path: /api/v1/ready, port: 8000 }
   periodSeconds: 10
 ```
 
 ## Metrics (Prometheus)
 
-`GET /metrics` exposes the Prometheus text format (no extra dependency):
+`GET /metrics` exposes the Prometheus text format (no extra dependency).
+With `PAIN001_API_KEY` set it needs `Authorization: Bearer <key>`, or the
+`PAIN001_METRICS_TOKEN` when that is set:
 
 | Metric | Type | Meaning |
 | :--- | :--- | :--- |
@@ -120,7 +137,7 @@ livenessProbe:
 | `pain001_jobs{status}` | gauge | Async jobs by status (pending/processing/success/failed/cancelled) |
 | `pain001_http_requests_total{method,status}` | counter | HTTP requests seen |
 | `pain001_files_processed_total{status,message_type}` | counter | Files processed, by outcome and message type |
-| `pain001_payment_volume_cents_total{currency}` | counter | Payment volume in minor units, by currency |
+| `pain001_payment_volume_cents_total{currency}` | counter | Payment volume in minor units, by currency; only with `PAIN001_METRICS_PAYMENT_VOLUME=1` |
 | `pain001_processing_seconds` | summary | Generation processing latency |
 
 Scrape config:
@@ -129,6 +146,8 @@ Scrape config:
 scrape_configs:
   - job_name: pain001
     metrics_path: /metrics
+    authorization:
+      credentials_file: /etc/prometheus/pain001-metrics-token
     static_configs:
       - targets: ["pain001:8000"]
 ```

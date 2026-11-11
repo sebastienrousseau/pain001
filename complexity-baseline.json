@@ -21,21 +21,10 @@
     "lines": 71
   },
   "pain001/api/app.py": {
-    "file_lines": 669
+    "file_lines": 666
   },
   "pain001/api/job_store.py::RedisJobStore.load_all": {
     "cognitive": 17
-  },
-  "pain001/api/metrics.py::render_prometheus": {
-    "lines": 73
-  },
-  "pain001/api/ui.py": {
-    "file_lines": 601
-  },
-  "pain001/api/ui.py::_parse_rows": {
-    "cognitive": 22,
-    "cyclomatic": 16,
-    "lines": 80
   },
   "pain001/camt053/generator.py::build_camt053_statement": {
     "lines": 63

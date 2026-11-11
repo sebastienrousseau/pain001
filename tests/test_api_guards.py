@@ -42,10 +42,10 @@ def test_anything_else_is_a_400(bad: str) -> None:
 
 
 def test_app_and_dashboard_share_the_barrier() -> None:
-    """The app module's private alias is the same function object."""
+    """The app and the dashboard pipelines use the same function object."""
     import importlib
 
     app_module = importlib.import_module("pain001.api.app")
-    ui_module = importlib.import_module("pain001.api.ui")
+    upload_module = importlib.import_module("pain001.api._upload")
     assert app_module._sanitise_message_type is sanitise_message_type
-    assert ui_module.sanitise_message_type is sanitise_message_type
+    assert upload_module.sanitise_message_type is sanitise_message_type

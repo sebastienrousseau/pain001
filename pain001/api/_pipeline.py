@@ -41,6 +41,7 @@ from typing import Any, ParamSpec, TypeVar
 
 from fastapi import HTTPException, status
 
+from pain001.api._redact import mask_error
 from pain001.api.job_manager import JobStatus
 from pain001.api.metrics import registry
 from pain001.api.models import (
@@ -212,16 +213,16 @@ def format_validation_errors(
         errors: List of (row_index, error_list) tuples from SchemaValidator.
 
     Returns:
-        List of ValidationErrorModel instances.
+        List of ValidationErrorModel instances, with IBAN, BIC, account
+        and name values masked (see :mod:`pain001.api._redact`).
     """
     error_models: list[ValidationErrorModel] = []
     for _, row_errors in errors:
         for error in row_errors:
+            message, value = mask_error(error.path, error.message, error.value)
             error_models.append(
                 ValidationErrorModel(
-                    field=error.path,
-                    message=error.message,
-                    value=str(error.value),
+                    field=error.path, message=message, value=value
                 )
             )
     return error_models

@@ -196,8 +196,11 @@ class TestPrometheusObservabilityEngine:
             in reg.render("pain001_payment_volume_cents_total")
         )
 
-    def test_record_data_volumes_aggregation(self) -> None:
+    def test_record_data_volumes_aggregation(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Volume aggregation extracts cents across currencies and skips bad rows."""
+        monkeypatch.setenv("PAIN001_METRICS_PAYMENT_VOLUME", "1")
         reg = MetricsRegistry()
         data = [
             {"payment_amount": "100.50", "currency": "EUR"},
@@ -219,8 +222,11 @@ class TestPrometheusObservabilityEngine:
             in lines
         )
 
-    def test_render_prometheus_full_exposition(self) -> None:
+    def test_render_prometheus_full_exposition(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """render_prometheus emits standard headers and series."""
+        monkeypatch.setenv("PAIN001_METRICS_PAYMENT_VOLUME", "1")
         registry.reset()
         registry.record_file_processed("success", "pain.001.001.03")
         registry.record_payment_volume("EUR", 50000)
@@ -237,8 +243,11 @@ class TestPrometheusObservabilityEngine:
         assert "# TYPE custom_counter counter" in body
         assert 'custom_counter{tag="val"} 3.0' in body
 
-    def test_generate_endpoint_records_metrics(self) -> None:
+    def test_generate_endpoint_records_metrics(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
         """Calling /api/generate updates processed files, volume, and latency."""
+        monkeypatch.setenv("PAIN001_METRICS_PAYMENT_VOLUME", "1")
         import os
 
         registry.reset()

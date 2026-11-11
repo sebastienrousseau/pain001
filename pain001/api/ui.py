@@ -38,41 +38,40 @@ whole surface off with ``PAIN001_UI_DISABLED=1``.
 
 from __future__ import annotations
 
-import csv
-import io
 import json
 import os
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import HTMLResponse
 
 from pain001 import __version__
+from pain001.api._pipeline import run_pipeline
+from pain001.api._upload import (
+    SUPPORTED_SUFFIXES,
+    generate_upload,
+    validate_upload,
+)
 from pain001.api.auth import require_api_key
-from pain001.api.guards import sanitise_message_type
 from pain001.api.models import (
+    MAX_UPLOAD_BYTES,
     UiFilePayload,
     UiGenerateResponse,
-    ValidationError,
     ValidationResponse,
 )
-from pain001.constants import TEMPLATES_DIR, valid_xml_types
-from pain001.data.loader import load_payment_data
-from pain001.exceptions import DataSourceError, PaymentValidationError
+from pain001.constants import valid_xml_types
 from pain001.observability.otel import traced
-from pain001.validation import validate_scheme
-from pain001.validation.schema_validator import SchemaValidator
 from pain001.validation.schemes import PROFILES
-from pain001.xml.generate_xml import generate_xml_string
 
 UI_DISABLED_ENV = "PAIN001_UI_DISABLED"
 """Set to ``1`` / ``true`` / ``yes`` to take the dashboard offline."""
 
-MAX_UPLOAD_BYTES = 10 * 1024 * 1024
-"""Largest file the dashboard accepts, in UTF-8 bytes (10 MiB)."""
-
-SUPPORTED_SUFFIXES: tuple[str, ...] = (".csv", ".json", ".jsonl")
-"""Text formats the dashboard parses in memory."""
+__all__ = [
+    "MAX_UPLOAD_BYTES",
+    "SUPPORTED_SUFFIXES",
+    "UI_DISABLED_ENV",
+    "is_ui_enabled",
+    "ui_router",
+]
 
 
 def is_ui_enabled() -> bool:
@@ -109,138 +108,6 @@ ui_router = APIRouter(
 )
 
 
-_BAD_REQUEST = status.HTTP_400_BAD_REQUEST
-
-
-def _parse_rows(filename: str, content: str) -> list[dict[str, Any]]:
-    """Turn the uploaded text into validated payment rows.
-
-    Mirrors the file loaders: CSV through :class:`csv.DictReader`, JSON
-    as a list or a single object, JSON Lines one object per line, then
-    the same row validation the path-based loaders apply.
-
-    Args:
-        filename: The name the browser reported; only its suffix is used.
-        content: The file's text.
-
-    Returns:
-        The validated rows.
-
-    Raises:
-        HTTPException: ``400`` for an unsupported suffix, malformed
-            text, or rows that fail validation; ``413`` when the text
-            exceeds :data:`MAX_UPLOAD_BYTES`.
-    """
-    suffix = os.path.splitext(filename.lower())[1]
-    if suffix not in SUPPORTED_SUFFIXES:
-        raise HTTPException(
-            status_code=_BAD_REQUEST,
-            detail=f"Unsupported file type {suffix or '(none)'!r}; upload a "
-            f"{', '.join(SUPPORTED_SUFFIXES)} file.",
-        )
-    if len(content.encode("utf-8")) > MAX_UPLOAD_BYTES:
-        raise HTTPException(
-            status_code=status.HTTP_413_CONTENT_TOO_LARGE,
-            detail=(
-                f"File exceeds {MAX_UPLOAD_BYTES // (1024 * 1024)} MiB; "
-                "use the CLI or the path-based API for batches this size."
-            ),
-        )
-
-    rows: list[Any]
-    if suffix == ".csv":
-        rows = list(csv.DictReader(io.StringIO(content)))
-    elif suffix == ".json":
-        try:
-            parsed = json.loads(content)
-        except json.JSONDecodeError as exc:
-            raise HTTPException(
-                status_code=_BAD_REQUEST, detail=f"Invalid JSON: {exc.msg}"
-            ) from exc
-        if isinstance(parsed, dict):
-            rows = [parsed]
-        elif isinstance(parsed, list):
-            rows = parsed
-        else:
-            raise HTTPException(
-                status_code=_BAD_REQUEST,
-                detail="JSON input must be an object or an array of objects.",
-            )
-    else:
-        rows = []
-        for number, line in enumerate(content.splitlines(), start=1):
-            if not line.strip():
-                continue
-            try:
-                rows.append(json.loads(line))
-            except json.JSONDecodeError as exc:
-                raise HTTPException(
-                    status_code=_BAD_REQUEST,
-                    detail=f"Invalid JSON on line {number}: {exc.msg}",
-                ) from exc
-
-    if not rows:
-        raise HTTPException(
-            status_code=_BAD_REQUEST, detail="The file has no payment rows."
-        )
-    if not all(isinstance(row, dict) for row in rows):
-        raise HTTPException(
-            status_code=_BAD_REQUEST,
-            detail="Every payment row must be a JSON object.",
-        )
-    try:
-        return load_payment_data(rows)
-    except (DataSourceError, PaymentValidationError) as exc:
-        raise HTTPException(status_code=_BAD_REQUEST, detail=str(exc)) from exc
-
-
-def _format_errors(
-    errors: list[tuple[int, list[Any]]],
-) -> list[ValidationError]:
-    """Flatten ``SchemaValidator.validate_batch`` errors into API models.
-
-    Args:
-        errors: ``(row_index, error_list)`` tuples for invalid rows.
-
-    Returns:
-        One :class:`ValidationError` per field error.
-    """
-    return [
-        ValidationError(
-            field=error.path,
-            message=error.message,
-            value=str(error.value),
-        )
-        for _, row_errors in errors
-        for error in row_errors
-    ]
-
-
-def _scheme_violations(
-    rows: list[dict[str, Any]], scheme: str | None
-) -> tuple[bool, list[dict[str, Any]]]:
-    """Run the requested scheme rulebooks, if any.
-
-    Args:
-        rows: Validated payment rows.
-        scheme: Profile spec (one name, or comma-separated names), or
-            ``None`` to skip scheme validation.
-
-    Returns:
-        ``(is_valid, violations)``; ``(True, [])`` when no scheme.
-
-    Raises:
-        HTTPException: ``400`` for an unknown profile name.
-    """
-    if not scheme:
-        return True, []
-    try:
-        result = validate_scheme(rows, scheme)
-    except ValueError as exc:
-        raise HTTPException(status_code=_BAD_REQUEST, detail=str(exc)) from exc
-    return result.is_valid, [v.as_dict() for v in result.violations]
-
-
 @ui_router.post(
     "/validate",
     response_model=ValidationResponse,
@@ -253,6 +120,9 @@ def _scheme_violations(
 async def ui_validate(payload: UiFilePayload) -> ValidationResponse:
     """Validate the uploaded text against the schema and optional schemes.
 
+    Parsing and validation run on the bounded pipeline pool, off the
+    event loop (see :mod:`pain001.api._upload`).
+
     Args:
         payload: The file's text, its name, the message type, and an
             optional scheme spec.
@@ -260,20 +130,7 @@ async def ui_validate(payload: UiFilePayload) -> ValidationResponse:
     Returns:
         The same shape as ``POST /validate``.
     """
-    rows = _parse_rows(payload.filename, payload.content)
-    validator = SchemaValidator(
-        sanitise_message_type(payload.message_type.value)
-    )
-    total, valid, errors = validator.validate_batch(rows)
-    scheme_ok, violations = _scheme_violations(rows, payload.scheme)
-    return ValidationResponse(
-        is_valid=not errors and scheme_ok,
-        total_rows=total,
-        valid_rows=valid,
-        invalid_rows=total - valid,
-        errors=_format_errors(errors),
-        scheme_violations=violations,
-    )
+    return await run_pipeline(validate_upload, payload)
 
 
 @ui_router.post(
@@ -288,6 +145,10 @@ async def ui_validate(payload: UiFilePayload) -> ValidationResponse:
 async def ui_generate(payload: UiFilePayload) -> UiGenerateResponse:
     """Validate the upload, then render the XML and return it inline.
 
+    Parsing, validation and rendering run on the bounded pipeline pool,
+    off the event loop (see :mod:`pain001.api._upload`). A rendering
+    failure (for example a document the XSD rejects) answers ``400``.
+
     Args:
         payload: The file's text, its name, the message type, and an
             optional scheme spec.
@@ -296,49 +157,8 @@ async def ui_generate(payload: UiFilePayload) -> UiGenerateResponse:
         ``success=True`` with the XML document and a suggested filename,
         or ``success=False`` carrying the validation errors or scheme
         violations that blocked generation.
-
-    Raises:
-        HTTPException: ``400`` when rendering fails (for example the
-            rendered document does not satisfy the XSD).
     """
-    rows = _parse_rows(payload.filename, payload.content)
-    # Allow-list barrier: the enum is already constrained, but the value
-    # is joined into filesystem paths below and static analysis only
-    # recognises an explicit membership check as a sanitiser.
-    message_type = sanitise_message_type(payload.message_type.value)
-    validator = SchemaValidator(message_type)
-    total, valid, errors = validator.validate_batch(rows)
-    if errors:
-        return UiGenerateResponse(
-            success=False,
-            message=f"Validation failed: {valid}/{total} rows valid",
-            validation_errors=_format_errors(errors),
-        )
-    scheme_ok, violations = _scheme_violations(rows, payload.scheme)
-    if not scheme_ok:
-        return UiGenerateResponse(
-            success=False,
-            message=f"Scheme '{payload.scheme}' validation failed",
-            scheme_violations=violations,
-        )
-    template_base = TEMPLATES_DIR / message_type
-    try:
-        xml = generate_xml_string(
-            rows,
-            message_type,
-            str(template_base / "template.xml"),
-            str(template_base / f"{message_type}.xsd"),
-        )
-    except (ValueError, RuntimeError, PaymentValidationError) as exc:
-        raise HTTPException(
-            status_code=_BAD_REQUEST, detail=f"Generation failed: {exc}"
-        ) from exc
-    return UiGenerateResponse(
-        success=True,
-        message=f"Generated {message_type} for {total} payment rows",
-        filename=f"{message_type}.xml",
-        xml=xml,
-    )
+    return await run_pipeline(generate_upload, payload)
 
 
 @ui_router.get("", include_in_schema=False, response_class=HTMLResponse)

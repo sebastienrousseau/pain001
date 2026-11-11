@@ -88,12 +88,12 @@ class FileJobStore:
 
     Args:
         directory: Directory under which ``<job_id>.json`` files are kept.
-            It is created if it does not exist.
+            It is created, owner-only (``0700``), if it does not exist.
     """
 
     def __init__(self, directory: str | os.PathLike[str]) -> None:
         self.directory = Path(directory)
-        self.directory.mkdir(parents=True, exist_ok=True)
+        self.directory.mkdir(mode=0o700, parents=True, exist_ok=True)
 
     def _path(self, job_id: str) -> Path:
         """Return the on-disk path for a job id.
@@ -129,7 +129,7 @@ class FileJobStore:
         return Path(candidate)
 
     def save(self, job_id: str, snapshot: dict[str, Any]) -> None:
-        """Atomically persist a job snapshot as JSON.
+        """Atomically persist a job snapshot as JSON, mode ``0600``.
 
         Args:
             job_id: Unique job identifier.
@@ -137,7 +137,12 @@ class FileJobStore:
         """
         target = self._path(job_id)
         tmp = target.with_suffix(".json.tmp")
-        tmp.write_text(json.dumps(snapshot), encoding="utf-8")
+        # Owner read/write only: a snapshot names the caller's files and
+        # carries their validation errors.
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(fd, "w", encoding="utf-8") as handle:
+            handle.write(json.dumps(snapshot))
+        os.chmod(tmp, 0o600)
         os.replace(tmp, target)
 
     def load_all(self) -> dict[str, dict[str, Any]]:
@@ -161,6 +166,17 @@ class FileJobStore:
             job_id: Unique job identifier.
         """
         self._path(job_id).unlink(missing_ok=True)
+
+    def ping(self) -> None:
+        """Check the store directory is still there and writable.
+
+        Raises:
+            OSError: When the directory is missing or not writable.
+        """
+        if not self.directory.is_dir() or not os.access(
+            self.directory, os.W_OK
+        ):
+            raise OSError(f"Job store directory unusable: {self.directory}")
 
 
 class RedisJobStore:
@@ -271,6 +287,10 @@ class RedisJobStore:
             job_id: Unique job identifier.
         """
         self._client.delete(self._key(job_id))
+
+    def ping(self) -> None:
+        """Check Redis answers; the client raises when it cannot be reached."""
+        self._client.ping()
 
 
 def job_store_from_env() -> JobStore | None:

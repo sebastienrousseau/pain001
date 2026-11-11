@@ -18,16 +18,18 @@ from __future__ import annotations
 
 from pain001.api._pipeline import pipeline_limit
 from pain001.api.auth import warn_if_unauthenticated
+from pain001.api.limits import max_body_bytes
 
 
 def startup_checks() -> None:
     """Check the server's configuration before it takes traffic.
 
-    Reads ``PAIN001_API_CONCURRENCY`` so a bad value stops start-up
-    rather than failing the first request, and warns when the API runs
-    without ``PAIN001_API_KEY`` (a server started by ``uvicorn``
-    directly cannot refuse an open bind the way ``pain001 serve``
-    does).
+    Reads ``PAIN001_API_CONCURRENCY`` and ``PAIN001_MAX_BODY_BYTES`` so
+    a bad value stops start-up rather than failing the first request,
+    and warns when the API runs without ``PAIN001_API_KEY`` (a server
+    started by ``uvicorn`` directly cannot refuse an open bind the way
+    ``pain001 serve`` does).
     """
     pipeline_limit()
+    max_body_bytes()
     warn_if_unauthenticated()
