@@ -38,6 +38,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mandates cover payments between financial institutions.
   `docs/chaps-enhanced-data.md` cites the 2024 and 2025 policy
   statements and ISO 17442 for each rule.
+- Logs and traces join up on the REST API. Every response carries
+  `X-Request-ID`: the caller's when well formed (1 to 128 of letters,
+  digits and `. _ : -`), otherwise a generated `req-<8 hex>`, and JSON
+  log lines written while serving it carry it as `request_id`. An
+  inbound W3C `traceparent` is honoured: with `OTEL_ENABLED` and the
+  `otel` extra each request gets a server span (`GET <route>`, status
+  code, `pain001.request_id`) that is a child of the caller's span, and
+  the `pain001.api.*` handler spans are its children. `JSONFormatter`
+  adds `trace_id` and `span_id` from the active span, or the caller's
+  `trace_id` when tracing is off or OpenTelemetry is not installed.
+  `pain001.logging_schema` gains `bind_request_context`,
+  `reset_request_context` and `current_trace_ids`. The OpenAPI document
+  is unchanged.
 
 ### Changed
 
@@ -144,6 +157,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   one, so an application embedding pain001 lost pain001's spans or its
   own exporter. It now uses a provider that is already set and installs
   pain001's only when none is.
+- `JSONFormatter` passed a message that happened to parse as a bare JSON
+  value (`logger.info("42")`) through as that value instead of a log
+  object with `level`, `request_id` and `message`; it is now wrapped
+  like any other plain-text message.
 
 ## [0.0.86] - 2026-11-11
 

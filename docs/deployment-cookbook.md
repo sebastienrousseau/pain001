@@ -274,6 +274,8 @@ http {
       proxy_http_version 1.1;
       proxy_set_header   Host $host;
       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+      # pain001 echoes this id and logs it as request_id.
+      proxy_set_header   X-Request-ID $request_id;
       proxy_set_header   X-Forwarded-Proto $scheme;
       proxy_read_timeout 120s;
     }
@@ -366,7 +368,7 @@ observability.
 | :--- | :--- | :--- |
 | `PYTHONUNBUFFERED` | Always in containers | `print()` lines flush immediately. Critical for `docker logs` debugging. |
 | `PAIN001_METRICS_PAYMENT_VOLUME` | You want payment volume per currency in Prometheus | `1` records and exposes `pain001_payment_volume_cents_total`. Off by default: it is business data, and anyone holding the scrape token can read it. |
-| `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
+| `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Each request gets a server span that continues an inbound `traceparent`, and JSON logs carry `trace_id` and `span_id`. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
 
 ---
 

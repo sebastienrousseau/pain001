@@ -30,6 +30,14 @@ pain001.api.check module
    :show-inheritance:
    :undoc-members:
 
+pain001.api.client\_address module
+----------------------------------
+
+.. automodule:: pain001.api.client_address
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.api.faces module
 ------------------------
 
@@ -86,6 +94,14 @@ pain001.api.metrics module
    :show-inheritance:
    :undoc-members:
 
+pain001.api.middleware module
+-----------------------------
+
+.. automodule:: pain001.api.middleware
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.api.models module
 -------------------------
 
@@ -106,6 +122,14 @@ pain001.api.ratelimit module
 ----------------------------
 
 .. automodule:: pain001.api.ratelimit
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.api.request\_context module
+-----------------------------------
+
+.. automodule:: pain001.api.request_context
    :members:
    :show-inheritance:
    :undoc-members:

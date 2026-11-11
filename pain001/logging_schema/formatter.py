@@ -24,7 +24,7 @@ from pathlib import Path
 from typing import Any
 
 from pain001.logging_schema._version import __version__
-from pain001.logging_schema.context import get_request_id
+from pain001.logging_schema.context import current_trace_ids, get_request_id
 from pain001.logging_schema.schema import Fields
 
 
@@ -34,7 +34,9 @@ class JSONFormatter(logging.Formatter):
     This formatter ensures all log records are emitted as valid JSON,
     regardless of the logging method used (logger.info(), logger.error(), etc.).
     It automatically adds standard fields (timestamp, level, logger name,
-    request_id) and merges them with structured log_event() calls.
+    request_id) and merges them with structured log_event() calls. Every
+    record also carries ``trace_id`` (and ``span_id`` inside an
+    OpenTelemetry span) when the work belongs to a trace.
 
     Example:
         >>> handler = logging.StreamHandler()
@@ -55,9 +57,13 @@ class JSONFormatter(logging.Formatter):
         # Try to parse existing JSON from log_event() calls
         try:
             # If message is already JSON from log_event(), use it
-            log_data: dict[str, Any] = json.loads(record.getMessage())
+            parsed: Any = json.loads(record.getMessage())
         except (json.JSONDecodeError, ValueError):
-            # Plain text message - wrap in JSON structure
+            parsed = None
+        if isinstance(parsed, dict):
+            log_data: dict[str, Any] = parsed
+        else:
+            # Plain text (or a bare JSON scalar) - wrap in JSON structure
             log_data = {
                 Fields.TIMESTAMP: time.strftime(
                     "%Y-%m-%dT%H:%M:%SZ", time.gmtime(record.created)
@@ -72,6 +78,11 @@ class JSONFormatter(logging.Formatter):
             # Add exception info if present
             if record.exc_info:
                 log_data["exception"] = self.formatException(record.exc_info)
+
+        # Join the log line to its trace: the active span's ids, or the
+        # trace id of the caller's ``traceparent``.
+        for name, value in current_trace_ids().items():
+            log_data.setdefault(name, value)
 
         # Only these diagnostic fields are accepted from plugin log extras.
         # Arbitrary extras may contain credentials or payment record values.
