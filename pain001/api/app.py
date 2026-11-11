@@ -482,16 +482,13 @@ def _job_or_404(job_id: str) -> JobResult:
     "pain001.api.status", attributes={"http.route": "/api/v1/status/{job_id}"}
 )
 async def get_job_status(job_id: str) -> JobStatusResponse:
-    """Get status of async job.
+    """Get status of async job; an unknown id answers 404.
 
     Args:
         job_id: Job identifier.
 
     Returns:
         JobStatusResponse: Current job status and result.
-
-    Raises:
-        HTTPException: If job not found.
     """
     job = _job_or_404(job_id)
 

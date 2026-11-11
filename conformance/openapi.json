@@ -1404,7 +1404,7 @@
     },
     "/api/v1/status/{job_id}": {
       "get": {
-        "description": "Get status of async job.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    JobStatusResponse: Current job status and result.\n\nRaises:\n    HTTPException: If job not found.",
+        "description": "Get status of async job; an unknown id answers 404.\n\nArgs:\n    job_id: Job identifier.\n\nReturns:\n    JobStatusResponse: Current job status and result.",
         "operationId": "get_job_status_api_v1_status__job_id__get",
         "parameters": [
           {
