@@ -131,6 +131,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `openapi.json`, list the `400`, `422` and `500` answers; no kit case
   changes. `/validate` still answers `200` with `is_valid: false`, as
   `/check` does with `passed: false`.
+- Behind a reverse proxy the rate limiter keyed every request on the
+  proxy's socket address, so all clients shared one bucket. The new
+  `PAIN001_TRUSTED_PROXIES` (addresses or networks, empty by default)
+  names the proxies whose forwarded header is believed; on their
+  connections the key is the right-most `X-Forwarded-For` hop that is
+  not a trusted proxy (`PAIN001_FORWARDED_HEADER=forwarded` reads the
+  RFC 7239 header instead). Any other peer is keyed on its socket
+  address as before, so a client cannot choose its own bucket.
 
 ## [0.0.86] - 2026-11-11
 

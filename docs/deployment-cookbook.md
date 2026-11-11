@@ -138,6 +138,9 @@ services:
       PAIN001_RATE_LIMIT: "100/minute"
       PAIN001_RATE_LIMIT_BACKEND: redis
       PAIN001_RATE_LIMIT_REDIS_URL: redis://redis:6379/0
+      # Key the limiter on the client nginx forwards, not on nginx.
+      # Narrow this to the compose network's subnet.
+      PAIN001_TRUSTED_PROXIES: "172.16.0.0/12"
 
       # Durable job store (Redis-backed, survives restarts)
       PAIN001_JOB_STORE_URL: redis://redis:6379/1
@@ -350,6 +353,7 @@ observability.
 | `PAIN001_API_CONCURRENCY` | CPU count (default) | Validation and generation pipelines run at once per worker; extra requests and async jobs queue instead of starving `/health`. Lower it to cap memory on a small container. |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` | Shared across replicas (needs the `redis` extra). The in-process backend protects one worker only. |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | `redis://redis:6379/0` | Pointing at the compose-network Redis. |
+| `PAIN001_TRUSTED_PROXIES` | nginx's address or the compose subnet | Without it every request seems to come from nginx and all clients share one rate-limit bucket. With it, `X-Forwarded-For` is read only on connections from these addresses, keyed on the right-most hop that is not a trusted proxy, so a client cannot pick its own key. `PAIN001_FORWARDED_HEADER=forwarded` reads the RFC 7239 header instead. |
 | `PAIN001_JOB_STORE_URL` | `redis://redis:6379/1` | Durable async-job state (needs the `redis` extra). Survives a pain001 restart. |
 | `PAIN001_JOB_STORE_DIR` | _unset_ when using Redis | The file-backed store is an alternative, not an addition. Job files are written `0600` in a `0700` directory. |
 | `PAIN001_METRICS_TOKEN` | `openssl rand -hex 32` | Prometheus scrapes with this token instead of the API key, so the scraper cannot call the payment routes. |

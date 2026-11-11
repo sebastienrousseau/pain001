@@ -93,6 +93,8 @@ browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 | `PAIN001_RATE_LIMIT` | Per-client request cap (fixed window); unset means no limit | `100/minute` |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` shares the rate-limit counters across replicas (`pain001[redis]`) | `redis` |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the rate limiter; falls back to `PAIN001_JOB_STORE_URL` | `redis://redis:6379/0` |
+| `PAIN001_TRUSTED_PROXIES` | Comma-separated addresses or networks of the reverse proxies in front of the API. Only when the connecting peer is one of them does the rate limiter read the forwarded header, keying on the right-most hop that is not a trusted proxy. Empty (default): the socket address is the key and forwarded headers are ignored. An entry that is not an address or network stops start-up | `10.0.0.0/8` |
+| `PAIN001_FORWARDED_HEADER` | The one header those proxies write: `x-forwarded-for` (default) or `forwarded` (RFC 7239). Pick the header your proxy sets, never one it passes through untouched | `x-forwarded-for` |
 | `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts | `/var/lib/pain001/jobs` |
 | `PAIN001_JOB_STORE_URL` | Store async jobs in Redis for multi-replica deployments (`pain001[redis]`); takes precedence over `PAIN001_JOB_STORE_DIR` | `redis://redis:6379/1` |
 | `PAIN001_JOB_STORE_NAMESPACE` | Key prefix for the Redis job store | `pain001:jobs` (default) |
