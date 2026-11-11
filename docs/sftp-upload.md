@@ -98,9 +98,13 @@ pain001 download --sftp sftp://user@bank.example/outbox/ --to ./replies \
   beside the first as `name.<sha8>.xml`.
 - **After the fetch.** `--after-fetch keep` (the default) leaves the remote
   file; a later `keep` run skips files the ledger holds at the same size and
-  modification time. `delete` removes it, and `move:/absolute/dir` renames
-  it into an archive directory on the server.
-  Use `delete` or `move` for production runs. `keep` suits trying the
+  modification time (a server that reports no modification time never
+  matches). `delete` removes it, and `move:/absolute/dir` renames
+  it into an archive directory on the server. Both read and hash every
+  file before touching the remote copy, so a reply reissued under the
+  same name and size is saved as `name.<sha8>.xml`, never deleted unread.
+  Use `delete` or `move` with a non-zero `--settle-seconds` for production
+  runs. `keep` suits trying the
   command out and read-only bank outboxes: SFTP gives the modification
   time in whole seconds, so a file rewritten with the same size within
   the same second would be skipped.
@@ -109,9 +113,12 @@ pain001 download --sftp sftp://user@bank.example/outbox/ --to ./replies \
   next run. A file whose size changes during the transfer is refused.
 - **Limits.** `--max-files` and `--max-bytes` bound one run; what they leave
   stays on the server and is reported.
-- **Skipped names.** Symlinks, directories, hidden names and `.tmp` or
-  `.part` files are skipped and listed, so a link on the server cannot point
-  the download at another file.
+- **Skipped names.** Symlinks, directories, hidden names, `.tmp` or
+  `.part` files, and names holding a path separator, a colon or a control
+  character are skipped and listed, so a link on the server cannot point
+  the download at another file and a name cannot leave `--to` (a colon is
+  drive-relative or a data stream on Windows). Listed names are printed
+  with control characters and backslashes escaped as `\xNN` or `\uNNNN`.
 
 There is no daemon. Run it from cron or a systemd timer. The MCP and REST
 interfaces never open network connections, so they do not offer it.
@@ -122,13 +129,23 @@ interfaces never open network connections, so they do not offer it.
 pain001 status replies/*.xml
 ```
 
-`status` reads pain.002 status reports with the library's parser, and
-camt.052, camt.053 and camt.054 with the
-[camt053](https://pypi.org/project/camt053/) package when it is
-installed (`pip install 'pain001[camt]'`); without it, camt.053 is read with the
-library's own parser and camt.052 and camt.054 are refused. It prints
-one line per file, and every rejected group, payment block and
-transaction is listed with its reason code. It exits `3` when anything
-was rejected (`RJCT`), `2` when a file cannot be read or is another
-message, and `0` otherwise; `--format json` prints the same as data. Together with
-`download`, a scheduled job can fetch replies and alert on rejections.
+`status` reads pain.002 status reports with the library's parser,
+validating each against the bundled schema for its version
+(pain.002.001.03, .12, .14 and .15) and refusing one that fails it; a
+report in another version is read unvalidated and its line says
+`not schema-validated`. It reads camt.052, camt.053 and camt.054 with
+the [camt053](https://pypi.org/project/camt053/) package when it is
+installed (`pip install 'pain001[camt]'`); without it, camt.053 is read
+with the library's own parser and camt.052 and camt.054 are refused. It
+prints one line per file with its transaction count and how many of
+those transactions were rejected, followed by the group or payment
+blocks rejected, if any (`pain.002 RJCT, 3 transactions, 2 rejected;
+group and 1 payment block rejected`). Every rejected group and payment
+block is then listed by its id, and every rejected transaction by its
+end-to-end id and reason code. It exits `3` when anything was rejected
+(`RJCT`), `2` when a file cannot be read, fails its schema or is
+another message, and `0` otherwise; `--format json` prints the same as
+data, with `rejected_transactions`, `rejected_groups` and
+`rejected_blocks` in `counts` and a `validated` flag for each pain.002.
+Together with `download`, a scheduled job can fetch replies and alert
+on rejections.

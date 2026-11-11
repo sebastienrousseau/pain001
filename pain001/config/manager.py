@@ -176,13 +176,27 @@ class ConfigManager:
         raise KeyError(f"Unknown profile '{profile_name}'")
 
     def _load_from_env(self) -> dict[str, Any]:
-        """Build a config dict from the PAIN001_* environment variables."""
+        """Build a config dict from the PAIN001_* environment variables.
+
+        Returns:
+            The values set, coerced to the type each key expects.
+
+        Raises:
+            ValueError: Naming the variable, when a value cannot be
+                coerced (``PAIN001_CHUNK_SIZE=abc``).
+        """
         data: dict[str, Any] = {}
         for env_name, target_name in ENV_MAPPING.items():
             value = os.getenv(env_name)
             if value is None:
                 continue
-            data[target_name] = self._coerce_value(target_name, value)
+            try:
+                data[target_name] = self._coerce_value(target_name, value)
+            except ValueError as exc:
+                raise ValueError(
+                    f"Environment variable {env_name}={value!r} is not "
+                    f"valid: {exc}"
+                ) from exc
         return data
 
     def _apply_cli_overrides(

@@ -20,6 +20,7 @@
 
 import os
 import re
+from pathlib import Path
 from typing import Any
 
 from pain001.exceptions import ConfigurationError
@@ -27,10 +28,20 @@ from pain001.security import validate_path
 
 
 def _connect_sqlite_read_only(safe_path: str) -> Any:
-    """Open an SQLite database in read-only mode."""
+    """Open an SQLite database in read-only mode.
+
+    The path is percent-encoded into a ``file:`` URI, so ``?``, ``#``
+    and ``%`` in a filename name that file rather than adding URI
+    parameters or decoding to another name. ``trusted_schema`` is
+    switched off so views and triggers in a supplied database cannot
+    call functions with side effects.
+    """
     import sqlite3  # noqa: PLC0415 - loaded only when a database is read
 
-    return sqlite3.connect(f"file:{safe_path}?mode=ro", uri=True)
+    uri = Path(safe_path).resolve().as_uri() + "?mode=ro"
+    conn = sqlite3.connect(uri, uri=True)
+    conn.execute("PRAGMA trusted_schema = OFF")
+    return conn
 
 
 def sanitize_table_name(table_name: str) -> str:

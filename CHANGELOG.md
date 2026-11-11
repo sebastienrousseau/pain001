@@ -9,6 +9,142 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.86] - 2026-11-11
+
+### Added
+
+- `GET /api/v1/ready` answers 503 unless every template and XSD loads
+  and the configured job store answers; `/api/v1/health` is
+  unchanged (audit D13).
+- `conformance/`: the SDK conformance kit. `cases.json` lists the
+  requests every pain001 SDK (Java, Go, Rust, .NET, C++) sends to a
+  running `pain001 serve` and what each response must satisfy, with
+  synthetic fixtures and a normalised `openapi.json`;
+  `tests/test_conformance_kit.py` runs every case in-process and fails
+  when the OpenAPI snapshot drifts (`scripts/build_conformance_openapi.py`).
+- Rename `CODE-OF-CONDUCT.md` to `CODE_OF_CONDUCT.md`, the name GitHub
+  and the suite's compliance audit recognise; the text is unchanged and
+  GOVERNANCE.md links the new name.
+- `build_pain002_report` takes a `transactions` list on a payment-status
+  row, so one `OrgnlPmtInfAndSts` block can report several transactions,
+  as a bank's reply does. A row with the flat `transaction_status`
+  triplet gives the same XML as before. A row as `parse_pain002_report`
+  returns it (the list plus the first transaction's keys) rebuilds
+  unchanged; flat keys that disagree with the list, a `transactions`
+  value that is not a list of dicts, or a listed transaction without a
+  status are refused.
+
+### Fixed
+
+- `pain001 download` with `--after-fetch delete` or `move` no longer
+  trusts a matching size and mtime: every file is read and hashed
+  before the remote copy is touched, so a reply the bank reissues
+  under the same name and size is saved as `name.<sha8>.xml` instead
+  of being deleted unread. A server that reports no mtime never
+  matches the ledger, even with `keep`.
+- `verify_signature` returns `valid=False` instead of raising when the
+  `ds:Signature` is the document root, refuses SignedInfo with more
+  than one `<Reference>`, and reads the DigestValue from that
+  Reference.
+- SQLite sources whose filename contains `?`, `#` or `%` open that
+  file: the read-only URI is now percent-encoded.
+- `build_pain002_report` validates every report against the bundled
+  schema for its version before returning it, omits `OrgnlEndToEndId`
+  when a transaction has no end-to-end id (an empty element failed
+  every schema), and refuses a version without a bundled schema
+  (pain.002.001.03, .12, .14 and .15 are bundled), raising
+  `ValueError` in each case.
+- `pain001 status` validates a pain.002 reply against the bundled
+  schema for its version and exits 2 when it fails; a reply in another
+  version is read and reported as not schema-validated. `--format json`
+  adds `rejected_groups` and `rejected_blocks` to `counts`, and
+  `version` and `validated` to each entry.
+- The test suite no longer writes generated XML into the repository
+  root, and the ignore rule that hid it is gone.
+- The dashboard's `/ui/validate` and `/ui/generate` run on the
+  bounded pipeline pool, so a large upload no longer holds `/health`
+  and every other route (audit P3).
+- The async job store is written outside the job manager's lock,
+  evicted jobs are deleted from the store, and start-up loads only
+  the newest `max_jobs` (audit P10).
+- The in-process rate limiter forgets idle clients, and latency
+  summaries keep their samples in a bounded deque (audit P11, P12).
+- `PAIN001_RATE_LIMIT_BACKEND=redis` now selects the Redis rate
+  limiter; it was ignored and every worker kept its own cap.
+- The OpenAPI document states the licence as `Apache-2.0 OR MIT`
+  (audit D11).
+- `generate` and `validate` no longer print "Schema validation passed"
+  for a check that ran on the template file and was ignored; the
+  generated XML is still XSD-validated before it is written.
+- The command line reads data, template and schema files you name from
+  any directory, also with `--workers` above 1; the REST API, MCP
+  server and dashboard keep the working-directory restriction.
+- A missing input file exits 2 before any output directory is created;
+  an unknown message type from a configuration file exits 2 instead of
+  a traceback; a bad environment value names its variable.
+- Row validation failures list each problem by line (as a spreadsheet
+  shows it), column and a stable code (`P001-E010` and up), never the
+  value, on the CLI, in REST error details and on
+  `PaymentValidationError.errors`; identifier errors count lines from 1.
+- `--verbose` shows library log records on stderr; `PAIN001_LOG_LEVEL`,
+  `PAIN001_LOG_FILE` and new `PAIN001_LOG_FORMAT` / `--log-format json`
+  apply to `generate` and `validate`.
+- The OpenAPI document described row errors (`ValidationResponse.errors`,
+  `validation_errors`) with FastAPI's request-validation shape
+  (`loc`, `msg`, `type`), because both models were named
+  `ValidationError` and FastAPI's replaced pain001's. pain001's model is
+  now published as `RowError` (`field`, `message`, `value`), so
+  generated clients get the right type; responses are unchanged and
+  `pain001.api.ValidationError` remains as an alias.
+- `pain001 status` counted every rejected line, so a rejected group and
+  payment block inflated the count ("5 transactions, 11 rejected" for a
+  reply with five rejected transactions). The count is now of rejected
+  transactions, rejected groups and payment blocks are named after it,
+  and `--format json` adds `rejected_transactions` to `counts`.
+
+### Changed
+
+- Release 0.0.86 in lockstep with the pain001 suite.
+- `pain001` exports `RowIssue`, `IssueCode` and `Pain001Error`.
+- `generate --help` examples need only `-t` and `-d`; the banner names
+  every input format (CSV, SQLite, JSON, JSONL, Parquet).
+- `Context.init_logger` is removed (it was never called).
+- docs/troubleshooting.rst has one exit-code table: 0 success, 1
+  findings, 2 usage, input or configuration, 3 bank rejection.
+
+### Security
+
+- `pain001 download` prints remote names with control characters
+  escaped, and treats names holding a C1 control or a colon as unsafe,
+  so a name cannot drive the terminal or leave `--to` on Windows.
+- A user-supplied XSD is loaded with xmlschema's `allow="local"` and
+  `defuse="always"` and parsed for libxml2 without entities, DTDs or
+  network access, so a remote `xs:import` is never fetched.
+- SQLite sources are opened with `trusted_schema=OFF`.
+- `pain001-migrate` neutralises spreadsheet formulas in the CSV it
+  writes, as the CSV loader already does on input.
+- An installed plugin can no longer replace a built-in loader, scheme
+  profile, validator or writer by reusing its name: the registry
+  refuses it with a warning unless `PAIN001_ALLOW_PLUGIN_OVERRIDES`
+  (or `PluginRegistry(allow_overrides=...)`) names it.
+- SECURITY.md, the assurance case and the data-handling page now state
+  only what the code does: `verify_xml_signature` without a key
+  raises, scheme findings quote rejected codes and amounts, pip-audit
+  (not Snyk) runs in CI, `download` names files from the server
+  through a name guard, and the GPG loader writes a 0600 plaintext
+  temp file. The container licence label reads `Apache-2.0 OR MIT`.
+- Request bodies over `PAIN001_MAX_BODY_BYTES` (default 21 MiB) are
+  refused with 413 before parsing; dashboard `content` declares a
+  10 MiB `maxLength` (audit S5).
+- `PAIN001_MAX_ACTIVE_JOBS` (default 100) caps pending and running
+  jobs; `POST /generate/async` answers 503 with `Retry-After` beyond
+  it (audit S5).
+- `/metrics` requires `PAIN001_METRICS_TOKEN`, or the API key, when
+  either is set; payment volume per currency is recorded only with
+  `PAIN001_METRICS_PAYMENT_VOLUME=1` (audit D13).
+- REST row errors mask IBAN, BIC, account and name values in `value`
+  and `message`; job files are written 0600 (audit S9).
+
 ## [0.0.85] - 2026-11-10
 
 ### Added

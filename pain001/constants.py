@@ -21,7 +21,7 @@ from pathlib import Path
 BASE_DIR = Path(os.path.dirname(os.path.abspath(__file__))).resolve()
 
 # Shared metadata
-VERSION = "0.0.85"
+VERSION = "0.0.86"
 SCHEMAS_DIR = BASE_DIR / "schemas"
 TEMPLATES_DIR = BASE_DIR / "templates"
 
@@ -45,8 +45,8 @@ valid_xml_types = [
 # Application metadata
 APP_NAME = "Pain001"
 APP_DESCRIPTION = """
-A powerful Python library that enables you to create
-ISO 20022-compliant payment files directly from CSV or SQLite Data files.\n
+Generates ISO 20022 payment initiation files (pain.001, pain.008)
+from CSV, SQLite, JSON, JSONL or Parquet data.\n
 https://pain001.com
 """
 

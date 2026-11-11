@@ -51,12 +51,18 @@ the download: they never open network connections.
 
 - The `upload` extra now covers download too; no new dependency
   (`sqlite3` is in the standard library).
-- A `keep` run skips files whose remote size and mtime the ledger
-  already holds, without reading them. SFTP reports the mtime in whole
-  seconds, so a file the bank rewrites with the same size within the
-  same second would be missed; while nothing is deleted, the earlier
-  copy also stays on the server. `delete` or `move` avoids that, and
-  is the setting for production runs.
+- A `keep` run skips files whose remote size and non-zero mtime the
+  ledger already holds, without reading them. SFTP reports the mtime
+  in whole seconds, so a file the bank rewrites with the same size
+  within the same second would be missed; while nothing is deleted,
+  the earlier copy also stays on the server. A server that reports no
+  mtime never matches, so its files are read every run. `delete` and
+  `move` never take that shortcut: every file is read and hashed
+  before its remote copy is touched, so a reissued reply of the same
+  size is saved as `name.<sha8>.ext` rather than discarded unread.
+  They are the setting for production runs, with a non-zero
+  `--settle-seconds` so a file still being written is left for the
+  next run.
 - `status` reads pain.002 with the core's parser. Plan decision D6
   (2026-11-09) gives camt parsing to the `camt053` package rather than
   a second parser here: when camt053 is installed, `status` reads

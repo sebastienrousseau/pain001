@@ -16,22 +16,70 @@ Data validation failed
 ----------------------
 
 - Cause: missing required CSV columns, invalid IBAN/BIC fields, or bad dates.
-- Fix: run ``pain001 validate -t <message type> -d <data file>`` first and
-  inspect the validation error; add ``--scheme <profile>`` for IBAN check
-  digits, currency and amount rules.
+- Fix: run ``pain001 validate -t <message type> -d <data file>`` first.
+  Each problem is listed on its own line with the line number as a
+  spreadsheet shows it (a CSV header is line 1), the column and a
+  stable code; the first 20 are shown, then a count. The value itself
+  is never printed. Add ``--scheme <profile>`` for currency and amount
+  rules.
+
+  ================  ===============================================
+  Code              Problem
+  ================  ===============================================
+  ``P001-E001``     The input has no payment rows.
+  ``P001-E010``     A required column is absent or empty.
+  ``P001-E011``     Not a whole number.
+  ``P001-E012``     Not a decimal number (an amount).
+  ``P001-E013``     Not true, false, 1 or 0.
+  ``P001-E014``     Not a date (``YYYY-MM-DD`` or ISO 8601).
+  ``P001-E020``     Not a valid IBAN.
+  ``P001-E021``     Not a valid BIC.
+  ================  ===============================================
+
+  From Python, the same problems are on the exception:
+  ``PaymentValidationError.errors`` is a tuple of ``RowIssue`` records
+  (``line``, ``column``, ``code``, ``message``).
+
+Input file not found
+--------------------
+
+- Cause: a ``-d``, ``-m`` or ``-s`` path that does not exist. The command
+  exits 2 before it prints progress or creates the output directory.
+- Fix: check the path. The command line reads files you name on it from
+  any directory.
 
 Path validation failed
 ----------------------
 
-- Cause: parent traversal, output path outside the working directory, or
-  unsupported template directives.
-- Fix: use repo-local or temp-local paths, and avoid Jinja ``include``,
-  ``extends``, and ``import`` directives in XML templates.
+- Cause: from Python, the REST API or the MCP server, a data, template
+  or schema path outside the working directory (or the temporary
+  directory), parent traversal, or unsupported template directives. The
+  output path is not restricted.
+- Fix: keep inputs under the working directory for those callers, and
+  avoid Jinja ``include``, ``extends``, and ``import`` directives in XML
+  templates.
 
 CLI Exit Codes
 ==============
 
-- ``0``: success
-- ``1``: validation or processing failure
-- ``2``: CLI/configuration error
+Every ``pain001`` command uses the same codes:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Code
+     - Meaning
+   * - ``0``
+     - Success.
+   * - ``1``
+     - Findings: the data, the file or a rulebook check failed, or
+       generation failed.
+   * - ``2``
+     - Usage, input/output or configuration error: a bad option, a
+       missing input file, an invalid environment value such as
+       ``PAIN001_CHUNK_SIZE=abc`` (the message names the variable), or
+       a file ``check`` cannot read.
+   * - ``3``
+     - The bank rejected the payment (``pain001 status`` read a
+       rejection from a status report).
 

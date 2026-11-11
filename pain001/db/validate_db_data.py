@@ -14,13 +14,32 @@
 
 """Validate SQLite payment data against required-field rules."""
 
-import logging
 from typing import Any
 
-from pain001.csv.validate_csv_data import _validate_field_type
-from pain001.schemas.required_columns import required_columns
+from pain001.csv.validate_csv_data import row_issues, validate_csv_data
+from pain001.exceptions import RowIssue
 
-logger = logging.getLogger(__name__)
+
+def db_row_issues(
+    data: list[dict[str, Any]],
+    message_type: str | None = None,
+    first_line: int = 1,
+) -> list[RowIssue]:
+    """Return the required-column problems in database rows.
+
+    The same contract as :func:`~pain001.csv.validate_csv_data.row_issues`,
+    except that an empty table is not an issue here: it never was for a
+    database, and generation refuses it later.
+
+    Args:
+        data: The rows, one dictionary per row.
+        message_type: The target message type, or ``None``.
+        first_line: The record number of ``data[0]``, counted from 1.
+
+    Returns:
+        The issues in row order; empty when every row is valid.
+    """
+    return row_issues(data, message_type, first_line) if data else []
 
 
 def validate_db_data(
@@ -30,7 +49,8 @@ def validate_db_data(
     Validate the data from a database.
 
     The columns and types come from :func:`required_columns`, the same
-    contract the CSV validator enforces.
+    contract the CSV validator enforces, and problems are logged by row
+    and column, never by value. An empty table passes.
 
     Args:
         data: The rows to validate, one dictionary per row.
@@ -40,23 +60,4 @@ def validate_db_data(
     Returns:
         bool: True if the data is valid, False otherwise.
     """
-    required = required_columns(message_type)
-    for row in data:
-        for column, data_type in required.items():
-            if column not in row or row[column] is None or row[column] == "":
-                logger.error(
-                    "Error: Missing value for required column '%s' in row: %s",
-                    column,
-                    row,
-                )
-                return False
-            value = str(row[column]).strip()
-            if not _validate_field_type(value, data_type):
-                logger.error(
-                    "Error: Invalid %s value for column '%s' in row: %s",
-                    data_type.__name__,
-                    column,
-                    row,
-                )
-                return False
-    return True
+    return not data or validate_csv_data(data, message_type)

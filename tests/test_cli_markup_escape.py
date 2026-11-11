@@ -68,7 +68,7 @@ def test_missing_data_file_name(runner, payload):
     name = f"pay{payload}.csv"
     result = runner.invoke(cli, ["generate", "-t", MTYPE, "-d", name])
     _assert_literal(result, name)
-    assert result.exit_code == 1
+    assert result.exit_code == 2
 
 
 @pytest.mark.parametrize("payload", PAYLOADS)
@@ -95,19 +95,6 @@ def test_generation_failure_and_traceback(runner, payload):
         )
     _assert_literal(result, f"Generation failed: {payload}")
     assert f"ValueError: {payload}" in _flat(result.output)
-    assert result.exit_code == 1
-
-
-@pytest.mark.parametrize("payload", PAYLOADS)
-def test_schema_failure_message(runner, payload):
-    """An XSD failure message prints literally."""
-    with patch.object(
-        cli_mod, "validate_via_xsd", side_effect=ValueError(payload)
-    ):
-        result = runner.invoke(
-            cli, ["generate", "-t", MTYPE, "-d", "rows.csv"]
-        )
-    _assert_literal(result, f"Schema validation failed: {payload}")
     assert result.exit_code == 1
 
 

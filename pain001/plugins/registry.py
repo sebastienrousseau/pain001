@@ -19,10 +19,14 @@ registry is populated lazily on first use:
 
 1. Built-in plugins shipped inside pain001 register first.
 2. External plugins discovered via ``importlib.metadata.entry_points``
-   register on top, winning over built-ins with the same name.
+   register on top. One reusing a built-in's kind and name is refused
+   with a warning unless ``PAIN001_ALLOW_PLUGIN_OVERRIDES`` (names) or
+   ``allow_overrides`` allows it: installed packages are untrusted.
 3. The ``PAIN001_DISABLE_PLUGINS`` env var (comma-separated names)
    skips matching plugins regardless of source - the production
    escape hatch when a plugin breaks.
+
+Direct ``register_*`` calls are trusted code and may still override.
 
 Plugin authors talk to the registry only through
 :func:`pain001.plugins.registry.registry` (the module-level
@@ -54,6 +58,10 @@ from pain001.plugins.contracts import (
 
 logger = logging.getLogger(__name__)
 
+#: Comma-separated plugin names an entry point may take over from a
+#: built-in. Unset, no installed package can replace a built-in.
+ALLOW_OVERRIDES_ENV = "PAIN001_ALLOW_PLUGIN_OVERRIDES"
+
 ENTRY_POINT_GROUPS: dict[str, str] = {
     "loader": "pain001.loaders",
     "validator": "pain001.validators",
@@ -84,10 +92,20 @@ class PluginRegistry:
             build implements. Plugins declaring a higher *major* are
             refused; plugins declaring a higher *minor* are loaded
             with a warning.
+        allow_overrides: Names an entry-point plugin may take over from
+            a built-in, on top of ``PAIN001_ALLOW_PLUGIN_OVERRIDES``.
     """
 
-    def __init__(self, api_version: tuple[int, int]) -> None:
+    def __init__(
+        self,
+        api_version: tuple[int, int],
+        *,
+        allow_overrides: Iterable[str] = (),
+    ) -> None:
         self._api_version = api_version
+        self._allowed_by_caller = frozenset(allow_overrides)
+        self._allow_overrides = self._allowed_by_caller
+        self._builtin_names: frozenset[tuple[str, str]] = frozenset()
         self._loaders: dict[str, AbstractLoader] = {}
         self._validators: dict[str, AbstractValidator] = {}
         self._schemes: dict[str, AbstractScheme] = {}
@@ -195,6 +213,7 @@ class PluginRegistry:
             self._schemes.clear()
             self._writers.clear()
             self._disabled = _parse_disabled_env()
+            self._builtin_names = frozenset()
             self._populated = False
         # Population runs once, under this lock. ``_populating`` lets a
         # lookup made by a plugin while it registers (same thread, so
@@ -205,6 +224,26 @@ class PluginRegistry:
     # ---------------------------------------------------------------
     # Internals
     # ---------------------------------------------------------------
+    def _refuses_override(self, kind: str, name: str, origin: str) -> bool:
+        """True, with a warning, if entry-point ``name`` would replace a built-in.
+
+        ``origin`` (entry point or distribution) is named in the warning.
+        """
+        if (kind, name) not in self._builtin_names or (
+            name in self._allow_overrides
+        ):
+            return False
+        logger.warning(
+            "refusing %s plugin %s from %s: it would replace the built-in "
+            "of that name; set %s=%s to allow it",
+            kind,
+            name,
+            origin,
+            ALLOW_OVERRIDES_ENV,
+            name,
+        )
+        return True
+
     def _stores(self) -> dict[str, dict[str, Any]]:
         """Return the four plugin stores keyed by kind name."""
         return {
@@ -291,6 +330,14 @@ class PluginRegistry:
                 from pain001.plugins import _builtins  # noqa: PLC0415
 
                 _builtins.register_all(self)
+                self._allow_overrides = self._allowed_by_caller | (
+                    _names_from_env(ALLOW_OVERRIDES_ENV)
+                )
+                self._builtin_names = frozenset(
+                    (kind, name)
+                    for kind, store in self._stores().items()
+                    for name in store
+                )
                 _load_entry_point_plugins(self)
                 self._populated = True
             finally:
@@ -299,7 +346,12 @@ class PluginRegistry:
 
 def _parse_disabled_env() -> frozenset[str]:
     """Read ``PAIN001_DISABLE_PLUGINS`` into a set of names (or empty)."""
-    raw = os.environ.get("PAIN001_DISABLE_PLUGINS", "")
+    return _names_from_env("PAIN001_DISABLE_PLUGINS")
+
+
+def _names_from_env(variable: str) -> frozenset[str]:
+    """Read a comma-separated list of plugin names from ``variable``."""
+    raw = os.environ.get(variable, "")
     return frozenset(s.strip() for s in raw.split(",") if s.strip())
 
 
@@ -316,16 +368,27 @@ def _load_entry_point_plugins(reg: PluginRegistry) -> None:
     is never imported and its constructor never runs. The declared
     ``meta.name`` is still checked at registration, for plugins whose
     entry-point name differs from it.
+
+    An entry point named after a built-in of its kind is refused before
+    it loads, and one whose declared ``meta.name`` is a built-in's is
+    refused before it registers, unless the name is allowed (see
+    :data:`ALLOW_OVERRIDES_ENV`).
     """
     for kind, group in ENTRY_POINT_GROUPS.items():
         for entry in _iter_entry_points(group):
-            if _is_disabled_entry(reg, entry, kind):
+            if _is_disabled_entry(reg, entry, kind) or reg._refuses_override(
+                kind, entry.name, f"entry point {entry.name}"
+            ):
                 continue
             try:
                 plugin_cls = entry.load()
                 plugin = plugin_cls()
                 # Stamp the source so list_plugins shows the dist name.
                 _stamp_source(plugin, entry)
+                if reg._refuses_override(
+                    kind, plugin.meta.name, plugin.meta.source
+                ):
+                    continue
                 _register_by_kind(reg, plugin, kind)
             except Exception as exc:
                 # Exception messages can contain payment data or credentials.

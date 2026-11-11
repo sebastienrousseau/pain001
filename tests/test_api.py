@@ -751,10 +751,13 @@ class TestAsyncGenerationWorker:
 
     _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
 
-    def test_worker_success(self):
-        """A valid request drives the job to SUCCESS and writes a file."""
+    def test_worker_success(self, tmp_path):
+        """A valid request drives the job to SUCCESS and writes a file.
+
+        The file goes to ``tmp_path``: without ``output_dir`` it lands in
+        the working directory, the checkout root under pytest.
+        """
         import asyncio
-        import os
 
         from pain001.api.app import _process_generation_job
         from pain001.api.job_manager import JobStatus, job_manager
@@ -765,16 +768,13 @@ class TestAsyncGenerationWorker:
             data_source="csv",
             file_path=self._BUNDLED_CSV,
             message_type="pain.001.001.03",
+            output_dir=str(tmp_path),
         )
-        try:
-            asyncio.run(_process_generation_job(job_id, request))
-            job = job_manager.get_job(job_id)
-            assert job is not None
-            assert job.status == JobStatus.SUCCESS
-        finally:
-            for leftover in ("pain.001.001.03.xml",):
-                if os.path.exists(leftover):
-                    os.remove(leftover)
+        asyncio.run(_process_generation_job(job_id, request))
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == JobStatus.SUCCESS
+        assert len(list(tmp_path.glob("pain.001.001.03-*.xml"))) == 1
 
     def test_worker_file_not_found(self):
         """A missing data file drives the job to FAILED."""
@@ -801,26 +801,22 @@ class TestSyncGenerationSuccess:
 
     _BUNDLED_CSV = "pain001/templates/pain.001.001.03/template.csv"
 
-    def test_generate_success_writes_file(self):
-        """A valid request (no scheme) generates an XML file."""
-        import os
-
+    def test_generate_success_writes_file(self, tmp_path):
+        """A valid request (no scheme) generates an XML file in output_dir."""
         response = client.post(
             "/api/generate",
             json={
                 "data_source": "csv",
                 "file_path": self._BUNDLED_CSV,
                 "message_type": "pain.001.001.03",
+                "output_dir": str(tmp_path),
             },
         )
-        try:
-            assert response.status_code == 200
-            body = response.json()
-            assert body["success"] is True
-            assert body["file_path"]
-        finally:
-            if os.path.exists("pain.001.001.03.xml"):
-                os.remove("pain.001.001.03.xml")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True
+        assert body["file_path"]
+        assert len(list(tmp_path.glob("pain.001.001.03-*.xml"))) == 1
 
 
 class TestAsyncWorkerErrorPaths:
@@ -1182,9 +1178,7 @@ class TestSyncGenerationOutcomes:
         assert "Validation failed" in body["message"]
         assert body["validation_errors"]
 
-    def test_scheme_pass_continues_to_generation(self):
-        import os
-
+    def test_scheme_pass_continues_to_generation(self, tmp_path):
         response = client.post(
             "/api/generate",
             json={
@@ -1192,15 +1186,13 @@ class TestSyncGenerationOutcomes:
                 "file_path": self._BUNDLED_CSV,
                 "message_type": "pain.001.001.03",
                 "scheme": "sepa-sct",
+                "output_dir": str(tmp_path),
             },
         )
-        try:
-            assert response.status_code == 200
-            body = response.json()
-            assert body["success"] is True and body["file_path"]
-        finally:
-            if os.path.exists("pain.001.001.03.xml"):
-                os.remove("pain.001.001.03.xml")
+        assert response.status_code == 200
+        body = response.json()
+        assert body["success"] is True and body["file_path"]
+        assert len(list(tmp_path.glob("pain.001.001.03-*.xml"))) == 1
 
     def test_scheme_violations_are_returned_not_raised(self):
         response = client.post(

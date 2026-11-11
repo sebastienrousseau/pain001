@@ -294,6 +294,10 @@ scrape_configs:
     static_configs:
       - targets: ["pain001:8000"]
     metrics_path: /metrics
+    # /metrics takes PAIN001_METRICS_TOKEN (or PAIN001_API_KEY when no
+    # metrics token is set). Mount the token as a file.
+    authorization:
+      credentials_file: /etc/prometheus/pain001-metrics-token
 ```
 
 ### `grafana/provisioning/datasources/prometheus.yml`
@@ -336,7 +340,7 @@ observability.
 
 | Variable | Purpose |
 | :--- | :--- |
-| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health`. Generate with `openssl rand -hex 32`; rotate every 90 days. Without it, `pain001 serve --host 0.0.0.0` refuses to start. |
+| `PAIN001_API_KEY` | Bearer token required on every `/api/v1/*` request except `/api/v1/health` and `/api/v1/ready`, and on `/metrics` unless `PAIN001_METRICS_TOKEN` is set. Generate with `openssl rand -hex 32`; rotate every 90 days. Without it, `pain001 serve --host 0.0.0.0` refuses to start. |
 
 ### Recommended env vars
 
@@ -347,13 +351,17 @@ observability.
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` | Shared across replicas (needs the `redis` extra). The in-process backend protects one worker only. |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | `redis://redis:6379/0` | Pointing at the compose-network Redis. |
 | `PAIN001_JOB_STORE_URL` | `redis://redis:6379/1` | Durable async-job state (needs the `redis` extra). Survives a pain001 restart. |
-| `PAIN001_JOB_STORE_DIR` | _unset_ when using Redis | The file-backed store is an alternative, not an addition. |
+| `PAIN001_JOB_STORE_DIR` | _unset_ when using Redis | The file-backed store is an alternative, not an addition. Job files are written `0600` in a `0700` directory. |
+| `PAIN001_METRICS_TOKEN` | `openssl rand -hex 32` | Prometheus scrapes with this token instead of the API key, so the scraper cannot call the payment routes. |
+| `PAIN001_MAX_BODY_BYTES` | 21 MiB (default) | Largest request body; anything bigger is answered `413` before it is parsed. The default fits a 10 MiB upload with JSON escaping. |
+| `PAIN001_MAX_ACTIVE_JOBS` | `100` (default) | Pending plus running async jobs; the next `POST /generate/async` gets `503` and `Retry-After: 5`. |
 
 ### Optional / scenario env vars
 
 | Variable | When to set | Effect |
 | :--- | :--- | :--- |
 | `PYTHONUNBUFFERED` | Always in containers | `print()` lines flush immediately. Critical for `docker logs` debugging. |
+| `PAIN001_METRICS_PAYMENT_VOLUME` | You want payment volume per currency in Prometheus | `1` records and exposes `pain001_payment_volume_cents_total`. Off by default: it is business data, and anyone holding the scrape token can read it. |
 | `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
 
 ---
@@ -374,8 +382,9 @@ docker compose logs --since 1h
 ```
 
 For production, ship logs to an aggregator (Loki / Datadog / CloudWatch).
-The server does not switch to JSON logs by itself: there is no
-environment variable for it. Call
+The server does not switch to JSON logs by itself (the
+`PAIN001_LOG_FORMAT` and `PAIN001_LOG_LEVEL` variables apply to the
+`generate` and `validate` commands, not to `serve`). Call
 `pain001.logging_schema.configure_json_logging()` from your own entry
 point if you need structured JSON (`PAIN001_LOG_LEVEL` and
 `PAIN001_LOG_FILE` then set the level and an optional file).
@@ -386,14 +395,22 @@ point if you need structured JSON (`PAIN001_LOG_LEVEL` and
 # Liveness (pain001 process is alive)
 curl -sS https://payments.example.com/api/v1/health
 
-# Metrics (only over docker network; not exposed via nginx)
+# Readiness (templates and XSDs load, the job store answers)
+curl -sS https://payments.example.com/api/v1/ready
+# {"status":"ready","checks":{"templates":"ok","job_store":"ok"}}
+
+# Metrics (only over docker network; not exposed via nginx). Pass the
+# metrics token, or the API key when no metrics token is set.
 docker compose exec pain001 python -c \
-  "import urllib.request; print(urllib.request.urlopen('http://127.0.0.1:8000/metrics').read().decode())" | head -40
+  "import os, urllib.request; r = urllib.request.Request('http://127.0.0.1:8000/metrics', headers={'Authorization': 'Bearer ' + os.environ.get('PAIN001_METRICS_TOKEN', os.environ['PAIN001_API_KEY'])}); print(urllib.request.urlopen(r).read().decode())" | head -40
 ```
 
-There is no separate readiness endpoint, and `/api/v1/health` does not
-check Redis. Use it as the load balancer health check and watch Redis
-with its own `redis-cli ping` healthcheck.
+`/api/v1/health` checks only that the process answers; use it for
+liveness. `/api/v1/ready` answers `503` when a template or XSD does not
+load or the configured job store (Redis or the directory) does not
+answer: use it as the load balancer check and readiness probe. It does
+not ping the rate limiter's Redis, so keep that Redis's own
+`redis-cli ping` healthcheck.
 
 ### Upgrades
 

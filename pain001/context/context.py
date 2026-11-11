@@ -30,7 +30,6 @@ class Context:
     - ``__init__`` initializes the class and creates a logger.
     - ``get_instance`` returns the singleton instance.
     - ``get_logger`` returns the logger.
-    - ``init_logger`` initializes the logger.
     - ``set_log_level`` sets the logger's level.
     - ``set_name`` sets the logger's name.
     """
@@ -114,32 +113,14 @@ class Context:
 
         self.logger.setLevel(self.log_level)
 
-    def init_logger(self) -> None:
-        """Initializes the logger.
-
-        Raises:
-            RuntimeError: If the logger has already been initialized.
-        """
-        if self.logger is not None:
-            raise RuntimeError("Logger has already been initialized")
-
-        self.logger = logging.getLogger(self.name)
-        console_handler = logging.StreamHandler()
-        self.logger.setLevel(self.log_level)
-        log_format = logging.Formatter(
-            "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-        )
-        console_handler.setFormatter(log_format)
-        if not self.logger.handlers:
-            self.logger.addHandler(console_handler)
-        self.logger.info("Logging initialized")
-
     def get_logger(self) -> logging.Logger:
         """Returns the logger.
+
+        Handlers are the caller's business: the package installs only a
+        ``NullHandler``, and the command line attaches its own for the
+        length of a run (:mod:`pain001.cli._logging`).
 
         Returns:
             A Logger instance.
         """
-        if self.logger is None:
-            self.init_logger()
         return self.logger

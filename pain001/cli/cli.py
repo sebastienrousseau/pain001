@@ -18,6 +18,7 @@ import functools
 import json
 import logging
 import os
+import shlex
 import shutil
 import sys
 import traceback
@@ -34,24 +35,28 @@ from rich.table import Table
 from pain001.cli._check import check_cmd
 from pain001.cli._config import _resolve_config
 from pain001.cli._gpg import _apply_gpg_options, _workers_option
-from pain001.cli._hints import print_data_tip, read_text
+from pain001.cli._hints import GENERATE_HELP, print_data_tip, read_text
+from pain001.cli._logging import configure_logging, log_format_option
 from pain001.cli._operations import add_operations
 from pain001.cli._output import (
     esc,
+    print_banner,
     print_scheme_result,
     print_template_details,
     print_template_list,
 )
-from pain001.cli._paths import _file_not_directory, _resolve_template_assets
+from pain001.cli._paths import (
+    _file_not_directory,
+    _require_inputs,
+    _require_message_type,
+    _resolve_template_assets,
+)
 from pain001.cli._serve import serve_cmd
 from pain001.cli._verify_signature import (
     verify_signature_cmd,
     xml_sign_options,
 )
-from pain001.constants import APP_DESCRIPTION as description
-from pain001.constants import APP_NAME as title
 from pain001.constants import VERSION, valid_xml_types
-from pain001.context.context import Context
 from pain001.core.core import process_files, process_files_streaming
 from pain001.faces.cli import face_cmd
 from pain001.logging_schema import (
@@ -65,72 +70,13 @@ from pain001.observability import (
     clear_metrics_callbacks,
     register_metrics_callback,
 )
+from pain001.security.path_validator import trusted_paths
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.validation import validate_scheme
 from pain001.validation._one_batch import load_batch
 from pain001.xml.envelope import BusinessApplicationHeader
-from pain001.xml.validate_via_xsd import validate_via_xsd
 
 console = Console()
-
-
-def _configure_logging(verbose: bool) -> logging.Logger:
-    """Configure logging level based on verbosity flag.
-
-    Args:
-        verbose: If True, enable DEBUG logging; otherwise INFO.
-
-    Returns:
-        Configured logger instance.
-    """
-    logger = Context.get_instance().get_logger()
-    if verbose:
-        logger.setLevel(logging.DEBUG)
-        console.print("[bold cyan]ℹ Verbose logging enabled[/bold cyan]")
-    else:
-        logger.setLevel(logging.INFO)
-    return logger
-
-
-def _validate_schema(
-    logger: logging.Logger,
-    xml_template_file_path: str,
-    xsd_schema_file_path: str,
-    xml_message_type: str,
-) -> None:
-    """Validate XML template against XSD schema.
-
-    Args:
-        logger: Logger instance for event recording.
-        xml_template_file_path: Path to XML template.
-        xsd_schema_file_path: Path to XSD schema.
-        xml_message_type: ISO 20022 message type.
-
-    Raises:
-        SystemExit: If validation fails (exit code 1).
-    """
-    console.print(
-        "[cyan]→ Validating XML template against XSD schema...[/cyan]"
-    )
-    try:
-        validate_via_xsd(xml_template_file_path, xsd_schema_file_path)
-        log_validation_event(
-            logger, "xsd_schema", True, message_type=xml_message_type
-        )
-        console.print("[bold green]✓ Schema validation passed[/bold green]")
-    except Exception as e:
-        log_validation_event(
-            logger, "xsd_schema", False, e, message_type=xml_message_type
-        )
-        console.print(
-            f"[bold red]✗ Schema validation failed:[/bold red] {esc(e)}",
-            style="red",
-        )
-        console.print(
-            f"\n[yellow]Tip:[/yellow] Ensure template and schema versions match. "
-            f"Expected: {esc(xml_message_type)}"
-        )
-        raise SystemExit(1) from e
 
 
 def _run_scheme_check(
@@ -399,24 +345,7 @@ _identifier_checks_option = click.option(
 
 
 @click.command(
-    help=(
-        "Generate ISO 20022-compliant payment XML files from CSV, SQLite, JSON, or Parquet data.\n\n"
-        "EXAMPLES:\n\n"
-        "  Basic usage (CSV input):\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv\n\n"
-        "  Validation only (dry-run):\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --dry-run\n\n"
-        "  Custom output directory:\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv -o /output\n\n"
-        "  Verbose logging:\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --verbose\n\n"
-        "  JSON input:\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.json\n\n"
-        "EXIT CODES:\n"
-        "  0 = Success\n"
-        "  1 = Validation or processing error\n"
-        "  2 = Invalid arguments or configuration"
-    ),
+    help=GENERATE_HELP,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 @click.option(
@@ -481,7 +410,7 @@ _identifier_checks_option = click.option(
     "--verbose",
     is_flag=True,
     default=False,
-    help="Enable detailed logging output (INFO and DEBUG messages)",
+    help="Show the library's DEBUG and INFO log records on stderr.",
 )
 @click.option(
     "--streaming/--no-streaming",
@@ -615,6 +544,7 @@ _identifier_checks_option = click.option(
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
 @_identifier_checks_option
+@log_format_option
 def main(
     xml_message_type: str | None,
     xml_template_file_path: str | None,
@@ -646,6 +576,7 @@ def main(
     xml_sign_passphrase_env: str | None = None,
     schematron: str | None = None,
     identifier_checks: bool = True,
+    log_format: str | None = None,
 ) -> None:
     # pylint: disable=too-many-arguments, too-many-positional-arguments
     """CLI entry point for Pain001 ISO 20022 payment file generation.
@@ -688,20 +619,14 @@ def main(
         schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
             or filesystem path to a .sch rulebook file.
         identifier_checks: If False, skip the IBAN and BIC checks.
+        log_format: Log record format on stderr ('text' or 'json').
 
     Exits:
         0 on success, 1 on validation/processing error, 2 on invalid arguments.
     """
-    # Display banner
-    table = Table(
-        box=box.ROUNDED, safe_box=True, show_header=False, title=title
-    )
-    table.add_column(justify="center", no_wrap=False, vertical="middle")
-    table.add_row(description)
-    table.width = 80
-    console.print(table)
+    print_banner(console)
 
-    logger = _configure_logging(verbose)
+    logger = configure_logging(console, verbose, log_format)
 
     if list_templates:
         print_template_list(console)
@@ -745,6 +670,7 @@ def main(
         console.print("[bold red]✗ Error:[/bold red] Missing data file path")
         sys.exit(2)
 
+    _require_message_type(console, xml_message_type)
     (
         xml_template_file_path,
         xsd_schema_file_path,
@@ -764,6 +690,10 @@ def main(
         )
         return
 
+    inputs = (data_file_path, xml_template_file_path, xsd_schema_file_path)
+    _require_inputs(console, inputs)
+    # The user named these files; they are read wherever they live.
+    click.get_current_context().with_resource(trusted_paths(*inputs))
     if resolved_config.get("emit_metrics"):
         register_metrics_callback(_console_metrics_callback)
     _apply_gpg_options(decrypt_key, decrypt_passphrase_env)
@@ -780,27 +710,6 @@ def main(
         **{Fields.MESSAGE_TYPE: xml_message_type, "dry_run": dry_run},
     )
 
-    # Redundant with Click validation; kept so the failure is logged.
-    if (
-        xml_message_type not in valid_xml_types
-    ):  # pragma: no cover - Click rejects it first
-        log_validation_event(
-            logger,
-            "message_type",
-            False,
-            ValueError(f"Invalid XML message type: {xml_message_type}"),
-            message_type=xml_message_type,
-        )
-        console.print(
-            f"[bold red]✗ Error:[/bold red] Invalid XML message type: [yellow]{esc(xml_message_type)}[/yellow]\n"
-            f"[cyan]Valid types:[/cyan] {', '.join(valid_xml_types)}",
-            style="red",
-        )
-        sys.exit(2)
-
-    _validate_schema(
-        logger, xml_template_file_path, xsd_schema_file_path, xml_message_type
-    )
     validate_data = functools.partial(
         _validate_payment_data,
         logger,
@@ -1001,7 +910,13 @@ cli.add_command(verify_signature_cmd)
     metavar="VAR",
     help="Environment variable holding the GPG passphrase.",
 )
-@click.option("-v", "--verbose", is_flag=True, default=False)
+@click.option(
+    "-v",
+    "--verbose",
+    is_flag=True,
+    default=False,
+    help="Show the library's DEBUG and INFO log records on stderr.",
+)
 @click.option(
     "--rules",
     type=click.Path(exists=True, dir_okay=False, readable=True),
@@ -1015,6 +930,7 @@ cli.add_command(verify_signature_cmd)
     help="Schematron business rules preset ('sepa', 'fednow', 'cbpr') or path to .sch file.",
 )
 @_identifier_checks_option
+@log_format_option
 @click.pass_context
 def validate_cmd(
     ctx: click.Context,
@@ -1031,6 +947,7 @@ def validate_cmd(
     rules: str | None,
     schematron: str | None = None,
     identifier_checks: bool = True,
+    log_format: str | None = None,
 ) -> None:
     """Validate inputs without generating XML (exit 0 = valid, 1 = invalid).
 
@@ -1053,6 +970,7 @@ def validate_cmd(
         rules: Optional path to private YAML CEL policy rules.
         schematron: Optional Schematron rulebook preset or path.
         identifier_checks: If False, skip the IBAN and BIC checks.
+        log_format: Log record format on stderr ('text' or 'json').
     """
     ctx.invoke(
         main,
@@ -1070,6 +988,7 @@ def validate_cmd(
         rules=rules,
         schematron=schematron,
         identifier_checks=identifier_checks,
+        log_format=log_format,
     )
 
 
@@ -1172,9 +1091,14 @@ def init_cmd(message_type: str, output_path: str | None) -> None:
     destination = Path(output_path or f"{message_type}.csv")
     shutil.copyfile(source, destination)
     console.print(
-        f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}\n"
+        f"[bold green]✓ Wrote starter CSV:[/bold green] {esc(destination)}"
+    )
+    # An absolute, quoted path, on one unwrapped line: the command runs
+    # as printed from any directory.
+    console.print(
         f"[dim]Edit it, then run:[/dim] pain001 generate -t {message_type} "
-        f"-d {esc(destination)}"
+        f"-d {esc(shlex.quote(str(destination.resolve())))}",
+        soft_wrap=True,
     )
 
 

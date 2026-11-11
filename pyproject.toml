@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.85"
+version = "0.0.86"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -378,6 +378,7 @@ pytest_add_cli_args = [
     # mutmut's trampolined copy outside the runner and crash, breaking the
     # pool; the ordinary test run covers them.
     "--ignore=tests/test_parallel_chunks.py",
+    "--deselect=tests/test_cli_input_paths.py::test_outside_template_with_worker_processes",
     # The complexity gate measures the real tree against its baseline;
     # inside the copy every function is a mutmut trampoline, so the
     # measurement differs. The ordinary test run and CI job cover it.
@@ -403,6 +404,8 @@ also_copy = [
     "ROADMAP.md",
     # The release-notes test reads releases/vX.md once the version is dated.
     "releases",
+    # tests/test_conformance_kit.py reads the SDK conformance kit.
+    "conformance",
     # tests/test_ci_surfaces.py reads the Action and the pre-commit hooks.
     "action.yml", ".pre-commit-hooks.yaml",
 ]

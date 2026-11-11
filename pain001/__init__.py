@@ -18,7 +18,7 @@ import importlib
 import logging
 from typing import TYPE_CHECKING
 
-__version__ = "0.0.85"
+__version__ = "0.0.86"
 
 # Library convention: emit nothing unless the host app configures
 # logging (PEP 282 / logging HOWTO).
@@ -43,7 +43,13 @@ if TYPE_CHECKING:
     from pain001.check import CheckReport, check_document
     from pain001.config import ConfigManager
     from pain001.core.core import process_files
-    from pain001.exceptions import DataSourceError, PaymentValidationError
+    from pain001.exceptions import (
+        DataSourceError,
+        IssueCode,
+        Pain001Error,
+        PaymentValidationError,
+        RowIssue,
+    )
     from pain001.observability import (
         MetricEvent,
         clear_metrics_callbacks,
@@ -95,7 +101,10 @@ _LAZY: dict[str, str] = {
     "ConfigManager": "pain001.config",
     "process_files": "pain001.core.core",
     "DataSourceError": "pain001.exceptions",
+    "Pain001Error": "pain001.exceptions",
     "PaymentValidationError": "pain001.exceptions",
+    "RowIssue": "pain001.exceptions",
+    "IssueCode": "pain001.exceptions",
     "MetricEvent": "pain001.observability",
     "clear_metrics_callbacks": "pain001.observability",
     "register_metrics_callback": "pain001.observability",
@@ -152,7 +161,10 @@ __all__ = [
     "SchemeValidationResult",
     "SchemeViolation",
     "sanitize_to_charset",
+    "Pain001Error",
     "PaymentValidationError",
+    "RowIssue",
+    "IssueCode",
     "DataSourceError",
     "BusinessApplicationHeader",
     "envelop_iso20022_message",

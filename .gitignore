@@ -160,8 +160,9 @@ tests/data/valid_data_unique.db
 tmp_env/
 pain001/tmp/
 
-# Test-output XML/CSV written to cwd by the suite
-/pain.0*.xml
+# Test-output CSV written to cwd by the suite. Generated XML is not
+# ignored: a test that writes pain.0*.xml into the checkout shows up in
+# git status instead of hiding.
 /migrated*.csv
 
 # Restricted material downloaded from swift.com / MyStandards (bank usage

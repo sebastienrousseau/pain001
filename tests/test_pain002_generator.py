@@ -10,8 +10,12 @@ import pytest
 
 from pain001.pain002 import (
     build_pain002_report,
+    bundled_schema_versions,
     parse_pain002_report,
 )
+
+#: Every pain.002 version the package ships a schema for.
+VERSIONS = bundled_schema_versions()
 
 
 def _write(tmp_path, xml: str):
@@ -103,10 +107,75 @@ class TestBuildPain002:
             "ACCP",
             [],
             creation_datetime="2026-01-01T00:00:00+00:00",
-            version="pain.002.001.10",
+            version="pain.002.001.14",
         )
         assert "2026-01-01T00:00:00+00:00" in xml
-        assert "pain.002.001.10" in xml
+        assert "pain.002.001.14" in xml
+
+    def test_every_bundled_version_is_offered(self) -> None:
+        """The four bundled schemas are the versions the builder accepts."""
+        assert VERSIONS == [
+            "pain.002.001.03",
+            "pain.002.001.12",
+            "pain.002.001.14",
+            "pain.002.001.15",
+        ]
+
+    @pytest.mark.parametrize("version", ["pain.002.001.10", "pain.002.001.99"])
+    def test_a_version_without_a_bundled_schema_is_refused(
+        self, version
+    ) -> None:
+        """A version the builder cannot validate is refused up front."""
+        with pytest.raises(ValueError, match="no bundled schema"):
+            build_pain002_report("S", "M", "ACCP", [], version=version)
+
+    @pytest.mark.parametrize("version", VERSIONS)
+    def test_a_missing_end_to_end_id_is_omitted(
+        self, tmp_path, version
+    ) -> None:
+        """No end-to-end id omits OrgnlEndToEndId, so the report validates."""
+        xml = build_pain002_report(
+            "STS",
+            "MSG",
+            "RJCT",
+            [
+                {
+                    "original_payment_information_id": "PMT-1",
+                    "payment_information_status": "RJCT",
+                    "transaction_status": "RJCT",
+                }
+            ],
+            version=version,
+        )
+        assert "OrgnlEndToEndId" not in xml
+        (row,) = parse_pain002_report(_write(tmp_path, xml), validate=True)[
+            "payment_statuses"
+        ]
+        assert row["original_end_to_end_id"] == ""
+        assert row["transaction_status"] == "RJCT"
+
+    def test_an_empty_end_to_end_id_is_omitted(self) -> None:
+        """An empty end-to-end id is treated as absent."""
+        xml = build_pain002_report(
+            "STS",
+            "MSG",
+            "RJCT",
+            [
+                {
+                    "original_payment_information_id": "PMT-1",
+                    "payment_information_status": "RJCT",
+                    "original_end_to_end_id": "",
+                    "transaction_status": "RJCT",
+                }
+            ],
+        )
+        assert "OrgnlEndToEndId" not in xml
+
+    @pytest.mark.parametrize("version", VERSIONS)
+    def test_output_that_breaks_the_schema_is_refused(self, version) -> None:
+        """The built report is checked against its schema before return."""
+        with pytest.raises(ValueError, match="fails the bundled schema"):
+            build_pain002_report("S" * 36, "MSG", "ACCP", [], version=version)
 
 
 class TestRoundTrip:
@@ -187,3 +256,133 @@ class TestRoundTrip:
         from pain001 import build_pain002_report as top
 
         assert top("x", "y", "ACCP", []).startswith("<?xml")
+
+
+class TestSeveralTransactionsPerBlock:
+    """One payment block can report several transactions (0.0.86)."""
+
+    ROW = {
+        "original_payment_information_id": "PMT-1",
+        "payment_information_status": "RJCT",
+        "transactions": [
+            {
+                "original_end_to_end_id": "E2E-1",
+                "transaction_status": "RJCT",
+                "status_reason": "NARR",
+            },
+            {"original_end_to_end_id": "E2E-2", "transaction_status": "RJCT"},
+        ],
+    }
+
+    @pytest.mark.parametrize("version", VERSIONS)
+    def test_one_block_holds_every_transaction(
+        self, tmp_path, version
+    ) -> None:
+        """Two transactions stay under one OrgnlPmtInfAndSts."""
+        xml = build_pain002_report(
+            "STS", "MSG", "RJCT", [self.ROW], version=version
+        )
+        assert xml.count("<OrgnlPmtInfAndSts>") == 1
+        assert xml.count("<TxInfAndSts>") == 2
+        (block,) = parse_pain002_report(_write(tmp_path, xml), validate=True)[
+            "payment_statuses"
+        ]
+        assert [
+            (t["original_end_to_end_id"], t["transaction_status"])
+            for t in block["transactions"]
+        ] == [("E2E-1", "RJCT"), ("E2E-2", "RJCT")]
+        assert block["transactions"][0]["status_reason"] == "NARR"
+        assert "<Cd>NARR</Cd>" in xml and xml.count("<StsRsnInf>") == 1
+
+    def test_the_single_transaction_keys_still_work(self) -> None:
+        """The flat triplet gives the same XML as a one-item list."""
+        flat = {
+            "original_payment_information_id": "PMT-1",
+            "payment_information_status": "ACCP",
+            "original_end_to_end_id": "E2E-1",
+            "transaction_status": "ACCP",
+        }
+        listed = {
+            "original_payment_information_id": "PMT-1",
+            "payment_information_status": "ACCP",
+            "transactions": [
+                {
+                    "original_end_to_end_id": "E2E-1",
+                    "transaction_status": "ACCP",
+                }
+            ],
+        }
+        when = "2026-11-10T10:00:00"
+        assert build_pain002_report(
+            "S", "M", "ACCP", [flat], creation_datetime=when
+        ) == build_pain002_report(
+            "S", "M", "ACCP", [listed], creation_datetime=when
+        )
+
+    def test_flat_keys_that_disagree_with_the_list_are_refused(self) -> None:
+        """Flat keys that contradict the first listed transaction are refused."""
+        row = dict(self.ROW, transaction_status="ACCP")
+        with pytest.raises(ValueError, match="disagree"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])
+
+    @pytest.mark.parametrize("version", VERSIONS)
+    def test_a_parsed_report_rebuilds_unchanged(
+        self, tmp_path, version
+    ) -> None:
+        """parse_pain002_report output feeds straight back into the builder.
+
+        The parser keeps the first transaction's keys on the block beside
+        the full list; the builder must accept that agreeing pair.
+        """
+        when = "2026-11-10T10:00:00"
+        first = build_pain002_report(
+            "STS",
+            "MSG",
+            "RJCT",
+            [
+                self.ROW,
+                {
+                    "original_payment_information_id": "PMT-2",
+                    "payment_information_status": "ACCP",
+                    "transactions": [],
+                },
+            ],
+            creation_datetime=when,
+            version=version,
+        )
+        parsed = parse_pain002_report(_write(tmp_path, first), validate=True)
+        again = build_pain002_report(
+            "STS",
+            "MSG",
+            parsed["group_status"],
+            parsed["payment_statuses"],
+            creation_datetime=when,
+            version=version,
+        )
+        assert again == first
+
+    @pytest.mark.parametrize(
+        "bad", [None, {"transaction_status": "ACCP"}, "ACCP"]
+    )
+    def test_transactions_must_be_a_list_of_dicts(self, bad) -> None:
+        """A non-list, or entries that are not dicts, are refused clearly."""
+        row = dict(self.ROW, transactions=bad)
+        with pytest.raises(ValueError, match="transactions"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])
+
+    def test_a_bad_status_in_the_list_is_refused(self) -> None:
+        """Every listed transaction status is checked."""
+        row = dict(
+            self.ROW,
+            transactions=[
+                {"original_end_to_end_id": "E", "transaction_status": "NOPE"}
+            ],
+        )
+        with pytest.raises(ValueError, match="NOPE"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])
+
+    def test_a_list_entry_without_a_status_is_refused(self) -> None:
+        """A listed transaction needs its status."""
+        row = dict(self.ROW, transactions=[{"original_end_to_end_id": "E"}])
+        with pytest.raises(ValueError, match="transaction_status"):
+            build_pain002_report("STS", "MSG", "RJCT", [row])

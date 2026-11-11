@@ -14,16 +14,22 @@
 
 """Universal data loader supporting multiple input sources."""
 
-from collections.abc import Generator
+import os
+from collections.abc import Generator, Sequence
 from typing import Any
 
 # pylint: disable=duplicate-code
 from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
-from pain001.csv.validate_csv_data import validate_csv_data
+from pain001.csv.validate_csv_data import row_issues
 from pain001.db.load_db_data import load_db_data
 from pain001.db.load_db_data_streaming import load_db_data_streaming
-from pain001.db.validate_db_data import validate_db_data
-from pain001.exceptions import DataSourceError, PaymentValidationError
+from pain001.db.validate_db_data import db_row_issues
+from pain001.exceptions import (
+    DataSourceError,
+    PaymentValidationError,
+    RowIssue,
+    format_issues,
+)
 from pain001.json.load_json_data import (
     load_json_data,
     load_json_data_streaming,
@@ -35,36 +41,92 @@ from pain001.parquet.load_parquet_data import (
     load_parquet_data_streaming,
 )
 
+#: Line of the first row in a file with a header line; a row counts
+#: from 1 in every other input.
+_HEADER_FIRST_LINE = {".csv": 2}
+
 
 def _get_file_loaders() -> dict[str, tuple[Any, Any, str]]:
     """Build dispatch table at call time so mocks are respected."""
     return {
-        ".csv": (load_csv_data, validate_csv_data, "CSV"),
+        ".csv": (load_csv_data, row_issues, "CSV"),
         ".db": (
             lambda p: load_db_data(p, table_name="pain001"),
-            validate_db_data,
+            db_row_issues,
             "Database",
         ),
-        ".json": (load_json_data, validate_csv_data, "JSON"),
-        ".jsonl": (load_jsonl_data, validate_csv_data, "JSONL"),
-        ".parquet": (load_parquet_data, validate_csv_data, "Parquet"),
+        ".json": (load_json_data, row_issues, "JSON"),
+        ".jsonl": (load_jsonl_data, row_issues, "JSONL"),
+        ".parquet": (load_parquet_data, row_issues, "Parquet"),
     }
+
+
+def _first_line(data_source: object) -> int:
+    """Return the line of the first row of ``data_source``, from 1.
+
+    Args:
+        data_source: A file path, a list of rows or one row.
+
+    Returns:
+        2 for a CSV file (its header is line 1), else 1.
+    """
+    if not isinstance(data_source, str):
+        return 1
+    ext = os.path.splitext(data_source)[1].lower()
+    return _HEADER_FIRST_LINE.get(ext, 1)
+
+
+def _refuse(headline: str, issues: Sequence[RowIssue]) -> None:
+    """Raise a PaymentValidationError listing ``issues``, if any.
+
+    Args:
+        headline: The message's first line.
+        issues: The problems found; nothing is raised when empty.
+
+    Raises:
+        PaymentValidationError: Carrying ``issues`` on ``errors`` and
+            listing the first of them in its message.
+    """
+    if issues:
+        count = f"{len(issues)} problem{'s' if len(issues) > 1 else ''}"
+        raise PaymentValidationError(
+            f"{headline} ({count}):{format_issues(issues)}",
+            field=issues[0].column,
+            errors=issues,
+        )
+
+
+def _require_valid(rows: list[dict[str, Any]], file_path: str) -> None:
+    """Run the built-in post-load check for ``file_path``'s type.
+
+    Args:
+        rows: The loaded rows.
+        file_path: The file they came from.
+    """
+    ext = os.path.splitext(file_path)[1].lower()
+    entry = _get_file_loaders().get(ext)
+    if entry is not None:
+        _, issues_for, format_name = entry
+        issues = issues_for(rows, first_line=_first_line(file_path))
+        _refuse(
+            f"{format_name} data validation failed for {file_path}", issues
+        )
 
 
 def _get_file_stream_loaders() -> dict[str, tuple[Any, Any, str]]:
     """Build streaming dispatch table at call time so mocks are respected."""
     return {
-        ".csv": (load_csv_data_streaming, validate_csv_data, "CSV"),
+        ".csv": (load_csv_data_streaming, row_issues, "CSV"),
         ".db": (
             lambda p, cs: load_db_data_streaming(p, "pain001", cs),
-            validate_db_data,
+            db_row_issues,
             "Database",
         ),
-        ".json": (load_json_data_streaming, validate_csv_data, "JSON"),
-        ".jsonl": (load_jsonl_data_streaming, validate_csv_data, "JSONL"),
+        ".json": (load_json_data_streaming, row_issues, "JSON"),
+        ".jsonl": (load_jsonl_data_streaming, row_issues, "JSONL"),
         ".parquet": (
             load_parquet_data_streaming,
-            validate_csv_data,
+            row_issues,
             "Parquet",
         ),
     }
@@ -119,11 +181,18 @@ def load_payment_data(
         ...     'id': 'MSG001', 'amount': '1000.00', ...
         ... })
     """
-    return _checked(_load_any(data_source), identifier_checks)
+    return _checked(
+        _load_any(data_source),
+        identifier_checks,
+        first_line=_first_line(data_source),
+    )
 
 
 def _checked(
-    rows: list[dict[str, Any]], identifier_checks: bool, start: int = 0
+    rows: list[dict[str, Any]],
+    identifier_checks: bool,
+    start: int = 0,
+    first_line: int = 1,
 ) -> list[dict[str, Any]]:
     """Return ``rows`` once their IBAN and BIC columns pass, if asked.
 
@@ -132,6 +201,7 @@ def _checked(
         identifier_checks: False returns ``rows`` unchecked.
         start: Index of the first row, so a chunk's errors name the
             row of the whole input.
+        first_line: The line of the input's first row (2 for CSV).
 
     Returns:
         ``rows``, unchanged.
@@ -140,7 +210,7 @@ def _checked(
         # Imported here: pain001.validation imports this module.
         from pain001.validation._identifiers import check_identifiers
 
-        check_identifiers(rows, start)
+        check_identifiers(rows, start, first_line)
     return rows
 
 
@@ -189,8 +259,6 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
     (`pain001-loader-xlsx`, `pain001-loader-gpg`, ...) handles the
     file. Plugin-handled formats own their own validation.
     """
-    import os
-
     from pain001.plugins.registry import registry as plugin_registry
 
     # Early extension check (fast-fail before path validation). The
@@ -235,13 +303,7 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
 
     # Every loader uses the contract; retain the built-in post-load gate.
     data = plugin_loader.load(safe_path).rows
-    entry = _get_file_loaders().get(ext)
-    if entry is not None:
-        _, validator_fn, format_name = entry
-        if not validator_fn(data):
-            raise PaymentValidationError(
-                f"{format_name} data validation failed for {file_path}"
-            )
+    _require_valid(data, file_path)
     return data
 
 
@@ -261,8 +323,7 @@ def _load_from_list(data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
 
     # Mandatory validation for data integrity
-    if not validate_csv_data(data_list):
-        raise PaymentValidationError("Data list validation failed")
+    _refuse("Data list validation failed", row_issues(data_list))
     return data_list
 
 
@@ -277,8 +338,7 @@ def _load_from_dict(data_dict: dict[str, Any]) -> list[dict[str, Any]]:
 
     # Wrap single dict in list and validate
     data_list = [data_dict]
-    if not validate_csv_data(data_list):
-        raise PaymentValidationError("Data dictionary validation failed")
+    _refuse("Data dictionary validation failed", row_issues(data_list))
     return data_list
 
 
@@ -336,8 +396,9 @@ def load_payment_data_streaming(
         Single dict input not supported in streaming mode. Convert to list first.
     """
     start = 0
+    first_line = _first_line(data_source)
     for chunk in _stream_any(data_source, chunk_size, validate):
-        yield _checked(chunk, identifier_checks, start)
+        yield _checked(chunk, identifier_checks, start, first_line)
         start += len(chunk)
 
 
@@ -381,8 +442,6 @@ def _load_from_file_streaming(
 
     Memory-efficient for large files.
     """
-    import os
-
     from pain001.plugins.registry import registry as plugin_registry
 
     ext = os.path.splitext(file_path)[1].lower()
@@ -394,12 +453,17 @@ def _load_from_file_streaming(
             f"Expected .csv, .db, .json, .jsonl, or .parquet file."
         )
 
+    start = 0
+    first_line = _first_line(file_path)
     for result in plugin_loader.load_streaming(file_path, chunk_size):
         chunk = result.rows
-        if validate and entry is not None and not entry[1](chunk):
-            raise PaymentValidationError(
-                f"{entry[2]} data validation failed for chunk in {file_path}"
+        if validate and entry is not None:
+            issues = entry[1](chunk, first_line=first_line + start)
+            _refuse(
+                f"{entry[2]} data validation failed for chunk in {file_path}",
+                issues,
             )
+        start += len(chunk)
         yield chunk
 
 
@@ -423,8 +487,9 @@ def _load_from_list_streaming(
     # Yield data in chunks
     for i in range(0, len(data_list), chunk_size):
         chunk = data_list[i : i + chunk_size]
-        if validate and not validate_csv_data(chunk):
-            raise PaymentValidationError(
-                f"Data validation failed for chunk starting at index {i}"
+        if validate:
+            _refuse(
+                f"Data validation failed for chunk starting at index {i}",
+                row_issues(chunk, first_line=1 + i),
             )
         yield chunk

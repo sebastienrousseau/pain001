@@ -261,7 +261,7 @@ class TestValidateCsvData(unittest.TestCase):
         self.assertNotIn("DE36210501700024690959", output)
         self.assertNotIn("BANKDEFFXXX", output)
         self.assertNotIn("John Doe", output)
-        self.assertIn("[REDACTED]", output)
+        self.assertIn("line 1, column creditor_name: missing value", output)
 
     def test_validate_csv_with_invalid_boolean(self) -> None:
         """Test validation with invalid boolean value."""

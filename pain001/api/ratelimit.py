@@ -72,11 +72,28 @@ class InProcessFixedWindowBackend:
         self.window_seconds = window_seconds
         self._clock = clock or time.monotonic
         self._hits: dict[str, deque[float]] = defaultdict(deque)
+        self._next_sweep = self._clock() + window_seconds
+
+    def _sweep(self, window_start: float) -> None:
+        """Forget every client with no hit inside the current window.
+
+        Without it, each client address ever seen keeps a bucket for the
+        life of the process. Runs at most once per window, so its cost is
+        spread over the requests of that window.
+
+        Args:
+            window_start: Hits at or before this time no longer count.
+        """
+        for key in [k for k, v in self._hits.items() if v[-1] <= window_start]:
+            del self._hits[key]
 
     def is_allowed(self, key: str) -> bool:
         """Record a hit and return whether the request stays within the cap."""
         now = self._clock()
         window_start = now - self.window_seconds
+        if now >= self._next_sweep:
+            self._sweep(window_start)
+            self._next_sweep = now + self.window_seconds
         hits = self._hits[key]
         while hits and hits[0] <= window_start:
             hits.popleft()
@@ -330,6 +347,9 @@ class RateLimitMiddleware:
 def install_rate_limiting(application: Any) -> None:
     """Attach the rate-limit middleware when ``PAIN001_RATE_LIMIT`` is set.
 
+    The backend is the one ``PAIN001_RATE_LIMIT_BACKEND`` names (see
+    :func:`backend_from_env`): in-process by default, Redis when asked.
+
     Args:
         application: The FastAPI (or Starlette) application to wrap.
     """
@@ -341,4 +361,5 @@ def install_rate_limiting(application: Any) -> None:
         RateLimitMiddleware,
         max_requests=max_requests,
         window_seconds=window_seconds,
+        backend=backend_from_env(max_requests, window_seconds),
     )

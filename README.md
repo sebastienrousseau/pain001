@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src=".github/demo.gif" alt="pain001 demo: write the starter payments.csv, validate it, generate an XSD-validated pain.001.001.03 file and show its group header" width="100%" />
+  <img src="https://raw.githubusercontent.com/sebastienrousseau/pain001/main/.github/demo.gif" alt="pain001 demo: write the starter payments.csv, validate it, generate an XSD-validated pain.001.001.03 file and show its group header" width="100%" />
 </p>
 
 ---
@@ -29,30 +29,30 @@
 
 **Getting started**
 
-- [Install](#install) — PyPI, source and Docker
-- [Requirements](#requirements) — toolchain floor, platforms
-- [Quick Start](#quick-start) — scaffold, validate and generate synthetic payments
+- [Install](#install): PyPI, source and Docker
+- [Requirements](#requirements): toolchain floor, platforms
+- [Quick Start](#quick-start): scaffold, validate and generate synthetic payments
 
 **The Pain001 ecosystem**
 
-- [The Pain001 ecosystem](#the-pain001-ecosystem) — core, MCP, LSP, loaders, scaffold, mockbank, native extension and website
+- [The Pain001 ecosystem](#the-pain001-ecosystem): core, MCP, LSP, loaders, scaffold, mockbank, native extension and website
 
 **Library reference**
 
-- [Capabilities at a glance](#capabilities-at-a-glance) — the current surface by theme
-- [Ecosystem comparison](#ecosystem-comparison) — short matrix; full table at [`docs/COMPARISON.md`](docs/COMPARISON.md)
-- [Benchmarks](#benchmarks) — headline numbers; full table at [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md)
-- [Features](#features) — module-level capability list
-- [Configuration](#configuration) — core options
-- [Examples](#examples) — runnable example index
+- [Capabilities at a glance](#capabilities-at-a-glance): the current surface by theme
+- [Ecosystem comparison](#ecosystem-comparison): short matrix; full table at [`docs/COMPARISON.md`](docs/COMPARISON.md)
+- [Benchmarks](#benchmarks): headline numbers; full table at [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md)
+- [Features](#features): module-level capability list
+- [Configuration](#configuration): core options
+- [Examples](#examples): runnable example index
 
 **Operational**
 
-- [When not to use Pain001](#when-not-to-use-pain001) — limitations
-- [Development](#development) — make targets, fuzzing, CI
-- [Security](#security) — guarantees and compliance
-- [Documentation](#documentation) — all reference docs
-- [Stability guarantees](#stability-guarantees) — SemVer axis, output stability, minimum toolchain discipline
+- [When not to use Pain001](#when-not-to-use-pain001): limitations
+- [Development](#development): make targets, fuzzing, CI
+- [Security](#security): guarantees and compliance
+- [Documentation](#documentation): all reference docs
+- [Stability guarantees](#stability-guarantees): SemVer axis, output stability, minimum toolchain discipline
 - [License](#license)
 
 ---
@@ -65,7 +65,7 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.85**: ISO 20022 pain.001 and pain.008 files
+> **Latest release: v0.0.86**: ISO 20022 pain.001 and pain.008 files
 > generated from CSV, SQLite, JSON, JSON Lines and Parquet and validated
 > against the official XSD, for Python 3.11+. Each companion publication
 > is verified separately by the ecosystem audit.
@@ -321,7 +321,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.85; publication requires approved release PRs and signed release tags.
+is 0.0.86; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

@@ -1,0 +1,205 @@
+{
+  "kit": "pain001-conformance",
+  "kit_version": 1,
+  "description": "Requests every pain001 SDK sends to a running `pain001 serve`, and what each response must satisfy. Synthetic data only.",
+  "cases": [
+    {
+      "id": "health",
+      "method": "GET",
+      "path": "/api/v1/health",
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/status": "healthy"
+        },
+        "types": {
+          "/version": "string"
+        }
+      }
+    },
+    {
+      "id": "validate-credit-transfer",
+      "method": "POST",
+      "path": "/api/v1/ui/validate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/credit-transfer.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09"
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/is_valid": true,
+          "/total_rows": 5,
+          "/valid_rows": 5,
+          "/invalid_rows": 0
+        },
+        "types": {
+          "/errors": "array"
+        }
+      }
+    },
+    {
+      "id": "validate-bad-iban",
+      "method": "POST",
+      "path": "/api/v1/ui/validate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/bad-iban.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09"
+      },
+      "expect": {
+        "status": 400,
+        "contains": {
+          "/detail": [
+            "creditor_account_IBAN",
+            "not a valid IBAN"
+          ]
+        }
+      }
+    },
+    {
+      "id": "validate-unknown-message-type",
+      "method": "POST",
+      "path": "/api/v1/ui/validate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/credit-transfer.pain.001.001.09.csv"
+        },
+        "message_type": "pain.999.001.01"
+      },
+      "expect": {
+        "status": 422,
+        "types": {
+          "/detail": "array"
+        }
+      }
+    },
+    {
+      "id": "generate-credit-transfer",
+      "method": "POST",
+      "path": "/api/v1/ui/generate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/credit-transfer.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09"
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/success": true
+        },
+        "contains": {
+          "/xml": [
+            "urn:iso:std:iso:20022:tech:xsd:pain.001.001.09",
+            "<NbOfTxs>5</NbOfTxs>",
+            "<CtrlSum>1100.00</CtrlSum>"
+          ]
+        }
+      }
+    },
+    {
+      "id": "generate-direct-debit",
+      "method": "POST",
+      "path": "/api/v1/ui/generate",
+      "body": {
+        "filename": "collections.csv",
+        "content": {
+          "$file": "fixtures/direct-debit.pain.008.001.08.csv"
+        },
+        "message_type": "pain.008.001.08"
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/success": true
+        },
+        "contains": {
+          "/xml": [
+            "urn:iso:std:iso:20022:tech:xsd:pain.008.001.08",
+            "<NbOfTxs>2</NbOfTxs>"
+          ]
+        }
+      }
+    },
+    {
+      "id": "check-valid-document",
+      "method": "POST",
+      "path": "/api/v1/check",
+      "body": {
+        "xml": {
+          "$file": "fixtures/credit-transfer.pain.001.001.09.xml"
+        }
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/passed": true,
+          "/errors": 0,
+          "/message_type": "pain.001.001.09"
+        },
+        "types": {
+          "/findings": "array"
+        }
+      }
+    },
+    {
+      "id": "check-not-a-payment",
+      "method": "POST",
+      "path": "/api/v1/check",
+      "body": {
+        "xml": "<x/>"
+      },
+      "expect": {
+        "status": 422,
+        "contains": {
+          "/detail": [
+            "not a pain.001 or pain.008 Document"
+          ]
+        }
+      }
+    },
+    {
+      "id": "faces-list",
+      "method": "GET",
+      "path": "/api/v1/faces",
+      "expect": {
+        "status": 200,
+        "types": {
+          "": "array",
+          "/0/name": "string"
+        },
+        "equals": {
+          "/0/name": "berlin_group",
+          "/1/name": "iso_2018",
+          "/2/name": "uk_open_banking"
+        }
+      }
+    },
+    {
+      "id": "face-berlin-group",
+      "method": "POST",
+      "path": "/api/v1/faces/berlin_group",
+      "body": {
+        "xml": {
+          "$file": "fixtures/credit-transfer.pain.001.001.09.xml"
+        }
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/face": "berlin_group",
+          "/version": "pain.001.001.09",
+          "/payload/debtorAccount/iban": "DE07512108001245126162"
+        }
+      }
+    }
+  ]
+}

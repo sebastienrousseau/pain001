@@ -15,7 +15,9 @@
 """End-to-end CLI tests for the --scheme rulebook flags."""
 
 import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from click.testing import CliRunner
@@ -222,23 +224,27 @@ class TestCliDataFailureTips(unittest.TestCase):
 
     def test_json_failure_tip(self) -> None:
         """A JSON load failure prints a JSON-specific tip."""
-        with patch("pain001.cli.cli.validate_via_xsd", return_value=True):
-            with patch(
-                "pain001.cli.cli.load_batch",
-                side_effect=ValueError("bad json"),
-            ):
-                result = self.runner.invoke(main, self._args("data.json"))
+        with patch(
+            "pain001.cli.cli.load_batch",
+            side_effect=ValueError("bad json"),
+        ):
+            with tempfile.TemporaryDirectory() as tmp:
+                data = Path(tmp) / "data.json"
+                data.write_text("[]", encoding="utf-8")
+                result = self.runner.invoke(main, self._args(str(data)))
         assert result.exit_code == 1
         assert "json" in result.output.lower()
 
     def test_parquet_failure_tip(self) -> None:
         """A Parquet load failure prints a pyarrow tip."""
-        with patch("pain001.cli.cli.validate_via_xsd", return_value=True):
-            with patch(
-                "pain001.cli.cli.load_batch",
-                side_effect=ValueError("bad parquet"),
-            ):
-                result = self.runner.invoke(main, self._args("data.parquet"))
+        with patch(
+            "pain001.cli.cli.load_batch",
+            side_effect=ValueError("bad parquet"),
+        ):
+            with tempfile.TemporaryDirectory() as tmp:
+                data = Path(tmp) / "data.parquet"
+                data.write_bytes(b"")
+                result = self.runner.invoke(main, self._args(str(data)))
         assert result.exit_code == 1
         assert "pyarrow" in result.output.lower()
 
@@ -256,7 +262,6 @@ class TestCliVerboseTraceback(unittest.TestCase):
             "pain001.cli.cli.process_files",
             side_effect=RuntimeError("boom"),
         ):
-            with patch("pain001.cli.cli.validate_via_xsd", return_value=True):
-                result = self.runner.invoke(main, [*_base_args(), "--verbose"])
+            result = self.runner.invoke(main, [*_base_args(), "--verbose"])
         assert result.exit_code == 1
         assert "traceback" in result.output.lower()

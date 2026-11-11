@@ -65,7 +65,7 @@ Verification parses once with lxml (DTDs and entities refused, as in
 digests the parsed tree with exclusive C14N 1.0, honouring an
 `InclusiveNamespaces` prefix list and keeping the text after the
 Signature when the enveloped transform removes it. It accepts only
-allow-listed methods: exclusive C14N; a `URI=""` reference with the
+allow-listed methods: exclusive C14N; exactly one `URI=""` reference with the
 enveloped transform, optionally then exclusive C14N; SHA-256, SHA-384
 or SHA-512 digests; RSA-SHA256, RSA-PSS (RFC 9231 `sha256-rsa-MGF1`),
 and ECDSA-SHA256 and ECDSA-SHA384 with the raw `r || s` value XML-DSig

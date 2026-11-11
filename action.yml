@@ -2,7 +2,7 @@
 # pain001 check as a GitHub Action: run the validation ladder on payment
 # files in a repository and upload the findings to code scanning.
 #
-#   - uses: sebastienrousseau/pain001@v0.0.85
+#   - uses: sebastienrousseau/pain001@v0.0.86
 #     with:
 #       files: "payments/**/*.xml"
 #       scheme: sepa-sct

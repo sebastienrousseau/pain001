@@ -108,7 +108,7 @@ arrangement today; the plan is incomplete until they do.
 
 ## Code of conduct & security
 
-Participation is governed by [`CODE-OF-CONDUCT.md`](CODE-OF-CONDUCT.md).
+Participation is governed by [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md).
 Security issues follow the private disclosure process in
 [`SECURITY.md`](SECURITY.md) — please do not open public issues for
 vulnerabilities.
