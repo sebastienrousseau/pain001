@@ -223,30 +223,9 @@
     "cyclomatic": 14,
     "lines": 76
   },
-  "pain001/validation/corrections.py::suggest_record_fix": {
-    "cognitive": 23,
-    "cyclomatic": 22,
-    "lines": 78
-  },
   "pain001/validation/iban_validator.py::validate_iban_format": {
     "cyclomatic": 11,
     "lines": 69
-  },
-  "pain001/validation/policy.py::CustomRuleScheme.validate": {
-    "cognitive": 17
-  },
-  "pain001/validation/policy.py::_activation": {
-    "cognitive": 16,
-    "cyclomatic": 12
-  },
-  "pain001/validation/policy.py::_check_expression": {
-    "cognitive": 16,
-    "cyclomatic": 11
-  },
-  "pain001/validation/policy.py::_load_rules": {
-    "cognitive": 26,
-    "cyclomatic": 20,
-    "lines": 84
   },
   "pain001/validation/rails.py": {
     "file_lines": 1250

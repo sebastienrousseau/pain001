@@ -103,51 +103,58 @@ class _Rule:
     fields: frozenset[str]
 
 
+def _check_function(name: str) -> None:
+    """Refuse a function call outside the policy's own functions."""
+    if name == "currency_of_iban":
+        raise ValueError(
+            "An IBAN does not encode account currency; use the record's currency field."
+        )
+    if name not in _FUNCTIONS:
+        raise ValueError(f"Function {name!r} is not allowed.")
+
+
+def _check_node(node: Tree[Token]) -> None:
+    """Refuse one expression node: a call, method or literal not allowed."""
+    if node.data == "ident_arg":
+        _check_function(str(node.children[0]))
+    if node.data == "member_dot_arg" and str(node.children[1]) not in _METHODS:
+        raise ValueError(
+            "Only bounded string methods are allowed; CEL collection macros are disabled."
+        )
+    if (
+        node.data == "literal"
+        and isinstance(node.children[0], Token)
+        and node.children[0].type == "FLOAT_LIT"
+    ):
+        raise ValueError(
+            'Use decimal("1.23") instead of a floating-point literal.'
+        )
+
+
 def _check_expression(tree: Tree[Token]) -> None:
     """Reject unbounded macros, unknown functions and inexact literals."""
     nodes = list(tree.iter_subtrees())
     if len(nodes) > 512:
         raise ValueError("Expression exceeds the 512-node limit.")
     for node in nodes:
-        if node.data == "ident_arg":
-            name = str(node.children[0])
-            if name == "currency_of_iban":
-                raise ValueError(
-                    "An IBAN does not encode account currency; use the record's currency field."
-                )
-            if name not in _FUNCTIONS:
-                raise ValueError(f"Function {name!r} is not allowed.")
-        if (
-            node.data == "member_dot_arg"
-            and str(node.children[1]) not in _METHODS
-        ):
-            raise ValueError(
-                "Only bounded string methods are allowed; CEL collection macros are disabled."
-            )
-        if (
-            node.data == "literal"
-            and isinstance(node.children[0], Token)
-            and node.children[0].type == "FLOAT_LIT"
-        ):
-            raise ValueError(
-                'Use decimal("1.23") instead of a floating-point literal.'
-            )
+        _check_node(node)
 
 
-def _load_rules(source: str) -> list[_Rule]:
-    """Validate YAML and compile bounded CEL without evaluating any record."""
+_FORBIDDEN_YAML_TOKENS = (
+    yaml.tokens.AliasToken,
+    yaml.tokens.AnchorToken,
+    yaml.tokens.TagToken,
+)
+_RULE_KEYS = frozenset({"id", "where", "severity", "message"})
+
+
+def _parse_specs(source: str) -> list[Any]:
+    """Parse the policy YAML into its rule specs, refusing YAML features."""
     if len(source.encode("utf-8")) > MAX_POLICY_BYTES:
         raise ValueError("Policy exceeds the 64 KiB limit.")
     try:
         for token in yaml.scan(source):
-            if isinstance(
-                token,
-                (
-                    yaml.tokens.AliasToken,
-                    yaml.tokens.AnchorToken,
-                    yaml.tokens.TagToken,
-                ),
-            ):
+            if isinstance(token, _FORBIDDEN_YAML_TOKENS):
                 raise ValueError(
                     "YAML aliases, anchors and explicit tags are not allowed in policies."
                 )
@@ -156,68 +163,116 @@ def _load_rules(source: str) -> list[_Rule]:
         raise ValueError("Invalid policy YAML.") from exc
     if not isinstance(specs, list) or not 1 <= len(specs) <= MAX_RULES:
         raise ValueError("A policy must contain between 1 and 64 rules.")
+    return specs
+
+
+def _rule_identifier(spec: Any, seen: set[str]) -> str:
+    """The rule's ID, once its keys and the ID itself are checked."""
+    if not isinstance(spec, dict) or set(spec) != _RULE_KEYS:
+        raise ValueError(
+            "Each rule requires exactly id, where, severity and message."
+        )
+    identifier = spec["id"]
+    if (
+        not isinstance(identifier, str)
+        or not _IDENTIFIER.fullmatch(identifier)
+        or identifier in seen
+    ):
+        raise ValueError(
+            "Rule IDs must be unique uppercase identifiers of at most 64 characters."
+        )
+    return identifier
+
+
+def _check_rule_fields(expression: Any, severity: Any, message: Any) -> None:
+    """Refuse a where, severity or message outside its allowed form."""
+    if (
+        not isinstance(expression, str)
+        or not 1 <= len(expression) <= MAX_EXPRESSION_LENGTH
+    ):
+        raise ValueError(
+            "where must be a CEL string of 1 through 2048 characters."
+        )
+    if severity not in ("error", "warning", "info"):
+        raise ValueError("severity must be error, warning or info.")
+    if not isinstance(message, str) or not 1 <= len(message) <= 1024:
+        raise ValueError(
+            "message must be a string of 1 through 1024 characters."
+        )
+
+
+def _compile_rule(
+    environment: celpy.Environment, spec: dict[str, Any], identifier: str
+) -> _Rule:
+    """Check and compile one rule spec; errors name the rule."""
+    try:
+        expression, severity, message = (
+            spec["where"],
+            spec["severity"],
+            spec["message"],
+        )
+        _check_rule_fields(expression, severity, message)
+        tree = environment.compile(expression)
+        _check_expression(tree)
+        # CEL supports custom scalar values at runtime. Decimal is kept
+        # exact instead of being coerced to the library's binary double.
+        functions: dict[str, CELFunction] = cast(
+            "dict[str, CELFunction]", _FUNCTIONS
+        )
+        program = environment.program(tree, functions=functions)
+    except (
+        ValueError,
+        TypeError,
+        CELParseError,
+        RecursionError,
+    ) as exc:
+        raise ValueError(f"Rule {identifier}: {exc}") from exc
+    fields = frozenset(
+        str(node.children[0]) for node in tree.find_data("ident")
+    )
+    return _Rule(identifier, severity, message, program, fields)
+
+
+def _load_rules(source: str) -> list[_Rule]:
+    """Validate YAML and compile bounded CEL without evaluating any record."""
+    specs = _parse_specs(source)
     rules = []
-    seen = set()
+    seen: set[str] = set()
     environment = celpy.Environment()
     for spec in specs:
-        if not isinstance(spec, dict) or set(spec) != {
-            "id",
-            "where",
-            "severity",
-            "message",
-        }:
-            raise ValueError(
-                "Each rule requires exactly id, where, severity and message."
-            )
-        identifier = spec["id"]
-        if (
-            not isinstance(identifier, str)
-            or not _IDENTIFIER.fullmatch(identifier)
-            or identifier in seen
-        ):
-            raise ValueError(
-                "Rule IDs must be unique uppercase identifiers of at most 64 characters."
-            )
+        identifier = _rule_identifier(spec, seen)
         seen.add(identifier)
-        try:
-            expression, severity, message = (
-                spec["where"],
-                spec["severity"],
-                spec["message"],
-            )
-            if (
-                not isinstance(expression, str)
-                or not 1 <= len(expression) <= MAX_EXPRESSION_LENGTH
-            ):
-                raise ValueError(
-                    "where must be a CEL string of 1 through 2048 characters."
-                )
-            if severity not in ("error", "warning", "info"):
-                raise ValueError("severity must be error, warning or info.")
-            if not isinstance(message, str) or not 1 <= len(message) <= 1024:
-                raise ValueError(
-                    "message must be a string of 1 through 1024 characters."
-                )
-            tree = environment.compile(expression)
-            _check_expression(tree)
-            # CEL supports custom scalar values at runtime. Decimal is kept
-            # exact instead of being coerced to the library's binary double.
-            functions: dict[str, CELFunction] = cast(
-                "dict[str, CELFunction]", _FUNCTIONS
-            )
-            program = environment.program(tree, functions=functions)
-        except (
-            ValueError,
-            TypeError,
-            CELParseError,
-            RecursionError,
-        ) as exc:
-            raise ValueError(f"Rule {identifier}: {exc}") from exc
-        fields = frozenset(
-            str(node.children[0]) for node in tree.find_data("ident")
-        )
-        rules.append(_Rule(identifier, severity, message, program, fields))
+        rules.append(_compile_rule(environment, spec, identifier))
     return rules
+
+
+_EXACT_FIELDS = frozenset({"amount", "payment_amount", "ctrl_sum"})
+
+
+def _string(value: str) -> celtypes.StringType:
+    """A bounded CEL string."""
+    if len(value) > 4096:
+        raise ValueError(
+            "Policy string inputs must be at most 4096 characters."
+        )
+    return celtypes.StringType(value)
+
+
+def _scalar(name: str, value: Any, expected: Any) -> Any:
+    """One record value as a CEL scalar, exact for monetary numbers."""
+    if expected == "number" or name in _EXACT_FIELDS:
+        return decimal(str(value))
+    if isinstance(value, bool):
+        return celtypes.BoolType(value)
+    if expected == "integer" or isinstance(value, int):
+        return celtypes.IntType(int(value))
+    if isinstance(value, float | Decimal):
+        return decimal(str(value))
+    if isinstance(value, str):
+        return _string(value)
+    if value is None:
+        return None
+    raise ValueError("Policy inputs must be flat scalar records.")
 
 
 def _activation(
@@ -231,29 +286,21 @@ def _activation(
                 "Record field names must be at most 128 characters."
             )
         expected = properties.get(name, {}).get("type")
-        if expected == "number" or name in {
-            "amount",
-            "payment_amount",
-            "ctrl_sum",
-        }:
-            context[name] = decimal(str(value))
-        elif isinstance(value, bool):
-            context[name] = celtypes.BoolType(value)
-        elif expected == "integer" or isinstance(value, int):
-            context[name] = celtypes.IntType(int(value))
-        elif isinstance(value, float | Decimal):
-            context[name] = decimal(str(value))
-        elif isinstance(value, str):
-            if len(value) > 4096:
-                raise ValueError(
-                    "Policy string inputs must be at most 4096 characters."
-                )
-            context[name] = celtypes.StringType(value)
-        elif value is None:
-            context[name] = None
-        else:
-            raise ValueError("Policy inputs must be flat scalar records.")
+        context[name] = _scalar(name, value, expected)
     return context
+
+
+def _evaluate(rule: _Rule, context: dict[str, Any], index: int) -> Any:
+    """Run one rule on one row's context; it must return a boolean."""
+    try:
+        result = rule.program.evaluate(context)
+        if not isinstance(result, (bool, celtypes.BoolType)):
+            raise ValueError("Predicate did not return a boolean.")
+    except Exception as exc:
+        raise ValueError(
+            f"Rule {rule.identifier}, row {index}: evaluation failed ({type(exc).__name__})."
+        ) from None
+    return result
 
 
 class CustomRuleScheme:
@@ -276,10 +323,32 @@ class CustomRuleScheme:
             name for rule in self._rules for name in rule.fields
         )
 
+    def _context(
+        self, index: int, row: dict[str, Any], properties: dict[str, Any]
+    ) -> dict[str, Any]:
+        """The CEL activation for one row: the fields the rules read."""
+        try:
+            return _activation(
+                {name: row[name] for name in self._fields if name in row},
+                properties,
+            )
+        except (
+            ValueError,
+            TypeError,
+            InvalidOperation,
+            OverflowError,
+        ) as exc:
+            raise ValueError(
+                f"Policy row {index}: invalid scalar input ({type(exc).__name__})."
+            ) from None
+
     def validate(
         self, rows: list[dict[str, Any]], *, message_type: str
     ) -> SchemeResult:
         """Return structured findings for rules whose predicates are true.
+
+        Invalid inputs and failed expression evaluations propagate
+        ValueError, naming the row and, for an evaluation, the rule.
 
         Args:
             rows: Flat payment records, never mutated.
@@ -287,46 +356,18 @@ class CustomRuleScheme:
 
         Returns:
             Findings in row and policy order; warnings do not reject a batch.
-
-        Raises:
-            ValueError: If inputs or expression evaluation are invalid.
         """
         properties = SchemaValidator(message_type).schema["properties"]
-        findings = []
+        findings: list[SchemeFinding] = []
         for index, row in enumerate(rows):
-            try:
-                context = _activation(
-                    {name: row[name] for name in self._fields if name in row},
-                    properties,
+            context = self._context(index, row, properties)
+            findings.extend(
+                SchemeFinding(
+                    index, None, rule.identifier, rule.severity, rule.message
                 )
-            except (
-                ValueError,
-                TypeError,
-                InvalidOperation,
-                OverflowError,
-            ) as exc:
-                raise ValueError(
-                    f"Policy row {index}: invalid scalar input ({type(exc).__name__})."
-                ) from None
-            for rule in self._rules:
-                try:
-                    result = rule.program.evaluate(context)
-                    if not isinstance(result, (bool, celtypes.BoolType)):
-                        raise ValueError("Predicate did not return a boolean.")
-                except Exception as exc:
-                    raise ValueError(
-                        f"Rule {rule.identifier}, row {index}: evaluation failed ({type(exc).__name__})."
-                    ) from None
-                if result:
-                    findings.append(
-                        SchemeFinding(
-                            index,
-                            None,
-                            rule.identifier,
-                            rule.severity,
-                            rule.message,
-                        )
-                    )
+                for rule in self._rules
+                if _evaluate(rule, context, index)
+            )
         return SchemeResult(
             not any(f.severity == "error" for f in findings), findings
         )
