@@ -25,6 +25,7 @@ registry is populated lazily on first use:
 3. The ``PAIN001_DISABLE_PLUGINS`` env var (comma-separated names)
    skips matching plugins regardless of source - the production
    escape hatch when a plugin breaks.
+
 Direct ``register_*`` calls are trusted code and may still override.
 
 Plugin authors talk to the registry only through

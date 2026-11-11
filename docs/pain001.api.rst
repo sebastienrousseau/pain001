@@ -62,6 +62,14 @@ pain001.api.job\_store module
    :show-inheritance:
    :undoc-members:
 
+pain001.api.limits module
+-------------------------
+
+.. automodule:: pain001.api.limits
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.api.meta module
 -----------------------
 
@@ -82,6 +90,14 @@ pain001.api.models module
 -------------------------
 
 .. automodule:: pain001.api.models
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
+pain001.api.ops module
+----------------------
+
+.. automodule:: pain001.api.ops
    :members:
    :show-inheritance:
    :undoc-members:

@@ -147,8 +147,9 @@ def format_issues(
         limit: How many to list before counting the rest.
 
     Returns:
-        One ``"\n  <issue>"`` per listed issue, then
-        ``"\n  ... and N more"`` when some were left out.
+        Each listed issue on its own line, indented by two spaces and
+        preceded by a newline, then an "... and N more" line when some
+        were left out.
     """
     listed = "".join(f"\n  {issue}" for issue in issues[:limit])
     if len(issues) > limit:
