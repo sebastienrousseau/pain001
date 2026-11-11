@@ -505,18 +505,6 @@ class TestRegistryLookups:
 class TestCsvValidationHelpers:
     """Internal CSV validation helpers."""
 
-    def test_mask_value_short(self) -> None:
-        """A short value is fully masked."""
-        from pain001.csv.validate_csv_data import _mask_value
-
-        assert _mask_value("ab", 4) == "**"
-
-    def test_mask_value_long(self) -> None:
-        """A long value keeps a prefix and suffix."""
-        from pain001.csv.validate_csv_data import _mask_value
-
-        assert "****" in _mask_value("ABCDEFGHIJ", 2)
-
     def test_validate_datetime_ok(self) -> None:
         """A valid ISO date passes _validate_datetime."""
         from pain001.csv.validate_csv_data import _validate_datetime

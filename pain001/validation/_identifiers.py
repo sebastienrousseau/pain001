@@ -27,8 +27,10 @@ accepts (``debtor_account_iban`` is ``debtor_account_IBAN``). An empty
 value is left to the required-field checks: a version 09 row may name
 an account by number instead of IBAN.
 
-Messages name the row (zero-based, as scheme violations do) and the
-column, and never repeat the identifier: an IBAN is personal data.
+Messages name the line (counted from 1 as a spreadsheet shows it, so a
+CSV file's first payment is line 2) and the column, and never repeat
+the identifier: an IBAN is personal data. The error carries one
+:class:`~pain001.exceptions.RowIssue` per finding on ``errors``.
 """
 
 from __future__ import annotations
@@ -36,7 +38,13 @@ from __future__ import annotations
 from collections.abc import Iterable, Mapping
 from typing import Any
 
-from pain001.exceptions import PaymentValidationError
+from pain001.exceptions import (
+    MAX_LISTED_ISSUES,
+    IssueCode,
+    PaymentValidationError,
+    RowIssue,
+    format_issues,
+)
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.iban_validator import validate_iban
 
@@ -58,7 +66,10 @@ _BIC_REASON = (
 )
 
 #: At most this many findings are listed in one error message.
-MAX_LISTED = 20
+MAX_LISTED = MAX_LISTED_ISSUES
+
+#: Issue code per identifier kind.
+_CODES = {"IBAN": IssueCode.INVALID_IBAN, "BIC": IssueCode.INVALID_BIC}
 
 
 def _reason(kind: str, value: str) -> str | None:
@@ -118,30 +129,38 @@ def identifier_errors(
 
 
 def check_identifiers(
-    rows: Iterable[Mapping[str, Any]], start: int = 0
+    rows: Iterable[Mapping[str, Any]], start: int = 0, first_line: int = 1
 ) -> None:
     """Raise when any row carries an invalid IBAN or BIC.
 
     Args:
         rows: The payment rows.
         start: Index of the first row, for a chunk of a larger input.
+        first_line: The line of the input's first row: 2 for a CSV
+            file, whose header is line 1, else 1.
 
     Raises:
-        PaymentValidationError: Listing the row and column of each
-            finding (the first :data:`MAX_LISTED`), never the value.
+        PaymentValidationError: Listing the line and column of each
+            finding (the first twenty), never the value, with one
+            :class:`~pain001.exceptions.RowIssue` each on ``errors``.
     """
     errors = identifier_errors(rows, start)
     if not errors:
         return
-    listed = "".join(
-        f"\n  row {index}, column {column}: {reason}"
-        for index, column, reason in errors[:MAX_LISTED]
-    )
-    if len(errors) > MAX_LISTED:
-        listed += f"\n  ... and {len(errors) - MAX_LISTED} more"
+    issues = [
+        RowIssue(
+            first_line + index,
+            column,
+            _CODES[IDENTIFIER_COLUMNS[_BY_LOWER[column.lower()]]],
+            reason,
+        )
+        for index, column, reason in errors
+    ]
     raise PaymentValidationError(
-        f"Invalid account identifiers ({len(errors)}):{listed}\n"
+        f"Invalid account identifiers ({len(errors)}):"
+        f"{format_issues(issues)}\n"
         "Fix the values, or skip these checks with --no-identifier-checks "
         "(identifier_checks=False).",
         field=errors[0][1],
+        errors=issues,
     )

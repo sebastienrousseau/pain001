@@ -16,9 +16,29 @@ Data validation failed
 ----------------------
 
 - Cause: missing required CSV columns, invalid IBAN/BIC fields, or bad dates.
-- Fix: run ``pain001 validate -t <message type> -d <data file>`` first and
-  inspect the validation error; add ``--scheme <profile>`` for IBAN check
-  digits, currency and amount rules.
+- Fix: run ``pain001 validate -t <message type> -d <data file>`` first.
+  Each problem is listed on its own line with the line number as a
+  spreadsheet shows it (a CSV header is line 1), the column and a
+  stable code; the first 20 are shown, then a count. The value itself
+  is never printed. Add ``--scheme <profile>`` for currency and amount
+  rules.
+
+  ================  ===============================================
+  Code              Problem
+  ================  ===============================================
+  ``P001-E001``     The input has no payment rows.
+  ``P001-E010``     A required column is absent or empty.
+  ``P001-E011``     Not a whole number.
+  ``P001-E012``     Not a decimal number (an amount).
+  ``P001-E013``     Not true, false, 1 or 0.
+  ``P001-E014``     Not a date (``YYYY-MM-DD`` or ISO 8601).
+  ``P001-E020``     Not a valid IBAN.
+  ``P001-E021``     Not a valid BIC.
+  ================  ===============================================
+
+  From Python, the same problems are on the exception:
+  ``PaymentValidationError.errors`` is a tuple of ``RowIssue`` records
+  (``line``, ``column``, ``code``, ``message``).
 
 Input file not found
 --------------------

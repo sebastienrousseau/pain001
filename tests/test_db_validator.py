@@ -14,7 +14,6 @@
 
 
 import unittest
-from unittest.mock import patch
 
 from pain001.db.validate_db_data import validate_db_data
 
@@ -78,16 +77,21 @@ class TestValidateDbData(unittest.TestCase):
     def test_validate_db_data_valid(self) -> None:
         self.assertTrue(validate_db_data(self.valid_data))
 
-    @patch("pain001.db.validate_db_data.logger.error", autospec=True)
-    def test_validate_db_data_logging(self, mock_logging_error) -> None:
+    def test_validate_db_data_logging(self) -> None:
+        """A missing column is logged by row and column, not by value."""
         invalid_data = self.valid_data.copy()
         invalid_data[0].pop("id")
-        validate_db_data(invalid_data)
-        mock_logging_error.assert_called_once_with(
-            "Error: Missing value for required column '%s' in row: %s",
-            "id",
-            invalid_data[0],
-        )
+        with self.assertLogs(
+            "pain001.csv.validate_csv_data", level="ERROR"
+        ) as captured:
+            self.assertFalse(validate_db_data(invalid_data))
+        output = "\n".join(captured.output)
+        self.assertIn("line 1, column id: missing value (P001-E010)", output)
+        self.assertNotIn("DE89370400440532013000", output)
+
+    def test_empty_table_passes(self) -> None:
+        """An empty table is not a validation failure here."""
+        self.assertTrue(validate_db_data([]))
 
 
 if __name__ == "__main__":

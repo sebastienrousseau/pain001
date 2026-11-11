@@ -33,7 +33,14 @@ Example:
     ...     log.error(f"Configuration error: {e}")
 """
 
+from collections.abc import Iterable, Sequence
+from dataclasses import dataclass
+
 __all__ = [
+    "IssueCode",
+    "MAX_LISTED_ISSUES",
+    "RowIssue",
+    "format_issues",
     "Pain001Error",
     "PaymentValidationError",
     "XMLGenerationError",
@@ -63,6 +70,92 @@ class Pain001Error(Exception):
     """
 
 
+class IssueCode:
+    """Stable codes for problems found in input rows.
+
+    A code never changes meaning once released; messages may be
+    reworded. Scripts and the REST API's callers match on the code.
+    """
+
+    #: The input holds no payment rows.
+    EMPTY_INPUT = "P001-E001"
+    #: A required column is absent or empty.
+    MISSING_VALUE = "P001-E010"
+    #: A column that takes a whole number holds something else.
+    NOT_INTEGER = "P001-E011"
+    #: A column that takes a decimal amount holds something else.
+    NOT_DECIMAL = "P001-E012"
+    #: A column that takes true or false holds something else.
+    NOT_BOOLEAN = "P001-E013"
+    #: A column that takes a date or date-time holds something else.
+    NOT_DATE = "P001-E014"
+    #: An IBAN column fails the mod-97 check or the country length.
+    INVALID_IBAN = "P001-E020"
+    #: A BIC column is not an ISO 9362 BIC.
+    INVALID_BIC = "P001-E021"
+
+
+@dataclass(frozen=True)
+class RowIssue:
+    """One problem in one input row, without the value that caused it.
+
+    An IBAN or a name is personal data, so the value is never kept: the
+    line and column are enough to find it.
+
+    Attributes:
+        line: Where the row is, counted from 1 as a spreadsheet or
+            editor shows it: in a CSV file the header is line 1, so the
+            first payment is line 2; in other inputs the first record
+            is 1. ``None`` when the problem concerns the whole input.
+        column: The column, or ``None`` when no single column is at
+            fault.
+        code: A stable :class:`IssueCode` value.
+        message: What is wrong, in plain words.
+    """
+
+    line: int | None
+    column: str | None
+    code: str
+    message: str
+
+    def __str__(self) -> str:
+        """Return ``line 3, column payment_amount: <message> (<code>)``.
+
+        Returns:
+            The issue on one line.
+        """
+        where = []
+        if self.line is not None:
+            where.append(f"line {self.line}")
+        if self.column is not None:
+            where.append(f"column {self.column}")
+        text = f"{self.message} ({self.code})"
+        return f"{', '.join(where)}: {text}" if where else text
+
+
+#: At most this many issues are listed in one error message.
+MAX_LISTED_ISSUES = 20
+
+
+def format_issues(
+    issues: Sequence[RowIssue], limit: int = MAX_LISTED_ISSUES
+) -> str:
+    """Return the issues as indented lines, the first ``limit`` of them.
+
+    Args:
+        issues: The issues, in input order.
+        limit: How many to list before counting the rest.
+
+    Returns:
+        One ``"\n  <issue>"`` per listed issue, then
+        ``"\n  ... and N more"`` when some were left out.
+    """
+    listed = "".join(f"\n  {issue}" for issue in issues[:limit])
+    if len(issues) > limit:
+        listed += f"\n  ... and {len(issues) - limit} more"
+    return listed
+
+
 class PaymentValidationError(Pain001Error):
     """Raised when payment data validation fails.
 
@@ -76,18 +169,26 @@ class PaymentValidationError(Pain001Error):
     Args:
         message: Human-readable error message.
         field: Optional field name that caused the validation error.
+        errors: The row problems found, one :class:`RowIssue` each;
+            kept as a tuple on ``errors`` (empty when none apply).
 
     Example:
         >>> try:
         ...     validate_payment_data(data)
         ... except PaymentValidationError as e:
         ...     # User-facing error - show validation message
-        ...     return {"error": str(e), "field": e.field}
+        ...     return {"error": str(e), "issues": [str(i) for i in e.errors]}
     """
 
-    def __init__(self, message: str, field: str | None = None):
+    def __init__(
+        self,
+        message: str,
+        field: str | None = None,
+        errors: Iterable[RowIssue] = (),
+    ):
         super().__init__(message)
         self.field = field
+        self.errors: tuple[RowIssue, ...] = tuple(errors)
 
 
 class XMLGenerationError(Pain001Error):

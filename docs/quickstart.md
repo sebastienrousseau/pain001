@@ -128,14 +128,17 @@ debtor IBAN with a broken check digit):
 
 ```text
 ✗ Data validation failed: Invalid account identifiers (1):
-  row 0, column debtor_account_IBAN: not a valid IBAN (IBAN checksum validation
-failed (mod 97 = 2, expected 1))
+  line 2, column debtor_account_IBAN: not a valid IBAN (IBAN checksum validation
+failed (mod 97 = 2, expected 1)) (P001-E020)
 Fix the values, or skip these checks with --no-identifier-checks
 (identifier_checks=False).
 ```
 
-Rows count from 0 and the message never repeats the IBAN itself. Pass
-`--no-identifier-checks` only for test data you know is synthetic.
+Lines count as a spreadsheet shows them (the header is line 1, so the
+first payment is line 2), and the message never repeats the IBAN
+itself. A missing value, a bad date or a bad amount is listed the same
+way, each with its own code. Pass `--no-identifier-checks` only for
+test data you know is synthetic.
 
 Want to check it'll pass the SEPA Credit Transfer rulebook *as
 well as* the schema? Add `--scheme`. The scheme profiles are where

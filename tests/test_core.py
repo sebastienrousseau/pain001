@@ -23,6 +23,7 @@ from pain001.core.core import process_files
 from pain001.exceptions import (
     DataSourceError,
     PaymentValidationError,
+    RowIssue,
     XMLGenerationError,
 )
 
@@ -230,20 +231,18 @@ class TestProcessFiles(unittest.TestCase):
             )
 
     def test_single_column_csv_data(self) -> None:
-        with self.assertLogs(
-            "pain001.csv.validate_csv_data", level="ERROR"
-        ) as logs:
-            with self.assertRaises(PaymentValidationError):
-                process_files(
-                    self.xml_message_type,
-                    self.xml_template_file_path,
-                    self.xsd_schema_file_path,
-                    self.single_column_csv_file_path,
-                )
+        with self.assertRaises(PaymentValidationError) as caught:
+            process_files(
+                self.xml_message_type,
+                self.xml_template_file_path,
+                self.xsd_schema_file_path,
+                self.single_column_csv_file_path,
+            )
+        self.assertTrue(caught.exception.errors)
         self.assertTrue(
-            any(
-                "Error: Missing value(s) for column(s)" in message
-                for message in logs.output
+            all(
+                issue.code == "P001-E010" and issue.line == 2
+                for issue in caught.exception.errors
             )
         )
 
@@ -276,9 +275,9 @@ class TestProcessFiles(unittest.TestCase):
                 return_value=[{}],
             ),
             patch(
-                "pain001.data.loader.validate_db_data",
+                "pain001.data.loader.db_row_issues",
                 autospec=True,
-                return_value=True,
+                return_value=[],
             ),
             patch(
                 "pain001.xml.generate_xml.generate_xml", autospec=True
@@ -300,9 +299,9 @@ class TestProcessFiles(unittest.TestCase):
                 return_value=[{}],
             ),
             patch(
-                "pain001.data.loader.validate_db_data",
+                "pain001.data.loader.db_row_issues",
                 autospec=True,
-                return_value=False,
+                return_value=[RowIssue(1, "id", "P001-E010", "missing value")],
             ),
         ):
             with self.assertRaises(PaymentValidationError):

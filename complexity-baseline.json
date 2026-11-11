@@ -183,9 +183,6 @@
     "cyclomatic": 12,
     "lines": 103
   },
-  "pain001/data/loader.py::_load_from_file": {
-    "lines": 65
-  },
   "pain001/db/load_db_data.py::load_db_data": {
     "lines": 79
   },

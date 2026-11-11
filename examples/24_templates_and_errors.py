@@ -23,6 +23,8 @@ works and the question becomes "what can go wrong, and how do I tell":
   whose template or schema names a different message type
 * ``DataSourceError`` / ``PaymentValidationError`` - the typed errors
   for "cannot read the input" and "the input is wrong"
+* ``RowIssue`` / ``IssueCode`` - one record per bad row and column on
+  ``PaymentValidationError.errors``, with a stable code and no value
 * ``SchemeValidationResult`` / ``SchemeViolation`` - the structured
   result ``validate_scheme`` returns, with ``as_dict()`` for JSON
 * ``MetricEvent`` - what a ``register_metrics_callback`` hook receives
@@ -43,8 +45,10 @@ from pathlib import Path
 from pain001 import (
     DEFAULT_TEMPLATE_REGISTRY,
     DataSourceError,
+    IssueCode,
     MetricEvent,
     PaymentValidationError,
+    RowIssue,
     SchemeValidationResult,
     SchemeViolation,
     TemplateRegistry,
@@ -57,6 +61,7 @@ from pain001 import (
     validate_scheme,
 )
 from pain001.csv.load_csv_data import load_csv_data
+from pain001.data import load_payment_data
 from pain001.templates.guardrails import SchemaGuardrailError
 
 MESSAGE_TYPE = "pain.001.001.03"
@@ -156,6 +161,17 @@ def _typed_errors(workdir: Path) -> None:
     assert error.field == "payment_amount"
     assert "more than two decimal places" in str(error)
     print(f"Over-precise amount -> PaymentValidationError ({error.field})")
+
+    rows = load_csv_data(str(DATA_FILE))
+    rows[1]["payment_amount"] = "twelve"
+    error = expect(PaymentValidationError, load_payment_data, rows)
+    assert isinstance(error, PaymentValidationError)
+    issue = error.errors[0]
+    assert isinstance(issue, RowIssue)
+    assert (issue.line, issue.column) == (2, "payment_amount")
+    assert issue.code == IssueCode.NOT_DECIMAL
+    assert "twelve" not in str(error)
+    print(f"Bad amount -> {issue}")
 
 
 def _scheme_result() -> None:
