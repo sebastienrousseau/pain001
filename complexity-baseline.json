@@ -270,11 +270,6 @@
     "cognitive": 18,
     "cyclomatic": 12
   },
-  "scripts/build_corpus.py::main": {
-    "cognitive": 75,
-    "cyclomatic": 34,
-    "lines": 143
-  },
   "scripts/build_corpus.py::provenance_for": {
     "lines": 66
   },
@@ -298,16 +293,6 @@
     "cognitive": 39,
     "cyclomatic": 27,
     "lines": 104
-  },
-  "scripts/inspect_release.py::inspect": {
-    "cognitive": 54,
-    "cyclomatic": 25,
-    "lines": 69
-  },
-  "scripts/inspect_release.py::main": {
-    "cognitive": 16,
-    "cyclomatic": 14,
-    "lines": 66
   },
   "scripts/refresh_external_codes.py::main": {
     "cyclomatic": 12,

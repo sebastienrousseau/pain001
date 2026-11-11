@@ -280,16 +280,8 @@ def compressed_size(root: Path) -> int:
     return total
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Build (or with ``--check`` verify) the corpus.
-
-    Args:
-        argv: Command-line arguments (defaults to ``sys.argv[1:]``).
-
-    Returns:
-        0 when built or up to date within budget; 1 on a stale file,
-        a build failure or a budget breach.
-    """
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
+    """The command line: ``--check`` and the roots tests redirect."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--check", action="store_true")
     parser.add_argument("--scenarios", type=Path, default=SCENARIOS_DIR)
@@ -311,8 +303,124 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--budget", type=int, default=BUDGET_BYTES, help=argparse.SUPPRESS
     )
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
 
+
+def _market_files(
+    scenario: Scenario, version: str, pool: list[Overlay], market_root: Path
+) -> dict[Path, str]:
+    """Every file one scenario renders for one edition, by path.
+
+    The base rendering and each applicable overlay variant, each with its
+    provenance sidecar and, for a twin-supported edition, its ISO twin.
+    """
+    renderings: list[tuple[Overlay | None, BuildResult]] = [
+        (None, build(scenario, version))
+    ]
+    renderings.extend(
+        (extra, build(scenario, version, extra.patch_for(scenario.id)))
+        for extra in variants_for(scenario, pool, version)
+    )
+    wanted: dict[Path, str] = {}
+    for overlay, result in renderings:
+        variant = overlay.overlay_id if overlay else None
+        target = target_for(scenario, version, market_root, variant)
+        wanted[target] = result.xml
+        wanted[target.with_suffix(".provenance.yaml")] = provenance_for(
+            scenario, result, overlay, pool
+        )
+        if twin_supported(version):
+            wanted[target.with_suffix(".iso.json")] = twin_text(
+                result.xml, version
+            )
+    return wanted
+
+
+def _coverage_files(version: str, coverage_root: Path) -> dict[Path, str]:
+    """An edition's coverage set and its slimmed report, by path."""
+    coverage_set = build_coverage_set(version)
+    set_dir = coverage_root / version
+    wanted = {
+        set_dir / info.name: text
+        for info, text in zip(
+            coverage_set.manifest, coverage_set.files, strict=True
+        )
+    }
+    report = slim_report(coverage_set.report, coverage_set.manifest)
+    wanted[set_dir / "coverage.json"] = json.dumps(report, indent=2) + "\n"
+    return wanted
+
+
+def _sync(wanted: dict[Path, str], check: bool) -> int:
+    """Write (or with ``check`` report) every file that differs on disk.
+
+    Returns:
+        How many files were stale.
+    """
+    stale = 0
+    for path, text in wanted.items():
+        current = path.read_text(encoding="utf-8") if path.exists() else None
+        if current == text:
+            continue
+        stale += 1
+        if check:
+            print(f"STALE       {_rel(path)}")
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+            print(f"wrote       {_rel(path)} ({len(text)} bytes)")
+    return stale
+
+
+def _sweep_orphans(roots: list[Path], expected: set[Path], check: bool) -> int:
+    """Remove (or with ``check`` report) files no build produces.
+
+    Returns:
+        How many orphaned files were found.
+    """
+    present = sorted(
+        p for root in roots if root.exists() for p in root.rglob("*")
+    )
+    orphans = 0
+    for path in present:
+        if path.is_file() and path not in expected:
+            orphans += 1
+            if check:
+                print(f"ORPHAN      {_rel(path)}")
+            else:
+                path.unlink()
+                print(f"removed     {_rel(path)}")
+    return orphans
+
+
+def _budget_breached(args: argparse.Namespace, summary: str) -> bool:
+    """Print the data tree's compressed size; whether it is over budget."""
+    size = compressed_size(args.data_root) if args.data_root.exists() else 0
+    if args.data_root == DATA_ROOT and SCHEMA_DIR.exists():
+        size += compressed_size(
+            SCHEMA_DIR
+        )  # the twin schemas share the budget
+    print(
+        f"{summary}; "
+        f"data tree {size:,} bytes compressed of {args.budget:,} budget"
+    )
+    if size > args.budget:
+        print("corpus data exceeds the compressed-size budget")
+        return True
+    return False
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Build (or with ``--check`` verify) the corpus.
+
+    Args:
+        argv: Command-line arguments (defaults to ``sys.argv[1:]``).
+
+    Returns:
+        0 when built or up to date within budget; 1 on a stale file,
+        a build failure or a budget breach.
+    """
+    args = _parse_args(argv)
     scenarios = load_scenarios(args.scenarios)
     if not scenarios:
         print(f"no scenarios under {args.scenarios}")
@@ -322,103 +430,24 @@ def main(argv: list[str] | None = None) -> int:
     pool = load_overlays()
     for scenario in scenarios:
         for version in scenario.versions:
-            renderings = [(None, build(scenario, version))]
-            for overlay in variants_for(scenario, pool, version):
-                renderings.append(
-                    (
-                        overlay,
-                        build(
-                            scenario, version, overlay.patch_for(scenario.id)
-                        ),
-                    )
-                )
-            wanted: dict[Path, str] = {}
-            for overlay, result in renderings:
-                variant = overlay.overlay_id if overlay else None
-                target = target_for(
-                    scenario, version, args.market_root, variant
-                )
-                sidecar = target.with_suffix(".provenance.yaml")
-                wanted[target] = result.xml
-                wanted[sidecar] = provenance_for(
-                    scenario, result, overlay, pool
-                )
-                if twin_supported(version):
-                    wanted[target.with_suffix(".iso.json")] = twin_text(
-                        result.xml, version
-                    )
+            wanted = _market_files(scenario, version, pool, args.market_root)
             expected.update(wanted)
-            for path, text in wanted.items():
-                current = (
-                    path.read_text(encoding="utf-8") if path.exists() else None
-                )
-                if current == text:
-                    continue
-                stale += 1
-                if args.check:
-                    print(f"STALE       {_rel(path)}")
-                else:
-                    path.parent.mkdir(parents=True, exist_ok=True)
-                    path.write_text(text, encoding="utf-8")
-                    print(f"wrote       {_rel(path)} ({len(text)} bytes)")
-    if not args.skip_coverage:
-        for version in valid_xml_types:
-            coverage_set = build_coverage_set(version)
-            set_dir = args.coverage_root / version
-            wanted = {
-                set_dir / info.name: text
-                for info, text in zip(
-                    coverage_set.manifest, coverage_set.files, strict=True
-                )
-            }
-            report = slim_report(coverage_set.report, coverage_set.manifest)
-            wanted[set_dir / "coverage.json"] = (
-                json.dumps(report, indent=2) + "\n"
-            )
-            expected.update(wanted)
-            for path, text in wanted.items():
-                current = (
-                    path.read_text(encoding="utf-8") if path.exists() else None
-                )
-                if current == text:
-                    continue
-                stale += 1
-                if args.check:
-                    print(f"STALE       {_rel(path)}")
-                else:
-                    path.parent.mkdir(parents=True, exist_ok=True)
-                    path.write_text(text, encoding="utf-8")
-                    print(f"wrote       {_rel(path)} ({len(text)} bytes)")
+            stale += _sync(wanted, args.check)
     roots = [args.market_root]
     if not args.skip_coverage:
+        for version in valid_xml_types:
+            wanted = _coverage_files(version, args.coverage_root)
+            expected.update(wanted)
+            stale += _sync(wanted, args.check)
         roots.append(args.coverage_root)
-    present = sorted(
-        p for root in roots if root.exists() for p in root.rglob("*")
-    )
-    for path in present:
-        if path.is_file() and path not in expected:
-            stale += 1
-            if args.check:
-                print(f"ORPHAN      {_rel(path)}")
-            else:
-                path.unlink()
-                print(f"removed     {_rel(path)}")
+    stale += _sweep_orphans(roots, expected, args.check)
     if args.check and stale:
         print(
             f"{stale} stale or orphaned file(s); run scripts/build_corpus.py"
         )
         return 1
-    size = compressed_size(args.data_root) if args.data_root.exists() else 0
-    if args.data_root == DATA_ROOT and SCHEMA_DIR.exists():
-        size += compressed_size(
-            SCHEMA_DIR
-        )  # the twin schemas share the budget
-    print(
-        f"{len(scenarios)} scenario(s), {len(expected)} file(s); "
-        f"data tree {size:,} bytes compressed of {args.budget:,} budget"
-    )
-    if size > args.budget:
-        print("corpus data exceeds the compressed-size budget")
+    summary = f"{len(scenarios)} scenario(s), {len(expected)} file(s)"
+    if _budget_breached(args, summary):
         return 1
     if not stale:
         print("up to date")

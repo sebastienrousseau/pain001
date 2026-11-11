@@ -56,6 +56,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   no longer offers paramiko's fallback CBC and 3DES ciphers or its SHA-1
   and MD5 MACs. A server that supports only those is refused at key
   exchange.
+- The complexity baseline shrinks from 106 to 87 offenders. Nineteen
+  functions over a ceiling were split into helpers that sit within all
+  four: the AppHdr reader and writer, the records and ISO JSON twins,
+  the row projection, the Schematron parser, record-fix suggestions,
+  custom-policy rules, `scripts/build_corpus.py` and
+  `scripts/inspect_release.py`. Behaviour is unchanged; the corpus
+  check and golden files are byte-identical.
 
 ### Fixed
 
