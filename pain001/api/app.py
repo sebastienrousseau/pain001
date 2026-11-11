@@ -47,6 +47,7 @@ from pain001.api.check import check_router
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import (
+    JobCancelledError,
     JobCapacityError,
     JobStatus,
     job_manager,
@@ -603,6 +604,10 @@ async def _process_generation_job(
 ) -> None:
     """Process async generation job.
 
+    A cancelled job stops at the pipeline's next stage boundary; one
+    cancelled while rendering has its file removed. Either way its
+    status stays ``cancelled`` and nothing is counted.
+
     Args:
         job_id: Job identifier.
         request: Generation request.
@@ -618,8 +623,10 @@ async def _process_generation_job(
             request,
             file_path,
             _resolve_generation_paths,
-            functools.partial(_report_progress, job_id),
+            functools.partial(job_manager.report_progress, job_id),
         )
+    except JobCancelledError:
+        return
     except InputRefused as exc:
         record_failure(msg_type, start_time)
         job_manager.update_status(job_id, JobStatus.FAILED, error=exc.detail)
@@ -634,18 +641,10 @@ async def _process_generation_job(
             error=job_manager.error_for(exc),
         )
         return
-    record_outcome(outcome, msg_type, start_time)
-    job_manager.update_status(job_id, progress=100, **job_update(outcome))
-
-
-def _report_progress(job_id: str, percent: int) -> None:
-    """Mark a background job as processing at ``percent``.
-
-    Args:
-        job_id: Job identifier.
-        percent: Progress percentage.
-    """
-    job_manager.update_status(job_id, JobStatus.PROCESSING, progress=percent)
+    if job_manager.update_status(job_id, progress=100, **job_update(outcome)):
+        record_outcome(outcome, msg_type, start_time)
+    elif outcome.file_path:
+        Path(outcome.file_path).unlink(missing_ok=True)
 
 
 # The dashboard and its two JSON endpoints, the faces and check ride on

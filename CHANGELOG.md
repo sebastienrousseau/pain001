@@ -74,6 +74,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hybrid addresses were enabled then, and unstructured ones are
   rejected from November 2026.
 
+- Cancelling a REST async job (`DELETE /api/v1/jobs/{job_id}`) now
+  stops it. Before, the cancel only changed the status: the worker
+  went on to render the XML, left the file in the output directory
+  where no download could reach it, and counted the job as a success
+  in the metrics. The worker now checks for a cancel at each stage
+  boundary (before loading, validating and rendering) and stops there;
+  a cancel that lands while the file is being rendered removes the
+  file. The job stays `cancelled` and is counted neither as a success
+  nor as a failure.
+
 ## [0.0.86] - 2026-11-11
 
 ### Added
