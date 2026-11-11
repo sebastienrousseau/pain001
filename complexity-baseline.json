@@ -254,12 +254,6 @@
   "pain001/validation/service.py::ValidationService.validate_all": {
     "lines": 77
   },
-  "pain001/xml/generate_xml.py::generate_xml": {
-    "lines": 86
-  },
-  "pain001/xml/generate_xml.py::generate_xml_string": {
-    "lines": 82
-  },
   "pain001/xml/message_registry.py": {
     "file_lines": 643
   },

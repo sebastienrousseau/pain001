@@ -18,23 +18,30 @@
 
 import logging
 import os
-import re
 import time
 from collections.abc import Iterator
-from typing import Any
-
-from jinja2 import Template
+from typing import Any, NamedTuple
 
 from pain001.exceptions import PaymentValidationError
 from pain001.observability import emit_metric_event
 from pain001.observability.otel import set_span_attributes, traced
 from pain001.security import validate_path
-from pain001.xml._jinja import compile_template as _compile_template
-from pain001.xml.message_registry import MESSAGE_REGISTRY, prepare_xml_data
-from pain001.xml.payment_records import (
-    _normalize_financial_fields,
-    canonicalize_payment_record,
+from pain001.xml._render import (
+    _compile_template as _compile_template,
 )
+from pain001.xml._render import (
+    _load_trusted_template_source as _load_trusted_template_source,
+)
+from pain001.xml._render import (
+    _prepare_template_and_data as _prepare_template_and_data,
+)
+from pain001.xml._render import (
+    _validate_generation_inputs,
+    prepare_render,
+    render_text,
+    render_to_file,
+)
+from pain001.xml.payment_records import canonical_for_reading
 from pain001.xml.payment_records import (
     normalize_payment_records as _normalize_payment_records,
 )
@@ -52,102 +59,6 @@ logger = logging.getLogger(__name__)
 # Public here before the record helpers moved to payment_records
 # (0.0.81); kept so existing imports from this module still work.
 normalize_payment_records = _normalize_payment_records
-
-# Templates are trusted, but these directives would let one pull in
-# arbitrary files from disk, so they are rejected before rendering.
-_TEMPLATE_DIRECTIVE_PATTERN = re.compile(
-    r"{%\s*(include|import|from|extends)\b", re.IGNORECASE
-)
-
-
-def _load_trusted_template_source(xml_template_path: str) -> str:
-    """Read a trusted template and reject filesystem-expanding directives."""
-    if not str(xml_template_path).endswith(".xml"):
-        raise ValueError("Template path must point to an .xml file")
-
-    with open(xml_template_path, encoding="utf-8") as handle:
-        template_source = handle.read()
-
-    if _TEMPLATE_DIRECTIVE_PATTERN.search(template_source):
-        raise ValueError(
-            "Template contains disabled Jinja filesystem directives"
-        )
-    return template_source
-
-
-def _validate_generation_inputs(
-    data: list[dict[str, Any]],
-    payment_initiation_message_type: str,
-    xml_template_path: str,
-) -> str:
-    """Validate message type, data presence, and template path.
-
-    Args:
-        data: List of dictionaries containing payment data.
-        payment_initiation_message_type: Message type (e.g., "pain.001.001.03").
-        xml_template_path: Path to the Jinja2 XML template file.
-
-    Returns:
-        The validated template path.
-
-    Raises:
-        ValueError: If message type is invalid, data is empty, or the
-            template path fails validation.
-    """
-    if payment_initiation_message_type not in MESSAGE_REGISTRY:
-        raise ValueError(
-            f"Invalid XML message type: {payment_initiation_message_type}"
-        )
-
-    if not data:
-        raise ValueError("No data to process - data list is empty")
-
-    try:
-        return str(validate_path(xml_template_path, must_exist=True))
-    except Exception as e:
-        raise ValueError(f"Invalid template path: {e}") from e
-
-
-def _prepare_template_and_data(
-    data: list[dict[str, Any]],
-    payment_initiation_message_type: str,
-    safe_template_path: str,
-) -> tuple[Template, dict[str, Any], int]:
-    """Prepare normalized XML template and data dictionary.
-
-    Args:
-        data: List of dictionaries containing payment data.
-        payment_initiation_message_type: Message type (e.g., "pain.001.001.03").
-        safe_template_path: Pre-validated path to XML template file.
-
-    Returns:
-        A tuple of (compiled Jinja2 template, prepared XML data dict, row count).
-    """
-    # Normalize amounts (Decimal, 2dp) and compute batch totals from the
-    # rows themselves — header fields like NbOfTxs/CtrlSum must never be
-    # trusted from input or the message becomes internally inconsistent.
-    normalized_data, nb_of_txs, ctrl_sum = _normalize_financial_fields(data)
-
-    # Prepare XML data using the registry-driven pipeline
-    prepare_started = time.time()
-    xml_data = prepare_xml_data(
-        normalized_data, payment_initiation_message_type
-    )
-    xml_data["nb_of_txs"] = nb_of_txs
-    if "payment_nb_of_txs" in xml_data:
-        xml_data["payment_nb_of_txs"] = nb_of_txs
-    if "ctrl_sum" in xml_data:
-        xml_data["ctrl_sum"] = ctrl_sum
-    emit_metric_event(
-        "xml_prepared",
-        message_type=payment_initiation_message_type,
-        record_count=len(normalized_data),
-        duration_ms=int((time.time() - prepare_started) * 1000),
-    )
-
-    template_source = _load_trusted_template_source(safe_template_path)
-    template = _compile_template(template_source)
-    return template, xml_data, len(normalized_data)
 
 
 @traced("pain001.stream")
@@ -244,7 +155,9 @@ def _prepare_stream_target(
         safe_xsd = validate_path(xsd_schema_path, must_exist=True)
     except Exception as e:
         raise ValueError(f"Invalid schema path: {e}") from e
-    rows = [canonicalize_payment_record(row) for row in data]
+    # Read-only: the rows are checked, never changed, so a row already
+    # in canonical form is checked as it is rather than copied.
+    rows = [canonical_for_reading(row) for row in data]
     if not validate_csv_data(rows, message_type):
         raise PaymentValidationError(
             f"Row validation failed for {message_type}; the log names "
@@ -336,15 +249,12 @@ def generate_xml_string(
     Returns:
         str: The generated and validated XML content.
 
-    Raises:
-        ValueError: If message type is invalid, data is empty, the
-            template or schema path fails validation, or the template
-            contains disabled Jinja filesystem directives.
-
-    RuntimeError from XSD validation (every violation listed) and
-    PaymentValidationError from amount normalization (missing,
-    non-numeric, non-positive, or over-precise payment_amount values)
-    propagates unchanged.
+    A ValueError (an invalid message type, empty data, a template or
+    schema path that fails validation, or a template with disabled
+    Jinja filesystem directives), a RuntimeError from XSD validation
+    (every violation listed) and a PaymentValidationError from amount
+    normalization (missing, non-numeric, non-positive, or over-precise
+    payment_amount values) propagate unchanged.
 
     Examples:
         >>> data = [{"id": "MSG001", "date": "2026-01-15", ...}]
@@ -357,47 +267,13 @@ def generate_xml_string(
         >>> xml_str.startswith('<?xml')
         True
     """
-    safe_template_path = _validate_generation_inputs(
-        data,
-        payment_initiation_message_type,
-        xml_template_path,
-    )
-
-    # Validate schema path
-    try:
-        xsd_schema_path = validate_path(xsd_schema_path, must_exist=True)
-    except Exception as e:
-        raise ValueError(f"Invalid schema path: {e}") from e
-
-    template, xml_data, row_count = _prepare_template_and_data(
-        data,
-        payment_initiation_message_type,
-        safe_template_path,
-    )
-
-    set_span_attributes(
-        **{
-            "pain001.message_type": payment_initiation_message_type,
-            "pain001.row_count": row_count,
-        }
-    )
-    # Render the template to string
-    render_started = time.time()
-    xml_content = template.render(**xml_data)
-    emit_metric_event(
-        "xml_rendered",
-        message_type=payment_initiation_message_type,
-        duration_ms=int((time.time() - render_started) * 1000),
-    )
-
-    # Validate the XML content against the XSD schema; every violation
-    # is reported at once (element path + reason) so a caller can fix
-    # all inputs in a single retry.
-    require_xsd_valid(
-        xml_content, xsd_schema_path, payment_initiation_message_type
-    )
-
-    return str(xml_content)
+    mt = payment_initiation_message_type
+    prepared = prepare_render(data, mt, xml_template_path, xsd_schema_path)
+    xml_content = render_text(prepared, mt)
+    # Every violation is reported at once (element path + reason) so a
+    # caller can fix all inputs in a single retry.
+    require_xsd_valid(xml_content, prepared[0], mt)
+    return xml_content
 
 
 def _written_size(path: str, xml_content: str) -> int:
@@ -406,6 +282,119 @@ def _written_size(path: str, xml_content: str) -> int:
         return os.path.getsize(path)
     except OSError:
         return len(xml_content.encode("utf-8"))
+
+
+class _Request(NamedTuple):
+    """What :func:`generate_xml` was asked to write."""
+
+    data: list[dict[str, Any]]
+    message_type: str
+    template: str
+    xsd: str
+    output_path: str | None
+    envelop_bah: bool
+    bah_header: Any | None
+    sign_key: str | bytes | None
+    sign_cert: str | bytes | None
+    sign_passphrase: str | bytes | None
+    schematron: Any | None
+
+
+def _renders_to_file(writer: Any, request: _Request) -> bool:
+    """Whether the message can be rendered straight to the file.
+
+    An envelope, a signature, Schematron or a plugin writer needs the
+    whole document as text; the plain file case does not.
+    """
+    from pain001.plugins._builtins import _XmlFileWriter
+
+    return (
+        isinstance(writer, _XmlFileWriter)
+        and not request.envelop_bah
+        and request.bah_header is None
+        and request.sign_key is None
+        and request.schematron is None
+    )
+
+
+def _finished_text(request: _Request) -> str:
+    """The XSD-valid message, enveloped and signed as asked."""
+    return finalise_message(
+        generate_xml_string(
+            request.data, request.message_type, request.template, request.xsd
+        ),
+        request.envelop_bah,
+        request.bah_header,
+        request.sign_key,
+        request.sign_cert,
+        request.sign_passphrase,
+    )
+
+
+def _write_text(
+    writer: Any, xml_content: str, path: str, schematron: Any | None
+) -> tuple[str, int]:
+    """Check ``xml_content`` against Schematron, hand it to ``writer``.
+
+    Args:
+        writer: The xml-file writer plugin, or ``None`` when disabled.
+        xml_content: The finished document.
+        path: Where it goes.
+        schematron: The rulebook it must pass, if any.
+
+    Returns:
+        The written path and its size.
+
+    Raises:
+        ValueError: If the xml-file writer plugin is disabled.
+    """
+    if schematron is not None:
+        require_schematron(
+            xml_content,
+            schematron,
+            f"Schematron rulebook validation failed for '{path}'",
+        )
+    if writer is None:
+        raise ValueError("The xml-file writer plugin is disabled")
+    path = writer.write(xml_content, path)
+    return path, _written_size(path, xml_content)
+
+
+# resolve_output_path's deprecation warning names generate_xml's caller:
+# past _write_message, generate_xml and its tracing wrapper.
+_CALLER = 5
+
+
+def _write_message(request: _Request) -> str:
+    """Render, check and publish the message ``request`` describes.
+
+    The plain file case renders straight into the staged file and
+    checks it as it streams back, so no copy of the document is held;
+    otherwise the text is built, finished and handed to the writer.
+    Inputs are checked before the output directory is created.
+    """
+    from pain001.plugins.registry import registry as plugin_registry
+
+    writer = plugin_registry.get_writer("xml-file")
+    where = (request.output_path, request.template, request.message_type)
+    if _renders_to_file(writer, request):
+        prepared = prepare_render(
+            request.data, request.message_type, request.template, request.xsd
+        )
+        path = resolve_output_path(*where, stacklevel=_CALLER)
+        path, size = render_to_file(prepared, request.message_type, path)
+    else:
+        content = _finished_text(request)
+        path = resolve_output_path(*where, stacklevel=_CALLER)
+        path, size = _write_text(writer, content, path, request.schematron)
+    emit_metric_event(
+        "xml_generated",
+        message_type=request.message_type,
+        output_path=str(path),
+        file_size_bytes=size,
+    )
+    logger.info("XML file created at %s", path)
+    return path
 
 
 @traced("pain001.write")
@@ -422,76 +411,47 @@ def generate_xml(
     xml_sign_passphrase: str | bytes | None = None,
     schematron: str | Any | None = None,
 ) -> str:
-    """Generates an ISO 20022 pain.001 XML file from input data.
+    """Generate an ISO 20022 payment message file from rows.
 
-    This function writes XML to a file. For in-memory XML generation
-    (serverless/API use cases), use generate_xml_string() instead.
+    For the XML as a string (an API response), use generate_xml_string.
 
     Args:
-        data: List of dictionaries containing payment data
-        payment_initiation_message_type: Message type identifier. Any
-            supported version from "pain.001.001.03" through
-            "pain.001.001.12", or "pain.008.001.02" for direct debits.
-        xml_file_path: Path to the Jinja2 XML template file
-        xsd_file_path: Path to XML schema file for validation
-        output_path: Explicit path to write the generated XML file to.
-            Parent directories are created if needed. When omitted, the
-            file is written next to the template (deprecated behavior
-            that only works when the template lives under the current
-            working directory).
-        envelop_bah: If True, wrap generated XML in an ISO 20022 BAH envelope.
-        bah_header: Optional customized BusinessApplicationHeader instance.
-        xml_sign_key: Optional RSA private key in PEM format to sign the XML.
-        xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
-        xml_sign_passphrase: Optional passphrase for the private key.
-        schematron: Optional Schematron rulebook preset or .sch path the
-            final document must pass before it is written.
+        data: The payment rows.
+        payment_initiation_message_type: Any supported message type
+            (``pain001 versions`` lists them).
+        xml_file_path: The Jinja2 XML template.
+        xsd_file_path: The XSD the message must pass.
+        output_path: Where to write the file; missing directories are
+            created. Omitted, the file goes next to the template
+            (deprecated; the template must be under the working
+            directory).
+        envelop_bah: Wrap the message in an ISO 20022 BAH envelope.
+        bah_header: A customised BusinessApplicationHeader.
+        xml_sign_key: RSA private key (PEM) to sign the XML with.
+        xml_sign_cert: X.509 certificate (PEM) for KeyInfo.
+        xml_sign_passphrase: Passphrase for the private key.
+        schematron: A Schematron rulebook preset or .sch path the
+            message must pass before it is written.
 
     Returns:
-        The path the XML file was written to.
+        The path the file was written to.
 
-    Raises:
-        ValueError: If message type is invalid, data is empty, or the
-            output path fails validation. RuntimeError from XSD
-            validation in generate_xml_string and XMLGenerationError
-            from Schematron propagate unchanged, and nothing is written.
+    A ValueError (an invalid message type, data or output path), a
+    RuntimeError (XSD) or an XMLGenerationError (Schematron) propagates,
+    and nothing is written.
     """
-    # Generate XML content as string
-    xml_content = generate_xml_string(
-        data, payment_initiation_message_type, xml_file_path, xsd_file_path
-    )
-
-    xml_content = finalise_message(
-        xml_content,
-        envelop_bah,
-        bah_header,
-        xml_sign_key,
-        xml_sign_cert,
-        xml_sign_passphrase,
-    )
-    safe_xml_path = resolve_output_path(
-        output_path, xml_file_path, payment_initiation_message_type
-    )
-    if schematron is not None:
-        require_schematron(
-            xml_content,
+    return _write_message(
+        _Request(
+            data,
+            payment_initiation_message_type,
+            xml_file_path,
+            xsd_file_path,
+            output_path,
+            envelop_bah,
+            bah_header,
+            xml_sign_key,
+            xml_sign_cert,
+            xml_sign_passphrase,
             schematron,
-            f"Schematron rulebook validation failed for '{safe_xml_path}'",
         )
-
-    from pain001.plugins.registry import registry as plugin_registry
-
-    writer = plugin_registry.get_writer("xml-file")
-    if writer is None:
-        raise ValueError("The xml-file writer plugin is disabled")
-    safe_xml_path = writer.write(xml_content, safe_xml_path)
-
-    emit_metric_event(
-        "xml_generated",
-        message_type=payment_initiation_message_type,
-        output_path=str(safe_xml_path),
-        file_size_bytes=_written_size(safe_xml_path, xml_content),
     )
-
-    logger.info("XML file created at %s", safe_xml_path)
-    return safe_xml_path

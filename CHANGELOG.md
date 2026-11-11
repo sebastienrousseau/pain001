@@ -88,6 +88,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Docker workflow builds a published image without the shared
   GitHub Actions cache; only pull-request builds, which push nothing,
   read or write it.
+- Writing a file no longer holds a copy of the document. The staged
+  file is XSD-validated as libxml2 streams it, releasing each element
+  once checked, instead of being read back, encoded again and built
+  into a tree; `generate_xml` and `process_files` render the template
+  straight into the staged file whenever nothing needs the whole text
+  (no BAH envelope, signature, Schematron rulebook or plugin writer);
+  and the normalised rows hold only the keys normalisation changed.
+  For 100,000 `pain.001.001.03` rows (a 138 MiB file), peak RSS falls
+  from about 1.2 GB to 380 MB on the default path and from about 1.0 GB
+  to 380 MB with `stream_xml_to_file`, in about the same time (the rows
+  themselves are 150 MB of that). The bytes written
+  are unchanged (golden files, bundled examples and corpus rebuild
+  identically). A file over 10 MiB that the schema rejects now reports
+  libxml2's first violation (element and reason) instead of up to 20
+  `xmlschema` messages, since collecting those builds the whole tree;
+  a smaller file still reports every violation as before.
 
 ### Fixed
 

@@ -30,11 +30,20 @@ Two deliberate constraints on that:
 Verdicts were compared across 121 documents — one valid, the rest
 mutated to be invalid in nine different ways — and the two
 implementations agreed on every one.
+
+A file on disk (the staged payment file a writer is about to publish)
+is checked by :func:`collect_xsd_file_errors` without ever holding its
+tree: libxml2 validates it as it streams past, so a 138 MiB file costs
+about 26 MiB instead of about 800 MiB, in about the same CPU time. Its rejections are final only above
+:data:`DETAILED_REPORT_LIMIT`; below it, ``xmlschema`` still decides and
+lists the violations, exactly as for a string.
 """
 
 from __future__ import annotations
 
 import logging
+import os
+import re
 from functools import lru_cache
 from io import StringIO
 from typing import TYPE_CHECKING
@@ -107,6 +116,150 @@ def _hardened_lxml_parser() -> _lxml_etree.XMLParser:
         no_network=True,
         huge_tree=False,
     )
+
+
+#: The largest file a libxml2 rejection is re-checked by ``xmlschema``,
+#: which builds the whole document (several times the file in memory,
+#: about 35 s for 14 MiB) to give the authoritative verdict and up to 20
+#: violations. A larger file is refused on libxml2's first violation.
+DETAILED_REPORT_LIMIT = 10 * 1024 * 1024
+
+#: The elements a payment file repeats (a batch, a transaction). The
+#: streaming validator releases each of these, with everything inside,
+#: once its end tag is checked; visiting only them, not every element,
+#: keeps it about as fast as validating a whole tree.
+_REPEATED = ("{*}PmtInf", "{*}CdtTrfTxInf", "{*}DrctDbtTxInf")
+
+_NAMESPACE = re.compile(r"\{[^}]*\}")
+
+
+def _release(element: _lxml_etree._Element) -> None:
+    """Drop a finished element and the finished siblings before it."""
+    element.clear(keep_tail=True)
+    while element.getprevious() is not None:
+        del element.getparent()[0]
+
+
+def _declared_dtd(xml_file_path: str) -> str | None:
+    """Refuse a document that declares a DTD; read only up to its root.
+
+    libxml2 crashes the process (SIGBUS, lxml 6.1 with libxml2 2.14)
+    when it validates against a schema while expanding an entity the
+    document declares, and with entity expansion off it stops reporting
+    well-formedness errors (a truncated file passes). A payment file
+    never needs a DTD, so one is refused before the schema pass, which
+    then runs with only the predefined entities to expand.
+
+    Args:
+        xml_file_path: The XML file.
+
+    Returns:
+        Why the file is refused, or ``None`` when it has no DTD.
+    """
+    with open(xml_file_path, "rb") as handle:
+        events = _lxml_etree.iterparse(
+            handle,
+            events=("start",),
+            resolve_entities=False,
+            load_dtd=False,
+            no_network=True,
+            huge_tree=False,
+        )
+        try:
+            _event, root = next(events)
+        except _lxml_etree.XMLSyntaxError as error:
+            return str(error.msg)
+    if root.getroottree().docinfo.doctype:
+        return "the document declares a DTD (<!DOCTYPE ...>)"
+    return None
+
+
+def _lxml_first_file_error(
+    xml_file_path: str, schema: _lxml_etree.XMLSchema
+) -> str | None:
+    """Stream ``xml_file_path`` through libxml2's validator.
+
+    Each batch and transaction (:data:`_REPEATED`) is released once its
+    end tag is validated, so memory stays flat whatever the number of
+    transactions. The parser loads no DTD and fetches
+    nothing; :func:`_declared_dtd` has already refused a document that
+    could declare an entity, so ``resolve_entities`` stays at lxml's
+    ``"internal"`` (``False`` hides well-formedness errors here).
+
+    Args:
+        xml_file_path: The XML file.
+        schema: The compiled schema it must pass.
+
+    Returns:
+        The first violation, without namespace URIs, or ``None`` when
+        the file is valid.
+    """
+    refused = _declared_dtd(xml_file_path)
+    if refused is not None:
+        return refused
+    with open(xml_file_path, "rb") as handle:
+        events = _lxml_etree.iterparse(
+            handle,
+            events=("end",),
+            tag=_REPEATED,
+            schema=schema,
+            resolve_entities="internal",
+            load_dtd=False,
+            no_network=True,
+            huge_tree=False,
+        )
+        try:
+            for _event, element in events:
+                _release(element)
+        except _lxml_etree.XMLSyntaxError as error:
+            return _NAMESPACE.sub("", str(error.msg))
+    return None
+
+
+def _lxml_file_schema(xsd_file_path: str) -> _lxml_etree.XMLSchema | None:
+    """The compiled libxml2 schema, or ``None`` when it cannot be used."""
+    if not _LXML_AVAILABLE:
+        return None
+    try:
+        return _get_cached_lxml_schema(xsd_file_path)
+    except Exception:  # noqa: BLE001 - xmlschema reports schema errors
+        return None
+
+
+@traced("pain001.validate")
+def collect_xsd_file_errors(
+    xml_file_path: str, xsd_file_path: str, max_errors: int = 20
+) -> list[str]:
+    """Every XSD violation in a file, read with bounded memory.
+
+    libxml2 streams the file and accepts it without building a tree.
+    It rejects through ``xmlschema`` (the same verdict and messages as
+    :func:`collect_xsd_validation_errors`) up to
+    :data:`DETAILED_REPORT_LIMIT`; above it, its first violation is the
+    answer. Without ``lxml``, or with a schema libxml2 cannot compile,
+    ``xmlschema`` reads the file.
+
+    Args:
+        xml_file_path: The XML file.
+        xsd_file_path: Path to the XSD schema file.
+        max_errors: Cap on the number of collected messages.
+
+    Returns:
+        A list of error messages; empty when the file is valid.
+    """
+    schema = _lxml_file_schema(xsd_file_path)
+    if schema is not None:
+        first = _lxml_first_file_error(xml_file_path, schema)
+        if first is None:
+            return []
+        if os.path.getsize(xml_file_path) > DETAILED_REPORT_LIMIT:
+            return [
+                f"{first} (first violation; the file is too large "
+                "to list them all)"
+            ]
+    with open(xml_file_path, encoding="utf-8") as handle:
+        content = handle.read()
+    return collect_xsd_validation_errors(content, xsd_file_path, max_errors)
 
 
 def _lxml_accepts(xml_content: str, xsd_file_path: str) -> bool:
