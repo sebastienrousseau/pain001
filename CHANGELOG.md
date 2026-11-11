@@ -85,6 +85,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Breaking: `POST /api/v1/ui/generate` answers `422` when it refuses
+  the data.** It answered `200` with `success: false`, so a client,
+  a retry policy or a monitor that read only the status counted a
+  refused payment file as generated. Rows that fail validation or a
+  scheme rule now answer `422` with the same body (`success: false`,
+  `xml: null`, `validation_errors` or `scheme_violations`), as `POST
+  /api/v1/generate` does; a `200` always carries the XML. A refused
+  upload, row identifier or scheme name stays `400`, and the OpenAPI
+  document lists `400`, `422` and `500`. Who is affected: any client
+  of the dashboard endpoint that checks `success` in the body without
+  checking the status, including the five SDKs, whose typed
+  `generate` now raises their API error with status `422` on a refusal.
+  What to do: treat `422` from generate as a refusal and read the
+  findings from its body (`validation_errors`, `scheme_violations`);
+  do not retry it. The dashboard page does this already. The
+  conformance kit moves to `kit_version` 2 with two new cases,
+  `generate-refused-rows` and `generate-refused-scheme`, and a
+  `bad-currency` fixture; `conformance/openapi.json` is regenerated.
+  `/ui/validate` is unchanged: like `/validate`, it answers `200` with
+  `is_valid: false`.
 - **The CLI and `process_files` now refuse rows that break the message
   type's JSON Schema**, as the REST API already did. `pain001 validate`
   and `pain001 generate` used to accept `currency=EURO` (or `eur`) and

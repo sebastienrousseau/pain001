@@ -42,16 +42,17 @@ import json
 import os
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from pain001 import __version__
-from pain001.api._pipeline import run_pipeline
+from pain001.api._pipeline import refusal_as_422, run_pipeline
 from pain001.api._upload import (
     SUPPORTED_SUFFIXES,
     generate_upload,
     validate_upload,
 )
 from pain001.api.auth import require_api_key
+from pain001.api.meta import UI_GENERATE_RESPONSES
 from pain001.api.models import (
     MAX_UPLOAD_BYTES,
     UiFilePayload,
@@ -138,16 +139,21 @@ async def ui_validate(payload: UiFilePayload) -> ValidationResponse:
     response_model=UiGenerateResponse,
     summary="Generate XML from an uploaded file (dashboard)",
     dependencies=[Depends(require_api_key)],
+    responses=UI_GENERATE_RESPONSES,
 )
 @traced(
     "pain001.api.ui.generate", attributes={"http.route": "/api/v1/ui/generate"}
 )
-async def ui_generate(payload: UiFilePayload) -> UiGenerateResponse:
+async def ui_generate(
+    payload: UiFilePayload,
+) -> UiGenerateResponse | JSONResponse:
     """Validate the upload, then render the XML and return it inline.
 
     Parsing, validation and rendering run on the bounded pipeline pool,
     off the event loop (see :mod:`pain001.api._upload`). A rendering
     failure (for example a document the XSD rejects) answers ``400``.
+    Rows refused by validation or a scheme rule answer ``422``, as
+    ``POST /generate`` does, so a ``200`` always carries a document.
 
     Args:
         payload: The file's text, its name, the message type, and an
@@ -155,10 +161,10 @@ async def ui_generate(payload: UiFilePayload) -> UiGenerateResponse:
 
     Returns:
         ``success=True`` with the XML document and a suggested filename,
-        or ``success=False`` carrying the validation errors or scheme
-        violations that blocked generation.
+        or a ``422`` whose ``success=False`` body carries the validation
+        errors or scheme violations that blocked generation.
     """
-    return await run_pipeline(generate_upload, payload)
+    return refusal_as_422(await run_pipeline(generate_upload, payload))
 
 
 @ui_router.get("", include_in_schema=False, response_class=HTMLResponse)
@@ -399,7 +405,8 @@ _UI_HTML = """\
   generateBtn.addEventListener('click', function () {
     busy(true); setStatus('Generating…'); downloadBtn.hidden = true;
     call('/generate').then(function (r) {
-      if (!r.ok) { setStatus(r.body.detail || ('HTTP ' + r.status), 'bad'); results.innerHTML = ''; return; }
+      var refused = r.status === 422 && r.body.success === false;
+      if (!r.ok && !refused) { setStatus(r.body.detail || ('HTTP ' + r.status), 'bad'); results.innerHTML = ''; return; }
       var b = r.body;
       renderFindings(b.validation_errors, b.scheme_violations);
       if (!b.success) { setStatus(b.message, 'bad'); return; }

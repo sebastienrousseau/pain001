@@ -48,6 +48,7 @@ from pain001.api.metrics import registry
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
+    UiGenerateResponse,
     ValidationRequest,
     ValidationResponse,
 )
@@ -61,6 +62,7 @@ CONCURRENCY_ENV = "PAIN001_API_CONCURRENCY"
 
 P = ParamSpec("P")
 T = TypeVar("T")
+Body = TypeVar("Body", GenerateXMLResponse, UiGenerateResponse)
 
 _executor: ThreadPoolExecutor | None = None
 _executor_lock = threading.Lock()
@@ -385,7 +387,22 @@ def sync_response(
     Returns:
         The endpoint's response body, or a ``422`` response.
     """
-    body = _sync_body(outcome)
+    return refusal_as_422(_sync_body(outcome))
+
+
+def refusal_as_422(body: Body) -> Body | JSONResponse:
+    """Answer a refused generation with ``422`` and the same body.
+
+    ``POST /generate`` and the dashboard's ``POST /ui/generate`` share
+    this, so on both a ``200`` always means a document was produced.
+
+    Args:
+        body: A generation response.
+
+    Returns:
+        ``body`` itself when ``success`` is true, else a ``422``
+        response carrying it.
+    """
     if body.success:
         return body
     return JSONResponse(

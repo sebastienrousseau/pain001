@@ -911,7 +911,7 @@
       "name": "Apache-2.0 OR MIT"
     },
     "title": "Pain001 REST API",
-    "version": "conformance-kit-1"
+    "version": "conformance-kit-2"
   },
   "openapi": "3.1.0",
   "paths": {
@@ -1463,7 +1463,7 @@
     },
     "/api/v1/ui/generate": {
       "post": {
-        "description": "Validate the upload, then render the XML and return it inline.\n\nParsing, validation and rendering run on the bounded pipeline pool,\noff the event loop (see :mod:`pain001.api._upload`). A rendering\nfailure (for example a document the XSD rejects) answers ``400``.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    ``success=True`` with the XML document and a suggested filename,\n    or ``success=False`` carrying the validation errors or scheme\n    violations that blocked generation.",
+        "description": "Validate the upload, then render the XML and return it inline.\n\nParsing, validation and rendering run on the bounded pipeline pool,\noff the event loop (see :mod:`pain001.api._upload`). A rendering\nfailure (for example a document the XSD rejects) answers ``400``.\nRows refused by validation or a scheme rule answer ``422``, as\n``POST /generate`` does, so a ``200`` always carries a document.\n\nArgs:\n    payload: The file's text, its name, the message type, and an\n        optional scheme spec.\n\nReturns:\n    ``success=True`` with the XML document and a suggested filename,\n    or a ``422`` whose ``success=False`` body carries the validation\n    errors or scheme violations that blocked generation.",
         "operationId": "ui_generate_api_v1_ui_generate_post",
         "parameters": [
           {
@@ -1504,15 +1504,28 @@
             },
             "description": "Successful Response"
           },
+          "400": {
+            "description": "The upload, a row identifier or a scheme name was refused, or the rendered document failed the XSD"
+          },
           "422": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/UiGenerateResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/HTTPValidationError"
+                    }
+                  ]
                 }
               }
             },
-            "description": "Validation Error"
+            "description": "Rows failed validation or a scheme rule (`success: false`, with `validation_errors` or `scheme_violations`), or the request body is malformed (`detail`)"
+          },
+          "500": {
+            "description": "Generation failed inside the server"
           }
         },
         "summary": "Generate XML from an uploaded file (dashboard)",

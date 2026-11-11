@@ -27,28 +27,56 @@ CANCEL_RESPONSES: dict[int | str, dict[str, Any]] = {
     409: {"description": "The job has already finished; it is left as it was"},
 }
 
-GENERATE_RESPONSES: dict[int | str, dict[str, Any]] = {
-    400: {"description": "The input file or a scheme name was refused"},
-    422: {
-        "description": (
-            "Rows failed validation or a scheme rule (`success: false`, "
-            "with `validation_errors` or `scheme_violations`), or the "
-            "request body is malformed (`detail`)"
-        ),
-        "content": {
-            "application/json": {
-                "schema": {
-                    "anyOf": [
-                        {"$ref": "#/components/schemas/GenerateXMLResponse"},
-                        {"$ref": "#/components/schemas/HTTPValidationError"},
-                    ]
+
+def generate_responses(
+    body_schema: str, refused_input: str
+) -> dict[int | str, dict[str, Any]]:
+    """Build the error statuses a generate route documents.
+
+    Args:
+        body_schema: The component name of the route's response body,
+            which a ``422`` refusal carries unchanged.
+        refused_input: What the ``400`` answer refuses.
+
+    Returns:
+        The ``responses`` table for the route decorator.
+    """
+    return {
+        400: {"description": refused_input},
+        422: {
+            "description": (
+                "Rows failed validation or a scheme rule (`success: false`, "
+                "with `validation_errors` or `scheme_violations`), or the "
+                "request body is malformed (`detail`)"
+            ),
+            "content": {
+                "application/json": {
+                    "schema": {
+                        "anyOf": [
+                            {"$ref": f"#/components/schemas/{body_schema}"},
+                            {
+                                "$ref": "#/components/schemas/HTTPValidationError"
+                            },
+                        ]
+                    }
                 }
-            }
+            },
         },
-    },
-    500: {"description": "Generation failed inside the server"},
-}
+        500: {"description": "Generation failed inside the server"},
+    }
+
+
+GENERATE_RESPONSES = generate_responses(
+    "GenerateXMLResponse", "The input file or a scheme name was refused"
+)
 """The error statuses ``POST /generate`` answers, for the OpenAPI document."""
+
+UI_GENERATE_RESPONSES = generate_responses(
+    "UiGenerateResponse",
+    "The upload, a row identifier or a scheme name was refused, or the "
+    "rendered document failed the XSD",
+)
+"""The error statuses ``POST /ui/generate`` answers, as ``/generate``."""
 
 # OpenAPI tag metadata — drives the grouped, described sections in the
 # interactive docs and any generated SDKs.

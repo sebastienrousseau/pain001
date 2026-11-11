@@ -160,6 +160,27 @@ def test_every_surface_gives_the_same_verdict(
     assert verdicts == dict.fromkeys(SURFACES, accepted)
 
 
+@pytest.mark.parametrize(
+    ("column", "value"),
+    [pytest.param(c, v, id=i) for i, c, v, _ in CASES],
+)
+def test_ui_generate_answers_the_status_rest_generate_does(
+    tmp_path: Path, column: str | None, value: str | None
+) -> None:
+    """The dashboard's generate and ``/generate`` share each status."""
+    data = _write_case(tmp_path, column, value)
+    rest = client.post("/api/v1/generate", json=_body(data, tmp_path))
+    ui = client.post(
+        "/api/v1/ui/generate",
+        json={
+            "filename": "payments.csv",
+            "content": Path(data).read_text(encoding="utf-8"),
+            "message_type": MESSAGE_TYPE,
+        },
+    )
+    assert ui.status_code == rest.status_code, ui.text
+
+
 def test_rest_validate_counts_the_refused_row(tmp_path: Path) -> None:
     data = _write_case(tmp_path, "currency", "EURO")
     response = client.post("/api/v1/validate", json=_body(data, tmp_path))
