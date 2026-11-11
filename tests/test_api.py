@@ -190,10 +190,10 @@ class TestSyncGenerationEndpoint:
                 "message_type": "pain.001.001.03",
             },
         )
-        # CSV structure validation fails (400) or validation errors returned (200)
-        assert response.status_code in [200, 400]
+        # CSV structure validation fails (400) or row errors returned (422)
+        assert response.status_code in [400, 422]
         data = response.json()
-        if response.status_code == 200:
+        if response.status_code == 422:
             assert data["success"] is False
             assert "Validation failed" in data["message"]
             assert data["validation_errors"] is not None
@@ -739,7 +739,7 @@ class TestSchemeValidation:
                 "scheme": "sepa-sct",
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 422
         body = response.json()
         assert body["success"] is False
         assert body["scheme_violations"]
@@ -1172,7 +1172,7 @@ class TestSyncGenerationOutcomes:
                 "message_type": "pain.001.001.03",
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 422
         body = response.json()
         assert body["success"] is False
         assert "Validation failed" in body["message"]
@@ -1204,7 +1204,7 @@ class TestSyncGenerationOutcomes:
                 "scheme": "sepa-sct",
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 422
         body = response.json()
         assert body["success"] is False
         assert body["scheme_violations"]

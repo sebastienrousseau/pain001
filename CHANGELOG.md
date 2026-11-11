@@ -81,6 +81,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   hybrid addresses were enabled then, and unstructured ones are
   rejected from November 2026.
 
+- Cancelling a REST async job (`DELETE /api/v1/jobs/{job_id}`) now
+  stops it. Before, the cancel only changed the status: the worker
+  went on to render the XML, left the file in the output directory
+  where no download could reach it, and counted the job as a success
+  in the metrics. The worker now checks for a cancel at each stage
+  boundary (before loading, validating and rendering) and stops there;
+  a cancel that lands while the file is being rendered removes the
+  file. The job stays `cancelled` and is counted neither as a success
+  nor as a failure.
+
+- `POST /api/v1/generate` answered `200` when it refused the data, so a
+  client that checked only the status took a refusal for a generated
+  file. Rows that fail validation or a scheme rule now answer `422`;
+  the body is unchanged (`success: false` with `validation_errors` or
+  `scheme_violations`). A refused input file or scheme name stays
+  `400`, an internal failure `500`, and a successful or validate-only
+  run `200`. The OpenAPI document, and the conformance kit's
+  `openapi.json`, list the `400`, `422` and `500` answers; no kit case
+  changes. `/validate` still answers `200` with `is_valid: false`, as
+  `/check` does with `passed: false`.
+
 ## [0.0.86] - 2026-11-11
 
 ### Added

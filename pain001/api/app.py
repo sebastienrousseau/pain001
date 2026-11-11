@@ -27,7 +27,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from pain001 import __version__
 from pain001.api._pipeline import (
@@ -47,13 +47,14 @@ from pain001.api.check import check_router
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import (
+    JobCancelledError,
     JobCapacityError,
     JobStatus,
     job_manager,
     output_name,
 )
 from pain001.api.limits import install_body_limit
-from pain001.api.meta import API_DESCRIPTION, TAGS_METADATA
+from pain001.api.meta import API_DESCRIPTION, GENERATE_RESPONSES, TAGS_METADATA
 from pain001.api.metrics import MetricsMiddleware
 from pain001.api.models import (
     GenerateXMLRequest,
@@ -359,21 +360,22 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
     tags=["Generation"],
     summary="Generate XML (synchronous)",
     dependencies=[Depends(_require_api_key)],
+    responses=GENERATE_RESPONSES,
 )
 @traced("pain001.api.generate", attributes={"http.route": "/api/v1/generate"})
 async def generate_xml_sync(
     request: GenerateXMLRequest,
-) -> GenerateXMLResponse:
+) -> GenerateXMLResponse | JSONResponse:
     """Generate XML synchronously.
 
     Args:
         request: Generation request with data source and options.
 
     Returns:
-        GenerateXMLResponse: Generated XML file path or errors.
+        The XML file path; refused data is a ``422`` with its errors.
 
     Raises:
-        HTTPException: If generation fails.
+        HTTPException: ``400`` for a refused input, ``500`` on failure.
     """
     start_time = time.perf_counter()
     msg_type = request.message_type.value
@@ -389,8 +391,7 @@ async def generate_xml_sync(
     except PaymentValidationError as e:
         record_failure(msg_type, start_time)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
     except Exception as e:
         record_failure(msg_type, start_time)
@@ -603,6 +604,10 @@ async def _process_generation_job(
 ) -> None:
     """Process async generation job.
 
+    A cancelled job stops at the pipeline's next stage boundary; one
+    cancelled while rendering has its file removed. Either way its
+    status stays ``cancelled`` and nothing is counted.
+
     Args:
         job_id: Job identifier.
         request: Generation request.
@@ -618,8 +623,10 @@ async def _process_generation_job(
             request,
             file_path,
             _resolve_generation_paths,
-            functools.partial(_report_progress, job_id),
+            functools.partial(job_manager.report_progress, job_id),
         )
+    except JobCancelledError:
+        return
     except InputRefused as exc:
         record_failure(msg_type, start_time)
         job_manager.update_status(job_id, JobStatus.FAILED, error=exc.detail)
@@ -634,18 +641,10 @@ async def _process_generation_job(
             error=job_manager.error_for(exc),
         )
         return
-    record_outcome(outcome, msg_type, start_time)
-    job_manager.update_status(job_id, progress=100, **job_update(outcome))
-
-
-def _report_progress(job_id: str, percent: int) -> None:
-    """Mark a background job as processing at ``percent``.
-
-    Args:
-        job_id: Job identifier.
-        percent: Progress percentage.
-    """
-    job_manager.update_status(job_id, JobStatus.PROCESSING, progress=percent)
+    if job_manager.update_status(job_id, progress=100, **job_update(outcome)):
+        record_outcome(outcome, msg_type, start_time)
+    elif outcome.file_path:
+        Path(outcome.file_path).unlink(missing_ok=True)
 
 
 # The dashboard and its two JSON endpoints, the faces and check ride on
