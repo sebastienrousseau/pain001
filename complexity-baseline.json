@@ -208,11 +208,6 @@
     "cognitive": 22,
     "cyclomatic": 14
   },
-  "pain001/schematron/parser.py::parse_schematron": {
-    "cognitive": 48,
-    "cyclomatic": 22,
-    "lines": 109
-  },
   "pain001/schematron/validator.py::SchematronValidator.validate": {
     "cyclomatic": 12,
     "lines": 74
@@ -310,16 +305,6 @@
   },
   "pain001/validation/service.py::ValidationService.validate_all": {
     "lines": 77
-  },
-  "pain001/xml/envelope.py::BusinessApplicationHeader.to_element": {
-    "cognitive": 20,
-    "cyclomatic": 16,
-    "lines": 97
-  },
-  "pain001/xml/envelope.py::_parse_app_hdr_element": {
-    "cognitive": 54,
-    "cyclomatic": 27,
-    "lines": 87
   },
   "pain001/xml/generate_xml.py::generate_xml": {
     "lines": 86

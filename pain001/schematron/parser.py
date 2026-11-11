@@ -16,6 +16,7 @@
 
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 from defusedxml import ElementTree as defused_et
 
@@ -84,6 +85,70 @@ def _strip_ns(tag: str) -> str:
     return tag
 
 
+def _load_root(source: str | bytes | Path) -> Any:
+    """Parse ``source``: XML text or bytes, or a path to read it from."""
+    if isinstance(source, Path):
+        return defused_et.fromstring(source.read_text(encoding="utf-8"))
+    if isinstance(source, str):
+        if source.strip().startswith("<"):
+            return defused_et.fromstring(source)
+        return defused_et.fromstring(Path(source).read_text(encoding="utf-8"))
+    if isinstance(source, bytes):
+        return defused_et.fromstring(source)
+    raise ValueError(f"Unsupported Schematron source type: {type(source)}")
+
+
+def _parse_assertion(
+    element: Any, tag: str, number: int
+) -> SchematronAssertion:
+    """One ``<assert>`` or ``<report>``; ``number`` names it if unnamed."""
+    test = element.attrib.get("test", "").strip()
+    rule_id = element.attrib.get(
+        "id", element.attrib.get("flag", f"RULE-{number}")
+    )
+    role = element.attrib.get("role", "error").lower()
+    severity = "WARNING" if role in ("warn", "warning", "info") else "ERROR"
+    msg = " ".join("".join(element.itertext()).split())
+    return SchematronAssertion(
+        rule_id=rule_id,
+        test=test,
+        message=msg or f"Assertion {rule_id} failed",
+        is_report=(tag == "report"),
+        severity=severity,
+    )
+
+
+def _parse_rule(element: Any) -> SchematronRule | None:
+    """One ``<rule>`` with its assertions; ``None`` when it has none."""
+    context = element.attrib.get("context", ".").strip()
+    assertions: list[SchematronAssertion] = []
+    for child in element:
+        tag = _strip_ns(child.tag)
+        if tag in ("assert", "report"):
+            assertions.append(
+                _parse_assertion(child, tag, len(assertions) + 1)
+            )
+    if not assertions:
+        return None
+    return SchematronRule(context=context, assertions=assertions)
+
+
+def _parse_pattern(element: Any) -> SchematronPattern:
+    """One ``<pattern>``: its title and the rules that assert something."""
+    pat_id = element.attrib.get("id", element.attrib.get("name", "pattern"))
+    title = ""
+    rules: list[SchematronRule] = []
+    for child in element:
+        tag = _strip_ns(child.tag)
+        if tag == "title":
+            title = (child.text or "").strip()
+        elif tag == "rule":
+            rule = _parse_rule(child)
+            if rule is not None:
+                rules.append(rule)
+    return SchematronPattern(pattern_id=pat_id, title=title, rules=rules)
+
+
 def parse_schematron(source: str | bytes | Path) -> SchematronSchema:
     """Parse a Schematron (.sch) XML document into a SchematronSchema object.
 
@@ -96,100 +161,21 @@ def parse_schematron(source: str | bytes | Path) -> SchematronSchema:
     Raises:
         ValueError: If the source does not represent a valid Schematron document.
     """
-    if isinstance(source, Path):
-        content = source.read_text(encoding="utf-8")
-        root = defused_et.fromstring(content)
-    elif isinstance(source, str):
-        if source.strip().startswith("<"):
-            root = defused_et.fromstring(source)
-        else:
-            path = Path(source)
-            content = path.read_text(encoding="utf-8")
-            root = defused_et.fromstring(content)
-    elif isinstance(source, bytes):
-        root = defused_et.fromstring(source)
-    else:
-        raise ValueError(f"Unsupported Schematron source type: {type(source)}")
-
+    root = _load_root(source)
     root_tag = _strip_ns(root.tag)
     if root_tag != "schema":
         raise ValueError(f"Root element must be 'schema', got '{root.tag}'")
 
-    title = ""
-    namespaces: dict[str, str] = {}
-    patterns: list[SchematronPattern] = []
-
+    schema = SchematronSchema(title="")
     for child in root:
         tag = _strip_ns(child.tag)
         if tag == "title":
-            title = (child.text or "").strip()
+            schema.title = (child.text or "").strip()
         elif tag == "ns":
             prefix = child.attrib.get("prefix", "").strip()
             uri = child.attrib.get("uri", "").strip()
             if prefix and uri:
-                namespaces[prefix] = uri
+                schema.namespaces[prefix] = uri
         elif tag == "pattern":
-            pat_id = child.attrib.get(
-                "id", child.attrib.get("name", "pattern")
-            )
-            pat_title = ""
-            pat_rules: list[SchematronRule] = []
-
-            for p_child in child:
-                p_tag = _strip_ns(p_child.tag)
-                if p_tag == "title":
-                    pat_title = (p_child.text or "").strip()
-                elif p_tag == "rule":
-                    context = p_child.attrib.get("context", ".").strip()
-                    rule_assertions: list[SchematronAssertion] = []
-
-                    for r_child in p_child:
-                        r_tag = _strip_ns(r_child.tag)
-                        if r_tag in ("assert", "report"):
-                            test = r_child.attrib.get("test", "").strip()
-                            rule_id = r_child.attrib.get(
-                                "id",
-                                r_child.attrib.get(
-                                    "flag", f"RULE-{len(rule_assertions) + 1}"
-                                ),
-                            )
-                            role = r_child.attrib.get("role", "error").lower()
-                            severity = (
-                                "WARNING"
-                                if role in ("warn", "warning", "info")
-                                else "ERROR"
-                            )
-                            msg = " ".join("".join(r_child.itertext()).split())
-
-                            rule_assertions.append(
-                                SchematronAssertion(
-                                    rule_id=rule_id,
-                                    test=test,
-                                    message=msg
-                                    or f"Assertion {rule_id} failed",
-                                    is_report=(r_tag == "report"),
-                                    severity=severity,
-                                )
-                            )
-
-                    if rule_assertions:
-                        pat_rules.append(
-                            SchematronRule(
-                                context=context,
-                                assertions=rule_assertions,
-                            )
-                        )
-
-            patterns.append(
-                SchematronPattern(
-                    pattern_id=pat_id,
-                    title=pat_title,
-                    rules=pat_rules,
-                )
-            )
-
-    return SchematronSchema(
-        title=title,
-        namespaces=namespaces,
-        patterns=patterns,
-    )
+            schema.patterns.append(_parse_pattern(child))
+    return schema
