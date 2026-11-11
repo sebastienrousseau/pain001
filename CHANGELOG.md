@@ -131,6 +131,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `openapi.json`, list the `400`, `422` and `500` answers; no kit case
   changes. `/validate` still answers `200` with `is_valid: false`, as
   `/check` does with `passed: false`.
+- A document declaring a DTD entity is refused as a validation error
+  (`XML parse error: EntitiesForbidden(...)`) instead of raising
+  defusedxml's exception out of `validate_via_xsd`,
+  `validate_xml_string_via_xsd` and `collect_xsd_validation_errors`.
 
 ## [0.0.86] - 2026-11-11
 

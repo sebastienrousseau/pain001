@@ -39,6 +39,7 @@ from functools import lru_cache
 from io import StringIO
 from typing import TYPE_CHECKING
 
+from defusedxml import DefusedXmlException
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
 
@@ -141,7 +142,7 @@ def validate_via_xsd(xml_file_path: str, xsd_file_path: str) -> bool:
     # Load XML file into an ElementTree object using defusedxml for security.
     try:
         xml_tree = defused_et.parse(xml_file_path)
-    except (ParseError, OSError) as e:
+    except (ParseError, DefusedXmlException, OSError) as e:
         logger.error("Error parsing XML file: %s", e)
         return False
 
@@ -180,7 +181,7 @@ def collect_xsd_validation_errors(
     """
     try:
         xml_tree = defused_et.parse(StringIO(xml_content))
-    except (ParseError, OSError) as e:
+    except (ParseError, DefusedXmlException, OSError) as e:
         return [f"XML parse error: {e}"]
     try:
         xsd = _get_cached_schema(xsd_file_path)
@@ -227,7 +228,7 @@ def validate_xml_string_via_xsd(xml_content: str, xsd_file_path: str) -> bool:
     # Load XML string into an ElementTree object using defusedxml for security.
     try:
         xml_tree = defused_et.parse(StringIO(xml_content))
-    except (ParseError, OSError) as e:
+    except (ParseError, DefusedXmlException, OSError) as e:
         logger.error("Error parsing XML string: %s", e)
         return False
 
