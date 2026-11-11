@@ -279,3 +279,23 @@ class TestErrorReportingIsUnchanged:
 
         assert messages
         assert "XML parse error" in messages[0]
+
+
+ENTITY_DOCUMENT = (
+    '<?xml version="1.0"?>'
+    '<!DOCTYPE Document [<!ENTITY a "aaaaaaaaaa">]>'
+    '<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03">'
+    "&a;</Document>"
+)
+
+
+def test_an_entity_declaration_is_a_refusal_not_an_exception(
+    tmp_path: Path,
+) -> None:
+    """defusedxml's refusal is reported like any parse error."""
+    path = tmp_path / "entity.xml"
+    path.write_text(ENTITY_DOCUMENT, encoding="utf-8")
+    assert not validate_xml_string_via_xsd(ENTITY_DOCUMENT, SCHEMA)
+    assert not module.validate_via_xsd(str(path), SCHEMA)
+    (error,) = collect_xsd_validation_errors(ENTITY_DOCUMENT, SCHEMA)
+    assert error.startswith("XML parse error: EntitiesForbidden")

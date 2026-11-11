@@ -130,6 +130,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   modules: `cli/cli.py` drops from 1,261 lines to 421 and its `main`
   from 244 lines and cyclomatic 16 to within the ceilings, so four
   baseline entries go.
+- Writing a file no longer holds a copy of the document. The staged
+  file is XSD-validated as libxml2 streams it, releasing each element
+  once checked, instead of being read back, encoded again and built
+  into a tree; `generate_xml` and `process_files` render the template
+  straight into the staged file whenever nothing needs the whole text
+  (no BAH envelope, signature, Schematron rulebook or plugin writer);
+  and the normalised rows hold only the keys normalisation changed.
+  For 100,000 `pain.001.001.03` rows (a 138 MiB file), peak RSS falls
+  from about 1.2 GB to 380 MB on the default path and from about 1.0 GB
+  to 380 MB with `stream_xml_to_file`, in about the same time (the rows
+  themselves are 150 MB of that). The bytes written
+  are unchanged (golden files, bundled examples and corpus rebuild
+  identically). A file over 10 MiB that the schema rejects now reports
+  libxml2's first violation (element and reason) instead of up to 20
+  `xmlschema` messages, since collecting those builds the whole tree;
+  a smaller file still reports every violation as before.
 
 ### Fixed
 
@@ -194,6 +210,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "unexpected extra argument"; only an invocation that starts with an
   option is routed to `generate` now, and Click names the closest
   command: `No such command 'genrate'. Did you mean 'generate'?`.
+- A document declaring a DTD entity is refused as a validation error
+  (`XML parse error: EntitiesForbidden(...)`) instead of raising
+  defusedxml's exception out of `validate_via_xsd`,
+  `validate_xml_string_via_xsd` and `collect_xsd_validation_errors`.
 
 ## [0.0.86] - 2026-11-11
 

@@ -141,6 +141,30 @@ def require_schematron(content: str, rulebook: Any, failure: str) -> None:
         )
 
 
+def _require_no_violations(
+    reasons: list[str], xsd_path: str, message_type: str, started: float
+) -> None:
+    """Emit the validation metric event; raise when ``reasons`` is set."""
+    from pain001.observability import emit_metric_event
+
+    if reasons:
+        emit_metric_event(
+            "validation_failed",
+            message_type=message_type,
+            schema_path=str(xsd_path),
+        )
+        raise RuntimeError(
+            f"Generated XML failed validation against {xsd_path}: "
+            + "; ".join(reasons)
+        )
+    emit_metric_event(
+        "xsd_validation_passed",
+        message_type=message_type,
+        schema_path=str(xsd_path),
+        duration_ms=int((time.time() - started) * 1000),
+    )
+
+
 def require_xsd_valid(content: str, xsd_path: str, message_type: str) -> None:
     """Refuse ``content`` that the XSD at ``xsd_path`` rejects.
 
@@ -153,50 +177,62 @@ def require_xsd_valid(content: str, xsd_path: str, message_type: str) -> None:
         xsd_path: A validated path to the message type's schema.
         message_type: The message type, for the metric events.
 
-    Raises:
-        RuntimeError: Listing the violations, when the XSD rejects it.
+    A RuntimeError listing the violations propagates when the XSD
+    rejects it.
     """
-    from pain001.observability import emit_metric_event
     from pain001.xml.validate_via_xsd import (
         collect_xsd_validation_errors,
         validate_xml_string_via_xsd,
     )
 
     started = time.time()
+    reasons: list[str] = []
     if not validate_xml_string_via_xsd(content, xsd_path):
-        emit_metric_event(
-            "validation_failed",
-            message_type=message_type,
-            schema_path=str(xsd_path),
-        )
-        reasons = collect_xsd_validation_errors(content, xsd_path)
-        detail = "; ".join(reasons) if reasons else "unknown reason"
-        raise RuntimeError(
-            f"Generated XML failed validation against {xsd_path}: {detail}"
-        )
-    emit_metric_event(
-        "xsd_validation_passed",
-        message_type=message_type,
-        schema_path=str(xsd_path),
-        duration_ms=int((time.time() - started) * 1000),
-    )
+        reasons = collect_xsd_validation_errors(content, xsd_path) or [
+            "unknown reason"
+        ]
+    _require_no_violations(reasons, xsd_path, message_type, started)
+
+
+def require_xsd_valid_file(
+    path: str, xsd_path: str, message_type: str
+) -> None:
+    """Refuse the file at ``path`` when the XSD rejects it.
+
+    The file is validated as it streams past (see
+    :func:`~pain001.xml.validate_via_xsd.collect_xsd_file_errors`), so
+    its size, not a tree of it, bounds the memory. Emits the same metric
+    events and raises the same error as :func:`require_xsd_valid`.
+
+    Args:
+        path: The XML file.
+        xsd_path: A validated path to the message type's schema.
+        message_type: The message type, for the metric events.
+
+    A RuntimeError listing the violations propagates when the XSD
+    rejects it.
+    """
+    from pain001.xml.validate_via_xsd import collect_xsd_file_errors
+
+    started = time.time()
+    reasons = collect_xsd_file_errors(path, xsd_path)
+    _require_no_violations(reasons, xsd_path, message_type, started)
 
 
 def xsd_check(xsd_path: str, message_type: str) -> StagedCheck:
-    """A staged-file check that applies :func:`require_xsd_valid`.
+    """A staged-file check that applies :func:`require_xsd_valid_file`.
 
     Args:
         xsd_path: A validated path to the message type's schema.
         message_type: The message type, for the metric events.
 
     Returns:
-        The check, reading the staged file it is handed.
+        The check, validating the staged file it is handed.
     """
 
     def check(staged: str) -> None:
         """Validate the staged file against the schema."""
-        with open(staged, encoding="utf-8") as handle:
-            require_xsd_valid(handle.read(), xsd_path, message_type)
+        require_xsd_valid_file(staged, xsd_path, message_type)
 
     return check
 
@@ -247,7 +283,10 @@ def finalise_message(
 
 
 def resolve_output_path(
-    output_path: str | None, xml_file_path: str, message_type: str
+    output_path: str | None,
+    xml_file_path: str,
+    message_type: str,
+    stacklevel: int = 3,
 ) -> str:
     """Where generate_xml writes: ``output_path``, or next to the template.
 
@@ -255,6 +294,8 @@ def resolve_output_path(
         output_path: The caller's explicit destination, if any.
         xml_file_path: The template path (the deprecated default).
         message_type: The message type, naming the default file.
+        stacklevel: Where the deprecation warning points, as for
+            :func:`warnings.warn` counted from here.
 
     Returns:
         The real destination path; its directory exists.
@@ -271,7 +312,7 @@ def resolve_output_path(
         "template and requires it to be under the current working "
         "directory; pass output_path explicitly instead.",
         DeprecationWarning,
-        stacklevel=3,
+        stacklevel=stacklevel,
     )
     from pain001.security import validate_path
     from pain001.xml.generate_updated_xml_file_path import (
