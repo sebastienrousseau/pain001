@@ -18,14 +18,12 @@ jobs:
   analyze:
     name: CodeQL Analysis
     runs-on: ubuntu-latest
+    # A public repository needs only these two; packages: read (private
+    # CodeQL packs) and actions: read (private repositories) are not
+    # granted.
     permissions:
-      # Required for all workflows
-      security-events: write
-      # Required to fetch internal or private CodeQL packs
-      packages: read
-      # Required for workflows in private repositories
-      actions: read
-      contents: read
+      security-events: write # upload the analysis to code scanning
+      contents: read # check out the source
 
     strategy:
       fail-fast: false
@@ -92,10 +90,13 @@ jobs:
     needs: analyze
     runs-on: ubuntu-latest
     if: always()
+    permissions: {}
     steps:
       - name: Check CodeQL status
+        env:
+          ANALYZE_RESULT: ${{ needs.analyze.result }}
         run: |
-          if [ "${{ needs.analyze.result }}" != "success" ]; then
+          if [ "$ANALYZE_RESULT" != "success" ]; then
             echo "::error::CodeQL analysis failed or found critical issues"
             exit 1
           fi

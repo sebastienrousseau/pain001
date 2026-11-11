@@ -30,9 +30,9 @@ on:
       - ".github/workflows/docker.yml"
   workflow_dispatch:
 
+# The build job states its own scopes; nothing else gets an OIDC token.
 permissions:
   contents: read
-  id-token: write
 
 env:
   REGISTRY: ghcr.io
@@ -43,10 +43,10 @@ jobs:
     name: Build (and publish on tag/main)
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
+      contents: read # check out the source
+      packages: write # push the image to GHCR (non-PR events only)
+      attestations: write # store the image's build provenance
+      id-token: write # sign that provenance through Sigstore OIDC
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:

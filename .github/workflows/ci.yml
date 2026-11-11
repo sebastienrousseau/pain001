@@ -24,6 +24,7 @@ jobs:
   # saying which of them is the cause. This says it in one line, in
   # seconds, before anything else runs.
   lockfile:
+    name: lockfile # the job id, so the check name stays the same
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,6 +44,7 @@ jobs:
 
   # 1. VERSION SYNC (Fastest Fail - 0s Setup)
   version-sync:
+    name: version-sync # the job id, so the check name stays the same
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -104,9 +106,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          # This job publishes nothing; the release is built by the
-          # uncached `build` job, so a cache here cannot reach it.
-          cache: "poetry" # zizmor: ignore[cache-poisoning]
+          # No dependency cache: this job also runs on release tags, and
+          # a tag run must not restore a cache that a branch run wrote.
       - name: Install pain001 with every extra
         run: poetry install --no-interaction --all-extras
       - name: Install signxml (hash-pinned, dependencies from the lock)
@@ -135,10 +136,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          # ✅ Native Caching (Faster/Cleaner). This job publishes
-          # nothing; the release is built by the uncached `build` job,
-          # so a cache here cannot reach it.
-          cache: "poetry" # zizmor: ignore[cache-poisoning]
+          # No dependency cache: this job also runs on release tags, and
+          # a tag run must not restore a cache that a branch run wrote.
 
       - name: ❯ Install Dependencies
         run: poetry install --no-interaction --all-extras
@@ -167,9 +166,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
-          # This job publishes nothing; the release is built by the
-          # uncached `build` job, so a cache here cannot reach it.
-          cache: "poetry" # zizmor: ignore[cache-poisoning]
+          # No dependency cache: this job also runs on release tags, and
+          # a tag run must not restore a cache that a branch run wrote.
 
       - name: ❯ Install Dependencies
         run: poetry install --no-interaction --all-extras
@@ -361,9 +359,9 @@ jobs:
     name: 📦 Publish Release
     environment: pypi
     permissions:
-      contents: write
-      id-token: write
-      attestations: write
+      contents: write # create the GitHub release and upload its files
+      id-token: write # PyPI trusted publishing and Sigstore signing
+      attestations: write # store the build provenance attestation
     steps:
       - name: ❯ Download the release files
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
@@ -398,7 +396,7 @@ jobs:
       # Kept over `gh release create`: on a re-run of this job the action
       # updates the existing release and replaces its files, where
       # `gh release create` fails because the release already exists.
-      - name: ❯ Create GitHub Release # zizmor: ignore[superfluous-actions]
+      - name: ❯ Create GitHub Release # zizmor: ignore[superfluous-actions] gh fails on a re-run
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           # The family's release title is "<project> <version>", never the
@@ -439,9 +437,11 @@ jobs:
   # workflow runs, so a standalone `on: release: published` workflow can
   # never fire for our own pipeline.
   #
-  # NOTE: the reusable generator MUST be referenced by tag, not SHA —
-  # slsa-verifier validates the generator's own provenance against its
-  # release tag. This is the documented exception to SHA pinning.
+  # The reusable generator MUST be referenced by its release tag, not a
+  # SHA: slsa-verifier checks the generator's own identity against that
+  # tag, so a SHA reference produces provenance it rejects. This line and
+  # its twin in slsa.yml are the only actions not pinned to a commit;
+  # tests/test_code_scanning_regressions.py allows exactly these two.
   provenance:
     needs: [build, publish]
     if: startsWith(github.ref, 'refs/tags/v')
@@ -449,7 +449,7 @@ jobs:
       actions: read   # read the workflow path
       id-token: write # sign via Sigstore OIDC
       contents: write # upload the attestation to the release
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses] slsa-verifier requires the tag
     with:
       base64-subjects: ${{ needs.build.outputs.hashes }}
       upload-assets: true
