@@ -29,30 +29,30 @@
 
 **Getting started**
 
-- [Install](#install) — PyPI, source and Docker
-- [Requirements](#requirements) — toolchain floor, platforms
-- [Quick Start](#quick-start) — scaffold, validate and generate synthetic payments
+- [Install](#install): PyPI, source and Docker
+- [Requirements](#requirements): toolchain floor, platforms
+- [Quick Start](#quick-start): scaffold, validate and generate synthetic payments
 
 **The Pain001 ecosystem**
 
-- [The Pain001 ecosystem](#the-pain001-ecosystem) — core, MCP, LSP, loaders, scaffold, mockbank, native extension and website
+- [The Pain001 ecosystem](#the-pain001-ecosystem): core, MCP, LSP, loaders, scaffold, mockbank, native extension and website
 
 **Library reference**
 
-- [Capabilities at a glance](#capabilities-at-a-glance) — the current surface by theme
-- [Ecosystem comparison](#ecosystem-comparison) — short matrix; full table at [`docs/COMPARISON.md`](docs/COMPARISON.md)
-- [Benchmarks](#benchmarks) — headline numbers; full table at [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md)
-- [Features](#features) — module-level capability list
-- [Configuration](#configuration) — core options
-- [Examples](#examples) — runnable example index
+- [Capabilities at a glance](#capabilities-at-a-glance): the current surface by theme
+- [Ecosystem comparison](#ecosystem-comparison): short matrix; full table at [`docs/COMPARISON.md`](docs/COMPARISON.md)
+- [Benchmarks](#benchmarks): headline numbers; full table at [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md)
+- [Features](#features): module-level capability list
+- [Configuration](#configuration): core options
+- [Examples](#examples): runnable example index
 
 **Operational**
 
-- [When not to use Pain001](#when-not-to-use-pain001) — limitations
-- [Development](#development) — make targets, fuzzing, CI
-- [Security](#security) — guarantees and compliance
-- [Documentation](#documentation) — all reference docs
-- [Stability guarantees](#stability-guarantees) — SemVer axis, output stability, minimum toolchain discipline
+- [When not to use Pain001](#when-not-to-use-pain001): limitations
+- [Development](#development): make targets, fuzzing, CI
+- [Security](#security): guarantees and compliance
+- [Documentation](#documentation): all reference docs
+- [Stability guarantees](#stability-guarantees): SemVer axis, output stability, minimum toolchain discipline
 - [License](#license)
 
 ---

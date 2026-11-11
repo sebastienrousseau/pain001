@@ -29,30 +29,30 @@
 
 **Getting started**
 
-- [Install](#install) — {{INSTALL_METHODS_SUMMARY}}
-- [Requirements](#requirements) — toolchain floor, platforms
-- [Quick Start](#quick-start) — {{QUICK_START_SUMMARY_PITCH}}
+- [Install](#install): {{INSTALL_METHODS_SUMMARY}}
+- [Requirements](#requirements): toolchain floor, platforms
+- [Quick Start](#quick-start): {{QUICK_START_SUMMARY_PITCH}}
 
 **The {{PROJECT_NAME}} ecosystem**
 
-- [The {{PROJECT_NAME}} ecosystem](#the-{{PROJECT_NAME_LOWER}}-ecosystem) — {{ECOSYSTEM_CRATES_OR_MODULES_LIST}}
+- [The {{PROJECT_NAME}} ecosystem](#the-{{PROJECT_NAME_LOWER}}-ecosystem): {{ECOSYSTEM_CRATES_OR_MODULES_LIST}}
 
 **Library reference**
 
-- [Capabilities at a glance](#capabilities-at-a-glance) — the current surface by theme
-- [Ecosystem comparison](#ecosystem-comparison) — short matrix; full table at [`docs/COMPARISON.md`](docs/COMPARISON.md)
-- [Benchmarks](#benchmarks) — headline numbers; full table at [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md)
-- [Features](#features) — module-level capability list
-- [Configuration](#configuration) — core options
-- [Examples](#examples) — runnable example index
+- [Capabilities at a glance](#capabilities-at-a-glance): the current surface by theme
+- [Ecosystem comparison](#ecosystem-comparison): short matrix; full table at [`docs/COMPARISON.md`](docs/COMPARISON.md)
+- [Benchmarks](#benchmarks): headline numbers; full table at [`docs/BENCHMARKS.md`](docs/BENCHMARKS.md)
+- [Features](#features): module-level capability list
+- [Configuration](#configuration): core options
+- [Examples](#examples): runnable example index
 
 **Operational**
 
-- [When not to use {{PROJECT_NAME}}](#when-not-to-use-{{PROJECT_NAME_LOWER}}) — limitations
-- [Development](#development) — make targets, fuzzing, CI
-- [Security](#security) — guarantees and compliance
-- [Documentation](#documentation) — all reference docs
-- [Stability guarantees](#stability-guarantees) — SemVer axis, output stability, minimum toolchain discipline
+- [When not to use {{PROJECT_NAME}}](#when-not-to-use-{{PROJECT_NAME_LOWER}}): limitations
+- [Development](#development): make targets, fuzzing, CI
+- [Security](#security): guarantees and compliance
+- [Documentation](#documentation): all reference docs
+- [Stability guarantees](#stability-guarantees): SemVer axis, output stability, minimum toolchain discipline
 - [License](#license)
 
 ---
