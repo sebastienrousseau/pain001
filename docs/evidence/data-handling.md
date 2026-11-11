@@ -65,6 +65,10 @@ command-line and library feature only ([ADR 0013](../adr/0013-download-replies-e
   rule and the field path, not the value; scheme-rule findings quote
   the rejected code, currency or amount, and the structural BIC check
   quotes the BIC it rejects.
+- Row errors in REST responses mask IBAN, BIC, account and name values
+  (first and last four characters, or `[REDACTED]` for names), with the
+  same rules as the log redactor
+  ([`pain001/api/_redact.py`](https://github.com/sebastienrousseau/pain001/blob/main/pain001/api/_redact.py)).
 
 ## How to check this yourself
 
