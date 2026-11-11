@@ -91,7 +91,8 @@ class TestVersionsCommand:
         """`--json` emits a parseable array containing the known types."""
         result = self.runner.invoke(cli, ["versions", "--json"])
         assert result.exit_code == 0
-        assert MTYPE in json.loads(result.output)
+        assert MTYPE in json.loads(result.stdout)
+        assert "--json is deprecated" in result.stderr
 
 
 class TestInspectCommand:
@@ -109,9 +110,11 @@ class TestInspectCommand:
 
     def test_inspect_json(self) -> None:
         """JSON output round-trips the message type and input formats."""
-        result = self.runner.invoke(cli, ["inspect", MTYPE, "--json"])
+        result = self.runner.invoke(
+            cli, ["inspect", MTYPE, "--format", "json"]
+        )
         assert result.exit_code == 0
-        payload = json.loads(result.output)
+        payload = json.loads(result.stdout)
         assert payload["message_type"] == MTYPE
         assert "csv" in payload["input_formats"]
 

@@ -38,6 +38,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mandates cover payments between financial institutions.
   `docs/chaps-enhanced-data.md` cites the 2024 and 2025 policy
   statements and ISO 17442 for each rule.
+- Logs and traces join up on the REST API. Every response carries
+  `X-Request-ID`: the caller's when well formed (1 to 128 of letters,
+  digits and `. _ : -`), otherwise a generated `req-<8 hex>`, and JSON
+  log lines written while serving it carry it as `request_id`. An
+  inbound W3C `traceparent` is honoured: with `OTEL_ENABLED` and the
+  `otel` extra each request gets a server span (`GET <route>`, status
+  code, `pain001.request_id`) that is a child of the caller's span, and
+  the `pain001.api.*` handler spans are its children. `JSONFormatter`
+  adds `trace_id` and `span_id` from the active span, or the caller's
+  `trace_id` when tracing is off or OpenTelemetry is not installed.
+  `pain001.logging_schema` gains `bind_request_context`,
+  `reset_request_context` and `current_trace_ids`. The OpenAPI document
+  is unchanged.
+- `--format text|json` on every command that returns a result
+  (`generate`, `validate`, `versions`, `inspect`, `init`, `face`,
+  `upload`, `download`, `plugins list|show|disable`, beside `check`,
+  `status` and `verify-signature`), so `pain001 <command> --format json
+  | jq .` works for each; `serve` and `mcp` run servers and have none.
+  `generate` and `validate` write one object (`ok`, `message_type`,
+  `records`, `files`, `scheme`, `schematron`, `error`), on failure too.
+  `-q`/`--quiet` on `generate`, `validate` and `init` drops the banner
+  and progress lines. `tests/test_cli_machine_output.py` runs every
+  command with `--format json` and parses its stdout.
+- `tests/data/cli-help.txt` pins every command's `--help`, and every
+  example under an `Examples:` heading is run against the bundled
+  sample data (`tests/test_cli_help_snapshot.py`).
 - `pain001.generate(data, message_type, output_dir=...)` returns a
   `GenerationResult` (`path`, `message_type`, `rows`) and
   `pain001.validate(data, message_type)` returns a `ValidationReport`
@@ -119,6 +145,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Docker workflow builds a published image without the shared
   GitHub Actions cache; only pull-request builds, which push nothing,
   read or write it.
+- Standard output carries only a command's result. Progress, warnings,
+  errors and the banner moved to standard error, and the banner prints
+  only when standard output is a terminal; with `--log-format json`
+  the progress lines are left out so stderr stays one JSON record per
+  line. A script that read `generate` or `validate` progress from
+  stdout reads it from stderr now.
+- `--emit-metrics` writes each metric as one JSON line on stdout
+  instead of a Python dict wrapped by the terminal.
+- Deprecated, removed in 0.0.88: `--json` on `versions`, `inspect` and
+  `plugins list`, and `--scheme-format json` on `generate` and
+  `validate`. Both still work and warn on stderr; use `--format json`.
+- `generate` and `validate` run from `pain001.cli._generate`, and
+  `versions`, `inspect`, `init` and `plugins` live in their own
+  modules: `cli/cli.py` drops from 1,261 lines to 421 and its `main`
+  from 244 lines and cyclomatic 16 to within the ceilings, so four
+  baseline entries go.
+- Writing a file no longer holds a copy of the document. The staged
+  file is XSD-validated as libxml2 streams it, releasing each element
+  once checked, instead of being read back, encoded again and built
+  into a tree; `generate_xml` and `process_files` render the template
+  straight into the staged file whenever nothing needs the whole text
+  (no BAH envelope, signature, Schematron rulebook or plugin writer);
+  and the normalised rows hold only the keys normalisation changed.
+  For 100,000 `pain.001.001.03` rows (a 138 MiB file), peak RSS falls
+  from about 1.2 GB to 380 MB on the default path and from about 1.0 GB
+  to 380 MB with `stream_xml_to_file`, in about the same time (the rows
+  themselves are 150 MB of that). The bytes written
+  are unchanged (golden files, bundled examples and corpus rebuild
+  identically). A file over 10 MiB that the schema rejects now reports
+  libxml2's first violation (element and reason) instead of up to 20
+  `xmlschema` messages, since collecting those builds the whole tree;
+  a smaller file still reports every violation as before.
 
 ### Fixed
 
@@ -168,6 +226,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `openapi.json`, list the `400`, `422` and `500` answers; no kit case
   changes. `/validate` still answers `200` with `is_valid: false`, as
   `/check` does with `passed: false`.
+- Behind a reverse proxy the rate limiter keyed every request on the
+  proxy's socket address, so all clients shared one bucket. The new
+  `PAIN001_TRUSTED_PROXIES` (addresses or networks, empty by default)
+  names the proxies whose forwarded header is believed; on their
+  connections the key is the right-most `X-Forwarded-For` hop that is
+  not a trusted proxy (`PAIN001_FORWARDED_HEADER=forwarded` reads the
+  RFC 7239 header instead). Any other peer is keyed on its socket
+  address as before, so a client cannot choose its own bucket.
+- `init_otel` built its own tracer provider and called
+  `set_tracer_provider` even when the host application had already set
+  one, so an application embedding pain001 lost pain001's spans or its
+  own exporter. It now uses a provider that is already set and installs
+  pain001's only when none is.
+- `JSONFormatter` passed a message that happened to parse as a bare JSON
+  value (`logger.info("42")`) through as that value instead of a log
+  object with `level`, `request_id` and `message`; it is now wrapped
+  like any other plain-text message.
+- A mistyped command (`pain001 genrate`) reached `generate` as an
+  "unexpected extra argument"; only an invocation that starts with an
+  option is routed to `generate` now, and Click names the closest
+  command: `No such command 'genrate'. Did you mean 'generate'?`.
+- A document declaring a DTD entity is refused as a validation error
+  (`XML parse error: EntitiesForbidden(...)`) instead of raising
+  defusedxml's exception out of `validate_via_xsd`,
+  `validate_xml_string_via_xsd` and `collect_xsd_validation_errors`.
 
 ## [0.0.86] - 2026-11-11
 

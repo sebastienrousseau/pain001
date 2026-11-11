@@ -21,23 +21,13 @@
     "lines": 71
   },
   "pain001/api/app.py": {
-    "file_lines": 662
+    "file_lines": 658
   },
   "pain001/api/job_store.py::RedisJobStore.load_all": {
     "cognitive": 17
   },
   "pain001/camt053/generator.py::build_camt053_statement": {
     "lines": 63
-  },
-  "pain001/cli/cli.py": {
-    "file_lines": 1246
-  },
-  "pain001/cli/cli.py::_generate_xml_files": {
-    "lines": 121
-  },
-  "pain001/cli/cli.py::main": {
-    "cyclomatic": 16,
-    "lines": 244
   },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82
@@ -184,9 +174,6 @@
   "pain001/migration/version_mapper.py::VersionMapper.migrate_rows": {
     "cognitive": 21
   },
-  "pain001/observability/otel.py::init_otel": {
-    "lines": 67
-  },
   "pain001/observability/otel.py::traced": {
     "lines": 62
   },
@@ -250,12 +237,6 @@
   },
   "pain001/validation/service.py::ValidationService.validate_all": {
     "lines": 75
-  },
-  "pain001/xml/generate_xml.py::generate_xml": {
-    "lines": 86
-  },
-  "pain001/xml/generate_xml.py::generate_xml_string": {
-    "lines": 82
   },
   "pain001/xml/message_registry.py": {
     "file_lines": 643

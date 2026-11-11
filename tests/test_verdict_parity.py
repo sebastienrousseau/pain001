@@ -21,6 +21,7 @@ Every surface either accepts it or refuses it; none may disagree.
 from __future__ import annotations
 
 import csv
+import json
 from collections.abc import Callable
 from pathlib import Path
 
@@ -187,3 +188,21 @@ def test_ui_validate_refuses_what_ui_generate_refuses(tmp_path: Path) -> None:
     assert generated.status_code == 400
     assert validated.status_code == 400
     assert "one payment information block" in validated.json()["detail"]
+
+
+@pytest.mark.parametrize("command", ["validate", "generate"])
+def test_json_result_reports_the_schema_refusal(
+    tmp_path: Path, command: str
+) -> None:
+    """``--format json`` carries the refusal: ok false, P001-E030, exit 1."""
+    data = _write_case(tmp_path, "currency", "EURO")
+    args = [command, "-t", MESSAGE_TYPE, "-d", data, "--format", "json"]
+    if command == "generate":
+        args += ["-o", str(tmp_path / "out")]
+    result = CliRunner().invoke(cli, args)
+    assert result.exit_code == 1
+    body = json.loads(result.stdout)
+    assert body["ok"] is False
+    assert "line 2, column currency" in body["error"]
+    assert "P001-E030" in body["error"]
+    assert body["files"] == []

@@ -28,7 +28,7 @@ class TestMain:
     def test_main_with_valid_files(self) -> None:
         from unittest.mock import patch
 
-        with patch("pain001.cli.cli.process_files", autospec=True):
+        with patch("pain001.cli._generate_steps.process_files", autospec=True):
             result = self.runner.invoke(
                 cli,
                 [
@@ -68,7 +68,7 @@ class TestMain:
         from unittest.mock import patch
 
         with patch(
-            "pain001.cli.cli.process_files", autospec=True
+            "pain001.cli._generate_steps.process_files", autospec=True
         ) as mock_process:
             result = self.runner.invoke(
                 cli,
@@ -93,7 +93,7 @@ class TestMain:
         from unittest.mock import patch
 
         with patch(
-            "pain001.cli.cli.process_files", autospec=True
+            "pain001.cli._generate_steps.process_files", autospec=True
         ) as mock_process:
             result = self.runner.invoke(
                 cli,

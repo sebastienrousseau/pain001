@@ -242,7 +242,7 @@ class TestCliVerboseTraceback(unittest.TestCase):
     def test_verbose_traceback_on_unexpected_error(self) -> None:
         """A generation error with --verbose prints a traceback, exit 1."""
         with patch(
-            "pain001.cli.cli.process_files",
+            "pain001.cli._generate_steps.process_files",
             side_effect=RuntimeError("boom"),
         ):
             result = self.runner.invoke(main, [*_base_args(), "--verbose"])

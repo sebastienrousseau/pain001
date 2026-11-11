@@ -17,6 +17,7 @@ payloads through a print site and checks the text comes out literally.
 from __future__ import annotations
 
 import dataclasses
+import json
 import shutil
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -25,7 +26,9 @@ import pytest
 from click.testing import CliRunner, Result
 
 from pain001 import __main__ as entry
-from pain001.cli import cli as cli_mod
+from pain001.cli import _generate_steps as steps
+from pain001.cli._format import Reporter
+from pain001.cli._gpg import _apply_gpg_options
 from pain001.cli.cli import cli
 from pain001.plugins import PAIN001_API_VERSION, PluginInfo, PluginMeta
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
@@ -74,7 +77,7 @@ def test_missing_data_file_name(runner, payload):
 @pytest.mark.parametrize("payload", PAYLOADS)
 def test_output_dir_and_success_message(runner, payload):
     """The output directory is echoed on start and on success."""
-    with patch.object(cli_mod, "process_files"):
+    with patch.object(steps, "process_files"):
         result = runner.invoke(
             cli,
             ["generate", "-t", MTYPE, "-d", "rows.csv", "-o", payload],
@@ -86,9 +89,7 @@ def test_output_dir_and_success_message(runner, payload):
 @pytest.mark.parametrize("payload", PAYLOADS)
 def test_generation_failure_and_traceback(runner, payload):
     """An exception message, and its verbose traceback, print literally."""
-    with patch.object(
-        cli_mod, "process_files", side_effect=ValueError(payload)
-    ):
+    with patch.object(steps, "process_files", side_effect=ValueError(payload)):
         result = runner.invoke(
             cli,
             ["generate", "-t", MTYPE, "-d", "rows.csv", "--verbose"],
@@ -170,14 +171,21 @@ def test_scheme_violation_text(capsys, payload, severity):
     result = SchemeValidationResult(
         profile="custom", violations=[_violation(payload, severity)]
     )
+    opts = {
+        "scheme": f"s{payload}",
+        "rules": None,
+        "explain": True,
+        "scheme_format": "text",
+        "xml_message_type": MTYPE,
+    }
     with patch(
         "pain001.validation.ladder.validate_scheme", return_value=result
     ):
         try:
-            cli_mod._run_scheme_check([], f"s{payload}", explain=True)
+            steps.run_scheme_check(Reporter(), steps.Outcome(), [], opts)
         except SystemExit as exc:
             assert severity == "error" and exc.code == 1
-    out = _flat(capsys.readouterr().out)
+    out = _flat(capsys.readouterr().err)
     for text in ("rule", "msg", "field", "fix", "s"):
         assert f"{text}{payload}" in out
     assert f"[rule{payload}]" in out
@@ -189,14 +197,14 @@ def test_gpg_key_file_and_metrics(capsys, monkeypatch, payload):
     # setenv records the original state, so the value the CLI writes
     # is rolled back and cannot leak into the GPG tests.
     monkeypatch.setenv("PAIN001_GPG_KEYFILE", "")
-    cli_mod._apply_gpg_options(f"k{payload}.asc", None)
-    event = MagicMock()
+    _apply_gpg_options(f"k{payload}.asc", None)
+    event = MagicMock(timestamp=0.0, trace_context={})
     event.name = "evt"
     event.attributes = {"path": payload}
-    cli_mod._console_metrics_callback(event)
-    out = _flat(capsys.readouterr().out)
-    assert f"k{payload}.asc" in out
-    assert repr({"path": payload}) in out
+    steps.emit_metric(event)
+    captured = capsys.readouterr()
+    assert f"k{payload}.asc" in _flat(captured.err)
+    assert json.loads(captured.out)["attributes"] == {"path": payload}
 
 
 @pytest.mark.parametrize("payload", PAYLOADS)

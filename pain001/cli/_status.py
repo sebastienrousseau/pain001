@@ -24,6 +24,7 @@ import click
 from defusedxml import ElementTree as defused_et
 from defusedxml.ElementTree import ParseError
 
+from pain001.cli._format import format_option
 from pain001.exceptions import DataSourceError, SchemaValidationError
 
 EXIT_REJECTED = 3
@@ -304,13 +305,7 @@ def _levels_rejected(counts: dict[str, int]) -> str:
     required=True,
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
 )
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    show_default=True,
-)
+@format_option()
 def status_cmd(files: tuple[Path, ...], output_format: str) -> None:
     """Report the status in pain.002 and camt.05x FILES (exit 3 on RJCT).
 

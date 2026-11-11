@@ -70,8 +70,11 @@ Field Naming Convention:
 
 from pain001.logging_schema._version import __version__
 from pain001.logging_schema.context import (
+    bind_request_context,
+    current_trace_ids,
     generate_request_id,
     get_request_id,
+    reset_request_context,
     set_request_id,
 )
 from pain001.logging_schema.events import (
@@ -109,8 +112,11 @@ __all__ = [
     "Events",
     "Fields",
     # context
+    "bind_request_context",
+    "current_trace_ids",
     "generate_request_id",
     "get_request_id",
+    "reset_request_context",
     "set_request_id",
     # redaction
     "mask_sensitive_data",

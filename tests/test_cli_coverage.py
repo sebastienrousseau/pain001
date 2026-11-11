@@ -174,12 +174,12 @@ class TestCLIIntrospectionFlags:
     def test_cli_emit_metrics_registers_console_callback(self):
         from unittest.mock import patch
 
-        from pain001.cli.cli import _console_metrics_callback
+        from pain001.cli._generate_steps import emit_metric
 
         runner = CliRunner()
-        with patch("pain001.cli.cli.process_files", autospec=True):
+        with patch("pain001.cli._generate_steps.process_files", autospec=True):
             with patch(
-                "pain001.cli.cli.register_metrics_callback",
+                "pain001.cli._generate.register_metrics_callback",
                 autospec=True,
             ) as mock_register:
                 result = runner.invoke(
@@ -193,21 +193,25 @@ class TestCLIIntrospectionFlags:
                     ],
                 )
         assert result.exit_code == 0
-        mock_register.assert_called_once_with(_console_metrics_callback)
+        mock_register.assert_called_once_with(emit_metric)
 
-    def test_console_metrics_callback_prints_event(self):
-        import time
+    def test_metric_callback_writes_one_json_line(self, capsys):
+        import json
 
-        from pain001.cli.cli import _console_metrics_callback
+        from pain001.cli._generate_steps import emit_metric
         from pain001.observability import MetricEvent
 
-        _console_metrics_callback(
-            MetricEvent(
-                name="unit_test",
-                timestamp=time.time(),
-                attributes={"k": "v"},
-            )
+        emit_metric(
+            MetricEvent(name="unit_test", timestamp=1.5, attributes={"k": "v"})
         )
+        line = capsys.readouterr().out
+        assert line.count("\n") == 1
+        assert json.loads(line) == {
+            "metric": "unit_test",
+            "timestamp": 1.5,
+            "attributes": {"k": "v"},
+            "trace_context": {},
+        }
 
 
 class TestCLIStreamingDispatch:
@@ -218,7 +222,8 @@ class TestCLIStreamingDispatch:
 
         runner = CliRunner()
         with patch(
-            "pain001.cli.cli.process_files_streaming", autospec=True
+            "pain001.cli._generate_steps.process_files_streaming",
+            autospec=True,
         ) as mock_streaming:
             result = runner.invoke(main, args)
         return result, mock_streaming

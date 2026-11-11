@@ -32,6 +32,7 @@ Run from the repository root::
     python examples/03_cli_workflows.py
 """
 
+import json
 import shutil
 import subprocess  # nosec B404
 import sys
@@ -86,10 +87,10 @@ def main() -> None:
         ]
 
         # Introspection: list supported types and inspect one template.
-        result = run_cli(["versions", "--json"], cwd=workdir)
+        result = run_cli(["versions", "--format", "json"], cwd=workdir)
         assert result.returncode == 0, result.stdout + result.stderr
-        assert MESSAGE_TYPE in result.stdout
-        print("versions --json    -> exit 0 (supported message types)")
+        assert MESSAGE_TYPE in json.loads(result.stdout)
+        print("versions --format json -> exit 0 (supported message types)")
 
         result = run_cli(["inspect", MESSAGE_TYPE], cwd=workdir)
         assert result.returncode == 0, result.stdout + result.stderr

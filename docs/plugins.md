@@ -248,13 +248,13 @@ Plugins with new names register as before.
 ## CLI surface
 
 ```text
-pain001 plugins list [--kind loader|validator|scheme|writer] [--json]
-pain001 plugins show <name> [--kind ...]
+pain001 plugins list [--kind loader|validator|scheme|writer] [--format text|json]
+pain001 plugins show <name> [--kind ...] [--format text|json]
 pain001 plugins disable          # documentation-only; prints the env-var instructions
 ```
 
 ```bash
-pain001 plugins list --json | jq '.[].name'
+pain001 plugins list --format json | jq '.[].name'
 pain001 plugins show csv
 # loader csv v<installed version>
 #   source:      built-in

@@ -54,14 +54,13 @@ from pain001.api.job_manager import (
     job_manager,
     output_name,
 )
-from pain001.api.limits import install_body_limit
 from pain001.api.meta import (
     API_DESCRIPTION,
     CANCEL_RESPONSES,
     GENERATE_RESPONSES,
     TAGS_METADATA,
 )
-from pain001.api.metrics import MetricsMiddleware
+from pain001.api.middleware import install_middleware
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
@@ -71,7 +70,6 @@ from pain001.api.models import (
     ValidationResponse,
 )
 from pain001.api.ops import metrics_router, ready_router
-from pain001.api.ratelimit import install_rate_limiting
 from pain001.api.ui import ui_router
 from pain001.constants import TEMPLATES_DIR
 from pain001.exceptions import PaymentValidationError
@@ -657,6 +655,4 @@ app.include_router(metrics_router)
 # ``/api`` alias (served but hidden from the OpenAPI schema).
 app.include_router(router, prefix="/api/v1")
 app.include_router(router, prefix="/api", include_in_schema=False)
-app.add_middleware(MetricsMiddleware)
-install_rate_limiting(app)
-install_body_limit(app)
+install_middleware(app)
