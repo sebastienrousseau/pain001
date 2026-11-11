@@ -127,16 +127,24 @@ def parse_after_fetch(value: str) -> tuple[str, str | None]:
 
 
 def _printable(text: str) -> bool:
-    """True when ``text`` has no control characters."""
-    return all(32 <= ord(char) != 127 for char in text)
+    """True when ``text`` has no C0, DEL or C1 control characters."""
+    return all(
+        32 <= ord(char) != 127 and not 128 <= ord(char) < 160 for char in text
+    )
 
 
 def _safe_name(name: str) -> bool:
-    """A flat, visible, finished filename: no paths, dots or temp files."""
+    """A flat, visible, finished filename: no paths, dots or temp files.
+
+    A colon is refused too: on Windows ``C:x.xml`` is drive-relative
+    and ``a.xml:s`` names an alternate data stream, so either would
+    write outside ``--to`` or hide the bytes.
+    """
     return (
         _printable(name)
         and "/" not in name
         and "\\" not in name
+        and ":" not in name
         and not name.startswith(".")
         and not name.endswith((".tmp", ".part"))
     )
@@ -276,6 +284,21 @@ def _dispose(run: _Run, name: str) -> None:
         run.sftp.rename(remote, f"{archive}/{name}")
 
 
+def _unchanged(run: _Run, source: str, size: int, mtime: int) -> Entry | None:
+    """The ledger row a ``keep`` run may trust without reading the file.
+
+    Size and mtime are only a hint: a server that reports no mtime, or
+    a reissued file of the same size within the same second, would
+    look unchanged. Keeping the remote copy makes a wrong guess
+    harmless, since the next run sees it again; deleting or moving it
+    would lose the new bytes unread, so those runs always read and
+    hash the file.
+    """
+    if run.disposal[0] != "keep" or mtime <= 0:
+        return None
+    return run.ledger.known(source, size, mtime)
+
+
 def _fetch(run: _Run, item: Listed) -> bool:
     """Save one file at most once, then dispose of the remote copy.
 
@@ -288,7 +311,7 @@ def _fetch(run: _Run, item: Listed) -> bool:
     """
     name, size, mtime = item
     source = run.source(name)
-    entry = run.ledger.known(source, size, mtime)
+    entry = _unchanged(run, source, size, mtime)
     status = "known"
     if entry is None:
         if size > run.budget:

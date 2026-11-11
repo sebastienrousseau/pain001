@@ -4,6 +4,7 @@
 # Licensed under either of the Apache License, Version 2.0 or the MIT
 # License, at your option. See LICENSE-APACHE and LICENSE-MIT.
 
+import csv
 import json
 import sqlite3
 from pathlib import Path
@@ -163,6 +164,18 @@ def test_write_csv_and_default_output_path(tmp_path: Path) -> None:
         mapper.default_output_path("/data/payments.csv", "pain.001.001.09")
         == "/data/payments_v09.csv"
     )
+
+
+def test_write_csv_neutralises_formulas(tmp_path: Path) -> None:
+    """A JSON or database source can carry a formula; the CSV must not."""
+    mapper = VersionMapper()
+    row = dict(SAMPLE_ROW, creditor_name='=HYPERLINK("http://x.test","y")')
+    migrated = mapper.migrate_rows([row], "v03", "v09")
+    output = mapper.write_csv(migrated, str(tmp_path / "result.csv"))
+    with open(output, encoding="utf-8", newline="") as handle:
+        written = next(csv.DictReader(handle))
+    assert written["creditor_name"] == '\'=HYPERLINK("http://x.test","y")'
+    assert written["payment_amount"] == "100.00"
 
 
 def test_migrate_file_from_json_and_jsonl(tmp_path: Path) -> None:

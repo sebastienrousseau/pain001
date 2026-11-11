@@ -14,15 +14,34 @@ import click
 from pain001.transport.cli import ssh_kwargs, ssh_options
 
 
+def _shown(name: str) -> str:
+    r"""A remote name made safe for a terminal.
+
+    Names come from the server. Backslashes and anything not printable
+    (C0 and C1 controls, DEL, bidirectional overrides) are written as
+    ``\xNN`` or ``\uNNNN`` so a hostile name cannot move the cursor,
+    retitle the window or disguise itself.
+    """
+    return "".join(
+        char
+        if char.isprintable() and char != "\\"
+        else f"\\x{ord(char):02x}"
+        if ord(char) < 256
+        else f"\\u{ord(char):04x}"
+        for char in name
+    )
+
+
 def _report(result: Any) -> None:
     """Print one line per file, the skipped names and what was left."""
     for fetched in result.files:
+        remote = _shown(fetched.remote)
         if fetched.status == "saved":
-            click.echo(f"Saved: {fetched.remote} -> {fetched.local}")
+            click.echo(f"Saved: {remote} -> {fetched.local}")
         else:
-            click.echo(f"Known: {fetched.remote} ({fetched.local})")
+            click.echo(f"Known: {remote} ({fetched.local})")
     for name in result.skipped:
-        click.echo(f"Skipped: {name}", err=True)
+        click.echo(f"Skipped: {_shown(name)}", err=True)
     if result.remaining:
         click.echo(f"{result.remaining} left for the next run", err=True)
 

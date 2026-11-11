@@ -23,7 +23,8 @@ canonical forms differed.
 
 The checks run in this order, and the first that fails is the report's
 ``reason``: exactly one ``ds:Signature`` (found by namespace and name,
-not by substring); ``SignedInfo``, ``SignatureValue`` and the reference's
+not by substring), inside the document it signs; ``SignedInfo``,
+``SignatureValue``, exactly one ``Reference`` and that reference's own
 ``DigestValue`` present; a key, from the trust anchor or, when the caller
 allows it, the certificate in ``KeyInfo``; the declared algorithms on the
 allow-lists; the payload digest; the signature over ``SignedInfo``.
@@ -161,6 +162,24 @@ def _signature(tree: Any) -> Any:
             f"{len(found)} <Signature> elements: pain001 verifies a "
             "document with exactly one"
         )
+    if found[0].getparent() is None:
+        raise _Invalid(
+            "the <Signature> must be inside the document it signs, "
+            "not the document itself"
+        )
+    return found[0]
+
+
+def _reference(signed_info: Any) -> Any:
+    """The one ``Reference``; pain001 checks a single signed object."""
+    found = signed_info.findall(_ds("Reference"))
+    if not found:
+        raise _Invalid("Missing <Reference>.")
+    if len(found) > 1:
+        raise _Invalid(
+            f"{len(found)} <Reference> elements: pain001 verifies "
+            "SignedInfo with exactly one <Reference>"
+        )
     return found[0]
 
 
@@ -227,9 +246,8 @@ def _c14n(node: Any, method: Any) -> bytes:
     )
 
 
-def _check_reference(signed_info: Any) -> tuple[Any, str]:
+def _check_reference(reference: Any) -> tuple[Any, str]:
     """The Reference must cover the whole document, enveloped."""
-    reference = _one(signed_info, _ds("Reference"), "Missing <Reference>.")
     if reference.get("URI") != "":
         raise _Invalid(
             'the Reference must sign the whole document (URI=""), '
@@ -303,10 +321,11 @@ def _verify(tree: Any, key: Any | None, report: dict[str, Any]) -> None:
         _ds("SignatureValue"),
         "Missing or empty <SignatureValue> element.",
     )
+    reference = _reference(signed_info)
     expected = _text(
-        signed_info,
-        f".//{_ds('DigestValue')}",
-        "Missing or empty <DigestValue> in <SignedInfo>.",
+        reference,
+        _ds("DigestValue"),
+        "Missing or empty <DigestValue> in <Reference>.",
     )
     cert = _embedded_cert(sig)
     if cert is not None:
@@ -319,7 +338,7 @@ def _verify(tree: Any, key: Any | None, report: dict[str, Any]) -> None:
         )
     c14n, algorithm = _check_methods(signed_info)
     report["algorithm"] = algorithm.name
-    ref_c14n, digest_name = _check_reference(signed_info)
+    ref_c14n, digest_name = _check_reference(reference)
     canonical_signed_info = _c14n(signed_info, c14n)
     _remove_enveloped(sig)
     digest = hashlib.new(digest_name, _c14n(tree, ref_c14n)).digest()

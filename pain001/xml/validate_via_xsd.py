@@ -64,8 +64,14 @@ except ImportError:  # pragma: no cover - presence depends on the install
 
 @lru_cache(maxsize=16)
 def _get_cached_schema(xsd_file_path: str) -> xmlschema.XMLSchema:
-    """Return a cached XMLSchema instance for the given XSD file path."""
-    return xmlschema.XMLSchema(xsd_file_path)
+    """Return a cached XMLSchema instance for the given XSD file path.
+
+    The path may be a user's ``--schema``, so the schema is treated as
+    untrusted local data: ``allow="local"`` loads imports and includes
+    from the filesystem only, never over the network, and
+    ``defuse="always"`` refuses DTDs and entity declarations.
+    """
+    return xmlschema.XMLSchema(xsd_file_path, allow="local", defuse="always")
 
 
 @lru_cache(maxsize=16)
@@ -74,8 +80,12 @@ def _get_cached_lxml_schema(xsd_file_path: str) -> _lxml_etree.XMLSchema:
 
     Compiling the schema is the expensive part and does not depend on the
     document, so it is cached exactly like the xmlschema equivalent.
+    The XSD is parsed with the same hardened parser as documents, so a
+    user's schema cannot expand entities or reach the network.
     """
-    return _lxml_etree.XMLSchema(_lxml_etree.parse(xsd_file_path))
+    return _lxml_etree.XMLSchema(
+        _lxml_etree.parse(xsd_file_path, _hardened_lxml_parser())
+    )
 
 
 def _hardened_lxml_parser() -> _lxml_etree.XMLParser:

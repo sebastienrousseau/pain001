@@ -125,6 +125,32 @@ def test_connect_sqlite_read_only_blocks_writes(tmp_path) -> None:
         ro_conn.close()
 
 
+def _table(path: Path, name: str) -> None:
+    conn = sqlite3.connect(path)
+    conn.execute("CREATE TABLE payments (who TEXT)")
+    conn.execute("INSERT INTO payments VALUES (?)", (name,))
+    conn.commit()
+    conn.close()
+
+
+@pytest.mark.parametrize("name", ["q?mode=rw#x.db", "%41.db", "a b.db"])
+def test_reserved_uri_characters_name_the_file_itself(
+    tmp_path, monkeypatch, name
+) -> None:
+    """``?``, ``#`` and ``%`` in a filename must not rewrite the URI."""
+    monkeypatch.chdir(tmp_path)
+    _table(tmp_path / name, "intended")
+    _table(tmp_path / "A.db", "decoy")
+    assert load_db_data(name, "payments") == [{"who": "intended"}]
+    conn = _connect_sqlite_read_only(str(tmp_path / name))
+    try:
+        with pytest.raises(sqlite3.OperationalError):
+            conn.execute("INSERT INTO payments VALUES ('x')")
+        assert conn.execute("PRAGMA trusted_schema").fetchone() == (0,)
+    finally:
+        conn.close()
+
+
 # If the script is executed directly, run the tests
 if __name__ == "__main__":
     pytest.main()

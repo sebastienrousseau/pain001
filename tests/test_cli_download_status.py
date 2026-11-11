@@ -437,3 +437,25 @@ def test_a_rejected_group_without_transactions_says_so(tmp_path):
     assert head.endswith(
         "0 transactions, 0 rejected; group and 1 payment block rejected"
     )
+
+
+def test_download_escapes_skipped_names(tmp_path, monkeypatch):
+    """A remote name cannot send control sequences to the terminal."""
+    pytest.importorskip("paramiko")
+    from pain001.transport import download
+
+    hostile = "a\x1b]0;owned\x07\x9b2Jb\\\u202eé.xml"
+    monkeypatch.setattr(
+        download,
+        "download_sftp",
+        lambda *a, **k: download.DownloadResult((), (hostile,)),
+    )
+    result = CliRunner().invoke(
+        cli, ["download", "--sftp", "sftp://ops@h/o/", "--to", str(tmp_path)]
+    )
+    assert result.exit_code == 0, result.output
+    assert (
+        "Skipped: a\\x1b]0;owned\\x07\\x9b2Jb\\x5c\\u202eé.xml"
+        in result.output
+    )
+    assert "\x1b" not in result.output and "\x9b" not in result.output

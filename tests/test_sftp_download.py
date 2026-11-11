@@ -317,3 +317,64 @@ def test_credentials_never_show_secrets():
 
     shown = repr(Credentials(password="hunter2", passphrase="p"))
     assert "hunter2" not in shown and "'p'" not in shown
+
+
+ACCP = b'<?xml version="1.0"?><Document>STATUS ACCP</Document>'
+RJCT = b'<?xml version="1.0"?><Document>STATUS RJCT</Document>'
+
+
+@pytest.mark.parametrize("after", ["delete", "move:/archive"])
+def test_a_reissued_reply_of_the_same_size_is_read_before_disposal(
+    bank, after
+):
+    """Same name, size and mtime, new bytes: saved, never dropped unread."""
+    server, local = bank
+    status = server.root / "outbox" / "STATUS.xml"
+    status.write_bytes(ACCP)
+    os.utime(status, (1_700_000_000, 1_700_000_000))
+    policy = DownloadPolicy(pattern="STATUS.xml", after_fetch=after)
+    _get(server, local, policy)
+    for archived in (server.root / "archive").iterdir():
+        archived.unlink()
+    status.write_bytes(RJCT)
+    os.utime(status, (1_700_000_000, 1_700_000_000))
+    result = _get(server, local, policy)
+    sha8 = hashlib.sha256(RJCT).hexdigest()[:8]
+    assert [f.status for f in result.files] == ["saved"]
+    assert (local / f"STATUS.{sha8}.xml").read_bytes() == RJCT
+    assert (local / "STATUS.xml").read_bytes() == ACCP
+    assert not status.exists()
+
+
+def test_a_server_without_mtimes_never_matches_the_ledger(bank, monkeypatch):
+    """No mtime is no evidence: a keep run reads the file again."""
+    server, local = bank
+    listed = download._list
+
+    def no_mtime(*args):
+        files, skipped = listed(*args)
+        return [(name, size, 0) for name, size, _ in files], skipped
+
+    monkeypatch.setattr(download, "_list", no_mtime)
+    status = server.root / "outbox" / "STATUS.xml"
+    status.write_bytes(ACCP)
+    policy = DownloadPolicy(pattern="STATUS.xml")
+    _get(server, local, policy)
+    status.write_bytes(RJCT)
+    result = _get(server, local, policy)
+    sha8 = hashlib.sha256(RJCT).hexdigest()[:8]
+    assert [f.status for f in result.files] == ["saved"]
+    assert (local / f"STATUS.{sha8}.xml").read_bytes() == RJCT
+
+
+@pytest.mark.parametrize(
+    "name", ["C:x.xml", "a\x9b2J.xml", "a\x85.xml", "a\x1b.xml", "a:b.xml"]
+)
+def test_c1_controls_and_colons_are_unsafe_names(name):
+    """C1 controls reach terminals; a colon escapes --to on Windows."""
+    assert not download._safe_name(name)
+
+
+def test_c1_controls_are_refused_in_the_archive_path():
+    with pytest.raises(ValueError):
+        parse_after_fetch("move:/archive\x9b")
