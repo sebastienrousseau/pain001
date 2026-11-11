@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import shlex
 import shutil
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -131,6 +132,58 @@ def test_template_and_schema_outside_working_directory(
         ],
     )
     assert result.exit_code == 0, result.output
+
+
+def test_outside_template_with_worker_processes(
+    dirs: tuple[Path, Path], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Spawned workers read an outside template and schema too.
+
+    The session keeps TMPDIR and pytest's base directory under the
+    package, an allowed base, so the template goes to a fresh directory
+    under ``/tmp``; the temporary-directory base is then moved inside
+    the working directory (here, and through ``TMPDIR`` for the spawned
+    workers), which leaves the template outside every allowed base.
+    """
+    work, elsewhere = dirs
+    outside = Path(tempfile.mkdtemp(dir="/tmp"))
+    try:
+        shutil.copyfile(BUNDLE, outside / "template.xml")
+        shutil.copyfile(BUNDLE.parent / f"{MTYPE}.xsd", outside / "s.xsd")
+        scratch = work / "tmp"
+        scratch.mkdir()
+        monkeypatch.setenv("TMPDIR", str(scratch))
+        monkeypatch.setattr(tempfile, "tempdir", str(scratch))
+        monkeypatch.setenv("PAIN001_WORKERS", "1")
+        rows = (elsewhere / "payments.csv").read_text().splitlines()
+        (elsewhere / "payments.csv").write_text(
+            "\n".join([rows[0]] + [rows[1]] * 4) + "\n"
+        )
+        result = CliRunner().invoke(
+            cli,
+            [
+                "generate",
+                "-t",
+                MTYPE,
+                "-d",
+                str(elsewhere / "payments.csv"),
+                "-m",
+                str(outside / "template.xml"),
+                "-s",
+                str(outside / "s.xsd"),
+                "-o",
+                "out",
+                "--streaming",
+                "--chunk-size",
+                "2",
+                "--workers",
+                "2",
+            ],
+        )
+    finally:
+        shutil.rmtree(outside)
+    assert result.exit_code == 0, result.output
+    assert len(list((work / "out").glob("*.chunk*.xml"))) == 2
 
 
 @pytest.mark.parametrize("command", ["generate", "validate"])
