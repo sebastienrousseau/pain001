@@ -27,8 +27,13 @@ WEAK_MACS = {"hmac-sha1", "hmac-md5", "hmac-sha1-96", "hmac-md5-96"}
 
 @pytest.fixture(scope="module")
 def short_rsa():
-    """A 1024-bit RSA key, below the floor."""
-    return rsa.generate_private_key(public_exponent=65537, key_size=1024)
+    """A 1024-bit RSA public key, below the floor.
+
+    Built from numbers rather than generated, so the suite never creates
+    a breakable private key; the floor is checked in algorithm_for_key,
+    which signing and verification share and which takes public keys.
+    """
+    return rsa.RSAPublicNumbers(65537, (1 << 1023) | 1).public_key()
 
 
 @pytest.mark.parametrize("requested", [None, "rsa-sha256", "rsa-pss-sha256"])
@@ -40,9 +45,7 @@ def test_short_rsa_key_is_refused(short_rsa, requested):
 def test_short_rsa_key_is_refused_when_verifying(short_rsa):
     algorithm = algorithms.ALGORITHMS["rsa-sha256"]
     with pytest.raises(ValueError, match="2048 bits"):
-        algorithms.verify_bytes(
-            short_rsa.public_key(), algorithm, b"\x00" * 128, b"data"
-        )
+        algorithms.verify_bytes(short_rsa, algorithm, b"\x00" * 128, b"data")
 
 
 def test_2048_bit_rsa_key_is_accepted():
