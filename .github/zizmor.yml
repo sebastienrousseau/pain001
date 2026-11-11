@@ -1,0 +1,15 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# zizmor configuration (.github/workflows/zizmor.yml runs it).
+# Every action is pinned to a full commit SHA, with one exception.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        # The SLSA generic generator is called by its release tag, never
+        # by SHA: slsa-verifier checks the generator's own identity against
+        # that tag, so a SHA reference produces provenance it rejects.
+        # tests/test_code_scanning_regressions.py allows this one
+        # reference and nothing else from the repository.
+        "slsa-framework/slsa-github-generator/*": ref-pin
+        "*": hash-pin

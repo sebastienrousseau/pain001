@@ -1,0 +1,4 @@
+# GitHub Actions static analysis for the zizmor workflow
+# (.github/workflows/zizmor.yml). Compiled with hashes:
+#   pip-compile --allow-unsafe --generate-hashes --output-file=zizmor.txt --strip-extras zizmor.in
+zizmor==1.32.0

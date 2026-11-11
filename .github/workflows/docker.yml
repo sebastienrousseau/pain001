@@ -49,6 +49,8 @@ jobs:
       id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up QEMU (for multi-arch builds)
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
@@ -92,9 +94,13 @@ jobs:
 
       - name: Smoke-test the published image
         if: github.event_name != 'pull_request'
+        # The tag reaches the script through the environment, not a
+        # template expansion inside it (zizmor template-injection).
+        env:
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
           set -euo pipefail
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_VERSION}"
           docker pull "$IMAGE"
           # Acceptance criterion 1: pain001 --version matches package version.
           VERSION_OUT=$(docker run --rm "$IMAGE" --version 2>&1 || true)

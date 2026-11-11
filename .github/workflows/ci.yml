@@ -27,6 +27,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
@@ -44,6 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Verify security exception deadlines
         run: python3 scripts/check_security_exceptions.py
       - name: ❯ Verify Version Sync
@@ -100,7 +104,9 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          cache: "poetry"
+          # This job publishes nothing; the release is built by the
+          # uncached `build` job, so a cache here cannot reach it.
+          cache: "poetry" # zizmor: ignore[cache-poisoning]
       - name: Install pain001 with every extra
         run: poetry install --no-interaction --all-extras
       - name: Install signxml (hash-pinned, dependencies from the lock)
@@ -122,12 +128,17 @@ jobs:
     name: 🛡️ Production Tollgates
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: ❯ Install Poetry
         run: pipx install poetry==2.4.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          cache: "poetry" # ✅ Native Caching (Faster/Cleaner)
+          # ✅ Native Caching (Faster/Cleaner). This job publishes
+          # nothing; the release is built by the uncached `build` job,
+          # so a cache here cannot reach it.
+          cache: "poetry" # zizmor: ignore[cache-poisoning]
 
       - name: ❯ Install Dependencies
         run: poetry install --no-interaction --all-extras
@@ -149,12 +160,16 @@ jobs:
     name: 🧬 Quality Gate (Py ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: ❯ Install Poetry
         run: pipx install poetry==2.4.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
+          # This job publishes nothing; the release is built by the
+          # uncached `build` job, so a cache here cannot reach it.
+          cache: "poetry" # zizmor: ignore[cache-poisoning]
 
       - name: ❯ Install Dependencies
         run: poetry install --no-interaction --all-extras
@@ -380,7 +395,10 @@ jobs:
         with:
           subject-path: "dist/*"
 
-      - name: ❯ Create GitHub Release
+      # Kept over `gh release create`: on a re-run of this job the action
+      # updates the existing release and replaces its files, where
+      # `gh release create` fails because the release already exists.
+      - name: ❯ Create GitHub Release # zizmor: ignore[superfluous-actions]
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           # The family's release title is "<project> <version>", never the

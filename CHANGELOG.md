@@ -63,6 +63,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   checks out nothing and builds nothing: it verifies the files against
   the build job's hashes, attests them, creates the GitHub release and
   uploads to PyPI. The SLSA provenance subjects now come from `build`.
+- zizmor 1.32.0 audits the GitHub Actions on every push and pull
+  request and weekly (`.github/workflows/zizmor.yml`, hash-pinned in
+  `.github/requirements/zizmor.txt`), fails on any finding and uploads
+  SARIF to code scanning. Its findings are fixed: every checkout sets
+  `persist-credentials: false`, the SDK workflow no longer caches pip or
+  npm on tag runs, the Docker smoke test reads the image tag from the
+  environment instead of a template expansion, the CodeQL, Scorecard
+  and setup-java pins carry their real version comments, and Dependabot
+  waits seven days before proposing a version update. Five exceptions
+  are recorded where they apply, each with its reason: the SLSA
+  generator's tag reference (`.github/zizmor.yml`), the Poetry caches in
+  the three CI jobs that publish nothing, `action-gh-release` (it updates
+  an existing release on a re-run), Suite Consistency's `workflow_run`
+  trigger, and its `./` action reference, which actionlint does not yet
+  accept in the `$/` form.
 
 ### Fixed
 
