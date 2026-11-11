@@ -27,6 +27,8 @@ Data validation failed
   Code              Problem
   ================  ===============================================
   ``P001-E001``     The input has no payment rows.
+  ``P001-E002``     A CSV row has more values than the header has
+                    columns (a stray comma or an unquoted value).
   ``P001-E010``     A required column is absent or empty.
   ``P001-E011``     Not a whole number.
   ``P001-E012``     Not a decimal number (an amount).

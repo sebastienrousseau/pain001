@@ -79,6 +79,8 @@ class IssueCode:
 
     #: The input holds no payment rows.
     EMPTY_INPUT = "P001-E001"
+    #: A CSV row holds more values than its header has columns.
+    EXTRA_VALUES = "P001-E002"
     #: A required column is absent or empty.
     MISSING_VALUE = "P001-E010"
     #: A column that takes a whole number holds something else.

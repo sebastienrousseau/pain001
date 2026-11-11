@@ -180,6 +180,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- A CSV row with more values than the header has columns crashed
+  validation with `AttributeError` (REST answered 500). It is now a
+  row issue, `P001-E002`, naming the line: `pain001 validate` exits 1,
+  REST answers 400 and `pain001.validate` reports it.
 - REST `POST /api/v1/validate` reported `invalid_rows: 0` beside
   `valid_rows: 3` of 4: the model's derived count was skipped when the
   field was left out. It is now always `total_rows - valid_rows`.
