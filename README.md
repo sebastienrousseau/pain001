@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src=".github/demo.gif" alt="pain001 demo: write the starter payments.csv, validate it, generate an XSD-validated pain.001.001.03 file and show its group header" width="100%" />
+  <img src="https://raw.githubusercontent.com/sebastienrousseau/pain001/main/.github/demo.gif" alt="pain001 demo: write the starter payments.csv, validate it, generate an XSD-validated pain.001.001.03 file and show its group header" width="100%" />
 </p>
 
 ---

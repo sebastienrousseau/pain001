@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src=".github/demo.gif" alt="{{DEMO_ALT_TEXT}}" width="100%" />
+  <img src="https://raw.githubusercontent.com/sebastienrousseau/pain001/main/.github/demo.gif" alt="{{DEMO_ALT_TEXT}}" width="100%" />
 </p>
 
 ---
