@@ -275,7 +275,7 @@ def process_files(
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
 
     Returns:
         The path the generated XML file was written to.
@@ -388,7 +388,7 @@ def process_files_streaming(
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
         workers: Processes building chunks at once; when omitted,
             ``PAIN001_WORKERS`` (set by ``--workers``), else 1, which
             builds them in this process. The arguments must pickle.

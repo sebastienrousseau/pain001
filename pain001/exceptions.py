@@ -93,6 +93,9 @@ class IssueCode:
     INVALID_IBAN = "P001-E020"
     #: A BIC column is not an ISO 9362 BIC.
     INVALID_BIC = "P001-E021"
+    #: An LEI column is not an ISO 17442 LEI (length, characters or
+    #: MOD 97-10 check digits).
+    INVALID_LEI = "P001-E022"
 
 
 @dataclass(frozen=True)

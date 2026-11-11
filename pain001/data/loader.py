@@ -147,8 +147,9 @@ def load_payment_data(
         data_source: File path to CSV, SQLite, JSON, JSONL, Parquet or a
             registered plugin format; a list of payment dictionaries; or
             one payment transaction dictionary.
-        identifier_checks: Check every IBAN (mod-97, country length)
-            and BIC (ISO 9362) column; False skips those checks.
+        identifier_checks: Check every IBAN (mod-97, country length),
+            BIC (ISO 9362) and LEI (ISO 17442) column; False skips
+            those checks.
 
     Returns:
         List[Dict[str, Any]]: List of payment data dictionaries

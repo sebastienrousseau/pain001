@@ -38,6 +38,14 @@ pain001.validation.iban\_validator module
    :show-inheritance:
    :undoc-members:
 
+pain001.validation.lei\_validator module
+----------------------------------------
+
+.. automodule:: pain001.validation.lei_validator
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.validation.policy module
 --------------------------------
 

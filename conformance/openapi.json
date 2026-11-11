@@ -270,7 +270,7 @@
           },
           "identifier_checks": {
             "default": true,
-            "description": "Check every IBAN (mod-97, country length) and BIC (ISO 9362) column; false skips those checks",
+            "description": "Check every IBAN (mod-97, country length), BIC (ISO 9362) and LEI (ISO 17442) column; false skips those checks",
             "title": "Identifier Checks",
             "type": "boolean"
           },
@@ -793,7 +793,7 @@
           },
           "identifier_checks": {
             "default": true,
-            "description": "Check every IBAN (mod-97, country length) and BIC (ISO 9362) column; false skips those checks",
+            "description": "Check every IBAN (mod-97, country length), BIC (ISO 9362) and LEI (ISO 17442) column; false skips those checks",
             "title": "Identifier Checks",
             "type": "boolean"
           },

@@ -39,8 +39,9 @@ Parquet input. Installed plugins can add formats such as XLSX. See
 :doc:`plugins` for privileges, discovery and disable controls, and
 :doc:`input-columns` for schema-derived field mappings.
 
-Every load checks each IBAN (length for its country and mod-97 check digits)
-and BIC (ISO 9362) column, whatever the scheme. A failure names the row
+Every load checks each IBAN (length for its country and mod-97 check digits),
+BIC (ISO 9362) and LEI (``*_lei``: ISO 17442 check digits) column, whatever
+the scheme. A failure names the row
 (counted from 0) and the column, never the identifier. ``--no-identifier-checks``
 on ``generate`` and ``validate``, ``identifier_checks=False`` in
 ``process_files``, ``process_files_streaming``, ``load_payment_data`` and

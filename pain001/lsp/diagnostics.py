@@ -18,12 +18,13 @@ This module has no LSP or editor dependencies, so it can be unit-tested in
 isolation and reused anywhere (the CLI, CI linters, the LSP server). Given
 the raw text of a CSV file it returns a list of :class:`Diagnostic` objects
 locating problems that would make the file fail ISO 20022 generation —
-missing required columns and malformed IBAN/BIC/currency cells — by reusing
+missing required columns and malformed IBAN/BIC/LEI/currency cells — by reusing
 the same validators the generator uses.
 """
 
 import csv
 import io
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import IntEnum
 
@@ -32,6 +33,7 @@ from pain001.schemas.required_columns import required_columns
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.charset import find_invalid_characters
 from pain001.validation.iban_validator import validate_iban_safe
+from pain001.validation.lei_validator import lei_error
 
 
 class Severity(IntEnum):
@@ -129,6 +131,75 @@ def _span_for(
     return spans[column_index]
 
 
+def _iban_problem(value: str) -> str | None:
+    """Return the IBAN diagnostic message, or ``None`` when valid."""
+    return None if validate_iban_safe(value) else f"Invalid IBAN: {value!r}"
+
+
+def _bic_problem(value: str) -> str | None:
+    """Return the BIC diagnostic message, or ``None`` when valid."""
+    return None if validate_bic_safe(value) else f"Invalid BIC: {value!r}"
+
+
+def _lei_problem(value: str) -> str | None:
+    """Return the LEI diagnostic message, or ``None`` when valid."""
+    reason = lei_error(value)
+    return None if reason is None else f"Invalid LEI: {value!r} ({reason})"
+
+
+def _currency_problem(value: str) -> str | None:
+    """Return the currency diagnostic message, or ``None`` when valid."""
+    if value.isalpha() and len(value) == 3:
+        return None
+    return f"Invalid ISO 4217 currency code: {value!r}"
+
+
+#: Column kind to (cell check, diagnostic code).
+_CELL_CHECKS: dict[str, tuple[Callable[[str], str | None], str]] = {
+    "iban": (_iban_problem, "invalid-iban"),
+    "bic": (_bic_problem, "invalid-bic"),
+    "lei": (_lei_problem, "invalid-lei"),
+    "currency": (_currency_problem, "invalid-currency"),
+}
+
+
+def _column_kind(name: str) -> str | None:
+    """Classify a header cell by name convention.
+
+    Args:
+        name: The stripped header cell.
+
+    Returns:
+        ``iban``, ``bic``, ``lei`` or ``currency``, else ``None``.
+    """
+    upper = name.upper()
+    if upper.endswith("IBAN"):
+        return "iban"
+    if upper.endswith("BIC"):
+        return "bic"
+    if upper == "LEI" or upper.endswith("_LEI"):
+        return "lei"
+    return "currency" if upper in ("CURRENCY", "PAYMENT_CURRENCY") else None
+
+
+def _missing_column_diagnostics(
+    header: list[str], header_line: str, message_type: str
+) -> list[Diagnostic]:
+    """Report each absent required column on the header line."""
+    missing = sorted(_required_columns(message_type) - set(header))
+    return [
+        Diagnostic(
+            line=0,
+            col_start=0,
+            col_end=len(header_line),
+            severity=Severity.ERROR,
+            message=f"Missing required column: {name!r}",
+            code="missing-column",
+        )
+        for name in missing
+    ]
+
+
 def diagnostics_for_csv(
     text: str, message_type: str = "pain.001.001.03"
 ) -> list[Diagnostic]:
@@ -146,122 +217,73 @@ def diagnostics_for_csv(
     if not lines or not lines[0].strip():
         return []
 
-    reader = csv.reader(io.StringIO(text))
-    rows = list(reader)
+    rows = list(csv.reader(io.StringIO(text)))
     header = [cell.strip() for cell in rows[0]]
-    diagnostics: list[Diagnostic] = []
-
-    # 1. Missing required columns (reported on the header line).
-    present = set(header)
-    missing = sorted(_required_columns(message_type) - present)
-    for name in missing:
-        diagnostics.append(
-            Diagnostic(
-                line=0,
-                col_start=0,
-                col_end=len(lines[0]),
-                severity=Severity.ERROR,
-                message=f"Missing required column: {name!r}",
-                code="missing-column",
-            )
-        )
-
-    # Column classification by name convention.
-    iban_cols = {
-        i for i, name in enumerate(header) if name.upper().endswith("IBAN")
+    diagnostics = _missing_column_diagnostics(header, lines[0], message_type)
+    kinds = {
+        index: kind
+        for index, name in enumerate(header)
+        if (kind := _column_kind(name)) is not None
     }
-    bic_cols = {
-        i for i, name in enumerate(header) if name.upper().endswith("BIC")
-    }
-    currency_cols = {
-        i
-        for i, name in enumerate(header)
-        if name.lower() in ("currency", "payment_currency")
-    }
-
-    # 2. Per-cell validation for each data row.
     for row_index, row in enumerate(rows[1:], start=1):
-        if not any(cell.strip() for cell in row):
-            continue
-        if row_index < len(lines):
-            line_text = lines[row_index]
-        else:  # pragma: no cover - rows never exceed text lines
-            line_text = ""
-        # Once per row, not once per cell: this is the whole fix.
-        spans = _cell_spans(line_text)
-        line_len = len(line_text)
-        for col, value in enumerate(row):
-            value = value.strip()
-            if not value:
-                continue
-            diag = _validate_cell(
-                row_index,
-                col,
-                value,
-                spans,
-                line_len,
-                iban_cols,
-                bic_cols,
-                currency_cols,
-            )
-            if diag is not None:
-                diagnostics.append(diag)
+        if any(cell.strip() for cell in row):
+            diagnostics.extend(_row_diagnostics(row_index, row, lines, kinds))
     return diagnostics
 
 
+def _row_diagnostics(
+    row_index: int, row: list[str], lines: list[str], kinds: dict[int, str]
+) -> list[Diagnostic]:
+    """Validate every non-empty cell of one data row.
+
+    Args:
+        row_index: Zero-based line index of the row.
+        row: The parsed cells.
+        lines: Every line of the document.
+        kinds: Column index to column kind, from :func:`_column_kind`.
+
+    Returns:
+        One diagnostic per malformed cell.
+    """
+    if row_index < len(lines):
+        line_text = lines[row_index]
+    else:  # pragma: no cover - rows never exceed text lines
+        line_text = ""
+    # Once per row, not once per cell: this is the whole fix.
+    spans = _cell_spans(line_text)
+    found: list[Diagnostic] = []
+    for col, raw in enumerate(row):
+        value = raw.strip()
+        if not value:
+            continue
+        start, end = _span_for(spans, col, len(line_text))
+        diag = _validate_cell(row_index, start, end, value, kinds.get(col))
+        if diag is not None:
+            found.append(diag)
+    return found
+
+
 def _validate_cell(
-    line: int,
-    col: int,
-    value: str,
-    spans: list[tuple[int, int]],
-    line_len: int,
-    iban_cols: set[int],
-    bic_cols: set[int],
-    currency_cols: set[int],
+    line: int, start: int, end: int, value: str, kind: str | None
 ) -> Diagnostic | None:
     """Validate a single cell and return a diagnostic if it is malformed.
 
     Args:
         line: Zero-based line index of the cell.
-        col: Zero-based column index of the cell.
+        start: Zero-based start character of the cell.
+        end: Zero-based end character (exclusive) of the cell.
         value: The (stripped, non-empty) cell value.
-        spans: Precomputed cell spans for the line.
-        line_len: Length of the line, for the out-of-range fallback.
-        iban_cols: Column indices holding IBANs.
-        bic_cols: Column indices holding BICs.
-        currency_cols: Column indices holding currency codes.
+        kind: The column's kind (``iban``, ``bic``, ``lei``,
+            ``currency``), or ``None`` for any other column.
 
     Returns:
         A :class:`Diagnostic` describing the problem, or ``None`` if valid.
     """
-    start, end = _span_for(spans, col, line_len)
-    if col in iban_cols and not validate_iban_safe(value):
-        return Diagnostic(
-            line,
-            start,
-            end,
-            Severity.ERROR,
-            f"Invalid IBAN: {value!r}",
-            "invalid-iban",
-        )
-    if col in bic_cols and not validate_bic_safe(value):
-        return Diagnostic(
-            line,
-            start,
-            end,
-            Severity.ERROR,
-            f"Invalid BIC: {value!r}",
-            "invalid-bic",
-        )
-    if col in currency_cols and not (value.isalpha() and len(value) == 3):
-        return Diagnostic(
-            line,
-            start,
-            end,
-            Severity.ERROR,
-            f"Invalid ISO 4217 currency code: {value!r}",
-            "invalid-currency",
-        )
+    if kind is not None:
+        check, code = _CELL_CHECKS[kind]
+        message = check(value)
+        if message is not None:
+            return Diagnostic(line, start, end, Severity.ERROR, message, code)
     invalid_chars = find_invalid_characters(value)
     if invalid_chars:
         return Diagnostic(

@@ -108,7 +108,7 @@
     "lines": 76
   },
   "pain001/corpus/identifiers.py": {
-    "file_lines": 552
+    "file_lines": 551
   },
   "pain001/corpus/inventory.py": {
     "file_lines": 518
@@ -191,14 +191,6 @@
   "pain001/logging_schema/redaction.py::_redact_pii_from_dict": {
     "cognitive": 24,
     "cyclomatic": 15
-  },
-  "pain001/lsp/diagnostics.py::_validate_cell": {
-    "lines": 65
-  },
-  "pain001/lsp/diagnostics.py::diagnostics_for_csv": {
-    "cognitive": 24,
-    "cyclomatic": 18,
-    "lines": 78
   },
   "pain001/migration/version_mapper.py::VersionMapper.migrate_rows": {
     "cognitive": 21

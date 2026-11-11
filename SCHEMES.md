@@ -12,8 +12,9 @@ per-row violations on top of XSD validation.
 
 IBAN and BIC validity no longer waits for a profile. Since 0.0.81 every
 load checks each IBAN (country length and mod-97 check digits) and BIC
-(ISO 9362) column the bundled templates render, `--scheme` or not, and
-stops with the row and column of each failure. `--no-identifier-checks`
+(ISO 9362) column the bundled templates render, and each LEI column
+(`*_lei`: twenty characters, ISO 17442 MOD 97-10 check digits),
+`--scheme` or not, and stops with the row and column of each failure. `--no-identifier-checks`
 (CLI), `identifier_checks=False` (Python) or `"identifier_checks": false`
 (REST) turns that off. The profiles below still report their own IBAN and
 BIC rules (`SEPA-DBTR-IBAN`, `XB-BIC` ...) when the checks are off.

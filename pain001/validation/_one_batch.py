@@ -37,7 +37,7 @@ def load_batch(
     Args:
         data_file_path: Path to the payment data.
         message_type: The target message type.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
 
     Returns:
         The loaded rows.

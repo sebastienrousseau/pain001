@@ -21,7 +21,12 @@ import pytest
 
 from pain001.lsp.diagnostics import diagnostics_for_csv
 
-_BLOCKING_CODES = {"invalid-iban", "invalid-bic", "invalid-currency"}
+_BLOCKING_CODES = {
+    "invalid-iban",
+    "invalid-bic",
+    "invalid-lei",
+    "invalid-currency",
+}
 
 # Every sample CSV a user might copy or that the docs/tests rely on.
 _SAMPLE_CSVS = sorted(

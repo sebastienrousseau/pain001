@@ -77,7 +77,8 @@ class ValidationConfig:
         xsd_schema_file_path: Path to XSD schema for validation.
         data_file_path: Path to CSV or SQLite data file.
         pre_validate: Whether to check every IBAN (mod-97, country
-            length) and BIC (ISO 9362) column while loading the data.
+            length), BIC (ISO 9362) and LEI (ISO 17442) column while
+            loading the data.
     """
 
     xml_message_type: str
@@ -349,7 +350,7 @@ class ValidationService:
 
         Args:
             data_path: Path to CSV or SQLite data file.
-            identifier_checks: If False, skip the IBAN and BIC checks.
+            identifier_checks: If False, skip the IBAN, BIC and LEI checks.
 
         Returns:
             ValidationResult indicating success or failure.

@@ -121,13 +121,15 @@ Output (success; the record count is the number of rows in your file):
 ✓ All validations passed (--dry-run: no XML generated)
 ```
 
-Every IBAN and BIC column is checked on the way in, with or without a
-scheme: an IBAN must have the right length for its country and valid
-mod-97 check digits, and a BIC must be ISO 9362. Output (failure, here a
-debtor IBAN with a broken check digit):
+Every IBAN, BIC and LEI column is checked on the way in, with or
+without a scheme: an IBAN must have the right length for its country and
+valid mod-97 check digits, a BIC must be ISO 9362, and an LEI (any
+column named `*_lei`, such as `debtor_lei`) must be twenty characters
+with valid ISO 17442 check digits. Output (failure, here a debtor IBAN
+with a broken check digit):
 
 ```text
-✗ Data validation failed: Invalid account identifiers (1):
+✗ Data validation failed: Invalid identifiers (1):
   line 2, column debtor_account_IBAN: not a valid IBAN (IBAN checksum validation
 failed (mod 97 = 2, expected 1)) (P001-E020)
 Fix the values, or skip these checks with --no-identifier-checks

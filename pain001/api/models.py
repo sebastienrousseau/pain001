@@ -94,8 +94,8 @@ class ValidationRequest(BaseModel):  # pylint: disable=too-few-public-methods
     )
     identifier_checks: bool = Field(
         default=True,
-        description="Check every IBAN (mod-97, country length) and BIC "
-        "(ISO 9362) column; false skips those checks",
+        description="Check every IBAN (mod-97, country length), BIC "
+        "(ISO 9362) and LEI (ISO 17442) column; false skips those checks",
     )
 
     model_config = ConfigDict(
@@ -149,8 +149,8 @@ class GenerateXMLRequest(BaseModel):
     )
     identifier_checks: bool = Field(
         default=True,
-        description="Check every IBAN (mod-97, country length) and BIC "
-        "(ISO 9362) column; false skips those checks",
+        description="Check every IBAN (mod-97, country length), BIC "
+        "(ISO 9362) and LEI (ISO 17442) column; false skips those checks",
     )
 
     model_config = ConfigDict(

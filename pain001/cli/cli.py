@@ -165,7 +165,7 @@ def _validate_payment_data(
         explain: If True, print remediation hints for scheme violations.
         scheme_format: Output format for scheme results ('text' or 'json').
         rules: Optional private YAML policy file.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
 
     Returns:
         Number of valid payment records.
@@ -257,7 +257,7 @@ def _generate_xml_files(
         xml_sign_cert: Path to X.509 certificate PEM file for KeyInfo.
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
         schematron: Optional Schematron rulebook preset or path.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
     """
     console.print("[cyan]→ Generating XML payment files...[/cyan]")
 
@@ -340,7 +340,7 @@ def _generate_xml_files(
 _identifier_checks_option = click.option(
     "--identifier-checks/--no-identifier-checks",
     default=True,
-    help="Check each IBAN (mod-97) and BIC (ISO 9362); on by default.",
+    help="Check each IBAN, BIC and LEI (check digits); on by default.",
 )
 
 
@@ -618,7 +618,7 @@ def main(
         xml_sign_passphrase_env: Env var holding passphrase for xml_sign_key.
         schematron: Optional Schematron rulebook name ('sepa', 'fednow', 'cbpr')
             or filesystem path to a .sch rulebook file.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
         log_format: Log record format on stderr ('text' or 'json').
 
     Exits:
@@ -969,7 +969,7 @@ def validate_cmd(
         verbose: If True, enable detailed logging output.
         rules: Optional path to private YAML CEL policy rules.
         schematron: Optional Schematron rulebook preset or path.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
         log_format: Log record format on stderr ('text' or 'json').
     """
     ctx.invoke(

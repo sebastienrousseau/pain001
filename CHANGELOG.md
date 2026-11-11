@@ -9,6 +9,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- LEI checks on every load: each column named `lei` or ending in
+  `_lei` (`initiator_lei` and `debtor_lei` render `OrgId/LEI`; the row
+  projection of a document adds the creditor, ultimate parties and
+  agents) must be twenty characters, `[A-Z0-9]{18}[0-9]{2}`, with ISO
+  17442 MOD 97-10 check digits. A failure is a `RowIssue` with the new
+  code `P001-E022`, beside the IBAN and BIC checks and under the same
+  `--no-identifier-checks` opt-out. `pain001.validation.lei_validator`
+  (`validate_lei`, `lei_error`, `lei_check_digits`) is the one
+  implementation; the corpus generator's LEI helpers now call it. The
+  editor diagnostics report `invalid-lei` the same way, and the
+  conformance kit gains `validate-bad-lei`.
+
+### Changed
+
+- The identifier-check error now opens `Invalid identifiers (N)`
+  instead of `Invalid account identifiers (N)`, since an LEI is not an
+  account identifier. Issue codes are unchanged.
+
 ## [0.0.86] - 2026-11-11
 
 ### Added
