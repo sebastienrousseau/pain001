@@ -29,8 +29,9 @@ CLI, REST and MCP surfaces through the plugin registry unchanged.
 
 Rules a public document states are errors; rules the plan marks as
 typical bank practice or an assumption are warnings and say so.
-:class:`PurposeMandate` adds the five country purpose-code mandates
-(AE, QA, MY, GB, HK) the plan names, as their own profiles.
+The five country purpose-code mandates (AE, QA, MY, GB, HK) the plan
+names are their own profiles, :class:`PurposeMandate`, defined in
+:mod:`pain001.validation.purpose_mandates` and registered here.
 """
 
 from __future__ import annotations
@@ -48,6 +49,14 @@ from pain001.validation._scheme_types import (
 )
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.iban_validator import validate_iban_safe
+from pain001.validation.purpose_mandates import (
+    PURPOSE_MANDATES,
+    PurposeMandate,
+)
+from pain001.validation.purpose_mandates import (
+    purpose_known as _purpose_known,
+)
+from pain001.validation.purpose_mandates import row_text as _text
 
 #: Nacha Standard Entry Class codes a pain.001 may carry in LclInstrm/Cd.
 SEC_CODES: frozenset[str] = frozenset(
@@ -212,15 +221,6 @@ def _is_qr_iban(iban: str) -> bool:
     if compact[:2] not in ("CH", "LI") or len(compact) < 9:
         return False
     return 30000 <= int(compact[4:9]) <= 31999
-
-
-def _text(row: dict[str, Any], *keys: str) -> str | None:
-    """The first non-blank value among ``keys``, stripped, else ``None``."""
-    for key in keys:
-        value = row.get(key)
-        if value is not None and str(value).strip():
-            return str(value).strip()
-    return None
 
 
 # --- the engine ----------------------------------------------------------------
@@ -885,104 +885,6 @@ class RailProfile(ValidationProfile):
                 )
 
 
-def _purpose_known(code: str) -> bool:
-    """True when ``code`` is in the vendored ISO external purpose list."""
-    from pain001.corpus.rules.external_codes import is_valid  # noqa: PLC0415
-
-    return is_valid("ExternalPurpose1Code", code)
-
-
-class PurposeMandate(ValidationProfile):
-    """A country's purpose-code mandate, as its own profile.
-
-    Args:
-        country: ISO 3166 alpha-2 code.
-        title: Human title.
-        where: ``purpose`` (Purp/Cd or Prtry) or ``regulatory``
-            (RgltryRptg/Dtls), where the country expects the code.
-        pattern: Regex the code must match, if the country prescribes one.
-        currency: Only when the payment currency is this (HK RMB).
-        sources: The public documents the mandate comes from.
-    """
-
-    def __init__(
-        self,
-        country: str,
-        title: str,
-        where: str,
-        pattern: str | None = None,
-        currency: str | None = None,
-        sources: tuple[str, ...] = (),
-    ) -> None:
-        self.country = country
-        self.title = title
-        self.where = where
-        self.pattern = re.compile(pattern) if pattern else None
-        self.currency = currency
-        self.sources = sources
-        self.name = f"purpose-mandate-{country.lower()}"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the country's purpose mandate.
-
-        Args:
-            data: Loaded payment rows.
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        rule = f"PURP-{self.country}"
-        for index, row in enumerate(data):
-            if (
-                self.currency
-                and _text(row, "payment_currency", "currency") != self.currency
-            ):
-                continue
-            if self.where == "regulatory":
-                code = _text(
-                    row,
-                    "regulatory_reporting_code",
-                    "regulatory_reporting_info",
-                )
-                field_name = "regulatory_reporting_code"
-            else:
-                code = _text(row, "purpose_code", "purpose_proprietary")
-                field_name = "purpose_code"
-            if not code:
-                result.violations.append(
-                    SchemeViolation(
-                        rule,
-                        f"{self.title}: a purpose code is mandatory",
-                        index,
-                        field_name,
-                    )
-                )
-            elif self.pattern is not None and not self.pattern.fullmatch(code):
-                result.violations.append(
-                    SchemeViolation(
-                        rule,
-                        f"{self.title}: purpose code {code} does not match {self.pattern.pattern}",
-                        index,
-                        field_name,
-                    )
-                )
-            elif (
-                self.where == "purpose"
-                and _text(row, "purpose_code")
-                and not _purpose_known(str(_text(row, "purpose_code")))
-            ):
-                result.violations.append(
-                    SchemeViolation(
-                        rule,
-                        f"{self.title}: purpose code {code} is not in the ISO external purpose list",
-                        index,
-                        field_name,
-                    )
-                )
-        return result
-
-
 # --- the rails -----------------------------------------------------------------
 
 _SEPA_COUNTRIES: tuple[str, ...] = (
@@ -1264,44 +1166,6 @@ RAILS: tuple[Rail, ...] = (
         address_required=True,
         uetr_required=True,
         charge_bearers=("DEBT", "CRED", "SHAR"),
-    ),
-)
-
-PURPOSE_MANDATES: tuple[PurposeMandate, ...] = (
-    PurposeMandate(
-        "AE",
-        "UAE CBUAE purpose of payment",
-        "regulatory",
-        r"(/(BENEFRES|ORDERRES)/AE//)?[A-Z]{3}",
-        sources=("CBUAE technical notes on transaction codes (AUX700)",),
-    ),
-    PurposeMandate(
-        "QA",
-        "Qatar QCB purpose of payment",
-        "purpose",
-        sources=("QCB retail payment pages",),
-    ),
-    PurposeMandate(
-        "MY",
-        "Malaysia BNM purpose code",
-        "purpose",
-        sources=("BNM purpose-code lists",),
-    ),
-    PurposeMandate(
-        "GB",
-        "UK CHAPS purpose code",
-        "purpose",
-        sources=("Bank of England ISO 20022 enhanced data in CHAPS",),
-    ),
-    PurposeMandate(
-        "HK",
-        "Hong Kong RMB cross-border purpose code",
-        "regulatory",
-        currency="CNY",
-        sources=(
-            "A Hong Kong bank's public RMB purpose-code notices",
-            "A US bank's public RMB quick guide",
-        ),
     ),
 )
 

@@ -46,6 +46,14 @@ pain001.validation.policy module
    :show-inheritance:
    :undoc-members:
 
+pain001.validation.purpose\_mandates module
+-------------------------------------------
+
+.. automodule:: pain001.validation.purpose_mandates
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.validation.rails module
 -------------------------------
 
