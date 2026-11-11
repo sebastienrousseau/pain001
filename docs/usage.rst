@@ -31,6 +31,52 @@ Use generated help rather than a duplicate flag table:
    pain001 versions
    pain001 inspect pain.001.001.03
 
+.. _machine-output:
+
+Machine-readable output
+=======================
+
+Standard output carries a command's result and nothing else. Progress
+lines, warnings, errors and the banner go to standard error, and the
+banner is printed only when standard output is a terminal. Every command
+that returns a result takes ``--format text|json``; ``check`` also takes
+``sarif``. ``serve`` and ``mcp`` run servers and have no result.
+
+.. code-block:: bash
+
+   pain001 validate -t pain.001.001.03 -d payments.csv --format json | jq .
+   pain001 versions --format json | jq '.[]'
+   pain001 status replies/*.xml --format json | jq '.[].rejected'
+
+``generate`` and ``validate`` write one object, also when they fail,
+with the same exit code as in text mode:
+
+.. code-block:: json
+
+   {"ok": true, "message_type": "pain.001.001.03", "data_file": "payments.csv",
+    "records": 4, "dry_run": true, "output_dir": null, "files": [],
+    "scheme": null, "schematron": null, "error": null}
+
+``files`` lists the XML written; ``scheme`` and ``schematron`` hold those
+results when asked for; ``error`` says why ``ok`` is false. ``records`` is
+set when the data was validated (``validate``, ``--dry-run``, or with
+``--scheme`` or ``--rules``).
+
+``-q``/``--quiet`` on ``generate``, ``validate`` and ``init`` drops the
+banner and progress lines; errors still print. With ``--log-format json``
+(or ``PAIN001_LOG_FORMAT=json``) the progress lines are left out as well,
+so standard error is one JSON log record per line.
+
+``--emit-metrics`` writes each metric event to standard output as one
+JSON line (``metric``, ``timestamp``, ``attributes``, ``trace_context``).
+With ``--format json`` the result object is the last line, so the whole
+stream is newline-delimited JSON.
+
+``--json`` on ``versions``, ``inspect`` and ``plugins list``, and
+``--scheme-format json`` on ``generate`` and ``validate``, still work in
+0.0.87 and print a deprecation warning on standard error; they are
+removed in 0.0.88. Use ``--format json``.
+
 Inputs and validation
 =====================
 

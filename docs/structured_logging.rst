@@ -2,7 +2,7 @@
 Structured Logging
 ===================
 
-Pain001 uses structured logging to provide consistent, machine-parsable log output. Events emitted through ``log_event`` are formatted as JSON once a handler with ``JSONFormatter`` is installed (``pain001.logging_schema.configure_json_logging()`` does this). The ``generate`` and ``validate`` commands attach a stderr handler for the run: plain text by default, ``JSONFormatter`` with ``--log-format json`` or ``PAIN001_LOG_FORMAT=json``; the level is WARNING, DEBUG with ``-v``, or ``PAIN001_LOG_LEVEL``, and ``PAIN001_LOG_FILE`` adds a file. The CLI's own progress output on stdout stays human-readable text.
+Pain001 uses structured logging to provide consistent, machine-parsable log output. Events emitted through ``log_event`` are formatted as JSON once a handler with ``JSONFormatter`` is installed (``pain001.logging_schema.configure_json_logging()`` does this). The ``generate`` and ``validate`` commands attach a stderr handler for the run: plain text by default, ``JSONFormatter`` with ``--log-format json`` or ``PAIN001_LOG_FORMAT=json``; the level is WARNING, DEBUG with ``-v``, or ``PAIN001_LOG_LEVEL``, and ``PAIN001_LOG_FILE`` adds a file. The CLI's own progress lines are human-readable text on stderr too, and are left out when the log format is JSON so stderr stays one JSON record per line; the command's result is on stdout (see :ref:`machine-output`).
 
 Overview
 ========

@@ -37,7 +37,7 @@ def test_plugins_list_json_emits_each_built_in(runner) -> None:
     """The `--json` flag emits a structured array."""
     result = runner.invoke(cli, ["plugins", "list", "--json"])
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.stdout)
     names = {entry["name"] for entry in payload}
     assert {"csv", "json", "jsonl", "sqlite", "parquet"}.issubset(names)
     csv_entry = next(e for e in payload if e["name"] == "csv")
@@ -52,7 +52,7 @@ def test_plugins_list_kind_filter(runner) -> None:
         cli, ["plugins", "list", "--kind", "loader", "--json"]
     )
     assert result.exit_code == 0, result.output
-    payload = json.loads(result.output)
+    payload = json.loads(result.stdout)
     assert payload  # at least one loader
     assert all(entry["kind"] == "loader" for entry in payload)
 
@@ -93,7 +93,7 @@ def test_plugins_list_reflects_disabled_env(runner, monkeypatch) -> None:
     global_registry.reset()  # re-read env on the next lookup
     try:
         result = runner.invoke(cli, ["plugins", "list", "--json"])
-        names = {entry["name"] for entry in json.loads(result.output)}
+        names = {entry["name"] for entry in json.loads(result.stdout)}
         assert "parquet" not in names
         assert "csv" in names  # other built-ins unaffected
     finally:

@@ -11,6 +11,7 @@ import os
 import click
 from rich.console import Console
 
+from pain001.cli._format import Failure
 from pain001.cli._output import esc
 from pain001.constants import valid_xml_types
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
@@ -68,7 +69,7 @@ def _require_inputs(console: Console, paths: tuple[str, ...]) -> None:
         paths: The data, template and schema paths.
 
     Raises:
-        SystemExit: 2 when one is missing or is not a file.
+        Failure: 2 when one is missing or is not a file.
     """
     for path in paths:
         if not os.path.isfile(path):
@@ -76,7 +77,7 @@ def _require_inputs(console: Console, paths: tuple[str, ...]) -> None:
                 f"[bold red]✗ Error:[/bold red] Input file not found: "
                 f"{esc(path)}"
             )
-            raise SystemExit(2)
+            raise Failure(2, f"Input file not found: {path}")
 
 
 def _require_message_type(console: Console, message_type: str) -> None:
@@ -90,7 +91,7 @@ def _require_message_type(console: Console, message_type: str) -> None:
         message_type: The resolved message type.
 
     Raises:
-        SystemExit: 2 when the type is unknown.
+        Failure: 2 when the type is unknown.
     """
     if message_type not in valid_xml_types:
         console.print(
@@ -98,4 +99,4 @@ def _require_message_type(console: Console, message_type: str) -> None:
             f"{esc(message_type)}\n"
             f"[cyan]Valid types:[/cyan] {', '.join(valid_xml_types)}"
         )
-        raise SystemExit(2)
+        raise Failure(2, f"Invalid XML message type: {message_type}")

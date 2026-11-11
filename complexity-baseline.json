@@ -29,19 +29,6 @@
   "pain001/camt053/generator.py::build_camt053_statement": {
     "lines": 63
   },
-  "pain001/cli/cli.py": {
-    "file_lines": 1261
-  },
-  "pain001/cli/cli.py::_generate_xml_files": {
-    "lines": 121
-  },
-  "pain001/cli/cli.py::_run_scheme_check": {
-    "lines": 64
-  },
-  "pain001/cli/cli.py::main": {
-    "cyclomatic": 16,
-    "lines": 244
-  },
   "pain001/core/core.py::_validate_inputs": {
     "lines": 82
   },

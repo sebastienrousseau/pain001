@@ -26,8 +26,13 @@ CLI (gates both dry-run and generation):
 ```bash
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --explain
-pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --scheme-format json
+pain001 validate -t pain.001.001.03 -d payments.csv --scheme sepa-sct --format json
 ```
+
+With `--format json` the scheme result is the `scheme` field of the one
+JSON object the command writes to stdout. `--scheme-format json`, which
+printed the scheme result alone, still works in 0.0.87 with a warning on
+stderr and is removed in 0.0.88.
 
 Python:
 

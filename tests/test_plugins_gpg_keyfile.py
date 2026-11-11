@@ -212,7 +212,7 @@ def test_generate_flags_set_the_loader_env_vars(
     monkeypatch.delenv("PAIN001_GPG_KEYFILE", raising=False)
     monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
 
-    with patch("pain001.cli.cli.load_batch", return_value=[{}]):
+    with patch("pain001.cli._generate_steps.load_batch", return_value=[{}]):
         result = CliRunner().invoke(
             main,
             [
@@ -239,7 +239,7 @@ def test_validate_subcommand_passes_the_flags_through(
     monkeypatch.delenv("PAIN001_GPG_KEYFILE", raising=False)
     monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
 
-    with patch("pain001.cli.cli.load_batch", return_value=[{}]):
+    with patch("pain001.cli._generate_steps.load_batch", return_value=[{}]):
         result = CliRunner().invoke(
             cli,
             [
@@ -262,7 +262,7 @@ def test_flags_are_optional_and_leave_the_environment_alone(
     """Without the flags nothing is written to the environment."""
     monkeypatch.delenv("PAIN001_GPG_KEYFILE", raising=False)
     monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
-    with patch("pain001.cli.cli.load_batch", return_value=[{}]):
+    with patch("pain001.cli._generate_steps.load_batch", return_value=[{}]):
         result = CliRunner().invoke(main, [*_base_args(), "--dry-run"])
     assert result.exit_code == 0, result.output
     assert "PAIN001_GPG_KEYFILE" not in os.environ

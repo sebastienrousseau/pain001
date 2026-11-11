@@ -33,6 +33,7 @@ from typing import TYPE_CHECKING, Any
 
 import click
 
+from pain001.cli._format import format_option
 from pain001.security._dsig_algorithms import ALGORITHMS
 
 if TYPE_CHECKING:
@@ -149,13 +150,7 @@ def _line(name: str, report: SignatureReport) -> str:
     default=False,
     help="Use each file's own certificate: integrity only, not identity.",
 )
-@click.option(
-    "--format",
-    "output_format",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    show_default=True,
-)
+@format_option()
 def verify_signature_cmd(
     files: tuple[Path, ...],
     cert: Path | None,

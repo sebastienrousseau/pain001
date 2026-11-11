@@ -36,7 +36,7 @@ from pain001.security.api_access import (
     insecure_allowed,
 )
 
-console = Console()
+console = Console(stderr=True)
 
 
 def is_loopback(host: str) -> bool:
