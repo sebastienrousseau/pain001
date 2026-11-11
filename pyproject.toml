@@ -378,6 +378,7 @@ pytest_add_cli_args = [
     # mutmut's trampolined copy outside the runner and crash, breaking the
     # pool; the ordinary test run covers them.
     "--ignore=tests/test_parallel_chunks.py",
+    "--deselect=tests/test_cli_input_paths.py::test_outside_template_with_worker_processes",
     # The complexity gate measures the real tree against its baseline;
     # inside the copy every function is a mutmut trampoline, so the
     # measurement differs. The ordinary test run and CI job cover it.
