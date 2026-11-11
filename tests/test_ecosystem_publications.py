@@ -24,6 +24,13 @@ NAMES = (
     "pain001-fast",
     "pain001.github.io",
 )
+SDKS = (
+    "pain001-sdk-go",
+    "pain001-sdk-java",
+    "pain001-sdk-rust",
+    "pain001-sdk-dotnet",
+    "pain001-sdk-cpp",
+)
 
 
 class Published:
@@ -34,8 +41,10 @@ class Published:
         self.data[
             "https://api.github.com/search/repositories?q=user:sebastienrousseau+pain001+in:name&per_page=100"
         ] = {
-            "total_count": 9,
-            "items": [{"name": name, "archived": False} for name in NAMES],
+            "total_count": len(NAMES) + len(SDKS),
+            "items": [
+                {"name": name, "archived": False} for name in NAMES + SDKS
+            ],
         }
         for name in NAMES:
             self.release(name)
@@ -357,7 +366,47 @@ def test_unknown_repository_cannot_be_silently_omitted() -> None:
         if isinstance(value, dict) and "items" in value
     )
     discovery["items"].append({"name": "pain001-new", "archived": False})
-    discovery["total_count"] = 10
+    discovery["total_count"] += 1
+    report = ecosystem_audit.audit(published)
+    assert report["complete"] is False
+    assert any("inventory" in p for p in report["problems"])
+
+
+def _discovery(published: Published) -> dict[str, Any]:
+    return next(
+        value
+        for value in published.data.values()
+        if isinstance(value, dict) and "items" in value
+    )
+
+
+def test_declared_unreleased_repositories_are_known() -> None:
+    """Repositories declared as not yet released do not fail discovery."""
+    published = Published()
+    assert {item["name"] for item in _discovery(published)["items"]} >= set(
+        SDKS
+    )
+    report = ecosystem_audit.audit(published)
+    assert report["complete"] is True, report["problems"]
+
+
+def test_unreleased_list_names_the_five_sdks() -> None:
+    """The SDKs are known to the family before their first release."""
+    assert set(ecosystem_audit.unreleased()) == set(SDKS)
+    members = {member.name for member in ecosystem_audit.inventory()}
+    assert members.isdisjoint(ecosystem_audit.unreleased())
+
+
+def test_declared_unreleased_repository_must_exist() -> None:
+    """A declared repository that GitHub no longer lists is a failure too."""
+    published = Published()
+    discovery = _discovery(published)
+    discovery["items"] = [
+        item
+        for item in discovery["items"]
+        if item["name"] != "pain001-sdk-cpp"
+    ]
+    discovery["total_count"] -= 1
     report = ecosystem_audit.audit(published)
     assert report["complete"] is False
     assert any("inventory" in p for p in report["problems"])

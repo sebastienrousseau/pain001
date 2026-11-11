@@ -1,0 +1,22 @@
+[
+  {
+    "name": "pain001-sdk-go",
+    "purpose": "Go client for the REST API, tested with the conformance kit"
+  },
+  {
+    "name": "pain001-sdk-java",
+    "purpose": "Java client for the REST API, tested with the conformance kit"
+  },
+  {
+    "name": "pain001-sdk-rust",
+    "purpose": "Rust client for the REST API, tested with the conformance kit"
+  },
+  {
+    "name": "pain001-sdk-dotnet",
+    "purpose": ".NET client for the REST API, tested with the conformance kit"
+  },
+  {
+    "name": "pain001-sdk-cpp",
+    "purpose": "C++ client for the REST API, tested with the conformance kit"
+  }
+]

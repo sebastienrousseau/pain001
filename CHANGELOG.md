@@ -49,6 +49,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `make ecosystem-check` and every member's Suite Consistency job failed
+  with "inventory differs from active GitHub repositories" once the five
+  SDK repositories existed, because discovery knew only the nine
+  released members. `docs/ecosystem-unreleased.json` now declares
+  repositories that have no release yet; discovery accepts them and the
+  publication audit skips them until they join `docs/ecosystem.json`.
+
 - The Bank of England CHAPS overlay's property-purpose rule listed
   HLTR, which is not an ISO external purpose code, and missed four of
   the six codes the Bank mandates. It now lists HLRP, HLST, PLDS, PDEP,

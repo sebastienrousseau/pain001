@@ -12,7 +12,7 @@ from .channels import (
     pypi_evidence,
     website_evidence,
 )
-from .inventory import Member, inventory
+from .inventory import Member, inventory, unreleased
 from .releases import API, release_evidence, require
 from .transport import Client, Transport
 
@@ -20,15 +20,19 @@ DISCOVERY = "https://api.github.com/search/repositories?q=user:sebastienrousseau
 
 
 def discover(client: Transport, members: tuple[Member, ...]) -> None:
-    """Reject a newly added or silently omitted active repository."""
+    """Reject a newly added or silently omitted active repository.
+
+    Repositories declared in ``docs/ecosystem-unreleased.json`` count as
+    known: they exist, but have nothing published to audit yet.
+    """
     result = client.json(DISCOVERY)
     require(
         result["total_count"] <= 100, "inventory discovery requires pagination"
     )
     names = {item["name"] for item in result["items"] if not item["archived"]}
+    known = {member.name for member in members} | set(unreleased())
     require(
-        names == {member.name for member in members},
-        "inventory differs from active GitHub repositories",
+        names == known, "inventory differs from active GitHub repositories"
     )
 
 
