@@ -51,6 +51,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `pain001.logging_schema` gains `bind_request_context`,
   `reset_request_context` and `current_trace_ids`. The OpenAPI document
   is unchanged.
+- `--format text|json` on every command that returns a result
+  (`generate`, `validate`, `versions`, `inspect`, `init`, `face`,
+  `upload`, `download`, `plugins list|show|disable`, beside `check`,
+  `status` and `verify-signature`), so `pain001 <command> --format json
+  | jq .` works for each; `serve` and `mcp` run servers and have none.
+  `generate` and `validate` write one object (`ok`, `message_type`,
+  `records`, `files`, `scheme`, `schematron`, `error`), on failure too.
+  `-q`/`--quiet` on `generate`, `validate` and `init` drops the banner
+  and progress lines. `tests/test_cli_machine_output.py` runs every
+  command with `--format json` and parses its stdout.
+- `tests/data/cli-help.txt` pins every command's `--help`, and every
+  example under an `Examples:` heading is run against the bundled
+  sample data (`tests/test_cli_help_snapshot.py`).
 
 ### Changed
 
@@ -101,6 +114,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The Docker workflow builds a published image without the shared
   GitHub Actions cache; only pull-request builds, which push nothing,
   read or write it.
+- Standard output carries only a command's result. Progress, warnings,
+  errors and the banner moved to standard error, and the banner prints
+  only when standard output is a terminal; with `--log-format json`
+  the progress lines are left out so stderr stays one JSON record per
+  line. A script that read `generate` or `validate` progress from
+  stdout reads it from stderr now.
+- `--emit-metrics` writes each metric as one JSON line on stdout
+  instead of a Python dict wrapped by the terminal.
+- Deprecated, removed in 0.0.88: `--json` on `versions`, `inspect` and
+  `plugins list`, and `--scheme-format json` on `generate` and
+  `validate`. Both still work and warn on stderr; use `--format json`.
+- `generate` and `validate` run from `pain001.cli._generate`, and
+  `versions`, `inspect`, `init` and `plugins` live in their own
+  modules: `cli/cli.py` drops from 1,261 lines to 421 and its `main`
+  from 244 lines and cyclomatic 16 to within the ceilings, so four
+  baseline entries go.
 
 ### Fixed
 
@@ -161,6 +190,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   value (`logger.info("42")`) through as that value instead of a log
   object with `level`, `request_id` and `message`; it is now wrapped
   like any other plain-text message.
+- A mistyped command (`pain001 genrate`) reached `generate` as an
+  "unexpected extra argument"; only an invocation that starts with an
+  option is routed to `generate` now, and Click names the closest
+  command: `No such command 'genrate'. Did you mean 'generate'?`.
 
 ## [0.0.86] - 2026-11-11
 

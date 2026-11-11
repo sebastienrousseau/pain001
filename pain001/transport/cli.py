@@ -10,6 +10,8 @@ from typing import Any
 
 import click
 
+from pain001.cli._format import emit_json, format_option
+
 
 def _secret_from_env(name: str | None) -> str | None:
     """Read a requested secret without including its value in diagnostics."""
@@ -34,9 +36,15 @@ def _transport() -> ModuleType:
     return sftp
 
 
-def _print_host_key(transport: ModuleType, url: str, timeout: float) -> None:
+def _print_host_key(
+    transport: ModuleType, url: str, timeout: float, output_format: str
+) -> None:
     """Print a server's unverified host-key fingerprint, with a warning."""
-    click.echo(transport.print_host_fingerprint(url, timeout))
+    fingerprint = transport.print_host_fingerprint(url, timeout)
+    if output_format == "json":
+        emit_json({"fingerprint": fingerprint, "verified": False})
+    else:
+        click.echo(fingerprint)
     click.echo(
         "Unverified host key: compare this fingerprint with the bank's independently supplied value before trusting it.",
         err=True,
@@ -130,6 +138,26 @@ def ssh_kwargs(ssh: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _receipt(result: Any, output_format: str) -> None:
+    """Print an upload receipt as text or JSON.
+
+    Args:
+        result: The transport's ``UploadResult``.
+        output_format: ``text`` or ``json``.
+    """
+    if output_format == "json":
+        emit_json(
+            {
+                "destination": result.destination,
+                "sha256": result.sha256,
+                "reused": result.reused,
+            }
+        )
+        return
+    action = "Already delivered" if result.reused else "Uploaded"
+    click.echo(f"{action}: {result.destination} (SHA256 {result.sha256})")
+
+
 @click.command("upload")
 @click.argument(
     "file_path", required=False, type=click.Path(exists=True, dir_okay=False)
@@ -146,6 +174,7 @@ def ssh_kwargs(ssh: dict[str, Any]) -> dict[str, Any]:
     is_flag=True,
     help="Print the unverified fingerprint without authenticating or uploading.",
 )
+@format_option()
 def upload_cmd(
     file_path: str | None,
     url: str,
@@ -158,6 +187,7 @@ def upload_cmd(
     passphrase_env: str | None,
     print_host_key: bool,
     timeout: float,
+    output_format: str,
 ) -> None:
     """Deliver FILE_PATH atomically to an explicitly trusted SFTP server.
     \f
@@ -173,6 +203,7 @@ def upload_cmd(
         passphrase_env: Name of the key-passphrase environment variable.
         print_host_key: Observe a host key without authentication.
         timeout: Network timeout in seconds.
+        output_format: ``text`` or ``json`` (the receipt as an object).
 
     Raises:
         click.ClickException: If dependencies, secrets or the transfer fail.
@@ -181,7 +212,7 @@ def upload_cmd(
     transport = _transport()
     try:
         if print_host_key:
-            _print_host_key(transport, url, timeout)
+            _print_host_key(transport, url, timeout, output_format)
             return
         if file_path is None:
             raise click.UsageError(
@@ -199,7 +230,6 @@ def upload_cmd(
             use_agent=use_agent,
             timeout=timeout,
         )
-        action = "Already delivered" if result.reused else "Uploaded"
-        click.echo(f"{action}: {result.destination} (SHA256 {result.sha256})")
+        _receipt(result, output_format)
     except (OSError, ValueError, transport.paramiko.SSHException) as exc:
         raise click.ClickException(str(exc)) from exc

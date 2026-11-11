@@ -22,8 +22,9 @@ from typing import Any
 
 import click
 
+from pain001.cli._format import emit_json, format_option
 from pain001.faces.engine import available_faces, project_face
-from pain001.faces.models import FaceError, LossReport
+from pain001.faces.models import FaceError, FaceResult, LossReport
 
 
 def _load_bindings(path: Path | None) -> dict[str, Any] | None:
@@ -53,6 +54,24 @@ def _echo_loss_report(report: LossReport) -> None:
         click.echo(f"  - {path}", err=True)
 
 
+def _emit_result(result: FaceResult, output: Path | None) -> None:
+    """Write ``--format json``: the face, version, payload, loss report.
+
+    With ``--output`` the payload goes to that file and the object
+    names it instead of repeating the payload.
+
+    Args:
+        result: The projection.
+        output: Optional payload file.
+    """
+    data = result.to_dict()
+    data["output"] = None
+    if output is not None:
+        output.write_text(result.to_json() + "\n", encoding="utf-8")
+        data["output"], data["payload"] = str(output), None
+    emit_json(data)
+
+
 @click.command("face")
 @click.argument(
     "source", type=click.Path(exists=True, dir_okay=False, path_type=Path)
@@ -79,12 +98,14 @@ def _echo_loss_report(report: LossReport) -> None:
 @click.option(
     "--loss-report", is_flag=True, help="List the source elements not carried."
 )
+@format_option()
 def face_cmd(
     source: Path,
     face_name: str,
     bindings: Path | None,
     output: Path | None,
     loss_report: bool,
+    output_format: str,
 ) -> None:
     """Project a pain.001 XML file into an external standard's JSON shape.
 
@@ -97,6 +118,8 @@ def face_cmd(
         bindings: Optional private bindings file.
         output: Optional output file for the payload.
         loss_report: Print the loss report to standard error.
+        output_format: ``text`` writes the payload; ``json`` writes an
+            object with the face, the payload and the loss report.
 
     Raises:
         click.ClickException: When the bindings cannot be read or the face
@@ -107,10 +130,12 @@ def face_cmd(
         result = project_face(source, face_name, bindings=side_inputs)
     except FaceError as exc:
         raise click.ClickException(f"Face projection error: {exc}") from exc
-    if output is None:
+    if output_format == "json":
+        _emit_result(result, output)
+    elif output is None:
         click.echo(result.to_json())
     else:
         output.write_text(result.to_json() + "\n", encoding="utf-8")
         click.echo(f"Wrote {face_name} face to {output}", err=True)
-    if loss_report:
+    if loss_report and output_format == "text":
         _echo_loss_report(result.loss_report)
