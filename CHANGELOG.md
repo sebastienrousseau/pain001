@@ -139,6 +139,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   not a trusted proxy (`PAIN001_FORWARDED_HEADER=forwarded` reads the
   RFC 7239 header instead). Any other peer is keyed on its socket
   address as before, so a client cannot choose its own bucket.
+- `init_otel` built its own tracer provider and called
+  `set_tracer_provider` even when the host application had already set
+  one, so an application embedding pain001 lost pain001's spans or its
+  own exporter. It now uses a provider that is already set and installs
+  pain001's only when none is.
 
 ## [0.0.86] - 2026-11-11
 

@@ -187,9 +187,6 @@
   "pain001/migration/version_mapper.py::VersionMapper.migrate_rows": {
     "cognitive": 21
   },
-  "pain001/observability/otel.py::init_otel": {
-    "lines": 67
-  },
   "pain001/observability/otel.py::traced": {
     "lines": 62
   },
