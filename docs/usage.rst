@@ -106,7 +106,8 @@ Signing and verifying signatures
 signature (``pain001[sign]``). The algorithm follows the key: an RSA key
 signs ``rsa-sha256``, a P-256 or P-384 key ``ecdsa-sha256`` or
 ``ecdsa-sha384``. ``--xml-sign-alg rsa-pss-sha256`` signs RSA-PSS
-instead. ``--xml-sign-cert`` embeds the signer's certificate.
+instead. ``--xml-sign-cert`` embeds the signer's certificate. RSA keys
+under 2048 bits are refused, for signing and for verifying.
 
 ``pain001 verify-signature`` checks the signature on files you received
 or wrote. Pass the signer's certificate (or public key) with ``--cert``;

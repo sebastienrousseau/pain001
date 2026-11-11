@@ -67,6 +67,10 @@ ALGORITHMS: dict[str, SignatureAlgorithm] = {
 #: Every SignatureMethod URI verification accepts.
 ALLOWED_SIGNATURE_METHODS = {a.uri: a for a in ALGORITHMS.values()}
 
+#: The smallest RSA modulus signing and verification accept: the NIST
+#: minimum through 2030 (SP 800-131A).
+MIN_RSA_BITS = 2048
+
 #: The ECDSA algorithm each supported curve signs with.
 _CURVE_ALGORITHM = {"secp256r1": "ecdsa-sha256", "secp384r1": "ecdsa-sha384"}
 
@@ -105,8 +109,9 @@ def algorithm_for_key(
         The algorithm.
 
     Raises:
-        ValueError: If the key type or curve is unsupported, or the
-            requested algorithm does not fit the key.
+        ValueError: If the key type or curve is unsupported, an RSA key
+            is under ``MIN_RSA_BITS``, or the requested algorithm does
+            not fit the key.
     """
     _, _, ec, _ = _crypto()
     if isinstance(
@@ -119,6 +124,11 @@ def algorithm_for_key(
             )
         families = {"ecdsa"}
     elif _is_rsa(key):
+        if key.key_size < MIN_RSA_BITS:
+            raise ValueError(
+                f"RSA key of {key.key_size} bits refused: use at least "
+                f"{MIN_RSA_BITS} bits"
+            )
         inferred, families = "rsa-sha256", {"rsa", "rsa-pss"}
     else:
         raise ValueError(f"unsupported key type {type(key).__name__}")

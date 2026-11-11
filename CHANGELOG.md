@@ -48,6 +48,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The identifier-check error now opens `Invalid identifiers (N)`
   instead of `Invalid account identifiers (N)`, since an LEI is not an
   account identifier. Issue codes are unchanged.
+- XML-DSig refuses RSA keys under 2048 bits, the NIST minimum through
+  2030, when signing and when verifying; `algorithm_for_key` raises
+  `ValueError` naming the key size. Keys of 2048 bits or more, and the
+  P-256 and P-384 EC keys, are unchanged.
+- The SFTP transport (`pain001 upload`, `download`, `--print-host-key`)
+  no longer offers paramiko's fallback CBC and 3DES ciphers or its SHA-1
+  and MD5 MACs. A server that supports only those is refused at key
+  exchange.
 
 ### Fixed
 
