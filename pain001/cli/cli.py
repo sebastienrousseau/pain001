@@ -72,8 +72,7 @@ from pain001.observability import (
 )
 from pain001.security.path_validator import trusted_paths
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
-from pain001.validation import validate_scheme
-from pain001.validation._one_batch import load_batch
+from pain001.validation.ladder import check_scheme, load_valid, read_policy
 from pain001.xml.envelope import BusinessApplicationHeader
 
 console = Console()
@@ -100,25 +99,11 @@ def _run_scheme_check(
 
     Raises:
         SystemExit: 2 if the scheme name is unknown, 1 if rows violate it.
-        ValueError: Raised internally for missing policy dependencies and
-            converted to SystemExit before returning to the caller.
+            A missing ``rules`` extra or a bad policy is a 2 as well.
     """
     try:
-        if rules is not None:
-            try:
-                from pain001.validation.policy import (
-                    MAX_POLICY_BYTES,
-                    validate_policy,
-                )
-            except ImportError as exc:
-                raise ValueError(
-                    "Custom rules require 'pain001[rules]'."
-                ) from exc
-            with Path(rules).open(encoding="utf-8") as policy_file:
-                source = policy_file.read(MAX_POLICY_BYTES + 1)
-            result = validate_policy(data, source, scheme, message_type)
-        else:
-            result = validate_scheme(data, scheme, message_type=message_type)
+        source = read_policy(rules) if rules is not None else None
+        result = check_scheme(data, message_type, scheme, source)
     except ValueError as exc:
         if output_format == "json":
             print(json.dumps({"error": str(exc)}))
@@ -175,7 +160,7 @@ def _validate_payment_data(
     """
     console.print("[cyan]→ Validating payment data...[/cyan]")
     try:
-        data = load_batch(data_file_path, xml_message_type, identifier_checks)
+        data = load_valid(data_file_path, xml_message_type, identifier_checks)
         record_count = len(data)
         log_validation_event(
             logger, "payment_data", True, message_type=xml_message_type

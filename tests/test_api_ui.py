@@ -213,7 +213,9 @@ def test_validate_reports_schema_errors(
         def validate_batch(self, rows: list[dict[str, object]]) -> tuple:
             return len(rows), len(rows) - 1, [(0, [_Error()])]
 
-    monkeypatch.setattr(upload_module, "SchemaValidator", _FakeValidator)
+    monkeypatch.setattr(
+        "pain001.validation.ladder.SchemaValidator", _FakeValidator
+    )
     response = client.post("/api/v1/ui/validate", json=_payload())
     assert response.status_code == 200
     body = response.json()
@@ -286,7 +288,9 @@ def test_generate_is_blocked_by_schema_errors(
         def validate_batch(self, rows: list[dict[str, object]]) -> tuple:
             return len(rows), 0, [(0, [_Error()])]
 
-    monkeypatch.setattr(upload_module, "SchemaValidator", _FakeValidator)
+    monkeypatch.setattr(
+        "pain001.validation.ladder.SchemaValidator", _FakeValidator
+    )
     response = client.post("/api/v1/ui/generate", json=_payload())
     body = response.json()
     assert response.status_code == 200

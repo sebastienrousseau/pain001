@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from click.testing import CliRunner
@@ -37,6 +37,7 @@ from pain001.plugins.builtins_gpg import (
     _decrypt_to_bytes,
     _import_keyfile,
 )
+from tests._ladder_stub import rows_loaded
 
 _TPL = TEMPLATES_DIR / "pain.001.001.03"
 
@@ -212,7 +213,7 @@ def test_generate_flags_set_the_loader_env_vars(
     monkeypatch.delenv("PAIN001_GPG_KEYFILE", raising=False)
     monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
 
-    with patch("pain001.cli.cli.load_batch", return_value=[{}]):
+    with rows_loaded([{}]):
         result = CliRunner().invoke(
             main,
             [
@@ -239,7 +240,7 @@ def test_validate_subcommand_passes_the_flags_through(
     monkeypatch.delenv("PAIN001_GPG_KEYFILE", raising=False)
     monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
 
-    with patch("pain001.cli.cli.load_batch", return_value=[{}]):
+    with rows_loaded([{}]):
         result = CliRunner().invoke(
             cli,
             [
@@ -262,7 +263,7 @@ def test_flags_are_optional_and_leave_the_environment_alone(
     """Without the flags nothing is written to the environment."""
     monkeypatch.delenv("PAIN001_GPG_KEYFILE", raising=False)
     monkeypatch.delenv("PAIN001_GPG_PASSPHRASE_ENV", raising=False)
-    with patch("pain001.cli.cli.load_batch", return_value=[{}]):
+    with rows_loaded([{}]):
         result = CliRunner().invoke(main, [*_base_args(), "--dry-run"])
     assert result.exit_code == 0, result.output
     assert "PAIN001_GPG_KEYFILE" not in os.environ
@@ -272,8 +273,7 @@ def test_flags_are_optional_and_leave_the_environment_alone(
 def test_decrypt_key_must_name_an_existing_file(tmp_path: Path) -> None:
     """A missing key file is a usage error (exit 2) before any work."""
     result = CliRunner().invoke(
-        main,
-        [*_base_args(), "--decrypt-key", str(tmp_path / "nope.asc")],
+        main, [*_base_args(), "--decrypt-key", str(tmp_path / "nope.asc")]
     )
     assert result.exit_code == 2
     assert "does not exist" in result.output

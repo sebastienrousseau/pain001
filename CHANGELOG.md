@@ -39,8 +39,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `docs/chaps-enhanced-data.md` cites the 2024 and 2025 policy
   statements and ISO 17442 for each rule.
 
+- Issue codes `P001-E030` (a value breaks the message type's JSON
+  Schema) and `P001-E040` (a row breaks the scheme or policy asked for).
+- `pain001.validation.ladder`: the one validation sequence (row
+  contract and identifiers, JSON Schema, then scheme or policy) that
+  the CLI, `process_files`, `ValidationService` and the REST
+  `/validate`, `/generate` and `/ui/*` routes all run.
+
 ### Changed
 
+- **The CLI and `process_files` now refuse rows that break the message
+  type's JSON Schema**, as the REST API already did. `pain001 validate`
+  and `pain001 generate` used to accept `currency=EURO` (or `eur`) and
+  write the file; they now exit 1 and list each row as `line N, column
+  currency: ... (P001-E030)`, and `process_files`,
+  `process_files_streaming` and `ValidationService.validate_all` raise
+  or report the same `PaymentValidationError`. Scripts that passed such
+  data before will now fail; fix the values the message lists.
+- The JSON Schemas for pain.001.001.03 to .08 and pain.008.001.02 and
+  .08 accept any 1 to 4 character `service_level_code`, as the XSD's
+  `ExternalServiceLevel1Code` and the .09 to .13 schemas do. The old
+  list (SEPA, URNS) refused the bundled pain.001.001.04 sample (`INST`)
+  on the REST API, and would have refused it on every surface.
 - `PurposeMandate` and `PURPOSE_MANDATES` live in
   `pain001.validation.purpose_mandates`, and the rails' check-digit
   helpers in `pain001.validation._check_digits`; `rails` still exports
@@ -91,6 +111,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- REST `POST /api/v1/validate` reported `invalid_rows: 0` beside
+  `valid_rows: 3` of 4: the model's derived count was skipped when the
+  field was left out. It is now always `total_rows - valid_rows`.
+- REST `POST /api/v1/ui/validate` accepted an upload whose rows need
+  two payment information blocks, which `ui/generate` and `pain001
+  validate` refuse; it now answers 400 with the same message.
 - `make ecosystem-check` and every member's Suite Consistency job failed
   with "inventory differs from active GitHub repositories" once the five
   SDK repositories existed, because discovery knew only the nine

@@ -66,11 +66,9 @@
     },
     "service_level_code": {
       "type": "string",
-      "enum": [
-        "SEPA",
-        "URNS"
-      ],
-      "description": "Service level code"
+      "minLength": 1,
+      "maxLength": 4,
+      "description": "Service level code (PmtTpInf/SvcLvl/Cd), e.g. SEPA, URGP, NURG, SDVA; optional."
     },
     "requested_execution_date": {
       "type": "string",

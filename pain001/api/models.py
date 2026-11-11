@@ -193,7 +193,13 @@ class ValidationResponse(BaseModel):
     is_valid: bool = Field(..., description="Whether data is valid")
     total_rows: int = Field(..., description="Total number of rows")
     valid_rows: int = Field(default=0, description="Number of valid rows")
-    invalid_rows: int = Field(default=0, description="Number of invalid rows")
+    invalid_rows: int = Field(
+        default=0,
+        description="Number of invalid rows",
+        # Derived even when left out: a default skipped the validator,
+        # so a response said 0 invalid beside 3 valid of 4.
+        validate_default=True,
+    )
     errors: list[RowError] = Field(
         default_factory=list,
         description="List of validation errors",

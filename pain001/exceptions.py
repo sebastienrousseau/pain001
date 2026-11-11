@@ -96,6 +96,12 @@ class IssueCode:
     #: An LEI column is not an ISO 17442 LEI (length, characters or
     #: MOD 97-10 check digits).
     INVALID_LEI = "P001-E022"
+    #: A value breaks the message type's JSON Schema (a pattern, a
+    #: length, an allowed value), for example ``currency=EURO``.
+    SCHEMA_VIOLATION = "P001-E030"
+    #: A row breaks a rule of the scheme rulebook or private policy
+    #: that was asked for (``scheme=`` or ``rules=``).
+    SCHEME_VIOLATION = "P001-E040"
 
 
 @dataclass(frozen=True)

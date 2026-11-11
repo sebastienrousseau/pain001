@@ -170,7 +170,9 @@ def test_scheme_violation_text(capsys, payload, severity):
     result = SchemeValidationResult(
         profile="custom", violations=[_violation(payload, severity)]
     )
-    with patch.object(cli_mod, "validate_scheme", return_value=result):
+    with patch(
+        "pain001.validation.ladder.validate_scheme", return_value=result
+    ):
         try:
             cli_mod._run_scheme_check([], f"s{payload}", explain=True)
         except SystemExit as exc:

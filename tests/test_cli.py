@@ -20,6 +20,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 
 from pain001.cli.cli import main
+from tests._ladder_stub import rows_loaded
 
 
 class TestCliModule(unittest.TestCase):
@@ -188,11 +189,7 @@ class TestCliModule(unittest.TestCase):
         with patch(
             "pain001.cli.cli.process_files", autospec=True
         ) as mock_process:
-            with patch(
-                "pain001.cli.cli.load_batch",
-                autospec=True,
-                return_value=[{}],
-            ) as mock_load:
+            with rows_loaded([{}]) as mock_load:
                 result = self.runner.invoke(
                     main,
                     [
@@ -335,11 +332,7 @@ class TestCliModule(unittest.TestCase):
 
     def test_cli_dry_run_with_verbose(self) -> None:
         """Test combining --dry-run and --verbose flags."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            autospec=True,
-            return_value=[{"id": "1"}, {"id": "2"}],
-        ):
+        with rows_loaded([{"id": "1"}, {"id": "2"}]):
             result = self.runner.invoke(
                 main,
                 [

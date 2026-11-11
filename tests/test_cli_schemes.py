@@ -24,6 +24,7 @@ from click.testing import CliRunner
 
 from pain001.cli.cli import main
 from pain001.constants import TEMPLATES_DIR
+from tests._ladder_stub import rows_loaded
 
 _TPL = TEMPLATES_DIR / "pain.001.001.03"
 
@@ -72,10 +73,7 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_text_reports_violations(self) -> None:
         """--scheme prints per-row violations and exits 1."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            return_value=[dict(_SEPA_VIOLATING_ROW)],
-        ):
+        with rows_loaded([dict(_SEPA_VIOLATING_ROW)]):
             result = self.runner.invoke(
                 main, [*_base_args(), "--scheme", "sepa-sct", "--dry-run"]
             )
@@ -84,10 +82,7 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_explain_prints_remediation(self) -> None:
         """--explain adds a remediation hint under each violation."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            return_value=[dict(_SEPA_VIOLATING_ROW)],
-        ):
+        with rows_loaded([dict(_SEPA_VIOLATING_ROW)]):
             result = self.runner.invoke(
                 main,
                 [
@@ -103,10 +98,7 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_json_output(self) -> None:
         """--scheme-format json emits a parseable result object."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            return_value=[dict(_SEPA_VIOLATING_ROW)],
-        ):
+        with rows_loaded([dict(_SEPA_VIOLATING_ROW)]):
             result = self.runner.invoke(
                 main,
                 [
@@ -153,10 +145,7 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_gates_generation(self) -> None:
         """Without --dry-run, a scheme failure blocks generation."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            return_value=[dict(_SEPA_VIOLATING_ROW)],
-        ):
+        with rows_loaded([dict(_SEPA_VIOLATING_ROW)]):
             result = self.runner.invoke(
                 main, [*_base_args(), "--scheme", "sepa-sct"]
             )
@@ -165,10 +154,7 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_passes_for_compliant_data(self) -> None:
         """A SEPA-compliant row passes the scheme check (exit 0)."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            return_value=[dict(_SEPA_VALID_ROW)],
-        ):
+        with rows_loaded([dict(_SEPA_VALID_ROW)]):
             result = self.runner.invoke(
                 main, [*_base_args(), "--scheme", "sepa-sct", "--dry-run"]
             )
@@ -177,10 +163,7 @@ class TestCliScheme(unittest.TestCase):
 
     def test_scheme_json_passes_for_compliant_data(self) -> None:
         """JSON output reports is_valid=True for compliant data (exit 0)."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            return_value=[dict(_SEPA_VALID_ROW)],
-        ):
+        with rows_loaded([dict(_SEPA_VALID_ROW)]):
             result = self.runner.invoke(
                 main,
                 [
@@ -225,7 +208,7 @@ class TestCliDataFailureTips(unittest.TestCase):
     def test_json_failure_tip(self) -> None:
         """A JSON load failure prints a JSON-specific tip."""
         with patch(
-            "pain001.cli.cli.load_batch",
+            "pain001.validation.ladder.load_batch",
             side_effect=ValueError("bad json"),
         ):
             with tempfile.TemporaryDirectory() as tmp:
@@ -238,7 +221,7 @@ class TestCliDataFailureTips(unittest.TestCase):
     def test_parquet_failure_tip(self) -> None:
         """A Parquet load failure prints a pyarrow tip."""
         with patch(
-            "pain001.cli.cli.load_batch",
+            "pain001.validation.ladder.load_batch",
             side_effect=ValueError("bad parquet"),
         ):
             with tempfile.TemporaryDirectory() as tmp:

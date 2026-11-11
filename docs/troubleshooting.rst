@@ -35,6 +35,10 @@ Data validation failed
   ``P001-E020``     Not a valid IBAN.
   ``P001-E021``     Not a valid BIC.
   ``P001-E022``     Not a valid LEI (ISO 17442 check digits).
+  ``P001-E030``     Breaks the message type's JSON Schema (for
+                    example ``currency=EURO``: not three letters).
+  ``P001-E040``     Breaks a rule of the scheme or policy asked for
+                    (``pain001.generate(..., scheme=...)``).
   ================  ===============================================
 
   From Python, the same problems are on the exception:

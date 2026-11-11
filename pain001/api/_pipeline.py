@@ -52,9 +52,7 @@ from pain001.api.models import (
     ValidationResponse,
 )
 from pain001.api.models import ValidationError as ValidationErrorModel
-from pain001.validation import validate_scheme
-from pain001.validation._one_batch import load_batch
-from pain001.validation.schema_validator import SchemaValidator
+from pain001.validation.ladder import check_scheme, run_ladder
 from pain001.validation.schemes import SchemeValidationResult
 from pain001.xml.generate_xml import generate_xml
 
@@ -182,22 +180,10 @@ def request_scheme_result(
 
     Raises:
         HTTPException: If policy dependencies, syntax or inputs are invalid.
-        ValueError: Raised internally for missing policy dependencies and
-            converted to HTTPException before returning to the caller.
     """
     try:
-        if request.rules is not None:
-            try:
-                from pain001.validation.policy import validate_policy
-            except ImportError as exc:
-                raise ValueError(
-                    "Custom rules require 'pain001[rules]'."
-                ) from exc
-            return validate_policy(
-                data, request.rules, request.scheme, request.message_type.value
-            )
-        return validate_scheme(
-            data, request.scheme or "", message_type=request.message_type.value
+        return check_scheme(
+            data, request.message_type.value, request.scheme, request.rules
         )
     except ValueError as exc:
         raise HTTPException(
@@ -241,24 +227,25 @@ def validate_pipeline(
     Returns:
         The validation response.
     """
-    data = load_batch(
-        file_path, request.message_type.value, request.identifier_checks
+    ladder = run_ladder(
+        file_path,
+        request.message_type.value,
+        identifier_checks=request.identifier_checks,
     )
-    validator = SchemaValidator(request.message_type.value)
-    total, valid, errors = validator.validate_batch(data)
 
     scheme_violations: list[dict[str, Any]] = []
-    is_valid = len(errors) == 0
+    is_valid = ladder.is_valid
     if request.scheme or request.rules is not None:
-        scheme_result = request_scheme_result(data, request)
+        scheme_result = request_scheme_result(ladder.rows, request)
         scheme_violations = [v.as_dict() for v in scheme_result.violations]
         is_valid = is_valid and scheme_result.is_valid
 
     return ValidationResponse(
         is_valid=is_valid,
-        total_rows=total,
-        valid_rows=valid,
-        errors=format_validation_errors(errors),
+        total_rows=ladder.total,
+        valid_rows=ladder.valid,
+        invalid_rows=ladder.invalid,
+        errors=format_validation_errors(ladder.row_errors),
         scheme_violations=scheme_violations,
     )
 
@@ -312,12 +299,18 @@ def generate_pipeline(
         The outcome, for the caller to turn into its response.
     """
     progress(10)
-    data = load_batch(
-        file_path, request.message_type.value, request.identifier_checks
+    ladder = run_ladder(
+        file_path,
+        request.message_type.value,
+        identifier_checks=request.identifier_checks,
+        after_load=functools.partial(progress, 40),
     )
-    progress(40)
-    validator = SchemaValidator(request.message_type.value)
-    total, valid, errors = validator.validate_batch(data)
+    data, total, valid, errors = (
+        ladder.rows,
+        ladder.total,
+        ladder.valid,
+        ladder.row_errors,
+    )
     if errors:
         return GenerationOutcome("invalid_rows", total, valid, errors=errors)
     if request.scheme or request.rules is not None:

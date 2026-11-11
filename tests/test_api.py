@@ -890,15 +890,9 @@ class TestAsyncWorkerErrorPaths:
                 message_type="pain.001.001.03",
             )
             # Loader returns rows missing required schema fields, so the
-            # SchemaValidator (not the loader) fails them. The package
-            # re-exports a FastAPI instance named 'app', which shadows the
-            # submodule, so reach the module via sys.modules.
-            import sys
-
-            pipeline_module = sys.modules["pain001.api._pipeline"]
-            with patch.object(
-                pipeline_module,
-                "load_batch",
+            # SchemaValidator (not the loader) fails them.
+            with patch(
+                "pain001.validation.ladder.load_batch",
                 return_value=[{"id": "1"}],
             ):
                 asyncio.run(_process_generation_job(job_id, request))
@@ -1040,12 +1034,11 @@ class TestValidateSchemaErrors:
 
     def test_validate_reports_schema_errors(self):
         """Rows that fail schema produce formatted error entries."""
-        import sys
         from unittest.mock import patch
 
-        pipeline_module = sys.modules["pain001.api._pipeline"]
-        with patch.object(
-            pipeline_module, "load_batch", return_value=[{"id": "1"}]
+        with patch(
+            "pain001.validation.ladder.load_batch",
+            return_value=[{"id": "1"}],
         ):
             response = client.post(
                 "/api/validate",
@@ -1234,8 +1227,8 @@ class TestUnexpectedFailures:
         raise RuntimeError("boom")
 
     def test_validate_endpoint_wraps_unexpected_errors(self, monkeypatch):
-        pipeline_module = sys.modules["pain001.api._pipeline"]
-        monkeypatch.setattr(pipeline_module, "load_batch", self._boom)
+        ladder_module = sys.modules["pain001.validation.ladder"]
+        monkeypatch.setattr(ladder_module, "load_batch", self._boom)
         response = client.post(
             "/api/validate",
             json={
@@ -1248,8 +1241,8 @@ class TestUnexpectedFailures:
         assert "Validation failed" in response.json()["detail"]
 
     def test_generate_endpoint_wraps_unexpected_errors(self, monkeypatch):
-        pipeline_module = sys.modules["pain001.api._pipeline"]
-        monkeypatch.setattr(pipeline_module, "load_batch", self._boom)
+        ladder_module = sys.modules["pain001.validation.ladder"]
+        monkeypatch.setattr(ladder_module, "load_batch", self._boom)
         response = client.post(
             "/api/generate",
             json={

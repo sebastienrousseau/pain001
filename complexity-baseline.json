@@ -30,13 +30,10 @@
     "lines": 63
   },
   "pain001/cli/cli.py": {
-    "file_lines": 1261
+    "file_lines": 1246
   },
   "pain001/cli/cli.py::_generate_xml_files": {
     "lines": 121
-  },
-  "pain001/cli/cli.py::_run_scheme_check": {
-    "lines": 64
   },
   "pain001/cli/cli.py::main": {
     "cyclomatic": 16,
@@ -252,7 +249,7 @@
     "lines": 82
   },
   "pain001/validation/service.py::ValidationService.validate_all": {
-    "lines": 77
+    "lines": 75
   },
   "pain001/xml/generate_xml.py::generate_xml": {
     "lines": 86

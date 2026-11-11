@@ -30,12 +30,15 @@ from pain001.xml.batch_consistency import require_one_batch
 
 
 def load_batch(
-    data_file_path: str, message_type: str, identifier_checks: bool = True
+    data_file_path: str | list[dict[str, Any]] | dict[str, Any],
+    message_type: str,
+    identifier_checks: bool = True,
 ) -> list[dict[str, Any]]:
     """Load payment rows and refuse them unless they form one batch.
 
     Args:
-        data_file_path: Path to the payment data.
+        data_file_path: Path to the payment data, a list of rows or
+            one row.
         message_type: The target message type.
         identifier_checks: If False, skip the IBAN, BIC and LEI checks.
 

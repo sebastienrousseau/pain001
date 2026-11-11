@@ -30,6 +30,7 @@ _CSV = "pain001/templates/pain.001.001.03/template.csv"
 # The package re-exports a FastAPI instance named ``app``, which shadows
 # the submodule; reach the modules through ``sys.modules``.
 _PIPELINE = sys.modules["pain001.api._pipeline"]
+_LADDER = sys.modules["pain001.validation.ladder"]
 _APP = sys.modules["pain001.api.app"]
 
 
@@ -49,7 +50,7 @@ def _outputs(output_dir: Path) -> list[Path]:
 def test_cancel_while_loading_stops_before_rendering(tmp_path):
     """A cancel during the load is seen at the next stage boundary."""
     job_id = job_manager.create_job()
-    real_load = _PIPELINE.load_batch
+    real_load = _LADDER.load_batch
 
     def load_then_cancel(*args, **kwargs):
         rows = real_load(*args, **kwargs)
@@ -57,7 +58,7 @@ def test_cancel_while_loading_stops_before_rendering(tmp_path):
         return rows
 
     with (
-        patch.object(_PIPELINE, "load_batch", side_effect=load_then_cancel),
+        patch.object(_LADDER, "load_batch", side_effect=load_then_cancel),
         patch.object(_PIPELINE, "generate_xml") as render,
     ):
         asyncio.run(_process_generation_job(job_id, _request(tmp_path)))
@@ -95,7 +96,7 @@ def test_cancel_while_rendering_removes_the_file(tmp_path):
 def test_cancel_after_the_last_stage_keeps_the_job_cancelled(tmp_path):
     """A validate-only job cancelled while validating reports nothing."""
     job_id = job_manager.create_job()
-    real_validate = _PIPELINE.SchemaValidator.validate_batch
+    real_validate = _LADDER.SchemaValidator.validate_batch
 
     def validate_then_cancel(self, data):
         assert job_manager.cancel_job(job_id)
@@ -103,7 +104,7 @@ def test_cancel_after_the_last_stage_keeps_the_job_cancelled(tmp_path):
 
     request = _request(tmp_path).model_copy(update={"validate_only": True})
     with patch.object(
-        _PIPELINE.SchemaValidator, "validate_batch", validate_then_cancel
+        _LADDER.SchemaValidator, "validate_batch", validate_then_cancel
     ):
         asyncio.run(_process_generation_job(job_id, request))
 
