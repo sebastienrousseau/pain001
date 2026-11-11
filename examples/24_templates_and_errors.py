@@ -22,7 +22,8 @@ works and the question becomes "what can go wrong, and how do I tell":
 * ``validate_registry`` - the drift guardrail that refuses a bundle
   whose template or schema names a different message type
 * ``DataSourceError`` / ``PaymentValidationError`` - the typed errors
-  for "cannot read the input" and "the input is wrong"
+  for "cannot read the input" and "the input is wrong"; both are a
+  ``Pain001Error``, which catches every error the library raises
 * ``RowIssue`` / ``IssueCode`` - one record per bad row and column on
   ``PaymentValidationError.errors``, with a stable code and no value
 * ``SchemeValidationResult`` / ``SchemeViolation`` - the structured
@@ -47,6 +48,7 @@ from pain001 import (
     DataSourceError,
     IssueCode,
     MetricEvent,
+    Pain001Error,
     PaymentValidationError,
     RowIssue,
     SchemeValidationResult,
@@ -162,6 +164,9 @@ def _typed_errors(workdir: Path) -> None:
     assert "more than two decimal places" in str(error)
     print(f"Over-precise amount -> PaymentValidationError ({error.field})")
 
+
+def _row_issues() -> None:
+    """Read each bad row's line, column and code off the error."""
     rows = load_csv_data(str(DATA_FILE))
     rows[1]["payment_amount"] = "twelve"
     error = expect(PaymentValidationError, load_payment_data, rows)
@@ -171,6 +176,7 @@ def _typed_errors(workdir: Path) -> None:
     assert (issue.line, issue.column) == (2, "payment_amount")
     assert issue.code == IssueCode.NOT_DECIMAL
     assert "twelve" not in str(error)
+    assert isinstance(error, Pain001Error)
     print(f"Bad amount -> {issue}")
 
 
@@ -231,6 +237,7 @@ def main() -> None:
         (root / "bundles").mkdir()
         _custom_registry(root / "bundles")
         _typed_errors(root)
+    _row_issues()
     _scheme_result()
     _metric_events()
 

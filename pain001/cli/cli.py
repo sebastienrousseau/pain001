@@ -35,7 +35,7 @@ from rich.table import Table
 from pain001.cli._check import check_cmd
 from pain001.cli._config import _resolve_config
 from pain001.cli._gpg import _apply_gpg_options, _workers_option
-from pain001.cli._hints import print_data_tip, read_text
+from pain001.cli._hints import GENERATE_HELP, print_data_tip, read_text
 from pain001.cli._logging import configure_logging, log_format_option
 from pain001.cli._operations import add_operations
 from pain001.cli._output import (
@@ -345,24 +345,7 @@ _identifier_checks_option = click.option(
 
 
 @click.command(
-    help=(
-        "Generate ISO 20022-compliant payment XML files from CSV, SQLite, JSON, or Parquet data.\n\n"
-        "EXAMPLES:\n\n"
-        "  Basic usage (CSV input):\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv\n\n"
-        "  Validation only (dry-run):\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --dry-run\n\n"
-        "  Custom output directory:\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv -o /output\n\n"
-        "  Verbose logging:\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.csv --verbose\n\n"
-        "  JSON input:\n"
-        "    pain001 -t pain.001.001.03 -m template.xml -s schema.xsd -d payments.json\n\n"
-        "EXIT CODES:\n"
-        "  0 = Success\n"
-        "  1 = Validation or processing error\n"
-        "  2 = Invalid arguments or configuration"
-    ),
+    help=GENERATE_HELP,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 @click.option(

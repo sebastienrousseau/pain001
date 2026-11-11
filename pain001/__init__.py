@@ -46,6 +46,7 @@ if TYPE_CHECKING:
     from pain001.exceptions import (
         DataSourceError,
         IssueCode,
+        Pain001Error,
         PaymentValidationError,
         RowIssue,
     )
@@ -100,6 +101,7 @@ _LAZY: dict[str, str] = {
     "ConfigManager": "pain001.config",
     "process_files": "pain001.core.core",
     "DataSourceError": "pain001.exceptions",
+    "Pain001Error": "pain001.exceptions",
     "PaymentValidationError": "pain001.exceptions",
     "RowIssue": "pain001.exceptions",
     "IssueCode": "pain001.exceptions",
@@ -159,6 +161,7 @@ __all__ = [
     "SchemeValidationResult",
     "SchemeViolation",
     "sanitize_to_charset",
+    "Pain001Error",
     "PaymentValidationError",
     "RowIssue",
     "IssueCode",
