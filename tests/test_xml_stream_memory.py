@@ -80,9 +80,15 @@ else:
     path = gx.generate_xml(
         rows, mt, template, str(bundle / f"{mt}.xsd"), "out.xml"
     )
-peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
-if sys.platform != "darwin":
-    peak *= 1024  # Linux reports KiB, macOS bytes
+if sys.platform == "darwin":
+    peak = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss  # bytes
+else:
+    # Linux carries ru_maxrss across exec, so a child started by a large
+    # pytest process would report the parent's peak. VmHWM belongs to
+    # this process's own address space.
+    with open("/proc/self/status", encoding="ascii") as fh:
+        line = next(x for x in fh if x.startswith("VmHWM:"))
+    peak = int(line.split()[1]) * 1024  # kB
 print(json.dumps({"peak": peak, "size": os.path.getsize(path)}))
 """
 
