@@ -221,6 +221,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Validation demanded columns the message type does not require. The
+  loader checked every row against every column any bundled schema
+  describes, so `pain001 validate` and `generate`, `process_files` and
+  its streaming form, `pain001.validate` and `generate`, and the REST
+  `/validate`, `/generate` and `/ui/*` routes refused a pain.001.001.09
+  file without `payment_method`, `charge_bearer`, `service_level_code`
+  or `forwarding_agent_BIC`, which that type's schema does not require
+  and generation defaults or leaves out (0.0.86 did the same). The row
+  contract is now the target type's own: `load_payment_data` and
+  `load_payment_data_streaming` take `message_type=` (`None` keeps the
+  every-column contract), and the validation ladder passes it. A file
+  that names the debtor account by `debtor_account_number`, which
+  generation accepted, now validates too. So that a file that
+  validates still generates, validation also runs the generator's
+  required-field check: a .09 file with neither `debtor_account_IBAN`
+  nor `debtor_account_number` is still refused on every surface.
+  Generated XML is unchanged.
 - A CSV row with more values than the header has columns crashed
   validation with `AttributeError` (REST answered 500). It is now a
   row issue, `P001-E002`, naming the line: `pain001 validate` exits 1,

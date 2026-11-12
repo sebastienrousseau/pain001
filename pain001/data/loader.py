@@ -15,37 +15,20 @@
 """Universal data loader supporting multiple input sources."""
 
 import os
-from collections.abc import Generator, Sequence
 from typing import Any
 
 # pylint: disable=duplicate-code
-from pain001.csv.load_csv_data import load_csv_data, load_csv_data_streaming
+from pain001.csv.load_csv_data import load_csv_data
 from pain001.csv.validate_csv_data import row_issues
+from pain001.data._checks import _checked, _first_line, _refuse
+from pain001.data._streaming import load_payment_data_streaming
 from pain001.db.load_db_data import load_db_data
-from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.db.validate_db_data import db_row_issues
-from pain001.exceptions import (
-    DataSourceError,
-    PaymentValidationError,
-    RowIssue,
-    format_issues,
-)
-from pain001.json.load_json_data import (
-    load_json_data,
-    load_json_data_streaming,
-    load_jsonl_data,
-    load_jsonl_data_streaming,
-)
-from pain001.parquet.load_parquet_data import (
-    load_parquet_data,
-    load_parquet_data_streaming,
-)
+from pain001.exceptions import DataSourceError, PaymentValidationError
+from pain001.json.load_json_data import load_json_data, load_jsonl_data
+from pain001.parquet.load_parquet_data import load_parquet_data
 
 __all__ = ["load_payment_data", "load_payment_data_streaming"]
-
-#: Line of the first row in a file with a header line; a row counts
-#: from 1 in every other input.
-_HEADER_FIRST_LINE = {".csv": 2}
 
 
 def _get_file_loaders() -> dict[str, tuple[Any, Any, str]]:
@@ -63,80 +46,32 @@ def _get_file_loaders() -> dict[str, tuple[Any, Any, str]]:
     }
 
 
-def _first_line(data_source: object) -> int:
-    """Return the line of the first row of ``data_source``, from 1.
-
-    Args:
-        data_source: A file path, a list of rows or one row.
-
-    Returns:
-        2 for a CSV file (its header is line 1), else 1.
-    """
-    if not isinstance(data_source, str):
-        return 1
-    ext = os.path.splitext(data_source)[1].lower()
-    return _HEADER_FIRST_LINE.get(ext, 1)
-
-
-def _refuse(headline: str, issues: Sequence[RowIssue]) -> None:
-    """Raise a PaymentValidationError listing ``issues``, if any.
-
-    Args:
-        headline: The message's first line.
-        issues: The problems found; nothing is raised when empty.
-
-    Raises:
-        PaymentValidationError: Carrying ``issues`` on ``errors`` and
-            listing the first of them in its message.
-    """
-    if issues:
-        count = f"{len(issues)} problem{'s' if len(issues) > 1 else ''}"
-        raise PaymentValidationError(
-            f"{headline} ({count}):{format_issues(issues)}",
-            field=issues[0].column,
-            errors=issues,
-        )
-
-
-def _require_valid(rows: list[dict[str, Any]], file_path: str) -> None:
+def _require_valid(
+    rows: list[dict[str, Any]], file_path: str, message_type: str | None
+) -> None:
     """Run the built-in post-load check for ``file_path``'s type.
 
     Args:
         rows: The loaded rows.
         file_path: The file they came from.
+        message_type: The type whose columns each row must carry.
     """
     ext = os.path.splitext(file_path)[1].lower()
     entry = _get_file_loaders().get(ext)
     if entry is not None:
         _, issues_for, format_name = entry
-        issues = issues_for(rows, first_line=_first_line(file_path))
+        issues = issues_for(
+            rows, message_type, first_line=_first_line(file_path)
+        )
         _refuse(
             f"{format_name} data validation failed for {file_path}", issues
         )
 
 
-def _get_file_stream_loaders() -> dict[str, tuple[Any, Any, str]]:
-    """Build streaming dispatch table at call time so mocks are respected."""
-    return {
-        ".csv": (load_csv_data_streaming, row_issues, "CSV"),
-        ".db": (
-            lambda p, cs: load_db_data_streaming(p, "pain001", cs),
-            db_row_issues,
-            "Database",
-        ),
-        ".json": (load_json_data_streaming, row_issues, "JSON"),
-        ".jsonl": (load_jsonl_data_streaming, row_issues, "JSONL"),
-        ".parquet": (
-            load_parquet_data_streaming,
-            row_issues,
-            "Parquet",
-        ),
-    }
-
-
 def load_payment_data(
     data_source: str | list[dict[str, Any]] | dict[str, Any],
     identifier_checks: bool = True,
+    message_type: str | None = None,
 ) -> list[dict[str, Any]]:
     """
     Universal data loader supporting multiple input sources.
@@ -152,6 +87,9 @@ def load_payment_data(
         identifier_checks: Check every IBAN (mod-97, country length),
             BIC (ISO 9362) and LEI (ISO 17442) column; False skips
             those checks.
+        message_type: The target message type: every row must carry
+            the columns its schema requires. ``None`` (the type is not
+            known) requires every column all bundled schemas describe.
 
     Returns:
         List[Dict[str, Any]]: List of payment data dictionaries
@@ -185,45 +123,21 @@ def load_payment_data(
         ... })
     """
     return _checked(
-        _load_any(data_source),
+        _load_any(data_source, message_type),
         identifier_checks,
         first_line=_first_line(data_source),
     )
 
 
-def _checked(
-    rows: list[dict[str, Any]],
-    identifier_checks: bool,
-    start: int = 0,
-    first_line: int = 1,
-) -> list[dict[str, Any]]:
-    """Return ``rows`` once their IBAN and BIC columns pass, if asked.
-
-    Args:
-        rows: Loaded payment rows (a whole input, or one chunk of it).
-        identifier_checks: False returns ``rows`` unchecked.
-        start: Index of the first row, so a chunk's errors name the
-            row of the whole input.
-        first_line: The line of the input's first row (2 for CSV).
-
-    Returns:
-        ``rows``, unchanged.
-    """
-    if identifier_checks:
-        # Imported here: pain001.validation imports this module.
-        from pain001.validation._identifiers import check_identifiers
-
-        check_identifiers(rows, start, first_line)
-    return rows
-
-
 def _load_any(
     data_source: str | list[dict[str, Any]] | dict[str, Any],
+    message_type: str | None = None,
 ) -> list[dict[str, Any]]:
     """Dispatch ``data_source`` to the loader for its type.
 
     Args:
         data_source: A file path, a list of rows or one row.
+        message_type: The type whose columns each row must carry.
 
     Returns:
         The loaded rows.
@@ -235,14 +149,14 @@ def _load_any(
     # TODO: add streaming/chunked loaders for large CSV/DB sources to reduce memory usage.
     # Handle file path (existing behaviour - backward compatible)
     if isinstance(data_source, str):
-        return _load_from_file(data_source)
+        return _load_from_file(data_source, message_type)
 
     # Handle Python dict/list (new feature)
     elif isinstance(data_source, list):
-        return _load_from_list(data_source)
+        return _load_from_list(data_source, message_type)
 
     elif isinstance(data_source, dict):
-        return _load_from_dict(data_source)
+        return _load_from_dict(data_source, message_type)
 
     else:
         raise DataSourceError(
@@ -251,7 +165,9 @@ def _load_any(
         )
 
 
-def _load_from_file(file_path: str) -> list[dict[str, Any]]:
+def _load_from_file(
+    file_path: str, message_type: str | None = None
+) -> list[dict[str, Any]]:
     """
     Load data from file (CSV, SQLite, JSON, Parquet, or a plugin-registered format).
 
@@ -306,11 +222,13 @@ def _load_from_file(file_path: str) -> list[dict[str, Any]]:
 
     # Every loader uses the contract; retain the built-in post-load gate.
     data = plugin_loader.load(safe_path).rows
-    _require_valid(data, file_path)
+    _require_valid(data, file_path, message_type)
     return data
 
 
-def _load_from_list(data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _load_from_list(
+    data_list: list[dict[str, Any]], message_type: str | None = None
+) -> list[dict[str, Any]]:
     """
     Load data from Python list of dictionaries.
 
@@ -326,11 +244,13 @@ def _load_from_list(data_list: list[dict[str, Any]]) -> list[dict[str, Any]]:
         )
 
     # Mandatory validation for data integrity
-    _refuse("Data list validation failed", row_issues(data_list))
+    _refuse("Data list validation failed", row_issues(data_list, message_type))
     return data_list
 
 
-def _load_from_dict(data_dict: dict[str, Any]) -> list[dict[str, Any]]:
+def _load_from_dict(
+    data_dict: dict[str, Any], message_type: str | None = None
+) -> list[dict[str, Any]]:
     """
     Load data from a single Python dictionary.
 
@@ -341,158 +261,8 @@ def _load_from_dict(data_dict: dict[str, Any]) -> list[dict[str, Any]]:
 
     # Wrap single dict in list and validate
     data_list = [data_dict]
-    _refuse("Data dictionary validation failed", row_issues(data_list))
+    _refuse(
+        "Data dictionary validation failed",
+        row_issues(data_list, message_type),
+    )
     return data_list
-
-
-def load_payment_data_streaming(
-    data_source: str | list[dict[str, Any]],
-    chunk_size: int = 1000,
-    validate: bool = True,
-    identifier_checks: bool = True,
-) -> Generator[list[dict[str, Any]], None, None]:
-    """
-    Memory-efficient streaming loader supporting multiple input sources.
-
-    This function yields chunks of payment data instead of loading everything
-    into memory, making it suitable for large datasets (millions of rows).
-
-    Args:
-        data_source: The payment data source. Supports:
-            - str: File path to CSV (.csv) or SQLite (.db) file
-            - list: List of dictionaries with payment data
-        chunk_size: Number of records to yield per chunk. Default is 1000.
-        validate: If True, validate each chunk. Default True.
-                 Set False for testing or when data is pre-validated.
-        identifier_checks: Check each chunk's IBAN and BIC columns,
-            whatever ``validate`` says; False skips those checks.
-
-    Yields:
-        list[dict[str, Any]]: Chunks of payment data dictionaries
-
-    A DataSourceError for an unsupported source type, and errors from
-    the underlying streaming loaders (e.g. FileNotFoundError for missing
-    files, PaymentValidationError for a chunk that fails validation or
-    carries an invalid IBAN or BIC), propagate unchanged.
-
-    Examples:
-        # Streaming from large CSV file
-        >>> for chunk in load_payment_data_streaming('large_payments.csv', chunk_size=500):
-        ...     process_batch(chunk)
-
-        # Streaming from large SQLite database
-        >>> for chunk in load_payment_data_streaming('payments.db', chunk_size=1000):
-        ...     generate_xml_batch(chunk)
-
-        # Streaming from large Python list (useful for APIs)
-        >>> large_data = [{'id': f'TX{i}', ...} for i in range(100000)]
-        >>> for chunk in load_payment_data_streaming(large_data, chunk_size=500):
-        ...     validate_and_process(chunk)
-
-    Performance:
-        - Memory usage: O(chunk_size) instead of O(total_records)
-        - Enables processing datasets larger than available RAM
-        - ~10-15% slower than load_payment_data() due to yielding overhead
-        - Best for files/datasets with 10,000+ records
-
-    Note:
-        Single dict input not supported in streaming mode. Convert to list first.
-    """
-    start = 0
-    first_line = _first_line(data_source)
-    for chunk in _stream_any(data_source, chunk_size, validate):
-        yield _checked(chunk, identifier_checks, start, first_line)
-        start += len(chunk)
-
-
-def _stream_any(
-    data_source: str | list[dict[str, Any]], chunk_size: int, validate: bool
-) -> Generator[list[dict[str, Any]], None, None]:
-    """Dispatch ``data_source`` to the streaming loader for its type.
-
-    Args:
-        data_source: A file path or a list of rows.
-        chunk_size: Number of records per chunk.
-        validate: If True, validate each chunk.
-
-    Yields:
-        list[dict[str, Any]]: Chunks of payment rows.
-
-    Raises:
-        DataSourceError: If the data source type is unsupported.
-    """
-    # Handle file path (CSV or SQLite)
-    if isinstance(data_source, str):
-        yield from _load_from_file_streaming(data_source, chunk_size, validate)
-
-    # Handle Python list
-    elif isinstance(data_source, list):
-        yield from _load_from_list_streaming(data_source, chunk_size, validate)
-
-    else:
-        raise DataSourceError(
-            f"Unsupported data source type for streaming: {type(data_source).__name__}. "
-            f"Expected str (file path) or list. "
-            f"For single dict, wrap in list: [your_dict]"
-        )
-
-
-def _load_from_file_streaming(
-    file_path: str, chunk_size: int, validate: bool = True
-) -> Generator[list[dict[str, Any]], None, None]:
-    """
-    Stream data from file (CSV, SQLite, JSON, or Parquet) in chunks.
-
-    Memory-efficient for large files.
-    """
-    from pain001.plugins.registry import registry as plugin_registry
-
-    ext = os.path.splitext(file_path)[1].lower()
-    plugin_loader = plugin_registry.get_loader_for_extension(ext)
-    entry = _get_file_stream_loaders().get(ext)
-    if plugin_loader is None:
-        raise DataSourceError(
-            f"Unsupported file type: {file_path}. "
-            f"Expected .csv, .db, .json, .jsonl, or .parquet file."
-        )
-
-    start = 0
-    first_line = _first_line(file_path)
-    for result in plugin_loader.load_streaming(file_path, chunk_size):
-        chunk = result.rows
-        if validate and entry is not None:
-            issues = entry[1](chunk, first_line=first_line + start)
-            _refuse(
-                f"{entry[2]} data validation failed for chunk in {file_path}",
-                issues,
-            )
-        start += len(chunk)
-        yield chunk
-
-
-def _load_from_list_streaming(
-    data_list: list[dict[str, Any]], chunk_size: int, validate: bool = True
-) -> Generator[list[dict[str, Any]], None, None]:
-    """
-    Stream data from Python list in chunks.
-
-    Useful for API inputs or in-memory data processing.
-    """
-    if not data_list:
-        raise DataSourceError("Empty data list provided.")
-
-    if not all(isinstance(item, dict) for item in data_list):
-        raise PaymentValidationError(
-            "All items in data list must be dictionaries. "
-            f"Found: {[type(item).__name__ for item in data_list if not isinstance(item, dict)]}"
-        )
-
-    # Yield data in chunks
-    for i in range(0, len(data_list), chunk_size):
-        chunk = data_list[i : i + chunk_size]
-        if validate:
-            _refuse(
-                f"Data validation failed for chunk starting at index {i}",
-                row_issues(chunk, first_line=1 + i),
-            )
-        yield chunk

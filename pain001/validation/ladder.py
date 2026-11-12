@@ -40,7 +40,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from pain001.data.loader import _first_line, load_payment_data_streaming
+from pain001.data._checks import _first_line
+from pain001.data.loader import load_payment_data_streaming
 from pain001.exceptions import (
     IssueCode,
     PaymentValidationError,
@@ -348,7 +349,10 @@ def load_valid_chunks(
     first_line = _first_line(data_file_path)
     start = 0
     for chunk in load_payment_data_streaming(
-        data_file_path, chunk_size, identifier_checks=identifier_checks
+        data_file_path,
+        chunk_size,
+        identifier_checks=identifier_checks,
+        message_type=message_type,
     ):
         require_schema_valid(chunk, message_type, start, first_line)
         start += len(chunk)

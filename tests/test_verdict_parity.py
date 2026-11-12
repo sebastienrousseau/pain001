@@ -14,8 +14,9 @@
 
 """One verdict per input on every surface: CLI, Python and REST.
 
-Each case is the bundled pain.001.001.03 sample with one value changed.
-Every surface either accepts it or refuses it; none may disagree.
+Each case is a bundled sample with one value changed, or with columns
+removed. Every surface either accepts it or refuses it; none may
+disagree.
 """
 
 from __future__ import annotations
@@ -33,12 +34,9 @@ import pain001
 from pain001.api.app import app
 from pain001.cli.cli import cli
 from pain001.constants import TEMPLATES_DIR
-from pain001.core.core import process_files
+from pain001.core.core import process_files, process_files_streaming
 
 MESSAGE_TYPE = "pain.001.001.03"
-SAMPLE = TEMPLATES_DIR / MESSAGE_TYPE / "template.csv"
-TEMPLATE = TEMPLATES_DIR / MESSAGE_TYPE / "template.xml"
-SCHEMA = TEMPLATES_DIR / MESSAGE_TYPE / f"{MESSAGE_TYPE}.xsd"
 
 client = TestClient(app)
 
@@ -53,72 +51,131 @@ CASES = [
     ("missing-debtor-name", "debtor_name", "", False),
 ]
 
+#: Columns every bundled schema describes but some types never require.
+#: Before the loader knew the message type it demanded all of them.
+DEFAULTED = (
+    "service_level_code",
+    "forwarding_agent_BIC",
+    "payment_method",
+    "charge_bearer",
+)
 
-def _write_case(directory: Path, column: str | None, value: str | None) -> str:
-    """Write the sample with ``column`` of its first row set to ``value``."""
-    with SAMPLE.open(encoding="utf-8", newline="") as handle:
+# (case id, message type, columns removed, accepted?)
+CONTRACT_CASES = [
+    ("v09-without-defaulted-columns", "pain.001.001.09", DEFAULTED, True),
+    ("v03-without-defaulted-columns", "pain.001.001.03", DEFAULTED, True),
+    ("v08-without-forwarding-agent", "pain.001.001.08", DEFAULTED[1:2], True),
+    (
+        "v09-without-debtor-account",
+        "pain.001.001.09",
+        ("debtor_account_IBAN",),
+        False,
+    ),
+    (
+        "v09-without-creditor-agent",
+        "pain.001.001.09",
+        ("creditor_agent_BIC",),
+        False,
+    ),
+    ("v09-without-debtor-name", "pain.001.001.09", ("debtor_name",), False),
+]
+
+
+def _write_case(
+    directory: Path,
+    column: str | None,
+    value: str | None,
+    message_type: str = MESSAGE_TYPE,
+    removed: tuple[str, ...] = (),
+) -> str:
+    """Write the sample with ``column`` of its first row set to ``value``.
+
+    The columns in ``removed`` are left out of the file altogether.
+    """
+    sample = TEMPLATES_DIR / message_type / "template.csv"
+    with sample.open(encoding="utf-8", newline="") as handle:
         rows = list(csv.reader(handle))
     if column is not None:
         rows[1][rows[0].index(column)] = value or ""
+    kept = [i for i, name in enumerate(rows[0]) if name not in removed]
+    rows = [[row[i] for i in kept] for row in rows]
     path = directory / "payments.csv"
     with path.open("w", encoding="utf-8", newline="") as handle:
         csv.writer(handle).writerows(rows)
     return str(path)
 
 
-def _cli_validate(data: str, _out: Path) -> bool:
+def _cli_validate(data: str, _out: Path, mt: str = MESSAGE_TYPE) -> bool:
+    result = CliRunner().invoke(cli, ["validate", "-t", mt, "-d", data])
+    assert result.exit_code in (0, 1), result.output
+    return result.exit_code == 0
+
+
+def _cli_generate(data: str, out: Path, mt: str = MESSAGE_TYPE) -> bool:
     result = CliRunner().invoke(
-        cli, ["validate", "-t", MESSAGE_TYPE, "-d", data]
+        cli, ["generate", "-t", mt, "-d", data, "-o", str(out)]
     )
     assert result.exit_code in (0, 1), result.output
     return result.exit_code == 0
 
 
-def _cli_generate(data: str, out: Path) -> bool:
-    result = CliRunner().invoke(
-        cli, ["generate", "-t", MESSAGE_TYPE, "-d", data, "-o", str(out)]
-    )
-    assert result.exit_code in (0, 1), result.output
-    return result.exit_code == 0
+def _paths(mt: str) -> tuple[str, str]:
+    """The bundled template and XSD of ``mt``."""
+    base = TEMPLATES_DIR / mt
+    return str(base / "template.xml"), str(base / f"{mt}.xsd")
 
 
-def _process_files(data: str, out: Path) -> bool:
+def _process_files(data: str, out: Path, mt: str = MESSAGE_TYPE) -> bool:
     try:
-        process_files(
-            MESSAGE_TYPE,
-            str(TEMPLATE),
-            str(SCHEMA),
-            data,
-            output_path=str(out / "out.xml"),
+        process_files(mt, *_paths(mt), data, output_path=str(out / "out.xml"))
+    except pain001.PaymentValidationError:
+        return False
+    return True
+
+
+def _process_files_streaming(
+    data: str, out: Path, mt: str = MESSAGE_TYPE
+) -> bool:
+    try:
+        process_files_streaming(
+            mt, *_paths(mt), data, chunk_size=2, output_dir=str(out)
         )
     except pain001.PaymentValidationError:
         return False
     return True
 
 
-def _python_validate(data: str, _out: Path) -> bool:
-    return pain001.validate(data, MESSAGE_TYPE).is_valid
+def _python_validate(data: str, _out: Path, mt: str = MESSAGE_TYPE) -> bool:
+    return pain001.validate(data, mt).is_valid
 
 
-def _python_generate(data: str, out: Path) -> bool:
+def _python_validate_rows(
+    data: str, _out: Path, mt: str = MESSAGE_TYPE
+) -> bool:
+    with Path(data).open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    return pain001.validate(rows, mt).is_valid
+
+
+def _python_generate(data: str, out: Path, mt: str = MESSAGE_TYPE) -> bool:
     try:
-        pain001.generate(data, MESSAGE_TYPE, output_dir=out)
+        pain001.generate(data, mt, output_dir=out)
     except pain001.PaymentValidationError:
         return False
     return True
 
 
-def _body(data: str, out: Path) -> dict[str, str]:
+def _body(data: str, out: Path, mt: str = MESSAGE_TYPE) -> dict[str, str]:
     return {
         "file_path": data,
         "data_source": "csv",
-        "message_type": MESSAGE_TYPE,
+        "message_type": mt,
         "output_dir": str(out),
     }
 
 
-def _rest_validate(data: str, out: Path) -> bool:
-    response = client.post("/api/v1/validate", json=_body(data, out))
+def _rest_validate(data: str, out: Path, mt: str = MESSAGE_TYPE) -> bool:
+    response = client.post("/api/v1/validate", json=_body(data, out, mt))
     if response.status_code == 400:
         return False
     assert response.status_code == 200, response.text
@@ -127,9 +184,29 @@ def _rest_validate(data: str, out: Path) -> bool:
     return bool(body["is_valid"])
 
 
-def _rest_generate(data: str, out: Path) -> bool:
-    response = client.post("/api/v1/generate", json=_body(data, out))
+def _rest_generate(data: str, out: Path, mt: str = MESSAGE_TYPE) -> bool:
+    response = client.post("/api/v1/generate", json=_body(data, out, mt))
     assert response.status_code in (200, 400, 422), response.text
+    return response.status_code == 200 and response.json()["success"]
+
+
+def _upload(data: str, mt: str) -> dict[str, str]:
+    return {
+        "filename": "payments.csv",
+        "content": Path(data).read_text(encoding="utf-8"),
+        "message_type": mt,
+    }
+
+
+def _ui_validate(data: str, _out: Path, mt: str = MESSAGE_TYPE) -> bool:
+    response = client.post("/api/v1/ui/validate", json=_upload(data, mt))
+    assert response.status_code in (200, 400), response.text
+    return response.status_code == 200 and response.json()["is_valid"]
+
+
+def _ui_generate(data: str, _out: Path, mt: str = MESSAGE_TYPE) -> bool:
+    response = client.post("/api/v1/ui/generate", json=_upload(data, mt))
+    assert response.status_code in (200, 400), response.text
     return response.status_code == 200 and response.json()["success"]
 
 
@@ -158,6 +235,69 @@ def test_every_surface_gives_the_same_verdict(
         out.mkdir()
         verdicts[name] = surface(data, out)
     assert verdicts == dict.fromkeys(SURFACES, accepted)
+
+
+#: Every surface, plus the ones only a whole-file check can reach.
+CONTRACT_SURFACES: dict[str, Callable[[str, Path, str], bool]] = {
+    **SURFACES,
+    "process_files_streaming": _process_files_streaming,
+    "python-validate-rows": _python_validate_rows,
+    "ui-validate": _ui_validate,
+    "ui-generate": _ui_generate,
+}
+
+
+@pytest.mark.parametrize(
+    ("message_type", "removed", "accepted"),
+    [pytest.param(t, r, a, id=i) for i, t, r, a in CONTRACT_CASES],
+)
+def test_the_row_contract_is_the_message_types_own(
+    tmp_path: Path, message_type: str, removed: tuple[str, ...], accepted: bool
+) -> None:
+    """A column only another type requires is not demanded.
+
+    Until 0.0.87 the loader checked rows against every column any
+    bundled schema describes, so a pain.001.001.09 file without
+    ``payment_method`` or ``charge_bearer`` (which have defaults) was
+    refused, though that type's schema does not require them. A column
+    generation needs (a debtor account) is still refused everywhere.
+    """
+    data = _write_case(tmp_path, None, None, message_type, removed)
+    verdicts = _contract_verdicts(tmp_path, data, message_type)
+    assert verdicts == dict.fromkeys(CONTRACT_SURFACES, accepted)
+
+
+def _contract_verdicts(
+    tmp_path: Path, data: str, message_type: str
+) -> dict[str, bool]:
+    """Each contract surface's verdict on ``data``."""
+    verdicts = {}
+    for name, surface in CONTRACT_SURFACES.items():
+        out = tmp_path / name
+        out.mkdir()
+        verdicts[name] = surface(data, out, message_type)
+    return verdicts
+
+
+def test_an_account_number_stands_in_for_the_iban(tmp_path: Path) -> None:
+    """Generation takes a debtor account number; so does validation.
+
+    The every-column contract demanded ``debtor_account_IBAN``, so a
+    file that names the account by number was refused before generation
+    could see it.
+    """
+    message_type = "pain.001.001.09"
+    data = Path(_write_case(tmp_path, None, None, message_type))
+    with data.open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.reader(handle))
+    column = rows[0].index("debtor_account_IBAN")
+    rows[0][column] = "debtor_account_number"
+    for row in rows[1:]:
+        row[column] = "12345678"
+    with data.open("w", encoding="utf-8", newline="") as handle:
+        csv.writer(handle).writerows(rows)
+    verdicts = _contract_verdicts(tmp_path, str(data), message_type)
+    assert verdicts == dict.fromkeys(CONTRACT_SURFACES, True)
 
 
 @pytest.mark.parametrize(

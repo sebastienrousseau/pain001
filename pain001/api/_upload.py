@@ -139,7 +139,9 @@ def _jsonl_rows(content: str) -> list[Any]:
     return rows
 
 
-def parse_upload(filename: str, content: str) -> list[dict[str, Any]]:
+def parse_upload(
+    filename: str, content: str, message_type: str | None = None
+) -> list[dict[str, Any]]:
     """Turn the uploaded text into validated payment rows.
 
     Mirrors the file loaders: CSV through :class:`csv.DictReader`, JSON
@@ -149,6 +151,9 @@ def parse_upload(filename: str, content: str) -> list[dict[str, Any]]:
     Args:
         filename: The name the browser reported; only its suffix is used.
         content: The file's text.
+        message_type: The target message type, whose columns every row
+            must carry; ``None`` requires every column all bundled
+            schemas describe.
 
     Returns:
         The validated rows.
@@ -176,7 +181,7 @@ def parse_upload(filename: str, content: str) -> list[dict[str, Any]]:
             detail="Every payment row must be a JSON object.",
         )
     try:
-        return load_payment_data(rows)
+        return load_payment_data(rows, message_type=message_type)
     except (DataSourceError, PaymentValidationError) as exc:
         raise HTTPException(status_code=_BAD_REQUEST, detail=str(exc)) from exc
 
@@ -236,8 +241,9 @@ def validate_upload(payload: UiFilePayload) -> ValidationResponse:
     Returns:
         The same shape as ``POST /validate``.
     """
-    rows = parse_upload(payload.filename, payload.content)
-    ladder = _climb(rows, sanitise_message_type(payload.message_type.value))
+    message_type = sanitise_message_type(payload.message_type.value)
+    rows = parse_upload(payload.filename, payload.content, message_type)
+    ladder = _climb(rows, message_type)
     scheme_ok, violations = _scheme_violations(rows, payload.scheme)
     return ValidationResponse(
         is_valid=ladder.is_valid and scheme_ok,
@@ -265,11 +271,11 @@ def generate_upload(payload: UiFilePayload) -> UiGenerateResponse:
         HTTPException: ``400`` when rendering fails (for example the
             rendered document does not satisfy the XSD).
     """
-    rows = parse_upload(payload.filename, payload.content)
     # Allow-list barrier: the enum is already constrained, but the value
     # is joined into filesystem paths below and static analysis only
     # recognises an explicit membership check as a sanitiser.
     message_type = sanitise_message_type(payload.message_type.value)
+    rows = parse_upload(payload.filename, payload.content, message_type)
     ladder = _climb(rows, message_type)
     total, valid, errors = ladder.total, ladder.valid, ladder.row_errors
     if errors:

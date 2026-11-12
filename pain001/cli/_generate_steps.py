@@ -227,7 +227,11 @@ def check_schematron(
 
     rulebook = opts["schematron"]
     xml_str = generate_xml_string(
-        load_payment_data(opts["data_file_path"], opts["identifier_checks"]),
+        load_payment_data(
+            opts["data_file_path"],
+            opts["identifier_checks"],
+            opts["xml_message_type"],
+        ),
         opts["xml_message_type"],
         opts["xml_template_file_path"],
         opts["xsd_schema_file_path"],
