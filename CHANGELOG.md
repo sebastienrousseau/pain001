@@ -105,6 +105,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `bad-currency` fixture; `conformance/openapi.json` is regenerated.
   `/ui/validate` is unchanged: like `/validate`, it answers `200` with
   `is_valid: false`.
+- **A REST API running without `PAIN001_API_KEY` answers only requests
+  addressed to loopback.** A `Host` other than `localhost` or a
+  loopback address (any port) is answered `400`, and an `Origin` that
+  is not loopback `403`, before routing. `PAIN001_ALLOWED_HOSTS`
+  (comma separated, `*` for any) names further hosts, for example an
+  `--insecure` server reached by its LAN address. Nothing changes when
+  a key is set. See ADR 0009.
 - **The CLI and `process_files` now refuse rows that break the message
   type's JSON Schema**, as the REST API already did. `pain001 validate`
   and `pain001 generate` used to accept `currency=EURO` (or `eur`) and
@@ -238,6 +245,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   required-field check: a .09 file with neither `debtor_account_IBAN`
   nor `debtor_account_number` is still refused on every surface.
   Generated XML is unchanged.
+- With a trust anchor, `verify_signature` and `pain001 verify-signature`
+  reported the signer from the certificate in `KeyInfo`, which the
+  signature does not cover, even when that certificate carried another
+  key. The signer is now the anchor certificate's subject, or, for a
+  bare public-key anchor, the embedded subject only when its key is the
+  anchor's. A certificate with another key sets the new
+  `SignatureReport.keyinfo_mismatch` field and adds a note to the text
+  output; the verdict is unchanged.
 - A CSV row with more values than the header has columns crashed
   validation with `AttributeError` (REST answered 500). It is now a
   row issue, `P001-E002`, naming the line: `pain001 validate` exits 1,

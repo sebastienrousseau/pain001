@@ -368,6 +368,7 @@ observability.
 | :--- | :--- | :--- |
 | `PYTHONUNBUFFERED` | Always in containers | `print()` lines flush immediately. Critical for `docker logs` debugging. |
 | `PAIN001_METRICS_PAYMENT_VOLUME` | You want payment volume per currency in Prometheus | `1` records and exposes `pain001_payment_volume_cents_total`. Off by default: it is business data, and anyone holding the scrape token can read it. |
+| `PAIN001_ALLOWED_HOSTS` | You run without `PAIN001_API_KEY` and reach the server by a name or address other than loopback | Without a key the API answers only requests whose `Host` (and `Origin`, when sent) is `localhost` or a loopback address. List further hosts, comma separated (`box.lan,10.0.0.5`); `*` accepts any. Ignored when `PAIN001_API_KEY` is set. |
 | `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Each request gets a server span that continues an inbound `traceparent`, and JSON logs carry `trace_id` and `span_id`. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
 
 ---

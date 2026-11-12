@@ -102,7 +102,7 @@ def _health_while_blocked(
     async def scenario() -> tuple[httpx.Response, httpx.Response]:
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://test"
+            transport=transport, base_url="http://127.0.0.1"
         ) as http:
             upload = asyncio.create_task(http.post(path, json=_payload()))
             for _ in range(500):

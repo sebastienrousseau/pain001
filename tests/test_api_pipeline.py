@@ -100,7 +100,7 @@ def _patch_batch(monkeypatch: pytest.MonkeyPatch, gate: _Gate) -> None:
 
 def _client() -> httpx.AsyncClient:
     return httpx.AsyncClient(
-        transport=httpx.ASGITransport(app=app), base_url="http://test"
+        transport=httpx.ASGITransport(app=app), base_url="http://127.0.0.1"
     )
 
 

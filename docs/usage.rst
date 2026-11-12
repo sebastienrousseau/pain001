@@ -182,6 +182,14 @@ cannot run (no trust choice, an unreadable certificate). In Python,
    report = verify_signature(signed_xml, trust_anchor=cert_pem)
    print(report.valid, report.algorithm, report.signer, report.reason)
 
+With a trust anchor, ``report.signer`` is the anchor certificate's
+subject. For an anchor that is a bare public key, it is the subject of
+the file's own certificate only when that certificate carries the
+anchor's key. A file whose certificate carries another key still
+verifies against the anchor, but ``report.keyinfo_mismatch`` is True,
+that certificate's subject is not reported, and the CLI line ends
+``the KeyInfo certificate does not match --cert and was ignored``.
+
 Verification uses exclusive C14N 1.0 on the parsed document and accepts
 only the algorithms above, SHA-256 to SHA-512 digests, and a reference
 to the whole document with the enveloped transform. The certificate's

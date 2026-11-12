@@ -31,6 +31,7 @@ from rich.console import Console
 from pain001.cli._output import esc
 from pain001.observability.otel import init_otel
 from pain001.security.api_access import (
+    ALLOWED_HOSTS_ENV,
     API_KEY_ENV,
     INSECURE_ENV,
     insecure_allowed,
@@ -78,7 +79,8 @@ def check_bind(host: str, insecure: bool) -> None:
         console.print(
             f"[bold yellow]! Warning:[/bold yellow] serving on {esc(repr(host))} "
             f"unauthenticated: {API_KEY_ENV} is unset. Anyone who can "
-            "reach this address can generate and download files."
+            "reach this address can generate and download files. "
+            f"Requests must name a loopback host or one in {ALLOWED_HOSTS_ENV}."
         )
         return
     raise click.UsageError(
