@@ -8,9 +8,11 @@
 
 from __future__ import annotations
 
+import base64
 import datetime
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -113,6 +115,32 @@ def test_the_wrong_certificate_exits_1(
     result = _run(str(path), "--cert", str(other))
     assert result.exit_code == 1
     assert ": invalid: Cryptographic signature" in result.output
+
+
+def test_a_foreign_keyinfo_certificate_is_not_named(
+    signed: tuple[Path, Path, Path],
+) -> None:
+    """The signer comes from --cert, never an unsigned KeyInfo swap."""
+    path, cert, other = signed
+    der = x509.load_pem_x509_certificate(other.read_bytes()).public_bytes(
+        serialization.Encoding.DER
+    )
+    swapped, count = re.subn(
+        r"(X509Certificate>)[^<]+(</)",
+        rf"\g<1>{base64.b64encode(der).decode()}\g<2>",
+        path.read_text(encoding="utf-8"),
+    )
+    assert count == 1
+    path.write_text(swapped, encoding="utf-8")
+    result = _run(str(path), "--cert", str(cert))
+    assert result.exit_code == 0, result.output
+    assert "signer CN=signer" in result.output
+    assert "CN=other" not in result.output
+    assert "KeyInfo certificate does not match --cert" in result.output
+    as_json = _run(str(path), "--cert", str(cert), "--format", "json")
+    (entry,) = json.loads(as_json.output)
+    assert entry["keyinfo_mismatch"] is True
+    assert entry["signer"] == "CN=signer"
 
 
 @pytest.mark.parametrize("both", [True, False])

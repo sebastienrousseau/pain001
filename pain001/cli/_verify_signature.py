@@ -128,7 +128,12 @@ def _line(name: str, report: SignatureReport) -> str:
         if report.trust == "anchor"
         else "embedded certificate, integrity only"
     )
-    return f"{name}: valid ({report.algorithm}, {how}{signer})"
+    mismatch = (
+        "; the KeyInfo certificate does not match --cert and was ignored"
+        if report.keyinfo_mismatch
+        else ""
+    )
+    return f"{name}: valid ({report.algorithm}, {how}{signer}){mismatch}"
 
 
 @click.command("verify-signature")

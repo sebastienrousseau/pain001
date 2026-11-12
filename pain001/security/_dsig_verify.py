@@ -76,8 +76,17 @@ class SignatureReport:
             document with a certificate they made).
         algorithm: The signature algorithm's short name, when declared
             and allowed.
-        signer: The subject of the certificate in ``KeyInfo``, if any.
+        signer: Who the verifying key belongs to. With a trust anchor:
+            the anchor certificate's subject, or, for an anchor that is
+            a bare public key, the subject of the certificate in
+            ``KeyInfo`` when that certificate carries the anchor's key.
+            Without one: the subject of the certificate in ``KeyInfo``.
+            None when nothing names it.
         reason: Why the document did not verify; None when it did.
+        keyinfo_mismatch: True when, with a trust anchor, the
+            certificate in ``KeyInfo`` carries a different key. That
+            certificate is not covered by the signature, so its subject
+            is not reported.
     """
 
     valid: bool
@@ -85,6 +94,7 @@ class SignatureReport:
     algorithm: str | None = None
     signer: str | None = None
     reason: str | None = None
+    keyinfo_mismatch: bool = False
 
 
 class _Invalid(Exception):
@@ -227,6 +237,17 @@ def load_trust_anchor(anchor: str | bytes) -> Any:
         ) from exc
 
 
+def _load_anchor(anchor: str | bytes) -> tuple[Any, str | None]:
+    """The anchor's public key, and its subject when it is a certificate."""
+    from cryptography import x509  # noqa: PLC0415
+
+    data = anchor.encode("utf-8") if isinstance(anchor, str) else anchor
+    if b"BEGIN CERTIFICATE" in data:
+        cert = x509.load_pem_x509_certificate(data)
+        return cert.public_key(), cert.subject.rfc4514_string()
+    return load_trust_anchor(data), None
+
+
 def _c14n(node: Any, method: Any) -> bytes:
     """Exclusive C14N 1.0, honouring an InclusiveNamespaces PrefixList."""
     etree = _etree()
@@ -308,6 +329,37 @@ def _remove_enveloped(sig: Any) -> None:
             parent.text = (parent.text or "") + tail
 
 
+def _spki(key: Any) -> bytes:
+    """``key`` as DER SubjectPublicKeyInfo, for comparing keys."""
+    from cryptography.hazmat.primitives import serialization  # noqa: PLC0415
+
+    return bytes(
+        key.public_bytes(
+            serialization.Encoding.DER,
+            serialization.PublicFormat.SubjectPublicKeyInfo,
+        )
+    )
+
+
+def _name_signer(cert: Any, key: Any | None, report: dict[str, Any]) -> None:
+    """Report the embedded certificate's subject only when it is the key's.
+
+    ``KeyInfo`` is outside what the signature covers. With a trust
+    anchor its subject names the signer only when the certificate
+    carries the anchor's key, and the anchor certificate's own subject
+    comes first; otherwise the mismatch is reported instead.
+    """
+    if cert is None:
+        return
+    subject = cert.subject.rfc4514_string()
+    if report["trust"] == "embedded":
+        report["signer"] = subject
+    elif _spki(cert.public_key()) != _spki(key):
+        report["keyinfo_mismatch"] = True
+    elif report.get("signer") is None:
+        report["signer"] = subject
+
+
 def _verify(tree: Any, key: Any | None, report: dict[str, Any]) -> None:
     """Run every check, filling ``report`` as facts are found."""
     from cryptography.exceptions import InvalidSignature  # noqa: PLC0415
@@ -328,10 +380,9 @@ def _verify(tree: Any, key: Any | None, report: dict[str, Any]) -> None:
         "Missing or empty <DigestValue> in <Reference>.",
     )
     cert = _embedded_cert(sig)
-    if cert is not None:
-        report["signer"] = cert.subject.rfc4514_string()
-    if key is None and cert is not None and report["trust"] == "embedded":
+    if key is None and cert is not None:
         key = cert.public_key()
+    _name_signer(cert, key, report)
     if key is None:
         raise _Invalid(
             "No public key or certificate supplied and none found in <KeyInfo>."
@@ -373,7 +424,8 @@ def verify_signature(
         signed_xml: The signed document.
         trust_anchor: The signer's PEM certificate or PEM public key, the
             key you already trust. The document's own certificate is
-            then reported but not used.
+            then not used, and names the signer only when it carries
+            the anchor's key.
         trust_embedded_cert: Without an anchor, verify with the
             certificate in ``KeyInfo``. That proves the document was not
             changed after signing, not who signed it.
@@ -391,9 +443,12 @@ def verify_signature(
             "pass trust_anchor (the signer's certificate or public key), or "
             "trust_embedded_cert=True for an integrity-only check"
         )
-    key = None if trust_anchor is None else load_trust_anchor(trust_anchor)
+    key, subject = (
+        (None, None) if trust_anchor is None else _load_anchor(trust_anchor)
+    )
     report: dict[str, Any] = {
-        "trust": "anchor" if key is not None else "embedded"
+        "trust": "anchor" if key is not None else "embedded",
+        "signer": subject,
     }
     raw = (
         signed_xml.encode("utf-8")

@@ -187,6 +187,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- With a trust anchor, `verify_signature` and `pain001 verify-signature`
+  reported the signer from the certificate in `KeyInfo`, which the
+  signature does not cover, even when that certificate carried another
+  key. The signer is now the anchor certificate's subject, or, for a
+  bare public-key anchor, the embedded subject only when its key is the
+  anchor's. A certificate with another key sets the new
+  `SignatureReport.keyinfo_mismatch` field and adds a note to the text
+  output; the verdict is unchanged.
 - A CSV row with more values than the header has columns crashed
   validation with `AttributeError` (REST answered 500). It is now a
   row issue, `P001-E002`, naming the line: `pain001 validate` exits 1,
