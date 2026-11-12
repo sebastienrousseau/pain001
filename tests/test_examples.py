@@ -21,6 +21,7 @@ silently rotting.
 
 import ast
 import importlib
+import os
 import re
 import subprocess  # nosec B404
 import sys
@@ -162,6 +163,20 @@ def test_every_example_is_documented() -> None:
         assert f"`{example.name}`" in guide
 
 
+def _user_environment() -> dict[str, str]:
+    """The environment a user runs an example in.
+
+    conftest.py names the test client's host in PAIN001_ALLOWED_HOSTS
+    for the in-process suite; an example or benchmark run as its own
+    process must work without it, as it does for a user.
+    """
+    return {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"PAIN001_ALLOWED_HOSTS", "PAIN001_API_KEY"}
+    }
+
+
 @pytest.mark.parametrize(
     "benchmark_script",
     sorted((REPO_ROOT / "benches").glob("bench_*.py")),
@@ -175,6 +190,7 @@ def test_benchmark_smoke(benchmark_script: Path) -> None:
     result = subprocess.run(
         arguments,
         cwd=REPO_ROOT,
+        env=_user_environment(),
         capture_output=True,
         text=True,
         timeout=300,
@@ -191,6 +207,7 @@ def test_example_runs_cleanly(example: Path) -> None:
     result = subprocess.run(  # nosec B603
         [sys.executable, str(example)],
         cwd=REPO_ROOT,
+        env=_user_environment(),
         capture_output=True,
         text=True,
         timeout=180,

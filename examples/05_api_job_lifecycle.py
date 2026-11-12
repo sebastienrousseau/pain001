@@ -151,8 +151,12 @@ def _delete_a_job(client: TestClient) -> None:
 
 def main() -> None:
     """Open the client inside a context manager so the app's event loop
-    stays alive between requests, letting background jobs progress."""
-    with TestClient(app) as client:
+    stays alive between requests, letting background jobs progress.
+
+    The client addresses the app as localhost: without PAIN001_API_KEY
+    the API answers loopback hosts only, and TestClient's default host,
+    testserver, is not one."""
+    with TestClient(app, base_url="http://localhost") as client:
         run(client)
 
 
