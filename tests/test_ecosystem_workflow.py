@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 import render_ecosystem_workflows as workflow_cli
 import yaml
-from ecosystem_audit import inventory, workflows
+from ecosystem_audit import Member, inventory, workflows
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -46,32 +46,29 @@ def test_readme_and_roadmap_list_all_nine_members() -> None:
         assert "unreleased `0.0.1`" not in text
 
 
-@pytest.mark.parametrize(
-    "name", ["pain001-mcp", "pain001-lsp", "pain001.github.io"]
-)
-def test_companion_workflows_watch_every_publisher_and_deployment(
-    name: str,
+@pytest.mark.parametrize("member", inventory()[1:], ids=lambda m: m.name)
+def test_companion_workflows_run_on_schedule_and_dispatch_only(
+    member: Member,
 ) -> None:
-    """The last actual publication, not just GitHub release creation, rechecks the family."""
-    members = {member.name: member for member in inventory()}
-    rendered = workflows.render(members[name], "d" * 40)
+    """No companion audit starts on another workflow's completion.
+
+    Like the core's, each one runs daily and on demand, with a read-only
+    token, from a pinned core commit.
+    """
+    rendered = workflows.render(member, "d" * 40)
+    assert "workflow_run" not in rendered
     workflow = yaml.load(rendered, Loader=yaml.BaseLoader)
-    assert workflow["on"]["workflow_run"]["workflows"] == list(
-        members[name].publishers
-    )
+    assert set(workflow["on"]) == {"schedule", "workflow_dispatch"}
+    assert set(workflow["on"]["workflow_dispatch"]["inputs"]) == {"version"}
     assert workflow["permissions"] == {"contents": "read"}
+    job = workflow["jobs"]["consistency"]
+    assert "if" not in job
     action = next(
         step["uses"]
-        for step in workflow["jobs"]["consistency"]["steps"]
+        for step in job["steps"]
         if "/check-ecosystem@" in step.get("uses", "")
     )
     assert action.endswith("@" + "d" * 40)
-    if name == "pain001.github.io":
-        assert "head_branch == 'main'" in workflow["jobs"]["consistency"]["if"]
-        assert (
-            "workflow_run.name == 'CI'"
-            in workflow["jobs"]["consistency"]["if"]
-        )
 
 
 @pytest.mark.parametrize("ref", ["main", "v0.0.84", "abc", "d" * 39])
