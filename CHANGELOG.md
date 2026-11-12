@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.87] - Unreleased
+## [0.0.87] - 2026-11-12
 
 ### Added
 
@@ -85,6 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Release 0.0.87 in lockstep with the pain001 suite.
 - **Breaking: `POST /api/v1/ui/generate` answers `422` when it refuses
   the data.** It answered `200` with `success: false`, so a client,
   a retry policy or a monitor that read only the status counted a
