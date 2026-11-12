@@ -311,3 +311,42 @@ def test_enabled_tracing_tests_never_reach_otlp_transport(monkeypatch):
         pass
     assert trace.get_tracer_provider().force_flush()
     assert attempts == []
+
+
+def test_init_otel_keeps_the_host_applications_provider(monkeypatch):
+    """A provider the host installed first stays the global one.
+
+    Audit finding D12: ``init_otel`` built its own provider and called
+    ``set_tracer_provider`` even inside an application that had already
+    configured tracing, replacing (or fighting) the host's exporter.
+    """
+    pytest.importorskip("opentelemetry.sdk")
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+        InMemorySpanExporter,
+    )
+
+    host = TracerProvider()
+    exporter = InMemorySpanExporter()
+    host.add_span_processor(SimpleSpanProcessor(exporter))
+    trace.set_tracer_provider(host)
+    monkeypatch.setenv("OTEL_ENABLED", "true")
+    tracer = otel.init_otel()
+    assert trace.get_tracer_provider() is host
+    with tracer.start_as_current_span("pain001.host-test"):
+        pass
+    assert [span.name for span in exporter.get_finished_spans()] == [
+        "pain001.host-test"
+    ]
+
+
+def test_init_otel_without_the_sdk_but_with_the_api(monkeypatch, caplog):
+    """The API alone, with no provider set, leaves tracing off."""
+    pytest.importorskip("opentelemetry.trace")
+    monkeypatch.setitem(sys.modules, "opentelemetry.sdk.resources", None)
+    monkeypatch.setenv("OTEL_ENABLED", "true")
+    with caplog.at_level("WARNING"):
+        assert otel.init_otel() is None
+    assert "pain001[otel]" in caplog.text

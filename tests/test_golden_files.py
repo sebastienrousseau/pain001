@@ -16,7 +16,7 @@ from pathlib import Path
 import pytest
 
 from pain001.constants import valid_xml_types
-from pain001.xml.generate_xml import generate_xml_string
+from pain001.xml.generate_xml import generate_xml, generate_xml_string
 
 TEMPLATES_DIR = Path("pain001/templates")
 GOLDEN_DIR = Path(__file__).parent / "golden"
@@ -48,3 +48,19 @@ def test_generated_xml_matches_golden(version: str) -> None:
         "If the change is intentional, regenerate via "
         "scripts/generate_golden_files.py"
     )
+
+
+@pytest.mark.version_compat
+@pytest.mark.parametrize("version", valid_xml_types)
+def test_written_file_matches_golden(version: str, tmp_path: Path) -> None:
+    """generate_xml renders straight to the file: same bytes as golden."""
+    base = TEMPLATES_DIR / version
+    written = generate_xml(
+        _load_template_rows(version),
+        version,
+        str(base / "template.xml"),
+        str(base / f"{version}.xsd"),
+        output_path=str(tmp_path / f"{version}.xml"),
+    )
+    golden = GOLDEN_DIR / f"{version}.xml"
+    assert Path(written).read_bytes() == golden.read_bytes()

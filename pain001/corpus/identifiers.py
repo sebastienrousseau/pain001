@@ -37,6 +37,7 @@ import string
 import uuid
 from collections.abc import Callable
 
+from pain001.validation import lei_validator as _lei
 from pain001.validation.iban_validator import IBAN_LENGTHS
 
 #: The sixteen markets of the plan; "SW" covers Switzerland and Sweden.
@@ -486,7 +487,7 @@ def bic_is_test(bic: str) -> bool:
 
 def lei_check_digits(body: str) -> str:
     """ISO 17442 check digits (MOD 97-10 over the 18-character body)."""
-    return f"{98 - mod97(body + '00'):02d}"
+    return _lei.lei_check_digits(body)
 
 
 def make_lei(seed: int) -> str:
@@ -504,9 +505,7 @@ def make_lei(seed: int) -> str:
 
 def lei_is_valid(lei: str) -> bool:
     """True when ``lei`` is twenty characters and passes MOD 97-10."""
-    return (
-        len(lei) == 20 and all(ch in _ALNUM for ch in lei) and mod97(lei) == 1
-    )
+    return _lei.validate_lei(lei)
 
 
 def make_uetr(seed: int) -> str:

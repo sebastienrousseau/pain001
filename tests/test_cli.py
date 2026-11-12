@@ -20,6 +20,7 @@ from unittest.mock import patch
 from click.testing import CliRunner
 
 from pain001.cli.cli import main
+from tests._ladder_stub import rows_loaded
 
 
 class TestCliModule(unittest.TestCase):
@@ -162,7 +163,7 @@ class TestCliModule(unittest.TestCase):
 
         # Mock process_files so nothing is generated
         with patch(
-            "pain001.cli.cli.process_files", autospec=True
+            "pain001.cli._generate_steps.process_files", autospec=True
         ) as mock_process:
             self.runner.invoke(
                 main,
@@ -186,13 +187,9 @@ class TestCliModule(unittest.TestCase):
         """Test CLI dry-run flag validates data but skips XML generation."""
 
         with patch(
-            "pain001.cli.cli.process_files", autospec=True
+            "pain001.cli._generate_steps.process_files", autospec=True
         ) as mock_process:
-            with patch(
-                "pain001.cli.cli.load_batch",
-                autospec=True,
-                return_value=[{}],
-            ) as mock_load:
+            with rows_loaded([{}]) as mock_load:
                 result = self.runner.invoke(
                     main,
                     [
@@ -226,7 +223,9 @@ class TestCliModule(unittest.TestCase):
             f.write("<root></root>")
 
         with patch("os.path.expanduser", autospec=True, return_value=home_xml):
-            with patch("pain001.cli.cli.process_files", autospec=True):
+            with patch(
+                "pain001.cli._generate_steps.process_files", autospec=True
+            ):
                 result = self.runner.invoke(
                     main,
                     [
@@ -265,7 +264,7 @@ class TestCliModule(unittest.TestCase):
         """Test that --output-dir flag creates directory if it doesn't exist."""
         output_dir = os.path.join(self.temp_dir, "output", "xml")
 
-        with patch("pain001.cli.cli.process_files", autospec=True):
+        with patch("pain001.cli._generate_steps.process_files", autospec=True):
             result = self.runner.invoke(
                 main,
                 [
@@ -290,7 +289,7 @@ class TestCliModule(unittest.TestCase):
         output_dir = os.path.join(self.temp_dir, "custom_output")
         os.makedirs(output_dir, exist_ok=True)
 
-        with patch("pain001.cli.cli.process_files", autospec=True):
+        with patch("pain001.cli._generate_steps.process_files", autospec=True):
             result = self.runner.invoke(
                 main,
                 [
@@ -315,7 +314,7 @@ class TestCliModule(unittest.TestCase):
 
     def test_cli_verbose_flag_enables_debug_logging(self) -> None:
         """Test that --verbose flag enables detailed logging."""
-        with patch("pain001.cli.cli.process_files", autospec=True):
+        with patch("pain001.cli._generate_steps.process_files", autospec=True):
             result = self.runner.invoke(
                 main,
                 [
@@ -335,11 +334,7 @@ class TestCliModule(unittest.TestCase):
 
     def test_cli_dry_run_with_verbose(self) -> None:
         """Test combining --dry-run and --verbose flags."""
-        with patch(
-            "pain001.cli.cli.load_batch",
-            autospec=True,
-            return_value=[{"id": "1"}, {"id": "2"}],
-        ):
+        with rows_loaded([{"id": "1"}, {"id": "2"}]):
             result = self.runner.invoke(
                 main,
                 [
@@ -397,7 +392,7 @@ class TestCliModule(unittest.TestCase):
 
     def test_cli_alias_flags(self) -> None:
         """Test that short and long flag names work."""
-        with patch("pain001.cli.cli.process_files", autospec=True):
+        with patch("pain001.cli._generate_steps.process_files", autospec=True):
             # Test short flags
             result_short = self.runner.invoke(
                 main,

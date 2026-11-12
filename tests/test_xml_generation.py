@@ -173,9 +173,9 @@ class TestGenerateXMLFunction(unittest.TestCase):
     def test_generate_xml_invalid_xsd_validation(self) -> None:
         """Test generate_xml with invalid XML that fails XSD validation."""
         with patch(
-            "pain001.xml.validate_via_xsd.validate_xml_string_via_xsd",
+            "pain001.xml.validate_via_xsd.collect_xsd_file_errors",
             autospec=True,
-            return_value=False,
+            return_value=["/Document: refused"],
         ):
             with self.assertRaises(RuntimeError):
                 generate_xml(
@@ -202,7 +202,7 @@ if __name__ == "__main__":
 
 
 def test_trusted_template_source_requires_an_xml_suffix(tmp_path) -> None:
-    from pain001.xml.generate_xml import _load_trusted_template_source
+    from pain001.xml._render import _load_trusted_template_source
 
     plain = tmp_path / "template.txt"
     plain.write_text("<x/>", encoding="utf-8")

@@ -26,7 +26,7 @@ from pain001.api.app import app
 from pain001.cli.cli import cli
 from pain001.constants import TEMPLATES_DIR
 from pain001.exceptions import PaymentValidationError
-from pain001.validation._one_batch import load_batch
+from pain001.validation._one_batch import load_batch, require_generatable
 from pain001.xml.batch_consistency import require_one_batch
 
 _TYPE = "pain.001.001.03"
@@ -73,6 +73,24 @@ def test_rows_generation_cannot_normalise_are_left_to_the_schema() -> None:
     rows[1]["payment_amount"] = "not a number"
     rows[1]["debtor_name"] = "Another Debtor"
     require_one_batch(rows, _TYPE)
+
+
+def test_the_preparer_refuses_a_missing_required_field() -> None:
+    """Generation's own required fields are checked at validation."""
+    rows = _rows()
+    for row in rows:
+        del row["debtor_account_IBAN"]
+    with pytest.raises(PaymentValidationError, match="debtor_account_IBAN"):
+        require_generatable(rows, _TYPE)
+
+
+def test_rows_that_cannot_be_normalised_skip_the_preparer() -> None:
+    """A bad amount is the schema check's finding, not the preparer's."""
+    rows = _rows()
+    rows[0]["payment_amount"] = "not a number"
+    for row in rows:
+        del row["debtor_account_IBAN"]
+    require_generatable(rows, _TYPE)
 
 
 def test_load_batch_refuses_a_mixed_file(mixed_csv: Path) -> None:

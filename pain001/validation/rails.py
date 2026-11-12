@@ -29,17 +29,20 @@ CLI, REST and MCP surfaces through the plugin registry unchanged.
 
 Rules a public document states are errors; rules the plan marks as
 typical bank practice or an assumption are warnings and say so.
-:class:`PurposeMandate` adds the five country purpose-code mandates
-(AE, QA, MY, GB, HK) the plan names, as their own profiles.
+The five country purpose-code mandates (AE, QA, MY, GB, HK) the plan
+names are their own profiles, :class:`PurposeMandate`, defined in
+:mod:`pain001.validation.purpose_mandates` and registered here.
 """
 
 from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import Any
 
+from pain001.validation import _check_digits as _cd
 from pain001.validation._scheme_rules import PROFILES, ValidationProfile
 from pain001.validation._scheme_types import (
     REMEDIATIONS,
@@ -48,6 +51,16 @@ from pain001.validation._scheme_types import (
 )
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.iban_validator import validate_iban_safe
+from pain001.validation.lei_validator import lei_error
+from pain001.validation.purpose_mandates import (
+    PURPOSE_MANDATES,
+    PurposeMandate,
+    execution_date,
+)
+from pain001.validation.purpose_mandates import (
+    purpose_known as _purpose_known,
+)
+from pain001.validation.purpose_mandates import row_text as _text
 
 #: Nacha Standard Entry Class codes a pain.001 may carry in LclInstrm/Cd.
 SEC_CODES: frozenset[str] = frozenset(
@@ -58,6 +71,10 @@ SEC_CODES: frozenset[str] = frozenset(
 #: Bacs transaction codes the plan maps sequence types to (an assumption).
 BACS_DD_CODES: frozenset[str] = frozenset({"01", "17", "18", "19"})
 UAE_REGULATORY = re.compile(r"^/(BENEFRES|ORDERRES)/AE//[A-Z]{3}$")
+#: First execution date the Bank of England's all-payments CHAPS purpose
+#: mandate is certainly in force: the policy says "November 2027" with
+#: no day, so the narrower reading starts it after that month.
+CHAPS_PURPOSE_ALL_PAYMENTS_FROM = date(2027, 12, 1)
 
 
 @dataclass(frozen=True)
@@ -105,6 +122,9 @@ class Rail:
         remittance_severity: Severity of the remittance rule.
         purpose: ``require``, ``warn`` or ``None``; a present purpose code
             must be in the ISO external list either way.
+        purpose_required_from: A ``warn`` purpose becomes ``require`` for
+            payments executed on or after this date.
+        lei_checked: Every ``*_lei`` value present must be an ISO 17442 LEI.
         regulatory: ``require`` or ``warn`` for a regulatory-reporting code.
         regulatory_pattern: Regex the regulatory info must match.
         charge_bearers: Accepted ``ChrgBr`` values.
@@ -139,6 +159,8 @@ class Rail:
     remittance_max: int | None = None
     remittance_severity: str = "warning"
     purpose: str | None = None
+    purpose_required_from: date | None = None
+    lei_checked: bool = False
     regulatory: str | None = None
     regulatory_pattern: re.Pattern[str] | None = None
     charge_bearers: tuple[str, ...] = ()
@@ -151,76 +173,6 @@ class Rail:
     creditor_id_pattern: re.Pattern[str] | None = None
     creditor_reference: str | None = None
     batch_booking: str | None = None
-
-
-# --- small check-digit helpers (kept local to avoid a package cycle) ---------
-
-
-def _mod97_alpha(text: str) -> int:
-    """MOD 97-10 over a string with letters mapped A=10 ... Z=35."""
-    digits = "".join(str(int(ch, 36)) for ch in text)
-    remainder = 0
-    for ch in digits:
-        remainder = (remainder * 10 + int(ch)) % 97
-    return remainder
-
-
-def _luhn_ok(digits: str) -> bool:
-    """True when ``digits`` pass the Luhn mod-10 check."""
-    total = 0
-    for i, ch in enumerate(reversed(digits)):
-        value = int(ch) * (2 if i % 2 == 1 else 1)
-        total += value - 9 if value > 9 else value
-    return total % 10 == 0
-
-
-def _aba_ok(routing: str) -> bool:
-    """True when ``routing`` is nine digits with a valid ABA check digit."""
-    if len(routing) != 9 or not routing.isdigit():
-        return False
-    d = [int(c) for c in routing]
-    total = (
-        3 * (d[0] + d[3] + d[6])
-        + 7 * (d[1] + d[4] + d[7])
-        + (d[2] + d[5] + d[8])
-    )
-    return total % 10 == 0
-
-
-def _qrr_ok(reference: str) -> bool:
-    """Swiss QR reference: 27 digits, recursive mod-10 check digit."""
-    if len(reference) != 27 or not reference.isdigit():
-        return False
-    table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5]
-    carry = 0
-    for ch in reference[:-1]:
-        carry = table[(carry + int(ch)) % 10]
-    return (10 - carry) % 10 == int(reference[-1])
-
-
-def _rf_ok(reference: str) -> bool:
-    """ISO 11649 creditor reference: RF + 2 check digits + up to 21 chars."""
-    compact = reference.replace(" ", "").upper()
-    if not (5 <= len(compact) <= 25) or not compact.startswith("RF"):
-        return False
-    return _mod97_alpha(compact[4:] + compact[:4]) == 1
-
-
-def _is_qr_iban(iban: str) -> bool:
-    """A Swiss or Liechtenstein IBAN whose IID is in the QR range."""
-    compact = iban.replace(" ", "")
-    if compact[:2] not in ("CH", "LI") or len(compact) < 9:
-        return False
-    return 30000 <= int(compact[4:9]) <= 31999
-
-
-def _text(row: dict[str, Any], *keys: str) -> str | None:
-    """The first non-blank value among ``keys``, stripped, else ``None``."""
-    for key in keys:
-        value = row.get(key)
-        if value is not None and str(value).strip():
-            return str(value).strip()
-    return None
 
 
 # --- the engine ----------------------------------------------------------------
@@ -239,6 +191,8 @@ class _RowContext:
         clearing: The counterparty agent's clearing system code.
         iban: The counterparty IBAN.
         other: The counterparty domestic account number.
+        executed: The requested execution date, the row's or else the
+            first row's (the PmtInf header); ``None`` when unreadable.
     """
 
     side: str
@@ -248,10 +202,11 @@ class _RowContext:
     clearing: str | None
     iban: str | None
     other: str | None
+    executed: date | None
 
     @classmethod
-    def of(cls, row: dict[str, Any]) -> _RowContext:
-        """Read the shared values from a row."""
+    def of(cls, row: dict[str, Any], head: dict[str, Any]) -> _RowContext:
+        """Read the shared values from a row and its batch's first row."""
         direct_debit = (
             _text(row, "payment_method") == "DD" or "mandate_id" in row
         )
@@ -264,6 +219,7 @@ class _RowContext:
             clearing=_text(row, f"{side}_agent_clearing_system"),
             iban=_text(row, f"{side}_account_IBAN"),
             other=_text(row, f"{side}_account_id", f"{side}_account_number"),
+            executed=execution_date(row) or execution_date(head),
         )
 
 
@@ -306,14 +262,18 @@ class RailProfile(ValidationProfile):
         """
         result = SchemeValidationResult(profile=self.name)
         for index, row in enumerate(data):
-            self._check_row(row, index, result)
+            self._check_row(row, index, result, data[0])
         return result
 
     def _check_row(
-        self, row: dict[str, Any], index: int, result: SchemeValidationResult
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        head: dict[str, Any],
     ) -> None:
         """Apply every configured rule to one row, one concern at a time."""
-        ctx = _RowContext.of(row)
+        ctx = _RowContext.of(row, head)
         for check in self._CHECKS:
             check(self, row, index, result, ctx)
 
@@ -550,7 +510,7 @@ class RailProfile(ValidationProfile):
         elif (
             member is not None
             and shape.member_check == "aba"
-            and not _aba_ok(member)
+            and not _cd.aba_ok(member)
         ):
             self._flag(
                 result,
@@ -629,13 +589,17 @@ class RailProfile(ValidationProfile):
             and not purpose
             and not _text(row, "purpose_proprietary")
         ):
+            mandated = self._purpose_mandated(ctx)
             self._flag(
                 result,
                 "PURP",
-                f"{rail.title} expects a purpose code",
+                f"{rail.title} requires a purpose code on payments executed "
+                f"from {rail.purpose_required_from}"
+                if mandated and rail.purpose != "require"
+                else f"{rail.title} expects a purpose code",
                 index,
                 "purpose_code",
-                "error" if rail.purpose == "require" else "warning",
+                "error" if mandated else "warning",
             )
         if purpose and not _purpose_known(purpose):
             self._flag(
@@ -645,6 +609,36 @@ class RailProfile(ValidationProfile):
                 index,
                 "purpose_code",
             )
+
+    def _purpose_mandated(self, ctx: _RowContext) -> bool:
+        """True when a missing purpose code is an error for this payment."""
+        rail = self.rail
+        if rail.purpose == "require":
+            return True
+        start = rail.purpose_required_from
+        return bool(start and ctx.executed and ctx.executed >= start)
+
+    def _check_lei(
+        self,
+        row: dict[str, Any],
+        index: int,
+        result: SchemeValidationResult,
+        ctx: _RowContext,
+    ) -> None:
+        """Every LEI the row carries is a well-formed ISO 17442 LEI."""
+        if not self.rail.lei_checked:
+            return
+        for key in [k for k in row if str(k).lower().endswith("_lei")]:
+            value = _text(row, key)
+            reason = lei_error(value) if value else None
+            if reason:
+                self._flag(
+                    result,
+                    "LEI",
+                    f"{key} is not a valid LEI ({reason})",
+                    index,
+                    key,
+                )
 
     def _check_regulatory(
         self,
@@ -809,6 +803,7 @@ class RailProfile(ValidationProfile):
         _check_domestic,
         _check_references,
         _check_purpose,
+        _check_lei,
         _check_regulatory,
         _check_charges_address_uetr,
         _check_direct_debit,
@@ -829,7 +824,7 @@ class RailProfile(ValidationProfile):
             return
         if self.rail.creditor_reference == "ch":
             if kind == "QRR":
-                if not _qrr_ok(reference):
+                if not _cd.qrr_ok(reference):
                     self._flag(
                         result,
                         "CDTRREF",
@@ -837,7 +832,7 @@ class RailProfile(ValidationProfile):
                         index,
                         "creditor_reference",
                     )
-                if iban and not _is_qr_iban(iban):
+                if iban and not _cd.is_qr_iban(iban):
                     self._flag(
                         result,
                         "CDTRREF",
@@ -846,7 +841,7 @@ class RailProfile(ValidationProfile):
                         "creditor_account_IBAN",
                     )
             elif kind == "SCOR":
-                if not _rf_ok(reference):
+                if not _cd.rf_ok(reference):
                     self._flag(
                         result,
                         "CDTRREF",
@@ -854,7 +849,7 @@ class RailProfile(ValidationProfile):
                         index,
                         "creditor_reference",
                     )
-                if iban and _is_qr_iban(iban):
+                if iban and _cd.is_qr_iban(iban):
                     self._flag(
                         result,
                         "CDTRREF",
@@ -874,7 +869,7 @@ class RailProfile(ValidationProfile):
             if (
                 not reference.isdigit()
                 or not 2 <= len(reference) <= 25
-                or not _luhn_ok(reference)
+                or not _cd.luhn_ok(reference)
             ):
                 self._flag(
                     result,
@@ -883,104 +878,6 @@ class RailProfile(ValidationProfile):
                     index,
                     "creditor_reference",
                 )
-
-
-def _purpose_known(code: str) -> bool:
-    """True when ``code`` is in the vendored ISO external purpose list."""
-    from pain001.corpus.rules.external_codes import is_valid  # noqa: PLC0415
-
-    return is_valid("ExternalPurpose1Code", code)
-
-
-class PurposeMandate(ValidationProfile):
-    """A country's purpose-code mandate, as its own profile.
-
-    Args:
-        country: ISO 3166 alpha-2 code.
-        title: Human title.
-        where: ``purpose`` (Purp/Cd or Prtry) or ``regulatory``
-            (RgltryRptg/Dtls), where the country expects the code.
-        pattern: Regex the code must match, if the country prescribes one.
-        currency: Only when the payment currency is this (HK RMB).
-        sources: The public documents the mandate comes from.
-    """
-
-    def __init__(
-        self,
-        country: str,
-        title: str,
-        where: str,
-        pattern: str | None = None,
-        currency: str | None = None,
-        sources: tuple[str, ...] = (),
-    ) -> None:
-        self.country = country
-        self.title = title
-        self.where = where
-        self.pattern = re.compile(pattern) if pattern else None
-        self.currency = currency
-        self.sources = sources
-        self.name = f"purpose-mandate-{country.lower()}"
-
-    def validate(self, data: list[dict[str, Any]]) -> SchemeValidationResult:
-        """Validate payment rows against the country's purpose mandate.
-
-        Args:
-            data: Loaded payment rows.
-
-        Returns:
-            A :class:`SchemeValidationResult` listing every violation.
-        """
-        result = SchemeValidationResult(profile=self.name)
-        rule = f"PURP-{self.country}"
-        for index, row in enumerate(data):
-            if (
-                self.currency
-                and _text(row, "payment_currency", "currency") != self.currency
-            ):
-                continue
-            if self.where == "regulatory":
-                code = _text(
-                    row,
-                    "regulatory_reporting_code",
-                    "regulatory_reporting_info",
-                )
-                field_name = "regulatory_reporting_code"
-            else:
-                code = _text(row, "purpose_code", "purpose_proprietary")
-                field_name = "purpose_code"
-            if not code:
-                result.violations.append(
-                    SchemeViolation(
-                        rule,
-                        f"{self.title}: a purpose code is mandatory",
-                        index,
-                        field_name,
-                    )
-                )
-            elif self.pattern is not None and not self.pattern.fullmatch(code):
-                result.violations.append(
-                    SchemeViolation(
-                        rule,
-                        f"{self.title}: purpose code {code} does not match {self.pattern.pattern}",
-                        index,
-                        field_name,
-                    )
-                )
-            elif (
-                self.where == "purpose"
-                and _text(row, "purpose_code")
-                and not _purpose_known(str(_text(row, "purpose_code")))
-            ):
-                result.violations.append(
-                    SchemeViolation(
-                        rule,
-                        f"{self.title}: purpose code {code} is not in the ISO external purpose list",
-                        index,
-                        field_name,
-                    )
-                )
-        return result
 
 
 # --- the rails -----------------------------------------------------------------
@@ -1034,7 +931,7 @@ RAILS: tuple[Rail, ...] = (
         "UK-CHAPS",
         ("pain.001",),
         (
-            "Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses)",
+            "Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, on all payments from November 2027; structured or hybrid addresses)",
             "A UK bank's public bulk-payment import guide (Jan 2025)",
         ),
         currencies=("GBP",),
@@ -1042,6 +939,8 @@ RAILS: tuple[Rail, ...] = (
         domestic=GB_DOMESTIC,
         end_to_end_max=35,
         purpose="warn",
+        purpose_required_from=CHAPS_PURPOSE_ALL_PAYMENTS_FROM,
+        lei_checked=True,
         address_required=True,
     ),
     Rail(
@@ -1267,44 +1166,6 @@ RAILS: tuple[Rail, ...] = (
     ),
 )
 
-PURPOSE_MANDATES: tuple[PurposeMandate, ...] = (
-    PurposeMandate(
-        "AE",
-        "UAE CBUAE purpose of payment",
-        "regulatory",
-        r"(/(BENEFRES|ORDERRES)/AE//)?[A-Z]{3}",
-        sources=("CBUAE technical notes on transaction codes (AUX700)",),
-    ),
-    PurposeMandate(
-        "QA",
-        "Qatar QCB purpose of payment",
-        "purpose",
-        sources=("QCB retail payment pages",),
-    ),
-    PurposeMandate(
-        "MY",
-        "Malaysia BNM purpose code",
-        "purpose",
-        sources=("BNM purpose-code lists",),
-    ),
-    PurposeMandate(
-        "GB",
-        "UK CHAPS purpose code",
-        "purpose",
-        sources=("Bank of England ISO 20022 enhanced data in CHAPS",),
-    ),
-    PurposeMandate(
-        "HK",
-        "Hong Kong RMB cross-border purpose code",
-        "regulatory",
-        currency="CNY",
-        sources=(
-            "A Hong Kong bank's public RMB purpose-code notices",
-            "A US bank's public RMB quick guide",
-        ),
-    ),
-)
-
 RAIL_PROFILES: dict[str, ValidationProfile] = {
     **{rail.name: RailProfile(rail) for rail in RAILS},
     **{mandate.name: mandate for mandate in PURPOSE_MANDATES},
@@ -1331,6 +1192,7 @@ _ASPECT_HINTS: dict[str, str] = {
     "REF": "Shorten the end-to-end id.",
     "RMT": "Shorten the remittance text.",
     "PURP": "Add a purpose code from the ISO external purpose list.",
+    "LEI": "Correct the LEI: 20 characters with ISO 17442 MOD 97-10 check digits.",
     "RGLTRY": "Add the regulatory reporting code the central bank prescribes.",
     "CHRGBR": "Set ChrgBr to a value the rail accepts.",
     "ADDR": "Give the party a structured or hybrid address with town and country.",
@@ -1374,6 +1236,7 @@ def rail(name: str) -> Rail:
 
 __all__ = [
     "BACS_DD_CODES",
+    "CHAPS_PURPOSE_ALL_PAYMENTS_FROM",
     "DESCRIPTIONS",
     "PURPOSE_MANDATES",
     "RAILS",

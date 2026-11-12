@@ -19,6 +19,9 @@ routes change, the corresponding example fails in CI instead of
 silently rotting.
 """
 
+import ast
+import importlib
+import os
 import re
 import subprocess  # nosec B404
 import sys
@@ -77,6 +80,58 @@ def test_every_public_name_has_an_example() -> None:
     assert not missing, f"public API with no example: {missing}"
 
 
+def _is_public_submodule(module: str, name: str) -> bool:
+    """Return True if ``module.name`` is a public, importable module."""
+    if name.startswith("_"):
+        return False
+    try:
+        importlib.import_module(f"{module}.{name}")
+    except ImportError:
+        return False
+    return True
+
+
+def _private_imports(path: Path) -> list[str]:
+    """Return each pain001 import in ``path`` that is not a public name.
+
+    A public name sits in its module's ``__all__`` (or is a public
+    submodule), and no part of the module's path starts with ``_``.
+    """
+    found = []
+    for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
+        if isinstance(node, ast.Import):
+            modules = [a.name for a in node.names]
+            found += [
+                m for m in modules if m.startswith("pain001") and "._" in m
+            ]
+            continue
+        if not isinstance(node, ast.ImportFrom) or not node.module:
+            continue
+        if node.module.split(".")[0] != "pain001":
+            continue
+        if any(part.startswith("_") for part in node.module.split(".")):
+            found.append(node.module)
+            continue
+        public = getattr(importlib.import_module(node.module), "__all__", ())
+        found += [
+            f"{node.module}.{alias.name}"
+            for alias in node.names
+            if alias.name not in public
+            and not _is_public_submodule(node.module, alias.name)
+        ]
+    return found
+
+
+def test_examples_import_only_public_names() -> None:
+    """Examples use only names a module declares in ``__all__``."""
+    private = {
+        path.name: names
+        for path in EXAMPLES
+        if (names := _private_imports(path))
+    }
+    assert not private, f"examples import non-public names: {private}"
+
+
 def test_every_cli_command_has_an_example() -> None:
     """Every CLI command and subcommand is run by some example."""
     missing = []
@@ -108,6 +163,20 @@ def test_every_example_is_documented() -> None:
         assert f"`{example.name}`" in guide
 
 
+def _user_environment() -> dict[str, str]:
+    """The environment a user runs an example in.
+
+    conftest.py names the test client's host in PAIN001_ALLOWED_HOSTS
+    for the in-process suite; an example or benchmark run as its own
+    process must work without it, as it does for a user.
+    """
+    return {
+        key: value
+        for key, value in os.environ.items()
+        if key not in {"PAIN001_ALLOWED_HOSTS", "PAIN001_API_KEY"}
+    }
+
+
 @pytest.mark.parametrize(
     "benchmark_script",
     sorted((REPO_ROOT / "benches").glob("bench_*.py")),
@@ -121,6 +190,7 @@ def test_benchmark_smoke(benchmark_script: Path) -> None:
     result = subprocess.run(
         arguments,
         cwd=REPO_ROOT,
+        env=_user_environment(),
         capture_output=True,
         text=True,
         timeout=300,
@@ -137,6 +207,7 @@ def test_example_runs_cleanly(example: Path) -> None:
     result = subprocess.run(  # nosec B603
         [sys.executable, str(example)],
         cwd=REPO_ROOT,
+        env=_user_environment(),
         capture_output=True,
         text=True,
         timeout=180,

@@ -12,7 +12,7 @@
 # implied. See the applicable Licence for the specific language
 # governing permissions and limitations.
 
-"""Account identifier checks every load runs, scheme or no scheme.
+"""Identifier checks every load runs, scheme or no scheme.
 
 Until 0.0.81 an IBAN with a broken mod-97 check digit, or a BIC that is
 not ISO 9362, passed every check but a scheme profile's: the XSD
@@ -23,9 +23,14 @@ unless the caller opts out (``identifier_checks=False``, or the CLI's
 
 The checked columns are the ones the bundled templates render into an
 ``IBAN``, ``BIC`` or ``BICFI`` element, in any spelling the generator
-accepts (``debtor_account_iban`` is ``debtor_account_IBAN``). An empty
-value is left to the required-field checks: a version 09 row may name
-an account by number instead of IBAN.
+accepts (``debtor_account_iban`` is ``debtor_account_IBAN``), and every
+column named ``lei`` or ending in ``_lei``, in any case
+(``initiator_lei`` and ``debtor_lei`` render ``OrgId/LEI``; the others
+are what the row projection of a document reads from parties and
+agents). An LEI must be twenty characters whose ISO 17442 check digits
+verify (:mod:`pain001.validation.lei_validator`). An empty value is
+left to the required-field checks: a version 09 row may name an
+account by number instead of IBAN.
 
 Messages name the line (counted from 1 as a spreadsheet shows it, so a
 CSV file's first payment is line 2) and the column, and never repeat
@@ -47,6 +52,7 @@ from pain001.exceptions import (
 )
 from pain001.validation.bic_validator import validate_bic_safe
 from pain001.validation.iban_validator import validate_iban
+from pain001.validation.lei_validator import lei_error
 
 #: Column, in its canonical spelling, to the identifier it carries.
 #: ``creditor_agent_BICFI`` is the fallback the 05-08 builders read when
@@ -57,6 +63,8 @@ IDENTIFIER_COLUMNS: dict[str, str] = {
     "debtor_agent_BIC": "BIC",
     "creditor_agent_BIC": "BIC",
     "creditor_agent_BICFI": "BIC",
+    "initiator_lei": "LEI",
+    "debtor_lei": "LEI",
 }
 _BY_LOWER = {column.lower(): column for column in IDENTIFIER_COLUMNS}
 
@@ -69,14 +77,33 @@ _BIC_REASON = (
 MAX_LISTED = MAX_LISTED_ISSUES
 
 #: Issue code per identifier kind.
-_CODES = {"IBAN": IssueCode.INVALID_IBAN, "BIC": IssueCode.INVALID_BIC}
+_CODES = {
+    "IBAN": IssueCode.INVALID_IBAN,
+    "BIC": IssueCode.INVALID_BIC,
+    "LEI": IssueCode.INVALID_LEI,
+}
+
+
+def _kind(column: str) -> str | None:
+    """Return the identifier ``column`` carries, or ``None``.
+
+    Args:
+        column: A row key, in any case.
+
+    Returns:
+        ``"IBAN"``, ``"BIC"`` or ``"LEI"``, else ``None``.
+    """
+    lower = column.lower()
+    if lower in _BY_LOWER:
+        return IDENTIFIER_COLUMNS[_BY_LOWER[lower]]
+    return "LEI" if lower == "lei" or lower.endswith("_lei") else None
 
 
 def _reason(kind: str, value: str) -> str | None:
     """Return why ``value`` is not a valid ``kind``, or ``None``.
 
     Args:
-        kind: ``"IBAN"`` or ``"BIC"``.
+        kind: ``"IBAN"``, ``"BIC"`` or ``"LEI"``.
         value: The stripped, non-empty column value.
 
     Returns:
@@ -84,6 +111,9 @@ def _reason(kind: str, value: str) -> str | None:
     """
     if kind == "BIC":
         return None if validate_bic_safe(value) else _BIC_REASON
+    if kind == "LEI":
+        reason = lei_error(value)
+        return None if reason is None else f"not a valid LEI ({reason})"
     is_valid, error = validate_iban(value, strict=False)
     return None if is_valid else f"not a valid IBAN ({error})"
 
@@ -99,11 +129,11 @@ def row_errors(row: Mapping[str, Any]) -> list[tuple[str, str]]:
     """
     found: list[tuple[str, str]] = []
     for key, raw in row.items():
-        column = _BY_LOWER.get(str(key).lower())
+        kind = _kind(str(key))
         value = "" if raw is None else str(raw).strip()
-        if column is None or not value:
+        if kind is None or not value:
             continue
-        reason = _reason(IDENTIFIER_COLUMNS[column], value)
+        reason = _reason(kind, value)
         if reason is not None:
             found.append((str(key), reason))
     return found
@@ -131,7 +161,7 @@ def identifier_errors(
 def check_identifiers(
     rows: Iterable[Mapping[str, Any]], start: int = 0, first_line: int = 1
 ) -> None:
-    """Raise when any row carries an invalid IBAN or BIC.
+    """Raise when any row carries an invalid IBAN, BIC or LEI.
 
     Args:
         rows: The payment rows.
@@ -151,13 +181,13 @@ def check_identifiers(
         RowIssue(
             first_line + index,
             column,
-            _CODES[IDENTIFIER_COLUMNS[_BY_LOWER[column.lower()]]],
+            _CODES[str(_kind(column))],
             reason,
         )
         for index, column, reason in errors
     ]
     raise PaymentValidationError(
-        f"Invalid account identifiers ({len(errors)}):"
+        f"Invalid identifiers ({len(errors)}):"
         f"{format_issues(issues)}\n"
         "Fix the values, or skip these checks with --no-identifier-checks "
         "(identifier_checks=False).",

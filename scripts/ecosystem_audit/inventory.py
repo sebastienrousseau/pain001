@@ -31,11 +31,25 @@ class Member:
         return f"{OWNER}/{self.name}"
 
 
+DOCS = Path(__file__).resolve().parents[2] / "docs"
+
+
 def inventory() -> tuple[Member, ...]:
     """Load the committed publication inventory, core first."""
-    source = Path(__file__).resolve().parents[2] / "docs/ecosystem.json"
+    source = DOCS / "ecosystem.json"
     records = json.loads(source.read_text())
     for item in records:
         for key in ("required_assets", "publishers"):
             item[key] = tuple(item.get(key, ()))
     return tuple(Member(**item) for item in records)
+
+
+def unreleased() -> tuple[str, ...]:
+    """Name the family's repositories that have no release yet.
+
+    They are declared so that discovery knows them, but have no
+    publication to audit until they join ``docs/ecosystem.json`` with
+    their first release.
+    """
+    records = json.loads((DOCS / "ecosystem-unreleased.json").read_text())
+    return tuple(item["name"] for item in records)

@@ -6,29 +6,35 @@ from pathlib import Path
 import pytest
 import render_ecosystem_workflows as workflow_cli
 import yaml
-from ecosystem_audit import inventory, workflows
+from ecosystem_audit import Member, inventory, workflows
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def test_audit_watches_completed_publishing_workflows() -> None:
-    """GITHUB_TOKEN-created releases do not launch release-event workflows."""
+def test_core_audit_runs_on_its_own_schedule_and_on_demand() -> None:
+    """No other workflow's completion can start it with this repository's trust.
+
+    The core publishes first, so an audit after its own release fails
+    until the companions ship; each companion audits after its own
+    publication, and the core's runs daily or when dispatched.
+    """
     workflow = yaml.load(
         (ROOT / ".github/workflows/suite-consistency.yml").read_text(),
         Loader=yaml.BaseLoader,
     )
     events = workflow["on"]
-    assert {"schedule", "workflow_dispatch", "workflow_run"} <= set(events)
-    assert set(events["workflow_run"]["workflows"]) == {
-        "ci",
-        "🐳 Build & Publish Docker Image",
-    }
-    assert events["workflow_run"]["types"] == ["completed"]
+    assert set(events) == {"schedule", "workflow_dispatch"}
+    assert set(events["workflow_dispatch"]["inputs"]) == {"version"}
     assert workflow["permissions"] == {"contents": "read"}
-    condition = workflow["jobs"]["consistency"]["if"]
-    assert "workflow_run.conclusion == 'success'" in condition
-    assert "workflow_run.event == 'push'" in condition
-    assert "workflow_run.head_branch" in condition
+    job = workflow["jobs"]["consistency"]
+    assert "if" not in job
+    assert "workflow_run" not in str(job)
+    action = [
+        step
+        for step in job["steps"]
+        if "check-ecosystem" in step.get("uses", "")
+    ]
+    assert action[0]["with"]["version"] == "${{ inputs.version }}"
 
 
 def test_readme_and_roadmap_list_all_nine_members() -> None:
@@ -40,32 +46,29 @@ def test_readme_and_roadmap_list_all_nine_members() -> None:
         assert "unreleased `0.0.1`" not in text
 
 
-@pytest.mark.parametrize(
-    "name", ["pain001-mcp", "pain001-lsp", "pain001.github.io"]
-)
-def test_companion_workflows_watch_every_publisher_and_deployment(
-    name: str,
+@pytest.mark.parametrize("member", inventory()[1:], ids=lambda m: m.name)
+def test_companion_workflows_run_on_schedule_and_dispatch_only(
+    member: Member,
 ) -> None:
-    """The last actual publication, not just GitHub release creation, rechecks the family."""
-    members = {member.name: member for member in inventory()}
-    rendered = workflows.render(members[name], "d" * 40)
+    """No companion audit starts on another workflow's completion.
+
+    Like the core's, each one runs daily and on demand, with a read-only
+    token, from a pinned core commit.
+    """
+    rendered = workflows.render(member, "d" * 40)
+    assert "workflow_run" not in rendered
     workflow = yaml.load(rendered, Loader=yaml.BaseLoader)
-    assert workflow["on"]["workflow_run"]["workflows"] == list(
-        members[name].publishers
-    )
+    assert set(workflow["on"]) == {"schedule", "workflow_dispatch"}
+    assert set(workflow["on"]["workflow_dispatch"]["inputs"]) == {"version"}
     assert workflow["permissions"] == {"contents": "read"}
+    job = workflow["jobs"]["consistency"]
+    assert "if" not in job
     action = next(
         step["uses"]
-        for step in workflow["jobs"]["consistency"]["steps"]
+        for step in job["steps"]
         if "/check-ecosystem@" in step.get("uses", "")
     )
     assert action.endswith("@" + "d" * 40)
-    if name == "pain001.github.io":
-        assert "head_branch == 'main'" in workflow["jobs"]["consistency"]["if"]
-        assert (
-            "workflow_run.name == 'CI'"
-            in workflow["jobs"]["consistency"]["if"]
-        )
 
 
 @pytest.mark.parametrize("ref", ["main", "v0.0.84", "abc", "d" * 39])

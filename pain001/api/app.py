@@ -27,7 +27,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import APIRouter, Depends, FastAPI, HTTPException, status
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from pain001 import __version__
 from pain001.api._pipeline import (
@@ -47,14 +47,20 @@ from pain001.api.check import check_router
 from pain001.api.faces import faces_router
 from pain001.api.guards import sanitise_message_type as _sanitise_message_type
 from pain001.api.job_manager import (
+    JobCancelledError,
     JobCapacityError,
+    JobResult,
     JobStatus,
     job_manager,
     output_name,
 )
-from pain001.api.limits import install_body_limit
-from pain001.api.meta import API_DESCRIPTION, TAGS_METADATA
-from pain001.api.metrics import MetricsMiddleware
+from pain001.api.meta import (
+    API_DESCRIPTION,
+    CANCEL_RESPONSES,
+    GENERATE_RESPONSES,
+    TAGS_METADATA,
+)
+from pain001.api.middleware import install_middleware
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
@@ -64,7 +70,6 @@ from pain001.api.models import (
     ValidationResponse,
 )
 from pain001.api.ops import metrics_router, ready_router
-from pain001.api.ratelimit import install_rate_limiting
 from pain001.api.ui import ui_router
 from pain001.constants import TEMPLATES_DIR
 from pain001.exceptions import PaymentValidationError
@@ -359,21 +364,22 @@ async def validate_data(request: ValidationRequest) -> ValidationResponse:
     tags=["Generation"],
     summary="Generate XML (synchronous)",
     dependencies=[Depends(_require_api_key)],
+    responses=GENERATE_RESPONSES,
 )
 @traced("pain001.api.generate", attributes={"http.route": "/api/v1/generate"})
 async def generate_xml_sync(
     request: GenerateXMLRequest,
-) -> GenerateXMLResponse:
+) -> GenerateXMLResponse | JSONResponse:
     """Generate XML synchronously.
 
     Args:
         request: Generation request with data source and options.
 
     Returns:
-        GenerateXMLResponse: Generated XML file path or errors.
+        The XML file path; refused data is a ``422`` with its errors.
 
     Raises:
-        HTTPException: If generation fails.
+        HTTPException: ``400`` for a refused input, ``500`` on failure.
     """
     start_time = time.perf_counter()
     msg_type = request.message_type.value
@@ -389,8 +395,7 @@ async def generate_xml_sync(
     except PaymentValidationError as e:
         record_failure(msg_type, start_time)
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e
     except Exception as e:
         record_failure(msg_type, start_time)
@@ -455,6 +460,15 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
         ) from e
 
 
+def _job_or_404(job_id: str) -> JobResult:
+    """Return the job, or raise 404 when it is unknown."""
+    if (job := job_manager.get_job(job_id)) is None:
+        raise HTTPException(
+            status.HTTP_404_NOT_FOUND, f"Job not found: {job_id}"
+        )
+    return job
+
+
 @router.get(
     "/status/{job_id}",
     response_model=JobStatusResponse,
@@ -466,24 +480,15 @@ async def generate_xml_async(request: GenerateXMLRequest) -> dict[str, str]:
     "pain001.api.status", attributes={"http.route": "/api/v1/status/{job_id}"}
 )
 async def get_job_status(job_id: str) -> JobStatusResponse:
-    """Get status of async job.
+    """Get status of async job; an unknown id answers 404.
 
     Args:
         job_id: Job identifier.
 
     Returns:
         JobStatusResponse: Current job status and result.
-
-    Raises:
-        HTTPException: If job not found.
     """
-    job = job_manager.get_job(job_id)
-
-    if not job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
+    job = _job_or_404(job_id)
 
     message = {
         JobStatus.PENDING: "Job is pending",
@@ -507,6 +512,7 @@ async def get_job_status(job_id: str) -> JobStatusResponse:
     "/jobs/{job_id}",
     tags=["Job Management"],
     summary="Cancel job",
+    responses=CANCEL_RESPONSES,
     dependencies=[Depends(_require_api_key)],
 )
 async def cancel_job(job_id: str) -> dict[str, str]:
@@ -519,15 +525,11 @@ async def cancel_job(job_id: str) -> dict[str, str]:
         Dictionary with cancellation status.
 
     Raises:
-        HTTPException: If job not found.
+        HTTPException: 404 if the job is unknown, 409 if it has finished.
     """
-    cancelled = job_manager.cancel_job(job_id)
-
-    if not cancelled and job_id not in job_manager.jobs:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
+    if not job_manager.cancel_job(job_id):
+        job = _job_or_404(job_id)
+        raise HTTPException(status.HTTP_409_CONFLICT, f"Job is {job.status}")
 
     return {
         "job_id": job_id,
@@ -558,13 +560,7 @@ async def download_xml(job_id: str) -> FileResponse:
     Raises:
         HTTPException: If job not found or file not available.
     """
-    job = job_manager.get_job(job_id)
-
-    if not job:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Job not found: {job_id}",
-        )
+    job = _job_or_404(job_id)
 
     if job.status != JobStatus.SUCCESS:
         raise HTTPException(
@@ -603,6 +599,10 @@ async def _process_generation_job(
 ) -> None:
     """Process async generation job.
 
+    A cancelled job stops at the pipeline's next stage boundary; one
+    cancelled while rendering has its file removed. Either way its
+    status stays ``cancelled`` and nothing is counted.
+
     Args:
         job_id: Job identifier.
         request: Generation request.
@@ -618,8 +618,10 @@ async def _process_generation_job(
             request,
             file_path,
             _resolve_generation_paths,
-            functools.partial(_report_progress, job_id),
+            functools.partial(job_manager.report_progress, job_id),
         )
+    except JobCancelledError:
+        return
     except InputRefused as exc:
         record_failure(msg_type, start_time)
         job_manager.update_status(job_id, JobStatus.FAILED, error=exc.detail)
@@ -634,18 +636,10 @@ async def _process_generation_job(
             error=job_manager.error_for(exc),
         )
         return
-    record_outcome(outcome, msg_type, start_time)
-    job_manager.update_status(job_id, progress=100, **job_update(outcome))
-
-
-def _report_progress(job_id: str, percent: int) -> None:
-    """Mark a background job as processing at ``percent``.
-
-    Args:
-        job_id: Job identifier.
-        percent: Progress percentage.
-    """
-    job_manager.update_status(job_id, JobStatus.PROCESSING, progress=percent)
+    if job_manager.update_status(job_id, progress=100, **job_update(outcome)):
+        record_outcome(outcome, msg_type, start_time)
+    elif outcome.file_path:
+        Path(outcome.file_path).unlink(missing_ok=True)
 
 
 # The dashboard and its two JSON endpoints, the faces and check ride on
@@ -661,6 +655,4 @@ app.include_router(metrics_router)
 # ``/api`` alias (served but hidden from the OpenAPI schema).
 app.include_router(router, prefix="/api/v1")
 app.include_router(router, prefix="/api", include_in_schema=False)
-app.add_middleware(MetricsMiddleware)
-install_rate_limiting(app)
-install_body_limit(app)
+install_middleware(app)

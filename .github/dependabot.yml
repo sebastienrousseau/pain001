@@ -7,6 +7,11 @@ updates:
       day: "monday"
       time: "06:00"
     open-pull-requests-limit: 10
+    # Wait a week before proposing a new release, so a compromised
+    # upload has time to be caught and yanked. Security updates are not
+    # delayed: cooldown applies to version updates only.
+    cooldown:
+      default-days: 7
     reviewers:
       - "sebastienrousseau"
     labels:
@@ -25,6 +30,8 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
+    cooldown:
+      default-days: 7
     reviewers:
       - "sebastienrousseau"
     labels:

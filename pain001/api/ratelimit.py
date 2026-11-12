@@ -17,7 +17,9 @@
 A small fixed-window limiter keyed by client IP, configured entirely
 through the ``PAIN001_RATE_LIMIT`` environment variable (e.g. ``100/minute``
 or ``20/second``). When the variable is unset the middleware is a no-op, so
-local development is unaffected.
+local development is unaffected. Behind a reverse proxy, name it in
+``PAIN001_TRUSTED_PROXIES`` so the key is the forwarded client address
+rather than the proxy's (see :mod:`pain001.api.client_address`).
 
 This is deliberately a single-process limiter — sufficient for one API
 node and for protecting against accidental floods. Horizontally-scaled
@@ -34,6 +36,18 @@ from typing import Any, Protocol, runtime_checkable
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.types import ASGIApp, Receive, Scope, Send
+
+from pain001.api.client_address import ClientAddressResolver
+
+__all__ = [
+    "InProcessFixedWindowBackend",
+    "RateLimitMiddleware",
+    "RateLimiterBackend",
+    "RedisFixedWindowBackend",
+    "backend_from_env",
+    "install_rate_limiting",
+    "parse_rate_limit",
+]
 
 
 @runtime_checkable
@@ -273,6 +287,8 @@ class RateLimitMiddleware:
             when constructing a fallback in-process backend).
         backend: Pluggable backend; pass an instance to use Redis or a
             custom limiter.
+        resolver: Finds the client address the bucket is keyed on;
+            the default trusts no proxy and keys on the socket address.
     """
 
     def __init__(
@@ -282,8 +298,10 @@ class RateLimitMiddleware:
         window_seconds: float,
         clock: Callable[[], float] | None = None,
         backend: RateLimiterBackend | None = None,
+        resolver: ClientAddressResolver | None = None,
     ) -> None:
         self.app = app
+        self._resolver = resolver or ClientAddressResolver()
         self.max_requests = max_requests
         self.window_seconds = window_seconds
         self._clock = clock or time.monotonic
@@ -302,10 +320,10 @@ class RateLimitMiddleware:
             request: The incoming request.
 
         Returns:
-            The client host, or ``"unknown"`` when it cannot be resolved.
+            The client address (forwarded through a trusted proxy, or
+            the socket's), or ``"unknown"`` when it cannot be resolved.
         """
-        client = request.client
-        return client.host if client else "unknown"
+        return self._resolver.resolve(request.scope)
 
     def _is_allowed(self, key: str) -> bool:
         """Record a hit and report whether it is within the limit.
@@ -349,6 +367,8 @@ def install_rate_limiting(application: Any) -> None:
 
     The backend is the one ``PAIN001_RATE_LIMIT_BACKEND`` names (see
     :func:`backend_from_env`): in-process by default, Redis when asked.
+    The key is the client address ``PAIN001_TRUSTED_PROXIES`` and
+    ``PAIN001_FORWARDED_HEADER`` resolve.
 
     Args:
         application: The FastAPI (or Starlette) application to wrap.
@@ -362,4 +382,5 @@ def install_rate_limiting(application: Any) -> None:
         max_requests=max_requests,
         window_seconds=window_seconds,
         backend=backend_from_env(max_requests, window_seconds),
+        resolver=ClientAddressResolver.from_env(),
     )

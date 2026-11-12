@@ -36,7 +36,7 @@ Example:
 """
 
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 
 from pain001.constants import valid_xml_types
@@ -47,24 +47,16 @@ from pain001.exceptions import (
     SchemaValidationError,
 )
 from pain001.security import validate_path
+from pain001.validation.ladder import run_ladder
+from pain001.validation.report import ValidationReport, ValidationResult
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
-
-@dataclass
-class ValidationResult:
-    """Result of a single validation check.
-
-    Attributes:
-        is_valid: Whether the validation passed.
-        error: Optional error message if validation failed.
-        field: Optional field name that caused the validation error.
-        details: Optional additional details about the validation.
-    """
-
-    is_valid: bool
-    error: str | None = None
-    field: str | None = None
-    details: str | None = None
+__all__ = [
+    "ValidationConfig",
+    "ValidationReport",
+    "ValidationResult",
+    "ValidationService",
+]
 
 
 @dataclass
@@ -77,7 +69,8 @@ class ValidationConfig:
         xsd_schema_file_path: Path to XSD schema for validation.
         data_file_path: Path to CSV or SQLite data file.
         pre_validate: Whether to check every IBAN (mod-97, country
-            length) and BIC (ISO 9362) column while loading the data.
+            length), BIC (ISO 9362) and LEI (ISO 17442) column while
+            loading the data.
     """
 
     xml_message_type: str
@@ -85,36 +78,6 @@ class ValidationConfig:
     xsd_schema_file_path: str
     data_file_path: str
     pre_validate: bool = True
-
-
-@dataclass
-class ValidationReport:
-    """Comprehensive validation report for all checks.
-
-    Attributes:
-        is_valid: Whether all validations passed.
-        errors: List of error messages from failed validations.
-        results: Dictionary of individual validation results.
-    """
-
-    is_valid: bool
-    errors: list[str] = field(default_factory=list)
-    results: dict[str, ValidationResult] = field(default_factory=dict)
-
-    def record(
-        self, name: str, result: ValidationResult, fallback: str
-    ) -> None:
-        """Store one check's result, failing the report if it failed.
-
-        Args:
-            name: The check's key in :attr:`results`.
-            result: The check's result.
-            fallback: Error message to use when the result carries none.
-        """
-        self.results[name] = result
-        if not result.is_valid:
-            self.is_valid = False
-            self.errors.append(result.error or fallback)
 
 
 class ValidationService:
@@ -343,13 +306,19 @@ class ValidationService:
             )
 
     def validate_data_content(
-        self, data_path: str | Path, identifier_checks: bool = True
+        self,
+        data_path: str | Path,
+        identifier_checks: bool = True,
+        message_type: str | None = None,
     ) -> ValidationResult:
         """Validate that the data file can be loaded and parsed.
 
         Args:
             data_path: Path to CSV or SQLite data file.
-            identifier_checks: If False, skip the IBAN and BIC checks.
+            identifier_checks: If False, skip the IBAN, BIC and LEI checks.
+            message_type: When given, the rows must also pass that
+                message type's JSON Schema, as on every other surface
+                (:mod:`pain001.validation.ladder`).
 
         Returns:
             ValidationResult indicating success or failure.
@@ -361,7 +330,14 @@ class ValidationService:
             ...     print(f"Data validation failed: {result.error}")
         """
         try:
-            load_payment_data(str(data_path), identifier_checks)
+            if message_type is None:
+                load_payment_data(str(data_path), identifier_checks)
+            else:
+                run_ladder(
+                    str(data_path),
+                    message_type,
+                    identifier_checks=identifier_checks,
+                ).require_valid()
             return ValidationResult(is_valid=True)
         except (FileNotFoundError, ValueError) as exc:
             return ValidationResult(
@@ -383,6 +359,28 @@ class ValidationService:
                 error=f"Unexpected data validation error: {exc}",
                 details=str(exc),
             )
+
+    def _content_check(
+        self, report: ValidationReport, config: ValidationConfig
+    ) -> ValidationResult:
+        """Run :meth:`validate_data_content` with the configured type.
+
+        The message type's JSON Schema applies only when the report
+        found the type supported.
+
+        Args:
+            report: The report so far, with its ``message_type`` result.
+            config: The validation configuration.
+
+        Returns:
+            The data content check's result.
+        """
+        supported = report.results["message_type"].is_valid
+        return self.validate_data_content(
+            config.data_file_path,
+            config.pre_validate,
+            config.xml_message_type if supported else None,
+        )
 
     def validate_all(self, config: ValidationConfig) -> ValidationReport:
         """Run comprehensive validation pipeline.
@@ -454,9 +452,7 @@ class ValidationService:
         if report.results["data_source"].is_valid:
             report.record(
                 "data_content",
-                self.validate_data_content(
-                    config.data_file_path, config.pre_validate
-                ),
+                self._content_check(report, config),
                 "Data content validation failed",
             )
 

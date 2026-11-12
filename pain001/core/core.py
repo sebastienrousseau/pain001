@@ -30,7 +30,6 @@ from pain001.core._support import (
 )
 from pain001.core._support import stamp_span
 from pain001.core.chunks import numbered_chunks
-from pain001.data.loader import load_payment_data, load_payment_data_streaming
 from pain001.exceptions import XMLGenerationError
 from pain001.logging_schema import (
     Events,
@@ -45,7 +44,10 @@ from pain001.observability import (
     traced,
 )
 from pain001.security.path_validator import sanitize_for_log, validate_path
+from pain001.validation.ladder import load_valid, load_valid_chunks
 from pain001.xml.envelope import BusinessApplicationHeader
+
+__all__ = ["process_files", "process_files_streaming"]
 
 # Library code: no handlers, no level overrides — the host
 # application controls logging configuration.
@@ -140,8 +142,9 @@ def _load_data(
     data_file_path: str | list[dict[str, Any]] | dict[str, Any],
     start_time: float,
     identifier_checks: bool = True,
+    message_type: str = "pain.001.001.03",
 ) -> list[dict[str, Any]]:
-    """Load and validate payment data from files or Python objects."""
+    """Load payment data that passes :mod:`pain001.validation.ladder`."""
     data_source_kind = _determine_data_source_type(data_file_path)
 
     log_event(
@@ -152,7 +155,9 @@ def _load_data(
     )
 
     try:
-        payment_data = load_payment_data(data_file_path, identifier_checks)
+        payment_data = load_valid(
+            data_file_path, message_type, identifier_checks
+        )
         duration_ms = int((time.time() - start_time) * 1000)
         file_size_bytes = None
         if isinstance(data_file_path, str) and os.path.exists(data_file_path):
@@ -275,7 +280,7 @@ def process_files(
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
 
     Returns:
         The path the generated XML file was written to.
@@ -299,7 +304,7 @@ def process_files(
             xml_message_type, xml_template_file_path, xsd_schema_file_path
         )
         payment_data = _load_data(
-            data_file_path, start_time, identifier_checks
+            data_file_path, start_time, identifier_checks, xml_message_type
         )
         stamp_span(xml_message_type, len(payment_data))
         _register_message_namespaces(xml_message_type)
@@ -388,7 +393,7 @@ def process_files_streaming(
         xml_sign_cert: Optional X.509 certificate in PEM format for KeyInfo.
         xml_sign_passphrase: Optional passphrase for the private key.
         schematron: Optional Schematron rulebook preset or .sch path to validate.
-        identifier_checks: If False, skip the IBAN and BIC checks.
+        identifier_checks: If False, skip the IBAN, BIC and LEI checks.
         workers: Processes building chunks at once; when omitted,
             ``PAIN001_WORKERS`` (set by ``--workers``), else 1, which
             builds them in this process. The arguments must pickle.
@@ -407,8 +412,8 @@ def process_files_streaming(
     if output_dir is None:
         output_dir = os.path.dirname(os.path.realpath(data_file_path))
 
-    chunks = load_payment_data_streaming(
-        data_file_path, chunk_size, identifier_checks=identifier_checks
+    chunks = load_valid_chunks(
+        data_file_path, xml_message_type, chunk_size, identifier_checks
     )
     jobs = (
         ChunkJob(

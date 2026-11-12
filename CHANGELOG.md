@@ -9,6 +9,329 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.87] - 2026-11-12
+
+### Added
+
+- LEI checks on every load: each column named `lei` or ending in
+  `_lei` (`initiator_lei` and `debtor_lei` render `OrgId/LEI`; the row
+  projection of a document adds the creditor, ultimate parties and
+  agents) must be twenty characters, `[A-Z0-9]{18}[0-9]{2}`, with ISO
+  17442 MOD 97-10 check digits. A failure is a `RowIssue` with the new
+  code `P001-E022`, beside the IBAN and BIC checks and under the same
+  `--no-identifier-checks` opt-out. `pain001.validation.lei_validator`
+  (`validate_lei`, `lei_error`, `lei_check_digits`) is the one
+  implementation; the corpus generator's LEI helpers now call it. The
+  editor diagnostics report `invalid-lei` the same way, and the
+  conformance kit gains `validate-bad-lei`.
+- `uk-chaps` carries the Bank of England's CHAPS enhanced-data rules
+  that reach a corporate's pain.001. A missing purpose code
+  (`UK-CHAPS-PURP`) stays a warning before the all-payments mandate and
+  is an error for payments whose requested execution date is on or
+  after 1 December 2027 (`rails.CHAPS_PURPOSE_ALL_PAYMENTS_FROM`; the
+  policy says "November 2027" with no day, so the narrower reading
+  starts after that month). The date comes from the file (the first
+  row's, when a later row leaves it blank), never the clock; a rail
+  built with `dataclasses.replace(rails.rail("uk-chaps"),
+  purpose_required_from=...)` moves it. Any `*_lei` value present must
+  verify (`UK-CHAPS-LEI`); no LEI is required, since the Bank's LEI
+  mandates cover payments between financial institutions.
+  `docs/chaps-enhanced-data.md` cites the 2024 and 2025 policy
+  statements and ISO 17442 for each rule.
+- Logs and traces join up on the REST API. Every response carries
+  `X-Request-ID`: the caller's when well formed (1 to 128 of letters,
+  digits and `. _ : -`), otherwise a generated `req-<8 hex>`, and JSON
+  log lines written while serving it carry it as `request_id`. An
+  inbound W3C `traceparent` is honoured: with `OTEL_ENABLED` and the
+  `otel` extra each request gets a server span (`GET <route>`, status
+  code, `pain001.request_id`) that is a child of the caller's span, and
+  the `pain001.api.*` handler spans are its children. `JSONFormatter`
+  adds `trace_id` and `span_id` from the active span, or the caller's
+  `trace_id` when tracing is off or OpenTelemetry is not installed.
+  `pain001.logging_schema` gains `bind_request_context`,
+  `reset_request_context` and `current_trace_ids`. The OpenAPI document
+  is unchanged.
+- `--format text|json` on every command that returns a result
+  (`generate`, `validate`, `versions`, `inspect`, `init`, `face`,
+  `upload`, `download`, `plugins list|show|disable`, beside `check`,
+  `status` and `verify-signature`), so `pain001 <command> --format json
+  | jq .` works for each; `serve` and `mcp` run servers and have none.
+  `generate` and `validate` write one object (`ok`, `message_type`,
+  `records`, `files`, `scheme`, `schematron`, `error`), on failure too.
+  `-q`/`--quiet` on `generate`, `validate` and `init` drops the banner
+  and progress lines. `tests/test_cli_machine_output.py` runs every
+  command with `--format json` and parses its stdout.
+- `tests/data/cli-help.txt` pins every command's `--help`, and every
+  example under an `Examples:` heading is run against the bundled
+  sample data (`tests/test_cli_help_snapshot.py`).
+- `pain001.generate(data, message_type, output_dir=...)` returns a
+  `GenerationResult` (`path`, `message_type`, `rows`) and
+  `pain001.validate(data, message_type)` returns a `ValidationReport`
+  (`is_valid`, `total_rows`, `valid_rows`, `invalid_rows`, `issues`,
+  `scheme_violations`). Both take a data file or row dictionaries, use
+  the bundled template and schema, and accept `scheme=` and `rules=`.
+  `GenerationResult` and `ValidationReport` are exported from
+  `pain001`. `examples/01_generate_xml_file.py` uses them.
+- Issue codes `P001-E030` (a value breaks the message type's JSON
+  Schema) and `P001-E040` (a row breaks the scheme or policy asked for).
+- `pain001.validation.ladder`: the one validation sequence (row
+  contract and identifiers, JSON Schema, then scheme or policy) that
+  the CLI, `process_files`, `ValidationService`, `pain001.validate` and
+  `generate`, and the REST `/validate`, `/generate` and `/ui/*` routes
+  all run.
+- Modules whose names the examples use declare `__all__`, and
+  `tests/test_examples.py` fails when an example imports a name outside
+  a module's `__all__` or from a private module.
+
+### Changed
+
+- Release 0.0.87 in lockstep with the pain001 suite.
+- **Breaking: `POST /api/v1/ui/generate` answers `422` when it refuses
+  the data.** It answered `200` with `success: false`, so a client,
+  a retry policy or a monitor that read only the status counted a
+  refused payment file as generated. Rows that fail validation or a
+  scheme rule now answer `422` with the same body (`success: false`,
+  `xml: null`, `validation_errors` or `scheme_violations`), as `POST
+  /api/v1/generate` does; a `200` always carries the XML. A refused
+  upload, row identifier or scheme name stays `400`, and the OpenAPI
+  document lists `400`, `422` and `500`. Who is affected: any client
+  of the dashboard endpoint that checks `success` in the body without
+  checking the status, including the five SDKs, whose typed
+  `generate` now raises their API error with status `422` on a refusal.
+  What to do: treat `422` from generate as a refusal and read the
+  findings from its body (`validation_errors`, `scheme_violations`);
+  do not retry it. The dashboard page does this already. The
+  conformance kit moves to `kit_version` 2 with two new cases,
+  `generate-refused-rows` and `generate-refused-scheme`, and a
+  `bad-currency` fixture; `conformance/openapi.json` is regenerated.
+  `/ui/validate` is unchanged: like `/validate`, it answers `200` with
+  `is_valid: false`.
+- **A REST API running without `PAIN001_API_KEY` answers only requests
+  addressed to loopback.** A `Host` other than `localhost` or a
+  loopback address (any port) is answered `400`, and an `Origin` that
+  is not loopback `403`, before routing. `PAIN001_ALLOWED_HOSTS`
+  (comma separated, `*` for any) names further hosts, for example an
+  `--insecure` server reached by its LAN address. Nothing changes when
+  a key is set. See ADR 0009.
+- **The CLI and `process_files` now refuse rows that break the message
+  type's JSON Schema**, as the REST API already did. `pain001 validate`
+  and `pain001 generate` used to accept `currency=EURO` (or `eur`) and
+  write the file; they now exit 1 and list each row as `line N, column
+  currency: ... (P001-E030)`, and `process_files`,
+  `process_files_streaming` and `ValidationService.validate_all` raise
+  or report the same `PaymentValidationError`. Scripts that passed such
+  data before will now fail; fix the values the message lists.
+- The JSON Schemas for pain.001.001.03 to .08 and pain.008.001.02 and
+  .08 accept any 1 to 4 character `service_level_code`, as the XSD's
+  `ExternalServiceLevel1Code` and the .09 to .13 schemas do. The old
+  list (SEPA, URNS) refused the bundled pain.001.001.04 sample (`INST`)
+  on the REST API, and would have refused it on every surface.
+- `PurposeMandate` and `PURPOSE_MANDATES` live in
+  `pain001.validation.purpose_mandates`, and the rails' check-digit
+  helpers in `pain001.validation._check_digits`; `rails` still exports
+  the mandates, so imports and profile names are unchanged.
+- The identifier-check error now opens `Invalid identifiers (N)`
+  instead of `Invalid account identifiers (N)`, since an LEI is not an
+  account identifier. Issue codes are unchanged.
+- XML-DSig refuses RSA keys under 2048 bits, the NIST minimum through
+  2030, when signing and when verifying; `algorithm_for_key` raises
+  `ValueError` naming the key size. Keys of 2048 bits or more, and the
+  P-256 and P-384 EC keys, are unchanged.
+- The SFTP transport (`pain001 upload`, `download`, `--print-host-key`)
+  no longer offers paramiko's fallback CBC and 3DES ciphers or its SHA-1
+  and MD5 MACs. A server that supports only those is refused at key
+  exchange.
+- The complexity baseline shrinks from 106 to 87 offenders. Nineteen
+  functions over a ceiling were split into helpers that sit within all
+  four: the AppHdr reader and writer, the records and ISO JSON twins,
+  the row projection, the Schematron parser, record-fix suggestions,
+  custom-policy rules, `scripts/build_corpus.py` and
+  `scripts/inspect_release.py`. Behaviour is unchanged; the corpus
+  check and golden files are byte-identical.
+- The tag workflow builds the release in a new `build` job that has
+  read-only permissions, no OIDC token and no dependency cache, and
+  passes the distributions, SBOMs and their SHA-256 hashes to `publish`
+  as an artifact. `publish`, the only job behind the `pypi` environment,
+  checks out nothing and builds nothing: it verifies the files against
+  the build job's hashes, attests them, creates the GitHub release and
+  uploads to PyPI. The SLSA provenance subjects now come from `build`.
+- zizmor 1.32.0 audits the GitHub Actions on every push and pull
+  request and weekly (`.github/workflows/zizmor.yml`, hash-pinned in
+  `.github/requirements/zizmor.txt`), fails on any finding and uploads
+  SARIF to code scanning. Its findings are fixed: every checkout sets
+  `persist-credentials: false`, the SDK workflow no longer caches pip or
+  npm on tag runs, the Docker smoke test reads the image tag from the
+  environment instead of a template expansion, the CodeQL, Scorecard
+  and setup-java pins carry their real version comments, and Dependabot
+  waits seven days before proposing a version update. Three exceptions
+  remain, each an inline ignore on the one line it covers with its
+  reason on that line: the SLSA generator's tag reference in `ci.yml`
+  and `slsa.yml` (slsa-verifier rejects a SHA reference),
+  `action-gh-release` (it updates an existing release on a re-run, where
+  `gh release create` fails), and Suite Consistency's `./` action
+  reference (actionlint 1.7.12 rejects the `$/` form zizmor suggests).
+  `.github/zizmor.yml` now holds policy only: every action, first-party
+  ones included, must be pinned to a commit.
+- The workflow exceptions first recorded for zizmor that covered a real
+  risk are fixed instead of ignored, and the pedantic audit's permission
+  and injection findings with them. Suite Consistency no longer runs on
+  `workflow_run`: it audits daily and on dispatch, since the core
+  publishes first. The eight companion workflows that
+  `scripts/render_ecosystem_workflows.py` generates drop the trigger
+  too and run on the same schedule. The
+  CI jobs that also run on release tags (XML-DSig interop, tollgates,
+  the quality-gate matrix) no longer restore a Poetry cache. The Docker
+  workflow no longer grants `id-token: write` at workflow level, the
+  Scorecard and SLSA workflows grant nothing at workflow level instead
+  of `read-all`, the CodeQL job drops `packages: read` and
+  `actions: read` (needed only for private repositories), and every
+  write scope carries a comment saying why. The CodeQL gate and the
+  mutation shards pass their values to the shell through `env` instead
+  of expanding them into the script. `tests/test_zizmor_ignores.py`
+  fails on an ignore without a reason, an ignore of template injection,
+  dangerous triggers or excessive permissions, an exception in the
+  configuration file, a `workflow_run` or `pull_request_target` trigger,
+  a write scope at workflow level, or a template expanded inside a
+  `run` script.
+- The Docker workflow builds a published image without the shared
+  GitHub Actions cache; only pull-request builds, which push nothing,
+  read or write it.
+- Standard output carries only a command's result. Progress, warnings,
+  errors and the banner moved to standard error, and the banner prints
+  only when standard output is a terminal; with `--log-format json`
+  the progress lines are left out so stderr stays one JSON record per
+  line. A script that read `generate` or `validate` progress from
+  stdout reads it from stderr now.
+- `--emit-metrics` writes each metric as one JSON line on stdout
+  instead of a Python dict wrapped by the terminal.
+- Deprecated, removed in 0.0.88: `--json` on `versions`, `inspect` and
+  `plugins list`, and `--scheme-format json` on `generate` and
+  `validate`. Both still work and warn on stderr; use `--format json`.
+- `generate` and `validate` run from `pain001.cli._generate`, and
+  `versions`, `inspect`, `init` and `plugins` live in their own
+  modules: `cli/cli.py` drops from 1,261 lines to 421 and its `main`
+  from 244 lines and cyclomatic 16 to within the ceilings, so four
+  baseline entries go.
+- Writing a file no longer holds a copy of the document. The staged
+  file is XSD-validated as libxml2 streams it, releasing each element
+  once checked, instead of being read back, encoded again and built
+  into a tree; `generate_xml` and `process_files` render the template
+  straight into the staged file whenever nothing needs the whole text
+  (no BAH envelope, signature, Schematron rulebook or plugin writer);
+  and the normalised rows hold only the keys normalisation changed.
+  For 100,000 `pain.001.001.03` rows (a 138 MiB file), peak RSS falls
+  from about 1.2 GB to 380 MB on the default path and from about 1.0 GB
+  to 380 MB with `stream_xml_to_file`, in about the same time (the rows
+  themselves are 150 MB of that). The bytes written
+  are unchanged (golden files, bundled examples and corpus rebuild
+  identically). A file over 10 MiB that the schema rejects now reports
+  libxml2's first violation (element and reason) instead of up to 20
+  `xmlschema` messages, since collecting those builds the whole tree;
+  a smaller file still reports every violation as before.
+
+### Fixed
+
+- Validation demanded columns the message type does not require. The
+  loader checked every row against every column any bundled schema
+  describes, so `pain001 validate` and `generate`, `process_files` and
+  its streaming form, `pain001.validate` and `generate`, and the REST
+  `/validate`, `/generate` and `/ui/*` routes refused a pain.001.001.09
+  file without `payment_method`, `charge_bearer`, `service_level_code`
+  or `forwarding_agent_BIC`, which that type's schema does not require
+  and generation defaults or leaves out (0.0.86 did the same). The row
+  contract is now the target type's own: `load_payment_data` and
+  `load_payment_data_streaming` take `message_type=` (`None` keeps the
+  every-column contract), and the validation ladder passes it. A file
+  that names the debtor account by `debtor_account_number`, which
+  generation accepted, now validates too. So that a file that
+  validates still generates, validation also runs the generator's
+  required-field check: a .09 file with neither `debtor_account_IBAN`
+  nor `debtor_account_number` is still refused on every surface.
+  Generated XML is unchanged.
+- With a trust anchor, `verify_signature` and `pain001 verify-signature`
+  reported the signer from the certificate in `KeyInfo`, which the
+  signature does not cover, even when that certificate carried another
+  key. The signer is now the anchor certificate's subject, or, for a
+  bare public-key anchor, the embedded subject only when its key is the
+  anchor's. A certificate with another key sets the new
+  `SignatureReport.keyinfo_mismatch` field and adds a note to the text
+  output; the verdict is unchanged.
+- A CSV row with more values than the header has columns crashed
+  validation with `AttributeError` (REST answered 500). It is now a
+  row issue, `P001-E002`, naming the line: `pain001 validate` exits 1,
+  REST answers 400 and `pain001.validate` reports it.
+- REST `POST /api/v1/validate` reported `invalid_rows: 0` beside
+  `valid_rows: 3` of 4: the model's derived count was skipped when the
+  field was left out. It is now always `total_rows - valid_rows`.
+- REST `POST /api/v1/ui/validate` accepted an upload whose rows need
+  two payment information blocks, which `ui/generate` and `pain001
+  validate` refuse; it now answers 400 with the same message.
+- `make ecosystem-check` and every member's Suite Consistency job failed
+  with "inventory differs from active GitHub repositories" once the five
+  SDK repositories existed, because discovery knew only the nine
+  released members. `docs/ecosystem-unreleased.json` now declares
+  repositories that have no release yet; discovery accepts them and the
+  publication audit skips them until they join `docs/ecosystem.json`.
+
+- The Bank of England CHAPS overlay's property-purpose rule listed
+  HLTR, which is not an ISO external purpose code, and missed four of
+  the six codes the Bank mandates. It now lists HLRP, HLST, PLDS, PDEP,
+  PCOM and PLRF (policy statement 2024, section 4.1.5). Its header no
+  longer says structured addresses were required from November 2025:
+  hybrid addresses were enabled then, and unstructured ones are
+  rejected from November 2026.
+
+- Cancelling a REST async job (`DELETE /api/v1/jobs/{job_id}`) now
+  stops it. Before, the cancel only changed the status: the worker
+  went on to render the XML, left the file in the output directory
+  where no download could reach it, and counted the job as a success
+  in the metrics. The worker now checks for a cancel at each stage
+  boundary (before loading, validating and rendering) and stops there;
+  a cancel that lands while the file is being rendered removes the
+  file. The job stays `cancelled` and is counted neither as a success
+  nor as a failure.
+
+- Cancelling a job that has already finished answered `200` with
+  "cancelled" while leaving the job as it was. It now answers `409`
+  with the job's actual status, and the OpenAPI lists `404` and `409`
+  for the route.
+
+- `POST /api/v1/generate` answered `200` when it refused the data, so a
+  client that checked only the status took a refusal for a generated
+  file. Rows that fail validation or a scheme rule now answer `422`;
+  the body is unchanged (`success: false` with `validation_errors` or
+  `scheme_violations`). A refused input file or scheme name stays
+  `400`, an internal failure `500`, and a successful or validate-only
+  run `200`. The OpenAPI document, and the conformance kit's
+  `openapi.json`, list the `400`, `422` and `500` answers; no kit case
+  changes. `/validate` still answers `200` with `is_valid: false`, as
+  `/check` does with `passed: false`.
+- Behind a reverse proxy the rate limiter keyed every request on the
+  proxy's socket address, so all clients shared one bucket. The new
+  `PAIN001_TRUSTED_PROXIES` (addresses or networks, empty by default)
+  names the proxies whose forwarded header is believed; on their
+  connections the key is the right-most `X-Forwarded-For` hop that is
+  not a trusted proxy (`PAIN001_FORWARDED_HEADER=forwarded` reads the
+  RFC 7239 header instead). Any other peer is keyed on its socket
+  address as before, so a client cannot choose its own bucket.
+- `init_otel` built its own tracer provider and called
+  `set_tracer_provider` even when the host application had already set
+  one, so an application embedding pain001 lost pain001's spans or its
+  own exporter. It now uses a provider that is already set and installs
+  pain001's only when none is.
+- `JSONFormatter` passed a message that happened to parse as a bare JSON
+  value (`logger.info("42")`) through as that value instead of a log
+  object with `level`, `request_id` and `message`; it is now wrapped
+  like any other plain-text message.
+- A mistyped command (`pain001 gneerate`) reached `generate` as an
+  "unexpected extra argument"; only an invocation that starts with an
+  option is routed to `generate` now, and Click names the closest
+  command: `No such command 'gneerate'. Did you mean 'generate'?`.
+- A document declaring a DTD entity is refused as a validation error
+  (`XML parse error: EntitiesForbidden(...)`) instead of raising
+  defusedxml's exception out of `validate_via_xsd`,
+  `validate_xml_string_via_xsd` and `collect_xsd_validation_errors`.
+
 ## [0.0.86] - 2026-11-11
 
 ### Added

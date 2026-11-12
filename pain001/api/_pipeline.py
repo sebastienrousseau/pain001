@@ -40,6 +40,7 @@ from dataclasses import dataclass, field
 from typing import Any, ParamSpec, TypeVar
 
 from fastapi import HTTPException, status
+from fastapi.responses import JSONResponse
 
 from pain001.api._redact import mask_error
 from pain001.api.job_manager import JobStatus
@@ -47,13 +48,12 @@ from pain001.api.metrics import registry
 from pain001.api.models import (
     GenerateXMLRequest,
     GenerateXMLResponse,
+    UiGenerateResponse,
     ValidationRequest,
     ValidationResponse,
 )
 from pain001.api.models import ValidationError as ValidationErrorModel
-from pain001.validation import validate_scheme
-from pain001.validation._one_batch import load_batch
-from pain001.validation.schema_validator import SchemaValidator
+from pain001.validation.ladder import check_scheme, run_ladder
 from pain001.validation.schemes import SchemeValidationResult
 from pain001.xml.generate_xml import generate_xml
 
@@ -62,6 +62,7 @@ CONCURRENCY_ENV = "PAIN001_API_CONCURRENCY"
 
 P = ParamSpec("P")
 T = TypeVar("T")
+Body = TypeVar("Body", GenerateXMLResponse, UiGenerateResponse)
 
 _executor: ThreadPoolExecutor | None = None
 _executor_lock = threading.Lock()
@@ -181,22 +182,10 @@ def request_scheme_result(
 
     Raises:
         HTTPException: If policy dependencies, syntax or inputs are invalid.
-        ValueError: Raised internally for missing policy dependencies and
-            converted to HTTPException before returning to the caller.
     """
     try:
-        if request.rules is not None:
-            try:
-                from pain001.validation.policy import validate_policy
-            except ImportError as exc:
-                raise ValueError(
-                    "Custom rules require 'pain001[rules]'."
-                ) from exc
-            return validate_policy(
-                data, request.rules, request.scheme, request.message_type.value
-            )
-        return validate_scheme(
-            data, request.scheme or "", message_type=request.message_type.value
+        return check_scheme(
+            data, request.message_type.value, request.scheme, request.rules
         )
     except ValueError as exc:
         raise HTTPException(
@@ -240,24 +229,25 @@ def validate_pipeline(
     Returns:
         The validation response.
     """
-    data = load_batch(
-        file_path, request.message_type.value, request.identifier_checks
+    ladder = run_ladder(
+        file_path,
+        request.message_type.value,
+        identifier_checks=request.identifier_checks,
     )
-    validator = SchemaValidator(request.message_type.value)
-    total, valid, errors = validator.validate_batch(data)
 
     scheme_violations: list[dict[str, Any]] = []
-    is_valid = len(errors) == 0
+    is_valid = ladder.is_valid
     if request.scheme or request.rules is not None:
-        scheme_result = request_scheme_result(data, request)
+        scheme_result = request_scheme_result(ladder.rows, request)
         scheme_violations = [v.as_dict() for v in scheme_result.violations]
         is_valid = is_valid and scheme_result.is_valid
 
     return ValidationResponse(
         is_valid=is_valid,
-        total_rows=total,
-        valid_rows=valid,
-        errors=format_validation_errors(errors),
+        total_rows=ladder.total,
+        valid_rows=ladder.valid,
+        invalid_rows=ladder.invalid,
+        errors=format_validation_errors(ladder.row_errors),
         scheme_violations=scheme_violations,
     )
 
@@ -311,12 +301,18 @@ def generate_pipeline(
         The outcome, for the caller to turn into its response.
     """
     progress(10)
-    data = load_batch(
-        file_path, request.message_type.value, request.identifier_checks
+    ladder = run_ladder(
+        file_path,
+        request.message_type.value,
+        identifier_checks=request.identifier_checks,
+        after_load=functools.partial(progress, 40),
     )
-    progress(40)
-    validator = SchemaValidator(request.message_type.value)
-    total, valid, errors = validator.validate_batch(data)
+    data, total, valid, errors = (
+        ladder.rows,
+        ladder.total,
+        ladder.valid,
+        ladder.row_errors,
+    )
     if errors:
         return GenerationOutcome("invalid_rows", total, valid, errors=errors)
     if request.scheme or request.rules is not None:
@@ -377,14 +373,52 @@ def record_outcome(
         record_failure(message_type, start_time)
 
 
-def sync_response(outcome: GenerationOutcome) -> GenerateXMLResponse:
+def sync_response(
+    outcome: GenerationOutcome,
+) -> GenerateXMLResponse | JSONResponse:
     """Turn an outcome into the synchronous ``/generate`` response.
+
+    Data that fails validation or a scheme rule is a ``422`` carrying
+    the same body, so the status agrees with ``success``.
 
     Args:
         outcome: What the pipeline produced.
 
     Returns:
-        The endpoint's response body.
+        The endpoint's response body, or a ``422`` response.
+    """
+    return refusal_as_422(_sync_body(outcome))
+
+
+def refusal_as_422(body: Body) -> Body | JSONResponse:
+    """Answer a refused generation with ``422`` and the same body.
+
+    ``POST /generate`` and the dashboard's ``POST /ui/generate`` share
+    this, so on both a ``200`` always means a document was produced.
+
+    Args:
+        body: A generation response.
+
+    Returns:
+        ``body`` itself when ``success`` is true, else a ``422``
+        response carrying it.
+    """
+    if body.success:
+        return body
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        content=body.model_dump(mode="json"),
+    )
+
+
+def _sync_body(outcome: GenerationOutcome) -> GenerateXMLResponse:
+    """Build the synchronous ``/generate`` response body.
+
+    Args:
+        outcome: What the pipeline produced.
+
+    Returns:
+        The body, ``success=False`` when the data was refused.
     """
     if outcome.kind == "invalid_rows":
         return GenerateXMLResponse(

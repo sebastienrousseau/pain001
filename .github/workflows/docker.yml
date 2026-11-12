@@ -30,9 +30,9 @@ on:
       - ".github/workflows/docker.yml"
   workflow_dispatch:
 
+# The build job states its own scopes; nothing else gets an OIDC token.
 permissions:
   contents: read
-  id-token: write
 
 env:
   REGISTRY: ghcr.io
@@ -43,12 +43,14 @@ jobs:
     name: Build (and publish on tag/main)
     runs-on: ubuntu-latest
     permissions:
-      contents: read
-      packages: write
-      attestations: write
-      id-token: write
+      contents: read # check out the source
+      packages: write # push the image to GHCR (non-PR events only)
+      attestations: write # store the image's build provenance
+      id-token: write # sign that provenance through Sigstore OIDC
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Set up QEMU (for multi-arch builds)
         uses: docker/setup-qemu-action@99012661954931238ded8c8b007157a8430204e1 # v4.4.0
@@ -86,15 +88,22 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          # Only pull-request builds, which push nothing, use the shared
+          # Actions cache; an image that is published is built from
+          # scratch, so a poisoned cache entry cannot reach it.
+          cache-from: ${{ github.event_name == 'pull_request' && 'type=gha' || '' }}
+          cache-to: ${{ github.event_name == 'pull_request' && 'type=gha,mode=max' || '' }}
           provenance: true
 
       - name: Smoke-test the published image
         if: github.event_name != 'pull_request'
+        # The tag reaches the script through the environment, not a
+        # template expansion inside it (zizmor template-injection).
+        env:
+          IMAGE_VERSION: ${{ steps.meta.outputs.version }}
         run: |
           set -euo pipefail
-          IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ steps.meta.outputs.version }}"
+          IMAGE="${REGISTRY}/${IMAGE_NAME}:${IMAGE_VERSION}"
           docker pull "$IMAGE"
           # Acceptance criterion 1: pain001 --version matches package version.
           VERSION_OUT=$(docker run --rm "$IMAGE" --version 2>&1 || true)

@@ -21,6 +21,7 @@ from pathlib import Path
 import pytest
 
 from pain001.constants import TEMPLATES_DIR
+from pain001.xml import _render
 from pain001.xml import generate_xml as gx
 
 MESSAGE_TYPE = "pain.001.001.09"
@@ -34,13 +35,13 @@ def _rows() -> list[dict[str, str]]:
 
 @pytest.fixture(autouse=True)
 def _fresh_cache() -> None:
-    gx._compile_template.cache_clear()
+    _render._compile_template.cache_clear()
 
 
 def test_the_same_source_compiles_once() -> None:
-    first = gx._compile_template("<a>{{ x }}</a>")
-    assert gx._compile_template("<a>{{ x }}</a>") is first
-    assert gx._compile_template.cache_info().misses == 1
+    first = _render._compile_template("<a>{{ x }}</a>")
+    assert _render._compile_template("<a>{{ x }}</a>") is first
+    assert _render._compile_template.cache_info().misses == 1
 
 
 def test_repeated_generation_reuses_the_compiled_template() -> None:
@@ -53,7 +54,7 @@ def test_repeated_generation_reuses_the_compiled_template() -> None:
     first = gx.generate_xml_string(*args)
     second = gx.generate_xml_string(*args)
     assert first == second
-    info = gx._compile_template.cache_info()
+    info = _render._compile_template.cache_info()
     assert (info.misses, info.hits) == (1, 1)
 
 
@@ -74,9 +75,9 @@ def test_an_edited_template_compiles_again(
     after = gx.generate_xml_string(_rows(), MESSAGE_TYPE, str(template), xsd)
     assert "<!-- edited -->" in after
     assert "<!-- edited -->" not in before
-    assert gx._compile_template.cache_info().misses == 2
+    assert _render._compile_template.cache_info().misses == 2
 
 
 def test_autoescape_still_applies_to_cached_templates() -> None:
-    template = gx._compile_template("<a>{{ x }}</a>")
+    template = _render._compile_template("<a>{{ x }}</a>")
     assert template.render(x="<b>&") == "<a>&lt;b&gt;&amp;</a>"

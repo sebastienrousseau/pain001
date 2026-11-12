@@ -44,7 +44,7 @@ from pain001.constants import TEMPLATES_DIR
 from pain001.data.loader import load_payment_data
 from pain001.exceptions import DataSourceError, PaymentValidationError
 from pain001.validation import validate_scheme
-from pain001.validation.schema_validator import SchemaValidator
+from pain001.validation.ladder import Ladder, run_ladder
 from pain001.xml.generate_xml import generate_xml_string
 
 SUPPORTED_SUFFIXES: tuple[str, ...] = (".csv", ".json", ".jsonl")
@@ -139,7 +139,9 @@ def _jsonl_rows(content: str) -> list[Any]:
     return rows
 
 
-def parse_upload(filename: str, content: str) -> list[dict[str, Any]]:
+def parse_upload(
+    filename: str, content: str, message_type: str | None = None
+) -> list[dict[str, Any]]:
     """Turn the uploaded text into validated payment rows.
 
     Mirrors the file loaders: CSV through :class:`csv.DictReader`, JSON
@@ -149,6 +151,9 @@ def parse_upload(filename: str, content: str) -> list[dict[str, Any]]:
     Args:
         filename: The name the browser reported; only its suffix is used.
         content: The file's text.
+        message_type: The target message type, whose columns every row
+            must carry; ``None`` requires every column all bundled
+            schemas describe.
 
     Returns:
         The validated rows.
@@ -176,7 +181,7 @@ def parse_upload(filename: str, content: str) -> list[dict[str, Any]]:
             detail="Every payment row must be a JSON object.",
         )
     try:
-        return load_payment_data(rows)
+        return load_payment_data(rows, message_type=message_type)
     except (DataSourceError, PaymentValidationError) as exc:
         raise HTTPException(status_code=_BAD_REQUEST, detail=str(exc)) from exc
 
@@ -206,6 +211,26 @@ def _scheme_violations(
     return result.is_valid, [v.as_dict() for v in result.violations]
 
 
+def _climb(rows: list[dict[str, Any]], message_type: str) -> Ladder:
+    """Run the shared validation ladder on uploaded rows.
+
+    Args:
+        rows: The parsed rows.
+        message_type: The sanitised message type.
+
+    Returns:
+        The ladder's findings.
+
+    Raises:
+        HTTPException: ``400`` when the rows do not form one batch, as
+            ``POST /validate`` and generation refuse them.
+    """
+    try:
+        return run_ladder(rows, message_type)
+    except PaymentValidationError as exc:
+        raise HTTPException(status_code=_BAD_REQUEST, detail=str(exc)) from exc
+
+
 def validate_upload(payload: UiFilePayload) -> ValidationResponse:
     """Validate the uploaded text against the schema and optional schemes.
 
@@ -216,18 +241,16 @@ def validate_upload(payload: UiFilePayload) -> ValidationResponse:
     Returns:
         The same shape as ``POST /validate``.
     """
-    rows = parse_upload(payload.filename, payload.content)
-    validator = SchemaValidator(
-        sanitise_message_type(payload.message_type.value)
-    )
-    total, valid, errors = validator.validate_batch(rows)
+    message_type = sanitise_message_type(payload.message_type.value)
+    rows = parse_upload(payload.filename, payload.content, message_type)
+    ladder = _climb(rows, message_type)
     scheme_ok, violations = _scheme_violations(rows, payload.scheme)
     return ValidationResponse(
-        is_valid=not errors and scheme_ok,
-        total_rows=total,
-        valid_rows=valid,
-        invalid_rows=total - valid,
-        errors=format_validation_errors(errors),
+        is_valid=ladder.is_valid and scheme_ok,
+        total_rows=ladder.total,
+        valid_rows=ladder.valid,
+        invalid_rows=ladder.invalid,
+        errors=format_validation_errors(ladder.row_errors),
         scheme_violations=violations,
     )
 
@@ -248,12 +271,13 @@ def generate_upload(payload: UiFilePayload) -> UiGenerateResponse:
         HTTPException: ``400`` when rendering fails (for example the
             rendered document does not satisfy the XSD).
     """
-    rows = parse_upload(payload.filename, payload.content)
     # Allow-list barrier: the enum is already constrained, but the value
     # is joined into filesystem paths below and static analysis only
     # recognises an explicit membership check as a sanitiser.
     message_type = sanitise_message_type(payload.message_type.value)
-    total, valid, errors = SchemaValidator(message_type).validate_batch(rows)
+    rows = parse_upload(payload.filename, payload.content, message_type)
+    ladder = _climb(rows, message_type)
+    total, valid, errors = ladder.total, ladder.valid, ladder.row_errors
     if errors:
         return UiGenerateResponse(
             success=False,

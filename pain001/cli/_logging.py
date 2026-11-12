@@ -84,6 +84,21 @@ def _env_choice(name: str, choices: tuple[str, ...], default: str) -> str:
     return value.lower()
 
 
+def resolve_log_format(log_format: str | None) -> str:
+    """The log format: ``--log-format``, else ``PAIN001_LOG_FORMAT``, else text.
+
+    Args:
+        log_format: The ``--log-format`` value, if given.
+
+    Returns:
+        ``"text"`` or ``"json"``.
+
+    A ``click.UsageError`` naming the variable propagates when the
+    environment value is not valid.
+    """
+    return log_format or _env_choice("PAIN001_LOG_FORMAT", FORMATS, "text")
+
+
 def _handlers(level: int, log_format: str) -> list[logging.Handler]:
     """Build the stderr handler, and a file handler if one is asked for.
 
@@ -130,9 +145,7 @@ def attach_cli_logging(
     """
     name = "debug" if verbose else None
     name = name or _env_choice("PAIN001_LOG_LEVEL", LEVELS, "warning")
-    log_format = log_format or _env_choice(
-        "PAIN001_LOG_FORMAT", FORMATS, "text"
-    )
+    log_format = resolve_log_format(log_format)
     level = getattr(logging, name.upper())
     handlers = _handlers(level, log_format)
     previous = logger.level

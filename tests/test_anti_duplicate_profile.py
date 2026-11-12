@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import patch
 
 import pytest
 from click.testing import CliRunner
@@ -47,6 +46,7 @@ from pain001.validation.schemes import (
     remediation_for,
     validate_scheme,
 )
+from tests._ladder_stub import rows_loaded
 
 ROOT = Path(__file__).resolve().parents[1]
 _TPL = TEMPLATES_DIR / "pain.001.001.03"
@@ -103,10 +103,7 @@ def test_one_cent_difference_is_not_a_duplicate() -> None:
 def test_cli_dry_run_flags_duplicates_and_exits_1() -> None:
     """``--scheme anti-duplicate --dry-run`` reports both rows and exits 1."""
     runner = CliRunner()
-    with patch(
-        "pain001.cli.cli.load_batch",
-        return_value=[_row(), _row()],
-    ):
+    with rows_loaded([_row(), _row()]):
         result = runner.invoke(
             main,
             [
@@ -327,10 +324,7 @@ def test_unknown_name_error_names_the_offending_profile() -> None:
 def test_cli_accepts_a_composed_scheme_spec() -> None:
     """``--scheme sepa-sct,anti-duplicate --scheme-format json`` round-trips."""
     runner = CliRunner()
-    with patch(
-        "pain001.cli.cli.load_batch",
-        return_value=[_row(), _row()],
-    ):
+    with rows_loaded([_row(), _row()]):
         result = runner.invoke(
             main,
             [

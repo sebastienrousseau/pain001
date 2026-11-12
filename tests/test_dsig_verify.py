@@ -446,3 +446,91 @@ def test_the_digest_value_is_read_from_the_reference() -> None:
     )
     decoy.text, good.text = good.text, "AAAA"
     assert "Digest mismatch" in _reason(_resigned(tree))
+
+
+def _keyinfo_swapped(signed: str | bytes, cert_pem: bytes) -> bytes:
+    """``signed`` with another certificate in KeyInfo (not signed over)."""
+    from cryptography import x509
+
+    raw = signed.encode("utf-8") if isinstance(signed, str) else signed
+    tree = etree.fromstring(raw)
+    der = x509.load_pem_x509_certificate(cert_pem).public_bytes(
+        serialization.Encoding.DER
+    )
+    found = tree.find(f".//{{{DS}}}X509Certificate")
+    found.text = base64.b64encode(der).decode()
+    return bytes(etree.tostring(tree))
+
+
+@pytest.fixture
+def other_cert_pem() -> bytes:
+    """A certificate for a key that did not sign anything here."""
+    import datetime
+
+    from cryptography import x509
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.x509.oid import NameOID
+
+    name = x509.Name(
+        [x509.NameAttribute(NameOID.COMMON_NAME, "Some Other Bank")]
+    )
+    now = datetime.datetime.now(datetime.UTC)
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(name)
+        .issuer_name(name)
+        .public_key(_P256.public_key())
+        .serial_number(9)
+        .not_valid_before(now - datetime.timedelta(days=1))
+        .not_valid_after(now + datetime.timedelta(days=1))
+        .sign(_P256, hashes.SHA256())
+    )
+    return cert.public_bytes(serialization.Encoding.PEM)
+
+
+def test_an_anchor_names_the_signer_not_a_swapped_certificate(
+    rsa_cert_pem: tuple[bytes, bytes], other_cert_pem: bytes
+) -> None:
+    """KeyInfo is not signed over, so its subject is not the signer's."""
+    key_pem, cert_pem = rsa_cert_pem
+    swapped = _keyinfo_swapped(
+        sign_xml_document(DOC, key_pem, cert_pem), other_cert_pem
+    )
+    report = verify_signature(swapped, trust_anchor=cert_pem)
+    assert report.valid and report.trust == "anchor"
+    assert report.signer == "CN=dsig test"
+    assert report.keyinfo_mismatch
+    bare = verify_signature(swapped, trust_anchor=_pem(_RSA))
+    assert bare.valid and bare.signer is None and bare.keyinfo_mismatch
+
+
+def test_a_bare_key_anchor_names_a_matching_embedded_signer(
+    rsa_cert_pem: tuple[bytes, bytes],
+) -> None:
+    key_pem, cert_pem = rsa_cert_pem
+    signed = sign_xml_document(DOC, key_pem, cert_pem)
+    report = verify_signature(signed, trust_anchor=_pem(_RSA))
+    assert report.valid and report.signer == "CN=dsig test"
+    assert not report.keyinfo_mismatch
+    embedded = verify_signature(signed, trust_embedded_cert=True)
+    assert not embedded.keyinfo_mismatch
+
+
+def test_a_certificate_anchor_names_the_signer_without_keyinfo(
+    rsa_cert_pem: tuple[bytes, bytes],
+) -> None:
+    key_pem, cert_pem = rsa_cert_pem
+    report = verify_signature(
+        sign_xml_document(DOC, key_pem), trust_anchor=cert_pem
+    )
+    assert report.valid and report.signer == "CN=dsig test"
+    assert not report.keyinfo_mismatch
+
+
+def test_load_trust_anchor_reads_a_certificate(
+    rsa_cert_pem: tuple[bytes, bytes],
+) -> None:
+    from pain001.security._dsig_verify import load_trust_anchor
+
+    key = load_trust_anchor(rsa_cert_pem[1].decode())
+    assert key.public_numbers() == _RSA.public_key().public_numbers()

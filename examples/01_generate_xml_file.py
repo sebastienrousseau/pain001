@@ -13,44 +13,61 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Generate a pain.001.001.03 XML file from CSV with the library API.
+"""Validate a CSV file, then generate a pain.001.001.03 XML file from it.
 
-Loads payment rows from ``examples/data/payments.csv``, renders them
-through the bundled template, validates the result against the bundled
-XSD schema, and writes the XML file to a temporary directory.
+``pain001.validate`` runs the checks ``pain001 validate`` and the REST
+API run, and returns a ``ValidationReport``; ``pain001.generate`` runs
+them again, renders the rows through the bundled template, validates
+the XML against the bundled XSD and returns a ``GenerationResult``.
+Neither needs a template or schema path.
 
 Run from the repository root::
 
     python examples/01_generate_xml_file.py
 """
 
+import csv
 import tempfile
 from pathlib import Path
 
-from pain001.constants import TEMPLATES_DIR
-from pain001.csv.load_csv_data import load_csv_data
-from pain001.xml.generate_xml import generate_xml
+import pain001
 
 MESSAGE_TYPE = "pain.001.001.03"
 DATA_FILE = Path(__file__).resolve().parent / "data" / "payments.csv"
 
 
 def main() -> None:
-    """Load CSV data and write a validated pain.001 XML file."""
-    template_dir = TEMPLATES_DIR / MESSAGE_TYPE
-    data = load_csv_data(str(DATA_FILE))
-    print(f"Loaded {len(data)} payment rows from {DATA_FILE.name}")
+    """Validate the CSV data and write a pain.001 XML file."""
+    report: pain001.ValidationReport = pain001.validate(
+        DATA_FILE, MESSAGE_TYPE
+    )
+    assert report.is_valid, report.errors
+    print(f"Validated {report.total_rows} payment rows from {DATA_FILE.name}")
 
     with tempfile.TemporaryDirectory() as output_dir:
-        output_path = generate_xml(
-            data,
-            MESSAGE_TYPE,
-            str(template_dir / "template.xml"),
-            str(template_dir / f"{MESSAGE_TYPE}.xsd"),
-            output_path=str(Path(output_dir) / f"{MESSAGE_TYPE}.xml"),
+        result: pain001.GenerationResult = pain001.generate(
+            DATA_FILE, MESSAGE_TYPE, output_dir=output_dir
         )
-        size = Path(output_path).stat().st_size
-        print(f"Generated and XSD-validated {output_path} ({size} bytes)")
+        size = result.path.stat().st_size
+        print(f"Generated and XSD-validated {result.path} ({size} bytes)")
+
+        # A value that breaks the message type's JSON Schema is refused
+        # before any XML is written, with the line and column of each
+        # problem. Every pain001 exception derives from Pain001Error.
+        # Rows can be passed as dictionaries instead of a file.
+        with DATA_FILE.open(encoding="utf-8", newline="") as handle:
+            rows = [
+                dict(row, currency="EURO") for row in csv.DictReader(handle)
+            ]
+        try:
+            pain001.generate(rows, MESSAGE_TYPE, output_dir=output_dir)
+        except pain001.Pain001Error as exc:
+            assert isinstance(exc, pain001.PaymentValidationError)
+            issue = exc.errors[0]
+            assert issue.column == "currency", issue
+            print(f"Refused as expected: {issue}")
+        else:
+            raise AssertionError("currency=EURO was accepted")
 
 
 if __name__ == "__main__":

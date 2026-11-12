@@ -102,7 +102,7 @@ def _health_while_blocked(
     async def scenario() -> tuple[httpx.Response, httpx.Response]:
         transport = httpx.ASGITransport(app=app)
         async with httpx.AsyncClient(
-            transport=transport, base_url="http://test"
+            transport=transport, base_url="http://127.0.0.1"
         ) as http:
             upload = asyncio.create_task(http.post(path, json=_payload()))
             for _ in range(500):
@@ -348,7 +348,9 @@ def test_ready_reports_ok() -> None:
 # ---------------------------------------------------------------------------
 def test_dashboard_errors_mask_account_numbers() -> None:
     """A rejected IBAN is reported masked, in ``value`` and ``message``."""
-    bad = TEMPLATE_CSV.replace(SAMPLE_IBAN, LOWER_IBAN, 1)
+    # Every row: one debtor IBAN per file, or the one-batch check refuses
+    # the upload before the schema reports it.
+    bad = TEMPLATE_CSV.replace(SAMPLE_IBAN, LOWER_IBAN)
     response = client.post("/api/v1/ui/validate", json=_payload(content=bad))
     assert response.status_code == 200
     errors = response.json()["errors"]

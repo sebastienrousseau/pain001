@@ -79,6 +79,8 @@ class IssueCode:
 
     #: The input holds no payment rows.
     EMPTY_INPUT = "P001-E001"
+    #: A CSV row holds more values than its header has columns.
+    EXTRA_VALUES = "P001-E002"
     #: A required column is absent or empty.
     MISSING_VALUE = "P001-E010"
     #: A column that takes a whole number holds something else.
@@ -93,6 +95,15 @@ class IssueCode:
     INVALID_IBAN = "P001-E020"
     #: A BIC column is not an ISO 9362 BIC.
     INVALID_BIC = "P001-E021"
+    #: An LEI column is not an ISO 17442 LEI (length, characters or
+    #: MOD 97-10 check digits).
+    INVALID_LEI = "P001-E022"
+    #: A value breaks the message type's JSON Schema (a pattern, a
+    #: length, an allowed value), for example ``currency=EURO``.
+    SCHEMA_VIOLATION = "P001-E030"
+    #: A row breaks a rule of the scheme rulebook or private policy
+    #: that was asked for (``scheme=`` or ``rules=``).
+    SCHEME_VIOLATION = "P001-E040"
 
 
 @dataclass(frozen=True)

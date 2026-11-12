@@ -87,6 +87,8 @@ class Fields:  # pylint: disable=too-few-public-methods
     TIMESTAMP = "timestamp"
     LEVEL = "level"
     REQUEST_ID = "request_id"  # UUID for request tracing
+    TRACE_ID = "trace_id"  # W3C trace id, when the work is traced
+    SPAN_ID = "span_id"  # Active OpenTelemetry span id
     LOGGER_NAME = "logger"
 
     # Component identification

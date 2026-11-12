@@ -138,6 +138,9 @@ services:
       PAIN001_RATE_LIMIT: "100/minute"
       PAIN001_RATE_LIMIT_BACKEND: redis
       PAIN001_RATE_LIMIT_REDIS_URL: redis://redis:6379/0
+      # Key the limiter on the client nginx forwards, not on nginx.
+      # Narrow this to the compose network's subnet.
+      PAIN001_TRUSTED_PROXIES: "172.16.0.0/12"
 
       # Durable job store (Redis-backed, survives restarts)
       PAIN001_JOB_STORE_URL: redis://redis:6379/1
@@ -271,6 +274,8 @@ http {
       proxy_http_version 1.1;
       proxy_set_header   Host $host;
       proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
+      # pain001 echoes this id and logs it as request_id.
+      proxy_set_header   X-Request-ID $request_id;
       proxy_set_header   X-Forwarded-Proto $scheme;
       proxy_read_timeout 120s;
     }
@@ -350,6 +355,7 @@ observability.
 | `PAIN001_API_CONCURRENCY` | CPU count (default) | Validation and generation pipelines run at once per worker; extra requests and async jobs queue instead of starving `/health`. Lower it to cap memory on a small container. |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` | Shared across replicas (needs the `redis` extra). The in-process backend protects one worker only. |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | `redis://redis:6379/0` | Pointing at the compose-network Redis. |
+| `PAIN001_TRUSTED_PROXIES` | nginx's address or the compose subnet | Without it every request seems to come from nginx and all clients share one rate-limit bucket. With it, `X-Forwarded-For` is read only on connections from these addresses, keyed on the right-most hop that is not a trusted proxy, so a client cannot pick its own key. `PAIN001_FORWARDED_HEADER=forwarded` reads the RFC 7239 header instead. |
 | `PAIN001_JOB_STORE_URL` | `redis://redis:6379/1` | Durable async-job state (needs the `redis` extra). Survives a pain001 restart. |
 | `PAIN001_JOB_STORE_DIR` | _unset_ when using Redis | The file-backed store is an alternative, not an addition. Job files are written `0600` in a `0700` directory. |
 | `PAIN001_METRICS_TOKEN` | `openssl rand -hex 32` | Prometheus scrapes with this token instead of the API key, so the scraper cannot call the payment routes. |
@@ -362,7 +368,8 @@ observability.
 | :--- | :--- | :--- |
 | `PYTHONUNBUFFERED` | Always in containers | `print()` lines flush immediately. Critical for `docker logs` debugging. |
 | `PAIN001_METRICS_PAYMENT_VOLUME` | You want payment volume per currency in Prometheus | `1` records and exposes `pain001_payment_volume_cents_total`. Off by default: it is business data, and anyone holding the scrape token can read it. |
-| `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
+| `PAIN001_ALLOWED_HOSTS` | You run without `PAIN001_API_KEY` and reach the server by a name or address other than loopback | Without a key the API answers only requests whose `Host` (and `Origin`, when sent) is `localhost` or a loopback address. List further hosts, comma separated (`box.lan,10.0.0.5`); `*` accepts any. Ignored when `PAIN001_API_KEY` is set. |
+| `OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` | Wiring to Datadog / Honeycomb / Tempo | `OTEL_ENABLED=true` turns tracing on; spans ship to the named OTLP collector. Each request gets a server span that continues an inbound `traceparent`, and JSON logs carry `trace_id` and `span_id`. Needs the `otel` extra, so add `otel` to the extras in `image/Dockerfile`. |
 
 ---
 

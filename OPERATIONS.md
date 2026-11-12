@@ -93,12 +93,14 @@ browser dashboard at `/api/v1/ui` is on, so local runs need no setup.
 | `PAIN001_RATE_LIMIT` | Per-client request cap (fixed window); unset means no limit | `100/minute` |
 | `PAIN001_RATE_LIMIT_BACKEND` | `redis` shares the rate-limit counters across replicas (`pain001[redis]`) | `redis` |
 | `PAIN001_RATE_LIMIT_REDIS_URL` | Redis URL for the rate limiter; falls back to `PAIN001_JOB_STORE_URL` | `redis://redis:6379/0` |
+| `PAIN001_TRUSTED_PROXIES` | Comma-separated addresses or networks of the reverse proxies in front of the API. Only when the connecting peer is one of them does the rate limiter read the forwarded header, keying on the right-most hop that is not a trusted proxy. Empty (default): the socket address is the key and forwarded headers are ignored. An entry that is not an address or network stops start-up | `10.0.0.0/8` |
+| `PAIN001_FORWARDED_HEADER` | The one header those proxies write: `x-forwarded-for` (default) or `forwarded` (RFC 7239). Pick the header your proxy sets, never one it passes through untouched | `x-forwarded-for` |
 | `PAIN001_JOB_STORE_DIR` | Persist async jobs to disk so they survive restarts | `/var/lib/pain001/jobs` |
 | `PAIN001_JOB_STORE_URL` | Store async jobs in Redis for multi-replica deployments (`pain001[redis]`); takes precedence over `PAIN001_JOB_STORE_DIR` | `redis://redis:6379/1` |
 | `PAIN001_JOB_STORE_NAMESPACE` | Key prefix for the Redis job store | `pain001:jobs` (default) |
 | `PAIN001_UI_DISABLED` | `1`, `true` or `yes` takes the `/api/v1/ui` dashboard offline | `1` |
 | `PAIN001_DISABLE_PLUGINS` | Comma-separated plugin names to skip | `xlsx,gpg` |
-| `OTEL_ENABLED` | Turn on OpenTelemetry tracing (`pain001[otel]`) | `true` |
+| `OTEL_ENABLED` | Turn on OpenTelemetry tracing (`pain001[otel]`): a server span per request, parented on an inbound `traceparent` (see [Request ids and traces](#request-ids-and-traces)) | `true` |
 
 ## Health and readiness
 
@@ -174,8 +176,27 @@ Suggested alerts:
 Structured JSON logging with PII redaction is available in
 `pain001.logging_schema`; the server does not turn it on by itself, so call
 `configure_json_logging()` from your own entry point when you want JSON.
-Ship stdout to your log pipeline; correlate with traces via the
-OpenTelemetry context attached to metric events when an OTel SDK is present.
+Ship stdout to your log pipeline.
+
+### Request ids and traces
+
+Every response carries `X-Request-ID`. A caller's own id is echoed when it
+is 1 to 128 characters of letters, digits and `. _ : -`, starting with a
+letter or digit; anything else is replaced by a fresh `req-<8 hex>` id.
+JSON log lines written while serving the request carry it as `request_id`,
+so a client can quote the id from a failed answer and you can find its
+logs. A proxy that stamps its own id (nginx `$request_id`) can pass it on.
+
+An inbound W3C `traceparent` joins the request to the caller's trace. With
+`OTEL_ENABLED=true` and the `otel` extra, each request gets a server span
+(`GET /api/v1/status/{job_id}`, with the status code and route) whose
+parent is the caller's span, and the handler spans (`pain001.api.*`) are
+its children; log lines carry its `trace_id` and `span_id`. Without
+tracing, logs still carry the caller's `trace_id`. If the host process has
+already set an OpenTelemetry tracer provider, pain001 uses it rather than
+installing its own, so embedding pain001 keeps the host's exporter and
+sampler. Propagators follow `OTEL_PROPAGATORS` (W3C trace context and
+baggage by default).
 
 ## Scaling notes
 

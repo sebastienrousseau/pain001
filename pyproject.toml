@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.86"
+version = "0.0.87"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -379,6 +379,14 @@ pytest_add_cli_args = [
     # pool; the ordinary test run covers them.
     "--ignore=tests/test_parallel_chunks.py",
     "--deselect=tests/test_cli_input_paths.py::test_outside_template_with_worker_processes",
+    # The memory tests measure a fresh interpreter, which imports the
+    # trampolined copy outside the runner; the ordinary run covers them.
+    "--deselect=tests/test_xml_stream_memory.py::test_streaming_100k_rows_stays_under_400_mb",
+    "--deselect=tests/test_xml_stream_memory.py::test_default_path_peaks_under_four_times_the_output",
+    # The warning's stacklevel is counted in frames; mutmut's trampoline
+    # adds one, so inside the copy the warning names the trampoline. The
+    # ordinary run checks it against the real call stack.
+    "--deselect=tests/test_xml_stream_memory.py::test_the_deprecation_warning_names_the_caller",
     # The complexity gate measures the real tree against its baseline;
     # inside the copy every function is a mutmut trampoline, so the
     # measurement differs. The ordinary test run and CI job cover it.

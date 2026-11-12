@@ -29,9 +29,10 @@
 # push, so its attestation binds to refs/tags/vX.Y.Z and (since 993eb97)
 # covers every release asset. Use this workflow when that did not run.
 #
-# NOTE: the reusable generator MUST be referenced by tag, not SHA —
+# NOTE: the reusable generator MUST be referenced by tag, not SHA:
 # slsa-verifier validates the generator's own provenance against its
-# release tag. This is the documented exception to SHA pinning.
+# release tag. This is the documented exception to SHA pinning, ignored
+# on its own line below and nowhere else.
 
 name: SLSA provenance
 
@@ -43,7 +44,8 @@ on:
         required: true
         type: string
 
-permissions: read-all
+# Each job states what it needs; nothing is granted by default.
+permissions: {}
 
 jobs:
   hashes:
@@ -86,7 +88,7 @@ jobs:
       actions: read   # read the workflow path
       id-token: write # sign via Sigstore OIDC
       contents: write # upload the attestation to the release
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses] slsa-verifier requires the tag
     with:
       base64-subjects: ${{ needs.hashes.outputs.hashes }}
       upload-tag-name: ${{ inputs.tag }}

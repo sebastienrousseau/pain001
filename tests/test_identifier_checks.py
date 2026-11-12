@@ -4,7 +4,7 @@
 # Licensed under either of the Apache License, Version 2.0 or the MIT
 # License, at your option. See LICENSE-APACHE and LICENSE-MIT.
 
-"""IBAN and BIC checks run on every load, with or without a scheme.
+"""IBAN, BIC and LEI checks run on every load, with or without a scheme.
 
 The rows below pass the XSD (its IBAN pattern only tests character
 classes), so before 0.0.81 every path wrote the XML. Each test pins one
@@ -53,6 +53,10 @@ _TPL = TEMPLATES_DIR / _TYPE
 _BAD_IBAN = "DE88370400440532013000"
 #: Right shape for the XSD, but "XQ" is no ISO 3166 country.
 _BAD_BIC = "DEUTXQFF"
+#: Synthetic LEI (unassigned ``0000`` prefix) with its last check digit
+#: changed: right shape for the XSD, wrong MOD 97-10.
+_BAD_LEI = "0000006ORRMT71WEV303"
+_GOOD_LEI = "0000006ORRMT71WEV302"
 
 
 def _rows() -> list[dict[str, Any]]:
@@ -108,6 +112,11 @@ def test_a_clean_row_has_no_findings() -> None:
         ("creditor_agent_BIC", "DEUTDEF", "ISO 9362"),
         ("creditor_agent_BICFI", "1EUTDEFF", "ISO 9362"),
         ("debtor_account_iban", _BAD_IBAN, "mod 97"),
+        ("debtor_lei", _BAD_LEI, "check digits"),
+        ("initiator_lei", "0000006ORRMT71WEV30", "20 characters"),
+        ("Debtor_LEI", _BAD_LEI, "check digits"),
+        ("creditor_agent_lei", _BAD_LEI, "check digits"),
+        ("ultimate_creditor_lei", "0000006orrmt71wev302", "upper-case"),
     ],
 )
 def test_each_identifier_column_is_checked(
@@ -118,6 +127,33 @@ def test_each_identifier_column_is_checked(
     assert findings[0][0] == column
     assert reason in findings[0][1]
     assert value not in findings[0][1]
+
+
+def test_a_valid_lei_and_lookalike_columns_pass() -> None:
+    """Any column named ``*_lei`` is an LEI; ``*lei`` without it is not."""
+    row = {
+        "debtor_lei": _GOOD_LEI,
+        "initiator_lei": f" {_GOOD_LEI} ",
+        "creditor_agent_lei": "",
+        "lei": _GOOD_LEI,
+        "mileage": "not an identifier",
+    }
+    assert row_errors(row) == []
+    assert row_errors({"lei": _BAD_LEI}) == [
+        ("lei", row_errors({"debtor_lei": _BAD_LEI})[0][1])
+    ]
+
+
+def test_an_lei_finding_carries_its_own_code() -> None:
+    with pytest.raises(PaymentValidationError) as caught:
+        check_identifiers([{"debtor_lei": _BAD_LEI}], first_line=2)
+    (issue,) = caught.value.errors
+    assert (issue.line, issue.column, issue.code) == (
+        2,
+        "debtor_lei",
+        "P001-E022",
+    )
+    assert _BAD_LEI not in str(caught.value)
 
 
 def test_empty_values_and_other_columns_are_left_alone() -> None:
@@ -142,7 +178,7 @@ def test_the_error_lists_rows_and_columns_but_never_values() -> None:
     with pytest.raises(PaymentValidationError) as caught:
         check_identifiers(rows)
     message = str(caught.value)
-    assert "Invalid account identifiers (2)" in message
+    assert "Invalid identifiers (2)" in message
     _assert_names_line_not_value(message, 1, "creditor_agent_BIC")
     _assert_names_line_not_value(message, 2, _BAD_COLUMN)
     assert "--no-identifier-checks" in message
@@ -185,6 +221,36 @@ def test_every_rendered_identifier_comes_from_a_checked_column(
     ]
     assert rendered
     assert all(text in checked for _, text in rendered), rendered
+
+
+def test_every_rendered_lei_comes_from_a_checked_column() -> None:
+    """The ``OrgId/LEI`` elements a template renders are all checked."""
+    message_type = "pain.001.001.09"
+    base = TEMPLATES_DIR / message_type
+    rows = load_payment_data(str(base / "template.csv"))
+    rows[0] = {
+        **rows[0],
+        "initiator_lei": _GOOD_LEI,
+        "debtor_lei": "000000MKEGLALP57A130",
+    }
+    xml = generate_xml_string(
+        rows,
+        message_type,
+        str(base / "template.xml"),
+        str(base / f"{message_type}.xsd"),
+    )
+    rendered = [
+        element.text
+        for element in ET.fromstring(xml).iter()  # nosec B314
+        if element.tag.rsplit("}", 1)[-1] == "LEI"
+    ]
+    assert sorted(rendered) == sorted([_GOOD_LEI, "000000MKEGLALP57A130"])
+    lei_columns = {
+        c for c, kind in IDENTIFIER_COLUMNS.items() if kind == "LEI"
+    }
+    assert lei_columns == {"initiator_lei", "debtor_lei"}
+    broken = {**rows[0], "initiator_lei": _BAD_LEI, "debtor_lei": _BAD_LEI}
+    assert {column for column, _ in row_errors(broken)} == lei_columns
 
 
 # --- library --------------------------------------------------------------

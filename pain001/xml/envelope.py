@@ -21,6 +21,7 @@ import uuid
 import xml.etree.ElementTree as et  # nosec B405
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from typing import Any
 
 import defusedxml.ElementTree as defused_et
 
@@ -70,92 +71,35 @@ class BusinessApplicationHeader:
             An ElementTree.Element representing <AppHdr>.
         """
         app_hdr = et.Element(f"{{{BAH_NAMESPACE}}}AppHdr")
-
-        if self.char_set:
-            char_set_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}CharSet")
-            char_set_el.text = self.char_set
-
-        # <Fr>
-        fr_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}Fr")
-        if self.from_bic:
-            fi_id = et.SubElement(fr_el, f"{{{BAH_NAMESPACE}}}FIId")
-            fin_instn = et.SubElement(fi_id, f"{{{BAH_NAMESPACE}}}FinInstnId")
-            bicfi = et.SubElement(fin_instn, f"{{{BAH_NAMESPACE}}}BICFI")
-            bicfi.text = self.from_bic
-        elif self.from_id:
-            org_id = et.SubElement(fr_el, f"{{{BAH_NAMESPACE}}}OrgId")
-            id_el = et.SubElement(org_id, f"{{{BAH_NAMESPACE}}}Id")
-            org_sub = et.SubElement(id_el, f"{{{BAH_NAMESPACE}}}OrgId")
-            othr = et.SubElement(org_sub, f"{{{BAH_NAMESPACE}}}Othr")
-            other_id = et.SubElement(othr, f"{{{BAH_NAMESPACE}}}Id")
-            other_id.text = self.from_id
-        else:
-            fi_id = et.SubElement(fr_el, f"{{{BAH_NAMESPACE}}}FIId")
-            fin_instn = et.SubElement(fi_id, f"{{{BAH_NAMESPACE}}}FinInstnId")
-            bicfi = et.SubElement(fin_instn, f"{{{BAH_NAMESPACE}}}BICFI")
-            bicfi.text = "NOTPROVIDED"
-
-        # <To>
-        to_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}To")
-        if self.to_bic:
-            fi_id = et.SubElement(to_el, f"{{{BAH_NAMESPACE}}}FIId")
-            fin_instn = et.SubElement(fi_id, f"{{{BAH_NAMESPACE}}}FinInstnId")
-            bicfi = et.SubElement(fin_instn, f"{{{BAH_NAMESPACE}}}BICFI")
-            bicfi.text = self.to_bic
-        elif self.to_id:
-            org_id = et.SubElement(to_el, f"{{{BAH_NAMESPACE}}}OrgId")
-            id_el = et.SubElement(org_id, f"{{{BAH_NAMESPACE}}}Id")
-            org_sub = et.SubElement(id_el, f"{{{BAH_NAMESPACE}}}OrgId")
-            othr = et.SubElement(org_sub, f"{{{BAH_NAMESPACE}}}Othr")
-            other_id = et.SubElement(othr, f"{{{BAH_NAMESPACE}}}Id")
-            other_id.text = self.to_id
-        else:
-            fi_id = et.SubElement(to_el, f"{{{BAH_NAMESPACE}}}FIId")
-            fin_instn = et.SubElement(fi_id, f"{{{BAH_NAMESPACE}}}FinInstnId")
-            bicfi = et.SubElement(fin_instn, f"{{{BAH_NAMESPACE}}}BICFI")
-            bicfi.text = "NOTPROVIDED"
-
-        # <BizMsgIdr>
-        biz_msg_idr_val = (
-            self.biz_msg_idr or f"MSG-{uuid.uuid4().hex[:16].upper()}"
+        _optional_text(app_hdr, "CharSet", self.char_set)
+        _party_element(app_hdr, "Fr", self.from_bic, self.from_id)
+        _party_element(app_hdr, "To", self.to_bic, self.to_id)
+        _text_element(
+            app_hdr,
+            "BizMsgIdr",
+            self.biz_msg_idr or f"MSG-{uuid.uuid4().hex[:16].upper()}",
         )
-        biz_msg_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}BizMsgIdr")
-        biz_msg_el.text = biz_msg_idr_val
-
-        # <MsgDefIdr>
-        msg_def_idr_val = self.msg_def_idr or "pain.001.001.03"
-        msg_def_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}MsgDefIdr")
-        msg_def_el.text = msg_def_idr_val
-
-        if self.biz_svc:
-            biz_svc_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}BizSvc")
-            biz_svc_el.text = self.biz_svc
-
-        # <CreDt>
-        cre_dt_val = self.cre_dt or datetime.now(UTC).strftime(
-            "%Y-%m-%dT%H:%M:%SZ"
+        _text_element(
+            app_hdr, "MsgDefIdr", self.msg_def_idr or "pain.001.001.03"
         )
-        cre_dt_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}CreDt")
-        cre_dt_el.text = cre_dt_val
-
-        if self.cpy_dplct:
-            cpy_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}CpyDplct")
-            cpy_el.text = self.cpy_dplct
-
+        _optional_text(app_hdr, "BizSvc", self.biz_svc)
+        _text_element(
+            app_hdr,
+            "CreDt",
+            self.cre_dt or datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        )
+        _optional_text(app_hdr, "CpyDplct", self.cpy_dplct)
         if self.pssbl_dplct is not None:
-            pssbl_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}PssblDplct")
-            pssbl_el.text = "true" if self.pssbl_dplct else "false"
-
-        if self.prty:
-            prty_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}Prty")
-            prty_el.text = self.prty
-
-        # <Sgntr>
+            _text_element(
+                app_hdr,
+                "PssblDplct",
+                "true" if self.pssbl_dplct else "false",
+            )
+        _optional_text(app_hdr, "Prty", self.prty)
         if self.signature is not None:
             sgntr_el = et.SubElement(app_hdr, f"{{{BAH_NAMESPACE}}}Sgntr")
             if isinstance(self.signature, str):
-                sig_parsed = defused_et.fromstring(self.signature)
-                sgntr_el.append(sig_parsed)
+                sgntr_el.append(defused_et.fromstring(self.signature))
             else:
                 sgntr_el.append(self.signature)
 
@@ -169,6 +113,38 @@ class BusinessApplicationHeader:
         """
         element = self.to_element()
         return et.tostring(element, encoding="unicode")
+
+
+def _text_element(parent: et.Element, tag: str, text: str) -> None:
+    """Append ``<tag>text</tag>`` in the BAH namespace to ``parent``."""
+    et.SubElement(parent, f"{{{BAH_NAMESPACE}}}{tag}").text = text
+
+
+def _optional_text(parent: et.Element, tag: str, text: str | None) -> None:
+    """Append ``<tag>`` to ``parent`` only when ``text`` is non-empty."""
+    if text:
+        _text_element(parent, tag, text)
+
+
+def _party_element(
+    parent: et.Element, tag: str, bic: str | None, org_id: str | None
+) -> None:
+    """Append a ``<Fr>`` or ``<To>`` party, by BIC, else organisation id.
+
+    A party with neither a BIC nor an organisation id is written with the
+    BIC ``NOTPROVIDED``.
+    """
+    party = et.SubElement(parent, f"{{{BAH_NAMESPACE}}}{tag}")
+    if org_id and not bic:
+        path: tuple[str, ...] = ("OrgId", "Id", "OrgId", "Othr", "Id")
+        text = org_id
+    else:
+        path = ("FIId", "FinInstnId", "BICFI")
+        text = bic or "NOTPROVIDED"
+    node = party
+    for name in path:
+        node = et.SubElement(node, f"{{{BAH_NAMESPACE}}}{name}")
+    node.text = text
 
 
 def extract_msg_def_idr(document_xml: str | et.Element) -> str:
@@ -301,6 +277,51 @@ def unpack_iso20022_message(
     return header, doc_xml_str
 
 
+#: AppHdr children whose text is copied as-is, by the field they fill.
+_BAH_TEXT_FIELDS = {
+    "CharSet": "char_set",
+    "BizMsgIdr": "biz_msg_idr",
+    "MsgDefIdr": "msg_def_idr",
+    "BizSvc": "biz_svc",
+    "CreDt": "cre_dt",
+    "CpyDplct": "cpy_dplct",
+    "Prty": "prty",
+}
+#: AppHdr party children, by the prefix of the fields they fill.
+_BAH_PARTIES = {"Fr": "from", "To": "to"}
+
+
+def _party_fields(party_el: et.Element, prefix: str) -> dict[str, str]:
+    """Read a ``<Fr>`` or ``<To>`` party: its BICFI, else its first Id."""
+    bic_el = party_el.find(f".//{{{BAH_NAMESPACE}}}BICFI")
+    if bic_el is None:
+        bic_el = party_el.find(".//BICFI")
+    if bic_el is not None and bic_el.text:
+        return {f"{prefix}_bic": bic_el.text}
+    for cand in party_el.iter():
+        if cand.tag.endswith("Id") and cand.text:
+            return {f"{prefix}_id": cand.text}
+    return {}
+
+
+def _app_hdr_fields(child: et.Element, tag: str) -> dict[str, Any]:
+    """Return the header fields one ``<AppHdr>`` child sets."""
+    if tag in _BAH_TEXT_FIELDS:
+        return {_BAH_TEXT_FIELDS[tag]: child.text}
+    if tag in _BAH_PARTIES:
+        return _party_fields(child, _BAH_PARTIES[tag])
+    if tag == "PssblDplct":
+        return {"pssbl_dplct": child.text == "true"}
+    if tag == "Sgntr":
+        signature = (
+            et.tostring(child[0], encoding="unicode")
+            if len(child) > 0
+            else None
+        )
+        return {"signature": signature}
+    return {}
+
+
 def _parse_app_hdr_element(
     app_hdr_el: et.Element,
 ) -> BusinessApplicationHeader:
@@ -312,79 +333,8 @@ def _parse_app_hdr_element(
     Returns:
         A parsed BusinessApplicationHeader object.
     """
-    char_set: str | None = None
-    from_bic: str | None = None
-    from_id: str | None = None
-    to_bic: str | None = None
-    to_id: str | None = None
-    biz_msg_idr: str | None = None
-    msg_def_idr: str | None = None
-    biz_svc: str | None = None
-    cre_dt: str | None = None
-    cpy_dplct: str | None = None
-    pssbl_dplct: bool | None = None
-    prty: str | None = None
-    signature: str | None = None
-
+    fields: dict[str, Any] = {}
     for child in app_hdr_el:
         tag = child.tag.split("}")[-1] if "}" in child.tag else child.tag
-        if tag == "CharSet":
-            char_set = child.text
-        elif tag == "Fr":
-            bic_el = child.find(f".//{{{BAH_NAMESPACE}}}BICFI")
-            if bic_el is None:
-                bic_el = child.find(".//BICFI")
-            if bic_el is not None and bic_el.text:
-                from_bic = bic_el.text
-            else:
-                for cand in child.iter():
-                    if cand.tag.endswith("Id") and cand.text:
-                        from_id = cand.text
-                        break
-        elif tag == "To":
-            bic_el = child.find(f".//{{{BAH_NAMESPACE}}}BICFI")
-            if bic_el is None:
-                bic_el = child.find(".//BICFI")
-            if bic_el is not None and bic_el.text:
-                to_bic = bic_el.text
-            else:
-                for cand in child.iter():
-                    if cand.tag.endswith("Id") and cand.text:
-                        to_id = cand.text
-                        break
-        elif tag == "BizMsgIdr":
-            biz_msg_idr = child.text
-        elif tag == "MsgDefIdr":
-            msg_def_idr = child.text
-        elif tag == "BizSvc":
-            biz_svc = child.text
-        elif tag == "CreDt":
-            cre_dt = child.text
-        elif tag == "CpyDplct":
-            cpy_dplct = child.text
-        elif tag == "PssblDplct":
-            pssbl_dplct = child.text == "true"
-        elif tag == "Prty":
-            prty = child.text
-        elif tag == "Sgntr":
-            signature = (
-                et.tostring(child[0], encoding="unicode")
-                if len(child) > 0
-                else None
-            )
-
-    return BusinessApplicationHeader(
-        from_bic=from_bic,
-        from_id=from_id,
-        to_bic=to_bic,
-        to_id=to_id,
-        biz_msg_idr=biz_msg_idr,
-        msg_def_idr=msg_def_idr,
-        cre_dt=cre_dt,
-        char_set=char_set,
-        biz_svc=biz_svc,
-        cpy_dplct=cpy_dplct,
-        pssbl_dplct=pssbl_dplct,
-        prty=prty,
-        signature=signature,
-    )
+        fields.update(_app_hdr_fields(child, tag))
+    return BusinessApplicationHeader(**fields)

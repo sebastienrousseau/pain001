@@ -213,7 +213,9 @@ def test_validate_reports_schema_errors(
         def validate_batch(self, rows: list[dict[str, object]]) -> tuple:
             return len(rows), len(rows) - 1, [(0, [_Error()])]
 
-    monkeypatch.setattr(upload_module, "SchemaValidator", _FakeValidator)
+    monkeypatch.setattr(
+        "pain001.validation.ladder.SchemaValidator", _FakeValidator
+    )
     response = client.post("/api/v1/ui/validate", json=_payload())
     assert response.status_code == 200
     body = response.json()
@@ -261,7 +263,7 @@ def test_generate_is_blocked_by_scheme_violations() -> None:
         "/api/v1/ui/generate",
         json=_payload(content=DUPLICATES_CSV, scheme="anti-duplicate"),
     )
-    assert response.status_code == 200
+    assert response.status_code == 422
     body = response.json()
     assert body["success"] is False
     assert body["xml"] is None
@@ -286,13 +288,35 @@ def test_generate_is_blocked_by_schema_errors(
         def validate_batch(self, rows: list[dict[str, object]]) -> tuple:
             return len(rows), 0, [(0, [_Error()])]
 
-    monkeypatch.setattr(upload_module, "SchemaValidator", _FakeValidator)
+    monkeypatch.setattr(
+        "pain001.validation.ladder.SchemaValidator", _FakeValidator
+    )
     response = client.post("/api/v1/ui/generate", json=_payload())
     body = response.json()
-    assert response.status_code == 200
+    assert response.status_code == 422
     assert body["success"] is False
     assert "Validation failed" in body["message"]
     assert body["validation_errors"][0]["field"] == "creditor_name"
+
+
+def test_generate_refusal_statuses_are_documented() -> None:
+    """A refusal is a documented ``422`` with the generate body."""
+    responses = app.openapi()["paths"]["/api/v1/ui/generate"]["post"][
+        "responses"
+    ]
+    assert {"200", "400", "422", "500"} <= set(responses)
+    schema = responses["422"]["content"]["application/json"]["schema"]
+    assert {option["$ref"] for option in schema["anyOf"]} == {
+        "#/components/schemas/UiGenerateResponse",
+        "#/components/schemas/HTTPValidationError",
+    }
+
+
+def test_page_shows_the_findings_of_a_422_refusal() -> None:
+    """The page renders a refusal's findings rather than a bare status."""
+    text = client.get("/api/v1/ui").text
+    assert "r.status === 422 && r.body.success === false" in text
+    assert "if (!r.ok && !refused)" in text
 
 
 def test_generate_surfaces_rendering_failures_as_400(

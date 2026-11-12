@@ -36,7 +36,9 @@ def test_rest_rules(endpoint, rules, valid):
             "validate_only": True,
         },
     )
-    assert result.status_code == 200, result.text
+    # /validate reports a verdict; /generate refuses rejected data.
+    refused = endpoint.endswith("generate") and not valid
+    assert result.status_code == (422 if refused else 200), result.text
     payload = result.json()
     assert (
         payload["is_valid" if endpoint.endswith("validate") else "success"]

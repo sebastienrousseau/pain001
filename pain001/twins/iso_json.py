@@ -104,6 +104,35 @@ def _shape(version: str) -> tuple[frozenset[str], frozenset[str]]:
     return frozenset(repeatable), frozenset(booleans)
 
 
+def _encode_simple(node: dict[str, Any], path: str) -> Any:
+    """Simple content: a bare value, or an amount with its currency."""
+    attributes = {k for k in node if k.startswith("@") and not _is_hint(k)}
+    if not attributes:
+        return node[_TEXT]  # a redundant xmlns on a leaf, dropped
+    if attributes == {_CCY}:
+        # simple content with attributes: only Ccy exists in pain.001
+        return {"amt": node[_TEXT], "Ccy": node[_CCY]}
+    raise TwinError(
+        f"{path}: attributes {sorted(attributes)} have no twin form"
+    )
+
+
+def _encode_complex(
+    node: dict[str, Any], path: str, repeatable: frozenset[str]
+) -> dict[str, Any]:
+    """Complex content: every child encoded, repeatable ones as arrays."""
+    out: dict[str, Any] = {}
+    for key, value in node.items():
+        if _is_hint(key):
+            continue
+        child = f"{path}/{key}" if path else key
+        encoded = _encode_node(value, child, repeatable)
+        if child in repeatable and not isinstance(encoded, list):
+            encoded = [encoded]
+        out[key] = encoded
+    return out
+
+
 def _encode_node(node: Any, path: str, repeatable: frozenset[str]) -> Any:
     """Converter output to RA shape, always-array for repeatable paths."""
     if isinstance(node, list):
@@ -112,30 +141,11 @@ def _encode_node(node: Any, path: str, repeatable: frozenset[str]) -> Any:
         return "true" if node else "false"
     if node is None:
         return {}  # an empty element: lossless, and the RA schema rejects it
-    if isinstance(node, dict):
-        if _TEXT in node:
-            attributes = {
-                k for k in node if k.startswith("@") and not _is_hint(k)
-            }
-            if not attributes:
-                return node[_TEXT]  # a redundant xmlns on a leaf, dropped
-            if attributes == {_CCY}:
-                # simple content with attributes: only Ccy exists in pain.001
-                return {"amt": node[_TEXT], "Ccy": node[_CCY]}
-            raise TwinError(
-                f"{path}: attributes {sorted(attributes)} have no twin form"
-            )
-        out: dict[str, Any] = {}
-        for key, value in node.items():
-            if _is_hint(key):
-                continue
-            child = f"{path}/{key}" if path else key
-            encoded = _encode_node(value, child, repeatable)
-            if child in repeatable and not isinstance(encoded, list):
-                encoded = [encoded]
-            out[key] = encoded
-        return out
-    return node
+    if not isinstance(node, dict):
+        return node
+    if _TEXT in node:
+        return _encode_simple(node, path)
+    return _encode_complex(node, path, repeatable)
 
 
 def to_iso_json(xml: str, version: str) -> dict[str, Any]:
@@ -163,27 +173,37 @@ def to_iso_json(xml: str, version: str) -> dict[str, Any]:
     return {"Document": _encode_node(raw, "", repeatable)}
 
 
+def _decode_boolean(node: str, path: str) -> bool:
+    """An XSD boolean lexical form back to a Python boolean."""
+    if node in ("true", "1"):
+        return True
+    if node in ("false", "0"):
+        return False
+    raise TwinError(f"{path}: {node!r} is not a boolean")
+
+
+def _decode_dict(
+    node: dict[str, Any], path: str, booleans: frozenset[str]
+) -> Any:
+    """An RA object back to an empty element, an amount or its children."""
+    if not node:
+        return None  # back to an empty element
+    if set(node) == {"amt", "Ccy"}:
+        return {_CCY: node["Ccy"], _TEXT: node["amt"]}
+    return {
+        key: _decode_node(value, f"{path}/{key}" if path else key, booleans)
+        for key, value in node.items()
+    }
+
+
 def _decode_node(node: Any, path: str, booleans: frozenset[str]) -> Any:
     """RA shape back to the converter's shape; bare values or arrays."""
     if isinstance(node, list):
         return [_decode_node(item, path, booleans) for item in node]
     if isinstance(node, dict):
-        if not node:
-            return None  # back to an empty element
-        if set(node) == {"amt", "Ccy"}:
-            return {_CCY: node["Ccy"], _TEXT: node["amt"]}
-        return {
-            key: _decode_node(
-                value, f"{path}/{key}" if path else key, booleans
-            )
-            for key, value in node.items()
-        }
+        return _decode_dict(node, path, booleans)
     if path in booleans and isinstance(node, str):
-        if node in ("true", "1"):
-            return True
-        if node in ("false", "0"):
-            return False
-        raise TwinError(f"{path}: {node!r} is not a boolean")
+        return _decode_boolean(node, path)
     return node
 
 

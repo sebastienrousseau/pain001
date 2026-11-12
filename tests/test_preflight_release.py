@@ -81,9 +81,8 @@ def test_the_release_workflow_titles_the_release_by_project() -> None:
     workflow = (
         Path(__file__).resolve().parent.parent / ".github/workflows/ci.yml"
     ).read_text(encoding="utf-8")
-    assert "name: pain001 ${{ steps.release_notes.outputs.version }}" in (
-        workflow
-    )
+    assert "name: pain001 ${{ needs.build.outputs.version }}" in workflow
+    assert "version: ${{ steps.release_notes.outputs.version }}" in workflow
     assert '"version=$TAG_VERSION" >> "$GITHUB_OUTPUT"' in workflow
     assert "--project Pain001" not in workflow
 

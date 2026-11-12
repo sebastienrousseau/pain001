@@ -12,8 +12,9 @@ per-row violations on top of XSD validation.
 
 IBAN and BIC validity no longer waits for a profile. Since 0.0.81 every
 load checks each IBAN (country length and mod-97 check digits) and BIC
-(ISO 9362) column the bundled templates render, `--scheme` or not, and
-stops with the row and column of each failure. `--no-identifier-checks`
+(ISO 9362) column the bundled templates render, and each LEI column
+(`*_lei`: twenty characters, ISO 17442 MOD 97-10 check digits),
+`--scheme` or not, and stops with the row and column of each failure. `--no-identifier-checks`
 (CLI), `identifier_checks=False` (Python) or `"identifier_checks": false`
 (REST) turns that off. The profiles below still report their own IBAN and
 BIC rules (`SEPA-DBTR-IBAN`, `XB-BIC` ...) when the checks are off.
@@ -25,8 +26,13 @@ CLI (gates both dry-run and generation):
 ```bash
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --dry-run
 pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --explain
-pain001 -t pain.001.001.03 -d payments.csv --scheme sepa-sct --scheme-format json
+pain001 validate -t pain.001.001.03 -d payments.csv --scheme sepa-sct --format json
 ```
+
+With `--format json` the scheme result is the `scheme` field of the one
+JSON object the command writes to stdout. `--scheme-format json`, which
+printed the scheme result alone, still works in 0.0.87 with a warning on
+stderr and is removed in 0.0.88.
 
 Python:
 
@@ -40,6 +46,9 @@ for v in result.violations:
 
 REST API — add `"scheme"` to the request body of `POST /api/validate` or
 `POST /api/generate`; violations come back in `scheme_violations`.
+`/validate` answers `200` with `is_valid: false`; `/generate` writes
+nothing and answers `422` with `success: false`, as the dashboard's
+`/ui/generate` does.
 
 Exit codes (CLI): `0` pass · `1` violations found · `2` unknown profile.
 
@@ -113,6 +122,14 @@ and every remediation hint names the source document.
 The five `purpose-mandate-<cc>` profiles carry a country's purpose-code
 mandate on its own, so they compose with any rail: `uk-chaps,purpose-mandate-gb`.
 
+On `uk-chaps`, a missing purpose code is a warning until the Bank of
+England's all-payments mandate and an error for payments executed from
+1 December 2027 (`UK-CHAPS-PURP`), and any LEI the row carries must
+verify (`UK-CHAPS-LEI`). The date is read from the file, never the
+clock. [CHAPS enhanced data](https://github.com/sebastienrousseau/pain001/blob/main/docs/chaps-enhanced-data.md)
+records the policy, its sources and the readings taken where it is
+ambiguous.
+
 Rails judge the same rows the SEPA profiles do; a built corpus file is
 projected onto those rows by `pain001.corpus.rules.projection` so the
 corpus gate can run them (the plan's L2).
@@ -121,7 +138,7 @@ corpus gate can run them (the plan's L2).
 | :--- | :--- |
 | `uk-bacs` | Bacs ISO 20022 / Standard 18 translation guide v1.1; Bacs service description (originator name and reference lengths) |
 | `uk-fps` | Pay.UK Faster Payments scheme limits; Pay.UK ISO 20022 usage (service levels URGP and URNS) |
-| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS (purpose codes from 1 May 2025, structured or hybrid addresses); a UK bank's public bulk-payment import guide (Jan 2025) |
+| `uk-chaps` | Bank of England: ISO 20022 enhanced data in CHAPS, policy statements of 2024 and September 2025 (purpose codes from 1 May 2025 and on all payments from November 2027, LEIs, structured or hybrid addresses); a UK bank's public bulk-payment import guide (Jan 2025) |
 | `uk-bacs-dd` | Bacs AUDDIS service guide; Bacs ISO 20022 translation guide v1.1 (sequence-type to transaction-code mapping is an assumption) |
 | `de-ccu` | DK DFÜ-Abkommen Anlage 3 V26.11, order type CCU; a German bank's public CCU product description |
 | `de-axz` | DK DFÜ-Abkommen Anlage 3 V3.8, order type AXZ; a German bank's public AXZ product description (regulatory reporting for AWV) |

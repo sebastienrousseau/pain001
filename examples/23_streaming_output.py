@@ -35,13 +35,13 @@ from pathlib import Path
 
 from pain001 import (
     canonicalize_payment_record,
+    generate_xml_string,
     normalize_payment_records,
     stream_xml_chunks,
     stream_xml_to_file,
 )
 from pain001.constants import TEMPLATES_DIR
 from pain001.csv.load_csv_data import load_csv_data
-from pain001.xml.generate_xml import generate_xml_string
 from pain001.xml.validate_via_xsd import validate_via_xsd
 
 MESSAGE_TYPE = "pain.001.001.03"

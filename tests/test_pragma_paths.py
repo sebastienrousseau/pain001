@@ -26,7 +26,7 @@ from pain001.context.context import Context
 from pain001.corpus.rules.overlays import OverlayError, _parse_assertion
 from pain001.csv.load_csv_data import load_csv_data
 from pain001.csv.validate_csv_data import _validate_datetime
-from pain001.data.loader import _load_from_list_streaming
+from pain001.data._streaming import _load_from_list_streaming
 from pain001.db.load_db_data import load_db_data
 from pain001.db.load_db_data_streaming import load_db_data_streaming
 from pain001.exceptions import PaymentValidationError, SchemaValidationError

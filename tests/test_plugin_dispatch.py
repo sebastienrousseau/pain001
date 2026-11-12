@@ -43,9 +43,11 @@ def test_loader_override_and_streaming(
     target = tmp_path / ("records" + extension)
     target.write_text("synthetic", encoding="utf-8")
     monkeypatch.chdir(tmp_path)
-    monkeypatch.setattr(
-        "pain001.data.loader.row_issues", lambda rows, first_line=1: []
-    )
+    for module in ("loader", "_streaming"):
+        monkeypatch.setattr(
+            f"pain001.data.{module}.row_issues",
+            lambda rows, message_type=None, first_line=1: [],
+        )
     result = LoaderResult(rows=[{"from_plugin": True}])
     loader = SimpleNamespace(
         meta=PluginMeta("csv", "0.0.1", "Override", source="test==0.0.1"),

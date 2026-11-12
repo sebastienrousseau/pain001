@@ -38,6 +38,8 @@ Run from the repository root::
     python examples/25_cli_plugins_and_upload.py
 """
 
+import base64
+import hashlib
 import importlib.util
 import json
 import logging
@@ -106,13 +108,13 @@ def run_cli(
 
 def _plugins_list_and_show(cwd: Path, env: dict[str, str]) -> None:
     """List every plugin as JSON, then show one by name."""
-    result = run_cli(["plugins", "list", "--json"], cwd, env)
+    result = run_cli(["plugins", "list", "--format", "json"], cwd, env)
     assert result.returncode == 0, result.stdout + result.stderr
     plugins = {(p["kind"], p["name"]) for p in json.loads(result.stdout)}
     assert {("loader", "csv"), ("scheme", "sepa-sct")} <= plugins
     assert ("writer", "xml-file") in plugins
     kinds = sorted({kind for kind, _ in plugins})
-    print(f"plugins list --json   -> exit 0 ({len(plugins)} plugins: {kinds})")
+    print(f"plugins list --format json -> exit 0 ({len(plugins)}: {kinds})")
 
     result = run_cli(["plugins", "show", "sepa-sct"], cwd, env)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -121,7 +123,7 @@ def _plugins_list_and_show(cwd: Path, env: dict[str, str]) -> None:
 
     result = run_cli(["plugins", "show", "no-such-plugin"], cwd, env)
     assert result.returncode == 1, result.stdout + result.stderr
-    assert "No plugin named" in result.stdout
+    assert "No plugin named" in result.stderr
     print("plugins show unknown  -> exit 1")
 
 
@@ -302,8 +304,6 @@ def _start_sftp_server(
     """
     import paramiko
 
-    from pain001.transport.sftp import fingerprint
-
     # The client side hangs up mid-handshake on purpose (host-key probe,
     # rejected pin); keep paramiko's server-side log of that quiet.
     logging.getLogger("paramiko").addHandler(logging.NullHandler())
@@ -324,7 +324,10 @@ def _start_sftp_server(
                 _serve_one(connection, key, root, stop, client_key)
 
     Thread(target=serve, daemon=True).start()
-    return listener.getsockname()[1], fingerprint(key)
+    # The OpenSSH SHA256 fingerprint, as `ssh-keygen -l` prints it.
+    digest = hashlib.sha256(key.asbytes()).digest()
+    host_key = "SHA256:" + base64.b64encode(digest).decode("ascii").rstrip("=")
+    return listener.getsockname()[1], host_key
 
 
 def _certificate(work: Path, user: object) -> Path:

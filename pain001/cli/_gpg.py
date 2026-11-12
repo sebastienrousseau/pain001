@@ -29,7 +29,7 @@ from rich.console import Console
 from pain001.cli._output import esc
 from pain001.security.path_validator import sanitize_for_log
 
-console = Console()
+console = Console(stderr=True)
 
 
 def _apply_gpg_options(

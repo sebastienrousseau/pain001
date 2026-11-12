@@ -78,6 +78,17 @@ class TestDiagnosticsEngine:
         bad = GOOD_ROW.replace("BANKDEFFXXX", "NOTABIC")
         assert "invalid-bic" in _codes(f"{HEADER}\n{bad}")
 
+    def test_invalid_lei(self) -> None:
+        """An LEI cell whose ISO 17442 check digits fail is an error."""
+        header = f"{HEADER},debtor_lei"
+        good = f"{GOOD_ROW},0000006ORRMT71WEV302"
+        assert diagnostics_for_csv(f"{header}\n{good}") == []
+        diags = diagnostics_for_csv(f"{header}\n{good[:-1]}3")
+        (lei,) = [d for d in diags if d.code == "invalid-lei"]
+        assert lei.severity == Severity.ERROR
+        assert "check digits" in lei.message
+        assert (lei.col_start, lei.col_end) == (len(GOOD_ROW) + 1, len(good))
+
     def test_invalid_currency(self) -> None:
         """A non-ISO-4217 currency code raises invalid-currency."""
         bad = GOOD_ROW.replace(",EUR,", ",EURO,")

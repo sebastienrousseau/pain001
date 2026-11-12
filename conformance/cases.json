@@ -1,6 +1,6 @@
 {
   "kit": "pain001-conformance",
-  "kit_version": 1,
+  "kit_version": 2,
   "description": "Requests every pain001 SDK sends to a running `pain001 serve`, and what each response must satisfy. Synthetic data only.",
   "cases": [
     {
@@ -59,6 +59,51 @@
             "creditor_account_IBAN",
             "not a valid IBAN"
           ]
+        }
+      }
+    },
+    {
+      "id": "validate-bad-lei",
+      "method": "POST",
+      "path": "/api/v1/ui/validate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/bad-lei.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09"
+      },
+      "expect": {
+        "status": 400,
+        "contains": {
+          "/detail": [
+            "debtor_lei",
+            "not a valid LEI",
+            "P001-E022"
+          ]
+        }
+      }
+    },
+    {
+      "id": "validate-chaps-purpose-required",
+      "method": "POST",
+      "path": "/api/v1/ui/validate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/chaps-no-purpose.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09",
+        "scheme": "uk-chaps"
+      },
+      "expect": {
+        "status": 200,
+        "equals": {
+          "/is_valid": false,
+          "/errors": [],
+          "/scheme_violations/0/rule": "UK-CHAPS-PURP",
+          "/scheme_violations/0/severity": "error",
+          "/scheme_violations/0/field": "purpose_code"
         }
       }
     },
@@ -126,6 +171,57 @@
             "urn:iso:std:iso:20022:tech:xsd:pain.008.001.08",
             "<NbOfTxs>2</NbOfTxs>"
           ]
+        }
+      }
+    },
+    {
+      "id": "generate-refused-rows",
+      "method": "POST",
+      "path": "/api/v1/ui/generate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/bad-currency.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09"
+      },
+      "expect": {
+        "status": 422,
+        "equals": {
+          "/success": false,
+          "/xml": null,
+          "/scheme_violations": [],
+          "/validation_errors/0/field": "$.currency",
+          "/validation_errors/0/value": "EURO"
+        },
+        "contains": {
+          "/message": [
+            "Validation failed"
+          ]
+        }
+      }
+    },
+    {
+      "id": "generate-refused-scheme",
+      "method": "POST",
+      "path": "/api/v1/ui/generate",
+      "body": {
+        "filename": "payments.csv",
+        "content": {
+          "$file": "fixtures/chaps-no-purpose.pain.001.001.09.csv"
+        },
+        "message_type": "pain.001.001.09",
+        "scheme": "uk-chaps"
+      },
+      "expect": {
+        "status": 422,
+        "equals": {
+          "/success": false,
+          "/xml": null,
+          "/validation_errors": [],
+          "/scheme_violations/0/rule": "UK-CHAPS-PURP",
+          "/scheme_violations/0/severity": "error",
+          "/scheme_violations/0/field": "purpose_code"
         }
       }
     },

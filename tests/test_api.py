@@ -190,10 +190,10 @@ class TestSyncGenerationEndpoint:
                 "message_type": "pain.001.001.03",
             },
         )
-        # CSV structure validation fails (400) or validation errors returned (200)
-        assert response.status_code in [200, 400]
+        # CSV structure validation fails (400) or row errors returned (422)
+        assert response.status_code in [400, 422]
         data = response.json()
-        if response.status_code == 200:
+        if response.status_code == 422:
             assert data["success"] is False
             assert "Validation failed" in data["message"]
             assert data["validation_errors"] is not None
@@ -395,6 +395,21 @@ class TestJobCancellationEndpoint:
         job = job_manager.get_job(job_id)
         assert job is not None
         assert job.status == JobStatus.CANCELLED
+
+    @pytest.mark.parametrize(
+        "final", [JobStatus.SUCCESS, JobStatus.FAILED, JobStatus.CANCELLED]
+    )
+    def test_cancel_finished_job_is_refused(self, final):
+        """A finished job answers 409 with its status, unchanged."""
+        job_id = job_manager.create_job()
+        job_manager.update_status(job_id, final)
+
+        response = client.delete(f"/api/jobs/{job_id}")
+        assert response.status_code == 409
+        assert final.value in response.json()["detail"]
+        job = job_manager.get_job(job_id)
+        assert job is not None
+        assert job.status == final
 
 
 class TestDownloadEndpoint:
@@ -739,7 +754,7 @@ class TestSchemeValidation:
                 "scheme": "sepa-sct",
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 422
         body = response.json()
         assert body["success"] is False
         assert body["scheme_violations"]
@@ -875,15 +890,9 @@ class TestAsyncWorkerErrorPaths:
                 message_type="pain.001.001.03",
             )
             # Loader returns rows missing required schema fields, so the
-            # SchemaValidator (not the loader) fails them. The package
-            # re-exports a FastAPI instance named 'app', which shadows the
-            # submodule, so reach the module via sys.modules.
-            import sys
-
-            pipeline_module = sys.modules["pain001.api._pipeline"]
-            with patch.object(
-                pipeline_module,
-                "load_batch",
+            # SchemaValidator (not the loader) fails them.
+            with patch(
+                "pain001.validation.ladder.load_batch",
                 return_value=[{"id": "1"}],
             ):
                 asyncio.run(_process_generation_job(job_id, request))
@@ -1025,12 +1034,11 @@ class TestValidateSchemaErrors:
 
     def test_validate_reports_schema_errors(self):
         """Rows that fail schema produce formatted error entries."""
-        import sys
         from unittest.mock import patch
 
-        pipeline_module = sys.modules["pain001.api._pipeline"]
-        with patch.object(
-            pipeline_module, "load_batch", return_value=[{"id": "1"}]
+        with patch(
+            "pain001.validation.ladder.load_batch",
+            return_value=[{"id": "1"}],
         ):
             response = client.post(
                 "/api/validate",
@@ -1172,7 +1180,7 @@ class TestSyncGenerationOutcomes:
                 "message_type": "pain.001.001.03",
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 422
         body = response.json()
         assert body["success"] is False
         assert "Validation failed" in body["message"]
@@ -1204,7 +1212,7 @@ class TestSyncGenerationOutcomes:
                 "scheme": "sepa-sct",
             },
         )
-        assert response.status_code == 200
+        assert response.status_code == 422
         body = response.json()
         assert body["success"] is False
         assert body["scheme_violations"]
@@ -1219,8 +1227,8 @@ class TestUnexpectedFailures:
         raise RuntimeError("boom")
 
     def test_validate_endpoint_wraps_unexpected_errors(self, monkeypatch):
-        pipeline_module = sys.modules["pain001.api._pipeline"]
-        monkeypatch.setattr(pipeline_module, "load_batch", self._boom)
+        ladder_module = sys.modules["pain001.validation.ladder"]
+        monkeypatch.setattr(ladder_module, "load_batch", self._boom)
         response = client.post(
             "/api/validate",
             json={
@@ -1233,8 +1241,8 @@ class TestUnexpectedFailures:
         assert "Validation failed" in response.json()["detail"]
 
     def test_generate_endpoint_wraps_unexpected_errors(self, monkeypatch):
-        pipeline_module = sys.modules["pain001.api._pipeline"]
-        monkeypatch.setattr(pipeline_module, "load_batch", self._boom)
+        ladder_module = sys.modules["pain001.validation.ladder"]
+        monkeypatch.setattr(ladder_module, "load_batch", self._boom)
         response = client.post(
             "/api/generate",
             json={

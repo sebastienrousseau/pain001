@@ -15,7 +15,7 @@ Schema validation failed
 Data validation failed
 ----------------------
 
-- Cause: missing required CSV columns, invalid IBAN/BIC fields, or bad dates.
+- Cause: missing required CSV columns, invalid IBAN/BIC/LEI fields, or bad dates.
 - Fix: run ``pain001 validate -t <message type> -d <data file>`` first.
   Each problem is listed on its own line with the line number as a
   spreadsheet shows it (a CSV header is line 1), the column and a
@@ -27,6 +27,8 @@ Data validation failed
   Code              Problem
   ================  ===============================================
   ``P001-E001``     The input has no payment rows.
+  ``P001-E002``     A CSV row has more values than the header has
+                    columns (a stray comma or an unquoted value).
   ``P001-E010``     A required column is absent or empty.
   ``P001-E011``     Not a whole number.
   ``P001-E012``     Not a decimal number (an amount).
@@ -34,6 +36,11 @@ Data validation failed
   ``P001-E014``     Not a date (``YYYY-MM-DD`` or ISO 8601).
   ``P001-E020``     Not a valid IBAN.
   ``P001-E021``     Not a valid BIC.
+  ``P001-E022``     Not a valid LEI (ISO 17442 check digits).
+  ``P001-E030``     Breaks the message type's JSON Schema (for
+                    example ``currency=EURO``: not three letters).
+  ``P001-E040``     Breaks a rule of the scheme or policy asked for
+                    (``pain001.generate(..., scheme=...)``).
   ================  ===============================================
 
   From Python, the same problems are on the exception:

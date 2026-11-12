@@ -31,6 +31,56 @@ Use generated help rather than a duplicate flag table:
    pain001 versions
    pain001 inspect pain.001.001.03
 
+A mistyped command is refused with the closest match
+(``No such command 'gneerate'. Did you mean 'generate'?``); only an
+invocation that starts with an option is routed to ``generate``.
+
+.. _machine-output:
+
+Machine-readable output
+=======================
+
+Standard output carries a command's result and nothing else. Progress
+lines, warnings, errors and the banner go to standard error, and the
+banner is printed only when standard output is a terminal. Every command
+that returns a result takes ``--format text|json``; ``check`` also takes
+``sarif``. ``serve`` and ``mcp`` run servers and have no result.
+
+.. code-block:: bash
+
+   pain001 validate -t pain.001.001.03 -d payments.csv --format json | jq .
+   pain001 versions --format json | jq '.[]'
+   pain001 status replies/*.xml --format json | jq '.[].rejected'
+
+``generate`` and ``validate`` write one object, also when they fail,
+with the same exit code as in text mode:
+
+.. code-block:: json
+
+   {"ok": true, "message_type": "pain.001.001.03", "data_file": "payments.csv",
+    "records": 4, "dry_run": true, "output_dir": null, "files": [],
+    "scheme": null, "schematron": null, "error": null}
+
+``files`` lists the XML written; ``scheme`` and ``schematron`` hold those
+results when asked for; ``error`` says why ``ok`` is false. ``records`` is
+set when the data was validated (``validate``, ``--dry-run``, or with
+``--scheme`` or ``--rules``).
+
+``-q``/``--quiet`` on ``generate``, ``validate`` and ``init`` drops the
+banner and progress lines; errors still print. With ``--log-format json``
+(or ``PAIN001_LOG_FORMAT=json``) the progress lines are left out as well,
+so standard error is one JSON log record per line.
+
+``--emit-metrics`` writes each metric event to standard output as one
+JSON line (``metric``, ``timestamp``, ``attributes``, ``trace_context``).
+With ``--format json`` the result object is the last line, so the whole
+stream is newline-delimited JSON.
+
+``--json`` on ``versions``, ``inspect`` and ``plugins list``, and
+``--scheme-format json`` on ``generate`` and ``validate``, still work in
+0.0.87 and print a deprecation warning on standard error; they are
+removed in 0.0.88. Use ``--format json``.
+
 Inputs and validation
 =====================
 
@@ -39,8 +89,9 @@ Parquet input. Installed plugins can add formats such as XLSX. See
 :doc:`plugins` for privileges, discovery and disable controls, and
 :doc:`input-columns` for schema-derived field mappings.
 
-Every load checks each IBAN (length for its country and mod-97 check digits)
-and BIC (ISO 9362) column, whatever the scheme. A failure names the row
+Every load checks each IBAN (length for its country and mod-97 check digits),
+BIC (ISO 9362) and LEI (``*_lei``: ISO 17442 check digits) column, whatever
+the scheme. A failure names the row
 (counted from 0) and the column, never the identifier. ``--no-identifier-checks``
 on ``generate`` and ``validate``, ``identifier_checks=False`` in
 ``process_files``, ``process_files_streaming``, ``load_payment_data`` and
@@ -105,7 +156,8 @@ Signing and verifying signatures
 signature (``pain001[sign]``). The algorithm follows the key: an RSA key
 signs ``rsa-sha256``, a P-256 or P-384 key ``ecdsa-sha256`` or
 ``ecdsa-sha384``. ``--xml-sign-alg rsa-pss-sha256`` signs RSA-PSS
-instead. ``--xml-sign-cert`` embeds the signer's certificate.
+instead. ``--xml-sign-cert`` embeds the signer's certificate. RSA keys
+under 2048 bits are refused, for signing and for verifying.
 
 ``pain001 verify-signature`` checks the signature on files you received
 or wrote. Pass the signer's certificate (or public key) with ``--cert``;
@@ -129,6 +181,14 @@ cannot run (no trust choice, an unreadable certificate). In Python,
 
    report = verify_signature(signed_xml, trust_anchor=cert_pem)
    print(report.valid, report.algorithm, report.signer, report.reason)
+
+With a trust anchor, ``report.signer`` is the anchor certificate's
+subject. For an anchor that is a bare public key, it is the subject of
+the file's own certificate only when that certificate carries the
+anchor's key. A file whose certificate carries another key still
+verifies against the anchor, but ``report.keyinfo_mismatch`` is True,
+that certificate's subject is not reported, and the CLI line ends
+``the KeyInfo certificate does not match --cert and was ignored``.
 
 Verification uses exclusive C14N 1.0 on the parsed document and accepts
 only the algorithms above, SHA-256 to SHA-512 digests, and a reference
@@ -160,7 +220,7 @@ on, so a glob may match XML that is not a payment:
      security-events: write   # for the SARIF upload
    steps:
      - uses: actions/checkout@<sha>
-     - uses: sebastienrousseau/pain001@v0.0.86
+     - uses: sebastienrousseau/pain001@v0.0.87
        with:
          files: "payments/**/*.xml"
          scheme: sepa-sct
@@ -181,6 +241,42 @@ For pre-commit, ``pain001-check`` checks staged XML files and
        - id: pain001-validate
          args: [-t, pain.001.001.09, -d, payments.csv]
          files: ^payments\.csv$
+
+Python: validate and generate
+=============================
+
+``pain001.validate`` and ``pain001.generate`` take a data file (or a
+list of row dictionaries) and a message type, and use the bundled
+template and schema. Both run the checks ``pain001 validate`` and the
+REST API run, in the same order: the row contract and identifiers, the
+message type's JSON Schema, then a scheme or private policy when one is
+named, so the three give the same verdict for the same input.
+
+.. code-block:: python
+
+   import shutil
+
+   import pain001
+   from pain001.constants import TEMPLATES_DIR
+
+   shutil.copy(TEMPLATES_DIR / "pain.001.001.03" / "template.csv", "payments.csv")
+   report = pain001.validate("payments.csv", "pain.001.001.03")
+   print(report.is_valid, report.total_rows, report.invalid_rows)
+   for issue in report.issues:  # line, column, code, message
+       print(issue)
+
+   try:
+       result = pain001.generate("payments.csv", "pain.001.001.03", output_dir="out")
+   except pain001.Pain001Error as exc:
+       print(exc)
+   else:
+       print(result.path, result.rows)
+
+``generate`` writes ``<message type>.xml`` in ``output_dir`` (the working
+directory when omitted) and raises ``PaymentValidationError``, whose
+``errors`` lists each problem, when any check refuses the data.
+``scheme="sepa-sct"`` and ``rules=<policy YAML text>`` add the scheme
+check to either call.
 
 Python: in-memory output
 ========================

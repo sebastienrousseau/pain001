@@ -81,6 +81,11 @@ _init_lock = threading.Lock()
 _init_attempted = False
 """Set after the first :func:`init_otel` call so repeats short-circuit."""
 
+_MISSING_EXTRA = (
+    "OTEL_ENABLED is set but the pain001[otel] extra is not installed; "
+    "tracing stays off. Install with: pip install 'pain001[otel]'"
+)
+
 
 def is_enabled() -> bool:
     """Return ``True`` iff the operator has set ``OTEL_ENABLED=true``.
@@ -100,13 +105,86 @@ def is_enabled() -> bool:
     }
 
 
+def _sdk_provider(service_name: str) -> Any:
+    """Build pain001's own SDK tracer provider, or ``None`` without the SDK.
+
+    Args:
+        service_name: Default ``service.name``; ``OTEL_SERVICE_NAME``
+            overrides it.
+
+    Returns:
+        An ``opentelemetry.sdk.trace.TracerProvider`` with an OTLP
+        exporter when one is installed, or ``None`` when the
+        ``pain001[otel]`` extra is missing.
+    """
+    try:
+        from opentelemetry.sdk.resources import Resource  # noqa: PLC0415
+        from opentelemetry.sdk.trace import TracerProvider  # noqa: PLC0415
+        from opentelemetry.sdk.trace.export import (  # noqa: PLC0415
+            BatchSpanProcessor,
+        )
+    except ImportError:
+        logger.warning(_MISSING_EXTRA)
+        return None
+    resource = Resource.create(
+        {"service.name": os.environ.get("OTEL_SERVICE_NAME", service_name)}
+    )
+    provider = TracerProvider(resource=resource)
+    # Exporter selection follows the SDK's standard env vars
+    # (OTEL_EXPORTER_OTLP_ENDPOINT etc.); when neither is set,
+    # spans accumulate in the provider with no exporter and
+    # silently drop on flush.
+    try:
+        from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # noqa: PLC0415, E501
+            OTLPSpanExporter,
+        )
+
+        provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
+    except ImportError:  # pragma: no cover - exporter is optional
+        logger.info(
+            "no OTLP exporter installed; spans will not be shipped. "
+            "Install opentelemetry-exporter-otlp for HTTP export."
+        )
+    return provider
+
+
+def _tracer_for(service_name: str) -> Any:
+    """Return a tracer, installing pain001's provider only if none is set.
+
+    A host application that configured tracing before pain001 keeps its
+    provider, exporter and sampler: pain001's spans join its traces.
+
+    Args:
+        service_name: Tracer name and default ``service.name``.
+
+    Returns:
+        The tracer, or ``None`` when no provider is set and the SDK is
+        not installed.
+    """
+    try:
+        from opentelemetry import trace  # noqa: PLC0415
+    except ImportError:
+        logger.warning(_MISSING_EXTRA)
+        return None
+    if isinstance(trace.get_tracer_provider(), trace.ProxyTracerProvider):
+        provider = _sdk_provider(service_name)
+        if provider is None:
+            return None
+        trace.set_tracer_provider(provider)
+    else:
+        logger.info("a tracer provider is already set; pain001 uses it")
+    return trace.get_tracer(service_name)
+
+
 def init_otel(service_name: str = PAIN001_SERVICE_NAME) -> Any:
-    """Initialise the OTel SDK once per process and return the tracer.
+    """Initialise tracing once per process and return the tracer.
 
     Idempotent: subsequent calls return the cached tracer without
     re-initialising. Safe to call when ``OTEL_ENABLED`` is unset or
     when the ``pain001[otel]`` extra is missing - both cases return
-    ``None`` and tracing stays off.
+    ``None`` and tracing stays off. When the host application has
+    already set a global tracer provider, pain001 uses it and does not
+    install its own.
 
     Args:
         service_name: ``service.name`` resource attribute. Defaults
@@ -125,47 +203,8 @@ def init_otel(service_name: str = PAIN001_SERVICE_NAME) -> Any:
         if _init_attempted:  # pragma: no cover - double-checked locking
             return _tracer
         _init_attempted = True
-        if not is_enabled():
-            return None
-        try:
-            from opentelemetry import trace  # noqa: PLC0415
-            from opentelemetry.sdk.resources import Resource  # noqa: PLC0415
-            from opentelemetry.sdk.trace import TracerProvider  # noqa: PLC0415
-            from opentelemetry.sdk.trace.export import (  # noqa: PLC0415
-                BatchSpanProcessor,
-            )
-        except ImportError:
-            logger.warning(
-                "OTEL_ENABLED is set but the pain001[otel] extra is not "
-                "installed; tracing stays off. Install with: "
-                "pip install 'pain001[otel]'"
-            )
-            return None
-        resource = Resource.create(
-            {
-                "service.name": os.environ.get(
-                    "OTEL_SERVICE_NAME", service_name
-                ),
-            }
-        )
-        provider = TracerProvider(resource=resource)
-        # Exporter selection follows the SDK's standard env vars
-        # (OTEL_EXPORTER_OTLP_ENDPOINT etc.); when neither is set,
-        # spans accumulate in the provider with no exporter and
-        # silently drop on flush.
-        try:
-            from opentelemetry.exporter.otlp.proto.http.trace_exporter import (  # noqa: PLC0415, E501
-                OTLPSpanExporter,
-            )
-
-            provider.add_span_processor(BatchSpanProcessor(OTLPSpanExporter()))
-        except ImportError:  # pragma: no cover - exporter is optional
-            logger.info(
-                "no OTLP exporter installed; spans will not be shipped. "
-                "Install opentelemetry-exporter-otlp for HTTP export."
-            )
-        trace.set_tracer_provider(provider)
-        _tracer = trace.get_tracer(service_name)
+        if is_enabled():
+            _tracer = _tracer_for(service_name)
         return _tracer
 
 

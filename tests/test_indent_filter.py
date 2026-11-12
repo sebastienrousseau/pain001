@@ -13,7 +13,7 @@ from hypothesis import strategies as st
 from jinja2.filters import do_indent
 from markupsafe import Markup
 
-from pain001.xml import generate_xml as gx
+from pain001.xml import _render
 from pain001.xml._jinja import indent
 
 TEXT = st.text(
@@ -52,7 +52,7 @@ def test_the_defaults_match_jinja() -> None:
 
 
 def test_compiled_templates_use_it() -> None:
-    gx._compile_template.cache_clear()
-    template = gx._compile_template("{{ x | indent('\t') }}")
+    _render._compile_template.cache_clear()
+    template = _render._compile_template("{{ x | indent('\t') }}")
     assert template.environment.filters["indent"] is indent
     assert template.render(x="a\n<b>") == "a\n\t&lt;b&gt;"

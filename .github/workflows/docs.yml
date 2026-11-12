@@ -25,9 +25,12 @@ concurrency:
 
 jobs:
   build:
+    name: build # the job id, so the check name stays the same
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: ❯ Set up Python 🐍
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -69,10 +72,11 @@ jobs:
           path: 'docs/_build/html'
 
   deploy:
+    name: deploy # the job id, so the check name stays the same
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     permissions:
-      pages: write
-      id-token: write
+      pages: write # publish the site to GitHub Pages
+      id-token: write # prove the deployment's origin to Pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

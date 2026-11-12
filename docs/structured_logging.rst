@@ -2,7 +2,7 @@
 Structured Logging
 ===================
 
-Pain001 uses structured logging to provide consistent, machine-parsable log output. Events emitted through ``log_event`` are formatted as JSON once a handler with ``JSONFormatter`` is installed (``pain001.logging_schema.configure_json_logging()`` does this). The ``generate`` and ``validate`` commands attach a stderr handler for the run: plain text by default, ``JSONFormatter`` with ``--log-format json`` or ``PAIN001_LOG_FORMAT=json``; the level is WARNING, DEBUG with ``-v``, or ``PAIN001_LOG_LEVEL``, and ``PAIN001_LOG_FILE`` adds a file. The CLI's own progress output on stdout stays human-readable text.
+Pain001 uses structured logging to provide consistent, machine-parsable log output. Events emitted through ``log_event`` are formatted as JSON once a handler with ``JSONFormatter`` is installed (``pain001.logging_schema.configure_json_logging()`` does this). The ``generate`` and ``validate`` commands attach a stderr handler for the run: plain text by default, ``JSONFormatter`` with ``--log-format json`` or ``PAIN001_LOG_FORMAT=json``; the level is WARNING, DEBUG with ``-v``, or ``PAIN001_LOG_LEVEL``, and ``PAIN001_LOG_FILE`` adds a file. The CLI's own progress lines are human-readable text on stderr too, and are left out when the log format is JSON so stderr stays one JSON record per line; the command's result is on stdout (see :ref:`machine-output`).
 
 Overview
 ========
@@ -195,7 +195,11 @@ Core Fields
 - ``timestamp``: ISO 8601 timestamp (YYYY-MM-DDTHH:MM:SSZ format, always present)
 - ``level``: Log level (INFO, ERROR, etc., always present)
 - ``logger``: Logger name (always present)
-- ``request_id``: Unique request identifier in format "req-<8-hex-chars>" (always present)
+- ``request_id``: Unique request identifier in format "req-<8-hex-chars>" (always present;
+  on the REST API, the request's ``X-Request-ID``)
+- ``trace_id``: W3C trace id (32 hex characters) when the work belongs to a trace: the active
+  OpenTelemetry span's, or the caller's ``traceparent`` on the REST API when tracing is off
+- ``span_id``: Active OpenTelemetry span id (16 hex characters), when a span is active
 - ``version``: Pain001 library version (always present)
 
 Identity Fields
@@ -503,6 +507,15 @@ Every log entry includes a unique ``request_id`` for end-to-end request tracking
     # Output includes: "request_id": "req-custom01"
 
 **Request ID Format:** ``req-<8-hex-chars>`` (e.g., ``req-e5ffe29b``)
+
+On the REST API the request id is bound per request by
+``pain001.api.request_context.RequestContextMiddleware``: a well-formed
+inbound ``X-Request-ID`` is kept, otherwise one is generated, and the
+response echoes it. ``bind_request_context`` and ``reset_request_context``
+do the same for another server: bind the id and the inbound
+``(trace_id, parent_span_id)`` at the start of a request and reset with the
+returned tokens at the end. ``current_trace_ids()`` returns the
+``trace_id`` / ``span_id`` pair ``JSONFormatter`` adds to every record.
 
 **Use Cases:**
 - Correlate logs across distributed systems

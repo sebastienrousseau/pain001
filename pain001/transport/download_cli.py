@@ -11,6 +11,7 @@ from typing import Any
 
 import click
 
+from pain001.cli._format import emit_json, format_option
 from pain001.transport.cli import ssh_kwargs, ssh_options
 
 
@@ -29,6 +30,33 @@ def _shown(name: str) -> str:
         if ord(char) < 256
         else f"\\u{ord(char):04x}"
         for char in name
+    )
+
+
+def _report_json(result: Any) -> None:
+    """Write the run as one JSON object: files, skipped, remaining.
+
+    Remote names are written as JSON strings, which escape control
+    characters, so they need no :func:`_shown`.
+
+    Args:
+        result: The ``DownloadResult``.
+    """
+    emit_json(
+        {
+            "files": [
+                {
+                    "remote": f.remote,
+                    "local": f.local,
+                    "sha256": f.sha256,
+                    "size": f.size,
+                    "status": f.status,
+                }
+                for f in result.files
+            ],
+            "skipped": list(result.skipped),
+            "remaining": result.remaining,
+        }
     )
 
 
@@ -96,6 +124,7 @@ def _report(result: Any) -> None:
     help="Ledger database (default: .pain001-ledger.sqlite3 in --to).",
 )
 @ssh_options
+@format_option()
 def download_cmd(
     url: str, to_dir: str, ledger: str | None, **flags: Any
 ) -> None:
@@ -109,7 +138,8 @@ def download_cmd(
         url: Remote directory URL.
         to_dir: Local directory.
         ledger: Optional ledger path.
-        **flags: The policy flags and the shared trust and identity flags.
+        **flags: The policy flags, ``output_format`` and the shared trust
+            and identity flags.
 
     Raises:
         click.ClickException: If the extra is missing or the run fails.
@@ -123,6 +153,7 @@ def download_cmd(
             "SFTP requires the optional dependencies; install "
             "'pain001[upload]'."
         ) from exc
+    output_format = flags.pop("output_format")
     policy = download.DownloadPolicy(
         pattern=flags.pop("pattern"),
         after_fetch=flags.pop("after_fetch"),
@@ -136,4 +167,7 @@ def download_cmd(
         )
     except (OSError, ValueError, SSHException) as exc:
         raise click.ClickException(str(exc)) from exc
-    _report(result)
+    if output_format == "json":
+        _report_json(result)
+    else:
+        _report(result)

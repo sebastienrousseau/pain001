@@ -21,7 +21,7 @@ from decimal import Decimal
 
 import pytest
 
-from pain001.validation import rails
+from pain001.validation import _check_digits, rails
 from pain001.validation.schemes import (
     PROFILES,
     REMEDIATIONS,
@@ -481,22 +481,26 @@ def test_composition_with_the_sepa_profiles_and_helpers() -> None:
     combined = validate_scheme([row, row], "uk-fps,anti-duplicate")
     assert combined.profile == "uk-fps,anti-duplicate"
     assert {v.rule for v in combined.violations} == {"DUP-CREDITOR-DATE"}
-    assert rails._aba_ok("021000021") and not rails._aba_ok("02100002")
-    assert rails._luhn_ok("1234567897") and not rails._luhn_ok("1234567896")
-    assert rails._qrr_ok("210000000003139471430009017") and not rails._qrr_ok(
-        "21000000000313947143000901"
+    assert _check_digits.aba_ok("021000021") and not _check_digits.aba_ok(
+        "02100002"
+    )
+    assert _check_digits.luhn_ok("1234567897") and not _check_digits.luhn_ok(
+        "1234567896"
+    )
+    assert _check_digits.qrr_ok(
+        "210000000003139471430009017"
+    ) and not _check_digits.qrr_ok("21000000000313947143000901")
+    assert (
+        _check_digits.rf_ok("RF18 5390 0754 7034")
+        and not _check_digits.rf_ok("RF18")
+        and not _check_digits.rf_ok("XX18539007547034")
     )
     assert (
-        rails._rf_ok("RF18 5390 0754 7034")
-        and not rails._rf_ok("RF18")
-        and not rails._rf_ok("XX18539007547034")
+        _check_digits.is_qr_iban("CH4431999123000889012")
+        and not _check_digits.is_qr_iban("DE89370400440532013000")
+        and not _check_digits.is_qr_iban("CH")
     )
-    assert (
-        rails._is_qr_iban("CH4431999123000889012")
-        and not rails._is_qr_iban("DE89370400440532013000")
-        and not rails._is_qr_iban("CH")
-    )
-    assert rails._mod97_alpha("RF18539007547034"[4:] + "RF18") == 1
+    assert _check_digits.mod97_alpha("RF18539007547034"[4:] + "RF18") == 1
     assert Decimal(rails.rail("uk-fps").max_amount or 0) == Decimal(
         "1000000.00"
     )

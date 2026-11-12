@@ -108,12 +108,19 @@ installed build supports.
 
 Yes. Pain001 can:
 
+- Write one large file without holding it in memory: ``generate``,
+  ``process_files`` and ``generate_xml`` render the template straight
+  into the file and check it against the schema as it streams back, so
+  the rows, not the document, set the peak (about 380 MB for 100,000
+  rows and a 138 MiB file). A BAH envelope, a signature or a Schematron
+  rulebook needs the whole document as text and keeps it in memory.
 - Stream the input in chunks and write one XML file per chunk
-  (``--streaming --chunk-size``)
-- Write a large file with constant memory (``stream_xml_to_file``)
+  (``--streaming --chunk-size``), built by several processes with
+  ``--workers``
+- Write a large file from Python with ``stream_xml_to_file``
 
-There is no built-in parallelism; run independent batches in separate
-processes if you need it.
+A file over 10 MiB that fails the schema reports its first violation
+(element and reason); a smaller one lists every violation.
 
 See `Examples <examples.html>`_ for batch processing examples.
 

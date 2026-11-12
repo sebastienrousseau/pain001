@@ -24,9 +24,12 @@ jobs:
   # saying which of them is the cause. This says it in one line, in
   # seconds, before anything else runs.
   lockfile:
+    name: lockfile # the job id, so the check name stays the same
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
@@ -41,9 +44,12 @@ jobs:
 
   # 1. VERSION SYNC (Fastest Fail - 0s Setup)
   version-sync:
+    name: version-sync # the job id, so the check name stays the same
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Verify security exception deadlines
         run: python3 scripts/check_security_exceptions.py
       - name: ❯ Verify Version Sync
@@ -100,7 +106,8 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          cache: "poetry"
+          # No dependency cache: this job also runs on release tags, and
+          # a tag run must not restore a cache that a branch run wrote.
       - name: Install pain001 with every extra
         run: poetry install --no-interaction --all-extras
       - name: Install signxml (hash-pinned, dependencies from the lock)
@@ -122,12 +129,15 @@ jobs:
     name: 🛡️ Production Tollgates
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: ❯ Install Poetry
         run: pipx install poetry==2.4.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          cache: "poetry" # ✅ Native Caching (Faster/Cleaner)
+          # No dependency cache: this job also runs on release tags, and
+          # a tag run must not restore a cache that a branch run wrote.
 
       - name: ❯ Install Dependencies
         run: poetry install --no-interaction --all-extras
@@ -149,12 +159,15 @@ jobs:
     name: 🧬 Quality Gate (Py ${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: ❯ Install Poetry
         run: pipx install poetry==2.4.1
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: ${{ matrix.python-version }}
-          cache: "poetry"
+          # No dependency cache: this job also runs on release tags, and
+          # a tag run must not restore a cache that a branch run wrote.
 
       - name: ❯ Install Dependencies
         run: poetry install --no-interaction --all-extras
@@ -187,21 +200,28 @@ jobs:
           RESULT: ${{ needs.quality-gate.result }}
         run: test "$RESULT" = success
 
-  # 4. RELEASE & PUBLISH (Only on Tags)
-  publish:
+  # 4a. RELEASE BUILD (Only on Tags)
+  #
+  # Builds the distributions, the SBOMs and the facts file, hashes them,
+  # and hands them to the publish job as one artifact. It holds no write
+  # permission and no OIDC token, so nothing it installs or runs (Poetry,
+  # the build backend, the SBOM tools) can mint a PyPI or Sigstore
+  # credential. It uses no dependency cache: a tag build must not restore
+  # a cache that a branch run wrote.
+  build:
     needs: quality-gate
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
-    name: 📦 Publish Release
-    environment: pypi
+    name: 🏗️ Build Release
     permissions:
-      contents: write
-      id-token: write
-      attestations: write
+      contents: read
     outputs:
       hashes: ${{ steps.dist_hashes.outputs.hashes }}
+      version: ${{ steps.release_notes.outputs.version }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: ❯ Verify Tag Matches Package Version
         run: |
@@ -232,7 +252,6 @@ jobs:
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
-          cache: "poetry"
       - run: poetry install --no-interaction --all-extras
 
       - name: ❯ Build & Metadata Check
@@ -241,14 +260,6 @@ jobs:
           poetry run twine check dist/*
           python scripts/inspect_release.py --name pain001 --project pain001 \
             --version "${GITHUB_REF_NAME#v}" --dist dist --output .release
-
-      # SLSA Build Level 3 provenance for every distribution file, bound to
-      # the exact bytes just built and signed with the workflow's OIDC
-      # identity. Verify with: gh attestation verify <file> --owner sebastienrousseau
-      - name: ❯ Generate SLSA build provenance attestation
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
-        with:
-          subject-path: "dist/*"
 
       - name: ❯ Generate SBOM (CycloneDX + SPDX)
         # Enterprise vulnerability-management tools (Snyk, Black Duck,
@@ -321,12 +332,76 @@ jobs:
           echo "$hashes"
           echo "hashes=$(printf '%s\n' "$hashes" | base64 -w0)" >> "$GITHUB_OUTPUT"
 
-      - name: ❯ Create GitHub Release
+      # .release holds SHA256SUMS and the release body; it is hidden, so
+      # it is included explicitly.
+      - name: ❯ Hand the release files to the publish job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-files
+          path: |
+            dist/
+            sbom/
+            .release/
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 7
+
+  # 4b. RELEASE & PUBLISH (Only on Tags)
+  #
+  # The only job with the PyPI OIDC token, behind the `pypi` environment.
+  # It checks out nothing and builds nothing: it downloads the build
+  # job's files, checks them against the hashes the build job computed,
+  # attests them, creates the GitHub release and uploads to PyPI.
+  publish:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    name: 📦 Publish Release
+    environment: pypi
+    permissions:
+      contents: write # create the GitHub release and upload its files
+      id-token: write # PyPI trusted publishing and Sigstore signing
+      attestations: write # store the build provenance attestation
+    steps:
+      - name: ❯ Download the release files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-files
+
+      # The artifact store sits between the two jobs; publish only the
+      # bytes the build job hashed.
+      - name: ❯ Verify the files against the build job's hashes
+        env:
+          HASHES: ${{ needs.build.outputs.hashes }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$HASHES" | base64 -d > "$RUNNER_TEMP/subjects"
+          # Subject names are bare filenames from dist/ and sbom/.
+          while read -r sum name; do
+            if [ -f "dist/$name" ]; then dir=dist; else dir=sbom; fi
+            printf '%s  %s/%s\n' "$sum" "$dir" "$name"
+          done < "$RUNNER_TEMP/subjects" | sha256sum --check --strict -
+          # Nothing unhashed may ride along to the release or PyPI.
+          test "$(find dist sbom -type f | wc -l)" -eq "$(wc -l < "$RUNNER_TEMP/subjects")"
+
+      # SLSA Build Level 3 provenance for every distribution file, bound to
+      # the exact bytes the build job produced and signed with the
+      # workflow's OIDC identity.
+      # Verify with: gh attestation verify <file> --owner sebastienrousseau
+      - name: ❯ Generate SLSA build provenance attestation
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: "dist/*"
+
+      # Kept over `gh release create`: on a re-run of this job the action
+      # updates the existing release and replaces its files, where
+      # `gh release create` fails because the release already exists.
+      - name: ❯ Create GitHub Release # zizmor: ignore[superfluous-actions] gh fails on a re-run
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3.0.4
         with:
           # The family's release title is "<project> <version>", never the
           # bare tag: without `name` the action titles it "v0.0.N".
-          name: pain001 ${{ steps.release_notes.outputs.version }}
+          name: pain001 ${{ needs.build.outputs.version }}
           body_path: .release/release-notes.md
           files: |
             dist/*
@@ -362,19 +437,21 @@ jobs:
   # workflow runs, so a standalone `on: release: published` workflow can
   # never fire for our own pipeline.
   #
-  # NOTE: the reusable generator MUST be referenced by tag, not SHA —
-  # slsa-verifier validates the generator's own provenance against its
-  # release tag. This is the documented exception to SHA pinning.
+  # The reusable generator MUST be referenced by its release tag, not a
+  # SHA: slsa-verifier checks the generator's own identity against that
+  # tag, so a SHA reference produces provenance it rejects. This line and
+  # its twin in slsa.yml are the only actions not pinned to a commit;
+  # tests/test_code_scanning_regressions.py allows exactly these two.
   provenance:
-    needs: publish
+    needs: [build, publish]
     if: startsWith(github.ref, 'refs/tags/v')
     permissions:
       actions: read   # read the workflow path
       id-token: write # sign via Sigstore OIDC
       contents: write # upload the attestation to the release
-    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0
+    uses: slsa-framework/slsa-github-generator/.github/workflows/generator_generic_slsa3.yml@v2.1.0 # zizmor: ignore[unpinned-uses] slsa-verifier requires the tag
     with:
-      base64-subjects: ${{ needs.publish.outputs.hashes }}
+      base64-subjects: ${{ needs.build.outputs.hashes }}
       upload-assets: true
 
   # 6. EVIDENCE PACK (Only on Tags)

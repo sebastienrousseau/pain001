@@ -164,6 +164,10 @@ def _issues_for_row(
         RowIssue(line, column, IssueCode.MISSING_VALUE, "missing value")
         for column in missing
     ]
+    # csv.DictReader files the surplus of a long row under the key None.
+    if None in row:
+        surplus = "more values than the header has columns"
+        issues.insert(0, RowIssue(line, None, IssueCode.EXTRA_VALUES, surplus))
     for column in invalid:
         code, message = _TYPE_ISSUES[required[column]]
         issues.append(RowIssue(line, column, code, message))

@@ -13,6 +13,7 @@
 # governing permissions and limitations.
 
 
+import csv
 import os
 import unittest
 from unittest.mock import patch
@@ -90,7 +91,7 @@ class TestProcessFiles(unittest.TestCase):
                 "Instruction-Id-123,Category-Purpose-123,"
                 "Remittance-Info-Unstructured-123,Remittance-Info-Structured-123,"
                 "Addtl-End-to-End-Id-123,Payment-Info-Structured-123,"
-                "Forwarding-Agent-BIC-123,Remittance-Information-123\n"
+                "BANKDEFFXXX,Remittance-Information-123\n"
             )
 
         # Create invalid_data_unique.csv
@@ -268,11 +269,14 @@ class TestProcessFiles(unittest.TestCase):
             mock_generate_xml.assert_called_once()
 
     def test_valid_sqlite_data(self) -> None:
+        # The rows must pass the message type's JSON Schema too.
+        with open(self.csv_file_path, encoding="utf-8", newline="") as f:
+            rows = list(csv.DictReader(f))
         with (
             patch(
                 "pain001.db.load_db_data.load_db_data",
                 autospec=True,
-                return_value=[{}],
+                return_value=rows,
             ),
             patch(
                 "pain001.data.loader.db_row_issues",

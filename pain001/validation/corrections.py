@@ -10,6 +10,8 @@ from typing import Any
 from pain001.validation.charset import sanitize_to_charset
 from pain001.validation.schema_validator import SchemaValidator
 
+__all__ = ["suggest_record_fix"]
+
 _FIELD = re.compile(r"[A-Za-z][A-Za-z0-9_]*\Z")
 _PROTECTED = frozenset(
     {"amount", "payment_amount", "currency", "payment_currency", "ctrl_sum"}
@@ -44,6 +46,67 @@ def _normalise_date(value: str) -> str | None:
     return next(iter(candidates)) if len(candidates) == 1 else None
 
 
+#: Name parts that mark a bank identifier, amount or currency field.
+_PROTECTED_PARTS = ("iban", "bic", "account", "amount", "currency")
+#: Rules whose fix is derived from the field's current string value.
+_STRING_RULES = frozenset({"CHARSET", "FIELD-LENGTH", "DATE-FORMAT"})
+#: Missing-field placeholders by JSON Schema type; not payment data.
+_PLACEHOLDERS: dict[Any, Any] = {
+    "string": "REQUIRED",
+    "integer": 0,
+    "number": 0,
+    "boolean": False,
+}
+
+
+def _field_refusal(field: Any) -> str | None:
+    """Why the named field cannot be patched, or ``None`` if it can."""
+    if not isinstance(field, str) or not _FIELD.fullmatch(field):
+        return "invalid_field"
+    lower = field.lower()
+    if lower in _PROTECTED or any(
+        part in lower.split("_") for part in _PROTECTED_PARTS
+    ):
+        return "protected_financial_field"
+    return None
+
+
+def _string_candidate(
+    rule: Any, value: str, definition: dict[str, Any]
+) -> Any:
+    """The fix a string rule derives from the value, or ``None``."""
+    if rule == "CHARSET":
+        return sanitize_to_charset(value)
+    if rule == "FIELD-LENGTH":
+        limit = definition.get("maxLength")
+        return value[:limit] if isinstance(limit, int) else None
+    if definition.get("format") == "date":
+        return _normalise_date(value)
+    return None
+
+
+def _candidate(
+    rule: Any,
+    field: str,
+    record: dict[str, Any],
+    definition: dict[str, Any],
+    required: Any,
+) -> tuple[Any, bool]:
+    """The candidate value for ``field`` and whether it is a placeholder."""
+    value = record.get(field)
+    if rule in _STRING_RULES:
+        if not isinstance(value, str):
+            return None, False
+        return _string_candidate(rule, value, definition), False
+    if (
+        rule == "MISSING-REQUIRED"
+        and field in required
+        and (field not in record or value in (None, ""))
+    ):
+        return _PLACEHOLDERS.get(definition.get("type")), True
+    return None, False
+
+
 def suggest_record_fix(
     record: dict[str, Any],
     validation_error: dict[str, Any],
@@ -68,46 +131,21 @@ def suggest_record_fix(
 
     """
     field = validation_error.get("field", validation_error.get("path", ""))
-    if not isinstance(field, str):
-        return _refusal("invalid_field")
-    field = field.removeprefix("$.")
-    if not _FIELD.fullmatch(field):
-        return _refusal("invalid_field")
-    lower = field.lower()
-    if lower in _PROTECTED or any(
-        part in lower.split("_")
-        for part in ("iban", "bic", "account", "amount", "currency")
-    ):
-        return _refusal("protected_financial_field")
+    if isinstance(field, str):
+        field = field.removeprefix("$.")
+    reason = _field_refusal(field)
+    if reason is not None:
+        return _refusal(reason)
 
     schema = SchemaValidator(message_type).schema
     definition = schema["properties"].get(field)
     if definition is None:
         return _refusal("unknown_field")
     rule = validation_error.get("rule")
-    value = record.get(field)
-    candidate: Any = None
-    placeholder = False
-    if rule == "CHARSET" and isinstance(value, str):
-        candidate = sanitize_to_charset(value)
-    elif rule == "FIELD-LENGTH" and isinstance(value, str):
-        limit = definition.get("maxLength")
-        if isinstance(limit, int):
-            candidate = value[:limit]
-    elif rule == "DATE-FORMAT" and isinstance(value, str):
-        if definition.get("format") == "date":
-            candidate = _normalise_date(value)
-    elif rule == "MISSING-REQUIRED" and field in schema["required"]:
-        if field not in record or value in (None, ""):
-            candidate = {
-                "string": "REQUIRED",
-                "integer": 0,
-                "number": 0,
-                "boolean": False,
-            }.get(definition.get("type"))
-            placeholder = True
-
-    if candidate is None or candidate == value:
+    candidate, placeholder = _candidate(
+        rule, field, record, definition, schema["required"]
+    )
+    if candidate is None or candidate == record.get(field):
         return _refusal("no_unambiguous_fix")
     return {
         "patches": [

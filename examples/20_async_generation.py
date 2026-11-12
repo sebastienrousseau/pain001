@@ -7,6 +7,7 @@ import shutil
 import tempfile
 from pathlib import Path
 
+from pain001 import generate_xml_string
 from pain001.async_adapter import (
     generate_xml_string_async,
     load_payment_data_async,
@@ -17,7 +18,6 @@ from pain001.async_adapter import (
 from pain001.constants import TEMPLATES_DIR
 from pain001.core.core import process_files, process_files_streaming
 from pain001.validation.service import ValidationConfig, ValidationService
-from pain001.xml.generate_xml import generate_xml_string
 
 EDITION = "pain.001.001.03"
 DIRECTORY = TEMPLATES_DIR / EDITION

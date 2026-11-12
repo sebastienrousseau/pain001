@@ -50,6 +50,10 @@ class JobCapacityError(RuntimeError):
     """Raised when a new job would exceed the active-job cap."""
 
 
+class JobCancelledError(RuntimeError):
+    """Raised in a worker whose job was cancelled, to stop it early."""
+
+
 def max_active_jobs() -> int:
     """Return how many jobs may be pending or processing at once.
 
@@ -298,7 +302,7 @@ class JobManager:
         progress: int = 0,
         result: dict[str, Any] | None = None,
         error: str | None = None,
-    ) -> None:
+    ) -> bool:
         """Update job status.
 
         Args:
@@ -308,6 +312,10 @@ class JobManager:
             result: Result data if completed.
             error: Error message if failed.
 
+        Returns:
+            True if the update was applied, False if the job is unknown
+            or already final.
+
         Terminal statuses (success/failed/cancelled) are final: a
         late-arriving update (e.g. a worker finishing after the user
         cancelled the job) must not resurrect or overwrite them.
@@ -315,7 +323,7 @@ class JobManager:
         with self._lock:
             job = self.jobs.get(job_id)
             if job is None or job.status in TERMINAL_STATUSES:
-                return
+                return False
             job.status = status
             job.progress_percent = min(100, max(0, progress))
             job.updated_at = datetime.now(UTC)
@@ -325,6 +333,37 @@ class JobManager:
                 job.error = error
             taken = self._snapshot(job_id)
         self._write(job_id, taken)
+        return True
+
+    def raise_if_cancelled(self, job_id: str) -> None:
+        """Stop the calling worker if its job was cancelled.
+
+        Args:
+            job_id: Job identifier.
+
+        Raises:
+            JobCancelledError: If the job is cancelled.
+        """
+        with self._lock:
+            job = self.jobs.get(job_id)
+            cancelled = job is not None and job.status is JobStatus.CANCELLED
+        if cancelled:
+            raise JobCancelledError(job_id)
+
+    def report_progress(self, job_id: str, percent: int) -> None:
+        """Mark a job as processing at ``percent``: a worker's safe point.
+
+        The generation pipeline reports at each stage boundary; for a
+        cancelled job :meth:`raise_if_cancelled` raises
+        :class:`JobCancelledError` there, so the worker stops instead of
+        rendering its file.
+
+        Args:
+            job_id: Job identifier.
+            percent: Progress percentage.
+        """
+        self.raise_if_cancelled(job_id)
+        self.update_status(job_id, JobStatus.PROCESSING, progress=percent)
 
     @staticmethod
     def error_for(exc: Exception) -> str:

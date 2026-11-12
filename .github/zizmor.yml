@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0 OR MIT
+#
+# zizmor configuration (.github/workflows/zizmor.yml runs it).
+#
+# Every action, first-party ones included, must be pinned to a full
+# commit SHA. This file holds policy only and grants no exception: the
+# one tag reference (the SLSA generator, which slsa-verifier requires
+# by tag) is ignored inline on its own line, with its reason, in ci.yml
+# and slsa.yml. tests/test_zizmor_ignores.py rejects an ignore without
+# a reason and any ignore of template-injection, dangerous-triggers or
+# excessive-permissions.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": hash-pin

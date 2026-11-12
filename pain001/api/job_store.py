@@ -27,6 +27,13 @@ import re
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
+__all__ = [
+    "FileJobStore",
+    "JobStore",
+    "RedisJobStore",
+    "job_store_from_env",
+]
+
 # A job id becomes part of a filesystem path (``FileJobStore``) and a Redis
 # key (``RedisJobStore``). Both are security-sensitive sinks: a value such
 # as ``../../etc/passwd`` would let a caller escape the store directory

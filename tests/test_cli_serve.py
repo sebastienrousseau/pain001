@@ -101,6 +101,7 @@ def test_insecure_flag_allows_open_bind_with_a_warning():
     assert result.exit_code == 0, result.output
     run.assert_called_once()
     assert "unauthenticated" in result.output
+    assert "PAIN001_ALLOWED_HOSTS" in result.output
 
 
 @pytest.mark.parametrize("value", ["1", "true", "YES"])

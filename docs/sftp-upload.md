@@ -62,6 +62,10 @@ Some key files are refused by name before connecting:
 | `sk-ssh-ed25519@openssh.com`, `sk-ecdsa-sha2-nistp256@openssh.com` (FIDO) | paramiko cannot sign with FIDO security keys. |
 | Any other type paramiko does not implement | Named in the error, with the paramiko version. |
 
+The client never offers CBC or 3DES ciphers, or SHA-1 or MD5 MACs, which
+paramiko otherwise keeps as fallbacks. A server that supports nothing
+stronger (AES-CTR or AES-GCM, HMAC-SHA2) is refused during key exchange.
+
 The upload streams into an exclusively created, uniquely named `.tmp` file
 in the destination directory, then publishes using standard SFTP rename.
 The server must support same-directory atomic, no-clobber rename. An existing

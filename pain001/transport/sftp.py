@@ -19,6 +19,7 @@ from uuid import uuid4
 
 import paramiko
 
+from pain001.transport._algorithms import DISABLED_ALGORITHMS
 from pain001.transport.identity import load_identity
 
 _BLOCK_SIZE = 65536
@@ -164,7 +165,9 @@ def print_host_fingerprint(url: str, timeout: float = 15) -> str:
     with socket.create_connection(
         (target.host, target.port), timeout=timeout
     ) as connection:
-        with paramiko.Transport(connection) as transport:
+        with paramiko.Transport(
+            connection, disabled_algorithms=DISABLED_ALGORITHMS
+        ) as transport:
             transport.start_client(timeout=timeout)
             return fingerprint(transport.get_remote_server_key())
 
@@ -316,6 +319,7 @@ def _connect(
         timeout=timeout,
         banner_timeout=timeout,
         auth_timeout=timeout,
+        disabled_algorithms=DISABLED_ALGORITHMS,
     )
 
 

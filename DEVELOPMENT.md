@@ -45,7 +45,7 @@ reproduced without reading YAML.
 | Benchmarks (kept compiling, not asserted) | `make perf` | `quality.yml` |
 | Fuzzing (Atheris harness in `fuzz/`) | `python fuzz/fuzz_validation.py -max_total_time=60` | `nightly.yml` |
 | Suite conformance (this repo against the family rules) | `poetry run pytest tests/test_suite_conformance.py` | `ci.yml` |
-| Full ecosystem publications (network, all nine repositories) | `make ecosystem-check` | `suite-consistency.yml` (daily and after publishing workflows) |
+| Full ecosystem publications (network, all nine repositories) | `make ecosystem-check` | `suite-consistency.yml` (daily and on dispatch) |
 | Publication audit regression tests and coverage (offline) | `make test-publications` | `quality.yml` |
 | Combined local gate (types separately) | `make check` and `make type` | — |
 
