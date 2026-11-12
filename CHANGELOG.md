@@ -175,7 +175,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   risk are fixed instead of ignored, and the pedantic audit's permission
   and injection findings with them. Suite Consistency no longer runs on
   `workflow_run`: it audits daily and on dispatch, since the core
-  publishes first and each companion audits after its own release. The
+  publishes first. The eight companion workflows that
+  `scripts/render_ecosystem_workflows.py` generates drop the trigger
+  too and run on the same schedule. The
   CI jobs that also run on release tags (XML-DSig interop, tollgates,
   the quality-gate matrix) no longer restore a Poetry cache. The Docker
   workflow no longer grants `id-token: write` at workflow level, the

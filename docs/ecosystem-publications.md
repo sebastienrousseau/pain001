@@ -54,27 +54,25 @@ checklist. A signed tag does not establish artifact provenance on its own.
 
 The core's Suite Consistency workflow runs daily and on dispatch, from
 trusted default-branch code with a read-only token. It does not run on
-another workflow's completion (`workflow_run`): the core publishes
-first, so an audit straight after its release can only report the
-companions that have not shipped yet, and each companion runs the audit
-after its own publication. Dispatch the core's workflow once the last
-member is out. A standalone `release: published` trigger would not help
+another workflow's completion (`workflow_run`), a trigger that runs with
+the default branch's trust whatever started it; the companions' audits
+follow the same rule. The core publishes first, so an audit straight
+after its release can only report the companions that have not shipped
+yet. Dispatch the core's workflow once the last member is out. A standalone `release: published` trigger would not help
 either, because releases created with `GITHUB_TOKEN` do not launch
 another workflow; see GitHub's
 [workflow triggering rules](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/trigger-a-workflow).
 
 The shared `.github/actions/check-ecosystem` action lets companions run the
-same checker pinned to a reviewed core commit. They watch their own release
-workflow completion. No cross-repository dispatch credential is required.
+same checker pinned to a reviewed core commit, daily and on dispatch, as
+the core does. No cross-repository dispatch credential is required.
 `scripts/render_ecosystem_workflows.py --core-ref COMMIT --out DIRECTORY`
-generates all eight companion workflow updates for review. Publishing
-workflow names come from the inventory; the website also rechecks after its
-main-branch CI completes the Pages deployment.
+generates all eight companion workflow updates for review.
 
 A core release may finish before its companions. During that rollout the
 audit must fail and name the missing members. A version bump, merged PR or
-successful core publish is not a complete family release. Each subsequent
-publication runs the audit again; the final member's audit should succeed.
+successful core publish is not a complete family release. After the final
+member publishes, dispatch the audit; it should succeed.
 Network failures, missing metadata, rate limits and stale deployment caches
 produce failed reports too. Do not add exceptions or skip a member to turn
 a partial rollout green.

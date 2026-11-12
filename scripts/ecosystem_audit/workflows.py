@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import re
 from pathlib import Path
 
@@ -23,9 +22,6 @@ on:
         description: "Explicit suite version; empty checks the latest published family"
         type: string
         default: ""
-  workflow_run:
-    workflows: __PUBLISHERS__
-    types: [completed]
 permissions:
   contents: read
 concurrency:
@@ -34,11 +30,6 @@ concurrency:
 jobs:
   consistency:
     name: All nine publications agree
-    if: >-
-      github.event_name != 'workflow_run' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       github.event.workflow_run.event == 'push' &&
-       (startsWith(github.event.workflow_run.head_branch, 'v0.')__DEPLOY_TRIGGER__))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -56,19 +47,18 @@ jobs:
 
 
 def render(member: Member, core_ref: str) -> str:
-    """Pin one companion to immutable code and its actual publication events."""
+    """Pin one companion's audit to an immutable, reviewed core commit.
+
+    The audit runs daily and on dispatch, never on another workflow's
+    completion: a ``workflow_run`` trigger runs with the default
+    branch's trust whatever started it, which is the class of trigger
+    the core's own workflows no longer use. Every companion renders
+    the same file; ``member`` names the repository it is written for.
+    """
+    del member
     if not re.fullmatch(r"[0-9a-f]{40}", core_ref):
         raise ValueError("core-ref must be a full immutable commit SHA")
-    deployment = ""
-    if member.runtime:
-        deployment = " || (github.event.workflow_run.head_branch == 'main' && github.event.workflow_run.name == 'CI')"
-    return (
-        TEMPLATE.replace("__CORE_REF__", core_ref)
-        .replace(
-            "__PUBLISHERS__", json.dumps(member.publishers, ensure_ascii=False)
-        )
-        .replace("__DEPLOY_TRIGGER__", deployment)
-    )
+    return TEMPLATE.replace("__CORE_REF__", core_ref)
 
 
 def main(argv: list[str] | None = None) -> int:
