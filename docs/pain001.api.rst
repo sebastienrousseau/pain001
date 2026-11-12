@@ -54,6 +54,14 @@ pain001.api.guards module
    :show-inheritance:
    :undoc-members:
 
+pain001.api.host\_guard module
+------------------------------
+
+.. automodule:: pain001.api.host_guard
+   :members:
+   :show-inheritance:
+   :undoc-members:
+
 pain001.api.job\_manager module
 -------------------------------
 
