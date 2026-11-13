@@ -96,9 +96,13 @@ python-gnupg = {version = ">=0.5.7,<1", optional = true}
 # XML-DSig signing and verification (sign_xml_document,
 # verify_xml_signature, --xml-sign-key) import it at call time.
 cryptography = {version = ">=50.0.2,<51", optional = true}
-opentelemetry-api = {version = ">=1.27,<2", optional = true}
-opentelemetry-sdk = {version = ">=1.27,<2", optional = true}
-opentelemetry-exporter-otlp-proto-http = {version = ">=1.27,<2", optional = true}
+# opentelemetry-api <= 1.45.1 has GHSA-mf5v-w3w3-f6cg (quadratic-time
+# traceparent parsing). The floor sits on all three so the SDK, which pins
+# the API exactly, cannot pull an affected release; fastapi also depends
+# on the API, so the `api` extra carries the same floor.
+opentelemetry-api = {version = ">=1.45.2,<2", optional = true}
+opentelemetry-sdk = {version = ">=1.45.2,<2", optional = true}
+opentelemetry-exporter-otlp-proto-http = {version = ">=1.45.2,<2", optional = true}
 # Advisory floor, not a direct import: the otel exporter pulls certifi in
 # through requests, and every certifi before 2026.10.19 is affected by
 # GHSA-6q48-6c7w-9gw2. Declared in the `otel` extra so pain001[otel]
@@ -106,7 +110,7 @@ opentelemetry-exporter-otlp-proto-http = {version = ">=1.27,<2", optional = true
 certifi = {version = ">=2026.10.19", optional = true}
 
 [tool.poetry.extras]
-api = ["fastapi", "uvicorn"]
+api = ["fastapi", "uvicorn", "opentelemetry-api"]
 parquet = ["pyarrow"]
 mcp = ["mcp"]
 lsp = ["pygls"]

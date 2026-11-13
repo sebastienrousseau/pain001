@@ -14,7 +14,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Raise `soupsieve` to `4.1` (`>=4.0.0` floor in `pyproject.toml` and
   `.github/requirements/docs.in`) across `poetry.lock` and
   `.github/requirements/docs.txt` (`#393`), clearing
-  `GHSA-4j63-6c4x-wfg4` and `GHSA-mmhr-3c5m-f64f`.
+  `GHSA-4j63-6c4x-wfg4`, `GHSA-mmhr-3c5m-f64f`, `GHSA-6655-6qjp-jx7x`
+  and `GHSA-7g44-g9rc-x53w`.
+- Raise `opentelemetry-api` to `1.45.2`, clearing `GHSA-mf5v-w3w3-f6cg`
+  (quadratic-time `traceparent` parsing in 1.45.1 and earlier). The
+  `otel` extra floors the API, SDK and OTLP exporter at `>=1.45.2`, and
+  the `api` extra floors the API too, since `fastapi` depends on it;
+  `poetry.lock` moves the OpenTelemetry family to 1.45.2 (0.66b2 for
+  the semantic conventions and the two exporter helper packages) and
+  `.github/requirements/api.txt` moves the API.
 
 ### Changed
 
