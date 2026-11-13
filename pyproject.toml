@@ -123,11 +123,11 @@ rules = ["cel-python", "holidays"]
 lxml = ">=6.1.3,<7"
 httpx = ">=0.23"
 fakeredis = ">=2.40.0,<3"
-pytest = "^9.1.1"
+pytest = "^9.2.0"
 pytest-cov = "^7.0.0"
-pytest-benchmark = "^5.3.0"
+pytest-benchmark = "^5.3.1"
 pytest-xdist = "^3.0.0"
-mypy = "^2.4.0"
+mypy = "^2.4.1"
 bandit = "^1.9.4"
 # pip-audit pulls in filelock (through cachecontrol). filelock <= 4.2.0 has
 # GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and GHSA-v4x8-3wr5-3wq8; the
@@ -140,15 +140,16 @@ msgpack = ">=1.2.3"
 ruff = "^0.17.4"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.1.0.20261030"
-types-pyyaml = "^6.0.12"
-diff-cover = "^10.6.0"
-types-setuptools = "^84.0.0"
+types-pyyaml = "^6.0.12.20261113"
+diff-cover = "^11.0.1"
+types-setuptools = "^84.2.0"
 radon = "^6.0.1"
 complexipy = {version = "^8.3.0", python = "<3.16"}
 mutmut = "^3.8.1"
-hypothesis = "^6.168.5"
+hypothesis = "^6.170.15"
 memory-profiler = "^0.61.0"
-sphinx = "^8.1.3"
+# Sphinx 9.1+ requires Python >= 3.13; ~9.0.4 keeps one version across 3.11-3.14.
+sphinx = "~9.0.4"
 sphinx-rtd-theme = "^3.1.0"
 sphinx-autodoc-typehints = "^3.5.2"
 pip-licenses = "^5.5.5"
@@ -163,11 +164,17 @@ pydoclint = "^0.12.0"
 optional = true
 
 [tool.poetry.group.docs.dependencies]
-sphinx = "^8.1.3"
-pydata-sphinx-theme = "^0.24.0"
+sphinx = "~9.0.4"
+pydata-sphinx-theme = {version = "^0.24.0", python = ">=3.11.5"}
 sphinx-autodoc-typehints = "^3.5.2"
 sphinx-design = "^0.7.0"
 myst-parser = "^5.1.0"
+# pydata-sphinx-theme pulls in soupsieve (through beautifulsoup4).
+# GHSA-4j63-6c4x-wfg4 and GHSA-mmhr-3c5m-f64f affect soupsieve < 4.0.0, and
+# soupsieve >= 4.0 requires Python >= 3.11.5; gating both in the optional docs
+# group keeps every affected release out of poetry.lock while preserving ^3.11
+# for the runtime package and dev suite.
+soupsieve = {version = ">=4.0.0", python = ">=3.11.5"}
 
 [build-system]
 requires = ["poetry-core"]

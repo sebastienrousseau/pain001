@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Security
+
+- Raise `soupsieve` to `4.1` (`>=4.0.0` floor in `pyproject.toml` and
+  `.github/requirements/docs.in`) across `poetry.lock` and
+  `.github/requirements/docs.txt` (`#393`), clearing
+  `GHSA-4j63-6c4x-wfg4` and `GHSA-mmhr-3c5m-f64f`.
+
+### Changed
+
+- Dependencies, in place of Dependabot `#385` to `#393`:
+
+  | Package | From | To | Where |
+  | :--- | :--- | :--- | :--- |
+  | pytest | 9.1.1 | 9.2.0 | dev group, poetry.lock, build-test lock |
+  | hypothesis | 6.170.5 | 6.170.15 | dev group, poetry.lock |
+  | mypy | 2.4.0 | 2.4.1 | dev group, poetry.lock |
+  | sphinx | 8.2.3 | 9.0.4 | dev and docs groups, poetry.lock, docs lock |
+  | types-setuptools | 84.0.0.20261006 | 84.2.0.20261104 | dev group, poetry.lock |
+  | pytest-benchmark | 5.3.0 | 5.3.1 | dev group, poetry.lock |
+  | diff-cover | 10.6.0 | 11.0.1 | dev group, poetry.lock |
+  | types-pyyaml | 6.0.12.20260906 | 6.0.12.20261113 | dev group, poetry.lock |
+  | soupsieve | 2.9.1 | 4.1 | docs group, poetry.lock, docs lock |
+
+  Sphinx 9 drops the deprecated `roman-numerals-py` shim in favour of
+  `roman-numerals`, and `docs/conf.py` sets
+  `autodoc_use_legacy_class_based = True` so Sphinx 9's dynamic autodoc
+  does not write Pydantic's internal `__pydantic_extra__` annotation
+  onto `BaseModel`.
+
 ## [0.0.87] - 2026-11-12
 
 ### Added

@@ -42,6 +42,10 @@ exclude_patterns = [
 # Document definitions in their owning modules rather than indexing every
 # public re-export again through package __all__ declarations.
 autodoc_default_options = {"ignore-module-all": True}
+# Sphinx 9's rewritten dynamic autodoc walks BaseModel's MRO on API models
+# and writes BaseModel's stringified __pydantic_extra__ annotation back onto
+# the class, breaking later imports of extra="allow" models (mcp_types).
+autodoc_use_legacy_class_based = True
 # Attribute prose remains visible as fields; autodoc owns the indexed member
 # declarations, avoiding duplicate targets for dataclass fields.
 napoleon_use_ivar = True
