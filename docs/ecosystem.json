@@ -121,5 +121,82 @@
       "pain001-site-v{version}.cdx.json",
       "SHA256SUMS"
     ]
+  },
+  {
+    "name": "pain001-sdk-go",
+    "project": "pain001-sdk-go",
+    "purpose": "Go client for the REST API, tested with the conformance kit",
+    "usage": "Call the REST API from Go services",
+    "registry": "go",
+    "package": "github.com/sebastienrousseau/pain001-sdk-go",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001-sdk-go-{version}.tar.gz",
+      "pain001-sdk-go-{version}.cdx.json"
+    ]
+  },
+  {
+    "name": "pain001-sdk-java",
+    "project": "pain001-sdk-java",
+    "purpose": "Java client for the REST API, tested with the conformance kit",
+    "usage": "Call the REST API from JVM applications",
+    "registry": "maven",
+    "package": "com.pain001:pain001-sdk",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001-sdk-{version}.jar",
+      "pain001-sdk-{version}-sources.jar",
+      "pain001-sdk-{version}-javadoc.jar",
+      "pain001-sdk-{version}.pom",
+      "pain001-sdk-{version}.cdx.json"
+    ]
+  },
+  {
+    "name": "pain001-sdk-rust",
+    "project": "pain001-sdk-rust",
+    "purpose": "Rust client for the REST API, tested with the conformance kit",
+    "usage": "Call the REST API from Rust programs",
+    "registry": "crates",
+    "package": "pain001-sdk",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001-sdk-{version}.crate",
+      "pain001-sdk-{version}.cdx.json"
+    ]
+  },
+  {
+    "name": "pain001-sdk-dotnet",
+    "project": "pain001-sdk-dotnet",
+    "purpose": ".NET client for the REST API, tested with the conformance kit",
+    "usage": "Call the REST API from .NET applications",
+    "registry": "nuget",
+    "package": "Pain001.Sdk",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "Pain001.Sdk.{version}.nupkg",
+      "Pain001.Sdk.{version}.snupkg",
+      "Pain001.Sdk.{version}.cdx.json"
+    ]
+  },
+  {
+    "name": "pain001-sdk-cpp",
+    "project": "pain001-sdk-cpp",
+    "purpose": "C++ client for the REST API, tested with the conformance kit",
+    "usage": "Call the REST API from C++ programs",
+    "publishers": [
+      "Release"
+    ],
+    "required_assets": [
+      "pain001-sdk-cpp-{version}.tar.gz",
+      "pain001-sdk-cpp-{version}.cdx.json"
+    ]
   }
 ]
