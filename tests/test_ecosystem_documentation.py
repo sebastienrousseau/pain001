@@ -24,7 +24,8 @@ def test_readme_values_include_non_pypi_members() -> None:
     assert values["COMPONENT_NAME"].startswith("[pain001](")
     assert "https://github.com/sebastienrousseau/pain001-fast" in urls
     assert "https://github.com/sebastienrousseau/pain001.github.io" in urls
-    assert len(values["COMPONENT_USE_CASE"].splitlines()) == 9
+    assert "https://github.com/sebastienrousseau/pain001-sdk-cpp" in urls
+    assert len(values["COMPONENT_USE_CASE"].splitlines()) == 14
 
 
 def test_roadmap_preserves_prose_and_is_idempotent() -> None:
@@ -35,6 +36,8 @@ def test_roadmap_preserves_prose_and_is_idempotent() -> None:
     assert "stale table" not in result
     assert "GitHub Releases, PyPI, GHCR" in result
     assert "live website" in result
+    for registry in ("Go module proxy", "Maven Central", "crates.io", "NuGet"):
+        assert "GitHub Releases, " + registry + " |" in result
     assert roadmap_table(result) == result
 
 

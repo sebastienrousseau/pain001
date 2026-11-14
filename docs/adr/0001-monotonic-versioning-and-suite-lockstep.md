@@ -66,7 +66,7 @@ section of the README).
 - **Amended 2026-11-09 (0.0.82):** the mockbank, plugin scaffold, native
   extension and website are part of the lockstep family too. The maintainer
   authorized adopting 0.0.82 while retaining their old published tags.
-  `docs/ecosystem.json` is the complete nine-repository inventory.
+  `docs/ecosystem.json` is the complete repository inventory.
   `scripts/check_ecosystem.py` verifies GitHub releases and tags, PyPI,
   both GHCR images and the deployed browser runtime after publishing
   workflows complete and daily. A missing member fails the family audit.

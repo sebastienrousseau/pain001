@@ -16,7 +16,16 @@ HOSTS = {
     "ghcr.io",
     "pain001.com",
     "registry.modelcontextprotocol.io",
+    "proxy.golang.org",
+    "repo1.maven.org",
+    "crates.io",
+    "api.nuget.org",
 }
+# crates.io refuses curl's default User-Agent with 403. A fixed string
+# naming the project, never a person or an email address, identifies us.
+USER_AGENT = (
+    "pain001-ecosystem-audit (+https://github.com/sebastienrousseau/pain001)"
+)
 
 
 class Transport(Protocol):
@@ -57,7 +66,11 @@ class Client:
             or parsed.port not in (None, 443)
         ):
             raise ValueError("refusing untrusted metadata URL: " + url)
-        request_headers = {"Accept": "application/json", **(headers or {})}
+        request_headers = {
+            "Accept": "application/json",
+            "User-Agent": USER_AGENT,
+            **(headers or {}),
+        }
         if parsed.hostname == "api.github.com" and self.token:
             request_headers["Authorization"] = "Bearer " + self.token
         key = (url, tuple(sorted(request_headers.items())))

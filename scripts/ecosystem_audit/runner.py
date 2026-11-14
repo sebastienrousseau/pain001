@@ -13,6 +13,7 @@ from .channels import (
     website_evidence,
 )
 from .inventory import Member, inventory, unreleased
+from .registries import registry_evidence
 from .releases import API, release_evidence, require
 from .transport import Client, Transport
 
@@ -55,6 +56,10 @@ def member_evidence(
         result.update(website_evidence(client, member, version, latest))
     if member.mcp_registry:
         result.update(mcp_registry_evidence(client, member, version, latest))
+    if member.registry:
+        result.update(
+            registry_evidence(client, member, version, result["asset_hashes"])
+        )
     return result
 
 

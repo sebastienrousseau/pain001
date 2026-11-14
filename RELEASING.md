@@ -112,9 +112,10 @@ cd /tmp/pain001-dry-run && PIP_NO_INDEX=1 .venv/bin/python -m build --no-isolati
 
 ## Coordinated release ordering and evidence
 
-Prepare release PRs for all nine members in `docs/ecosystem.json`. The
+Prepare release PRs for every member in `docs/ecosystem.json`. The
 scaffold, native extension and website joined the suite at 0.0.82 by
-maintainer decision; their earlier tags remain unchanged. Every subsequent
+maintainer decision; their earlier tags remain unchanged. The five SDKs
+joined at 0.0.88. Every subsequent
 release advances together by one. All four PyPI companions require the
 matching core release, including the loaders. Regenerate their locks from
 the published core distributions before their release gates run. Never
@@ -124,10 +125,9 @@ members' actual GitHub, image and website publication channels.
 
 Run `make ecosystem-check` after the last publication and inspect its JSON
 evidence. It must pass before calling the suite release complete. The
-[publication audit](docs/ecosystem-publications.md) checks all nine releases,
+[publication audit](docs/ecosystem-publications.md) checks every member's release,
 the five PyPI distributions, all four versioned container images, the MCP
-Registry and the live
-browser runtime; a partial rollout fails and names its missing members.
+Registry, the live browser runtime and the four SDK package registries; a partial rollout fails and names its missing members.
 
 The maintainer must explicitly approve each named PR before merge. Passing
 candidate tests on a feature branch is not a full release preflight: the
@@ -136,8 +136,8 @@ origin/main. Run full preflight again on that merged commit.
 
 `scripts/check_security_exceptions.py` enforces the review and expiry dates
 in `docs/security-exceptions.json`. Acceptance in this repository does not
-authorize dismissing findings in companion repositories. Review all nine
-members' security dashboards before declaring the coordinated release ready.
+authorize dismissing findings in companion repositories. Review every
+member's security dashboard before declaring the coordinated release ready.
 
 `scripts/inspect_release.py` inspects wheel and source-archive metadata,
 runtime versions, licences, README contents and source manifests, then writes

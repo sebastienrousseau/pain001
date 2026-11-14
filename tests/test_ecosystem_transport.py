@@ -54,6 +54,41 @@ def test_github_token_is_sent_only_to_github_via_standard_input(
 @pytest.mark.parametrize(
     "url",
     [
+        "https://proxy.golang.org/github.com/sebastienrousseau/pain001-sdk-go/@v/v0.0.88.info",
+        "https://repo1.maven.org/maven2/com/pain001/pain001-sdk/0.0.88/pain001-sdk-0.0.88.jar",
+        "https://crates.io/api/v1/crates/pain001-sdk/0.0.88",
+        "https://api.nuget.org/v3-flatcontainer/pain001.sdk/index.json",
+    ],
+)
+def test_sdk_registries_are_trusted_without_the_github_token(
+    monkeypatch: pytest.MonkeyPatch, url: str
+) -> None:
+    """Each SDK registry is reachable, and none of them sees the token."""
+    calls = runner(monkeypatch, b"{}")
+    assert ecosystem_audit.Client(token="synthetic-token").get(url) == b"{}"
+    assert b"synthetic-token" not in calls[0][1]["input"]
+
+
+def test_every_request_names_the_auditor(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """crates.io answers 403 to curl's default User-Agent.
+
+    The agent string is fixed and names the project, never a person.
+    """
+    calls = runner(monkeypatch, b"{}")
+    ecosystem_audit.Client().get("https://crates.io/api/v1/crates/x/1.0.0")
+    config = calls[0][1]["input"].decode()
+    assert (
+        'header = "User-Agent: pain001-ecosystem-audit '
+        '(+https://github.com/sebastienrousseau/pain001)"'
+    ) in config
+    assert "@" not in config
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
         "http://api.github.com/x",
         "file:///etc/passwd",
         "https://example.test/x",

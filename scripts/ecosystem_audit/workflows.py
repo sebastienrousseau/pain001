@@ -29,7 +29,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   consistency:
-    name: All nine publications agree
+    name: Every family publication agrees
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -62,7 +62,7 @@ def render(member: Member, core_ref: str) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Write all eight companion workflows into a review directory."""
+    """Write every companion's workflow into a review directory."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--core-ref",
@@ -73,15 +73,18 @@ def main(argv: list[str] | None = None) -> int:
         "--out",
         type=Path,
         required=True,
-        help="directory for the eight repository trees",
+        help="directory for the companion repository trees",
     )
     args = parser.parse_args(argv)
-    for member in inventory()[1:]:
+    companions = inventory()[1:]
+    for member in companions:
         rendered = render(member, args.core_ref)
         target = (
             args.out / member.name / ".github/workflows/suite-consistency.yml"
         )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(rendered, encoding="utf-8")
-    print(f"Generated eight companion workflows pinned to {args.core_ref}")
+    print(
+        f"Generated {len(companions)} companion workflows pinned to {args.core_ref}"
+    )
     return 0

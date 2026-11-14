@@ -2,8 +2,8 @@
 
 # Verify the published ecosystem
 
-The family inventory is [ecosystem.json](ecosystem.json). It names all nine
-repositories, their release titles and their actual publication channels.
+The family inventory is [ecosystem.json](ecosystem.json). It names every
+repository, their release titles and their actual publication channels.
 The README and roadmap component tables are generated from this inventory.
 `pain001/suite.py` remains the policy table for the five PyPI distributions;
 it is not the complete publication inventory.
@@ -24,7 +24,7 @@ For machine output, use `python3 scripts/check_ecosystem.py --json`; add
 
 - Every active pain001 repository discovered on GitHub appears in the
   inventory. A new or missing repository fails rather than being skipped.
-- All nine GitHub releases have the expected stable version and project
+- Every GitHub release has the expected stable version and project
   title, a signed annotated tag verified by GitHub, and a commit target.
   Notes follow the global Highlights, changes, checksums and changelog
   format. Every attached asset is listed exactly once and its checksum
@@ -44,6 +44,13 @@ For machine output, use `python3 scripts/check_ecosystem.py --json`; add
   wheels, the scaffold source archive, the website archive and SBOM, the
   mockbank image reference, and the LSP VSIX. Marketplace publication is
   optional in the LSP workflow; the downloadable VSIX is required.
+- Each SDK's package registry carries the release. The Go module proxy
+  serves the tagged module version. The jar on Maven Central hashes to the
+  release's jar asset. crates.io lists the crate version and has not yanked
+  it. nuget.org lists the package version; its bytes are not compared,
+  because nuget.org adds a repository signature to every package. The C++
+  SDK publishes its release archive only. Every SDK release must attach its
+  source package and CycloneDX SBOM.
 
 The scheduled audit compares GitHub's asset digests; it does not download
 every release binary. Full artifact downloads and cryptographic build/image
@@ -67,7 +74,7 @@ The shared `.github/actions/check-ecosystem` action lets companions run the
 same checker pinned to a reviewed core commit, daily and on dispatch, as
 the core does. No cross-repository dispatch credential is required.
 `scripts/render_ecosystem_workflows.py --core-ref COMMIT --out DIRECTORY`
-generates all eight companion workflow updates for review.
+generates every companion's workflow update for review.
 
 A core release may finish before its companions. During that rollout the
 audit must fail and name the missing members. A version bump, merged PR or

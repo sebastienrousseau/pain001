@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- The five SDKs (`pain001-sdk-go`, `pain001-sdk-java`, `pain001-sdk-rust`,
+  `pain001-sdk-dotnet` and `pain001-sdk-cpp`) join `docs/ecosystem.json`
+  for 0.0.88, so `make ecosystem-check` audits all fourteen repositories.
+  For each SDK it checks the signed release, its notes and checksums, and
+  that the source package and CycloneDX SBOM are attached. It also checks
+  the package registry: the Go module proxy serves `v<version>`, the jar
+  on Maven Central hashes to the release's jar, crates.io lists the crate
+  version unyanked, and nuget.org lists the package version (its bytes
+  carry nuget.org's repository signature, so they are not compared). The
+  C++ SDK publishes its release archive only. Every audit request now
+  sends a fixed `User-Agent` naming the project, because crates.io
+  answers 403 to curl's default one.
+  `docs/ecosystem-unreleased.json` is now empty; discovery still accepts
+  a repository declared there and still rejects an unknown one.
+
 ### Security
 
 - Raise `soupsieve` to `4.1` (`>=4.0.0` floor in `pyproject.toml` and
@@ -26,6 +43,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The Suite Consistency job, here and in every generated companion
+  workflow, is named "Every family publication agrees" instead of "All
+  nine publications agree", and `scripts/render_ecosystem_workflows.py`
+  writes one workflow per companion in the inventory, thirteen now.
 - Dependencies, in place of Dependabot `#385` to `#393`:
 
   | Package | From | To | Where |

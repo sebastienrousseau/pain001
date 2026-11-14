@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 from .inventory import inventory
+from .registries import REGISTRIES
 
 START = "<!-- ecosystem:start -->"
 END = "<!-- ecosystem:end -->"
@@ -39,6 +40,8 @@ def roadmap_table(source: str) -> str:
             channels.append("live website")
         if member.mcp_registry:
             channels.append("MCP Registry")
+        if member.registry:
+            channels.append(REGISTRIES[member.registry][0])
         rows.append(
             f"| [{member.project}](https://github.com/{member.repository}) | {member.purpose} | {', '.join(channels)} |"
         )

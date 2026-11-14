@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 name: Suite Consistency
 
-# Check every publication channel, including the four non-PyPI members.
+# Check every publication channel, including the members not on PyPI.
 #
 # It runs daily and on demand, from this repository's own default-branch
 # code, and never on another workflow's completion. The workflow_run
@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   consistency:
-    name: All nine publications agree
+    name: Every family publication agrees
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
