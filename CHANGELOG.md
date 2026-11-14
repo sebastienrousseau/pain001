@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.88] - Unreleased
+
 ### Added
 
 - The five SDKs (`pain001-sdk-go`, `pain001-sdk-java`, `pain001-sdk-rust`,
