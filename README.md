@@ -65,7 +65,7 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.87**: ISO 20022 pain.001 and pain.008 files
+> **Latest release: v0.0.88**: ISO 20022 pain.001 and pain.008 files
 > generated from CSV, SQLite, JSON, JSON Lines and Parquet and validated
 > against the official XSD, for Python 3.11+. Each companion publication
 > is verified separately by the ecosystem audit.
@@ -117,10 +117,11 @@ checks data but is not a bank acceptance guarantee.
 
 ## The Pain001 ecosystem
 
-All nine repositories follow one suite version; see the
+Every repository in the family follows one suite version; see the
 [suite policy](docs/adr/0001-monotonic-versioning-and-suite-lockstep.md).
 The scaffold, native extension and website joined at 0.0.82 by maintainer
-decision. Each member publishes through its own channels. The
+decision; the five SDKs joined at 0.0.88. Each member publishes through
+its own channels. The
 [publication audit](docs/ecosystem-publications.md) verifies every member
 before a coordinated release is declared complete. Component rows below
 are generated from [the publication inventory](docs/ecosystem.json).
@@ -136,6 +137,11 @@ are generated from [the publication inventory](docs/ecosystem.json).
 | [pain001-plugin-template](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter plugin scaffold | Develop an external loader or validator |
 | [pain001-fast](https://github.com/sebastienrousseau/pain001-fast) | Experimental native validation extension | Optional IBAN, BIC and character-set helpers |
 | [pain001.com](https://github.com/sebastienrousseau/pain001.github.io) | Website and browser demo | Browse documentation and try the library |
+| [pain001-sdk-go](https://github.com/sebastienrousseau/pain001-sdk-go) | Go client for the REST API, tested with the conformance kit | Call the REST API from Go services |
+| [pain001-sdk-java](https://github.com/sebastienrousseau/pain001-sdk-java) | Java client for the REST API, tested with the conformance kit | Call the REST API from JVM applications |
+| [pain001-sdk-rust](https://github.com/sebastienrousseau/pain001-sdk-rust) | Rust client for the REST API, tested with the conformance kit | Call the REST API from Rust programs |
+| [pain001-sdk-dotnet](https://github.com/sebastienrousseau/pain001-sdk-dotnet) | .NET client for the REST API, tested with the conformance kit | Call the REST API from .NET applications |
+| [pain001-sdk-cpp](https://github.com/sebastienrousseau/pain001-sdk-cpp) | C++ client for the REST API, tested with the conformance kit | Call the REST API from C++ programs |
 
 ---
 
@@ -321,7 +327,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.87; publication requires approved release PRs and signed release tags.
+is 0.0.88; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

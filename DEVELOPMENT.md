@@ -45,7 +45,7 @@ reproduced without reading YAML.
 | Benchmarks (kept compiling, not asserted) | `make perf` | `quality.yml` |
 | Fuzzing (Atheris harness in `fuzz/`) | `python fuzz/fuzz_validation.py -max_total_time=60` | `nightly.yml` |
 | Suite conformance (this repo against the family rules) | `poetry run pytest tests/test_suite_conformance.py` | `ci.yml` |
-| Full ecosystem publications (network, all nine repositories) | `make ecosystem-check` | `suite-consistency.yml` (daily and on dispatch) |
+| Full ecosystem publications (network, every repository in the inventory) | `make ecosystem-check` | `suite-consistency.yml` (daily and on dispatch) |
 | Publication audit regression tests and coverage (offline) | `make test-publications` | `quality.yml` |
 | Combined local gate (types separately) | `make check` and `make type` | — |
 
@@ -101,7 +101,7 @@ Sphinx build before claiming documentation is ready.
   disagree.
 - The line is `0.0.x` and every release is one step up; every member of
   the suite ships the same number ([ADR-0001](https://github.com/sebastienrousseau/pain001/blob/main/docs/adr/0001-monotonic-versioning-and-suite-lockstep.md)).
-- The nine-member inventory is `docs/ecosystem.json`. `make ecosystem-check`
+- The family inventory is `docs/ecosystem.json`. `make ecosystem-check`
   checks each member's real publication channels. See the
   [publication audit](https://github.com/sebastienrousseau/pain001/blob/main/docs/ecosystem-publications.md) for partial rollouts,
   evidence and explicit-version checks. A successful core publish alone

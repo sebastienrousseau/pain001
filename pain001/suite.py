@@ -14,7 +14,7 @@
 
 """The PyPI portion of the pain001 suite and its dependency-floor policy.
 
-The full nine-repository publication inventory is ``docs/ecosystem.json``.
+The full publication inventory is ``docs/ecosystem.json``.
 It also includes GitHub-only, container and website publications checked by
 ``scripts/check_ecosystem.py``. This module retains the PyPI policy API.
 

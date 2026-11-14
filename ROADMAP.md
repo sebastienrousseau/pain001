@@ -86,8 +86,9 @@ and **project sustainability / ecosystem discovery**.
 
 ## Suite
 
-All nine repositories follow the suite version. They publish through
-different channels; one GitHub release does not publish its companions.
+Every repository in the inventory follows the suite version. They
+publish through different channels; one GitHub release does not publish
+its companions.
 The [publication audit](docs/ecosystem-publications.md) checks the live
 releases, registries, images and browser demo. The table is generated from
 [`docs/ecosystem.json`](docs/ecosystem.json); it records channels rather
@@ -106,6 +107,11 @@ than maintaining another set of release-version numbers.
 | [pain001-plugin-template](https://github.com/sebastienrousseau/pain001-plugin-template) | Cookiecutter plugin scaffold | GitHub Releases |
 | [pain001-fast](https://github.com/sebastienrousseau/pain001-fast) | Experimental native validation extension | GitHub Releases |
 | [pain001.com](https://github.com/sebastienrousseau/pain001.github.io) | Website and browser demo | GitHub Releases, live website |
+| [pain001-sdk-go](https://github.com/sebastienrousseau/pain001-sdk-go) | Go client for the REST API, tested with the conformance kit | GitHub Releases, Go module proxy |
+| [pain001-sdk-java](https://github.com/sebastienrousseau/pain001-sdk-java) | Java client for the REST API, tested with the conformance kit | GitHub Releases, Maven Central |
+| [pain001-sdk-rust](https://github.com/sebastienrousseau/pain001-sdk-rust) | Rust client for the REST API, tested with the conformance kit | GitHub Releases, crates.io |
+| [pain001-sdk-dotnet](https://github.com/sebastienrousseau/pain001-sdk-dotnet) | .NET client for the REST API, tested with the conformance kit | GitHub Releases, NuGet |
+| [pain001-sdk-cpp](https://github.com/sebastienrousseau/pain001-sdk-cpp) | C++ client for the REST API, tested with the conformance kit | GitHub Releases |
 
 <!-- ecosystem:end -->
 
@@ -174,7 +180,7 @@ per country and rail with provenance and an evidence state.
 | Milestone | Scope | Effort | Status |
 | :--- | :--- | :--- | :--- |
 | **Faces engine (ADR-0005 Phase B & C)** | Outbound JSON projections of pain.001 to compatible standards: UK Open Banking Payment Initiation API and Berlin Group NextGenPSD2, plus the ISO 2018 compatibility face backed by a name table derived from the Message Definition Reports, with per-occurrence loss reports and CI validation against the published schemas, served by the library, the CLI, the REST API, pain001-mcp and pain001-lsp. | M | ✅ v0.0.78 |
-| **Ecosystem publication audit** | Enforce the nine-repository inventory after publishing workflows and daily, including GitHub tags and checksum notes, PyPI, both container images and the deployed browser runtime. | M | in progress |
+| **Ecosystem publication audit** | Enforce the family inventory after publishing workflows and daily, including GitHub tags and checksum notes, PyPI, both container images and the deployed browser runtime. | M | in progress |
 | **Mutation floor hardening** | Pin ordering and timing dependencies in the fast mutation tier tests to eliminate variance, raising `MUTATION_FLOOR` from 80% to >=85% once the measured score supports it. | M | planned |
 | **Twin import (ADR-0005 Phase D)** | Inbound deserialization: read ISO JSON twins and Open Banking / Berlin Group payloads back into canonical payment instruction models and validated XML documents. | L | planned |
 | **Ecosystem discovery** | Submit `pain001-mcp` to `awesome-mcp-servers` and `pain001-lsp` to `awesome-language-servers` per `scripts/awesome-list-submissions.md`. | S | ready |

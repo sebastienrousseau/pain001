@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: Apache-2.0 OR MIT
 name: Check pain001 ecosystem publications
-description: Verify signed releases, checksums, PyPI metadata, OCI images and the live website for all nine repositories.
+description: Verify signed releases, checksums, PyPI metadata, OCI images, SDK registries and the live website for every family repository.
 inputs:
   version:
     description: Optional historical version; empty checks the latest published family

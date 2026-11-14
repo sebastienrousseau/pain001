@@ -37,7 +37,7 @@ help:
 	@echo "  cov           - Generate coverage report (100% enforced)"
 	@echo "  sec           - Security checks (bandit, safety)"
 	@echo "  release-check - Pre-flight the RELEASING.md checklist before tagging"
-	@echo "  ecosystem-check - Audit all nine published suite members (network)"
+	@echo "  ecosystem-check - Audit every published suite member (network)"
 	@echo "  test-publications - Test the audit offline with 100% line/branch coverage"
 	@echo "  perf          - Performance benchmarks (XML generation < 500ms/1000tx)"
 	@echo "  complex       - Code complexity analysis"

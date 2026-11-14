@@ -9,6 +9,8 @@ from typing import Any
 
 import ecosystem_audit
 import pytest
+from ecosystem_audit import runner
+from ecosystem_audit.registries import registry_evidence
 
 VERSION = "0.0.82"
 COMMIT = "a" * 40
@@ -31,6 +33,42 @@ SDKS = (
     "pain001-sdk-dotnet",
     "pain001-sdk-cpp",
 )
+SDK_ASSETS = {
+    "pain001-sdk-go": [
+        "pain001-sdk-go-{v}.tar.gz",
+        "pain001-sdk-go-{v}.cdx.json",
+    ],
+    "pain001-sdk-java": [
+        "pain001-sdk-{v}.jar",
+        "pain001-sdk-{v}-sources.jar",
+        "pain001-sdk-{v}-javadoc.jar",
+        "pain001-sdk-{v}.pom",
+        "pain001-sdk-{v}.cdx.json",
+    ],
+    "pain001-sdk-rust": ["pain001-sdk-{v}.crate", "pain001-sdk-{v}.cdx.json"],
+    "pain001-sdk-dotnet": [
+        "Pain001.Sdk.{v}.nupkg",
+        "Pain001.Sdk.{v}.snupkg",
+        "Pain001.Sdk.{v}.cdx.json",
+    ],
+    "pain001-sdk-cpp": [
+        "pain001-sdk-cpp-{v}.tar.gz",
+        "pain001-sdk-cpp-{v}.cdx.json",
+    ],
+}
+JAR = b"synthetic jar"
+JAR_NAME = f"pain001-sdk-{VERSION}.jar"
+GO_URL = (
+    "https://proxy.golang.org/github.com/sebastienrousseau/pain001-sdk-go/@v/v"
+    + VERSION
+    + ".info"
+)
+MAVEN_URL = (
+    f"https://repo1.maven.org/maven2/com/pain001/pain001-sdk/{VERSION}/"
+    + JAR_NAME
+)
+CRATES_URL = "https://crates.io/api/v1/crates/pain001-sdk/" + VERSION
+NUGET_URL = "https://api.nuget.org/v3-flatcontainer/pain001.sdk/index.json"
 
 
 class Published:
@@ -46,8 +84,9 @@ class Published:
                 {"name": name, "archived": False} for name in NAMES + SDKS
             ],
         }
-        for name in NAMES:
+        for name in NAMES + SDKS:
             self.release(name)
+        self.registries()
         for name in (
             "pain001",
             "pain001-mcp",
@@ -87,6 +126,13 @@ class Published:
             ],
         }
 
+    def registries(self) -> None:
+        """Publish each SDK's package where its language looks for it."""
+        self.data[GO_URL] = {"Version": "v" + VERSION, "Time": "2026-11-14"}
+        self.data[MAVEN_URL] = JAR
+        self.data[CRATES_URL] = {"version": {"num": VERSION, "yanked": False}}
+        self.data[NUGET_URL] = {"versions": ["0.0.81", VERSION]}
+
     def release(self, name: str) -> None:
         """Publish source metadata, a signed tag and optional PyPI files."""
         project = "pain001.com" if name == "pain001.github.io" else name
@@ -104,8 +150,13 @@ class Published:
         if name in NAMES[:5]:
             files.append(f"{prefix}-{VERSION}-py3-none-any.whl")
         files.extend(extra_assets(name))
-        assets = [{"name": f, "digest": "sha256:" + "b" * 64} for f in files]
-        sums = "\n".join("b" * 64 + "  " + f for f in files)
+        if name in SDKS:
+            files = [asset.format(v=VERSION) for asset in SDK_ASSETS[name]]
+        digests = dict.fromkeys(files, "b" * 64)
+        if JAR_NAME in digests:
+            digests[JAR_NAME] = hashlib.sha256(JAR).hexdigest()
+        assets = [{"name": f, "digest": "sha256:" + digests[f]} for f in files]
+        sums = "\n".join(digests[f] + "  " + f for f in files)
         body = (
             "## Highlights ⭐️\n\n* **One**: First change.\n* **Two**: Second change.\n\n"
             "## What's Changed\n\n* Update by @example in https://example.test/pr/1\n\n"
@@ -207,17 +258,20 @@ class Published:
 def test_inventory_includes_every_repository_and_publication_channel() -> None:
     """The scaffold, native wheel and website cannot disappear behind PyPI."""
     inventory = {member.name: member for member in ecosystem_audit.inventory()}
-    assert set(inventory) == {
-        "pain001",
-        "pain001-mcp",
-        "pain001-lsp",
-        "pain001-loader-mt101",
-        "pain001-loader-xlsx",
-        "pain001-mockbank",
-        "pain001-plugin-template",
-        "pain001-fast",
-        "pain001.github.io",
+    assert set(inventory) == set(NAMES + SDKS)
+    assert {m.name: m.registry for m in inventory.values() if m.registry} == {
+        "pain001-sdk-go": "go",
+        "pain001-sdk-java": "maven",
+        "pain001-sdk-rust": "crates",
+        "pain001-sdk-dotnet": "nuget",
     }
+    assert {
+        name: [
+            a.replace("{version}", "{v}")
+            for a in inventory[name].required_assets
+        ]
+        for name in SDKS
+    } == SDK_ASSETS
     assert sum(member.pypi for member in inventory.values()) == 5
     assert {m.name for m in inventory.values() if m.image} == {
         "pain001",
@@ -252,12 +306,20 @@ def extra_assets(name: str) -> list[str]:
 
 
 def test_complete_family_checks_every_channel() -> None:
-    """A successful report names all nine repositories and their evidence."""
+    """A successful report names every repository and its evidence."""
     report = ecosystem_audit.audit(Published())
     assert report["complete"] is True
     assert report["version"] == VERSION
     assert report["problems"] == []
-    assert set(report["members"]) == set(NAMES)
+    assert set(report["members"]) == set(NAMES + SDKS)
+    for name, registry in (
+        ("pain001-sdk-go", "go"),
+        ("pain001-sdk-java", "maven"),
+        ("pain001-sdk-rust", "crates"),
+        ("pain001-sdk-dotnet", "nuget"),
+    ):
+        assert report["members"][name][registry] == VERSION
+    assert "release" in report["members"]["pain001-sdk-cpp"]
     assert report["members"]["pain001-mockbank"]["image_platforms"] == [
         "linux/amd64",
         "linux/arm64",
@@ -265,7 +327,7 @@ def test_complete_family_checks_every_channel() -> None:
     assert report["members"]["pain001.github.io"]["runtime"] == VERSION
 
 
-@pytest.mark.parametrize("name", NAMES)
+@pytest.mark.parametrize("name", NAMES + SDKS)
 def test_any_missing_release_fails_the_family(name: str) -> None:
     """A missing non-PyPI member is as fatal as a missing core release."""
     published = Published()
@@ -380,25 +442,36 @@ def _discovery(published: Published) -> dict[str, Any]:
     )
 
 
-def test_declared_unreleased_repositories_are_known() -> None:
-    """Repositories declared as not yet released do not fail discovery."""
+def test_declared_unreleased_repositories_are_known(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A repository declared as not yet released does not fail discovery."""
     published = Published()
-    assert {item["name"] for item in _discovery(published)["items"]} >= set(
-        SDKS
-    )
+    discovery = _discovery(published)
+    discovery["items"].append({"name": "pain001-next", "archived": False})
+    discovery["total_count"] += 1
+    monkeypatch.setattr(runner, "unreleased", lambda: ("pain001-next",))
     report = ecosystem_audit.audit(published)
     assert report["complete"] is True, report["problems"]
 
 
-def test_unreleased_list_names_the_five_sdks() -> None:
-    """The SDKs are known to the family before their first release."""
-    assert set(ecosystem_audit.unreleased()) == set(SDKS)
-    members = {member.name for member in ecosystem_audit.inventory()}
-    assert members.isdisjoint(ecosystem_audit.unreleased())
+def test_every_family_repository_is_released() -> None:
+    """The SDKs left the unreleased list when they joined the inventory."""
+    assert ecosystem_audit.unreleased() == ()
 
 
-def test_declared_unreleased_repository_must_exist() -> None:
+def test_declared_unreleased_repository_must_exist(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """A declared repository that GitHub no longer lists is a failure too."""
+    monkeypatch.setattr(runner, "unreleased", lambda: ("pain001-gone",))
+    report = ecosystem_audit.audit(Published())
+    assert report["complete"] is False
+    assert any("inventory" in p for p in report["problems"])
+
+
+def test_released_repository_cannot_vanish_from_github() -> None:
+    """An inventory member that GitHub no longer lists fails discovery."""
     published = Published()
     discovery = _discovery(published)
     discovery["items"] = [
@@ -415,7 +488,7 @@ def test_declared_unreleased_repository_must_exist() -> None:
 def test_historical_audit_uses_the_requested_version() -> None:
     """An explicit version audits that release, independently of latest."""
     published = Published()
-    for name in NAMES:
+    for name in NAMES + SDKS:
         published.data[API + name + "/releases/latest"] = {
             "tag_name": "v0.0.83"
         }
@@ -521,3 +594,76 @@ def test_every_native_wheel_platform_is_required(platform: str) -> None:
     report = ecosystem_audit.audit(published)
     assert report["complete"] is False
     assert any(filename in problem for problem in report["problems"])
+
+
+def _yank(published: Published) -> None:
+    published.data[CRATES_URL]["version"]["yanked"] = True
+
+
+def _drop(url: str) -> Any:
+    return lambda published: published.data.pop(url)
+
+
+def _set(url: str, value: Any) -> Any:
+    def change(published: Published) -> None:
+        published.data[url] = value
+
+    return change
+
+
+@pytest.mark.parametrize(
+    ("change", "name", "message"),
+    [
+        (_drop(GO_URL), "pain001-sdk-go", "HTTP 404"),
+        (
+            _set(GO_URL, {"Version": "v0.0.81"}),
+            "pain001-sdk-go",
+            "Go module proxy",
+        ),
+        (_drop(MAVEN_URL), "pain001-sdk-java", "HTTP 404"),
+        (
+            _set(MAVEN_URL, b"another jar"),
+            "pain001-sdk-java",
+            "Maven Central jar differs",
+        ),
+        (_drop(CRATES_URL), "pain001-sdk-rust", "HTTP 404"),
+        (
+            _set(CRATES_URL, {"version": {"num": "0.0.81", "yanked": False}}),
+            "pain001-sdk-rust",
+            "crates.io version differs",
+        ),
+        (_yank, "pain001-sdk-rust", "yanked"),
+        (_drop(NUGET_URL), "pain001-sdk-dotnet", "HTTP 404"),
+        (
+            _set(NUGET_URL, {"versions": ["0.0.81"]}),
+            "pain001-sdk-dotnet",
+            "NuGet does not list",
+        ),
+    ],
+)
+def test_sdk_registry_must_carry_the_release(
+    change: Any, name: str, message: str
+) -> None:
+    """A GitHub release is not an SDK publication without its registry."""
+    published = Published()
+    change(published)
+    report = ecosystem_audit.audit(published)
+    assert report["complete"] is False
+    assert report["problems"] == [
+        p for p in report["problems"] if p.startswith(name + ": ")
+    ]
+    assert message in report["problems"][0]
+
+
+def test_unknown_registry_is_a_failure_not_a_skip() -> None:
+    """An inventory typo cannot quietly drop an SDK's registry check."""
+    member = ecosystem_audit.Member(
+        name="pain001-sdk-x",
+        project="pain001-sdk-x",
+        purpose="",
+        usage="",
+        registry="cpan",
+        package="Pain001",
+    )
+    with pytest.raises(ValueError, match="unknown package registry: cpan"):
+        registry_evidence(Published(), member, VERSION, {})

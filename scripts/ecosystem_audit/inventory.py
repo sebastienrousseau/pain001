@@ -22,6 +22,8 @@ class Member:
     image: bool = False
     runtime: str = ""
     mcp_registry: str = ""
+    registry: str = ""
+    package: str = ""
     required_assets: tuple[str, ...] = ()
     publishers: tuple[str, ...] = ()
 

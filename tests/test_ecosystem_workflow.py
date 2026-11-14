@@ -37,12 +37,12 @@ def test_core_audit_runs_on_its_own_schedule_and_on_demand() -> None:
     assert action[0]["with"]["version"] == "${{ inputs.version }}"
 
 
-def test_readme_and_roadmap_list_all_nine_members() -> None:
-    """The generated tables must include the extension and deployed website."""
+def test_readme_and_roadmap_list_every_member() -> None:
+    """The generated tables must include every member, SDKs included."""
     for name in ("README.md", "ROADMAP.md"):
         text = (ROOT / name).read_text()
-        assert "https://github.com/sebastienrousseau/pain001-fast" in text
-        assert "https://github.com/sebastienrousseau/pain001.github.io" in text
+        for member in inventory():
+            assert f"https://github.com/{member.repository})" in text
         assert "unreleased `0.0.1`" not in text
 
 
@@ -78,8 +78,8 @@ def test_workflow_action_reference_must_be_immutable(ref: str) -> None:
         workflows.render(inventory()[1], ref)
 
 
-def test_workflow_generator_emits_all_eight_companion_files(
-    tmp_path: Path,
+def test_workflow_generator_emits_every_companion_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
     """One command prepares a complete, reviewable rollout from the inventory."""
     assert (
@@ -87,7 +87,8 @@ def test_workflow_generator_emits_all_eight_companion_files(
         == 0
     )
     paths = list(tmp_path.glob("*/.github/workflows/suite-consistency.yml"))
-    assert len(paths) == 8
+    assert len(paths) == len(inventory()) - 1 == 13
+    assert "Generated 13 companion workflows" in capsys.readouterr().out
     assert {path.parents[2].name for path in paths} == {
         member.name for member in inventory()[1:]
     }

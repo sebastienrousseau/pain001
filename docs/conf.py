@@ -96,6 +96,13 @@ search_hygiene_redirects = {
     ),
 }
 
+# Search engines crawled the raw reStructuredText copies under _sources/
+# and listed them as "crawled, not indexed" beside the real pages. The
+# rendered pages are the documentation; the sources live in the
+# repository.
+html_copy_source = False
+html_show_sourcelink = False
+
 # PyData theme configuration
 html_theme_options = {
     "navbar_start": ["navbar-logo"],
