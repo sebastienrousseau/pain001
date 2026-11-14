@@ -45,6 +45,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The documentation site no longer publishes the raw reStructuredText
+  copies under `_sources/` or a "Show source" link (`html_copy_source`
+  and `html_show_sourcelink` off): Google crawled them as pages and
+  listed them beside the rendered documentation.
 - The Suite Consistency job, here and in every generated companion
   workflow, is named "Every family publication agrees" instead of "All
   nine publications agree", and `scripts/render_ecosystem_workflows.py`
