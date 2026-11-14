@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.88] - Unreleased
+## [0.0.88] - 2026-11-14
 
 ### Added
 
@@ -45,6 +45,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Release 0.0.88 in lockstep with the pain001 suite.
 - The documentation site no longer publishes the raw reStructuredText
   copies under `_sources/` or a "Show source" link (`html_copy_source`
   and `html_show_sourcelink` off): Google crawled them as pages and
