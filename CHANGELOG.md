@@ -24,6 +24,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as a module and with `from ... import`, which CodeQL flagged (code
   scanning alert 306). It now uses the module import only.
 
+### Changed
+
+- The corpus builder's conform pass moved to `pain001/corpus/_fit.py`,
+  and `_Fitter.value` and `_Fitter.tree` were split into smaller steps.
+  Behaviour is unchanged (the corpus, golden and twin tests pass as
+  before), and `pain001.corpus.builder` still exports `ALIASES` and
+  `WRAP_PREFERENCE` with the same API documentation. The two functions
+  were the worst entries in the complexity baseline (cognitive 48 and
+  20); both are now under the ceilings, `builder.py` is 851 lines
+  instead of 946, and the baseline holds 78 offenders instead of 80.
+
 ## [0.0.88] - 2026-11-14
 
 ### Added

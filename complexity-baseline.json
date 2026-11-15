@@ -39,7 +39,7 @@
     "lines": 85
   },
   "pain001/corpus/builder.py": {
-    "file_lines": 946
+    "file_lines": 851
   },
   "pain001/corpus/builder.py::_Composer.address": {
     "cyclomatic": 16
@@ -55,14 +55,6 @@
     "cognitive": 17,
     "cyclomatic": 12,
     "lines": 95
-  },
-  "pain001/corpus/builder.py::_Fitter.tree": {
-    "cognitive": 20,
-    "cyclomatic": 14
-  },
-  "pain001/corpus/builder.py::_Fitter.value": {
-    "cognitive": 48,
-    "cyclomatic": 29
   },
   "pain001/corpus/builder.py::_fill": {
     "cognitive": 17
