@@ -14,10 +14,13 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from decimal import Decimal
 
 import pytest
 
 from pain001.constants import valid_xml_types
+from pain001.data.loader import load_payment_data
+from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.twins import SUPPORTED_PREFIX, column_paths
 from pain001.twins import records as rec
 
@@ -227,3 +230,22 @@ def test_read_past_the_last_transaction_is_absent() -> None:
     twin = {"Document": {"P": {"CdtTrfTxInf": [{"N": "a"}, {"N": "b"}]}}}
     assert rec._read(twin, "P/CdtTrfTxInf/N", 1) == "b"
     assert rec._read(twin, "P/CdtTrfTxInf/N", 2) is None
+
+
+@pytest.mark.parametrize(
+    "version", DEFAULT_TEMPLATE_REGISTRY.list_supported_versions()
+)
+def test_rendered_totals_are_the_rows_count_and_sum(version: str) -> None:
+    """NbOfTxs is the row count and CtrlSum the sum to two places."""
+    bundle = DEFAULT_TEMPLATE_REGISTRY.get_template(version)
+    rows = [
+        {key: str(value) for key, value in row.items()}
+        for row in load_payment_data(str(bundle.example_data_path))
+    ]
+    xml = rec._render(version, rows)
+    total = sum(Decimal(row["payment_amount"]) for row in rows)
+    counts = set(re.findall(r"<NbOfTxs>([^<]*)</NbOfTxs>", xml))
+    sums = set(re.findall(r"<CtrlSum>([^<]*)</CtrlSum>", xml))
+    has_sum = "CtrlSum" in bundle.template_path.read_text(encoding="utf-8")
+    assert counts == {str(len(rows))}
+    assert sums == ({f"{total:.2f}"} if has_sum else set())
