@@ -9,7 +9,6 @@ from pathlib import Path
 
 import pytest
 
-from pain001.exceptions import SchemaValidationError
 from pain001.validation import service as service_module
 
 TEMPLATE = Path("pain001/templates/pain.001.001.03/template.xml")
@@ -35,9 +34,9 @@ def test_data_source_must_be_a_regular_file(tmp_path: Path) -> None:
 
 def test_template_schema_mismatch_is_reported(monkeypatch) -> None:
     def fail(*_args: object) -> None:
-        raise SchemaValidationError("element out of order")
+        raise RuntimeError("element out of order")
 
-    monkeypatch.setattr(service_module, "validate_via_xsd", fail)
+    monkeypatch.setattr(service_module, "generate_xml_string", fail)
     result = service_module.ValidationService().validate_template_schema_compatibility(
         TEMPLATE, SCHEMA
     )
@@ -47,9 +46,9 @@ def test_template_schema_mismatch_is_reported(monkeypatch) -> None:
 
 def test_template_schema_unexpected_error_is_reported(monkeypatch) -> None:
     def crash(*_args: object) -> None:
-        raise RuntimeError("parser exploded")
+        raise OSError("disk exploded")
 
-    monkeypatch.setattr(service_module, "validate_via_xsd", crash)
+    monkeypatch.setattr(service_module, "generate_xml_string", crash)
     result = service_module.ValidationService().validate_template_schema_compatibility(
         TEMPLATE, SCHEMA
     )

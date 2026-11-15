@@ -22,6 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reason "Cryptographic signature verification failed: invalid". The
   reason ended after the colon, because `InvalidSignature` has no text
   and the fallback never applied.
+- `ValidationService.validate_template_schema_compatibility` reports a
+  template that cannot produce schema-valid XML. It ignored the XSD
+  verdict and returned valid for anything, even a document with the
+  wrong root content. It now renders the template with the message
+  type's bundled example data (a raw Jinja2 template is not valid XML
+  until rendered), under generation's path rules, and validates the
+  result. The message type comes from the schema's file name, as in the
+  bundled layout, or from a new `message_type` argument. pain001's own
+  pipeline does not call it. Found by mutation testing.
 - `VersionMapper` fills a migrated file's `payment_method` and
   `charge_bearer` with `TRF` and `SLEV` when no row has them. The
   defaults sat in `_normalize_group_fields` but never applied, because

@@ -28,7 +28,7 @@ from typing import cast
 import pytest
 
 from pain001.constants import valid_xml_types
-from pain001.exceptions import ConfigurationError, SchemaValidationError
+from pain001.exceptions import ConfigurationError
 from pain001.validation import (
     ValidationConfig,
     ValidationResult,
@@ -116,53 +116,52 @@ def test_a_directory_is_not_a_template_or_schema(
     )
 
 
-def test_the_compatibility_check_passes_both_paths_as_text(
+def test_the_compatibility_check_renders_with_the_example_rows(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The XSD validator receives the template and schema paths as str."""
-    seen: list[tuple[object, object]] = []
+    """The template is rendered with the type's example data, paths as str."""
+    seen: list[tuple[object, ...]] = []
 
-    def record(xml_path: object, xsd_path: object) -> bool:
-        seen.append((xml_path, xsd_path))
-        return True
+    def record(rows: object, kind: object, xml: object, xsd: object) -> str:
+        seen.append((rows, kind, xml, xsd))
+        return "<Document/>"
 
-    monkeypatch.setattr(service_module, "validate_via_xsd", record)
+    monkeypatch.setattr(service_module, "generate_xml_string", record)
     result = ValidationService().validate_template_schema_compatibility(
-        TYPE_DIR / "pain.001.001.03.xml", TYPE_DIR / "pain.001.001.03.xsd"
+        TYPE_DIR / "template.xml", TYPE_DIR / "pain.001.001.03.xsd"
     )
     assert _result(result) == (True, None, None, None)
-    assert seen == [
-        (
-            str(TYPE_DIR / "pain.001.001.03.xml"),
-            str(TYPE_DIR / "pain.001.001.03.xsd"),
-        )
-    ]
+    ((rows, kind, xml, xsd),) = seen
+    assert isinstance(rows, list) and rows
+    assert (kind, xml, xsd) == (
+        "pain.001.001.03",
+        str(TYPE_DIR / "template.xml"),
+        str(TYPE_DIR / "pain.001.001.03.xsd"),
+    )
 
 
 @pytest.mark.parametrize(
     ("raised", "prefix"),
     [
+        (RuntimeError("element out of order"), "Schema validation failed"),
         (
-            SchemaValidationError("element out of order"),
-            "Schema validation failed",
+            ValueError("outside the allowed paths"),
+            "Template could not be rendered",
         ),
-        (
-            RuntimeError("parser exploded"),
-            "Unexpected schema validation error",
-        ),
+        (OSError("disk exploded"), "Unexpected schema validation error"),
     ],
 )
 def test_a_compatibility_failure_carries_the_reason(
     monkeypatch: pytest.MonkeyPatch, raised: Exception, prefix: str
 ) -> None:
-    """The error and the details both carry the validator's own reason."""
+    """The error and the details both carry the renderer's own reason."""
 
-    def fail(xml_path: object, xsd_path: object) -> bool:
+    def fail(*_args: object) -> str:
         raise raised
 
-    monkeypatch.setattr(service_module, "validate_via_xsd", fail)
+    monkeypatch.setattr(service_module, "generate_xml_string", fail)
     result = ValidationService().validate_template_schema_compatibility(
-        "t.xml", "s.xsd"
+        "t.xml", "pain.001.001.03.xsd"
     )
     assert _result(result) == (
         False,
