@@ -8,8 +8,8 @@ import json
 from typing import Any
 
 import ecosystem_audit
+import ecosystem_audit.runner
 import pytest
-from ecosystem_audit import runner
 from ecosystem_audit.registries import registry_evidence
 
 VERSION = "0.0.82"
@@ -450,7 +450,9 @@ def test_declared_unreleased_repositories_are_known(
     discovery = _discovery(published)
     discovery["items"].append({"name": "pain001-next", "archived": False})
     discovery["total_count"] += 1
-    monkeypatch.setattr(runner, "unreleased", lambda: ("pain001-next",))
+    monkeypatch.setattr(
+        ecosystem_audit.runner, "unreleased", lambda: ("pain001-next",)
+    )
     report = ecosystem_audit.audit(published)
     assert report["complete"] is True, report["problems"]
 
@@ -464,7 +466,9 @@ def test_declared_unreleased_repository_must_exist(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A declared repository that GitHub no longer lists is a failure too."""
-    monkeypatch.setattr(runner, "unreleased", lambda: ("pain001-gone",))
+    monkeypatch.setattr(
+        ecosystem_audit.runner, "unreleased", lambda: ("pain001-gone",)
+    )
     report = ecosystem_audit.audit(Published())
     assert report["complete"] is False
     assert any("inventory" in p for p in report["problems"])
