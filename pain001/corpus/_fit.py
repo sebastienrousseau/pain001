@@ -22,11 +22,25 @@ records it.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol
 
 if TYPE_CHECKING:
-    from pain001.corpus.builder import BuildReport
     from pain001.corpus.inventory import ElementEntry, Inventory
+
+
+class _Report(Protocol):
+    """The lists of :class:`~pain001.corpus.builder.BuildReport` this pass fills.
+
+    A protocol, not an import, so this module never imports the builder
+    that imports it.
+    """
+
+    renamed: list[tuple[str, str]]
+    wrapped: list[str]
+    unwrapped: list[str]
+    dropped: list[str]
+    truncated: list[str]
+
 
 #: Elements that changed name between editions but not meaning.
 ALIASES: dict[str, tuple[str, ...]] = {
@@ -44,7 +58,7 @@ Tree = dict[str, Any]
 class _Fitter:
     """Fits a composed tree to one edition's inventory."""
 
-    def __init__(self, inventory: Inventory, report: BuildReport) -> None:
+    def __init__(self, inventory: Inventory, report: _Report) -> None:
         self.report = report
         self.children: dict[str, dict[str, ElementEntry]] = {}
         self.any_slots: set[str] = set()
