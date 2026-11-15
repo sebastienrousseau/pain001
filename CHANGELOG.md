@@ -22,6 +22,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reason "Cryptographic signature verification failed: invalid". The
   reason ended after the colon, because `InvalidSignature` has no text
   and the fallback never applied.
+- `VersionMapper` fills a migrated file's `payment_method` and
+  `charge_bearer` with `TRF` and `SLEV` when no row has them. The
+  defaults sat in `_normalize_group_fields` but never applied, because
+  the loop above them had already written `""`. `pain001 migrate`
+  output does not change: both bundled mappings and the built-in
+  generic mapping set the same defaults first. Found by mutation
+  testing.
 - The weekly full mutation run reports a score again. As one job it
   outgrew its 300-minute timeout and was cancelled in five of the six
   scheduled runs from 2026-10-11 to 2026-11-15. It now runs as seven

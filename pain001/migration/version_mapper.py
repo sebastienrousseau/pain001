@@ -33,6 +33,11 @@ from pain001.parquet.load_parquet_data import load_parquet_data
 from pain001.security.formula import sanitize_formula_injection
 from pain001.xml.generate_xml import generate_xml_string
 
+#: Group values a migrated file needs when no row supplies them: a
+#: credit transfer (TRF) with the charges shared (SLEV). The bundled
+#: mappings set the same defaults; these cover a mapping that does not.
+_GROUP_DEFAULTS = {"payment_method": "TRF", "charge_bearer": "SLEV"}
+
 
 class VersionMapper:
     """Migrate payment rows from older pain.001 variants to newer ones."""
@@ -233,10 +238,10 @@ class VersionMapper:
                 "charge_bearer",
             ):
                 if row.get(field) in ("", None):
-                    row[field] = first.get(field, "")
+                    row[field] = first.get(field) or _GROUP_DEFAULTS.get(
+                        field, ""
+                    )
             row.setdefault("payment_currency", "EUR")
-            row.setdefault("payment_method", "TRF")
-            row.setdefault("charge_bearer", "SLEV")
             if row.get("remittance_information") in (
                 "",
                 None,

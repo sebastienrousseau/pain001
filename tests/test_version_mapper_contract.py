@@ -208,3 +208,16 @@ def test_write_csv_creates_missing_parent_directories(tmp_path: Path) -> None:
     with open(target, encoding="utf-8", newline="") as handle:
         read_back = list(csv.DictReader(handle))
     assert read_back[0]["id"] == "M"
+
+
+def test_group_fields_default_the_method_and_bearer() -> None:
+    """Without a value in any row, TRF and SLEV apply, as EUR does."""
+    rows: list[dict[str, Any]] = [
+        {"id": "MSG1", "payment_id": "P1"},
+        {"id": "", "payment_id": "P2", "charge_bearer": "DEBT"},
+    ]
+    VersionMapper._normalize_group_fields(rows)
+    assert [
+        (r["payment_method"], r["charge_bearer"], r["payment_currency"])
+        for r in rows
+    ] == [("TRF", "SLEV", "EUR"), ("TRF", "DEBT", "EUR")]
