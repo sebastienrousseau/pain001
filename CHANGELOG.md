@@ -33,6 +33,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   full run's 5,868 survivors. Run locally, 272 of the 276 are now
   killed; the other four are equivalent (`readable=True` and
   `type=str` restate Click's defaults).
+- `tests/test_import_time_builders.py` builds the template registry
+  and the API's generate-route `responses` tables again inside a test
+  and compares them with the copies built at import, then covers the
+  metadata the bundled templates do not use (no examples, deprecated,
+  an empty file). 113 of the 117 survivors in those two builders are
+  now killed; the other four are equivalent (`"UTF-8"` for `"utf-8"`,
+  and `bool()` of a missing `deprecated` key).
 - `tests/test_ecosystem_publications.py` imported `ecosystem_audit` both
   as a module and with `from ... import`, which CodeQL flagged (code
   scanning alert 306). It now uses the module import only.
