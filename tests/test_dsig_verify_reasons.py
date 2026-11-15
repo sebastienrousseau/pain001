@@ -19,6 +19,7 @@ from typing import Any
 import pytest
 from cryptography import x509
 from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.x509.oid import NameOID
 from lxml import etree
 
@@ -315,4 +316,31 @@ def test_no_key_anywhere_and_no_trust_choice() -> None:
     assert str(error.value) == (
         "pass trust_anchor (the signer's certificate or public key), or "
         "trust_embedded_cert=True for an integrity-only check"
+    )
+
+
+def test_a_wrong_key_still_names_why_it_failed() -> None:
+    """A bare InvalidSignature has no text; the reason must not end blank."""
+    other = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    reason = _reason(_sign(DOC, other))
+    assert reason == "Cryptographic signature verification failed: invalid"
+
+
+@pytest.mark.parametrize(
+    "document",
+    [
+        b"<a>" * 300 + b"x" + b"</a>" * 300,
+        b"<a>" + b"x" * (10 * 1024 * 1024 + 1) + b"</a>",
+    ],
+    ids=["nested-300-deep", "text-over-10-MB"],
+)
+def test_a_document_over_the_parser_limits_is_a_report(
+    document: bytes,
+) -> None:
+    """Too deep or too large for lxml is an invalid report, not a crash."""
+    report = verify_signature(document, trust_embedded_cert=True)
+    assert report.valid is False
+    assert report.reason is not None
+    assert report.reason.startswith(
+        "refused: the document exceeds the XML parser's limits ("
     )

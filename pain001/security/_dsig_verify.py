@@ -132,7 +132,15 @@ def _parse(raw: bytes) -> Any:
         no_network=True,
         huge_tree=False,
     )
-    tree = etree.ElementTree(etree.fromstring(raw, parser))
+    try:
+        root = etree.fromstring(raw, parser)
+    except etree.XMLSyntaxError as exc:
+        # Well-formed (defusedxml accepted it) but deeper than 256
+        # levels or with a text node over 10 MB: huge_tree stays off.
+        raise _Invalid(
+            f"refused: the document exceeds the XML parser's limits ({exc})"
+        ) from exc
+    tree = etree.ElementTree(root)
     if tree.docinfo.doctype:
         raise _Invalid("refused: DTDs and entities are not allowed")
     return tree
@@ -408,7 +416,8 @@ def _verify(tree: Any, key: Any | None, report: dict[str, Any]) -> None:
         )
     except (InvalidSignature, ValueError, TypeError) as err:
         raise _Invalid(
-            f"Cryptographic signature verification failed: {err or 'invalid'}"
+            "Cryptographic signature verification failed: "
+            f"{str(err) or 'invalid'}"
         ) from err
 
 

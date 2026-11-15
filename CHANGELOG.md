@@ -13,6 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- `verify_signature` (and `pain001 verify-signature`) returns an invalid
+  report, "refused: the document exceeds the XML parser's limits", for a
+  well-formed document nested more than 256 levels deep or with a text
+  node over 10 MB. It raised lxml's `XMLSyntaxError` instead, so the CLI
+  crashed rather than exiting 1 with a reason.
+- A signature that does not verify with the trusted key now gives the
+  reason "Cryptographic signature verification failed: invalid". The
+  reason ended after the colon, because `InvalidSignature` has no text
+  and the fallback never applied.
 - The weekly full mutation run reports a score again. As one job it
   outgrew its 300-minute timeout and was cancelled in five of the six
   scheduled runs from 2026-10-11 to 2026-11-15. It now runs as seven
