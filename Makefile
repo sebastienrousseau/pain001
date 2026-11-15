@@ -148,6 +148,25 @@ MUTATION_FLOOR ?= 80
 MUTATION_SHARD_REGISTRY = "pain001.xml.message_registry.*"
 MUTATION_SHARD_REST = "pain001.xml.[!m]*" "pain001.security.*" "pain001.config.*" "pain001.templates.*"
 MUTATION_FAST_TIER = $(MUTATION_SHARD_REGISTRY) $(MUTATION_SHARD_REST)
+# The weekly full run is sharded the same way: as one job it outgrew
+# the 300-minute timeout (five of six scheduled runs from 2026-10-11 to
+# 2026-11-15 were cancelled at the limit, so no full score was recorded).
+# The seven shards hold 3,500 to 4,800 of the 28,848 mutants mutmut 3.8
+# generated for 0.0.88. corpus is the largest package (about 7,000), so
+# its rules subpackage is a shard of its own; "[!r]*" is every other
+# corpus module except registry, which is named on its own.
+# tests/test_mutation_gate.py checks that every module in pain001/ falls
+# in exactly one shard, so a new module cannot slip out of the run.
+# The top-level __init__ has no module segment: its mutants are named
+# "pain001.x_*" (functions) and "pain001.xǁ*" (methods).
+MUTATION_FULL_SHARDS = CORPUS CORPUS_RULES VALIDATION XML API CLI OTHER
+MUTATION_FULL_CORPUS = "pain001.corpus.[!r]*" "pain001.corpus.registry.*"
+MUTATION_FULL_CORPUS_RULES = "pain001.corpus.rules.*" "pain001.twins.*"
+MUTATION_FULL_VALIDATION = "pain001.validation.*" "pain001.core.*"
+MUTATION_FULL_XML = "pain001.xml.*" "pain001.security.*" "pain001.config.*" "pain001.templates.*" "pain001.json.*"
+MUTATION_FULL_API = "pain001.api.*" "pain001.faces.*" "pain001.schematron.*"
+MUTATION_FULL_CLI = "pain001.cli.*" "pain001.transport.*" "pain001.plugins.*" "pain001.migration.*"
+MUTATION_FULL_OTHER = "pain001.logging_schema.*" "pain001.pain002.*" "pain001.camt053.*" "pain001.data.*" "pain001.csv.*" "pain001.lsp.*" "pain001.db.*" "pain001.observability.*" "pain001.context.*" "pain001.parquet.*" "pain001.schemas.*" "pain001.mcp.*" "pain001.test_fixtures.*" "pain001.check.*" "pain001.entry.*" "pain001.async_adapter.*" "pain001.__main__.*" "pain001.exceptions.*" "pain001._lazy.*" "pain001.suite.*" "pain001.constants.*" "pain001.migrate.*" "pain001.x_*" "pain001.xǁ*"
 
 mutate:
 	@echo "$(YELLOW)Running mutation testing (every module)...$(NC)"
@@ -169,6 +188,14 @@ mutate-shard:
 	@test -n '$(MUTATION_SHARD_$(SHARD))' || { echo "SHARD must be REGISTRY or REST" >&2; exit 1; }
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_SHARD_$(SHARD))
+	@poetry run mutmut export-cicd-stats
+
+# One shard of the weekly full run (SHARD=VALIDATION, API, ...); CI gates
+# the six shards together with mutate-gate.
+mutate-full-shard:
+	@test -n '$(MUTATION_FULL_$(SHARD))' || { echo "SHARD must be one of: $(MUTATION_FULL_SHARDS)" >&2; exit 1; }
+	@rm -rf mutants
+	@poetry run mutmut run $(MUTATION_FULL_$(SHARD))
 	@poetry run mutmut export-cicd-stats
 
 # Score several shards' stats as one tier: MUTATION_STATS="a.json b.json".

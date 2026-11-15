@@ -9,6 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- The weekly full mutation run reports a score again. As one job it
+  outgrew its 300-minute timeout and was cancelled in five of the six
+  scheduled runs from 2026-10-11 to 2026-11-15. It now runs as seven
+  shards in parallel (`make mutate-full-shard SHARD=...`), each holding
+  3,500 to 4,800 of the 28,848 mutants, and one job gates their sum
+  against the floor. A test checks that every module in `pain001/`
+  falls in exactly one shard. The workflow can also be started by hand.
+- `tests/test_ecosystem_publications.py` imported `ecosystem_audit` both
+  as a module and with `from ... import`, which CodeQL flagged (code
+  scanning alert 306). It now uses the module import only.
+
 ## [0.0.88] - 2026-11-14
 
 ### Added

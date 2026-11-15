@@ -1,6 +1,6 @@
 # Copyright (C) 2023-2026 Pain001. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0 OR MIT
-"""The fast mutation tier runs as shards and is gated as one score."""
+"""Mutation runs are sharded and each set of shards is gated as one score."""
 
 from __future__ import annotations
 
@@ -93,3 +93,42 @@ def test_every_fast_tier_module_is_in_exactly_one_shard() -> None:
             if any(fnmatch.fnmatch(mutant, p) for p in patterns)
         ]
         assert len(hits) == 1, f"{module} is in shards {hits}"
+
+
+def _mutmut_module(path: Path) -> str:
+    """Name a source file the way mutmut 3 prefixes its mutants."""
+    name = ".".join(path.relative_to(ROOT).with_suffix("").parts)
+    return name.removesuffix(".__init__")
+
+
+def test_every_module_is_in_exactly_one_full_shard() -> None:
+    """The weekly run is sharded; a module no shard names is never mutated."""
+    text = (ROOT / "Makefile").read_text(encoding="utf-8")
+    match = re.search(r"^MUTATION_FULL_SHARDS = (.+)$", text, re.MULTILINE)
+    assert match, "MUTATION_FULL_SHARDS is not set in the Makefile"
+    shards = {
+        name: _make_patterns(f"MUTATION_FULL_{name}")
+        for name in match.group(1).split()
+    }
+    workflow = (ROOT / ".github/workflows/quality.yml").read_text(
+        encoding="utf-8"
+    )
+    assert f"shard: [{', '.join(shards)}]" in workflow
+    for name in shards:
+        assert f"mutation-full-{name}/mutmut-cicd-stats.json" in workflow
+    paths = [
+        path
+        for path in (ROOT / "pain001").rglob("*.py")
+        if "tmp" not in path.relative_to(ROOT / "pain001").parts[:1]
+    ]
+    assert paths
+    for path in paths:
+        module = _mutmut_module(path)
+        for kind in ("x_function", "xǁKlassǁmethod"):
+            mutant = f"{module}.{kind}__mutmut_1"
+            hits = [
+                shard
+                for shard, patterns in shards.items()
+                if any(fnmatch.fnmatch(mutant, p) for p in patterns)
+            ]
+            assert len(hits) == 1, f"{mutant} is in shards {hits}"

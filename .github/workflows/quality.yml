@@ -7,6 +7,7 @@ on:
     branches: [main]
   schedule:
     - cron: '0 0 * * 0'  # Weekly on Sunday at midnight UTC
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -36,7 +37,7 @@ jobs:
   mutation-fast-shard:
     runs-on: ubuntu-latest
     name: 🧬 Mutation shard (${{ matrix.shard }})
-    if: github.event_name != 'schedule'
+    if: github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     strategy:
       fail-fast: false
       matrix:
@@ -70,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     name: 🧬 Mutation Testing (Fast)
     needs: mutation-fast-shard
-    if: always() && github.event_name != 'schedule'
+    if: always() && github.event_name != 'schedule' && github.event_name != 'workflow_dispatch'
     steps:
       - name: Both shards finished
         env:
@@ -93,10 +94,17 @@ jobs:
           mutation-stats/mutation-fast-REST/mutmut-cicd-stats.json"
 
   # Job 2: Full Mutation Testing (Scheduled Weekly)
-  mutation-full:
+  # Every module, as sharded jobs in parallel (see MUTATION_FULL_* in the
+  # Makefile): as one job the run outgrew its 300-minute timeout and was
+  # cancelled before it could report a score.
+  mutation-full-shard:
     runs-on: ubuntu-latest
-    name: 🧬 Mutation Testing (Full - Weekly)
-    if: github.event_name == 'schedule'
+    name: 🧬 Mutation full shard (${{ matrix.shard }})
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [CORPUS, CORPUS_RULES, VALIDATION, XML, API, CLI, OTHER]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -106,14 +114,48 @@ jobs:
           python-version: "3.12"
       - uses: abatilo/actions-poetry@3765cf608f2d4a72178a9fc5b918668e542b89b1 # v4.0.0
       - run: poetry install --no-interaction --all-extras
-      - run: poetry run make mutate
-        timeout-minutes: 300
+      - run: poetry run make mutate-full-shard SHARD="$SHARD"
+        env:
+          SHARD: ${{ matrix.shard }}
+        timeout-minutes: 240
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
-          name: mutation-full-results
+          name: mutation-full-${{ matrix.shard }}
           path: mutants/mutmut-cicd-stats.json
           if-no-files-found: warn
+
+  # Scores the shards as one run; fails unless every shard finished.
+  mutation-full:
+    runs-on: ubuntu-latest
+    name: 🧬 Mutation Testing (Full - Weekly)
+    needs: mutation-full-shard
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    steps:
+      - name: Every shard finished
+        env:
+          SHARDS: ${{ needs.mutation-full-shard.result }}
+        run: |
+          test "$SHARDS" = success || { echo "mutation shards: $SHARDS" >&2; exit 1; }
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: mutation-full-*
+          path: mutation-stats
+      - run: >-
+          make mutate-gate
+          MUTATION_STATS="mutation-stats/mutation-full-CORPUS/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-CORPUS_RULES/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-VALIDATION/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-XML/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-API/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-CLI/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-OTHER/mutmut-cicd-stats.json"
 
   # Job 3: Performance Benchmarks
   benchmarks:
