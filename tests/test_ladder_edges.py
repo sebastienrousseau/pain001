@@ -131,7 +131,10 @@ def test_check_scheme_composes_the_scheme_with_the_policy() -> None:
     result = check_scheme(_rows(), MESSAGE_TYPE, "sepa-sct", rules)
     assert result.profile == "sepa-sct,custom"
     assert "BIG" in {v.rule for v in result.violations}
-    with pytest.raises(ValueError, match=r"^Unknown scheme profile ''\."):
+    with pytest.raises(
+        ValueError,
+        match=r"^check_scheme needs a scheme profile, rules, or both\.$",
+    ):
         check_scheme(_rows(), MESSAGE_TYPE)
 
 

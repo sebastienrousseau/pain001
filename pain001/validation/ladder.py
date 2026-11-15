@@ -192,16 +192,20 @@ def check_scheme(
         The findings.
 
     Raises:
-        ValueError: For an unknown scheme, a bad policy, or a policy
-            without the ``rules`` extra installed.
+        ValueError: For neither a scheme nor rules, an unknown scheme, a
+            bad policy, or a policy without the ``rules`` extra installed.
     """
-    if rules is not None:
-        try:
-            from pain001.validation.policy import validate_policy
-        except ImportError as exc:
-            raise ValueError("Custom rules require 'pain001[rules]'.") from exc
-        return validate_policy(rows, rules, scheme, message_type)
-    return validate_scheme(rows, scheme or "", message_type=message_type)
+    if rules is None:
+        if not scheme:
+            raise ValueError(
+                "check_scheme needs a scheme profile, rules, or both."
+            )
+        return validate_scheme(rows, scheme, message_type=message_type)
+    try:
+        from pain001.validation.policy import validate_policy
+    except ImportError as exc:
+        raise ValueError("Custom rules require 'pain001[rules]'.") from exc
+    return validate_policy(rows, rules, scheme, message_type)
 
 
 @dataclass(frozen=True)

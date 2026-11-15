@@ -37,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   "Unexpected data validation error" with no field, because
   `PaymentValidationError` is neither a `ValueError` nor a
   `DataSourceError`. Found by mutation testing.
+- `check_scheme` called with neither a scheme profile nor rules raises
+  "check_scheme needs a scheme profile, rules, or both." instead of
+  "Unknown scheme profile ''.". The CLI and REST API never call it that
+  way.
 - `VersionMapper` fills a migrated file's `payment_method` and
   `charge_bearer` with `TRF` and `SLEV` when no row has them. The
   defaults sat in `_normalize_group_fields` but never applied, because
