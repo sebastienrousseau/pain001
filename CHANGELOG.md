@@ -55,6 +55,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the promise one release late. Passing either flag now exits 2 with
   "No such option".
 
+### Added
+
+- A mutation ratchet. `mutation-baseline.json` records how many mutants
+  survive in each function, and the weekly full run fails when any
+  function has more than recorded, or a function the baseline does not
+  list has any (`scripts/mutation_ratchet.py`, `make mutate-ratchet`).
+  `--update` records improvements from a run's survivor lists and
+  refuses a regression, so the backlog only shrinks toward a 100%
+  score. It counts per function, not per mutant, because mutmut
+  renumbers a function's mutants whenever its body changes.
+
 ### Changed
 
 - The mutation-score floor rises from 80% to 85%, toward 100%. It

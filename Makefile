@@ -210,6 +210,14 @@ mutate-full-shard:
 	@poetry run mutmut export-cicd-stats
 	@$(MUTATION_SURVIVORS)
 
+# Hold surviving mutants per function to mutation-baseline.json, which
+# may only shrink (scripts/mutation_ratchet.py): the weekly full run
+# fails when any function has more survivors than recorded. After an
+# improvement, record it from the run's artifacts with
+#   make mutate-ratchet MUTATION_SURVIVOR_LISTS="..." RATCHET_ARGS="--update --score 85.3%"
+mutate-ratchet:
+	@python3 scripts/mutation_ratchet.py --baseline mutation-baseline.json $(foreach s,$(MUTATION_SURVIVOR_LISTS),--survivors $(s)) $(RATCHET_ARGS)
+
 # Score several shards' stats as one tier: MUTATION_STATS="a.json b.json".
 # The script uses the standard library only, so no virtualenv is needed.
 mutate-gate:

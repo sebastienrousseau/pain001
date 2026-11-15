@@ -116,6 +116,7 @@ def test_every_module_is_in_exactly_one_full_shard() -> None:
     assert f"shard: [{', '.join(shards)}]" in workflow
     for name in shards:
         assert f"mutation-full-{name}/mutmut-cicd-stats.json" in workflow
+        assert f"mutation-full-{name}/survivors.txt" in workflow
     paths = [
         path
         for path in (ROOT / "pain001").rglob("*.py")

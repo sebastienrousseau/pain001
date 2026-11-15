@@ -160,6 +160,19 @@ jobs:
           mutation-stats/mutation-full-API/mutmut-cicd-stats.json
           mutation-stats/mutation-full-CLI/mutmut-cicd-stats.json
           mutation-stats/mutation-full-OTHER/mutmut-cicd-stats.json"
+      # No function may have more surviving mutants than
+      # mutation-baseline.json records (see the Makefile). It runs even
+      # when the score step failed, so both verdicts are reported.
+      - if: ${{ !cancelled() }}
+        run: >-
+            make mutate-ratchet
+            MUTATION_SURVIVOR_LISTS="mutation-stats/mutation-full-CORPUS/survivors.txt
+            mutation-stats/mutation-full-CORPUS_RULES/survivors.txt
+            mutation-stats/mutation-full-VALIDATION/survivors.txt
+            mutation-stats/mutation-full-XML/survivors.txt
+            mutation-stats/mutation-full-API/survivors.txt
+            mutation-stats/mutation-full-CLI/survivors.txt
+            mutation-stats/mutation-full-OTHER/survivors.txt"
 
   # Job 3: Performance Benchmarks
   benchmarks:
