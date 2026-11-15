@@ -97,12 +97,12 @@ def _expected_rest() -> list[str]:
         "# TYPE pain001_http_requests_total counter",
         'pain001_http_requests_total{method="GET",status="200"} 1.0',
         "# HELP pain001_files_processed_total "
-        "Files processed by status and message type.",
+        + "Files processed by status and message type.",
         "# TYPE pain001_files_processed_total counter",
         "pain001_files_processed_total"
-        '{message_type="pain.001.001.03",status="success"} 1.0',
+        + '{message_type="pain.001.001.03",status="success"} 1.0',
         "# HELP pain001_processing_seconds Payment generation processing "
-        "latency in seconds.",
+        + "latency in seconds.",
         "# TYPE pain001_processing_seconds summary",
         'pain001_processing_seconds{quantile="0.5"} 0.25',
         'pain001_processing_seconds{quantile="0.95"} 0.25',

@@ -242,9 +242,6 @@ def test_comments_are_not_signed_over() -> None:
     assert report.valid is True
 
 
-_ALG = 'Algorithm="'
-
-
 @pytest.mark.parametrize(
     ("old", "new", "reason"),
     [

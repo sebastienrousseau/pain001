@@ -163,6 +163,11 @@ def test_status_follows_event_levels(
     assert tracker.has_warnings is warnings
 
 
+def _boom() -> None:
+    """Fail the way a processing step would."""
+    raise RuntimeError("boom")
+
+
 def test_exception_in_context_aborts_and_counts_error(
     emitted: list[dict[str, Any]],
 ) -> None:
@@ -171,7 +176,7 @@ def test_exception_in_context_aborts_and_counts_error(
         pytest.raises(RuntimeError),
         ExecutionSummaryTracker(_logger()) as tracker,
     ):
-        raise RuntimeError("boom")
+        _boom()
     summary = emitted[0]["summary"]
     assert summary["status"] == "ABORTED"
     assert summary["counts"]["error"] == 1

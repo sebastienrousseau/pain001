@@ -86,9 +86,9 @@ def test_banner_renders_rounded_80_column_box() -> None:
         f"╭{bar}╮",
         blank,
         "│      Generates ISO 20022 payment initiation files "
-        "(pain.001, pain.008)       │",
+        + "(pain.001, pain.008)       │",
         "│                from CSV, SQLite, JSON, JSONL or Parquet data."
-        "                │",
+        + "                │",
         blank,
         "│" + " " * 29 + "https://pain001.com" + " " * 30 + "│",
         blank,

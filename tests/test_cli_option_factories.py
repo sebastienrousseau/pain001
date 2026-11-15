@@ -212,7 +212,7 @@ def test_xml_sign_options_help_text() -> None:
     command = _command(xml_sign_options)
     assert [p.help for p in command.params if isinstance(p, click.Option)] == [
         "Private key PEM file (RSA, or EC P-256/P-384) to sign the "
-        "generated XML with W3C XML-DSig.",
+        + "generated XML with W3C XML-DSig.",
         "Optional X.509 certificate PEM file to embed in XML-DSig <KeyInfo>.",
         "XML-DSig algorithm; default follows the key (RSA: rsa-sha256).",
         "Environment variable holding the passphrase for --xml-sign-key.",

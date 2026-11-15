@@ -123,7 +123,7 @@ class _Inner:
 def _loader(inner: Any) -> _GpgDecryptingLoader:
     """Return a GPG loader whose registry resolves to ``inner``."""
     registry = SimpleNamespace(get_loader_for_extension=lambda ext: inner)
-    return _GpgDecryptingLoader(cast("BuiltinRegistry", registry))
+    return _GpgDecryptingLoader(cast(BuiltinRegistry, registry))
 
 
 def test_missing_gnupg_message(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -146,7 +146,7 @@ def test_maybe_register_without_gnupg_logs_and_skips(
     registered: list[Any] = []
     reg = SimpleNamespace(register_loader=registered.append)
     with caplog.at_level(logging.DEBUG, logger=LOGGER):
-        builtins_gpg.maybe_register(cast("BuiltinRegistry", reg))
+        builtins_gpg.maybe_register(cast(BuiltinRegistry, reg))
     assert registered == []
     assert [r.getMessage() for r in caplog.records] == [
         "pain001[gpg] extra not installed; .gpg / .asc loader unavailable"

@@ -66,7 +66,7 @@ class _InlinePool:
         future: Future[Built] = Future()
         try:
             future.set_result(fn(*args))
-        except BaseException as exc:
+        except Exception as exc:
             future.set_exception(exc)
         return future
 

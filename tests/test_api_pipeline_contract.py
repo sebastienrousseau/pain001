@@ -202,9 +202,9 @@ def test_record_outcome_per_kind() -> None:
     )
     assert _processed() == [
         'pain001_files_processed_total{message_type="pain.001.001.03",'
-        'status="failure"} 1.0',
+        + 'status="failure"} 1.0',
         'pain001_files_processed_total{message_type="pain.001.001.03",'
-        'status="success"} 1.0',
+        + 'status="success"} 1.0',
     ]
 
 
