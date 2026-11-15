@@ -19,7 +19,7 @@ import click
 import pytest
 from click.testing import CliRunner
 
-from pain001.cli._format import REMOVED_IN, format_option
+from pain001.cli._format import format_option
 from pain001.cli._verify_signature import xml_sign_alg_option, xml_sign_options
 from pain001.transport.cli import ssh_options
 
@@ -232,41 +232,8 @@ def test_format_option_defaults_to_text_and_lists_its_choices() -> None:
     assert option.help == "Result format on stdout: text, json, csv."
 
 
-def test_format_option_without_legacy_json_rejects_json_flag() -> None:
-    """Only commands that ask for it accept the deprecated --json."""
+def test_format_option_has_no_json_shorthand() -> None:
+    """The --json shorthand was removed in 0.0.89; --format json replaces it."""
     result = CliRunner().invoke(_command(format_option()), ["--json"])
     assert result.exit_code == 2
     assert "No such option '--json'" in result.output
-
-
-def test_legacy_json_flag_is_hidden_and_means_format_json() -> None:
-    """--json still works where enabled, warns, and is not in --help."""
-    seen: dict[str, Any] = {}
-
-    @click.command()
-    @format_option(legacy_json=True)
-    def command(output_format: str) -> None:
-        """Record the format the command received."""
-        seen["format"] = output_format
-
-    legacy = _option(command, "--json")
-    assert legacy.name == "as_json"
-    assert legacy.is_flag
-    assert legacy.default is False
-    assert legacy.hidden is True
-    assert legacy.help == "Deprecated: use --format json."
-    assert [p.opts for p in command.params] == [["--format"], ["--json"]]
-
-    runner = CliRunner()
-    result = runner.invoke(command, ["--json"])
-    assert result.exit_code == 0, result.output
-    assert seen["format"] == "json"
-    assert result.stderr == (
-        f"Warning: --json is deprecated and will be removed in {REMOVED_IN}; "
-        "use --format json.\n"
-    )
-
-    result = runner.invoke(command, [])
-    assert result.exit_code == 0, result.output
-    assert seen["format"] == "text"
-    assert result.stderr == ""

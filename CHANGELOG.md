@@ -37,6 +37,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as a module and with `from ... import`, which CodeQL flagged (code
   scanning alert 306). It now uses the module import only.
 
+### Removed
+
+- `--json` on `versions`, `inspect` and `plugins list`, and
+  `--scheme-format json` on `generate` and `validate`. Use
+  `--format json`; with it, the scheme result is the `scheme` field of
+  the one JSON object on stdout. Both were deprecated in 0.0.87 with a
+  promise to remove them in 0.0.88, but 0.0.88 shipped still accepting
+  them and still warning "will be removed in 0.0.88"; this release keeps
+  the promise one release late. Passing either flag now exits 2 with
+  "No such option".
+
 ### Changed
 
 - The corpus builder's conform pass moved to `pain001/corpus/_fit.py`,

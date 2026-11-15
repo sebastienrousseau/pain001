@@ -77,9 +77,8 @@ With ``--format json`` the result object is the last line, so the whole
 stream is newline-delimited JSON.
 
 ``--json`` on ``versions``, ``inspect`` and ``plugins list``, and
-``--scheme-format json`` on ``generate`` and ``validate``, still work in
-0.0.87 and print a deprecation warning on standard error; they are
-removed in 0.0.88. Use ``--format json``.
+``--scheme-format json`` on ``generate`` and ``validate``, were
+deprecated in 0.0.87 and removed in 0.0.89. Use ``--format json``.
 
 Inputs and validation
 =====================

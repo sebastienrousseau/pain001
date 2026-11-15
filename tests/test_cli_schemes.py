@@ -97,7 +97,7 @@ class TestCliScheme(unittest.TestCase):
         assert "fix:" in result.output
 
     def test_scheme_json_output(self) -> None:
-        """--scheme-format json emits a parseable result object."""
+        """--format json carries the scheme result as its ``scheme`` field."""
         with rows_loaded([dict(_SEPA_VIOLATING_ROW)]):
             result = self.runner.invoke(
                 main,
@@ -105,7 +105,7 @@ class TestCliScheme(unittest.TestCase):
                     *_base_args(),
                     "--scheme",
                     "sepa-sct",
-                    "--scheme-format",
+                    "--format",
                     "json",
                     "--dry-run",
                 ],
@@ -116,9 +116,9 @@ class TestCliScheme(unittest.TestCase):
             for line in result.output.splitlines()
             if line.startswith("{")
         )
-        assert payload["profile"] == "sepa-sct"
-        assert payload["is_valid"] is False
-        assert payload["violations"]
+        assert payload["scheme"]["profile"] == "sepa-sct"
+        assert payload["scheme"]["is_valid"] is False
+        assert payload["scheme"]["violations"]
 
     def test_unknown_scheme_exits_2(self) -> None:
         """An unknown profile name exits with code 2."""
@@ -135,7 +135,7 @@ class TestCliScheme(unittest.TestCase):
                 *_base_args(),
                 "--scheme",
                 "nope",
-                "--scheme-format",
+                "--format",
                 "json",
                 "--dry-run",
             ],
@@ -170,7 +170,7 @@ class TestCliScheme(unittest.TestCase):
                     *_base_args(),
                     "--scheme",
                     "sepa-sct",
-                    "--scheme-format",
+                    "--format",
                     "json",
                     "--dry-run",
                 ],
@@ -181,8 +181,8 @@ class TestCliScheme(unittest.TestCase):
             for line in result.output.splitlines()
             if line.startswith("{")
         )
-        assert payload["is_valid"] is True
-        assert payload["violations"] == []
+        assert payload["scheme"]["is_valid"] is True
+        assert payload["scheme"]["violations"] == []
 
 
 class TestCliDataFailureTips(unittest.TestCase):

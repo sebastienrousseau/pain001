@@ -88,11 +88,11 @@ class TestVersionsCommand:
         assert MTYPE in result.output
 
     def test_versions_json(self) -> None:
-        """`--json` emits a parseable array containing the known types."""
-        result = self.runner.invoke(cli, ["versions", "--json"])
+        """`--format json` emits a parseable array of the known types."""
+        result = self.runner.invoke(cli, ["versions", "--format", "json"])
         assert result.exit_code == 0
         assert MTYPE in json.loads(result.stdout)
-        assert "--json is deprecated" in result.stderr
+        assert result.stderr == ""
 
 
 class TestInspectCommand:

@@ -122,7 +122,7 @@ def show_template_metadata(message_type: str, output_format: str) -> None:
 
 
 @click.command("versions")
-@format_option(legacy_json=True)
+@format_option()
 def versions_cmd(output_format: str) -> None:
     """List the ISO 20022 message types this build can generate.
     \f
@@ -141,7 +141,7 @@ def versions_cmd(output_format: str) -> None:
 
 @click.command("inspect")
 @click.argument("message_type")
-@format_option(legacy_json=True)
+@format_option()
 def inspect_cmd(message_type: str, output_format: str) -> None:
     """Show the bundled template, schema, and accepted formats for a type.
     \f

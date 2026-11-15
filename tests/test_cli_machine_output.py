@@ -280,19 +280,15 @@ def test_metrics_are_json_lines_on_stdout(workdir: Path) -> None:
     [("versions",), ("inspect", MTYPE), ("plugins", "list")],
     ids=" ".join,
 )
-def test_the_old_json_flag_still_works_and_warns(
-    path: tuple[str, ...],
-) -> None:
-    """``--json`` is ``--format json`` for one more release."""
+def test_the_old_json_flag_is_gone(path: tuple[str, ...]) -> None:
+    """``--json`` was removed in 0.0.89; ``--format json`` replaces it."""
     result = CliRunner().invoke(cli, [*path, "--json"])
-    assert result.exit_code == 0, result.output
-    assert json.loads(result.stdout)
-    assert "--json is deprecated" in result.stderr
-    assert "--format json" in result.stderr
+    assert result.exit_code == 2
+    assert "No such option '--json'" in result.output
 
 
-def test_scheme_format_json_still_works_and_warns(workdir: Path) -> None:
-    """``--scheme-format json`` keeps its output and warns on stderr."""
+def test_scheme_format_is_gone(workdir: Path) -> None:
+    """``--scheme-format`` was removed in 0.0.89; ``--format json`` replaces it."""
     result = CliRunner().invoke(
         cli,
         [
@@ -307,8 +303,8 @@ def test_scheme_format_json_still_works_and_warns(workdir: Path) -> None:
             "json",
         ],
     )
-    assert json.loads(result.stdout)["profile"] == "anti-duplicate"
-    assert "--scheme-format json is deprecated" in result.stderr
+    assert result.exit_code == 2
+    assert "No such option '--scheme-format'" in result.output
 
 
 class _TTY(io.StringIO):
