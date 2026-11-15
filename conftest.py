@@ -4,8 +4,10 @@ Monitors test execution time and warns if approaching thresholds.
 """
 
 import os
+import sys
 import tempfile
 import time
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
@@ -140,3 +142,27 @@ def pytest_configure(config: pytest.Config) -> None:
             "markers", "slo: mark test as subject to SLO enforcement"
         )
         config.pluginmanager.register(SLOPlugin())
+
+
+@pytest.fixture(autouse=True)
+def _no_trace_context_leak(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Run each test in an empty OpenTelemetry context; fail one that leaks.
+
+    Starlette's TestClient runs the app in the calling thread's context,
+    so a span one test leaves active would show up in a later test's
+    logs (``span_id``), depending on the order tests run in. The module
+    is only touched once something has imported it, as in the product.
+    """
+    context = sys.modules.get("opentelemetry.context")
+    token = context.attach(context.Context()) if context else None
+    yield
+    trace = sys.modules.get("opentelemetry.trace")
+    active = (
+        trace is not None
+        and trace.get_current_span().get_span_context().is_valid
+    )
+    if context is not None and token is not None:
+        context.detach(token)
+    assert not active, (
+        f"{request.node.nodeid} left an OpenTelemetry span active"
+    )
