@@ -53,8 +53,8 @@ def _rows(message_type: str) -> list[dict[str, Any]]:
 def _prepare(
     monkeypatch: pytest.MonkeyPatch, message_type: str
 ) -> tuple[dict[str, Any], int, list[bool]]:
-    """Run the preparation with a 250 ms clock; record ``compact``."""
-    ticks = iter([10.0, 10.25])
+    """Run the preparation with a one-second clock; record ``compact``."""
+    ticks = iter([10.0, 11.0])
     monkeypatch.setattr(
         _render, "time", SimpleNamespace(time=lambda: next(ticks))
     )
@@ -95,7 +95,7 @@ def test_preparation_sets_totals_and_reports_its_duration(
         {
             "message_type": "pain.001.001.03",
             "record_count": 4,
-            "duration_ms": 250,
+            "duration_ms": 1000,
         }
     ]
 
