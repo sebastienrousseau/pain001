@@ -25,6 +25,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   first full run on 2026-11-15 scored 79.6% against the 80% floor, but
   its artifacts held only counts, so nothing said which mutants to look
   at. `mutmut show <name>` prints a survivor's diff.
+- `tests/test_cli_option_factories.py` applies `ssh_options`,
+  `xml_sign_options` and `format_option` to a fresh command and pins
+  the flags they attach: order, types, defaults and help text. The
+  decorators run when the CLI is imported, before mutmut activates a
+  mutant, so no test ever ran a changed one: they held 276 of the
+  full run's 5,868 survivors. Run locally, 272 of the 276 are now
+  killed; the other four are equivalent (`readable=True` and
+  `type=str` restate Click's defaults).
 - `tests/test_ecosystem_publications.py` imported `ecosystem_audit` both
   as a module and with `from ... import`, which CodeQL flagged (code
   scanning alert 306). It now uses the module import only.
