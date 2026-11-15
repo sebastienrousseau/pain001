@@ -20,7 +20,9 @@ A function with fewer survivors than recorded is an improvement. It is
 reported, not failed, because the baseline can only be rewritten from a
 full run's artifacts; ``--update`` writes the new counts and refuses to
 run while anything is worse, so it records improvements and never
-absorbs a regression. The ``score`` field is informational.
+absorbs a regression. The first ``--update``, with no baseline on disk,
+records the survivors as found; a plain check with no baseline fails.
+The ``score`` field is informational.
 
 The standard library only, so the gate job needs no virtualenv.
 
@@ -122,9 +124,10 @@ def main(argv: list[str] | None = None) -> int:
     if missing:
         print(f"no survivor list at {missing[0]}", file=sys.stderr)
         return 1
+    first = args.update and not args.baseline.exists()
     baseline = _load(args.baseline)
     found = count_survivors(args.survivors)
-    worse, better = compare(baseline, found)
+    worse, better = ([], []) if first else compare(baseline, found)
     for line in worse:
         print(f"  worse: {line}")
     for line in better:

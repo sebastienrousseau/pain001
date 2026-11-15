@@ -166,3 +166,19 @@ def test_a_missing_survivor_list_fails(
     code = _ratchet().main(["--baseline", str(base), "--survivors", str(gone)])
     assert code == 1
     assert f"no survivor list at {gone}" in capsys.readouterr().err
+
+
+def test_the_first_update_records_existing_survivors(tmp_path: Path) -> None:
+    """With no baseline yet, --update records the survivors as found."""
+    base = tmp_path / "new.json"
+    lst = _survivors(tmp_path / "s.txt", "m.x_f__mutmut_1", "m.x_f__mutmut_2")
+    args = ["--baseline", str(base), "--survivors", str(lst), "--update"]
+    assert _ratchet().main([*args, "--score", "79.6%"]) == 0
+    assert json.loads(base.read_text())["functions"] == {"m.x_f": 2}
+
+
+def test_without_a_baseline_a_check_still_fails(tmp_path: Path) -> None:
+    """Only --update may start a baseline; a plain check with none fails."""
+    lst = _survivors(tmp_path / "s.txt", "m.x_f__mutmut_1")
+    args = ["--baseline", str(tmp_path / "none.json"), "--survivors", str(lst)]
+    assert _ratchet().main(args) == 1
