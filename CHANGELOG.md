@@ -31,6 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   result. The message type comes from the schema's file name, as in the
   bundled layout, or from a new `message_type` argument. pain001's own
   pipeline does not call it. Found by mutation testing.
+- `ValidationService.validate_data_content` reports bad payment data
+  (a broken IBAN, a missing value) as "Data validation failed" with the
+  column it names, such as `debtor_account_IBAN`. It reported it as an
+  "Unexpected data validation error" with no field, because
+  `PaymentValidationError` is neither a `ValueError` nor a
+  `DataSourceError`. Found by mutation testing.
 - `VersionMapper` fills a migrated file's `payment_method` and
   `charge_bearer` with `TRF` and `SLEV` when no row has them. The
   defaults sat in `_normalize_group_fields` but never applied, because

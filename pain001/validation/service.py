@@ -44,6 +44,7 @@ from pain001.data.loader import load_payment_data
 from pain001.exceptions import (
     ConfigurationError,
     DataSourceError,
+    PaymentValidationError,
 )
 from pain001.security import validate_path
 from pain001.templates.registry import DEFAULT_TEMPLATE_REGISTRY
@@ -80,10 +81,12 @@ class ValidationConfig:
     pre_validate: bool = True
 
 
-def _failure(prefix: str, exc: Exception) -> ValidationResult:
+def _failure(
+    prefix: str, exc: Exception, field: str | None = None
+) -> ValidationResult:
     """An invalid result whose error and details carry ``exc``'s text."""
     return ValidationResult(
-        is_valid=False, error=f"{prefix}: {exc}", details=str(exc)
+        is_valid=False, error=f"{prefix}: {exc}", field=field, details=str(exc)
     )
 
 
@@ -358,26 +361,16 @@ class ValidationService:
                     identifier_checks=identifier_checks,
                 ).require_valid()
             return ValidationResult(is_valid=True)
+        except PaymentValidationError as exc:  # bad rows: name the column
+            return _failure(
+                "Data validation failed", exc, exc.field or "data_file_path"
+            )
         except (FileNotFoundError, ValueError) as exc:
-            return ValidationResult(
-                is_valid=False,
-                error=f"Data validation failed: {exc}",
-                field="data_file_path",
-                details=str(exc),
-            )
+            return _failure("Data validation failed", exc, "data_file_path")
         except DataSourceError as exc:
-            return ValidationResult(
-                is_valid=False,
-                error=f"Data source error: {exc}",
-                field="data_file_path",
-                details=str(exc),
-            )
+            return _failure("Data source error", exc, "data_file_path")
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            return ValidationResult(
-                is_valid=False,
-                error=f"Unexpected data validation error: {exc}",
-                details=str(exc),
-            )
+            return _failure("Unexpected data validation error", exc)
 
     def _content_check(
         self, report: ValidationReport, config: ValidationConfig

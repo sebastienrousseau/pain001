@@ -28,7 +28,7 @@ from typing import cast
 import pytest
 
 from pain001.constants import valid_xml_types
-from pain001.exceptions import ConfigurationError
+from pain001.exceptions import ConfigurationError, PaymentValidationError
 from pain001.validation import (
     ValidationConfig,
     ValidationResult,
@@ -193,8 +193,25 @@ def test_data_content_checks_identifiers_by_default(tmp_path: Path) -> None:
     assert result.is_valid is False
     assert result.details
     assert result.details.startswith("Invalid identifiers")
-    assert result.error == (
-        f"Unexpected data validation error: {result.details}"
+    assert result.error == f"Data validation failed: {result.details}"
+    assert result.field == "debtor_account_IBAN"
+
+
+def test_a_payment_error_without_a_field_names_the_data_file(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Bad data is a data failure even when no single column is to blame."""
+
+    def reject(*_args: object) -> None:
+        raise PaymentValidationError("rows disagree on the currency")
+
+    monkeypatch.setattr(service_module, "load_payment_data", reject)
+    result = ValidationService().validate_data_content("rows.csv")
+    assert _result(result) == (
+        False,
+        "Data validation failed: rows disagree on the currency",
+        "data_file_path",
+        "rows disagree on the currency",
     )
 
 
@@ -306,4 +323,22 @@ def test_a_special_file_is_not_a_data_file(tmp_path: Path) -> None:
         f"Data file does not exist: {fifo}",
         "data_file_path",
         None,
+    )
+
+
+def test_a_crash_while_loading_is_an_unexpected_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Anything but bad data or a bad source is reported as unexpected."""
+
+    def crash(*_args: object) -> None:
+        raise RuntimeError("loader exploded")
+
+    monkeypatch.setattr(service_module, "load_payment_data", crash)
+    result = ValidationService().validate_data_content("rows.csv")
+    assert _result(result) == (
+        False,
+        "Unexpected data validation error: loader exploded",
+        None,
+        "loader exploded",
     )
