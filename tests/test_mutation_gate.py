@@ -132,3 +132,25 @@ def test_every_module_is_in_exactly_one_full_shard() -> None:
                 if any(fnmatch.fnmatch(mutant, p) for p in patterns)
             ]
             assert len(hits) == 1, f"{mutant} is in shards {hits}"
+
+
+def test_every_mutation_run_lists_and_uploads_its_survivors() -> None:
+    """A red run must say which mutants survived, not only how many."""
+    makefile = (ROOT / "Makefile").read_text(encoding="utf-8")
+    for target in (
+        "mutate",
+        "mutate-fast",
+        "mutate-shard",
+        "mutate-full-shard",
+    ):
+        match = re.search(
+            rf"^{re.escape(target)}:.*?\n((?:\t.*\n)+)", makefile, re.MULTILINE
+        )
+        assert match, f"no {target} target"
+        assert "$(MUTATION_SURVIVORS)" in match.group(1), target
+    workflow = (ROOT / ".github/workflows/quality.yml").read_text(
+        encoding="utf-8"
+    )
+    uploads = workflow.count("mutants/mutmut-cicd-stats.json")
+    assert uploads == 2
+    assert workflow.count("mutants/survivors.txt") == uploads

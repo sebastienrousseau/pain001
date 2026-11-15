@@ -168,11 +168,18 @@ MUTATION_FULL_API = "pain001.api.*" "pain001.faces.*" "pain001.schematron.*"
 MUTATION_FULL_CLI = "pain001.cli.*" "pain001.transport.*" "pain001.plugins.*" "pain001.migration.*"
 MUTATION_FULL_OTHER = "pain001.logging_schema.*" "pain001.pain002.*" "pain001.camt053.*" "pain001.data.*" "pain001.csv.*" "pain001.lsp.*" "pain001.db.*" "pain001.observability.*" "pain001.context.*" "pain001.parquet.*" "pain001.schemas.*" "pain001.mcp.*" "pain001.test_fixtures.*" "pain001.check.*" "pain001.entry.*" "pain001.async_adapter.*" "pain001.__main__.*" "pain001.exceptions.*" "pain001._lazy.*" "pain001.suite.*" "pain001.constants.*" "pain001.migrate.*" "pain001.x_*" "pain001.xǁ*"
 
+# The names of the mutants the tests let through, one per line, next to
+# the stats: CI uploads both, so a red run says which mutants to look at.
+# `mutmut show <name>` prints one's diff. grep exits 1 when nothing
+# survived, which is a success here; any other status still fails.
+MUTATION_SURVIVORS = poetry run mutmut results > mutants/results.txt && { grep -E ': survived$$' mutants/results.txt > mutants/survivors.txt || test $$? -eq 1; } && echo "$$(wc -l < mutants/survivors.txt | tr -d ' ') survivors listed in mutants/survivors.txt"
+
 mutate:
 	@echo "$(YELLOW)Running mutation testing (every module)...$(NC)"
 	@rm -rf mutants
 	@poetry run mutmut run
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
 
 mutate-fast:
@@ -180,6 +187,7 @@ mutate-fast:
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_FAST_TIER)
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
 
 # One shard of the fast tier (SHARD=REGISTRY or SHARD=REST); CI gates
@@ -189,6 +197,7 @@ mutate-shard:
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_SHARD_$(SHARD))
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 
 # One shard of the weekly full run (SHARD=VALIDATION, API, ...); CI gates
 # the six shards together with mutate-gate.
@@ -197,6 +206,7 @@ mutate-full-shard:
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_FULL_$(SHARD))
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 
 # Score several shards' stats as one tier: MUTATION_STATS="a.json b.json".
 # The script uses the standard library only, so no virtualenv is needed.

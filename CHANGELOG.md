@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   3,500 to 4,800 of the 28,848 mutants, and one job gates their sum
   against the floor. A test checks that every module in `pain001/`
   falls in exactly one shard. The workflow can also be started by hand.
+- Every mutation run writes `mutants/survivors.txt`, the names of the
+  mutants the tests let through, and CI uploads it with the stats. The
+  first full run on 2026-11-15 scored 79.6% against the 80% floor, but
+  its artifacts held only counts, so nothing said which mutants to look
+  at. `mutmut show <name>` prints a survivor's diff.
 - `tests/test_ecosystem_publications.py` imported `ecosystem_audit` both
   as a module and with `from ... import`, which CodeQL flagged (code
   scanning alert 306). It now uses the module import only.

@@ -61,7 +61,9 @@ jobs:
         if: always()
         with:
           name: mutation-fast-${{ matrix.shard }}
-          path: mutants/mutmut-cicd-stats.json
+          path: |
+            mutants/mutmut-cicd-stats.json
+            mutants/survivors.txt
           if-no-files-found: warn
 
   # The required check. It runs even when a shard failed (a skipped
@@ -122,7 +124,9 @@ jobs:
         if: always()
         with:
           name: mutation-full-${{ matrix.shard }}
-          path: mutants/mutmut-cicd-stats.json
+          path: |
+            mutants/mutmut-cicd-stats.json
+            mutants/survivors.txt
           if-no-files-found: warn
 
   # Scores the shards as one run; fails unless every shard finished.
