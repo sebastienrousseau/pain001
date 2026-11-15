@@ -135,10 +135,12 @@ complex:
 # fast tier (2,562 and 2,446 of 2,941 checked mutants killed): about 120
 # mutants change verdict between runs, so the score carries a variance of
 # roughly four points that the tests, not the code, are responsible for.
-# The floor sits under the lower measurement; it is raised once the
-# flipping mutants are found and pinned (see ROADMAP), never lowered to
-# make a red run green.
-MUTATION_FLOOR ?= 80
+# The maintainer raised the floor from 80 to 85 on 2026-11-15, toward
+# 100. The fast tier then scored 85.7% to 86.2% over nine CI runs, and
+# the first full run that finished scored 79.6%; the full run is held to
+# the same floor, so its survivors are the backlog. The floor is never
+# lowered to make a red run green.
+MUTATION_FLOOR ?= 85
 # CI runs the fast tier as two shards in parallel: 4,148 mutants in
 # 0.0.81, where the last single run on main took 43 of the job's 90
 # minutes. message_registry holds about two thirds of the test time,

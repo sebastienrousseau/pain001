@@ -57,6 +57,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- The mutation-score floor rises from 80% to 85%, toward 100%. It
+  applies to the fast tier on every pull request (85.7% to 86.2% over
+  the last nine runs, before this release's new tests) and to the weekly
+  full run, whose first finished run scored 79.6%.
 - The corpus builder's conform pass moved to `pain001/corpus/_fit.py`,
   and `_Fitter.value` and `_Fitter.tree` were split into smaller steps.
   Behaviour is unchanged (the corpus, golden and twin tests pass as
