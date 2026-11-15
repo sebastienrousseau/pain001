@@ -227,3 +227,29 @@ def test_a_chunk_is_finalised_with_the_jobs_envelope_and_keys(
     )
     build_chunk(job)
     assert seen == [(True, {"header": 1}, "key", "cert", "secret")]
+
+
+def _built(path: Path) -> Future[Built]:
+    """A finished chunk whose output is ``path``."""
+    future: Future[Built] = Future()
+    future.set_result((0, str(path), 1))
+    return future
+
+
+def test_discard_skips_cancelled_and_failed_then_unlinks_the_rest(
+    tmp_path: Path,
+) -> None:
+    """After a failure, later chunks are cancelled; finished ones deleted."""
+    from collections import deque
+
+    queued: Future[Built] = Future()
+    failed: Future[Built] = Future()
+    failed.set_exception(RuntimeError("chunk 2 failed"))
+    written = tmp_path / "chunk-3.xml"
+    written.write_text("<x/>", encoding="utf-8")
+    gone = tmp_path / "chunk-4.xml"
+    _parallel._discard_later(
+        deque([queued, failed, _built(written), _built(gone)])
+    )
+    assert queued.cancelled()
+    assert not written.exists()

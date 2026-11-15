@@ -221,3 +221,23 @@ def test_group_fields_default_the_method_and_bearer() -> None:
         (r["payment_method"], r["charge_bearer"], r["payment_currency"])
         for r in rows
     ] == [("TRF", "SLEV", "EUR"), ("TRF", "DEBT", "EUR")]
+
+
+def test_a_mapping_default_fills_blank_values_and_beats_the_group_default(
+    tmp_path: Path,
+) -> None:
+    """A mapping's ``defaults`` fill empty and missing fields first."""
+    mapper = _mapper_with(
+        tmp_path,
+        "field_map:\n"
+        "  charge_bearer: charge_bearer\n"
+        "  payment_method: payment_method\n"
+        "defaults:\n"
+        "  charge_bearer: DEBT\n"
+        "  payment_method: CHK\n",
+    )
+    migrated = mapper.migrate_rows([{"charge_bearer": ""}], "v03", "v09")
+    assert (migrated[0]["charge_bearer"], migrated[0]["payment_method"]) == (
+        "DEBT",
+        "CHK",
+    )

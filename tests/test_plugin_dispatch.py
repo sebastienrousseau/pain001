@@ -174,7 +174,9 @@ def test_validator_registry_change_fails_closed(registry, monkeypatch):
         SimpleNamespace(meta=PluginMeta("local", "0.0.1", "Local"))
     )
     monkeypatch.setattr(registry, "get_validator", lambda name: None)
-    with pytest.raises(ValueError, match="registry changed"):
+    with pytest.raises(
+        ValueError, match=r"^Validator registry changed during validation$"
+    ):
         SchemaValidator("pain.001.001.03").validate_batch([])
 
 
@@ -186,3 +188,61 @@ def test_disable_name_is_shell_safe(name, code):
     if code == 0:
         assert "export PAIN001_DISABLE_PLUGINS=xlsx" in result.output
         assert "no settings were changed" in result.output
+
+
+def test_validator_sees_the_rows_and_the_message_type(registry, monkeypatch):
+    """The plugin gets the batch and the validator's own message type."""
+    validator = SchemaValidator("pain.001.001.03")
+    monkeypatch.setattr(validator, "validate_data", lambda row: [])
+    rows = [{"id": "1"}, {"id": "2"}]
+    validate = Mock(return_value=ValidatorResult(True, []))
+    registry.register_validator(
+        SimpleNamespace(
+            meta=PluginMeta("local", "0.0.1", "Local"), validate=validate
+        )
+    )
+    assert validator.validate_batch(rows) == (2, 2, [])
+    validate.assert_called_once_with(rows, message_type="pain.001.001.03")
+
+
+def test_a_finding_one_past_the_last_row_is_refused(registry, monkeypatch):
+    """Row indexes run from 0 to len(rows) - 1; len(rows) is outside."""
+    validator = SchemaValidator("pain.001.001.03")
+    monkeypatch.setattr(validator, "validate_data", lambda row: [])
+    finding = ValidatorFinding(1, None, "LOCAL", "warning", "Review.")
+    registry.register_validator(
+        SimpleNamespace(
+            meta=PluginMeta("local", "0.0.1", "Local"),
+            validate=lambda *a, **kw: ValidatorResult(True, [finding]),
+        )
+    )
+    with pytest.raises(ValueError, match="invalid row index"):
+        validator.validate_batch([{}])
+
+
+@pytest.mark.parametrize(
+    ("field", "path"), [("debtor_name", "$.debtor_name"), (None, "$")]
+)
+def test_a_finding_lands_on_its_row_with_its_path(
+    registry, monkeypatch, field, path
+):
+    """An error finding is filed under its row index with a JSON path."""
+    validator = SchemaValidator("pain.001.001.03")
+    monkeypatch.setattr(validator, "validate_data", lambda row: [])
+    finding = ValidatorFinding(1, field, "LOCAL", "error", "Review.")
+    registry.register_validator(
+        SimpleNamespace(
+            meta=PluginMeta("local", "0.0.1", "Local"),
+            validate=lambda *a, **kw: ValidatorResult(False, [finding]),
+        )
+    )
+    total, valid, errors = validator.validate_batch([{}, {}])
+    assert (total, valid) == (2, 1)
+    [(index, [error])] = errors
+    assert index == 1
+    assert (error.message, error.path, error.value, error.rule) == (
+        "Review.",
+        path,
+        None,
+        "LOCAL",
+    )
