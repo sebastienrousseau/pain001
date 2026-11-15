@@ -110,6 +110,24 @@ def _write(path: Path, found: Counter[str], score: str | None) -> None:
     path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
 
 
+def _report(
+    worse: list[str],
+    better: list[str],
+    found: Counter[str],
+    baseline: dict[str, int],
+) -> None:
+    """Print each worse and better function, then the totals."""
+    for line in worse:
+        print(f"  worse: {line}")
+    for line in better:
+        print(f"  better: {line}")
+    print(
+        f"mutation ratchet: {sum(found.values())} survivors in "
+        f"{len(found)} functions (baseline {sum(baseline.values())}); "
+        f"{len(worse)} worse, {len(better)} better"
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     """Print the comparison; exit 1 on any regression."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -128,15 +146,7 @@ def main(argv: list[str] | None = None) -> int:
     baseline = _load(args.baseline)
     found = count_survivors(args.survivors)
     worse, better = ([], []) if first else compare(baseline, found)
-    for line in worse:
-        print(f"  worse: {line}")
-    for line in better:
-        print(f"  better: {line}")
-    print(
-        f"mutation ratchet: {sum(found.values())} survivors in "
-        f"{len(found)} functions (baseline {sum(baseline.values())}); "
-        f"{len(worse)} worse, {len(better)} better"
-    )
+    _report(worse, better, found, baseline)
     if worse:
         if args.update:
             print("refusing to record a regression", file=sys.stderr)
