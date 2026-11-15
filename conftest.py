@@ -9,6 +9,7 @@ import tempfile
 import time
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -166,3 +167,19 @@ def _no_trace_context_leak(request: pytest.FixtureRequest) -> Iterator[None]:
     assert not active, (
         f"{request.node.nodeid} left an OpenTelemetry span active"
     )
+
+
+@pytest.fixture(autouse=True)
+def _wait_for_pipeline_jobs() -> Iterator[None]:
+    """Let a test's background REST jobs finish before the next test starts.
+
+    The API runs generation on a thread pool and a job can outlive the
+    request that started it. Work still running after its test would be
+    attributed to whichever test runs next (mutmut picks the tests to run
+    against a mutant from that record), so the pool is drained here.
+    """
+    yield
+    pipeline = cast(Any, sys.modules.get("pain001.api._pipeline"))
+    if pipeline is not None and pipeline._executor is not None:
+        pipeline._executor.shutdown(wait=True)
+        pipeline._executor = None
