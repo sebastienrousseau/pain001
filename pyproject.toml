@@ -155,7 +155,7 @@ memory-profiler = "^0.61.0"
 # Sphinx 9.1+ requires Python >= 3.13; ~9.0.4 keeps one version across 3.11-3.14.
 sphinx = "~9.0.4"
 sphinx-rtd-theme = "^3.1.0"
-sphinx-autodoc-typehints = "^3.5.2"
+sphinx-autodoc-typehints = "^3.6.1"
 pip-licenses = "^5.5.5"
 twine = "^7.0.0"
 types-jsonschema = "^4.26.0.20261006"
@@ -170,7 +170,7 @@ optional = true
 [tool.poetry.group.docs.dependencies]
 sphinx = "~9.0.4"
 pydata-sphinx-theme = {version = "^0.24.0", python = ">=3.11.5"}
-sphinx-autodoc-typehints = "^3.5.2"
+sphinx-autodoc-typehints = "^3.6.1"
 sphinx-design = "^0.7.0"
 myst-parser = "^5.1.0"
 # pydata-sphinx-theme pulls in soupsieve (through beautifulsoup4).
