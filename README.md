@@ -29,7 +29,7 @@
 
 **Getting started**
 
-- [Install](#install): PyPI, source and Docker
+- [Install](#install): PyPI, source, Docker and the GitHub Action
 - [Requirements](#requirements): toolchain floor, platforms
 - [Quick Start](#quick-start): scaffold, validate and generate synthetic payments
 
@@ -88,6 +88,27 @@ Docker runs as a non-root user. Mount a writable directory at `/data` and use
 `-w /data`; `generate -t pain.001.001.03 -d payments.csv -o output` writes into
 an output **directory**, not a filename. No distro package or standalone native
 binary is claimed; see [packaging](docs/packaging.md).
+
+### As a GitHub Action
+
+Check payment files on every pull request and see the findings in code
+scanning. The step fails when a file breaks the XSD, a message rule or a
+scheme profile:
+
+```yaml
+permissions:
+  contents: read
+  security-events: write   # for the SARIF upload
+steps:
+  - uses: actions/checkout@v7
+  - uses: sebastienrousseau/pain001@v0.0.89
+    with:
+      files: "payments/**/*.xml"
+      scheme: sepa-sct
+```
+
+Inputs and outputs are listed in [action.yml](action.yml) and the
+[user guide](docs/usage.rst).
 
 ---
 

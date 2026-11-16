@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- The GitHub Action is named "ISO 20022 Payment File Check (pain001)"
+  and its description names pain.001, pain.008, payment XML, SEPA,
+  CBPR+ and FedNow, the words a Marketplace search for it uses. The
+  `uses: sebastienrousseau/pain001@v...` reference is unchanged.
+- The README shows the Action in a workflow under Install, and the
+  release preflight keeps that example's pin on the released tag.
+
 ## [0.0.89] - 2026-11-16
 
 ### Fixed

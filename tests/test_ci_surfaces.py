@@ -97,3 +97,27 @@ def test_the_action_meets_the_marketplace_listing_rules() -> None:
     assert len(ACTION["description"]) < 125
     assert ACTION["branding"]["icon"]
     assert ACTION["branding"]["color"]
+
+
+def test_the_listing_carries_the_words_people_search_for() -> None:
+    """Marketplace search ranks the name and description.
+
+    "pain001 check" alone matches nobody's query; someone looking for
+    this action types ISO 20022, a message name or a scheme.
+    """
+    assert "ISO 20022" in ACTION["name"]
+    for word in ("ISO 20022", "pain.001", "pain.008", "SEPA", "XML"):
+        assert word in ACTION["description"], word
+
+
+def test_the_readme_shows_the_action_in_a_workflow() -> None:
+    """The Marketplace page is the README; it shows a ``uses:`` step.
+
+    The preflight check keeps that example's pin on the released tag.
+    """
+    from scripts import preflight_release
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    assert "uses: sebastienrousseau/pain001@v" in readme
+    assert "security-events: write" in readme
+    assert "README.md" in preflight_release.ACTION_EXAMPLES
