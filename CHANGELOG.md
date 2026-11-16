@@ -13,6 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- The GitHub Action's description is 101 characters, under the 125
+  GitHub Marketplace allows, so the action can be listed there. A test
+  keeps it under the limit.
 - `verify_signature` (and `pain001 verify-signature`) returns an invalid
   report, "refused: the document exceeds the XML parser's limits", for a
   well-formed document nested more than 256 levels deep or with a text

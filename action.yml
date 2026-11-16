@@ -12,8 +12,8 @@
 # "permissions: security-events: write" on the job.
 name: pain001 check
 description: >-
-  Check pain.001 and pain.008 files against their ISO 20022 schema, the
-  message definition rules and scheme profiles, and upload SARIF.
+  Check pain.001 and pain.008 files against ISO 20022 schemas, rules and
+  scheme profiles; upload SARIF.
 author: Sebastien Rousseau
 branding:
   icon: check-circle
