@@ -44,12 +44,13 @@ from pain001.data.loader import load_payment_data
 from pain001.exceptions import (
     ConfigurationError,
     DataSourceError,
-    SchemaValidationError,
+    PaymentValidationError,
 )
 from pain001.security import validate_path
+from pain001.templates.registry import DEFAULT_TEMPLATE_REGISTRY
 from pain001.validation.ladder import run_ladder
 from pain001.validation.report import ValidationReport, ValidationResult
-from pain001.xml.validate_via_xsd import validate_via_xsd
+from pain001.xml.generate_xml import generate_xml_string
 
 __all__ = [
     "ValidationConfig",
@@ -78,6 +79,15 @@ class ValidationConfig:
     xsd_schema_file_path: str
     data_file_path: str
     pre_validate: bool = True
+
+
+def _failure(
+    prefix: str, exc: Exception, field: str | None = None
+) -> ValidationResult:
+    """An invalid result whose error and details carry ``exc``'s text."""
+    return ValidationResult(
+        is_valid=False, error=f"{prefix}: {exc}", field=field, details=str(exc)
+    )
 
 
 class ValidationService:
@@ -264,19 +274,25 @@ class ValidationService:
         return ValidationResult(is_valid=True)
 
     def validate_template_schema_compatibility(
-        self, template_path: str | Path, schema_path: str | Path
+        self,
+        template_path: str | Path,
+        schema_path: str | Path,
+        message_type: str | None = None,
     ) -> ValidationResult:
-        """Validate that the XML template conforms to the XSD schema.
+        """Check that the template renders XML the schema accepts.
 
-        Note:
-            Raw Jinja2 XML templates containing unrendered directives
-            ({% for ... %}, {{ date }}) are not strictly schema-valid XML
-            until rendered with payment data. Schema validation is therefore
-            authoritatively enforced during document generation.
+        A raw Jinja2 template ({% for ... %}, {{ date }}) is not
+        schema-valid XML until it is rendered, so the template is
+        rendered with the message type's bundled example data, under
+        generation's path rules, and the result is validated against the
+        schema. A file with no Jinja2 markup is checked as it is.
 
         Args:
             template_path: Path to XML template file.
             schema_path: Path to XSD schema file.
+            message_type: The message type to render as. When omitted,
+                the schema's file name, as in the bundled layout
+                (``pain.001.001.03.xsd``).
 
         Returns:
             ValidationResult indicating success or failure.
@@ -284,26 +300,32 @@ class ValidationService:
         Example:
             >>> service = ValidationService()
             >>> result = service.validate_template_schema_compatibility(
-            ...     "template.xml", "schema.xsd"
+            ...     "template.xml", "pain.001.001.03.xsd"
             ... )
             >>> if not result.is_valid:
             ...     print(f"Schema validation failed: {result.error}")
         """
+        schema = Path(schema_path)
+        kind = message_type or schema.stem
+        if kind not in DEFAULT_TEMPLATE_REGISTRY.list_supported_versions():
+            return ValidationResult(
+                is_valid=False,
+                error=f"Cannot tell the message type from schema "
+                f"'{schema.name}'; pass message_type.",
+            )
+        example = DEFAULT_TEMPLATE_REGISTRY.get_template(
+            kind
+        ).example_data_path
         try:
-            validate_via_xsd(str(template_path), str(schema_path))
-            return ValidationResult(is_valid=True)
-        except SchemaValidationError as exc:
-            return ValidationResult(
-                is_valid=False,
-                error=f"Schema validation failed: {exc}",
-                details=str(exc),
-            )
+            rows = load_payment_data(str(example))
+            generate_xml_string(rows, kind, str(template_path), str(schema))
+        except RuntimeError as exc:  # every XSD violation, listed
+            return _failure("Schema validation failed", exc)
+        except ValueError as exc:  # path rules, unreadable template
+            return _failure("Template could not be rendered", exc)
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            return ValidationResult(
-                is_valid=False,
-                error=f"Unexpected schema validation error: {exc}",
-                details=str(exc),
-            )
+            return _failure("Unexpected schema validation error", exc)
+        return ValidationResult(is_valid=True)
 
     def validate_data_content(
         self,
@@ -339,26 +361,16 @@ class ValidationService:
                     identifier_checks=identifier_checks,
                 ).require_valid()
             return ValidationResult(is_valid=True)
+        except PaymentValidationError as exc:  # bad rows: name the column
+            return _failure(
+                "Data validation failed", exc, exc.field or "data_file_path"
+            )
         except (FileNotFoundError, ValueError) as exc:
-            return ValidationResult(
-                is_valid=False,
-                error=f"Data validation failed: {exc}",
-                field="data_file_path",
-                details=str(exc),
-            )
+            return _failure("Data validation failed", exc, "data_file_path")
         except DataSourceError as exc:
-            return ValidationResult(
-                is_valid=False,
-                error=f"Data source error: {exc}",
-                field="data_file_path",
-                details=str(exc),
-            )
+            return _failure("Data source error", exc, "data_file_path")
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            return ValidationResult(
-                is_valid=False,
-                error=f"Unexpected data validation error: {exc}",
-                details=str(exc),
-            )
+            return _failure("Unexpected data validation error", exc)
 
     def _content_check(
         self, report: ValidationReport, config: ValidationConfig

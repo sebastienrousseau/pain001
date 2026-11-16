@@ -46,27 +46,22 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from typing import Any
 
+from pain001.corpus import _fit
 from pain001.corpus import identifiers as ids
-from pain001.corpus.inventory import ElementEntry, Inventory, inventory_for
+from pain001.corpus._fit import Tree, _Fitter
+from pain001.corpus.inventory import inventory_for
 from pain001.corpus.registry import Scenario, scenario_from
 from pain001.templates import DEFAULT_TEMPLATE_REGISTRY
 from pain001.xml.validate_via_xsd import collect_xsd_validation_errors
 
 #: Elements that changed name between editions but not meaning.
-ALIASES: dict[str, tuple[str, ...]] = {
-    "BIC": ("BICFI",),
-    "BICFI": ("BIC",),
-    "BICOrBEI": ("AnyBIC",),
-    "AnyBIC": ("BICOrBEI",),
-}
+ALIASES: dict[str, tuple[str, ...]] = _fit.ALIASES
 #: When a scalar meets a complex slot, the child that carries it.
-WRAP_PREFERENCE: tuple[str, ...] = ("Cd", "Dt", "DtTm", "Tp", "Id")
+WRAP_PREFERENCE: tuple[str, ...] = _fit.WRAP_PREFERENCE
 ROOTS = {"pain.001": "CstmrCdtTrfInitn", "pain.008": "CstmrDrctDbtInitn"}
 #: Markets that write the house number before the street on a line.
 NUMBER_FIRST = frozenset({"GB", "US", "HK", "SG", "MY", "IE", "AU", "CA"})
 INDENT = "  "
-
-Tree = dict[str, Any]
 
 
 class BuildError(ValueError):
@@ -713,96 +708,6 @@ class _Composer:
 
 
 # --- conform, order, serialise ------------------------------------------------
-
-
-class _Fitter:
-    """Fits a composed tree to one edition's inventory."""
-
-    def __init__(self, inventory: Inventory, report: BuildReport) -> None:
-        self.report = report
-        self.children: dict[str, dict[str, ElementEntry]] = {}
-        self.any_slots: set[str] = set()
-        for entry in inventory.elements:
-            parent, name = entry.path.rsplit("/", 1)
-            if entry.kind == "attribute":
-                continue
-            if entry.kind == "any":
-                self.any_slots.add(parent)
-                continue
-            self.children.setdefault(parent, {})[name] = entry
-
-    def tree(self, node: Tree, path: str) -> Tree:
-        """Conform and order one complex node."""
-        declared = self.children.get(path, {})
-        fitted: Tree = {}
-        for key, value in node.items():
-            name = key
-            if name not in declared:
-                alias = next(
-                    (a for a in ALIASES.get(name, ()) if a in declared), None
-                )
-                if alias is not None:
-                    self.report.renamed.append((f"{path}/{name}", alias))
-                    name = alias
-                elif path in self.any_slots:
-                    fitted[name] = value  # free content under xs:any
-                    continue
-                else:
-                    self.report.dropped.append(f"{path}/{name}")
-                    continue
-            value = self.value(value, f"{path}/{name}", declared[name])
-            if value is not None and value != {} and value != []:
-                fitted[name] = value
-        ordered = {name: fitted[name] for name in declared if name in fitted}
-        for name, value in fitted.items():  # content under an xs:any slot
-            if name not in ordered:
-                ordered[name] = value
-        return ordered
-
-    def value(self, value: Any, path: str, entry: ElementEntry) -> Any:
-        """Conform one value to its declared slot."""
-        if value is None:
-            return None
-        if isinstance(value, list):
-            items = [self.value(v, path, entry) for v in value]
-            items = [i for i in items if i is not None and i != {}]
-            if entry.max_occurs is not None and len(items) > entry.max_occurs:
-                self.report.truncated.append(path)
-                items = items[: entry.max_occurs]
-            if entry.max_occurs == 1:
-                return items[0] if items else None
-            return items
-        if entry.kind == "simple":
-            if isinstance(value, dict):
-                if "$" in value or any(k.startswith("@") for k in value):
-                    return {
-                        k: v
-                        for k, v in value.items()
-                        if k == "$" or k.startswith("@")
-                    }
-                for pick in WRAP_PREFERENCE:
-                    if pick in value:
-                        self.report.unwrapped.append(path)
-                        return self.value(value[pick], path, entry)
-                self.report.dropped.append(path)
-                return None
-            return value
-        if not isinstance(value, dict):
-            declared = self.children.get(path, {})
-            wrap: str | None = None
-            if "DtTm" in declared and "Dt" in declared and "T" in str(value):
-                wrap = "DtTm"
-            else:
-                wrap = next(
-                    (p for p in WRAP_PREFERENCE if p in declared), None
-                )
-            if wrap is None:
-                self.report.dropped.append(path)
-                return None
-            self.report.wrapped.append(path)
-            return self.tree({wrap: value}, path)
-        fitted = self.tree(value, path)
-        return fitted or None
 
 
 def _serialise(root_name: str, tree: Tree, namespace: str) -> str:

@@ -569,3 +569,20 @@ class TestJSONLoggingIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_a_plain_record_is_stamped_with_its_own_creation_time() -> None:
+    """The timestamp is when the record was made, not when it is formatted."""
+    from pain001.logging_schema.formatter import JSONFormatter
+
+    record = logging.LogRecord(
+        "pain001.x", logging.WARNING, "f", 1, "hi", None, None
+    )
+    record.created = 86_400.0  # 1970-01-02T00:00:00Z, far from "now"
+    data = json.loads(JSONFormatter().format(record))
+    assert data["timestamp"] == "1970-01-02T00:00:00Z"
+    assert (data["level"], data["logger"], data["message"]) == (
+        "WARNING",
+        "pain001.x",
+        "hi",
+    )

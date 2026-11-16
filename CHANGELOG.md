@@ -9,8 +9,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.89] - Unreleased
+
 ### Fixed
 
+- The GitHub Action's description is 101 characters, under the 125
+  GitHub Marketplace allows, so the action can be listed there. A test
+  keeps it under the limit.
+- `verify_signature` (and `pain001 verify-signature`) returns an invalid
+  report, "refused: the document exceeds the XML parser's limits", for a
+  well-formed document nested more than 256 levels deep or with a text
+  node over 10 MB. It raised lxml's `XMLSyntaxError` instead, so the CLI
+  crashed rather than exiting 1 with a reason.
+- A signature that does not verify with the trusted key now gives the
+  reason "Cryptographic signature verification failed: invalid". The
+  reason ended after the colon, because `InvalidSignature` has no text
+  and the fallback never applied.
+- `ValidationService.validate_template_schema_compatibility` reports a
+  template that cannot produce schema-valid XML. It ignored the XSD
+  verdict and returned valid for anything, even a document with the
+  wrong root content. It now renders the template with the message
+  type's bundled example data (a raw Jinja2 template is not valid XML
+  until rendered), under generation's path rules, and validates the
+  result. The message type comes from the schema's file name, as in the
+  bundled layout, or from a new `message_type` argument. pain001's own
+  pipeline does not call it. Found by mutation testing.
+- `ValidationService.validate_data_content` reports bad payment data
+  (a broken IBAN, a missing value) as "Data validation failed" with the
+  column it names, such as `debtor_account_IBAN`. It reported it as an
+  "Unexpected data validation error" with no field, because
+  `PaymentValidationError` is neither a `ValueError` nor a
+  `DataSourceError`. Found by mutation testing.
+- `check_scheme` called with neither a scheme profile nor rules raises
+  "check_scheme needs a scheme profile, rules, or both." instead of
+  "Unknown scheme profile ''.". The CLI and REST API never call it that
+  way.
+- `VersionMapper` fills a migrated file's `payment_method` and
+  `charge_bearer` with `TRF` and `SLEV` when no row has them. The
+  defaults sat in `_normalize_group_fields` but never applied, because
+  the loop above them had already written `""`. `pain001 migrate`
+  output does not change: both bundled mappings and the built-in
+  generic mapping set the same defaults first. Found by mutation
+  testing.
 - The weekly full mutation run reports a score again. As one job it
   outgrew its 300-minute timeout and was cancelled in five of the six
   scheduled runs from 2026-10-11 to 2026-11-15. It now runs as seven
@@ -18,9 +58,66 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   3,500 to 4,800 of the 28,848 mutants, and one job gates their sum
   against the floor. A test checks that every module in `pain001/`
   falls in exactly one shard. The workflow can also be started by hand.
+- Every mutation run writes `mutants/survivors.txt`, the names of the
+  mutants the tests let through, and CI uploads it with the stats. The
+  first full run on 2026-11-15 scored 79.6% against the 80% floor, but
+  its artifacts held only counts, so nothing said which mutants to look
+  at. `mutmut show <name>` prints a survivor's diff.
+- `tests/test_cli_option_factories.py` applies `ssh_options`,
+  `xml_sign_options` and `format_option` to a fresh command and pins
+  the flags they attach: order, types, defaults and help text. The
+  decorators run when the CLI is imported, before mutmut activates a
+  mutant, so no test ever ran a changed one: they held 276 of the
+  full run's 5,868 survivors. Run locally, 272 of the 276 are now
+  killed; the other four are equivalent (`readable=True` and
+  `type=str` restate Click's defaults).
+- `tests/test_import_time_builders.py` builds the template registry
+  and the API's generate-route `responses` tables again inside a test
+  and compares them with the copies built at import, then covers the
+  metadata the bundled templates do not use (no examples, deprecated,
+  an empty file). 113 of the 117 survivors in those two builders are
+  now killed; the other four are equivalent (`"UTF-8"` for `"utf-8"`,
+  and `bool()` of a missing `deprecated` key).
 - `tests/test_ecosystem_publications.py` imported `ecosystem_audit` both
   as a module and with `from ... import`, which CodeQL flagged (code
   scanning alert 306). It now uses the module import only.
+
+### Removed
+
+- `--json` on `versions`, `inspect` and `plugins list`, and
+  `--scheme-format json` on `generate` and `validate`. Use
+  `--format json`; with it, the scheme result is the `scheme` field of
+  the one JSON object on stdout. Both were deprecated in 0.0.87 with a
+  promise to remove them in 0.0.88, but 0.0.88 shipped still accepting
+  them and still warning "will be removed in 0.0.88"; this release keeps
+  the promise one release late. Passing either flag now exits 2 with
+  "No such option".
+
+### Added
+
+- A mutation ratchet. `mutation-baseline.json` records how many mutants
+  survive in each function, and the weekly full run fails when any
+  function has more than recorded, or a function the baseline does not
+  list has any (`scripts/mutation_ratchet.py`, `make mutate-ratchet`).
+  `--update` records improvements from a run's survivor lists and
+  refuses a regression, so the backlog only shrinks toward a 100%
+  score. It counts per function, not per mutant, because mutmut
+  renumbers a function's mutants whenever its body changes.
+
+### Changed
+
+- The mutation-score floor rises from 80% to 85%, toward 100%. It
+  applies to the fast tier on every pull request (85.7% to 86.2% over
+  the last nine runs, before this release's new tests) and to the weekly
+  full run, whose first finished run scored 79.6%.
+- The corpus builder's conform pass moved to `pain001/corpus/_fit.py`,
+  and `_Fitter.value` and `_Fitter.tree` were split into smaller steps.
+  Behaviour is unchanged (the corpus, golden and twin tests pass as
+  before), and `pain001.corpus.builder` still exports `ALIASES` and
+  `WRAP_PREFERENCE` with the same API documentation. The two functions
+  were the worst entries in the complexity baseline (cognitive 48 and
+  20); both are now under the ceilings, `builder.py` is 851 lines
+  instead of 946, and the baseline holds 78 offenders instead of 80.
 
 ## [0.0.88] - 2026-11-14
 

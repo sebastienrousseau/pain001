@@ -29,7 +29,7 @@ from typing import Any
 import click
 
 from pain001.cli._config import _resolve_config
-from pain001.cli._format import Failure, Reporter, deprecated, emit_json
+from pain001.cli._format import Failure, Reporter, emit_json
 from pain001.cli._generate_steps import (
     Outcome,
     check_schematron,
@@ -263,8 +263,6 @@ def run_generate(opts: dict[str, Any]) -> None:
     # JSON log records on stderr would be corrupted by progress lines.
     quiet = opts["quiet"] or resolve_log_format(opts["log_format"]) == "json"
     rep = Reporter(opts["output_format"], quiet)
-    if opts["scheme_format"] == "json":
-        deprecated("--scheme-format json", "--format json")
     rep.banner()
     logger = configure_logging(
         rep.chatter, opts["verbose"], opts["log_format"]

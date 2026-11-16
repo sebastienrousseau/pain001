@@ -3,10 +3,14 @@ PySentinel pytest plugin for real-time SLO enforcement.
 Monitors test execution time and warns if approaching thresholds.
 """
 
+import logging
 import os
+import sys
 import tempfile
 import time
+from collections.abc import Iterator
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
@@ -140,3 +144,88 @@ def pytest_configure(config: pytest.Config) -> None:
             "markers", "slo: mark test as subject to SLO enforcement"
         )
         config.pluginmanager.register(SLOPlugin())
+
+
+@pytest.fixture(autouse=True)
+def _no_trace_context_leak(request: pytest.FixtureRequest) -> Iterator[None]:
+    """Run each test in an empty OpenTelemetry context; fail one that leaks.
+
+    Starlette's TestClient runs the app in the calling thread's context,
+    so a span one test leaves active would show up in a later test's
+    logs (``span_id``), depending on the order tests run in. The module
+    is only touched once something has imported it, as in the product.
+    """
+    context = sys.modules.get("opentelemetry.context")
+    token = context.attach(context.Context()) if context else None
+    yield
+    trace = sys.modules.get("opentelemetry.trace")
+    active = (
+        trace is not None
+        and trace.get_current_span().get_span_context().is_valid
+    )
+    if context is not None and token is not None:
+        context.detach(token)
+    assert not active, (
+        f"{request.node.nodeid} left an OpenTelemetry span active"
+    )
+
+
+@pytest.fixture(autouse=True)
+def _no_global_tracer_provider(
+    request: pytest.FixtureRequest,
+) -> Iterator[None]:
+    """Fail a test that installs a process-wide tracer provider.
+
+    OpenTelemetry lets a process set its provider once. A test that
+    reaches the real ``init_otel`` with ``OTEL_ENABLED`` set installs one
+    for good, and every later tracing test then sees its spans and its
+    service name, depending on the order tests run in. pain001's cached
+    tracer is cleared after each test for the same reason.
+    """
+    yield
+    otel = cast(Any, sys.modules.get("pain001.observability.otel"))
+    if otel is not None:
+        otel.reset_for_tests()
+    trace = sys.modules.get("opentelemetry.trace")
+    assert trace is None or isinstance(
+        trace.get_tracer_provider(), trace.ProxyTracerProvider
+    ), f"{request.node.nodeid} installed a global tracer provider"
+
+
+@pytest.fixture(autouse=True)
+def _restore_package_logger() -> Iterator[None]:
+    """Put the ``pain001`` logger back as the test found it.
+
+    The logger is process-wide: a test that sets it to WARNING (through
+    ``Context.set_log_level``) silences the INFO events a later test
+    captures with ``caplog``, depending on the order tests run in, as
+    mutmut's clean-test pass does.
+    """
+    package = logging.getLogger("pain001")
+    saved = (package.level, package.propagate, package.disabled)
+    handlers = list(package.handlers)
+    context = cast(Any, sys.modules.get("pain001.context.context"))
+    instance = context.Context.instance if context is not None else None
+    level = getattr(instance, "log_level", None)
+    yield
+    package.setLevel(saved[0])
+    package.propagate, package.disabled = saved[1], saved[2]
+    package.handlers = handlers
+    if instance is not None and level is not None:
+        instance.log_level = level
+
+
+@pytest.fixture(autouse=True)
+def _wait_for_pipeline_jobs() -> Iterator[None]:
+    """Let a test's background REST jobs finish before the next test starts.
+
+    The API runs generation on a thread pool and a job can outlive the
+    request that started it. Work still running after its test would be
+    attributed to whichever test runs next (mutmut picks the tests to run
+    against a mutant from that record), so the pool is drained here.
+    """
+    yield
+    pipeline = cast(Any, sys.modules.get("pain001.api._pipeline"))
+    if pipeline is not None and pipeline._executor is not None:
+        pipeline._executor.shutdown(wait=True)
+        pipeline._executor = None

@@ -322,7 +322,7 @@ def test_unknown_name_error_names_the_offending_profile() -> None:
 
 
 def test_cli_accepts_a_composed_scheme_spec() -> None:
-    """``--scheme sepa-sct,anti-duplicate --scheme-format json`` round-trips."""
+    """``--scheme sepa-sct,anti-duplicate --format json`` round-trips."""
     runner = CliRunner()
     with rows_loaded([_row(), _row()]):
         result = runner.invoke(
@@ -338,7 +338,7 @@ def test_cli_accepts_a_composed_scheme_spec() -> None:
                 str(_TPL / "template.csv"),
                 "--scheme",
                 "sepa-sct,anti-duplicate",
-                "--scheme-format",
+                "--format",
                 "json",
                 "--dry-run",
             ],
@@ -349,8 +349,10 @@ def test_cli_accepts_a_composed_scheme_spec() -> None:
         for line in result.output.splitlines()
         if line.startswith("{")
     )
-    assert payload["profile"] == "sepa-sct,anti-duplicate"
-    assert {v["rule"] for v in payload["violations"]} == {"DUP-CREDITOR-DATE"}
+    assert payload["scheme"]["profile"] == "sepa-sct,anti-duplicate"
+    assert {v["rule"] for v in payload["scheme"]["violations"]} == {
+        "DUP-CREDITOR-DATE"
+    }
 
 
 def test_rest_api_accepts_the_profile_and_composition() -> None:

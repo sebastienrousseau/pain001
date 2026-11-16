@@ -179,7 +179,6 @@ Options:
                                   several: sepa-sct,anti-duplicate.
   --explain                       With --scheme, print a remediation hint for
                                   each violation.
-  --scheme-format [text|json]     Deprecated: use --format json.
   --decrypt-key FILE              GPG private-key file to import before reading
                                   a .gpg/.asc data file (requires pain001[gpg];
                                   sets PAIN001_GPG_KEYFILE).
@@ -376,7 +375,6 @@ Options:
                                   (e.g. sepa-sct).
   --explain                       With --scheme, print a remediation hint for
                                   each violation.
-  --scheme-format [text|json]     Deprecated: use --format json.
   --decrypt-key FILE              GPG private-key file to import before reading
                                   a .gpg/.asc file.
   --decrypt-passphrase-env VAR    Environment variable holding the GPG

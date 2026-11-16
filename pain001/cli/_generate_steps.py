@@ -134,35 +134,27 @@ def run_scheme_check(
 ) -> None:
     """Validate loaded rows against a payment-scheme rulebook.
 
-    ``--scheme-format json`` (deprecated) still writes the scheme
-    result alone to stdout when ``--format`` is text.
-
     Args:
         rep: Where human output goes.
         outcome: Records the scheme result.
         data: Loaded payment rows.
         opts: The command's options (``scheme``, ``rules``,
-            ``explain``, ``scheme_format``, ``xml_message_type``).
+            ``explain``, ``xml_message_type``).
 
     Raises:
         Failure: 2 for an unknown scheme or missing extra, 1 when rows
             violate it.
     """
     scheme = opts["scheme"] or "custom"
-    legacy = opts["scheme_format"] == "json" and not rep.as_json
     try:
         result = _scheme_result(
             data, scheme, opts["rules"], opts["xml_message_type"]
         )
     except ValueError as exc:
-        if legacy:
-            emit_json({"error": str(exc)}, indent=None)
         rep.error(str(exc), plain=True)
         raise Failure(2, str(exc)) from exc
     outcome.scheme = scheme_dict(result)
-    if legacy:
-        emit_json(outcome.scheme, indent=None)
-    elif not rep.as_json:
+    if not rep.as_json:
         print_scheme_result(rep.console, result, scheme, opts["explain"])
     if not result.is_valid:
         raise Failure(1, f"Scheme '{scheme}' validation failed")

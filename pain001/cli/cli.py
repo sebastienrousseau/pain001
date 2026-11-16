@@ -184,12 +184,6 @@ _identifier_checks_option = click.option(
     help="With --scheme, print a remediation hint for each violation.",
 )
 @click.option(
-    "--scheme-format",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    help="Deprecated: use --format json.",
-)
-@click.option(
     "--decrypt-key",
     "decrypt_key",
     type=click.Path(exists=True, dir_okay=False, readable=True),
@@ -323,12 +317,6 @@ def cli() -> None:
     is_flag=True,
     default=False,
     help="With --scheme, print a remediation hint for each violation.",
-)
-@click.option(
-    "--scheme-format",
-    type=click.Choice(["text", "json"]),
-    default="text",
-    help="Deprecated: use --format json.",
 )
 @click.option(
     "--decrypt-key",

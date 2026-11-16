@@ -175,7 +175,6 @@ def test_scheme_violation_text(capsys, payload, severity):
         "scheme": f"s{payload}",
         "rules": None,
         "explain": True,
-        "scheme_format": "text",
         "xml_message_type": MTYPE,
     }
     with patch(

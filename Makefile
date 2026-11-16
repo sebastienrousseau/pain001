@@ -135,10 +135,12 @@ complex:
 # fast tier (2,562 and 2,446 of 2,941 checked mutants killed): about 120
 # mutants change verdict between runs, so the score carries a variance of
 # roughly four points that the tests, not the code, are responsible for.
-# The floor sits under the lower measurement; it is raised once the
-# flipping mutants are found and pinned (see ROADMAP), never lowered to
-# make a red run green.
-MUTATION_FLOOR ?= 80
+# The maintainer raised the floor from 80 to 85 on 2026-11-15, toward
+# 100. The fast tier then scored 85.7% to 86.2% over nine CI runs, and
+# the first full run that finished scored 79.6%; the full run is held to
+# the same floor, so its survivors are the backlog. The floor is never
+# lowered to make a red run green.
+MUTATION_FLOOR ?= 85
 # CI runs the fast tier as two shards in parallel: 4,148 mutants in
 # 0.0.81, where the last single run on main took 43 of the job's 90
 # minutes. message_registry holds about two thirds of the test time,
@@ -151,16 +153,20 @@ MUTATION_FAST_TIER = $(MUTATION_SHARD_REGISTRY) $(MUTATION_SHARD_REST)
 # The weekly full run is sharded the same way: as one job it outgrew
 # the 300-minute timeout (five of six scheduled runs from 2026-10-11 to
 # 2026-11-15 were cancelled at the limit, so no full score was recorded).
-# The seven shards hold 3,500 to 4,800 of the 28,848 mutants mutmut 3.8
+# The shards hold up to 4,800 of the 28,848 mutants mutmut 3.8
 # generated for 0.0.88. corpus is the largest package (about 7,000), so
-# its rules subpackage is a shard of its own; "[!r]*" is every other
-# corpus module except registry, which is named on its own.
+# its rules subpackage is a shard of its own. The rest of corpus ran 3h15m
+# as one shard; by mutmut's own estimate (mutants times the tests each
+# one runs) builder is 58% of that time, so builder is CORPUS and the
+# remaining modules are CORPUS_DATA: "[!rb]*" is every corpus module
+# except rules and builder, and registry is named on its own.
 # tests/test_mutation_gate.py checks that every module in pain001/ falls
 # in exactly one shard, so a new module cannot slip out of the run.
 # The top-level __init__ has no module segment: its mutants are named
 # "pain001.x_*" (functions) and "pain001.xǁ*" (methods).
-MUTATION_FULL_SHARDS = CORPUS CORPUS_RULES VALIDATION XML API CLI OTHER
-MUTATION_FULL_CORPUS = "pain001.corpus.[!r]*" "pain001.corpus.registry.*"
+MUTATION_FULL_SHARDS = CORPUS CORPUS_DATA CORPUS_RULES VALIDATION XML API CLI OTHER
+MUTATION_FULL_CORPUS = "pain001.corpus.builder.*"
+MUTATION_FULL_CORPUS_DATA = "pain001.corpus.[!rb]*" "pain001.corpus.registry.*"
 MUTATION_FULL_CORPUS_RULES = "pain001.corpus.rules.*" "pain001.twins.*"
 MUTATION_FULL_VALIDATION = "pain001.validation.*" "pain001.core.*"
 MUTATION_FULL_XML = "pain001.xml.*" "pain001.security.*" "pain001.config.*" "pain001.templates.*" "pain001.json.*"
@@ -168,11 +174,18 @@ MUTATION_FULL_API = "pain001.api.*" "pain001.faces.*" "pain001.schematron.*"
 MUTATION_FULL_CLI = "pain001.cli.*" "pain001.transport.*" "pain001.plugins.*" "pain001.migration.*"
 MUTATION_FULL_OTHER = "pain001.logging_schema.*" "pain001.pain002.*" "pain001.camt053.*" "pain001.data.*" "pain001.csv.*" "pain001.lsp.*" "pain001.db.*" "pain001.observability.*" "pain001.context.*" "pain001.parquet.*" "pain001.schemas.*" "pain001.mcp.*" "pain001.test_fixtures.*" "pain001.check.*" "pain001.entry.*" "pain001.async_adapter.*" "pain001.__main__.*" "pain001.exceptions.*" "pain001._lazy.*" "pain001.suite.*" "pain001.constants.*" "pain001.migrate.*" "pain001.x_*" "pain001.xǁ*"
 
+# The names of the mutants the tests let through, one per line, next to
+# the stats: CI uploads both, so a red run says which mutants to look at.
+# `mutmut show <name>` prints one's diff. grep exits 1 when nothing
+# survived, which is a success here; any other status still fails.
+MUTATION_SURVIVORS = poetry run mutmut results > mutants/results.txt && { grep -E ': survived$$' mutants/results.txt > mutants/survivors.txt || test $$? -eq 1; } && echo "$$(wc -l < mutants/survivors.txt | tr -d ' ') survivors listed in mutants/survivors.txt"
+
 mutate:
 	@echo "$(YELLOW)Running mutation testing (every module)...$(NC)"
 	@rm -rf mutants
 	@poetry run mutmut run
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
 
 mutate-fast:
@@ -180,6 +193,7 @@ mutate-fast:
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_FAST_TIER)
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 	@poetry run python scripts/mutation_gate.py --floor $(MUTATION_FLOOR)
 
 # One shard of the fast tier (SHARD=REGISTRY or SHARD=REST); CI gates
@@ -189,14 +203,24 @@ mutate-shard:
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_SHARD_$(SHARD))
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
 
 # One shard of the weekly full run (SHARD=VALIDATION, API, ...); CI gates
-# the six shards together with mutate-gate.
+# the shards together with mutate-gate.
 mutate-full-shard:
 	@test -n '$(MUTATION_FULL_$(SHARD))' || { echo "SHARD must be one of: $(MUTATION_FULL_SHARDS)" >&2; exit 1; }
 	@rm -rf mutants
 	@poetry run mutmut run $(MUTATION_FULL_$(SHARD))
 	@poetry run mutmut export-cicd-stats
+	@$(MUTATION_SURVIVORS)
+
+# Hold surviving mutants per function to mutation-baseline.json, which
+# may only shrink (scripts/mutation_ratchet.py): the weekly full run
+# fails when any function has more survivors than recorded. After an
+# improvement, record it from the run's artifacts with
+#   make mutate-ratchet MUTATION_SURVIVOR_LISTS="..." RATCHET_ARGS="--update --score 85.3%"
+mutate-ratchet:
+	@python3 scripts/mutation_ratchet.py --baseline mutation-baseline.json $(foreach s,$(MUTATION_SURVIVOR_LISTS),--survivors $(s)) $(RATCHET_ARGS)
 
 # Score several shards' stats as one tier: MUTATION_STATS="a.json b.json".
 # The script uses the standard library only, so no virtualenv is needed.

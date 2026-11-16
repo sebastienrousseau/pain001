@@ -34,8 +34,8 @@ def test_plugins_list_renders_table(runner) -> None:
 
 
 def test_plugins_list_json_emits_each_built_in(runner) -> None:
-    """The `--json` flag emits a structured array."""
-    result = runner.invoke(cli, ["plugins", "list", "--json"])
+    """`--format json` emits a structured array."""
+    result = runner.invoke(cli, ["plugins", "list", "--format", "json"])
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
     names = {entry["name"] for entry in payload}
@@ -49,7 +49,7 @@ def test_plugins_list_json_emits_each_built_in(runner) -> None:
 def test_plugins_list_kind_filter(runner) -> None:
     """`--kind loader` narrows the output to loaders only."""
     result = runner.invoke(
-        cli, ["plugins", "list", "--kind", "loader", "--json"]
+        cli, ["plugins", "list", "--kind", "loader", "--format", "json"]
     )
     assert result.exit_code == 0, result.output
     payload = json.loads(result.stdout)
@@ -92,7 +92,7 @@ def test_plugins_list_reflects_disabled_env(runner, monkeypatch) -> None:
     monkeypatch.setenv("PAIN001_DISABLE_PLUGINS", "parquet")
     global_registry.reset()  # re-read env on the next lookup
     try:
-        result = runner.invoke(cli, ["plugins", "list", "--json"])
+        result = runner.invoke(cli, ["plugins", "list", "--format", "json"])
         names = {entry["name"] for entry in json.loads(result.stdout)}
         assert "parquet" not in names
         assert "csv" in names  # other built-ins unaffected

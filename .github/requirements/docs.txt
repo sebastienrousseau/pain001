@@ -377,9 +377,9 @@ sphinx==9.0.4 \
     #   pydata-sphinx-theme
     #   sphinx-autodoc-typehints
     #   sphinx-design
-sphinx-autodoc-typehints==3.5.2 \
-    --hash=sha256:0accd043619f53c86705958e323b419e41667917045ac9215d7be1b493648d8c \
-    --hash=sha256:5fcd4a3eb7aa89424c1e2e32bedca66edc38367569c9169a80f4b3e934171fdb
+sphinx-autodoc-typehints==3.6.1 \
+    --hash=sha256:dd818ba31d4c97f219a8c0fcacef280424f84a3589cedcb73003ad99c7da41ca \
+    --hash=sha256:fa0b686ae1b85965116c88260e5e4b82faec3687c2e94d6a10f9b36c3743e2fe
     # via -r docs.in
 sphinx-design==0.7.0 \
     --hash=sha256:d2a3f5b19c24b916adb52f97c5f00efab4009ca337812001109084a740ec9b7a \

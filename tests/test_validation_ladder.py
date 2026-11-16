@@ -29,6 +29,7 @@ from pain001.exceptions import IssueCode, PaymentValidationError
 from pain001.validation import ValidationConfig, ValidationService
 from pain001.validation.ladder import (
     check_scheme,
+    load_valid,
     load_valid_chunks,
     read_policy,
     run_ladder,
@@ -189,3 +190,30 @@ class TestValidationService:
         )
         assert not report.results["message_type"].is_valid
         assert report.results["data_content"].is_valid
+
+
+def test_two_problems_are_plural_and_headed_by_the_type() -> None:
+    """The headline names the message type and counts "2 problems"."""
+    rows = _rows()
+    for row in rows[:2]:
+        row["currency"] = "EURO"
+    with pytest.raises(PaymentValidationError) as caught:
+        run_ladder(rows[:2], MESSAGE_TYPE).require_valid()
+    assert str(caught.value).startswith(
+        f"{MESSAGE_TYPE} schema validation failed (2 problems):"
+    )
+
+
+def test_rows_are_numbered_from_line_one_by_default() -> None:
+    """Without a header line, the first row is line 1."""
+    error = ValidationError("bad", "$.id", "x", "type")
+    [issue] = schema_issues([(0, [error])])
+    assert issue.line == 1
+
+
+def test_load_valid_checks_identifiers_unless_told_not_to() -> None:
+    """A bad IBAN is refused by default and passes with the checks off."""
+    rows = _rows(debtor_account_IBAN="GB00BUKB20201555555555")
+    with pytest.raises(PaymentValidationError, match="IBAN"):
+        load_valid(rows, MESSAGE_TYPE)
+    assert load_valid(rows, MESSAGE_TYPE, identifier_checks=False) == rows

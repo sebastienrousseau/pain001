@@ -12,12 +12,11 @@ the banner, warnings and errors go to standard error. With
 ``pain001 <command> --format json | jq .`` works for every command
 that returns a result (``serve`` and ``mcp`` run servers and have
 none). The ``--json`` flag that ``versions``, ``inspect`` and
-``plugins list`` had is kept for one release and warns on stderr.
+``plugins list`` had was removed in 0.0.89; use ``--format json``.
 """
 
 from __future__ import annotations
 
-import functools
 import json
 import sys
 from collections.abc import Callable
@@ -28,10 +27,6 @@ import click
 from rich.console import Console
 
 from pain001.cli._output import print_banner
-
-#: The release that drops the deprecated ``--json`` and
-#: ``--scheme-format`` flags.
-REMOVED_IN = "0.0.88"
 
 Command = Callable[..., Any]
 
@@ -52,20 +47,6 @@ class Failure(SystemExit):
         self.message = message
 
 
-def deprecated(old: str, new: str) -> None:
-    """Warn on stderr that ``old`` is going away in favour of ``new``.
-
-    Args:
-        old: The deprecated flag, as typed.
-        new: What to use instead.
-    """
-    click.echo(
-        f"Warning: {old} is deprecated and will be removed in "
-        f"{REMOVED_IN}; use {new}.",
-        err=True,
-    )
-
-
 def emit_json(value: Any, indent: int | None = 2) -> None:
     """Write ``value`` to stdout as one JSON document.
 
@@ -77,35 +58,11 @@ def emit_json(value: Any, indent: int | None = 2) -> None:
     click.echo(json.dumps(value, indent=indent, default=str))
 
 
-def _legacy_json(command: Command) -> Command:
-    """Accept the deprecated ``--json`` flag as ``--format json``."""
-
-    @functools.wraps(command)
-    def wrapper(*args: Any, as_json: bool = False, **kwargs: Any) -> Any:
-        """Map ``--json`` onto ``output_format`` and warn."""
-        if as_json:
-            deprecated("--json", "--format json")
-            kwargs["output_format"] = "json"
-        return command(*args, **kwargs)
-
-    return click.option(
-        "--json",
-        "as_json",
-        is_flag=True,
-        default=False,
-        hidden=True,
-        help="Deprecated: use --format json.",
-    )(wrapper)
-
-
-def format_option(
-    *choices: str, legacy_json: bool = False
-) -> Callable[[Command], Command]:
+def format_option(*choices: str) -> Callable[[Command], Command]:
     """Add ``--format`` (default ``text``) to a command.
 
     Args:
         *choices: The formats beyond ``text`` and ``json``, if any.
-        legacy_json: Also accept the deprecated ``--json`` flag.
 
     Returns:
         A decorator, applied below ``@click.command``.
@@ -113,9 +70,7 @@ def format_option(
     names = ["text", "json", *choices]
 
     def decorate(command: Command) -> Command:
-        """Attach the option (and the legacy flag) to ``command``."""
-        if legacy_json:
-            command = _legacy_json(command)
+        """Attach the option to ``command``."""
         return click.option(
             "--format",
             "output_format",

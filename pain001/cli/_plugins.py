@@ -77,7 +77,7 @@ def plugins_group() -> None:
 @click.option(
     "--kind", type=_KINDS, default=None, help="Filter to one plugin kind."
 )
-@format_option(legacy_json=True)
+@format_option()
 def plugins_list_cmd(kind: str | None, output_format: str) -> None:
     """List every registered plugin (built-in + entry-point discovered).
     \f

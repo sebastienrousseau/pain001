@@ -140,7 +140,7 @@ def _plugins_disable(cwd: Path, env: dict[str, str], home: Path) -> None:
     assert result.returncode == 2, result.stdout + result.stderr
     print("disable shell expr    -> exit 2 (rejected)")
 
-    args = ["plugins", "list", "--kind", "loader", "--json"]
+    args = ["plugins", "list", "--kind", "loader", "--format", "json"]
     disabled_env = env | {"PAIN001_DISABLE_PLUGINS": "parquet"}
     loaders = json.loads(run_cli(args, cwd, disabled_env).stdout)
     names = {loader["name"] for loader in loaders}

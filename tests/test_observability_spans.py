@@ -53,9 +53,14 @@ def exporter(monkeypatch: pytest.MonkeyPatch):
     memory = InMemorySpanExporter()
     provider = TracerProvider()
     provider.add_span_processor(SimpleSpanProcessor(memory))
-    tracer = provider.get_tracer("pain001-test")
-    monkeypatch.setattr(otel, "init_otel", lambda *a, **kw: tracer)
-    return memory
+    # Seed the cached tracer rather than patching ``otel.init_otel``:
+    # modules that imported ``init_otel`` by name (the request
+    # middleware, the app's lifespan) would still call the real one,
+    # which installs a process-wide SDK provider every later test sees.
+    monkeypatch.setattr(otel, "_tracer", provider.get_tracer("pain001-test"))
+    monkeypatch.setattr(otel, "_init_attempted", True)
+    yield memory
+    provider.shutdown()
 
 
 def _names(memory) -> list[str]:

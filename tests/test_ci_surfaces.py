@@ -86,3 +86,14 @@ def test_the_check_hook_skips_unrelated_xml() -> None:
     (check,) = (hook for hook in HOOKS if hook["id"] == "pain001-check")
     assert "--skip-other-xml" in check["entry"]
     assert check["types"] == ["xml"]
+
+
+def test_the_action_meets_the_marketplace_listing_rules() -> None:
+    """GitHub Marketplace refuses a description of 125 characters or more.
+
+    The release form checks it only when the action is listed, so a
+    longer description would block the listing at release time.
+    """
+    assert len(ACTION["description"]) < 125
+    assert ACTION["branding"]["icon"]
+    assert ACTION["branding"]["color"]

@@ -61,7 +61,9 @@ jobs:
         if: always()
         with:
           name: mutation-fast-${{ matrix.shard }}
-          path: mutants/mutmut-cicd-stats.json
+          path: |
+            mutants/mutmut-cicd-stats.json
+            mutants/survivors.txt
           if-no-files-found: warn
 
   # The required check. It runs even when a shard failed (a skipped
@@ -104,7 +106,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [CORPUS, CORPUS_RULES, VALIDATION, XML, API, CLI, OTHER]
+        shard: [CORPUS, CORPUS_DATA, CORPUS_RULES, VALIDATION, XML, API, CLI, OTHER]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -122,7 +124,9 @@ jobs:
         if: always()
         with:
           name: mutation-full-${{ matrix.shard }}
-          path: mutants/mutmut-cicd-stats.json
+          path: |
+            mutants/mutmut-cicd-stats.json
+            mutants/survivors.txt
           if-no-files-found: warn
 
   # Scores the shards as one run; fails unless every shard finished.
@@ -150,12 +154,27 @@ jobs:
       - run: >-
           make mutate-gate
           MUTATION_STATS="mutation-stats/mutation-full-CORPUS/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-CORPUS_DATA/mutmut-cicd-stats.json
           mutation-stats/mutation-full-CORPUS_RULES/mutmut-cicd-stats.json
           mutation-stats/mutation-full-VALIDATION/mutmut-cicd-stats.json
           mutation-stats/mutation-full-XML/mutmut-cicd-stats.json
           mutation-stats/mutation-full-API/mutmut-cicd-stats.json
           mutation-stats/mutation-full-CLI/mutmut-cicd-stats.json
           mutation-stats/mutation-full-OTHER/mutmut-cicd-stats.json"
+      # No function may have more surviving mutants than
+      # mutation-baseline.json records (see the Makefile). It runs even
+      # when the score step failed, so both verdicts are reported.
+      - if: ${{ !cancelled() }}
+        run: >-
+            make mutate-ratchet
+            MUTATION_SURVIVOR_LISTS="mutation-stats/mutation-full-CORPUS/survivors.txt
+            mutation-stats/mutation-full-CORPUS_DATA/survivors.txt
+            mutation-stats/mutation-full-CORPUS_RULES/survivors.txt
+            mutation-stats/mutation-full-VALIDATION/survivors.txt
+            mutation-stats/mutation-full-XML/survivors.txt
+            mutation-stats/mutation-full-API/survivors.txt
+            mutation-stats/mutation-full-CLI/survivors.txt
+            mutation-stats/mutation-full-OTHER/survivors.txt"
 
   # Job 3: Performance Benchmarks
   benchmarks:
