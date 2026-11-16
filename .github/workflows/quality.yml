@@ -106,7 +106,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [CORPUS, CORPUS_RULES, VALIDATION, XML, API, CLI, OTHER]
+        shard: [CORPUS, CORPUS_DATA, CORPUS_RULES, VALIDATION, XML, API, CLI, OTHER]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -154,6 +154,7 @@ jobs:
       - run: >-
           make mutate-gate
           MUTATION_STATS="mutation-stats/mutation-full-CORPUS/mutmut-cicd-stats.json
+          mutation-stats/mutation-full-CORPUS_DATA/mutmut-cicd-stats.json
           mutation-stats/mutation-full-CORPUS_RULES/mutmut-cicd-stats.json
           mutation-stats/mutation-full-VALIDATION/mutmut-cicd-stats.json
           mutation-stats/mutation-full-XML/mutmut-cicd-stats.json
@@ -167,6 +168,7 @@ jobs:
         run: >-
             make mutate-ratchet
             MUTATION_SURVIVOR_LISTS="mutation-stats/mutation-full-CORPUS/survivors.txt
+            mutation-stats/mutation-full-CORPUS_DATA/survivors.txt
             mutation-stats/mutation-full-CORPUS_RULES/survivors.txt
             mutation-stats/mutation-full-VALIDATION/survivors.txt
             mutation-stats/mutation-full-XML/survivors.txt

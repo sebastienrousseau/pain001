@@ -153,16 +153,20 @@ MUTATION_FAST_TIER = $(MUTATION_SHARD_REGISTRY) $(MUTATION_SHARD_REST)
 # The weekly full run is sharded the same way: as one job it outgrew
 # the 300-minute timeout (five of six scheduled runs from 2026-10-11 to
 # 2026-11-15 were cancelled at the limit, so no full score was recorded).
-# The seven shards hold 3,500 to 4,800 of the 28,848 mutants mutmut 3.8
+# The shards hold up to 4,800 of the 28,848 mutants mutmut 3.8
 # generated for 0.0.88. corpus is the largest package (about 7,000), so
-# its rules subpackage is a shard of its own; "[!r]*" is every other
-# corpus module except registry, which is named on its own.
+# its rules subpackage is a shard of its own. The rest of corpus ran 3h15m
+# as one shard; by mutmut's own estimate (mutants times the tests each
+# one runs) builder is 58% of that time, so builder is CORPUS and the
+# remaining modules are CORPUS_DATA: "[!rb]*" is every corpus module
+# except rules and builder, and registry is named on its own.
 # tests/test_mutation_gate.py checks that every module in pain001/ falls
 # in exactly one shard, so a new module cannot slip out of the run.
 # The top-level __init__ has no module segment: its mutants are named
 # "pain001.x_*" (functions) and "pain001.xǁ*" (methods).
-MUTATION_FULL_SHARDS = CORPUS CORPUS_RULES VALIDATION XML API CLI OTHER
-MUTATION_FULL_CORPUS = "pain001.corpus.[!r]*" "pain001.corpus.registry.*"
+MUTATION_FULL_SHARDS = CORPUS CORPUS_DATA CORPUS_RULES VALIDATION XML API CLI OTHER
+MUTATION_FULL_CORPUS = "pain001.corpus.builder.*"
+MUTATION_FULL_CORPUS_DATA = "pain001.corpus.[!rb]*" "pain001.corpus.registry.*"
 MUTATION_FULL_CORPUS_RULES = "pain001.corpus.rules.*" "pain001.twins.*"
 MUTATION_FULL_VALIDATION = "pain001.validation.*" "pain001.core.*"
 MUTATION_FULL_XML = "pain001.xml.*" "pain001.security.*" "pain001.config.*" "pain001.templates.*" "pain001.json.*"
@@ -202,7 +206,7 @@ mutate-shard:
 	@$(MUTATION_SURVIVORS)
 
 # One shard of the weekly full run (SHARD=VALIDATION, API, ...); CI gates
-# the six shards together with mutate-gate.
+# the shards together with mutate-gate.
 mutate-full-shard:
 	@test -n '$(MUTATION_FULL_$(SHARD))' || { echo "SHARD must be one of: $(MUTATION_FULL_SHARDS)" >&2; exit 1; }
 	@rm -rf mutants
