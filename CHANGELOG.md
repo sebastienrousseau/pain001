@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.90] - Unreleased
+## [0.0.90] - 2026-11-16
 
 ### Fixed
 
@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `uses: sebastienrousseau/pain001@v...` reference is unchanged.
 - The README shows the Action in a workflow under Install, and the
   release preflight keeps that example's pin on the released tag.
+- Release 0.0.90 in lockstep with the pain001 suite.
 
 ## [0.0.89] - 2026-11-16
 
