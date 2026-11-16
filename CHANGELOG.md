@@ -9,6 +9,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.90] - 2026-11-16
+
+### Fixed
+
+- A freshly started `pain001 serve` no longer answers its first
+  concurrent requests with HTTP 500 "partially initialized module
+  'xmlschema' has no attribute 'XMLSchema'". `lazy_module` took
+  xmlschema from `sys.modules` while another thread was still importing
+  it; it now waits for that import, as an `import` statement does.
+  Found by the .NET SDK's conformance run against 0.0.89.
+
+### Changed
+
+- The GitHub Action is named "ISO 20022 Payment File Check (pain001)"
+  and its description names pain.001, pain.008, payment XML, SEPA,
+  CBPR+ and FedNow, the words a Marketplace search for it uses. The
+  `uses: sebastienrousseau/pain001@v...` reference is unchanged.
+- The README shows the Action in a workflow under Install, and the
+  release preflight keeps that example's pin on the released tag.
+- Release 0.0.90 in lockstep with the pain001 suite.
+
 ## [0.0.89] - 2026-11-16
 
 ### Fixed

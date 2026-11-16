@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -140,3 +141,43 @@ def test_parquet_support_is_probed_without_importing(
     assert lpd._installed("pyarrow") is False
     monkeypatch.setattr(importlib.util, "find_spec", lambda name: None)
     assert lpd._installed("pyarrow") is False
+
+
+def test_lazy_module_waits_for_an_import_in_another_thread(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A module half-imported by another thread is not handed out.
+
+    pain001 0.0.89's server answered its first concurrent requests with
+    "partially initialized module 'xmlschema' has no attribute
+    'XMLSchema'": one request imported xmlschema normally while another
+    took the same, still-executing module from ``sys.modules`` through
+    ``lazy_module``.
+    """
+    import threading
+
+    from pain001._lazy import lazy_module
+
+    (tmp_path / "pain001_slow_import.py").write_text(
+        "import builtins, time\n"
+        "builtins.pain001_slow_started.set()\n"
+        "time.sleep(0.5)\n"
+        "VALUE = 42\n",
+        encoding="utf-8",
+    )
+    monkeypatch.syspath_prepend(str(tmp_path))
+    started = threading.Event()
+    monkeypatch.setattr(
+        "builtins.pain001_slow_started", started, raising=False
+    )
+    monkeypatch.delitem(sys.modules, "pain001_slow_import", raising=False)
+    importer = threading.Thread(
+        target=__import__, args=("pain001_slow_import",)
+    )
+    importer.start()
+    try:
+        assert started.wait(5)
+        assert lazy_module("pain001_slow_import").VALUE == 42
+    finally:
+        importer.join()
+        sys.modules.pop("pain001_slow_import", None)

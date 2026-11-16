@@ -29,7 +29,7 @@
 
 **Getting started**
 
-- [Install](#install): PyPI, source and Docker
+- [Install](#install): PyPI, source, Docker and the GitHub Action
 - [Requirements](#requirements): toolchain floor, platforms
 - [Quick Start](#quick-start): scaffold, validate and generate synthetic payments
 
@@ -65,7 +65,7 @@
 python -m pip install pain001
 ```
 
-> **Latest release: v0.0.89**: ISO 20022 pain.001 and pain.008 files
+> **Latest release: v0.0.90**: ISO 20022 pain.001 and pain.008 files
 > generated from CSV, SQLite, JSON, JSON Lines and Parquet and validated
 > against the official XSD, for Python 3.11+. Each companion publication
 > is verified separately by the ecosystem audit.
@@ -88,6 +88,27 @@ Docker runs as a non-root user. Mount a writable directory at `/data` and use
 `-w /data`; `generate -t pain.001.001.03 -d payments.csv -o output` writes into
 an output **directory**, not a filename. No distro package or standalone native
 binary is claimed; see [packaging](docs/packaging.md).
+
+### As a GitHub Action
+
+Check payment files on every pull request and see the findings in code
+scanning. The step fails when a file breaks the XSD, a message rule or a
+scheme profile:
+
+```yaml
+permissions:
+  contents: read
+  security-events: write   # for the SARIF upload
+steps:
+  - uses: actions/checkout@v7
+  - uses: sebastienrousseau/pain001@v0.0.90
+    with:
+      files: "payments/**/*.xml"
+      scheme: sepa-sct
+```
+
+Inputs and outputs are listed in [action.yml](action.yml) and the
+[user guide](docs/usage.rst).
 
 ---
 
@@ -327,7 +348,7 @@ Also see [architecture](ARCHITECTURE.md), [support](SUPPORT.md),
 
 Versions advance one step at a time on the `0.0.x` line, with `0.1.0` after
 `0.0.999`; only the maintainer opens a release. The current release
-is 0.0.89; publication requires approved release PRs and signed release tags.
+is 0.0.90; publication requires approved release PRs and signed release tags.
 
 Generated XML changes for identical input, required fields, CLI/REST/MCP
 contracts and plugin contracts are breaking changes. They must be announced

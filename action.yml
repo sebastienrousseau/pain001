@@ -2,7 +2,7 @@
 # pain001 check as a GitHub Action: run the validation ladder on payment
 # files in a repository and upload the findings to code scanning.
 #
-#   - uses: sebastienrousseau/pain001@v0.0.89
+#   - uses: sebastienrousseau/pain001@v0.0.90
 #     with:
 #       files: "payments/**/*.xml"
 #       scheme: sepa-sct
@@ -10,10 +10,10 @@
 # The action installs pain001 from its own checkout, so the version that
 # runs is the one the workflow pins. Uploading SARIF needs
 # "permissions: security-events: write" on the job.
-name: pain001 check
+name: ISO 20022 Payment File Check (pain001)
 description: >-
-  Check pain.001 and pain.008 files against ISO 20022 schemas, rules and
-  scheme profiles; upload SARIF.
+  Validate ISO 20022 pain.001 and pain.008 payment XML (SEPA, CBPR+,
+  FedNow) against XSD, rules and scheme profiles. SARIF.
 author: Sebastien Rousseau
 branding:
   icon: check-circle

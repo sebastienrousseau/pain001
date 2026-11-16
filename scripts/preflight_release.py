@@ -171,7 +171,7 @@ def readme_release_problems(
     return [f"README.md lacks '{w}'" for w in wanted if w not in folded]
 
 
-ACTION_EXAMPLES = ("action.yml", "docs/usage.rst")
+ACTION_EXAMPLES = ("action.yml", "docs/usage.rst", "README.md")
 _ACTION_PIN = re.compile(r"sebastienrousseau/pain001@v([0-9][0-9.]*[0-9])")
 
 
