@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.0.89] - Unreleased
+## [0.0.89] - 2026-11-16
 
 ### Fixed
 
@@ -106,6 +106,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Release 0.0.89 in lockstep with the pain001 suite.
 - The mutation-score floor rises from 80% to 85%, toward 100%. It
   applies to the fast tier on every pull request (85.7% to 86.2% over
   the last nine runs, before this release's new tests) and to the weekly
