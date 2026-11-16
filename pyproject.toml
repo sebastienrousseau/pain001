@@ -64,7 +64,7 @@ pain001-lsp-builtin = "pain001.lsp.server:main"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-click = ">=8.5.0,<9"
+click = ">=8.5.1,<9"
 defusedxml = ">=0.7.1,<1"
 jinja2 = ">=3.1.6,<4"
 pyyaml = ">=6.0,<7.0"
@@ -86,7 +86,7 @@ jsonschema = ">=4.17,<5"
 # Optional feature sets — install with
 # pain001[api] / pain001[parquet] / pain001[mcp] / pain001[lsp] /
 # pain001[redis] / pain001[gpg] / pain001[otel] / pain001[sign]
-fastapi = {version = ">=0.162.0", optional = true}
+fastapi = {version = ">=0.162.2", optional = true}
 uvicorn = {version = ">=0.54.0", extras = ["standard"], optional = true}
 pyarrow = {version = ">=26.0.1,<27.0.0", optional = true}
 mcp = {version = ">=2.3.0,<3", optional = true}
@@ -155,7 +155,7 @@ memory-profiler = "^0.61.0"
 # Sphinx 9.1+ requires Python >= 3.13; ~9.0.4 keeps one version across 3.11-3.14.
 sphinx = "~9.0.4"
 sphinx-rtd-theme = "^3.1.0"
-sphinx-autodoc-typehints = "^3.5.2"
+sphinx-autodoc-typehints = "^3.6.1"
 pip-licenses = "^5.5.5"
 twine = "^7.0.0"
 types-jsonschema = "^4.26.0.20261006"
@@ -170,7 +170,7 @@ optional = true
 [tool.poetry.group.docs.dependencies]
 sphinx = "~9.0.4"
 pydata-sphinx-theme = {version = "^0.24.0", python = ">=3.11.5"}
-sphinx-autodoc-typehints = "^3.5.2"
+sphinx-autodoc-typehints = "^3.6.1"
 sphinx-design = "^0.7.0"
 myst-parser = "^5.1.0"
 # pydata-sphinx-theme pulls in soupsieve (through beautifulsoup4).
