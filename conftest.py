@@ -3,6 +3,7 @@ PySentinel pytest plugin for real-time SLO enforcement.
 Monitors test execution time and warns if approaching thresholds.
 """
 
+import logging
 import os
 import sys
 import tempfile
@@ -167,6 +168,51 @@ def _no_trace_context_leak(request: pytest.FixtureRequest) -> Iterator[None]:
     assert not active, (
         f"{request.node.nodeid} left an OpenTelemetry span active"
     )
+
+
+@pytest.fixture(autouse=True)
+def _no_global_tracer_provider(
+    request: pytest.FixtureRequest,
+) -> Iterator[None]:
+    """Fail a test that installs a process-wide tracer provider.
+
+    OpenTelemetry lets a process set its provider once. A test that
+    reaches the real ``init_otel`` with ``OTEL_ENABLED`` set installs one
+    for good, and every later tracing test then sees its spans and its
+    service name, depending on the order tests run in. pain001's cached
+    tracer is cleared after each test for the same reason.
+    """
+    yield
+    otel = cast(Any, sys.modules.get("pain001.observability.otel"))
+    if otel is not None:
+        otel.reset_for_tests()
+    trace = sys.modules.get("opentelemetry.trace")
+    assert trace is None or isinstance(
+        trace.get_tracer_provider(), trace.ProxyTracerProvider
+    ), f"{request.node.nodeid} installed a global tracer provider"
+
+
+@pytest.fixture(autouse=True)
+def _restore_package_logger() -> Iterator[None]:
+    """Put the ``pain001`` logger back as the test found it.
+
+    The logger is process-wide: a test that sets it to WARNING (through
+    ``Context.set_log_level``) silences the INFO events a later test
+    captures with ``caplog``, depending on the order tests run in, as
+    mutmut's clean-test pass does.
+    """
+    package = logging.getLogger("pain001")
+    saved = (package.level, package.propagate, package.disabled)
+    handlers = list(package.handlers)
+    context = cast(Any, sys.modules.get("pain001.context.context"))
+    instance = context.Context.instance if context is not None else None
+    level = getattr(instance, "log_level", None)
+    yield
+    package.setLevel(saved[0])
+    package.propagate, package.disabled = saved[1], saved[2]
+    package.handlers = handlers
+    if instance is not None and level is not None:
+        instance.log_level = level
 
 
 @pytest.fixture(autouse=True)
