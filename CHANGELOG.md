@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- A freshly started `pain001 serve` no longer answers its first
+  concurrent requests with HTTP 500 "partially initialized module
+  'xmlschema' has no attribute 'XMLSchema'". `lazy_module` took
+  xmlschema from `sys.modules` while another thread was still importing
+  it; it now waits for that import, as an `import` statement does.
+  Found by the .NET SDK's conformance run against 0.0.89.
+
 ### Changed
 
 - The GitHub Action is named "ISO 20022 Payment File Check (pain001)"
