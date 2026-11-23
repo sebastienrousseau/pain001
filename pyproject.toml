@@ -145,7 +145,7 @@ ruff = "^0.17.4"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.1.0.20261030"
 types-pyyaml = "^6.0.12.20261113"
-diff-cover = "^11.0.1"
+diff-cover = "^11.0.2"
 types-setuptools = "^84.2.0"
 radon = "^6.0.1"
 complexipy = {version = "^8.3.0", python = "<3.16"}
