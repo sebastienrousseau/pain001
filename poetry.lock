@@ -555,7 +555,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
-markers = {main = "(extra == \"upload\" or extra == \"mcp\" or extra == \"sign\") and platform_python_implementation != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\""}
+markers = {main = "(extra == \"sign\" or extra == \"mcp\" or extra == \"upload\") and platform_python_implementation != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -1021,7 +1021,7 @@ files = [
     {file = "cryptography-50.0.2-pp311-pypy311_pp80-win_amd64.whl", hash = "sha256:7b75de3c8b3be1cdb1052747c929440c3eea46c1bc2cb8a6e3a48388e9b7b452"},
     {file = "cryptography-50.0.2.tar.gz", hash = "sha256:7b46165bb56eb4704e2eaaf86f3c940d19154535d9b0ca7d6d590b04060e00d5"},
 ]
-markers = {main = "extra == \"upload\" or extra == \"mcp\" or extra == \"sign\""}
+markers = {main = "extra == \"sign\" or extra == \"mcp\" or extra == \"upload\""}
 
 [package.dependencies]
 cffi = {version = ">=2.0.0", markers = "platform_python_implementation != \"PyPy\""}
@@ -2406,7 +2406,7 @@ files = [
     {file = "lxml-6.1.3-pp39-pypy39_pp73-win_amd64.whl", hash = "sha256:be5346653c0b0e34be96869ff9dbeba23860156f89a2896a64c64fb419260cb6"},
     {file = "lxml-6.1.3.tar.gz", hash = "sha256:45222d94ddd511536f3b2f7d9deae3b2339b4ce0f075f1ca25703b07cad9dd21"},
 ]
-markers = {main = "extra == \"sign\" or extra == \"fast\""}
+markers = {main = "extra == \"fast\" or extra == \"sign\""}
 
 [package.extras]
 cssselect = ["cssselect (>=0.7)"]
@@ -3718,7 +3718,7 @@ files = [
     {file = "pycparser-2.23-py3-none-any.whl", hash = "sha256:e5c6e8d3fbad53479cab09ac03729e0a9faf2bee3db8208a550daf5af81a5934"},
     {file = "pycparser-2.23.tar.gz", hash = "sha256:78816d4f24add8f10a06d6f05b4d424ad9e96cfebf68a4ddc99c65c0720d00c2"},
 ]
-markers = {main = "(extra == \"upload\" or extra == \"mcp\" or extra == \"sign\") and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""}
+markers = {main = "(extra == \"sign\" or extra == \"mcp\" or extra == \"upload\") and platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\" and implementation_name != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -4884,29 +4884,29 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.13)", "defusedxml (>=0.7.1)", "
 
 [[package]]
 name = "sphinx-design"
-version = "0.7.0"
+version = "0.8.0"
 description = "A sphinx extension for designing beautiful, view size responsive web components."
 optional = false
 python-versions = ">=3.11"
 groups = ["docs"]
 files = [
-    {file = "sphinx_design-0.7.0-py3-none-any.whl", hash = "sha256:f82bf179951d58f55dca78ab3706aeafa496b741a91b1911d371441127d64282"},
-    {file = "sphinx_design-0.7.0.tar.gz", hash = "sha256:d2a3f5b19c24b916adb52f97c5f00efab4009ca337812001109084a740ec9b7a"},
+    {file = "sphinx_design-0.8.0-py3-none-any.whl", hash = "sha256:861fecb064c3da5ff48031a237692ccb7c2e671f8c4aa84d4b9eef3cb8fd9c91"},
+    {file = "sphinx_design-0.8.0.tar.gz", hash = "sha256:57fa4d96378525122947ab6109c6e490190e3119dc10f3e3adf6b71444bf3bb4"},
 ]
 
 [package.dependencies]
-sphinx = ">=7,<10"
+sphinx = ">=7.2,<10"
 
 [package.extras]
-code-style = ["pre-commit (>=3,<4)"]
+code-style = ["pre-commit (>=3,<5)"]
 rtd = ["myst-parser (>=4,<6)"]
-testing = ["defusedxml", "myst-parser (>=4,<6)", "pytest (>=8.3,<9.0)", "pytest-cov", "pytest-regressions"]
-testing-no-myst = ["defusedxml", "pytest (>=8.3,<9.0)", "pytest-cov", "pytest-regressions"]
-theme-furo = ["furo (>=2024.7.18,<2024.8.0)"]
-theme-im = ["sphinx-immaterial (>=0.12.2,<0.13.0)"]
-theme-pydata = ["pydata-sphinx-theme (>=0.15.2,<0.16.0)"]
-theme-rtd = ["sphinx-rtd-theme (>=2.0,<3.0)"]
-theme-sbt = ["sphinx-book-theme (>=1.1,<2.0)"]
+testing = ["defusedxml", "myst-parser (>=4,<6)", "pytest (>=8.3,<10.0)", "pytest-cov", "pytest-regressions", "rcssmin", "tinycss2"]
+testing-no-myst = ["defusedxml", "pytest (>=8.3,<10.0)", "pytest-cov", "pytest-regressions", "rcssmin", "tinycss2"]
+theme-furo = ["furo (>=2025.12,<2026.0)"]
+theme-im = ["sphinx-immaterial (>=0.13.9,<0.14.0)"]
+theme-pydata = ["pydata-sphinx-theme (>=0.20,<0.25)"]
+theme-rtd = ["sphinx-rtd-theme (>=3.1,<4.0)"]
+theme-sbt = ["sphinx-book-theme (>=1.2,<2.0)"]
 
 [[package]]
 name = "sphinx-rtd-theme"
@@ -5752,4 +5752,4 @@ upload = ["paramiko"]
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "3eba0ef0672f06519be13ccba3cb510f7c06e0660cd022b35072f6944199e8d2"
+content-hash = "9080f7ae5e3c7f51d9433e415ffd415882f3db6d7de8f9e1a60e1f98f3acfd33"
