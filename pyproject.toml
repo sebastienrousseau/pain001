@@ -172,7 +172,7 @@ sphinx = "~9.0.4"
 pydata-sphinx-theme = {version = "^0.24.0", python = ">=3.11.5"}
 sphinx-autodoc-typehints = "^3.6.1"
 sphinx-design = "^0.7.0"
-myst-parser = "^5.1.0"
+myst-parser = "^5.2.0"
 # pydata-sphinx-theme pulls in soupsieve (through beautifulsoup4).
 # GHSA-4j63-6c4x-wfg4 and GHSA-mmhr-3c5m-f64f affect soupsieve < 4.0.0, and
 # soupsieve >= 4.0 requires Python >= 3.11.5; gating both in the optional docs
