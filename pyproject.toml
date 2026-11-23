@@ -178,7 +178,7 @@ myst-parser = "^5.1.0"
 # soupsieve >= 4.0 requires Python >= 3.11.5; gating both in the optional docs
 # group keeps every affected release out of poetry.lock while preserving ^3.11
 # for the runtime package and dev suite.
-soupsieve = {version = ">=4.0.0", python = ">=3.11.5"}
+soupsieve = {version = ">=4.1.1", python = ">=3.11.5"}
 
 [build-system]
 requires = ["poetry-core"]
