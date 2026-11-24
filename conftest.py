@@ -146,6 +146,24 @@ def pytest_configure(config: pytest.Config) -> None:
         config.pluginmanager.register(SLOPlugin())
 
 
+def pytest_sessionfinish(session: pytest.Session) -> None:
+    """Leave only files and directories in the pinned basetemp.
+
+    The basetemp sits under pain001/tmp, inside the package tree that
+    ``poetry build`` walks. A symlink out of the tree, a dangling one or
+    a named pipe left there by a test makes the build fail, so the
+    release preflight, which builds right after the suite, would too.
+    """
+    basetemp = Path(session.config.option.basetemp)
+    special = [
+        path
+        for path in basetemp.rglob("*")
+        if path.is_symlink() or not (path.is_file() or path.is_dir())
+    ]
+    for path in special:
+        path.unlink(missing_ok=True)
+
+
 @pytest.fixture(autouse=True)
 def _no_trace_context_leak(request: pytest.FixtureRequest) -> Iterator[None]:
     """Run each test in an empty OpenTelemetry context; fail one that leaks.
