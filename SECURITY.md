@@ -9,7 +9,8 @@ in the table below; older 0.0.x versions do not receive them.
 
 | Version | Status | Receives security fixes? |
 | :--- | :--- | :--- |
-| `0.0.90` (latest) | Current | ✅ Yes |
+| `0.0.91` (latest) | Current | ✅ Yes |
+| `0.0.90` | Prior | ✅ Yes |
 | `0.0.89` | Prior | ✅ Yes |
 | `0.0.88` | Prior | ✅ Yes |
 | `0.0.87` | Prior | ✅ Yes |
