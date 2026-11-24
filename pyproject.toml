@@ -303,6 +303,7 @@ exclude = [
     "setup.py",
     "scripts/",
     "tmp_env/",
+    "pain001/tmp/",
     ".venv/",
     ".eggs/",
 ]
@@ -355,7 +356,7 @@ ignore-init-method = true
 ignore-semiprivate = false
 ignore-private = false
 ignore-magic = true
-exclude = ["setup.py", "scripts", "tests", "docs"]
+exclude = ["setup.py", "scripts", "tests", "docs", "pain001/tmp"]
 
 [tool.pydoclint]
 style = "google"
@@ -363,7 +364,7 @@ quiet = true
 arg-type-hints-in-docstring = false
 skip-checking-short-docstrings = true
 check-return-types = false
-exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/)"
+exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/|pain001/tmp/)"
 
 [tool.mutmut]
 # Mutation testing (mutmut 3). The fast tier on every pull request runs
