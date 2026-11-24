@@ -105,16 +105,8 @@ def usages(code: str, roots: tuple[Path, ...]) -> list[Path]:
     return hits
 
 
-def main(argv: list[str] | None = None) -> int:
-    """Run the refresh.
-
-    Args:
-        argv: Command-line arguments (defaults to ``sys.argv[1:]``).
-
-    Returns:
-        0 when the edition was replaced (or ``--dry-run`` found no
-        blocker), 1 when a withdrawn code is still in use.
-    """
+def _parse_args(argv: list[str] | None) -> argparse.Namespace:
+    """Parse the command line."""
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("new_edition", type=Path)
     parser.add_argument("--dry-run", action="store_true")
@@ -128,7 +120,44 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help=argparse.SUPPRESS,
     )
-    args = parser.parse_args(argv)
+    return parser.parse_args(argv)
+
+
+def _shown(path: Path) -> str:
+    """Return ``path`` relative to the repository when it is inside it."""
+    if path.is_relative_to(REPO_ROOT):
+        return str(path.relative_to(REPO_ROOT))
+    return str(path)
+
+
+def _report_withdrawn(
+    withdrawn: dict[str, list[str]], roots: tuple[Path, ...]
+) -> int:
+    """Print each withdrawn code and return how many are still in use."""
+    blockers = 0
+    for name, values in withdrawn.items():
+        for code in values:
+            used = usages(code, roots)
+            if used:
+                where = ", ".join(_shown(u) for u in used)
+                print(f"  BLOCKED {name}: {code} used in {where}")
+            else:
+                print(f"  - {name}: {code}")
+            blockers += bool(used)
+    return blockers
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the refresh.
+
+    Args:
+        argv: Command-line arguments (defaults to ``sys.argv[1:]``).
+
+    Returns:
+        0 when the edition was replaced (or ``--dry-run`` found no
+        blocker), 1 when a withdrawn code is still in use.
+    """
+    args = _parse_args(argv)
     roots = tuple(args.scan) if args.scan else DEFAULT_SCAN
 
     current = edition_file(args.data_dir)
@@ -142,20 +171,7 @@ def main(argv: list[str] | None = None) -> int:
     )
     for name, values in added.items():
         print(f"  + {name}: {', '.join(values)}")
-    blockers = 0
-    for name, values in withdrawn.items():
-        for code in values:
-            used = usages(code, roots)
-            mark = "BLOCKED" if used else "-"
-            print(
-                f"  {mark} {name}: {code}"
-                + (
-                    f" used in {', '.join(str(u.relative_to(REPO_ROOT)) if u.is_relative_to(REPO_ROOT) else str(u) for u in used)}"
-                    if used
-                    else ""
-                )
-            )
-            blockers += bool(used)
+    blockers = _report_withdrawn(withdrawn, roots)
     if blockers:
         print(
             f"{blockers} withdrawn code(s) still in use; edition not replaced"

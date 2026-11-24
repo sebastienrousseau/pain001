@@ -221,6 +221,46 @@ def _identification_or_proxy(root: _Node) -> list[MdrFinding]:
 # --- pain.001 --------------------------------------------------------------
 
 
+def _cheque_delivery_rule(tx: _Node, cheque: _Node | None) -> list[MdrFinding]:
+    """The three DlvryMtd / CdtrAgt constraints for one CHK transaction."""
+    delivery = cheque.child("DlvryMtd") if cheque is not None else None
+    agent = tx.has("CdtrAgt")
+    if delivery is None:
+        rule = "ChequeNoDeliveryAndNoCreditorAgentRule" if agent else ""
+        message = "PmtMtd is CHK without a DlvryMtd, so CdtrAgt is not allowed"
+    elif (code := delivery.text("Cd")) in CHEQUE_TO_AGENT:
+        rule = "" if agent else "ChequeDeliveryAndCreditorAgentRule"
+        message = (
+            f"DlvryMtd {code} delivers to the final agent, so CdtrAgt "
+            "must be present"
+        )
+    else:
+        rule = "ChequeDeliveryAndNoCreditorAgentRule" if agent else ""
+        message = (
+            f"DlvryMtd {code or 'Prtry'} does not deliver to the final "
+            "agent, so CdtrAgt is not allowed"
+        )
+    path = tx.path + ("/CdtrAgt" if agent else "")
+    return [MdrFinding(rule, path, message)] if rule else []
+
+
+def _cheque_maturity_rule(cheque: _Node | None) -> list[MdrFinding]:
+    """ChequeMaturityDateRule: ChqMtrtyDt needs a DRFT or ELDR cheque."""
+    if cheque is None or not cheque.has("ChqMtrtyDt"):
+        return []
+    cheque_type = cheque.text("ChqTp")
+    if cheque_type in MATURITY_CHEQUE_TYPES:
+        return []
+    return [
+        MdrFinding(
+            "ChequeMaturityDateRule",
+            cheque.path + "/ChqMtrtyDt",
+            f"ChqMtrtyDt is present, so ChqTp must be DRFT or ELDR, "
+            f"not {cheque_type}",
+        )
+    ]
+
+
 def _cheque_rules(pmt: _Node) -> list[MdrFinding]:
     """The seven cheque constraints plus NonChequePaymentMethodRule."""
     method = pmt.text("PmtMtd")
@@ -254,50 +294,8 @@ def _cheque_rules(pmt: _Node) -> list[MdrFinding]:
                         "PmtMtd is CHK, so CdtrAcct is not allowed",
                     )
                 )
-            delivery = cheque.child("DlvryMtd") if cheque is not None else None
-            code = delivery.text("Cd") if delivery is not None else None
-            agent = tx.has("CdtrAgt")
-            if delivery is None and agent:
-                findings.append(
-                    MdrFinding(
-                        "ChequeNoDeliveryAndNoCreditorAgentRule",
-                        tx.path + "/CdtrAgt",
-                        "PmtMtd is CHK without a DlvryMtd, so CdtrAgt is not allowed",
-                    )
-                )
-            elif (
-                delivery is not None and code in CHEQUE_TO_AGENT and not agent
-            ):
-                findings.append(
-                    MdrFinding(
-                        "ChequeDeliveryAndCreditorAgentRule",
-                        tx.path,
-                        f"DlvryMtd {code} delivers to the final agent, so CdtrAgt "
-                        "must be present",
-                    )
-                )
-            elif (
-                delivery is not None and code not in CHEQUE_TO_AGENT and agent
-            ):
-                findings.append(
-                    MdrFinding(
-                        "ChequeDeliveryAndNoCreditorAgentRule",
-                        tx.path + "/CdtrAgt",
-                        f"DlvryMtd {code or 'Prtry'} does not deliver to the final "
-                        "agent, so CdtrAgt is not allowed",
-                    )
-                )
-        if cheque is not None and cheque.has("ChqMtrtyDt"):
-            cheque_type = cheque.text("ChqTp")
-            if cheque_type not in MATURITY_CHEQUE_TYPES:
-                findings.append(
-                    MdrFinding(
-                        "ChequeMaturityDateRule",
-                        cheque.path + "/ChqMtrtyDt",
-                        f"ChqMtrtyDt is present, so ChqTp must be DRFT or ELDR, "
-                        f"not {cheque_type}",
-                    )
-                )
+            findings += _cheque_delivery_rule(tx, cheque)
+        findings += _cheque_maturity_rule(cheque)
     return findings
 
 

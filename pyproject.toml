@@ -27,7 +27,7 @@ dynamic = [
 ]
 
 [tool.poetry]
-version = "0.0.90"
+version = "0.0.91"
 description = "Pain001 is a Python Library for Automating ISO 20022-Compliant Payment Files Using CSV Data."
 authors = ["Sebastien Rousseau <sebastian.rousseau@gmail.com>"]
 readme = "README.md"
@@ -137,18 +137,18 @@ bandit = "^1.9.4"
 # GHSA-9vhv-jxww-xfm5, GHSA-567q-5qvw-pf92 and GHSA-v4x8-3wr5-3wq8; the
 # floor keeps every affected release from resolving.
 pip-audit = ">=2.7,<3.0"
-filelock = ">=4.2.9"
+filelock = ">=4.2.10"
 # msgpack comes in through cachecontrol (pip-audit). CVE-2026-114613
 # affects msgpack < 1.2.3; the floor keeps every affected release from resolving.
 msgpack = ">=1.2.3"
-ruff = "^0.17.4"
+ruff = "^0.17.5"
 types-defusedxml = "^0.7.0"
 types-paramiko = "^5.1.0.20261030"
 types-pyyaml = "^6.0.12.20261113"
-diff-cover = "^11.0.1"
+diff-cover = "^11.0.2"
 types-setuptools = "^84.2.0"
 radon = "^6.0.1"
-complexipy = {version = "^8.3.0", python = "<3.16"}
+complexipy = {version = "^9.0.0", python = "<3.16"}
 mutmut = "^3.8.1"
 hypothesis = "^6.170.15"
 memory-profiler = "^0.61.0"
@@ -171,14 +171,14 @@ optional = true
 sphinx = "~9.0.4"
 pydata-sphinx-theme = {version = "^0.24.0", python = ">=3.11.5"}
 sphinx-autodoc-typehints = "^3.6.1"
-sphinx-design = "^0.7.0"
-myst-parser = "^5.1.0"
+sphinx-design = "^0.8.0"
+myst-parser = "^5.2.0"
 # pydata-sphinx-theme pulls in soupsieve (through beautifulsoup4).
 # GHSA-4j63-6c4x-wfg4 and GHSA-mmhr-3c5m-f64f affect soupsieve < 4.0.0, and
 # soupsieve >= 4.0 requires Python >= 3.11.5; gating both in the optional docs
 # group keeps every affected release out of poetry.lock while preserving ^3.11
 # for the runtime package and dev suite.
-soupsieve = {version = ">=4.0.0", python = ">=3.11.5"}
+soupsieve = {version = ">=4.1.1", python = ">=3.11.5"}
 
 [build-system]
 requires = ["poetry-core"]
@@ -303,6 +303,7 @@ exclude = [
     "setup.py",
     "scripts/",
     "tmp_env/",
+    "pain001/tmp/",
     ".venv/",
     ".eggs/",
 ]
@@ -355,7 +356,7 @@ ignore-init-method = true
 ignore-semiprivate = false
 ignore-private = false
 ignore-magic = true
-exclude = ["setup.py", "scripts", "tests", "docs"]
+exclude = ["setup.py", "scripts", "tests", "docs", "pain001/tmp"]
 
 [tool.pydoclint]
 style = "google"
@@ -363,7 +364,7 @@ quiet = true
 arg-type-hints-in-docstring = false
 skip-checking-short-docstrings = true
 check-return-types = false
-exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/)"
+exclude = "(?:setup\\.py|scripts/|tests/|docs/|\\.venv/|pain001/tmp/)"
 
 [tool.mutmut]
 # Mutation testing (mutmut 3). The fast tier on every pull request runs

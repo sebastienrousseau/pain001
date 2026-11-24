@@ -14,7 +14,7 @@ repos:
         args: ["--maxkb=2048"]
       - id: check-merge-conflict
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.16.6
+    rev: v0.17.6
     hooks:
       - id: ruff
         args: ["--fix"]

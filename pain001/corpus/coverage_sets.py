@@ -435,9 +435,9 @@ class _Planner:
         wanted: list[str] = []
         for child in self.children.get(path, []):
             name = child.path.rsplit("/", 1)[1]
-            if self._forbidden(child.path):
-                continue
-            if not self._chosen(path, name, picks):
+            if self._forbidden(child.path) or not self._chosen(
+                path, name, picks
+            ):
                 continue
             below = self.descendants.get(child.path, set()) | {child.path}
             if (

@@ -282,7 +282,7 @@ class _Walker:
                     f"{path}/@{_local(name or '')}",
                     "attribute",
                     _local(type_name) if type_name else None,
-                    1 if attribute.use == "required" else 0,
+                    int(attribute.use == "required"),
                     1,
                     a_primitive,
                     a_facets,

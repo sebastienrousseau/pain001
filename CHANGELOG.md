@@ -9,6 +9,43 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.91] - Unreleased
+
+### Fixed
+
+- `make lint` and `make type` no longer fail after a local `make test`:
+  mypy, interrogate and pydoclint skip the pytest scratch directory
+  `pain001/tmp/`, where the 0.0.90 `lazy_module` race test writes a
+  Python module.
+
+### Changed
+
+- Release 0.0.91 in lockstep with the pain001 suite.
+- Dependencies, in place of Dependabot `#403` to `#411`:
+
+  | Package | From | To | Where |
+  | :--- | :--- | :--- | :--- |
+  | actions/setup-java | 6.2.0 | 6.3.0 | SDK workflow |
+  | markdown-it-py | 4.2.0 | 4.3.0 | requirements.txt, poetry.lock, API, docs and release locks |
+  | diff-cover | 11.0.1 | 11.0.4 | dev group, poetry.lock |
+  | ruff | 0.17.4 | 0.17.6 | dev group, poetry.lock, pre-commit (from v0.16.6) |
+  | sphinx-design | 0.7.0 | 0.8.0 | docs group, poetry.lock, docs lock |
+  | filelock | 4.2.9 | 4.3.1 | dev group, poetry.lock |
+  | soupsieve | 4.1 | 4.1.3 | docs group, poetry.lock, docs lock |
+  | myst-parser | 5.1.0 | 5.2.0 | docs group, poetry.lock, docs lock |
+  | complexipy | 8.3.0 | 9.0.0 | dev group, poetry.lock, complexity lock |
+
+  complexipy 9 scores cognitive complexity differently: fourteen
+  baselined functions score lower and the baseline shrinks to record
+  them, while three scored higher and `refresh_external_codes.main`
+  went over the ceiling. Those were restructured rather than absorbed:
+  `_cheque_rules` in the MDR rules splits out the delivery and
+  maturity checks (34 to 14), `refresh_external_codes.main` splits out
+  argument parsing and the withdrawn-code report, two guard clauses in
+  the coverage-set planner merge, and the schema walker counts a
+  required attribute with `int()` instead of a conditional. No output
+  changes.
+
 ## [0.0.90] - 2026-11-16
 
 ### Fixed
