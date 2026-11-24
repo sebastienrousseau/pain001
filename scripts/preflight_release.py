@@ -406,6 +406,9 @@ def _inspect_release(version: str, *extra: str) -> subprocess.CompletedProcess:
     )
 
 
+_HASHED = ("--disable-pip", "--require-hashes")
+
+
 def _run_slow_checks(version: str) -> None:
     """Items 1-4: tests, build, artifact inspection and pip-audit."""
     print("\n  running slow checks…")
@@ -423,14 +426,11 @@ def _run_slow_checks(version: str) -> None:
         r.returncode == 0,
         r.stdout.strip() or r.stderr.strip(),
     )
-    r = run(
-        "poetry", "run", "pip-audit", "-r", "requirements.txt", "--no-deps"
-    )
-    check(
-        "pip-audit clean",
-        r.returncode == 0,
-        (r.stdout.strip().splitlines() or [""])[-1],
-    )
+    # The lock is pinned and hashed: audit it as it is, with no throwaway
+    # virtualenv that has to reach PyPI (a network hiccup failed the gate).
+    r = run("poetry", "run", "pip-audit", "-r", "requirements.txt", *_HASHED)
+    output = (r.stdout.strip() or r.stderr.strip()).splitlines()
+    check("pip-audit clean", r.returncode == 0, (output or [""])[-1])
 
 
 def _create_tag(version: str) -> int:

@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   mypy, interrogate and pydoclint skip the pytest scratch directory
   `pain001/tmp/`, where the 0.0.90 `lazy_module` race test writes a
   Python module.
+- `make release-check FULL=1` builds the package again after the test
+  suite: pytest's session now removes the symlinks and named pipes that
+  tests leave in `pain001/tmp/`, which `poetry build` refused to walk.
+- The release preflight audits the hashed `requirements.txt` with
+  `pip-audit --disable-pip --require-hashes`, so a failed download in
+  pip-audit's temporary virtualenv no longer fails the gate.
 
 ### Changed
 
