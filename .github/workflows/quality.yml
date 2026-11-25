@@ -197,6 +197,10 @@ jobs:
           name: benchmarks
           path: |
             .benchmarks/
+          # .benchmarks/ is a hidden directory, which upload-artifact skips
+          # by default; fail rather than upload nothing again.
+          include-hidden-files: true
+          if-no-files-found: error
 
   # Job 4: Coverage Report
   coverage:
