@@ -31,7 +31,7 @@ def check_url(site: Path, url: str) -> str | None:
     """Return why ``url`` does not belong in the sitemap, or None."""
     if not url.startswith(BASE_URL):
         return f"{url}: outside {BASE_URL}"
-    page = site / url.removeprefix(BASE_URL)
+    page = site / (url.removeprefix(BASE_URL) or "index.html")
     if not page.is_file():
         return f"{url}: not in the build"
     text = page.read_text(encoding="utf-8")

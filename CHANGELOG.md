@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- docs.pain001.com names its home page `https://docs.pain001.com/` as
+  canonical and lists that URL in `sitemap.xml`, rather than
+  `index.html`. Every link points at the root, so Search Console
+  reported the root as a duplicate whose canonical Google chose
+  differently, and `index.html` as a page with a redirect.
+
 ## [0.0.91] - 2026-11-24
 
 ### Fixed

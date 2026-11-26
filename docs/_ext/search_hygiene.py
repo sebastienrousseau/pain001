@@ -26,6 +26,16 @@ def is_noindex(pagename: str) -> bool:
     return pagename in NOINDEX_PAGES or pagename.startswith(NOINDEX_PREFIXES)
 
 
+def page_url(base_url: str, pagename: str) -> str:
+    """Return the canonical URL of ``pagename``: the site root for the home.
+
+    Every link to the home page names ``/``, so its canonical and its
+    sitemap entry do too; naming ``index.html`` made Search Console
+    report the root as a duplicate with a different canonical.
+    """
+    return base_url if pagename == "index" else base_url + pagename + ".html"
+
+
 def render_stub(base_url: str, target: str) -> str:
     """Return the HTML of a redirect stub pointing at ``target``."""
     canonical = html.escape(base_url + target.split("#", 1)[0])
@@ -49,7 +59,7 @@ def render_stub(base_url: str, target: str) -> str:
 def render_sitemap(base_url: str, pagenames: list[str]) -> str:
     """Return a sitemap listing the indexable pages in ``pagenames``."""
     urls = sorted(
-        base_url + name + ".html" for name in pagenames if not is_noindex(name)
+        page_url(base_url, name) for name in pagenames if not is_noindex(name)
     )
     entries = "".join(
         f"  <url><loc>{escape(url)}</loc></url>\n" for url in urls
@@ -83,6 +93,8 @@ def _page_context(
         context["metatags"] = context.get("metatags", "") + ROBOTS_META
         # A noindex page that names itself canonical sends mixed signals.
         context["pageurl"] = None
+    elif pagename == "index":
+        context["pageurl"] = page_url(app.config.html_baseurl, pagename)
 
 
 def _write_outputs(app: Any, exception: Exception | None) -> None:
