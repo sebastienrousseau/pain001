@@ -67,6 +67,14 @@ def test_noindex_page_drops_its_canonical() -> None:
     assert indexed == {"metatags": "", "pageurl": BASE + "pain001.html"}
 
 
+def test_home_page_names_the_site_root_canonical() -> None:
+    """Search Console chose / over index.html; the page must agree."""
+    app = SimpleNamespace(config=SimpleNamespace(html_baseurl=BASE))
+    context = {"metatags": "", "pageurl": BASE + "index.html"}
+    hygiene._page_context(app, "index", "", context, None)
+    assert context == {"metatags": "", "pageurl": BASE}
+
+
 def test_stub_refreshes_and_names_target_canonical() -> None:
     stub = hygiene.render_stub(BASE, "pain001.html#module-pain001.constants")
     assert 'content="0; url=/pain001.html#module-pain001.constants"' in stub
@@ -78,7 +86,8 @@ def test_sitemap_lists_only_indexable_pages() -> None:
     sitemap = hygiene.render_sitemap(
         BASE, ["index", "_modules/pain001/xml/generate_xml", "search"]
     )
-    assert f"<loc>{BASE}index.html</loc>" in sitemap
+    assert f"<loc>{BASE}</loc>" in sitemap
+    assert "index.html" not in sitemap
     assert "_modules" not in sitemap
     assert "search.html" not in sitemap
 
@@ -141,6 +150,8 @@ def test_sitemap_checker_accepts_only_canonical_indexable_pages(
     assert "canonical" in check_url(tmp_path, BASE + "other.html")
     assert "not in the build" in check_url(tmp_path, BASE + "gone.html")
     assert "outside" in check_url(tmp_path, "https://pain001.com/")
+    _page(tmp_path, "index.html", f'<link rel="canonical" href="{BASE}"')
+    assert check_url(tmp_path, BASE) is None
 
 
 def test_sitemap_checker_exit_codes(tmp_path: Path) -> None:
